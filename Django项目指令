@@ -1,0 +1,17 @@
+--创建虚拟环境
+python -m venv matchSys
+
+--环境启用
+. bin/activate
+
+--安装Django
+pip install django
+
+--创建项目
+django-admin startproject {projectName}
+
+--启动项目
+python manage.py runserver
+
+--创建app（功能模块）
+python manage.py startapp {appName}

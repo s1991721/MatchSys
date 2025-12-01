@@ -96,6 +96,81 @@
             max-height: 380px;
         }
 
+        .filters {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 12px;
+            margin: 0 0 12px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .chip-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chip {
+            padding: 8px 12px;
+            border: 1px solid #d7deea;
+            background: #f6f8fd;
+            border-radius: 12px;
+            color: #3b4a60;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+        }
+
+        .chip.active {
+            background: rgba(28, 123, 255, 0.12);
+            border-color: #5e90ff;
+            color: #1f60d8;
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+        }
+
+        .input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #d7deea;
+            background: #fdfdff;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+            background: #ffffff;
+        }
+
+        .date-input {
+            max-width: 160px;
+            padding-left: 10px;
+        }
+
+        .date-input.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+        }
+
+        .search-input {
+            width: 100%;
+        }
+
         .item {
             padding: 10px 12px;
             display: flex;
@@ -120,6 +195,13 @@
 
         .item-main {
             flex: 1;
+        }
+
+        .empty {
+            padding: 16px 12px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
         }
 
         .item-title {
@@ -180,6 +262,10 @@
             .list.persons {
                 max-height: 320px;
             }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -189,73 +275,22 @@
     <div class="row">
         <div class="panel panel-left">
             <div class="panel-title">求人列表</div>
+            <div class="filters">
+                <div class="filter-group">
+                    <span class="filter-label">时间</span>
+                    <div class="chip-row">
+                        <button class="chip active" data-range="all" type="button">全部</button>
+                        <button class="chip" data-range="today" type="button">今天</button>
+                        <button class="chip" data-range="yesterday" type="button">昨天</button>
+                        <input id="job-date" class="input date-input" type="date" aria-label="选择日期">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <span class="filter-label">关键字</span>
+                    <input id="job-keyword" class="input search-input" type="search" placeholder="搜索案件标题、描述或细节">
+                </div>
+            </div>
             <ul class="list jobs" id="job-list">
-                <!-- 使用 data-detail 存放详情文本 -->
-                <li class="item active"
-                    data-detail="这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人1标题</div>
-                        <div class="item-desc">求人1的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-12-01</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人2的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人2标题</div>
-                        <div class="item-desc">求人2的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-11-25</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人3标题</div>
-                        <div class="item-desc">求人3的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-11-20</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人4的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人4标题</div>
-                        <div class="item-desc">求人4的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-11-18</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人5的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人5标题</div>
-                        <div class="item-desc">求人5的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-11-12</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人6的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人6标题</div>
-                        <div class="item-desc">求人6的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-11-05</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人7的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人7标题</div>
-                        <div class="item-desc">求人7的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-10-29</div>
-                </li>
-                <li class="item"
-                    data-detail="这是求人8的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="item-main">
-                        <div class="item-title">求人8标题</div>
-                        <div class="item-desc">求人8的简单说明content</div>
-                    </div>
-                    <div class="item-time">2025-10-18</div>
-                </li>
-                <!-- 继续添加 li 即可 -->
             </ul>
         </div>
 
@@ -370,6 +405,28 @@
 </div>
 
 <script>
+    const jobs = [
+        { id: 1, title: '求人1标题', desc: '求人1的简单说明content', detail: '这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-12-01' },
+        { id: 2, title: '求人2标题', desc: '求人2的简单说明content', detail: '这是求人2的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-25' },
+        { id: 3, title: '求人3标题', desc: '求人3的简单说明content', detail: '这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-20' },
+        { id: 4, title: '求人4标题', desc: '求人4的简单说明content', detail: '这是求人4的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-18' },
+        { id: 5, title: '求人5标题', desc: '求人5的简单说明content', detail: '这是求人5的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-12' },
+        { id: 6, title: '求人6标题', desc: '求人6的简单说明content', detail: '这是求人6的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-05' },
+        { id: 7, title: '求人7标题', desc: '求人7的简单说明content', detail: '这是求人7的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-10-29' },
+        { id: 8, title: '求人8标题', desc: '求人8的简单说明content', detail: '这是求人8的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-10-18' }
+    ];
+
+    const jobList = document.getElementById('job-list');
+    const jobDetail = document.getElementById('job-detail');
+    const jobKeyword = document.getElementById('job-keyword');
+    const jobDate = document.getElementById('job-date');
+    const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
+
+    const filters = {
+        range: 'all',
+        customDate: ''
+    };
+
     // 公共函数：给列表加点击事件
     function bindListClick(listId, detailId) {
         const list = document.getElementById(listId);
@@ -381,17 +438,122 @@
             const item = e.target.closest('.item');
             if (!item) return;
 
-            // 去掉其他 active
             list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
             item.classList.add('active');
 
-            // 更新下方详情
             const text = item.getAttribute('data-detail') || '';
             detail.textContent = text;
         });
     }
 
-    // 绑定两个列表
+    const formatDate = (date) => date.toISOString().slice(0, 10);
+
+    function renderJobList(items) {
+        jobList.innerHTML = '';
+
+        if (!items.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = '暂无匹配的求人';
+            jobList.appendChild(empty);
+            jobDetail.textContent = '暂无可显示的求人';
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'item' + (index === 0 ? ' active' : '');
+            li.dataset.detail = item.detail;
+            li.dataset.id = item.id;
+
+            const main = document.createElement('div');
+            main.className = 'item-main';
+
+            const title = document.createElement('div');
+            title.className = 'item-title';
+            title.textContent = item.title;
+
+            const desc = document.createElement('div');
+            desc.className = 'item-desc';
+            desc.textContent = item.desc;
+
+            const time = document.createElement('div');
+            time.className = 'item-time';
+            time.textContent = item.date;
+
+            main.appendChild(title);
+            main.appendChild(desc);
+            li.appendChild(main);
+            li.appendChild(time);
+            jobList.appendChild(li);
+        });
+
+        const first = jobList.querySelector('.item');
+        if (first) {
+            jobDetail.textContent = first.dataset.detail || '';
+        }
+    }
+
+    function applyFilters() {
+        const today = formatDate(new Date());
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterday = formatDate(yesterdayDate);
+
+        const keyword = jobKeyword.value.trim().toLowerCase();
+        const targetDate = filters.range === 'today'
+            ? today
+            : filters.range === 'yesterday'
+                ? yesterday
+                : filters.range === 'custom'
+                    ? filters.customDate
+                    : '';
+
+        const filtered = jobs.filter(item => {
+            const matchKeyword = keyword
+                ? (item.title + item.desc + item.detail).toLowerCase().includes(keyword)
+                : true;
+            const matchDate = targetDate ? item.date === targetDate : true;
+            return matchKeyword && matchDate;
+        });
+
+        renderJobList(filtered);
+    }
+
+    dateButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            dateButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filters.range = btn.dataset.range;
+            filters.customDate = '';
+            jobDate.value = '';
+            jobDate.classList.remove('active');
+            applyFilters();
+        });
+    });
+
+    jobDate.addEventListener('change', () => {
+        if (jobDate.value) {
+            filters.range = 'custom';
+            filters.customDate = jobDate.value;
+            dateButtons.forEach(b => b.classList.remove('active'));
+            jobDate.classList.add('active');
+        } else {
+            filters.range = 'all';
+            filters.customDate = '';
+            dateButtons.forEach(b => {
+                b.classList.toggle('active', b.dataset.range === 'all');
+            });
+            jobDate.classList.remove('active');
+        }
+        applyFilters();
+    });
+
+    jobKeyword.addEventListener('input', () => {
+        applyFilters();
+    });
+
+    renderJobList(jobs);
     bindListClick('job-list', 'job-detail');
     bindListClick('person-list', 'person-detail');
 </script>

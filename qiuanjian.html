@@ -79,6 +79,64 @@
             max-height: 360px;
         }
 
+        .filters {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 12px;
+            margin: 0 0 12px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .chip-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .chip {
+            padding: 8px 12px;
+            border: 1px solid #d7deea;
+            background: #f6f8fd;
+            border-radius: 12px;
+            color: #3b4a60;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+        }
+
+        .chip.active {
+            background: rgba(28, 123, 255, 0.12);
+            border-color: #5e90ff;
+            color: #1f60d8;
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+        }
+
+        .date-input {
+            max-width: 160px;
+            padding-left: 10px;
+        }
+
+        .date-input.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+        }
+
+        .search-input {
+            width: 100%;
+        }
+
         .item {
             padding: 10px 12px;
             display: flex;
@@ -103,6 +161,13 @@
 
         .item-main {
             flex: 1;
+        }
+
+        .empty {
+            padding: 16px 12px;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
         }
 
         .item-title {
@@ -230,6 +295,10 @@
                 grid-template-rows: auto auto;
                 min-height: auto;
             }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -238,42 +307,22 @@
         <section class="split-left">
             <div class="panel">
                 <h2 class="title">求案件列表</h2>
+                <div class="filters">
+                    <div class="filter-group">
+                        <span class="filter-label">时间</span>
+                        <div class="chip-row">
+                            <button class="chip active" data-range="all" type="button">全部</button>
+                            <button class="chip" data-range="today" type="button">今天</button>
+                            <button class="chip" data-range="yesterday" type="button">昨天</button>
+                            <input id="date-picker" class="input date-input" type="date" aria-label="选择日期">
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-label">关键字</span>
+                        <input id="keyword-input" class="input search-input" type="search" placeholder="搜索案件标题、描述或细节">
+                    </div>
+                </div>
                 <ul id="case-list" class="list">
-                    <li class="item active" data-detail="这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。">
-                        <div class="item-main">
-                            <div class="item-title">案件1标题</div>
-                            <div class="item-desc">案件1的简单说明 content</div>
-                        </div>
-                        <div class="item-time">2025-12-01</div>
-                    </li>
-                    <li class="item" data-detail="这是案件2的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。">
-                        <div class="item-main">
-                            <div class="item-title">案件2标题</div>
-                            <div class="item-desc">案件2的简单说明 content</div>
-                        </div>
-                        <div class="item-time">2025-11-25</div>
-                    </li>
-                    <li class="item" data-detail="这是案件3的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。">
-                        <div class="item-main">
-                            <div class="item-title">案件3标题</div>
-                            <div class="item-desc">案件3的简单说明 content</div>
-                        </div>
-                        <div class="item-time">2025-11-20</div>
-                    </li>
-                    <li class="item" data-detail="这是案件4的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。">
-                        <div class="item-main">
-                            <div class="item-title">案件4标题</div>
-                            <div class="item-desc">案件4的简单说明 content</div>
-                        </div>
-                        <div class="item-time">2025-11-18</div>
-                    </li>
-                    <li class="item" data-detail="这是案件5的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。">
-                        <div class="item-main">
-                            <div class="item-title">案件5标题</div>
-                            <div class="item-desc">案件5的简单说明 content</div>
-                        </div>
-                        <div class="item-time">2025-11-12</div>
-                    </li>
                 </ul>
             </div>
 
@@ -330,11 +379,130 @@
 
     <script>
         (function () {
+            const cases = [
+                {
+                    id: 1,
+                    title: '案件1标题',
+                    desc: '案件1的简单说明 content',
+                    detail: '这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    date: '2025-12-01'
+                },
+                {
+                    id: 2,
+                    title: '案件2标题',
+                    desc: '案件2的简单说明 content',
+                    detail: '这是案件2的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    date: '2025-11-25'
+                },
+                {
+                    id: 3,
+                    title: '案件3标题',
+                    desc: '案件3的简单说明 content',
+                    detail: '这是案件3的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    date: '2025-11-20'
+                },
+                {
+                    id: 4,
+                    title: '案件4标题',
+                    desc: '案件4的简单说明 content',
+                    detail: '这是案件4的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    date: '2025-11-18'
+                },
+                {
+                    id: 5,
+                    title: '案件5标题',
+                    desc: '案件5的简单说明 content',
+                    detail: '这是案件5的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    date: '2025-11-12'
+                }
+            ];
+
             const list = document.getElementById('case-list');
             const detail = document.getElementById('case-detail');
+            const keywordInput = document.getElementById('keyword-input');
+            const datePicker = document.getElementById('date-picker');
+            const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
             const inputs = ['name', 'belong', 'nation', 'age', 'price', 'intro'].map(id => document.getElementById(id));
             const resetBtn = document.getElementById('btn-reset');
             const saveBtn = document.getElementById('btn-save');
+            const filters = {
+                range: 'all',
+                customDate: ''
+            };
+
+            const formatDate = (date) => date.toISOString().slice(0, 10);
+
+            const renderList = (items) => {
+                list.innerHTML = '';
+
+                if (!items.length) {
+                    const empty = document.createElement('li');
+                    empty.className = 'empty';
+                    empty.textContent = '暂无匹配的案件';
+                    list.appendChild(empty);
+                    detail.textContent = '暂无可显示的案件';
+                    return;
+                }
+
+                items.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'item' + (index === 0 ? ' active' : '');
+                    li.dataset.detail = item.detail;
+                    li.dataset.id = item.id;
+
+                    const main = document.createElement('div');
+                    main.className = 'item-main';
+
+                    const title = document.createElement('div');
+                    title.className = 'item-title';
+                    title.textContent = item.title;
+
+                    const desc = document.createElement('div');
+                    desc.className = 'item-desc';
+                    desc.textContent = item.desc;
+
+                    const time = document.createElement('div');
+                    time.className = 'item-time';
+                    time.textContent = item.date;
+
+                    main.appendChild(title);
+                    main.appendChild(desc);
+                    li.appendChild(main);
+                    li.appendChild(time);
+                    list.appendChild(li);
+                });
+
+                const first = list.querySelector('.item');
+                if (first) {
+                    detail.textContent = first.dataset.detail || '';
+                }
+            };
+
+            const applyFilters = () => {
+                const today = formatDate(new Date());
+                const yesterdayDate = new Date();
+                yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+                const yesterday = formatDate(yesterdayDate);
+
+                const keyword = keywordInput.value.trim().toLowerCase();
+                const targetDate = filters.range === 'today'
+                    ? today
+                    : filters.range === 'yesterday'
+                        ? yesterday
+                        : filters.range === 'custom'
+                            ? filters.customDate
+                            : '';
+
+                const filtered = cases.filter(item => {
+                    const matchKeyword = keyword
+                        ? (item.title + item.desc + item.detail).toLowerCase().includes(keyword)
+                        : true;
+                    const matchDate = targetDate ? item.date === targetDate : true;
+                    return matchKeyword && matchDate;
+                });
+
+                renderList(filtered);
+            };
 
             list.addEventListener('click', (e) => {
                 const item = e.target.closest('.item');
@@ -342,6 +510,39 @@
                 list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
                 item.classList.add('active');
                 detail.textContent = item.dataset.detail || '';
+            });
+
+            dateButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    dateButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filters.range = btn.dataset.range;
+                    filters.customDate = '';
+                    datePicker.value = '';
+                    datePicker.classList.remove('active');
+                    applyFilters();
+                });
+            });
+
+            datePicker.addEventListener('change', () => {
+                if (datePicker.value) {
+                    filters.range = 'custom';
+                    filters.customDate = datePicker.value;
+                    dateButtons.forEach(b => b.classList.remove('active'));
+                    datePicker.classList.add('active');
+                } else {
+                    filters.range = 'all';
+                    filters.customDate = '';
+                    dateButtons.forEach(b => {
+                        b.classList.toggle('active', b.dataset.range === 'all');
+                    });
+                    datePicker.classList.remove('active');
+                }
+                applyFilters();
+            });
+
+            keywordInput.addEventListener('input', () => {
+                applyFilters();
             });
 
             resetBtn.addEventListener('click', () => {
@@ -352,6 +553,8 @@
             saveBtn.addEventListener('click', () => {
                 alert('内容已保存。');
             });
+
+            renderList(cases);
         })();
     </script>
 </body>

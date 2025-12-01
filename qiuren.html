@@ -1,194 +1,381 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <title>求人</title>
-</head>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 24px auto;
+            padding: 16px 20px 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .row + .row {
+            margin-top: 20px;
+        }
+
+        .panel {
+            background: #fafafa;
+            border-radius: 6px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 260px;
+        }
+
+        .panel-left {
+            flex: 2;
+        }
+
+        .panel-right {
+            flex: 1;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-left: 8px;
+            border-left: 3px solid #007aff;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        .list {
+            margin-top: 4px;
+            overflow-y: auto;
+        }
+
+        .list.jobs {
+            max-height: 360px;
+        }
+
+        .list.persons {
+            max-height: 360px;
+        }
+
+        .item {
+            padding: 4px 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .item:hover {
+            background: #eceff9;
+        }
+
+        .item.active {
+            background: #d8e3ff;
+        }
+
+        .item + .item {
+            border-top: 1px solid #e5e5e5;
+            margin-top: 4px;
+            padding-top: 6px;
+        }
+
+        .job-header,
+        .person-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .job-title {
+            font-weight: 500;
+        }
+
+        .job-time,
+        .person-belong {
+            font-size: 12px;
+            color: #888;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .job-content {
+            font-size: 13px;
+            margin-top: 2px;
+            color: #555;
+        }
+
+        .person-name {
+            font-weight: 500;
+        }
+
+        .detail {
+            flex: 1;
+        }
+
+        .detail-text {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+            word-break: break-all;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
 <body>
-    <div>
-        <div name="up" style="display: flex;">
-            <div name="up-left" style="width:70%; height: 700px;">
-                <div >求人列表</div>
-                <ul>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>title</span>
-                            <span>time</span>
-                        </div>
-                        <div>content</div>
-                    </li>
-                </ul>
-            </div>
-            <div name="up-right" style="width:30%; height: 700px;">
-                <div>人员列表</div>
-                <ul>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                    <li>
-                        <div>
-                            <span>name</span>
-                            <span>belong</span>
-                        </div>
-                    </li>
-                </ul>
+<div class="page">
+    <!-- 上半部分：列表 -->
+    <div class="row">
+        <div class="panel panel-left">
+            <div class="panel-title">求人列表</div>
+            <ul class="list jobs" id="job-list">
+                <!-- 使用 data-detail 存放详情文本 -->
+                <li class="item active"
+                    data-detail="这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人1标题</span>
+                        <span class="job-time">2025-12-01</span>
+                    </div>
+                    <div class="job-content">求人1的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人2的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人2标题</span>
+                        <span class="job-time">2025-11-25</span>
+                    </div>
+                    <div class="job-content">求人2的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <li class="item"
+                    data-detail="这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="job-header">
+                        <span class="job-title">求人3标题</span>
+                        <span class="job-time">2025-11-20</span>
+                    </div>
+                    <div class="job-content">求人3的简单说明content</div>
+                </li>
+                <!-- 继续添加 li 即可 -->
+            </ul>
+        </div>
+
+        <div class="panel panel-right">
+            <div class="panel-title">人员列表</div>
+            <ul class="list persons" id="person-list">
+                <!-- 使用 data-detail 存放技术者详细信息 -->
+                <li class="item active"
+                    data-detail="这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者A</span>
+                        <span class="person-belong">所属1</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者B的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者B</span>
+                        <span class="person-belong">所属2</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+                <li class="item"
+                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
+                    <div class="person-header">
+                        <span class="person-name">技术者C</span>
+                        <span class="person-belong">所属3</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 下半部分：详情 -->
+    <div class="row">
+        <div class="panel panel-left detail">
+            <div class="panel-title">求人详情</div>
+            <div class="detail-text" id="job-detail">
+                这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
 
-        <div name="down" style="display: flex;">
-            <div name="down-left" style="width:70%; ">
-                <div>求人详情</div>
-                <div style="word-break: break-all;">
-                    这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。
-                </div>
-            </div>
-            <div name="down-right" style="width:30%; ">
-                <div>技术者详情</div>
-                <div style="word-break: break-all;">
-                    这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。这是一个很长的文字测试ABCDEFG1234567890不想超出屏幕想自动换行。
-                </div>
+        <div class="panel panel-right detail">
+            <div class="panel-title">技术者详情</div>
+            <div class="detail-text" id="person-detail">
+                这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
     </div>
-</body>
+</div>
 
+<script>
+    // 公共函数：给列表加点击事件
+    function bindListClick(listId, detailId) {
+        const list = document.getElementById(listId);
+        const detail = document.getElementById(detailId);
+
+        if (!list || !detail) return;
+
+        list.addEventListener('click', function (e) {
+            const item = e.target.closest('.item');
+            if (!item) return;
+
+            // 去掉其他 active
+            list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+
+            // 更新下方详情
+            const text = item.getAttribute('data-detail') || '';
+            detail.textContent = text;
+        });
+    }
+
+    // 绑定两个列表
+    bindListClick('job-list', 'job-detail');
+    bindListClick('person-list', 'person-detail');
+</script>
+</body>
 </html>

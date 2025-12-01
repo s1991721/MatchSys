@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>送信页</title>
+    <style>
+        :root {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --line: #e5e9f2;
+            --primary: #1c7bff;
+            --text: #1f2a3d;
+            --muted: #6b7686;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: 24px auto 32px;
+            padding: 0 20px 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin: 6px 0 18px;
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .grid + .grid {
+            margin-top: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            box-shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
+            padding: 16px 18px 18px;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card-title::before {
+            content: "";
+            width: 4px;
+            height: 18px;
+            border-radius: 12px;
+            background: var(--primary);
+            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+        }
+
+        .editor {
+            width: 100%;
+            height: 340px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid #d8dfec;
+            background: linear-gradient(180deg, #fbfcff 0%, #f6f7fb 100%);
+            font-size: 15px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            color: var(--text);
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .editor:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.14);
+            background: #ffffff;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .input {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #d8dfec;
+            padding: 12px 12px;
+            font-size: 14px;
+            outline: none;
+            background: #fdfdff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+            background: #ffffff;
+        }
+
+        .send-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .ghost-button {
+            border: 1px solid #d8dfec;
+            background: #f7f9fd;
+            color: #405169;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .ghost-button:hover {
+            background: #eef3fb;
+            border-color: #cfd7e6;
+        }
+
+        .send-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 11px 18px;
+            background: linear-gradient(135deg, #5e90ff, #2e7bff);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 12px 24px rgba(46, 123, 255, 0.25);
+            transition: transform 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .send-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(46, 123, 255, 0.28);
+        }
+
+        .send-button:active {
+            transform: translateY(0);
+        }
+
+        .detail {
+            font-size: 14px;
+            color: #455164;
+            line-height: 1.7;
+            min-height: 140px;
+        }
+
+        .muted-block {
+            background: #f8faff;
+            border: 1px dashed #d7e1f4;
+            border-radius: 10px;
+            padding: 12px 14px;
+            color: #556074;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .upload-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-hint {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .attachment-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .attachment-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid #e0e7f3;
+            border-radius: 10px;
+            background: #f9fbff;
+        }
+
+        .attachment-name {
+            font-size: 13px;
+            color: #2f3b4d;
+        }
+
+        .attachment-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #6b7686;
+            font-size: 12px;
+        }
+
+        .remove-link {
+            color: #e35d5d;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .empty-tip {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .editor {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="page-header">
+            <div>
+                <div class="title">送信页</div>
+                <div class="subtitle">整页编辑模式，直接书写并发送邮件内容</div>
+            </div>
+            <div class="subtitle">状态：草稿</div>
+        </header>
+
+        <section class="grid">
+            <div class="card">
+                <div class="card-title">内容编辑</div>
+                <textarea id="editor" class="editor" placeholder="在此编写您要发送的内容，例如项目进度、补充说明或会议纪要等。" aria-label="内容编辑文本域"></textarea>
+            </div>
+
+            <div class="card">
+                <div class="card-title">收件与附件</div>
+                <div class="field">
+                    <label for="email">收件人邮箱</label>
+                    <input id="email" type="email" class="input" placeholder="name@example.com">
+                </div>
+                <div class="field">
+                    <label for="cc">抄送 (可选)</label>
+                    <input id="cc" type="email" class="input" placeholder="cc@example.com">
+                </div>
+                <div class="field">
+                    <label for="file-input">上传附件</label>
+                    <div class="upload-bar">
+                        <input id="file-input" class="file-input" type="file" multiple>
+                        <button id="btn-upload" class="ghost-button" type="button">选择文件</button>
+                        <span class="upload-hint">支持多文件，建议单个不超过10MB</span>
+                    </div>
+                    <div id="attachment-list" class="attachment-list">
+                        <div class="empty-tip">暂无附件</div>
+                    </div>
+                </div>
+                <div class="send-actions">
+                    <button id="btn-clear" class="ghost-button" type="button">清空内容</button>
+                    <button id="btn-send" class="send-button" type="button" aria-label="发送">
+                        <span>发送</span>
+                        <span aria-hidden="true">➤</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid">
+            <div class="card">
+                <div class="card-title">预览</div>
+                <div id="preview" class="detail">
+                    这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。ABCDEFG1234567890不想超出屏幕会自动换行。
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">提醒</div>
+                <div class="muted-block">
+                    · 请确认邮箱地址无误再发送。<br>
+                    · 已支持在页面右侧上传附件，发送前请核对文件列表。<br>
+                    · 内容较长时建议分段，保持易读性。<br>
+                    · 发送后可在历史记录中查看送信状态。
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        (function () {
+            const editor = document.getElementById('editor');
+            const email = document.getElementById('email');
+            const cc = document.getElementById('cc');
+            const preview = document.getElementById('preview');
+            const clearBtn = document.getElementById('btn-clear');
+            const sendBtn = document.getElementById('btn-send');
+            const uploadBtn = document.getElementById('btn-upload');
+            const fileInput = document.getElementById('file-input');
+            const attachmentList = document.getElementById('attachment-list');
+            const attachments = [];
+
+            const formatSize = (bytes) => {
+                if (bytes < 1024) return bytes + 'B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+                return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+            };
+
+            const renderAttachments = () => {
+                if (!attachments.length) {
+                    attachmentList.innerHTML = '<div class="empty-tip">暂无附件</div>';
+                    return;
+                }
+
+                attachmentList.innerHTML = attachments.map((file, idx) => `
+                    <div class="attachment-item" data-idx="${idx}">
+                        <div class="attachment-name">${file.name}</div>
+                        <div class="attachment-meta">
+                            <span>${file.size}</span>
+                            <span class="remove-link" data-remove="${idx}">移除</span>
+                        </div>
+                    </div>
+                `).join('');
+            };
+
+            const renderPreview = () => {
+                const content = editor.value.trim();
+
+                if (!content) {
+                    preview.textContent = '这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。';
+                    return;
+                }
+
+                preview.textContent = content;
+            };
+
+            clearBtn.addEventListener('click', () => {
+                editor.value = '';
+                email.value = '';
+                cc.value = '';
+                attachments.length = 0;
+                renderAttachments();
+                renderPreview();
+                editor.focus();
+            });
+
+            editor.addEventListener('input', renderPreview);
+            uploadBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', () => {
+                const files = Array.from(fileInput.files || []);
+                files.forEach(f => attachments.push({ name: f.name, size: formatSize(f.size) }));
+                fileInput.value = '';
+                renderAttachments();
+            });
+
+            attachmentList.addEventListener('click', (e) => {
+                const idx = e.target.getAttribute('data-remove');
+                if (idx === null) return;
+                attachments.splice(Number(idx), 1);
+                renderAttachments();
+            });
+
+            sendBtn.addEventListener('click', () => {
+                const target = email.value.trim();
+                if (!target) {
+                    alert('请先填写收件人邮箱。');
+                    email.focus();
+                    return;
+                }
+                const attachTip = attachments.length ? `，附件数量：${attachments.length}` : '';
+                alert('内容已准备好发送至：' + target + attachTip);
+            });
+
+            renderAttachments();
+            renderPreview();
+        })();
+    </script>
+</body>
+</html>

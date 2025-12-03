@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from typing import List, Optional
 import base64
 import os.path
@@ -45,6 +46,8 @@ class GmailTool:
         query: str = "is:unread",
         limit: int = 10,
         mark_seen: bool = False,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
     ) -> List[dict]:
         """
         从 Gmail 获取邮件列表。
@@ -52,14 +55,25 @@ class GmailTool:
         :param query: Gmail 搜索语法，例如 "is:unread", "from:xxx", "label:INBOX"
         :param limit: 最多返回几封邮件
         :param mark_seen: 是否把取到的邮件标记为已读
+        :param start_date: 起始日期（含），格式 date
+        :param end_date: 结束日期（含），格式 date
         :return: list[dict]，结构与原来尽量保持相似
         """
         service = self.service
 
+        query_parts = [query]
+        if start_date:
+            query_parts.append(f'after:{start_date.strftime("%Y/%m/%d")}')
+        if end_date:
+            # Gmail before: 是严格早于给定日期，所以要 +1 天来实现“含 end_date”。
+            inclusive_end = end_date + timedelta(days=1)
+            query_parts.append(f'before:{inclusive_end.strftime("%Y/%m/%d")}')
+        final_query = " ".join(q for q in query_parts if q)
+
         # 列出邮件 ID
         response = service.users().messages().list(
             userId='me',
-            q=query,
+            q=final_query,
             maxResults=limit,
         ).execute()
 
@@ -180,14 +194,19 @@ if __name__ == "__main__":
     tool = GmailTool()
 
     # 1. 收邮件测试
-    msgs = tool.fetch_messages(limit=3, mark_seen=False)
-    for m in msgs:
-        print(m["subject"], m["from"])
-        print(m["body"][:80], "...\n")
+#     msgs = tool.fetch_messages(
+#         limit=1,
+#         query="",
+#         start_date=date(2025, 11, 27),
+#         end_date=date(2025, 11, 28),
+# )
+#     for m in msgs:
+#         print(m["subject"], m["from"])
+#         print(m["body"])
 
     # 2. 发邮件测试
-    # tool.send_message(
-    #     to="你的邮箱",
-    #     subject="Gmail API 测试",
-    #     body="这是一封来自 Gmail API 的测试邮件。",
-    # )
+    tool.send_message(
+        to="jef4267@gmail.com",
+        subject="Gmail API 测试",
+        body="这是一封来自 Gmail API 的测试邮件。",
+    )

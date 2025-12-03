@@ -243,14 +243,24 @@
         .detail-text {
             margin-top: 4px;
             font-size: 14px;
-            line-height: 1.7;
-            word-break: break-all;
+            line-height: 1.75;
+            word-break: break-word;
+            white-space: pre-line;
             border: 1px solid var(--line);
             border-radius: 10px;
-            padding: 12px 14px;
+            padding: 14px 16px;
             background: #fafbfe;
-            min-height: 140px;
+            min-height: 180px;
             color: #435065;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .detail-text p {
+            margin: 0 0 10px;
+        }
+
+        .detail-text p:last-child {
+            margin-bottom: 0;
         }
 
         .detail-actions {
@@ -439,9 +449,32 @@
 </div>
 
 <script>
+    const sanitize = (str = '') =>
+        str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+
+    function renderDetail(target, text = '') {
+        if (!target) return;
+        const normalized = text
+            .replace(/\r\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        const html = sanitize(normalized)
+            .split(/\n{2,}/)
+            .filter(Boolean)
+            .map(block => `<p>${block.replace(/\n/g, '<br>')}</p>`)
+            .join('');
+        target.innerHTML = html || '<p style="color:#9aa4b5">暂无内容</p>';
+    }
+
     const API_BASE = 'http://localhost:8000';
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
+    const personDetail = document.getElementById('person-detail');
     const jobKeyword = document.getElementById('job-keyword');
     const jobDate = document.getElementById('job-date');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
@@ -466,7 +499,7 @@
             item.classList.add('active');
 
             const text = item.getAttribute('data-detail') || '';
-            detail.textContent = text;
+            renderDetail(detail, text);
         });
     }
 
@@ -480,7 +513,7 @@
             empty.className = 'empty';
             empty.textContent = '暂无匹配的求人';
             jobList.appendChild(empty);
-            jobDetail.textContent = '暂无可显示的求人';
+            renderDetail(jobDetail, '暂无可显示的求人');
             return;
         }
 
@@ -514,7 +547,7 @@
 
         const first = jobList.querySelector('.item');
         if (first) {
-            jobDetail.textContent = first.dataset.detail || '';
+            renderDetail(jobDetail, first.dataset.detail || '');
         }
     }
 
@@ -608,6 +641,10 @@
     jobKeyword.addEventListener('input', () => {
         fetchJobs();
     });
+
+    // 先把静态文案按新格式渲染，再绑定事件和拉取接口
+    renderDetail(jobDetail, jobDetail.textContent.trim());
+    renderDetail(personDetail, personDetail.textContent.trim());
 
     fetchJobs();
     bindListClick('job-list', 'job-detail');

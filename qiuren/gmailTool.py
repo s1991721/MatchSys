@@ -122,11 +122,15 @@ class GmailTool:
                         return h['value']
                 return ""
 
+            def get_header_list(name: str) -> List[str]:
+                return [h['value'] for h in headers if h.get('name', '').lower() == name.lower()]
+
             subject = get_header("Subject")
             from_ = get_header("From")
             to = get_header("To")
             date_header = get_header("Date")
             internal_ts_ms = msg.get("internalDate")  # 接收时间（毫秒）
+            received_headers = get_header_list("Received")
 
             body_text = self._extract_text_from_gmail_msg(msg)
 
@@ -134,13 +138,39 @@ class GmailTool:
             iso_ts = ""
             ts_float = float("-inf")
             try:
-                if date_header:
-                    dt = parsedate_to_datetime(date_header)
-                    # 转为 aware（若缺 tz 则视为 UTC）
-                    if dt.tzinfo is None:
-                        dt = dt.replace(tzinfo=timezone.utc)
-                    ts_float = dt.timestamp()
-                    iso_ts = dt.astimezone(timezone.utc).isoformat()
+                received_dt = None
+                # Gmail 的 Received 会有多个，取第一条（最新一跳）末尾分号后的时间
+                if received_headers:
+                    for raw in received_headers:
+                        if ";" not in raw:
+                            continue
+                        _, _, after = raw.rpartition(";")
+                        candidate = after.strip()
+                        if not candidate:
+                            continue
+                        try:
+                            received_dt = parsedate_to_datetime(candidate)
+                            if received_dt:
+                                break
+                        except Exception:
+                            continue
+                    if not received_dt:
+                        try:
+                            received_dt = parsedate_to_datetime(received_headers[0])
+                        except Exception:
+                            received_dt = None
+
+                if not received_dt and date_header:
+                    try:
+                        received_dt = parsedate_to_datetime(date_header)
+                    except Exception:
+                        received_dt = None
+
+                if received_dt:
+                    if received_dt.tzinfo is None:
+                        received_dt = received_dt.replace(tzinfo=timezone.utc)
+                    ts_float = received_dt.timestamp()
+                    iso_ts = received_dt.astimezone(timezone.utc).isoformat()
             except Exception:
                 ts_float = float("-inf")
 
@@ -168,10 +198,31 @@ class GmailTool:
             reverse=True
         )
 
+        # 3.1) 再用本地时区按日期做一次兜底过滤（防止 Gmail 搜索的 GMT 边界与本地日历不一致）
+        if start_date or end_date:
+            local_tz = datetime.now().astimezone().tzinfo
+
+            def in_range(ts: Optional[float]) -> bool:
+                if ts is None or ts == float("-inf"):
+                    return False
+                try:
+                    local_dt = datetime.fromtimestamp(ts, tz=local_tz)
+                    local_d = local_dt.date()
+                except Exception:
+                    return False
+                if start_date and local_d < start_date:
+                    return False
+                if end_date and local_d > end_date:
+                    return False
+                return True
+
+            messages = [m for m in messages if in_range(m.get("internal_ts"))]
+
         # 4) 可选标记为已读（批量）
         if mark_seen and ids:
             mark_batch = service.new_batch_http_request()
-            for msg_id in ids:
+            ids_to_mark = [m.get("id") for m in messages if m.get("id")] if (start_date or end_date) else ids
+            for msg_id in ids_to_mark:
                 mark_batch.add(
                     service.users().messages().modify(
                         userId='me',

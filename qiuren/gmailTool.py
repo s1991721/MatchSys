@@ -19,6 +19,7 @@ class GmailTool:
 
     # 需要的 scope：读写+标记已读
     SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+    BATCH_LIMIT = 100  # Gmail batch API 限制：单批最多100个请求
 
     def __init__(self):
         self.service = self._build_service()
@@ -100,17 +101,18 @@ class GmailTool:
                 return
             details.append(response)
 
-        batch = service.new_batch_http_request()
-        for msg_id in ids:
-            batch.add(
-                service.users().messages().get(
-                    userId='me',
-                    id=msg_id,
-                    format='full',
-                ),
-                callback=handle_detail,
-            )
-        batch.execute()
+        for start in range(0, len(ids), self.BATCH_LIMIT):
+            batch = service.new_batch_http_request()
+            for msg_id in ids[start:start + self.BATCH_LIMIT]:
+                batch.add(
+                    service.users().messages().get(
+                        userId='me',
+                        id=msg_id,
+                        format='full',
+                    ),
+                    callback=handle_detail,
+                )
+            batch.execute()
 
         messages: List[dict] = []
         for msg in details:
@@ -222,15 +224,17 @@ class GmailTool:
         if mark_seen and ids:
             mark_batch = service.new_batch_http_request()
             ids_to_mark = [m.get("id") for m in messages if m.get("id")] if (start_date or end_date) else ids
-            for msg_id in ids_to_mark:
-                mark_batch.add(
-                    service.users().messages().modify(
-                        userId='me',
-                        id=msg_id,
-                        body={"removeLabelIds": ["UNREAD"]}
+            for start in range(0, len(ids_to_mark), self.BATCH_LIMIT):
+                mark_batch = service.new_batch_http_request()
+                for msg_id in ids_to_mark[start:start + self.BATCH_LIMIT]:
+                    mark_batch.add(
+                        service.users().messages().modify(
+                            userId='me',
+                            id=msg_id,
+                            body={"removeLabelIds": ["UNREAD"]}
+                        )
                     )
-                )
-            mark_batch.execute()
+                mark_batch.execute()
 
         return messages
 

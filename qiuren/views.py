@@ -21,12 +21,13 @@ def _parse_date(date_str: str):
 def messages(request):
     keyword = request.GET.get("keyword", "").strip()
     date_str = request.GET.get("date", "").strip()
-    limit_str = request.GET.get("limit", "20")
+    limit_str = request.GET.get("limit", "").strip()
 
     try:
-        limit = max(1, min(50, int(limit_str)))
+        parsed_limit = int(limit_str)
+        limit = min(parsed_limit, 9999) if parsed_limit > 0 else 9999
     except ValueError:
-        limit = 20
+        limit = 9999
 
     target_date = _parse_date(date_str)
     query = keyword or ""

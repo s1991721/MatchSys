@@ -439,17 +439,7 @@
 </div>
 
 <script>
-    const jobs = [
-        { id: 1, title: '求人1标题', desc: '求人1的简单说明content', detail: '这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-12-01' },
-        { id: 2, title: '求人2标题', desc: '求人2的简单说明content', detail: '这是求人2的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-25' },
-        { id: 3, title: '求人3标题', desc: '求人3的简单说明content', detail: '这是求人3的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-20' },
-        { id: 4, title: '求人4标题', desc: '求人4的简单说明content', detail: '这是求人4的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-18' },
-        { id: 5, title: '求人5标题', desc: '求人5的简单说明content', detail: '这是求人5的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-12' },
-        { id: 6, title: '求人6标题', desc: '求人6的简单说明content', detail: '这是求人6的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-05' },
-        { id: 7, title: '求人7标题', desc: '求人7的简单说明content', detail: '这是求人7的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-10-29' },
-        { id: 8, title: '求人8标题', desc: '求人8的简单说明content', detail: '这是求人8的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-10-18' }
-    ];
-
+    const API_BASE = 'http://localhost:8000';
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const jobKeyword = document.getElementById('job-keyword');
@@ -528,30 +518,55 @@
         }
     }
 
-    function applyFilters() {
+    function currentFilterDate() {
         const today = formatDate(new Date());
         const yesterdayDate = new Date();
         yesterdayDate.setDate(yesterdayDate.getDate() - 1);
         const yesterday = formatDate(yesterdayDate);
 
-        const keyword = jobKeyword.value.trim().toLowerCase();
-        const targetDate = filters.range === 'today'
+        return filters.range === 'today'
             ? today
             : filters.range === 'yesterday'
                 ? yesterday
                 : filters.range === 'custom'
                     ? filters.customDate
                     : '';
+    }
 
-        const filtered = jobs.filter(item => {
-            const matchKeyword = keyword
-                ? (item.title + item.desc + item.detail).toLowerCase().includes(keyword)
-                : true;
-            const matchDate = targetDate ? item.date === targetDate : true;
-            return matchKeyword && matchDate;
-        });
+    function showLoading(message = '加载中...') {
+        jobList.innerHTML = '';
+        const loading = document.createElement('li');
+        loading.className = 'empty';
+        loading.textContent = message;
+        jobList.appendChild(loading);
+    }
 
-        renderJobList(filtered);
+    async function fetchJobs() {
+        const params = new URLSearchParams();
+        const keyword = jobKeyword.value.trim();
+        const targetDate = currentFilterDate();
+
+        if (keyword) params.set('keyword', keyword);
+        if (targetDate) params.set('date', targetDate);
+
+        const url = `${API_BASE}/messages${params.toString() ? `?${params}` : ''}`;
+        showLoading('正在加载求人...');
+
+        try {
+            const res = await fetch(url);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            renderJobList(data.items || []);
+        } catch (err) {
+            jobList.innerHTML = '';
+            const errorLi = document.createElement('li');
+            errorLi.className = 'empty';
+            errorLi.textContent = `加载失败：${err.message}`;
+            jobList.appendChild(errorLi);
+            jobDetail.textContent = '暂无可显示的求人';
+        }
     }
 
     dateButtons.forEach(btn => {
@@ -562,7 +577,7 @@
             filters.customDate = '';
             jobDate.value = '';
             jobDate.classList.remove('active');
-            applyFilters();
+            fetchJobs();
         });
     });
 
@@ -580,14 +595,14 @@
             });
             jobDate.classList.remove('active');
         }
-        applyFilters();
+        fetchJobs();
     });
 
     jobKeyword.addEventListener('input', () => {
-        applyFilters();
+        fetchJobs();
     });
 
-    renderJobList(jobs);
+    fetchJobs();
     bindListClick('job-list', 'job-detail');
     bindListClick('person-list', 'person-detail');
 </script>

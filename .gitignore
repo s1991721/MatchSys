@@ -1,2 +1,8 @@
 qiuren/credentials.json
 qiuren/token.json
+qiuren/__pycache__/**
+qiuren/migrations/__pycache__/__init__.cpython-313.pyc
+project/__pycache__/urls.cpython-313.pyc
+project/__pycache__/settings.cpython-313.pyc
+project/__pycache__/urls.cpython-313.pyc
+project/__pycache__/settings.cpython-313.pyc

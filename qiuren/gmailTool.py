@@ -1,8 +1,11 @@
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
+import re
 import base64
 import os.path
 from pathlib import Path
+from html import unescape
+from html.parser import HTMLParser
 
 from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
@@ -265,6 +268,42 @@ class GmailTool:
         """
         从 Gmail API 返回的 message 结构中抽取文本正文（优先 text/plain）。
         """
+
+        class _HTMLStripper(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.parts: List[str] = []
+
+            def handle_starttag(self, tag, attrs):
+                if tag in ("br", "p", "div", "li", "tr"):
+                    self.parts.append("\n")
+
+            def handle_endtag(self, tag):
+                if tag in ("p", "div", "li", "tr", "table"):
+                    self.parts.append("\n")
+
+            def handle_data(self, data):
+                if data:
+                    self.parts.append(data)
+
+            def get_text(self):
+                text = "".join(self.parts)
+                # 去掉过多空行
+                text = re.sub(r"\n{3,}", "\n\n", text)
+                # 行尾空白
+                text = "\n".join(line.rstrip() for line in text.splitlines())
+                return text.strip()
+
+        def html_to_text(html_body: str) -> str:
+            stripper = _HTMLStripper()
+            try:
+                stripper.feed(html_body)
+                stripper.close()
+            except Exception:
+                return html_body
+            text = stripper.get_text()
+            return unescape(text)
+
         def _get_parts(payload):
             if 'parts' in payload:
                 for part in payload['parts']:
@@ -292,6 +331,9 @@ class GmailTool:
             if mime_type == 'text/plain':
                 body_texts.insert(0, text)  # 优先 text/plain
             else:
-                body_texts.append(text)
+                if mime_type == 'text/html':
+                    body_texts.append(html_to_text(text))
+                else:
+                    body_texts.append(text)
 
         return "\n\n".join(body_texts).strip()

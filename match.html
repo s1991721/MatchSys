@@ -503,7 +503,7 @@
 
             const time = document.createElement('div');
             time.className = 'item-time';
-            time.textContent = item.date;
+            time.textContent = formatDisplayDate(item.date);
 
             main.appendChild(title);
             main.appendChild(desc);
@@ -516,6 +516,13 @@
         if (first) {
             jobDetail.textContent = first.dataset.detail || '';
         }
+    }
+
+    function formatDisplayDate(raw) {
+        const d = raw ? new Date(raw) : null;
+        if (!d || Number.isNaN(d.getTime())) return raw || '';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
     function currentFilterDate() {

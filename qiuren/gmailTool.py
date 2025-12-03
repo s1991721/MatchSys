@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
 import base64
 import os.path
+from pathlib import Path
 
 from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
@@ -24,18 +25,25 @@ class GmailTool:
 
     def _build_service(self):
         creds = None
-        if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', self.SCOPES)
+        # Use absolute paths so Django working dir changes won't break token/credentials lookup.
+        base_dir = Path(__file__).resolve().parent.parent
+        token_path = base_dir / "token.json"
+        credentials_path = base_dir / "credentials.json"
+
+        if token_path.exists():
+            creds = Credentials.from_authorized_user_file(token_path, self.SCOPES)
 
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
+                if not credentials_path.exists():
+                    raise FileNotFoundError(f"Google OAuth client file missing: {credentials_path}")
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', self.SCOPES)
+                    credentials_path, self.SCOPES)
                 creds = flow.run_local_server(port=0)
 
-            with open('token.json', 'w') as token:
+            with open(token_path, 'w') as token:
                 token.write(creds.to_json())
 
         return build('gmail', 'v1', credentials=creds)

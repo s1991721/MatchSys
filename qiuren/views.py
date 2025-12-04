@@ -21,21 +21,30 @@ def _parse_date(date_str: str):
 def messages(request):
     keyword = request.GET.get("keyword", "").strip()
     date_str = request.GET.get("date", "").strip()
+    page_str = request.GET.get("page", "1").strip()
+    page_size_str = request.GET.get("page_size", "").strip()
     limit_str = request.GET.get("limit", "").strip()
 
     try:
-        parsed_limit = int(limit_str)
-        limit = min(parsed_limit, 9999) if parsed_limit > 0 else 9999
+        parsed_page = int(page_str)
+        page = parsed_page if parsed_page > 0 else 1
     except ValueError:
-        limit = 9999
+        page = 1
+
+    try:
+        parsed_size = int(page_size_str or limit_str or 20)
+        page_size = min(max(parsed_size, 1), 100)
+    except ValueError:
+        page_size = 20
 
     target_date = _parse_date(date_str)
     query = keyword or ""
 
     try:
-        msgs = tool.fetch_messages(
+        msgs, has_next = tool.fetch_messages(
             query=query,
-            limit=limit,
+            page=page,
+            page_size=page_size,
             start_date=target_date,
             end_date=target_date,
         )
@@ -52,4 +61,9 @@ def messages(request):
             "date": m.get("date") or "",
         })
 
-    return JsonResponse({"items": items})
+    return JsonResponse({
+        "items": items,
+        "page": page,
+        "page_size": page_size,
+        "has_next": has_next,
+    })

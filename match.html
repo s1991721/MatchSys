@@ -292,6 +292,41 @@
             box-shadow: 0 8px 18px rgba(28, 123, 255, 0.2);
         }
 
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 2px 0;
+        }
+
+        .pager-btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #f6f8fd;
+            color: #2f3d52;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+        }
+
+        .pager-btn:hover:not(:disabled) {
+            background: #edf3ff;
+            border-color: #c6d2ea;
+        }
+
+        .pager-btn:disabled {
+            cursor: not-allowed;
+            color: #b0b8c5;
+            background: #f1f3f7;
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
         @media (max-width: 1100px) {
             .row {
                 flex-direction: column;
@@ -331,6 +366,11 @@
             </div>
             <ul class="list jobs" id="job-list">
             </ul>
+            <div class="pagination" id="job-pagination">
+                <button class="pager-btn" id="prev-page" type="button">上一页</button>
+                <div class="page-info" id="page-info">第 1 页</div>
+                <button class="pager-btn" id="next-page" type="button">下一页</button>
+            </div>
         </div>
 
         <div class="panel panel-right">
@@ -478,6 +518,13 @@
     const jobKeyword = document.getElementById('job-keyword');
     const jobDate = document.getElementById('job-date');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const pageInfo = document.getElementById('page-info');
+
+    const PAGE_SIZE = 20;
+    let currentPage = 1;
+    let hasNextPage = false;
 
     const filters = {
         range: 'all',
@@ -578,21 +625,38 @@
                     : '';
     }
 
+    function updatePaginationUI() {
+        if (pageInfo) {
+            pageInfo.textContent = `第 ${currentPage} 页`;
+        }
+        if (prevPageBtn) {
+            prevPageBtn.disabled = currentPage <= 1;
+        }
+        if (nextPageBtn) {
+            nextPageBtn.disabled = !hasNextPage;
+        }
+    }
+
     function showLoading(message = '加载中...') {
         jobList.innerHTML = '';
         const loading = document.createElement('li');
         loading.className = 'empty';
         loading.textContent = message;
         jobList.appendChild(loading);
+        hasNextPage = false;
+        updatePaginationUI();
     }
 
-    async function fetchJobs() {
+    async function fetchJobs(page = 1) {
+        currentPage = page;
         const params = new URLSearchParams();
         const keyword = jobKeyword.value.trim();
         const targetDate = currentFilterDate();
 
         if (keyword) params.set('keyword', keyword);
         if (targetDate) params.set('date', targetDate);
+        params.set('page', String(currentPage));
+        params.set('page_size', String(PAGE_SIZE));
 
         const url = `${API_BASE}/messages${params.toString() ? `?${params}` : ''}`;
         showLoading('正在加载求人...');
@@ -603,7 +667,10 @@
                 throw new Error(`HTTP ${res.status}`);
             }
             const data = await res.json();
+            currentPage = data.page || currentPage;
+            hasNextPage = Boolean(data.has_next);
             renderJobList(data.items || []);
+            updatePaginationUI();
         } catch (err) {
             jobList.innerHTML = '';
             const errorLi = document.createElement('li');
@@ -611,6 +678,8 @@
             errorLi.textContent = `加载失败：${err.message}`;
             jobList.appendChild(errorLi);
             jobDetail.textContent = '暂无可显示的求人';
+            hasNextPage = false;
+            updatePaginationUI();
         }
     }
 
@@ -622,7 +691,7 @@
             filters.customDate = '';
             jobDate.value = '';
             jobDate.classList.remove('active');
-            fetchJobs();
+            fetchJobs(1);
         });
     });
 
@@ -640,18 +709,34 @@
             });
             jobDate.classList.remove('active');
         }
-        fetchJobs();
+        fetchJobs(1);
     });
 
     jobKeyword.addEventListener('input', () => {
-        fetchJobs();
+        fetchJobs(1);
     });
+
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                fetchJobs(currentPage - 1);
+            }
+        });
+    }
+
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => {
+            if (hasNextPage) {
+                fetchJobs(currentPage + 1);
+            }
+        });
+    }
 
     // 先把静态文案按新格式渲染，再绑定事件和拉取接口
     renderDetail(jobDetail, jobDetail.textContent.trim());
     renderDetail(personDetail, personDetail.textContent.trim());
 
-    fetchJobs();
+    fetchJobs(1);
     bindListClick('job-list', 'job-detail');
     bindListClick('person-list', 'person-detail');
 </script>

@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import re
 import base64
 import os.path
@@ -55,13 +55,14 @@ class GmailTool:
     def fetch_messages(
         self,
         query: str = "is:unread",
-        limit: int = 10,
+        page: int = 1,
+        page_size: int = 20,
         mark_seen: bool = False,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> List[dict]:
+    ) -> Tuple[List[dict], bool]:
         """
-        从 Gmail 获取邮件列表（按时间倒序）。使用 list 拿 ID，再批量 get 详情。
+        从 Gmail 获取邮件列表（按时间倒序）。分页返回指定页的数据以及是否存在下一页。
         """
         service = self.service
 
@@ -73,129 +74,159 @@ class GmailTool:
             query_parts.append(f'before:{inclusive_end.strftime("%Y/%m/%d")}')
         final_query = " ".join(q for q in query_parts if q)
 
-        # 1) 先拿 ID（若有分页，按 limit 收够为止）
-        ids: List[str] = []
-        next_token = None
-        remaining = limit
-        while remaining > 0:
+        # Gmail API 的 maxResults 上限为 500；这里固定分页大小（默认20）
+        page = max(int(page or 1), 1)
+        page_size = max(1, min(int(page_size or 1), 500))
+        target_count = page * page_size + 1  # 多取 1 条用于判断是否有下一页
+
+        # 用于缓存结果与分页标记
+        messages: List[dict] = []
+        next_page_token: Optional[str] = None
+        current_token: Optional[str] = None
+
+        def in_range(ts: Optional[float]) -> bool:
+            if not (start_date or end_date):
+                return True
+            if ts is None or ts == float("-inf"):
+                return False
+            try:
+                local_tz = datetime.now().astimezone().tzinfo
+                local_dt = datetime.fromtimestamp(ts, tz=local_tz)
+                local_d = local_dt.date()
+            except Exception:
+                return False
+            if start_date and local_d < start_date:
+                return False
+            if end_date and local_d > end_date:
+                return False
+            return True
+
+        def fetch_details(ids: List[str]) -> List[dict]:
+            detail_items: List[dict] = []
+
+            def handle_detail(_, response, exception):
+                if exception:
+                    return
+                detail_items.append(response)
+
+            for start in range(0, len(ids), self.BATCH_LIMIT):
+                batch = service.new_batch_http_request()
+                for msg_id in ids[start:start + self.BATCH_LIMIT]:
+                    batch.add(
+                        service.users().messages().get(
+                            userId='me',
+                            id=msg_id,
+                            format='full',
+                        ),
+                        callback=handle_detail,
+                    )
+                batch.execute()
+            return detail_items
+
+        while len(messages) < target_count:
             resp = service.users().messages().list(
                 userId='me',
                 q=final_query,
-                maxResults=min(remaining, 500),
-                pageToken=next_token,
+                maxResults=page_size,
+                pageToken=current_token,
             ).execute()
-            items = resp.get('messages', [])
-            if not items:
-                break
-            ids.extend(item['id'] for item in items)
-            remaining = limit - len(ids)
-            next_token = resp.get('nextPageToken')
-            if not next_token:
-                break
 
-        if not ids:
-            return []
+            ids = [item.get('id') for item in resp.get('messages', []) if item.get('id')]
+            if not ids:
+                current_token = resp.get('nextPageToken')
+                next_page_token = current_token
+                if not current_token:
+                    break
+                continue
 
-        # 2) 批量 get 详情
-        details: List[dict] = []
+            details = fetch_details(ids)
 
-        def handle_detail(_, response, exception):
-            if exception:
-                return
-            details.append(response)
+            for msg in details:
+                headers = msg.get('payload', {}).get('headers', [])
 
-        for start in range(0, len(ids), self.BATCH_LIMIT):
-            batch = service.new_batch_http_request()
-            for msg_id in ids[start:start + self.BATCH_LIMIT]:
-                batch.add(
-                    service.users().messages().get(
-                        userId='me',
-                        id=msg_id,
-                        format='full',
-                    ),
-                    callback=handle_detail,
-                )
-            batch.execute()
+                def get_header(name: str) -> str:
+                    for h in headers:
+                        if h['name'].lower() == name.lower():
+                            return h['value']
+                    return ""
 
-        messages: List[dict] = []
-        for msg in details:
-            headers = msg.get('payload', {}).get('headers', [])
+                def get_header_list(name: str) -> List[str]:
+                    return [h['value'] for h in headers if h.get('name', '').lower() == name.lower()]
 
-            def get_header(name: str) -> str:
-                for h in headers:
-                    if h['name'].lower() == name.lower():
-                        return h['value']
-                return ""
+                subject = get_header("Subject")
+                from_ = get_header("From")
+                to = get_header("To")
+                date_header = get_header("Date")
+                internal_ts_ms = msg.get("internalDate")  # 接收时间（毫秒）
+                received_headers = get_header_list("Received")
 
-            def get_header_list(name: str) -> List[str]:
-                return [h['value'] for h in headers if h.get('name', '').lower() == name.lower()]
+                body_text = self._extract_text_from_gmail_msg(msg)
 
-            subject = get_header("Subject")
-            from_ = get_header("From")
-            to = get_header("To")
-            date_header = get_header("Date")
-            internal_ts_ms = msg.get("internalDate")  # 接收时间（毫秒）
-            received_headers = get_header_list("Received")
+                # 解析 Date 头；若缺失则退化为 internalDate
+                iso_ts = ""
+                ts_float = float("-inf")
+                try:
+                    received_dt = None
+                    # Gmail 的 Received 会有多个，取第一条（最新一跳）末尾分号后的时间
+                    if received_headers:
+                        for raw in received_headers:
+                            if ";" not in raw:
+                                continue
+                            _, _, after = raw.rpartition(";")
+                            candidate = after.strip()
+                            if not candidate:
+                                continue
+                            try:
+                                received_dt = parsedate_to_datetime(candidate)
+                                if received_dt:
+                                    break
+                            except Exception:
+                                continue
+                        if not received_dt:
+                            try:
+                                received_dt = parsedate_to_datetime(received_headers[0])
+                            except Exception:
+                                received_dt = None
 
-            body_text = self._extract_text_from_gmail_msg(msg)
-
-            # 解析 Date 头；若缺失则退化为 internalDate
-            iso_ts = ""
-            ts_float = float("-inf")
-            try:
-                received_dt = None
-                # Gmail 的 Received 会有多个，取第一条（最新一跳）末尾分号后的时间
-                if received_headers:
-                    for raw in received_headers:
-                        if ";" not in raw:
-                            continue
-                        _, _, after = raw.rpartition(";")
-                        candidate = after.strip()
-                        if not candidate:
-                            continue
+                    if not received_dt and date_header:
                         try:
-                            received_dt = parsedate_to_datetime(candidate)
-                            if received_dt:
-                                break
-                        except Exception:
-                            continue
-                    if not received_dt:
-                        try:
-                            received_dt = parsedate_to_datetime(received_headers[0])
+                            received_dt = parsedate_to_datetime(date_header)
                         except Exception:
                             received_dt = None
 
-                if not received_dt and date_header:
-                    try:
-                        received_dt = parsedate_to_datetime(date_header)
-                    except Exception:
-                        received_dt = None
-
-                if received_dt:
-                    if received_dt.tzinfo is None:
-                        received_dt = received_dt.replace(tzinfo=timezone.utc)
-                    ts_float = received_dt.timestamp()
-                    iso_ts = received_dt.astimezone(timezone.utc).isoformat()
-            except Exception:
-                ts_float = float("-inf")
-
-            if iso_ts == "" and internal_ts_ms:
-                try:
-                    ts_float = int(internal_ts_ms) / 1000
-                    iso_ts = datetime.fromtimestamp(ts_float, tz=timezone.utc).isoformat()
+                    if received_dt:
+                        if received_dt.tzinfo is None:
+                            received_dt = received_dt.replace(tzinfo=timezone.utc)
+                        ts_float = received_dt.timestamp()
+                        iso_ts = received_dt.astimezone(timezone.utc).isoformat()
                 except Exception:
                     ts_float = float("-inf")
 
-            messages.append({
-                "id": msg.get("id"),
-                "subject": subject,
-                "from": from_,
-                "to": to,
-                "date": iso_ts or date_header or "",  # 前端显示使用 ISO，缺失则原始
-                "date_header": date_header,
-                "internal_ts": ts_float,
-                "body": body_text,
-            })
+                if iso_ts == "" and internal_ts_ms:
+                    try:
+                        ts_float = int(internal_ts_ms) / 1000
+                        iso_ts = datetime.fromtimestamp(ts_float, tz=timezone.utc).isoformat()
+                    except Exception:
+                        ts_float = float("-inf")
+
+                message = {
+                    "id": msg.get("id"),
+                    "subject": subject,
+                    "from": from_,
+                    "to": to,
+                    "date": iso_ts or date_header or "",  # 前端显示使用 ISO，缺失则原始
+                    "date_header": date_header,
+                    "internal_ts": ts_float,
+                    "body": body_text,
+                }
+
+                if in_range(message.get("internal_ts")):
+                    messages.append(message)
+
+            current_token = resp.get('nextPageToken')
+            next_page_token = current_token
+            if not current_token:
+                break
 
         # 3) 按时间倒序（优先 Date 头，退化到 internalDate）
         messages.sort(
@@ -203,30 +234,14 @@ class GmailTool:
             reverse=True
         )
 
-        # 3.1) 再用本地时区按日期做一次兜底过滤（防止 Gmail 搜索的 GMT 边界与本地日历不一致）
-        if start_date or end_date:
-            local_tz = datetime.now().astimezone().tzinfo
-
-            def in_range(ts: Optional[float]) -> bool:
-                if ts is None or ts == float("-inf"):
-                    return False
-                try:
-                    local_dt = datetime.fromtimestamp(ts, tz=local_tz)
-                    local_d = local_dt.date()
-                except Exception:
-                    return False
-                if start_date and local_d < start_date:
-                    return False
-                if end_date and local_d > end_date:
-                    return False
-                return True
-
-            messages = [m for m in messages if in_range(m.get("internal_ts"))]
+        start_index = (page - 1) * page_size
+        end_index = start_index + page_size
+        page_messages = messages[start_index:end_index]
+        has_next = len(messages) > end_index or (next_page_token is not None and len(messages) > start_index)
 
         # 4) 可选标记为已读（批量）
-        if mark_seen and ids:
-            mark_batch = service.new_batch_http_request()
-            ids_to_mark = [m.get("id") for m in messages if m.get("id")] if (start_date or end_date) else ids
+        if mark_seen and page_messages:
+            ids_to_mark = [m.get("id") for m in page_messages if m.get("id")]
             for start in range(0, len(ids_to_mark), self.BATCH_LIMIT):
                 mark_batch = service.new_batch_http_request()
                 for msg_id in ids_to_mark[start:start + self.BATCH_LIMIT]:
@@ -239,7 +254,7 @@ class GmailTool:
                     )
                 mark_batch.execute()
 
-        return messages
+        return page_messages, has_next
 
     def send_message(self, to: str, subject: str, body: str, sender: str = None):
         """

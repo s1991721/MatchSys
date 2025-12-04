@@ -11,3 +11,5 @@ project/__pycache__/settings.cpython-313.pyc
 project/__pycache__/settings.cpython-313.pyc
 .idea/project.iml
 .DS_Store
+credentials.json
+token.json

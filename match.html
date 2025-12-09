@@ -672,7 +672,7 @@
         const d = raw ? new Date(raw) : null;
         if (!d || Number.isNaN(d.getTime())) return '未刷新';
         const pad = (n) => String(n).padStart(2, '0');
-        return `${pad(d.getHours())}:${pad(d.getMinutes())} 刷新`;
+        return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} 刷新`;
     }
 
     function currentFilterDate() {

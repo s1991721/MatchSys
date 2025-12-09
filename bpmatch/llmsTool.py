@@ -13,7 +13,6 @@ llm = ChatOllama(
     temperature=0,
 )
 
-
 # ---------------------------
 #  分析邮件标题 返回邮件类型
 # ---------------------------
@@ -119,7 +118,6 @@ def qiuanjian_detail_analysis(text: str) -> str:
         ),
         HumanMessage(content=text),
     ]
-
     ai_msg = llm.invoke(messages)
     return ai_msg.content.strip()
 

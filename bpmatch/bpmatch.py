@@ -28,6 +28,7 @@ def fetch_recent_two_weeks_emails(
     page = 1
     all_messages: List[Dict] = []
 
+    # todo 记得正式生产环境改回true
     while page < 5:
         messages, has_next = gmail_tool.fetch_messages(
             query=query,
@@ -48,6 +49,97 @@ def fetch_recent_two_weeks_emails(
     return all_messages
 
 
+def _parse_date(date_str: str):
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    except Exception:
+        return None
+
+
+def _normalize_str(value, default: str = "") -> str:
+    """
+    Ensure incoming values (possibly None/int) are converted to stripped strings.
+    """
+    if value is None:
+        return default
+    try:
+        return str(value).strip()
+    except Exception:
+        return default
+
+
+def fetch_page_emails(
+    keyword: str = "",
+    date_str: str = "",
+    start_date_str: str = "",
+    end_date_str: str = "",
+    page_str: str = "1",
+    page_size_str: str = "",
+    limit_str: str = "",
+) -> Dict:
+    """
+    Fetch a single page of emails with optional keyword/date filters.
+    """
+
+    keyword = _normalize_str(keyword)
+    date_str = _normalize_str(date_str)
+    start_date_str = _normalize_str(start_date_str)
+    end_date_str = _normalize_str(end_date_str)
+    page_str = _normalize_str(page_str, "1")
+    page_size_str = _normalize_str(page_size_str)
+    limit_str = _normalize_str(limit_str)
+
+    try:
+        parsed_page = int(page_str)
+        page = parsed_page if parsed_page > 0 else 1
+    except ValueError:
+        page = 1
+
+    try:
+        parsed_size = int(page_size_str or limit_str or 20)
+        page_size = min(max(parsed_size, 1), 100)
+    except ValueError:
+        page_size = 20
+
+    # 单日优先（保持原有 date 参数兼容）；否则使用 start/end 区间。
+    if date_str:
+        start_date = end_date = _parse_date(date_str)
+    else:
+        start_date = _parse_date(start_date_str)
+        end_date = _parse_date(end_date_str)
+
+    query = keyword or ""
+
+    messages, has_next = gmail_tool.fetch_messages(
+        query=query,
+        page=page,
+        page_size=page_size,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    items = []
+    for m in messages:
+        if qiuren_email_filter(m.get("subject")):
+            items.append(
+                {
+                    "id": m.get("id") or "",
+                    "title": m.get("subject") or "(无标题)",
+                    "desc": m.get("from") or "",
+                    "detail": m.get("body") or "",
+                    "date": m.get("date") or "",
+                    "type": "0",
+                }
+            )
+
+    return {
+        "items": items,
+        "page": page,
+        "page_size": page_size,
+        "has_next": has_next,
+    }
+
+
 def qiuanjian_email_filter(emails: List[Dict]) -> List[Dict]:
     """
     Classify emails by title using llmsTool.title_analysis and return enriched copies.
@@ -64,6 +156,18 @@ def qiuanjian_email_filter(emails: List[Dict]) -> List[Dict]:
         if label == 1:  # 仅保留「求案件」类型
             classified.append({**email, "type": label})
     return classified
+
+
+def qiuren_email_filter(title: str) -> bool:
+    label_raw = title_analysis(title)
+    try:
+        label = int(str(label_raw).strip())
+    except Exception:
+        label = -1
+
+    if label == 0:  # 仅保留「求人」类型
+        return True
+    return False
 
 
 if __name__ == "__main__":

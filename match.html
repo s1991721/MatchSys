@@ -77,6 +77,24 @@
             box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
         }
 
+        .panel-refresh {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #5a6c86;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .panel-refresh svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
         ul {
             list-style: none;
         }
@@ -374,7 +392,15 @@
         </div>
 
         <div class="panel panel-right">
-            <div class="panel-title">人员列表</div>
+            <div class="panel-title">
+                <span>人员列表</span>
+                <span class="panel-refresh" aria-label="刷新时间">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 2.5a1 1 0 0 1 1 1v2.836l1.768-1.768a1 1 0 1 1 1.414 1.414l-3.535 3.536a1 1 0 0 1-1.414 0L7.698 5.982A1 1 0 0 1 9.112 4.568L10.5 5.957V3.5a1 1 0 0 1 1-1Zm-7 11a7 7 0 0 1 12.195-4.949 1 1 0 1 0 1.41-1.418A9 9 0 1 0 12 21.5a9.01 9.01 0 0 0 8.352-5.512 1 1 0 1 0-1.85-.77A7 7 0 0 1 5 13.5Z"/>
+                    </svg>
+                    <span class="panel-refresh-time">10:24 刷新</span>
+                </span>
+            </div>
             <ul class="list persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
                 <li class="item active"
@@ -515,6 +541,9 @@
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
+    const personList = document.getElementById('person-list');
+    const personRefresh = document.querySelector('.panel-refresh');
+    const personRefreshTime = document.querySelector('.panel-refresh-time');
     const jobKeyword = document.getElementById('job-keyword');
     const jobDate = document.getElementById('job-date');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
@@ -603,11 +632,60 @@
         }
     }
 
+    function renderPersonList(items) {
+        if (!personList) return;
+        personList.innerHTML = '';
+
+        if (!items.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = '暂无技术者';
+            personList.appendChild(empty);
+            renderDetail(personDetail, '暂无可显示的技术者');
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'item' + (index === 0 ? ' active' : '');
+            li.dataset.detail = item.detail || '';
+            li.dataset.id = item.id || '';
+
+            const header = document.createElement('div');
+            header.className = 'person-header';
+
+            const name = document.createElement('span');
+            name.className = 'person-name';
+            name.textContent = item.name || '(无标题)';
+
+            const belong = document.createElement('span');
+            belong.className = 'person-belong';
+            belong.textContent = item.belong || '';
+
+            header.appendChild(name);
+            header.appendChild(belong);
+            li.appendChild(header);
+            personList.appendChild(li);
+        });
+
+        const first = personList.querySelector('.item');
+        if (first) {
+            renderDetail(personDetail, first.dataset.detail || '');
+        }
+    }
+
     function formatDisplayDate(raw) {
         const d = raw ? new Date(raw) : null;
         if (!d || Number.isNaN(d.getTime())) return raw || '';
         const pad = (n) => String(n).padStart(2, '0');
         return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    function formatRefreshTime(raw) {
+        const d = raw ? new Date(raw) : null;
+        if (!d || Number.isNaN(d.getTime())) return '未刷新';
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${pad(d.getHours())}:${pad(d.getMinutes())} 刷新`;
     }
 
     function currentFilterDate() {
@@ -683,6 +761,41 @@
         }
     }
 
+    async function fetchPersons(refresh = false) {
+        if (personRefreshTime) {
+            personRefreshTime.textContent = '刷新中...';
+        }
+        if (personList) {
+            personList.innerHTML = '';
+            const loading = document.createElement('li');
+            loading.className = 'empty';
+            loading.textContent = '正在加载技术者...';
+            personList.appendChild(loading);
+        }
+
+        try {
+            const url = `${API_BASE}/persons${refresh ? '?refresh=1' : ''}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            renderPersonList(data.items || []);
+            if (personRefreshTime) {
+                personRefreshTime.textContent = formatRefreshTime(data.update_time);
+            }
+        } catch (err) {
+            if (personList) {
+                personList.innerHTML = '';
+                const errorLi = document.createElement('li');
+                errorLi.className = 'empty';
+                errorLi.textContent = `加载失败：${err.message}`;
+                personList.appendChild(errorLi);
+            }
+            if (personRefreshTime) {
+                personRefreshTime.textContent = '刷新失败';
+            }
+        }
+    }
+
     dateButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             dateButtons.forEach(b => b.classList.remove('active'));
@@ -732,6 +845,12 @@
         });
     }
 
+    if (personRefresh) {
+        personRefresh.addEventListener('click', () => {
+            fetchPersons(true);
+        });
+    }
+
     // 先把静态文案按新格式渲染，再绑定事件和拉取接口
     renderDetail(jobDetail, jobDetail.textContent.trim());
     renderDetail(personDetail, personDetail.textContent.trim());
@@ -739,6 +858,7 @@
     fetchJobs(1);
     bindListClick('job-list', 'job-detail');
     bindListClick('person-list', 'person-detail');
+    fetchPersons(false);
 </script>
 </body>
 </html>

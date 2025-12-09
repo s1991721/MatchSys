@@ -18,9 +18,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from bpmatch.views import messages
+from bpmatch.views import messages, persons
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("messages", messages),
+    path("persons", persons),
 ]

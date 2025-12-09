@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-from gmailTool import GmailTool
-from llmsTool import title_analysis
+from .gmailTool import GmailTool
+from .llmsTool import title_analysis
 
 # Reuse one Gmail client to avoid repeating OAuth flows.
 gmail_tool = GmailTool()
@@ -19,8 +19,9 @@ def fetch_recent_two_weeks_emails(
     """
     Fetch all emails from the past two weeks (inclusive), using the current time as the end point.
     """
+    global qiuanjian_message, update_time
     qiuanjian_message = None
-
+    update_time = None
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=14)
 
@@ -43,7 +44,7 @@ def fetch_recent_two_weeks_emails(
         page += 1
 
     qiuanjian_message = all_messages
-    update_time = end_date
+    update_time = datetime.now()
     return all_messages
 
 

@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from qiuren.views import messages
+from bpmatch.views import messages
 
 urlpatterns = [
     path("admin/", admin.site.urls),

@@ -526,6 +526,7 @@
     }
 
     const API_BASE = 'http://localhost:8000';
+    const JOB_CLICK_ENDPOINT = `${API_BASE}/job-click`;
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
@@ -549,7 +550,7 @@
     };
 
     // 公共函数：给列表加点击事件
-    function bindListClick(listId, detailId) {
+    function bindListClick(listId, detailId, onSelect) {
         const list = document.getElementById(listId);
         const detail = document.getElementById(detailId);
 
@@ -564,6 +565,14 @@
 
             const text = item.getAttribute('data-detail') || '';
             renderDetail(detail, text);
+
+            if (typeof onSelect === 'function') {
+                try {
+                    onSelect(item);
+                } catch (err) {
+                    console.error('handleSelect failed', err);
+                }
+            }
         });
     }
 
@@ -589,8 +598,11 @@
         items.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'item' + (index === 0 ? ' active' : '');
-            li.dataset.detail = item.detail;
-            li.dataset.id = item.id;
+            const detail = item.detail || '';
+            const id = item.id || '';
+            li.dataset.detail = detail;
+            li.dataset.id = id;
+            li.dataset.item = JSON.stringify({ ...item, detail, id });
 
             const main = document.createElement('div');
             main.className = 'item-main';
@@ -854,7 +866,24 @@
     renderDetail(personDetail, personDetail.textContent.trim());
 
     fetchJobs(1);
-    bindListClick('job-list', 'job-detail');
+    bindListClick('job-list', 'job-detail', async (item) => {
+        const raw = item?.dataset?.item || '{}';
+        let payload;
+        try {
+            payload = JSON.parse(raw);
+        } catch {
+            payload = {};
+        }
+        try {
+            await fetch(JOB_CLICK_ENDPOINT, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload),
+            });
+        } catch (err) {
+            console.error('上报点击事件失败', err);
+        }
+    });
     bindListClick('person-list', 'person-detail');
     fetchPersons(false);
 </script>

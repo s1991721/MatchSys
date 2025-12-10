@@ -18,10 +18,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from bpmatch.views import messages, persons
+from bpmatch.views import messages, persons, log_job_click
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("messages", messages),
     path("persons", persons),
+    path("job-click", log_job_click),
 ]

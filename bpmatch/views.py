@@ -1,3 +1,5 @@
+import json
+
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
@@ -55,3 +57,21 @@ def persons(request):
             "update_time": refreshed_at.isoformat() if refreshed_at else "",
         }
     )
+
+
+@csrf_exempt
+def log_job_click(request):
+    """
+    Receive a job click event from the frontend and log the payload for debugging.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST is allowed"}, status=405)
+
+    try:
+        raw_body = request.body.decode("utf-8") if request.body else "{}"
+        payload = json.loads(raw_body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    print(f"[job_click] 收到求人点击: {json.dumps(payload, ensure_ascii=False)}")
+    return JsonResponse({"status": "ok"})

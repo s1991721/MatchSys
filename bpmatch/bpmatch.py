@@ -1,8 +1,13 @@
+import json
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
 from .gmailTool import GmailTool
-from .llmsTool import title_analysis, qiuren_detail_analysis
+from .llmsTool import (
+    title_analysis,
+    qiuren_detail_analysis,
+    qiuanjian_detail_analysis,
+)
 
 # Reuse one Gmail client to avoid repeating OAuth flows.
 gmail_tool = GmailTool()
@@ -29,7 +34,7 @@ def fetch_recent_two_weeks_emails(
     all_messages: List[Dict] = []
 
     # todo 记得正式生产环境改回true
-    while page < 5:
+    while page < 2:
         messages, has_next = gmail_tool.fetch_messages(
             query=query,
             page=page,
@@ -154,7 +159,38 @@ def qiuanjian_email_filter(emails: List[Dict]) -> List[Dict]:
             label = -1
 
         if label == 1:  # 仅保留「求案件」类型
-            classified.append({**email, "type": label})
+            detail_text = _normalize_str(
+                email.get("body") or email.get("detail") or ""
+            )
+            analysis_json: Any
+            try:
+                analysis_raw = (
+                    qiuanjian_detail_analysis(detail_text) if detail_text else ""
+                )
+                try:
+                    analysis_json = json.loads(analysis_raw) if analysis_raw else {}
+                except Exception:
+                    analysis_json = {"raw": analysis_raw}
+            except Exception as exc:
+                print(f"[qiuanjian_email_filter] 解析求案件正文失败: {exc}")
+                analysis_json = {"error": str(exc)}
+
+            extra_fields: Dict[str, Any]
+            if isinstance(analysis_json, dict):
+                extra_fields = analysis_json
+            else:
+                extra_fields = {"analysis_raw": analysis_json}
+
+            to_add = {**email, "type": label, **extra_fields}
+            try:
+                print(
+                    "[qiuanjian_email_filter] 即将添加:",
+                    json.dumps(to_add, ensure_ascii=False),
+                )
+            except Exception as exc:
+                print(f"[qiuanjian_email_filter] 打印对象失败: {exc}")
+
+            classified.append(to_add)
     return classified
 
 

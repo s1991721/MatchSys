@@ -34,6 +34,8 @@
         .row {
             display: flex;
             gap: 14px;
+            width: 100%;
+            min-width: 0;
         }
 
         .row + .row {
@@ -49,14 +51,17 @@
             display: flex;
             flex-direction: column;
             min-height: 240px;
+            min-width: 0;
         }
 
         .panel-left {
             flex: 1.2;
+            min-width: 0;
         }
 
         .panel-right {
             flex: 1;
+            min-width: 0;
         }
 
         .panel-title {
@@ -226,11 +231,15 @@
             font-weight: 600;
             font-size: 14px;
             margin-bottom: 2px;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .item-desc {
             font-size: 13px;
             color: var(--muted);
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .item-time {
@@ -256,6 +265,8 @@
             flex: 1;
             min-width: 0;
             font-size: 14px;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         .person-meta {

@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Any
 
 from .gmailTool import GmailTool
-from .llmsTool import title_analysis
+from .llmsTool import title_analysis, qiuren_detail_analysis
 
 # Reuse one Gmail client to avoid repeating OAuth flows.
 gmail_tool = GmailTool()
@@ -168,6 +168,26 @@ def qiuren_email_filter(title: str) -> bool:
     if label == 0:  # 仅保留「求人」类型
         return True
     return False
+
+
+def match(job_payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Analyze a 求人邮件正文并打印结果。
+    """
+    detail = _normalize_str(
+        job_payload.get("detail") or job_payload.get("body") or ""
+    )
+    if not detail:
+        print("[match] 求人正文为空，无法分析")
+        return {"analysis": "", "error": "empty detail"}
+
+    try:
+        analysis = qiuren_detail_analysis(detail)
+        print(f"[match] 求人分析结果: {analysis}")
+        return {"analysis": analysis}
+    except Exception as exc:
+        print(f"[match] 求人分析异常: {exc}")
+        return {"analysis": "", "error": str(exc)}
 
 
 if __name__ == "__main__":

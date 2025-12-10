@@ -74,4 +74,10 @@ def log_job_click(request):
         return JsonResponse({"error": "Invalid JSON body"}, status=400)
 
     print(f"[job_click] 收到求人点击: {json.dumps(payload, ensure_ascii=False)}")
-    return JsonResponse({"status": "ok"})
+    try:
+        match_result = bpmatch.match(payload)
+    except Exception as exc:
+        print(f"[job_click] 调用 match 失败: {exc}")
+        return JsonResponse({"error": str(exc)}, status=500)
+
+    return JsonResponse({"status": "ok", "match": match_result})

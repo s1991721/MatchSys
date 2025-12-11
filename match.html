@@ -648,7 +648,7 @@
         items.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'item' + (index === 0 ? ' active' : '');
-            li.dataset.detail = item.detail || '';
+            li.dataset.detail = item.detail || item.body || item.desc || '';
             li.dataset.id = item.id || '';
 
             const header = document.createElement('div');
@@ -656,14 +656,14 @@
 
             const name = document.createElement('span');
             name.className = 'person-name';
-            name.textContent = item.name || '(无标题)';
+            name.textContent = item.name || item.title || item.subject || '(无标题)';
 
             const meta = document.createElement('div');
             meta.className = 'person-meta';
 
             const belong = document.createElement('span');
             belong.className = 'person-belong';
-            belong.textContent = item.belong || '';
+            belong.textContent = item.belong || item.from || '';
 
             const time = document.createElement('span');
             time.className = 'person-time';
@@ -875,13 +875,42 @@
             payload = {};
         }
         try {
-            await fetch(JOB_CLICK_ENDPOINT, {
+            const res = await fetch(JOB_CLICK_ENDPOINT, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload),
             });
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
+            const data = await res.json();
+            const rawMatches =
+                (data && data.matches) ||
+                (data && data.match && data.match.matches) ||
+                [];
+            const matchItems = Array.isArray(rawMatches)
+                ? rawMatches
+                : typeof rawMatches === 'object' && rawMatches !== null
+                    ? Object.values(rawMatches)
+                    : [];
+
+            if (personRefreshTime) {
+                personRefreshTime.textContent = '匹配结果（刚刚）';
+            }
+            renderPersonList(matchItems);
         } catch (err) {
             console.error('上报点击事件失败', err);
+            if (personList) {
+                personList.innerHTML = '';
+                const errorLi = document.createElement('li');
+                errorLi.className = 'empty';
+                errorLi.textContent = `匹配失败：${err.message}`;
+                personList.appendChild(errorLi);
+                renderDetail(personDetail, '暂无可显示的技术者');
+            }
+            if (personRefreshTime) {
+                personRefreshTime.textContent = '匹配失败';
+            }
         }
     });
     bindListClick('person-list', 'person-detail');

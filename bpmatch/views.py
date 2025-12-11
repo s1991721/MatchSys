@@ -80,4 +80,26 @@ def log_job_click(request):
         print(f"[job_click] 调用 match 失败: {exc}")
         return JsonResponse({"error": str(exc)}, status=500)
 
-    return JsonResponse({"status": "ok", "match": match_result})
+    # 标准化匹配结果，方便前端直接渲染人员列表
+    matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
+    items = []
+    for idx, match in enumerate(matches_raw or []):
+        items.append(
+            {
+                "id": match.get("id") or f"match-{idx}",
+                "name": match.get("subject")
+                or match.get("title")
+                or "(无标题)",
+                "belong": match.get("from") or "",
+                "detail": match.get("body") or match.get("detail") or "",
+                "date": match.get("date") or "",
+            }
+        )
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "match": match_result,
+            "matches": items,
+        }
+    )

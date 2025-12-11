@@ -371,6 +371,28 @@
             background: #f1f3f7;
         }
 
+        .loading-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #c9d5ea;
+            border-top-color: var(--primary);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .page-info {
             font-size: 13px;
             color: var(--muted);
@@ -771,17 +793,20 @@
         }
     }
 
+    function setPersonLoading(message = '正在匹配技术者...') {
+        if (!personList) return;
+        personList.innerHTML = '';
+        const loading = document.createElement('li');
+        loading.className = 'empty';
+        loading.innerHTML = `<span class="loading-row"><span class="spinner" aria-hidden="true"></span>${sanitize(message)}</span>`;
+        personList.appendChild(loading);
+    }
+
     async function fetchPersons(refresh = false) {
         if (personRefreshTime) {
             personRefreshTime.textContent = '刷新中...';
         }
-        if (personList) {
-            personList.innerHTML = '';
-            const loading = document.createElement('li');
-            loading.className = 'empty';
-            loading.textContent = '正在加载技术者...';
-            personList.appendChild(loading);
-        }
+        setPersonLoading('正在加载技术者...');
 
         try {
             const url = `${API_BASE}/persons${refresh ? '?refresh=1' : ''}`;
@@ -873,6 +898,10 @@
             payload = JSON.parse(raw);
         } catch {
             payload = {};
+        }
+        setPersonLoading('正在匹配技术者...');
+        if (personRefreshTime) {
+            personRefreshTime.textContent = '匹配中...';
         }
         try {
             const res = await fetch(JOB_CLICK_ENDPOINT, {

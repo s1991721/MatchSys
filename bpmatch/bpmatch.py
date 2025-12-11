@@ -13,19 +13,23 @@ from .llmsTool import (
 gmail_tool = GmailTool()
 
 qiuanjian_message = None
+qiuanjian_jponly_message = None
+qiuanjian_other_message = None
 update_time = None
 
 
 def fetch_recent_two_weeks_emails(
     query: str = "",
     mark_seen: bool = False,
-    page_size: int = 20,
+    page_size: int = 100,
 ) -> List[Dict]:
     """
     Fetch all emails from the past two weeks (inclusive), using the current time as the end point.
     """
-    global qiuanjian_message, update_time
+    global qiuanjian_message, qiuanjian_jponly_message, qiuanjian_other_message, update_time
     qiuanjian_message = None
+    qiuanjian_jponly_message = None
+    qiuanjian_other_message = None
     update_time = None
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=14)
@@ -51,7 +55,7 @@ def fetch_recent_two_weeks_emails(
 
     qiuanjian_message = all_messages
     update_time = datetime.now()
-    return all_messages
+    return qiuanjian_jponly_message
 
 
 def _parse_date(date_str: str):
@@ -149,6 +153,7 @@ def qiuanjian_email_filter(emails: List[Dict]) -> List[Dict]:
     """
     Classify emails by title using llmsTool.title_analysis and return enriched copies.
     """
+    global qiuanjian_jponly_message, qiuanjian_other_message
     classified: List[Dict] = []
     for email in emails:
         subject = email.get("subject") or ""
@@ -159,9 +164,7 @@ def qiuanjian_email_filter(emails: List[Dict]) -> List[Dict]:
             label = -1
 
         if label == 1:  # 仅保留「求案件」类型
-            detail_text = _normalize_str(
-                email.get("body") or email.get("detail") or ""
-            )
+            detail_text = _normalize_str(email.get("body") or email.get("detail") or "")
             analysis_json: Any
             try:
                 analysis_raw = (
@@ -190,6 +193,16 @@ def qiuanjian_email_filter(emails: List[Dict]) -> List[Dict]:
             except Exception as exc:
                 print(f"[qiuanjian_email_filter] 打印对象失败: {exc}")
 
+            country_str = str(to_add.get("country_code", "1")).strip()
+            if country_str == "0":
+                if qiuanjian_jponly_message is None:
+                    qiuanjian_jponly_message = []
+                qiuanjian_jponly_message.append(to_add)
+            if country_str == "1":
+                if qiuanjian_other_message is None:
+                    qiuanjian_other_message = []
+                qiuanjian_other_message.append(to_add)
+
             classified.append(to_add)
     return classified
 
@@ -210,9 +223,7 @@ def match(job_payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze a 求人邮件正文并打印结果。
     """
-    detail = _normalize_str(
-        job_payload.get("detail") or job_payload.get("body") or ""
-    )
+    detail = _normalize_str(job_payload.get("detail") or job_payload.get("body") or "")
     if not detail:
         print("[match] 求人正文为空，无法分析")
         return {"analysis": "", "error": "empty detail"}

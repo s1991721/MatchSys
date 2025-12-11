@@ -77,6 +77,22 @@ def _normalize_str(value, default: str = "") -> str:
         return default
 
 
+def _normalize_skills(skills_raw) -> List[str]:
+    """
+    Normalize skills into lowercased unique list.
+    """
+    if not isinstance(skills_raw, (list, tuple, set)):
+        return []
+    dedup = []
+    seen = set()
+    for skill in skills_raw:
+        skill_str = str(skill).strip().lower()
+        if skill_str and skill_str not in seen:
+            dedup.append(skill_str)
+            seen.add(skill_str)
+    return dedup
+
+
 def fetch_page_emails(
     keyword: str = "",
     date_str: str = "",
@@ -221,20 +237,57 @@ def qiuren_email_filter(title: str) -> bool:
 
 def match(job_payload: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Analyze a 求人邮件正文并打印结果。
+    Analyze a 求人邮件正文，返回分析结果、国籍分支及匹配到的求案件列表。
     """
     detail = _normalize_str(job_payload.get("detail") or job_payload.get("body") or "")
     if not detail:
         print("[match] 求人正文为空，无法分析")
         return {"analysis": "", "error": "empty detail"}
 
+    # 1) 调用 LLM 做正文分析
     try:
         analysis = qiuren_detail_analysis(detail)
         print(f"[match] 求人分析结果: {analysis}")
-        return {"analysis": analysis}
     except Exception as exc:
         print(f"[match] 求人分析异常: {exc}")
         return {"analysis": "", "error": str(exc)}
+
+    # 2) 解析分析结果
+    country = 1
+    matches: List[Dict[str, Any]] = []
+    skills_from_analysis: List[str] = []
+    try:
+        analysis_json = json.loads(analysis)
+        if isinstance(analysis_json, dict):
+            try:
+                country = int(str(analysis_json.get("country", 1)).strip())
+            except Exception:
+                country = 1
+
+            skills_from_analysis = _normalize_skills(analysis_json.get("skills", []))
+
+            if country == 0:
+                print("[match] 国籍=0，走日本籍分支")
+            elif country == 1:
+                print("[match] 国籍=1，走非日本籍分支")
+    except Exception as exc:
+        print(f"[match] 解析 analysis JSON 失败: {exc}")
+
+    # 3) 国籍为日本籍时，按技能匹配求案件列表
+    if skills_from_analysis:
+        if country == 0:
+            source_messages = qiuanjian_jponly_message or []
+        if country == 1:
+            source_messages = qiuanjian_other_message or []
+
+        skills_set = set(skills_from_analysis)
+        for message in source_messages:
+            message_skills = set(_normalize_skills(message.get("skills", [])))
+            if skills_set & message_skills:
+                matches.append(message)
+
+    print(f"analysis: {analysis}, country: {country}, matches: {matches}")
+    return {"analysis": analysis, "country": country, "matches": matches}
 
 
 if __name__ == "__main__":

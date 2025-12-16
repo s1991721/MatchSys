@@ -543,9 +543,20 @@
 
     const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+    const stripCssNoise = (text = '') => {
+        if (!text) return '';
+        const firstGap = text.indexOf('\n\n');
+        const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
+        if (firstGap >= 0 && hasBraces) {
+            return text.slice(firstGap + 2);
+        }
+        return text;
+    };
+
     function renderDetail(target, text = '', highlights = []) {
         if (!target) return;
-        const normalized = text
+        const cleaned = stripCssNoise(text || '');
+        const normalized = cleaned
             .replace(/\r\n/g, '\n')
             .replace(/\n{3,}/g, '\n\n')
             .trim();

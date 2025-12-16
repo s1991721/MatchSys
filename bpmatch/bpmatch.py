@@ -283,11 +283,17 @@ def match(job_payload: Dict[str, Any]) -> Dict[str, Any]:
         skills_set = set(skills_from_analysis)
         for message in source_messages:
             message_skills = set(_normalize_skills(message.get("skills", [])))
-            if skills_set & message_skills:
-                matches.append(message)
+            overlap = skills_set & message_skills
+            if overlap:
+                matches.append({**message, "matched_skills": sorted(overlap)})
 
     print(f"analysis: {analysis}, country: {country}, matches: {matches}")
-    return {"analysis": analysis, "country": country, "matches": matches}
+    return {
+        "analysis": analysis,
+        "country": country,
+        "matches": matches,
+        "job_skills": skills_from_analysis,
+    }
 
 
 if __name__ == "__main__":

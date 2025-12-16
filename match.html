@@ -304,6 +304,14 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
+        .skill-highlight {
+            background: #ffe59e;
+            color: #8a4b00;
+            padding: 0 4px;
+            border-radius: 6px;
+            box-shadow: 0 0 0 1px #f3c763 inset;
+        }
+
         .detail-text p {
             margin: 0 0 10px;
         }
@@ -533,16 +541,28 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
 
-    function renderDetail(target, text = '') {
+    const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    function renderDetail(target, text = '', highlights = []) {
         if (!target) return;
         const normalized = text
             .replace(/\r\n/g, '\n')
             .replace(/\n{3,}/g, '\n\n')
             .trim();
+        const escapedHighlights = (Array.isArray(highlights) ? highlights : [])
+            .filter(Boolean)
+            .map(v => sanitize(String(v)))
+            .map(escapeRegExp);
+        const highlightRegex = escapedHighlights.length
+            ? new RegExp(`(${escapedHighlights.join('|')})`, 'gi')
+            : null;
+        const applyHighlight = (val) =>
+            highlightRegex ? val.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>') : val;
+
         const html = sanitize(normalized)
             .split(/\n{2,}/)
             .filter(Boolean)
-            .map(block => `<p>${block.replace(/\n/g, '<br>')}</p>`)
+            .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
             .join('');
         target.innerHTML = html || '<p style="color:#9aa4b5">暂无内容</p>';
     }
@@ -561,6 +581,9 @@
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
+
+    let activeJobDetail = '';
+    let activeMatchedSkills = [];
 
     const PAGE_SIZE = 50;
     let currentPage = 1;
@@ -586,17 +609,29 @@
             item.classList.add('active');
 
             const text = item.getAttribute('data-detail') || '';
-            renderDetail(detail, text);
+            const highlights = readMatchedSkills(item);
+            renderDetail(detail, text, highlights);
 
             if (typeof onSelect === 'function') {
                 try {
-                    onSelect(item);
+                    onSelect(item, highlights);
                 } catch (err) {
                     console.error('handleSelect failed', err);
                 }
             }
         });
     }
+
+    const readMatchedSkills = (item) => {
+        const raw = item?.dataset?.matchedSkills;
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
+        } catch {
+            return [];
+        }
+    };
 
     const formatDate = (date) => {
         const y = date.getFullYear();
@@ -607,6 +642,7 @@
 
     function renderJobList(items) {
         jobList.innerHTML = '';
+        activeMatchedSkills = [];
 
         if (!items.length) {
             const empty = document.createElement('li');
@@ -614,6 +650,7 @@
             empty.textContent = '暂无匹配的求人';
             jobList.appendChild(empty);
             renderDetail(jobDetail, '暂无可显示的求人');
+            activeJobDetail = '';
             return;
         }
 
@@ -650,13 +687,15 @@
 
         const first = jobList.querySelector('.item');
         if (first) {
-            renderDetail(jobDetail, first.dataset.detail || '');
+            activeJobDetail = first.dataset.detail || '';
+            renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
         }
     }
 
     function renderPersonList(items) {
         if (!personList) return;
         personList.innerHTML = '';
+        activeMatchedSkills = [];
 
         if (!items.length) {
             const empty = document.createElement('li');
@@ -664,6 +703,7 @@
             empty.textContent = '暂无技术者';
             personList.appendChild(empty);
             renderDetail(personDetail, '暂无可显示的技术者');
+            renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
             return;
         }
 
@@ -672,6 +712,7 @@
             li.className = 'item' + (index === 0 ? ' active' : '');
             li.dataset.detail = item.detail || item.body || item.desc || '';
             li.dataset.id = item.id || '';
+            li.dataset.matchedSkills = JSON.stringify(item.matched_skills || []);
 
             const header = document.createElement('div');
             header.className = 'person-header';
@@ -702,7 +743,11 @@
 
         const first = personList.querySelector('.item');
         if (first) {
-            renderDetail(personDetail, first.dataset.detail || '');
+            const initialHighlights = readMatchedSkills(first);
+            activeMatchedSkills = initialHighlights;
+            const firstDetail = first.dataset.detail || '';
+            renderDetail(personDetail, firstDetail, initialHighlights);
+            renderDetail(jobDetail, activeJobDetail, initialHighlights);
         }
     }
 
@@ -892,6 +937,9 @@
 
     fetchJobs(1);
     bindListClick('job-list', 'job-detail', async (item) => {
+        activeJobDetail = item.getAttribute('data-detail') || '';
+        activeMatchedSkills = [];
+        renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
         const raw = item?.dataset?.item || '{}';
         let payload;
         try {
@@ -942,7 +990,10 @@
             }
         }
     });
-    bindListClick('person-list', 'person-detail');
+    bindListClick('person-list', 'person-detail', (item, highlights) => {
+        activeMatchedSkills = highlights || [];
+        renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
+    });
     fetchPersons(false);
 </script>
 </body>

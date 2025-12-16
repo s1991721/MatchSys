@@ -84,6 +84,7 @@ def log_job_click(request):
     matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
     items = []
     for idx, match in enumerate(matches_raw or []):
+        matched_skills = match.get("matched_skills") if isinstance(match, dict) else []
         items.append(
             {
                 "id": match.get("id") or f"match-{idx}",
@@ -93,6 +94,7 @@ def log_job_click(request):
                 "belong": match.get("from") or "",
                 "detail": match.get("body") or match.get("detail") or "",
                 "date": match.get("date") or "",
+                "matched_skills": matched_skills if isinstance(matched_skills, list) else [],
             }
         )
 

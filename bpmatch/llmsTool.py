@@ -83,7 +83,7 @@ def qiuren_detail_analysis(text: str) -> str:
                 JSON 对象包含字段：country、skills、price。
 
                 字段规则：
-                1. country：整数。0 表示日本籍，1 表示非日本籍。出现「日本籍」「日本国籍」则 country=0；出现「外国籍」「非日本籍」或具体非日本国籍（如「中国籍」「インド籍」「ベトナム籍」等）则 country=1；若邮件中未提及国籍，则默认 country=1。
+                1. country：整数。0 表示此求人仅招日本籍，1 表示国籍不限。出现「外国籍不可」「日本国籍」则 country=0；出现「外国籍可」「非日本籍」则 country=1；若邮件中未提及国籍，则默认 country=1。
                 2. skills：字符串数组。从邮件正文中识别技术相关关键词，全部转为小写并去重。常见技术词包括但不限于：java、vue、react、c#、c++、python、php、ruby、go、typescript、javascript、node、kotlin、swift、spring、.net、azure、aws、gcp、docker、kubernetes、oracle、sql、postgresql、mysql、sap、salesforce、laravel、django。若出现其他明显为技术名 / 框架名 / 云服务名，也一并加入 skills。若未识别到任何技术词，则 skills=[]。
                 3. price：整数。从与报酬相关的描述中提取第一个数值，优先从包含「単価」「時給」「月給」「月額」「年収」「報酬」以及包含「円」「万円」「万」等金额表述的部分抽取。
                 - 若金额以「万」或「万円」表示（如「60万円」「60万」），则输出对应的整数万数（例：60）。

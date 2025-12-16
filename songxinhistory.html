@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-
 <head>
     <meta charset="UTF-8">
-    <title>送信履历</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>送信历史</title>
     <style>
         :root {
             --bg: #f4f6fb;
             --card: #ffffff;
-            --line: #e6ebf3;
+            --line: #e5e9f2;
             --primary: #1c7bff;
             --text: #1f2a3d;
             --muted: #6b7686;
+            --success: #2bb775;
+            --warning: #f0a400;
+            --danger: #ff6b6b;
         }
 
         * {
@@ -21,41 +24,86 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
             background: var(--bg);
             color: var(--text);
         }
 
         .page {
-            max-width: 1260px;
+            max-width: 1240px;
             margin: 24px auto 32px;
-            padding: 0 20px 24px;
-            display: grid;
-            grid-template-columns: 1.1fr 1fr;
-            gap: 16px;
+            padding: 0 20px 28px;
         }
 
-        .panel {
-            background: var(--card);
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-            padding: 14px 16px 16px;
+        .page-header {
             display: flex;
-            flex-direction: column;
-            min-height: 300px;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin: 6px 0 18px;
         }
 
         .title {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .status-note {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef3ff;
+            color: #3b4f77;
+            border: 1px solid #d8e2f5;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            box-shadow: 0 0 0 4px rgba(43, 183, 117, 0.18);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 16px;
+        }
+
+        .grid + .grid {
+            margin-top: 16px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            box-shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
+            padding: 16px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            min-height: 260px;
+        }
+
+        .card-title {
             display: flex;
             align-items: center;
             gap: 10px;
             font-size: 16px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
-        .title::before {
+        .card-title::before {
             content: "";
             width: 4px;
             height: 18px;
@@ -64,54 +112,119 @@
             box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
         }
 
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .pill-group {
+            display: inline-flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            padding: 8px 12px;
+            border: 1px solid #d8dfec;
+            border-radius: 999px;
+            background: #f7f9fd;
+            color: #3b4f77;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .pill.active {
+            background: rgba(28, 123, 255, 0.12);
+            border-color: #5e90ff;
+            color: #1f60d8;
+            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+        }
+
+        .search {
+            margin-left: auto;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .input {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid #d8dfec;
+            padding: 11px 12px;
+            font-size: 14px;
+            outline: none;
+            background: #fdfdff;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+            background: #ffffff;
+        }
+
         ul {
             list-style: none;
         }
 
-        .list {
-            margin-top: 4px;
-            overflow-y: auto;
+        .history-list {
+            margin-top: 6px;
             border: 1px solid var(--line);
-            border-radius: 10px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-height: 520px;
         }
 
-        .item {
-            padding: 10px 12px;
+        .history-item {
             display: grid;
             grid-template-columns: 1fr auto;
-            gap: 10px;
+            gap: 12px;
+            padding: 12px 14px;
             border-bottom: 1px solid var(--line);
+            background: #ffffff;
             cursor: pointer;
-            transition: background 0.12s ease;
+            transition: background 0.12s ease, box-shadow 0.12s ease;
         }
 
-        .item:last-child {
+        .history-item:last-child {
             border-bottom: none;
         }
 
-        .item:hover {
-            background: #edf3ff;
+        .history-item:hover {
+            background: #f4f7ff;
         }
 
-        .item.active {
-            background: #dbe7ff;
-        }
-
-        .item-main {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .recipient {
-            font-size: 13px;
-            color: var(--muted);
+        .history-item.active {
+            background: #e6efff;
+            box-shadow: inset 0 0 0 1px rgba(28, 123, 255, 0.35);
         }
 
         .mail-title {
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
-            color: var(--text);
+            color: #1f2a3d;
+            margin-bottom: 4px;
+        }
+
+        .mail-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .meta-badge {
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: #f8faff;
+            border: 1px solid #e1e7f2;
+            color: #4a5c7a;
+            font-size: 12px;
         }
 
         .time {
@@ -121,149 +234,430 @@
             align-self: center;
         }
 
-        .detail {
-            margin-top: 4px;
-            font-size: 14px;
-            line-height: 1.7;
-            word-break: break-all;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 12px 14px;
-            background: #fafbfe;
-            color: #435065;
-            min-height: 260px;
-            overflow: auto;
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 12px;
         }
 
-        @media (max-width: 1080px) {
-            .page {
+        .status.success {
+            background: rgba(43, 183, 117, 0.12);
+            color: #1b8a58;
+            border: 1px solid rgba(43, 183, 117, 0.26);
+        }
+
+        .status.warning {
+            background: rgba(240, 164, 0, 0.14);
+            color: #a26c00;
+            border: 1px solid rgba(240, 164, 0, 0.26);
+        }
+
+        .status.danger {
+            background: rgba(255, 107, 107, 0.14);
+            color: #c94343;
+            border: 1px solid rgba(255, 107, 107, 0.28);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .detail {
+            background: #f8faff;
+            border: 1px solid #dfe6f3;
+            border-radius: 12px;
+            padding: 14px 16px;
+            min-height: 220px;
+            color: #414d63;
+            line-height: 1.7;
+            margin-top: 10px;
+        }
+
+        .detail h4 {
+            margin: 0 0 8px;
+            font-size: 15px;
+        }
+
+        .detail p {
+            margin: 0 0 10px;
+            white-space: pre-line;
+        }
+
+        .detail-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px 12px;
+            margin-bottom: 10px;
+        }
+
+        .detail-meta span {
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .section-title {
+            margin-top: 14px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            letter-spacing: 0.2px;
+        }
+
+        .attachment-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .attachment {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 10px;
+            background: #eef3ff;
+            border-radius: 10px;
+            border: 1px solid #d7e1f4;
+            font-size: 12px;
+            color: #3b4f77;
+        }
+
+        .empty-tip {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #f5f8ff, #eef3ff);
+            border-radius: 12px;
+            padding: 14px;
+            border: 1px solid #dfe6f5;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .stat-label {
+            color: #5b6780;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #21467a;
+        }
+
+        .tips {
+            font-size: 13px;
+            color: #4f5c74;
+            line-height: 1.7;
+        }
+
+        .tips-item {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .tips-bullet {
+            width: 6px;
+            height: 6px;
+            margin-top: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 1060px) {
+            .grid {
                 grid-template-columns: 1fr;
             }
 
-            .list {
-                max-height: 360px;
+            .history-list {
+                max-height: none;
             }
         }
     </style>
 </head>
-
 <body>
     <div class="page">
-        <section class="panel">
-            <div class="title">送信履历</div>
-            <ul id="history-list" class="list">
-                <li class="item active" data-detail="Hi team,\n这里是第一封邮件的正文。包含项目进度、下一步计划以及附件说明。">
-                    <div class="item-main">
-                        <div class="mail-title">项目进度更新</div>
-                        <div class="recipient">收信人：alice@example.com</div>
-                    </div>
-                    <div class="time">2025-12-01 10:20</div>
-                </li>
-                <li class="item" data-detail="Hi Bob,\n这是第二封邮件正文，关于需求澄清和会议安排。">
-                    <div class="item-main">
-                        <div class="mail-title">需求澄清</div>
-                        <div class="recipient">收信人：bob@example.com</div>
-                    </div>
-                    <div class="time">2025-11-25 15:40</div>
-                </li>
-                <li class="item" data-detail="亲爱的客户，感谢您的反馈，以下是改进计划。">
-                    <div class="item-main">
-                        <div class="mail-title">客户反馈回复</div>
-                        <div class="recipient">收信人：client@example.com</div>
-                    </div>
-                    <div class="time">2025-11-20 09:10</div>
-                </li>
-                <li class="item" data-detail="Hi team,\n本周会议纪要，请查阅重点任务和负责人。">
-                    <div class="item-main">
-                        <div class="mail-title">会议纪要</div>
-                        <div class="recipient">收信人：team@example.com</div>
-                    </div>
-                    <div class="time">2025-11-18 18:30</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
-                <li class="item" data-detail="Hi QA,\n这是测试报告，请确认缺陷列表和修复版本。">
-                    <div class="item-main">
-                        <div class="mail-title">测试报告</div>
-                        <div class="recipient">收信人：qa@example.com</div>
-                    </div>
-                    <div class="time">2025-11-12 11:05</div>
-                </li>
+        <header class="page-header">
+            <div>
+                <div class="title">送信历史</div>
+                <div class="subtitle">查看已发送记录、状态与正文内容</div>
+            </div>
+            <div class="status-note">
+                <span class="status-dot"></span>
+                <span>最近更新：今天 10:20</span>
+            </div>
+        </header>
 
-            </ul>
+        <section class="grid">
+            <div class="card">
+                <div class="card-title">历史列表</div>
+                <div class="filter-row">
+                    <div class="pill-group" id="status-group">
+                        <button class="pill active" data-status="all" type="button">全部</button>
+                        <button class="pill" data-status="sent" type="button">已发送</button>
+                        <button class="pill" data-status="pending" type="button">发送中</button>
+                        <button class="pill" data-status="failed" type="button">失败</button>
+                        <button class="pill" data-status="draft" type="button">草稿</button>
+                    </div>
+                    <div class="search">
+                        <input id="search" class="input" type="search" placeholder="搜索标题、收件人或抄送">
+                    </div>
+                </div>
+                <ul id="history-list" class="history-list"></ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">送信详情</div>
+                <div class="detail-meta" id="detail-meta"></div>
+                <div class="section-title">正文</div>
+                <div id="history-detail" class="detail"></div>
+                <div class="section-title">附件</div>
+                <div id="detail-attachments" class="attachment-list"></div>
+            </div>
         </section>
 
-        <section class="panel">
-            <div class="title">送信内容详情</div>
-            <div id="history-detail" class="detail">
-                Hi team,
-                这里是第一封邮件的正文。包含项目进度、下一步计划以及附件说明。
+        <section class="grid">
+            <div class="card">
+                <div class="card-title">统计概览</div>
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">本周已发送</div>
+                        <div class="stat-value" id="stat-sent">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">待处理</div>
+                        <div class="stat-value" id="stat-pending">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">失败重试</div>
+                        <div class="stat-value" id="stat-failed">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">提醒</div>
+                <div class="tips">
+                    <div class="tips-item">
+                        <span class="tips-bullet"></span>
+                        <span>点击左侧记录可快速查看正文与附件列表，确认实际送达内容。</span>
+                    </div>
+                    <div class="tips-item">
+                        <span class="tips-bullet"></span>
+                        <span>发送失败的邮件可在此处检查原因，必要时重新发送。</span>
+                    </div>
+                    <div class="tips-item">
+                        <span class="tips-bullet"></span>
+                        <span>筛选支持按状态或关键字查找，便于对齐项目进展。</span>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
 
     <script>
         (function () {
-            const list = document.getElementById('history-list');
-            const detail = document.getElementById('history-detail');
+            const listEl = document.getElementById('history-list');
+            const detailEl = document.getElementById('history-detail');
+            const metaEl = document.getElementById('detail-meta');
+            const attachEl = document.getElementById('detail-attachments');
+            const searchInput = document.getElementById('search');
+            const statusGroup = document.getElementById('status-group');
+            const statSent = document.getElementById('stat-sent');
+            const statPending = document.getElementById('stat-pending');
+            const statFailed = document.getElementById('stat-failed');
 
-            list.addEventListener('click', (e) => {
-                const item = e.target.closest('.item');
+            const records = [
+                {
+                    id: 1,
+                    title: '项目进度更新',
+                    to: 'alice@example.com',
+                    cc: 'pm@example.com',
+                    status: 'sent',
+                    time: '2025-12-01 10:20',
+                    content: 'Hi Team,\n这里是第一封邮件的正文。包含项目进度、下一步计划以及附件说明。',
+                    attachments: ['计划更新.docx', '需求列表.xlsx']
+                },
+                {
+                    id: 2,
+                    title: '需求澄清',
+                    to: 'bob@example.com',
+                    cc: 'qa@example.com',
+                    status: 'pending',
+                    time: '2025-11-25 15:40',
+                    content: 'Hi Bob,\n这是第二封邮件正文，关于需求澄清和会议安排。\n请确认接口参数和交付时间。',
+                    attachments: []
+                },
+                {
+                    id: 3,
+                    title: '客户反馈回复',
+                    to: 'client@example.com',
+                    cc: 'cs@example.com',
+                    status: 'sent',
+                    time: '2025-11-20 09:10',
+                    content: '亲爱的客户，感谢您的反馈，以下是改进计划。\n我们将在下周推送修复版本。',
+                    attachments: ['回复邮件.pdf']
+                },
+                {
+                    id: 4,
+                    title: '会议纪要',
+                    to: 'team@example.com',
+                    cc: '',
+                    status: 'failed',
+                    time: '2025-11-18 18:30',
+                    content: 'Hi team,\n本周会议纪要，请查阅重点任务和负责人。\n如未收到邮件，请告知。',
+                    attachments: ['会议纪要.md']
+                },
+                {
+                    id: 5,
+                    title: '测试报告',
+                    to: 'qa@example.com',
+                    cc: 'dev@example.com',
+                    status: 'draft',
+                    time: '2025-11-12 11:05',
+                    content: 'Hi QA,\n这是测试报告草稿，请确认缺陷列表和修复版本。',
+                    attachments: []
+                }
+            ];
+
+            let activeStatus = 'all';
+            let activeId = null;
+
+            const statusMap = {
+                sent: { text: '已发送', cls: 'success' },
+                pending: { text: '发送中', cls: 'warning' },
+                failed: { text: '失败', cls: 'danger' },
+                draft: { text: '草稿', cls: 'warning' }
+            };
+
+            const renderStats = (items) => {
+                const sent = items.filter(i => i.status === 'sent').length;
+                const pending = items.filter(i => i.status === 'pending').length;
+                const failed = items.filter(i => i.status === 'failed').length;
+                statSent.textContent = sent;
+                statPending.textContent = pending;
+                statFailed.textContent = failed;
+            };
+
+            const renderAttachments = (files) => {
+                if (!files || !files.length) {
+                    attachEl.innerHTML = '<div class="empty-tip">暂无附件</div>';
+                    return;
+                }
+                attachEl.innerHTML = files.map(f => `<span class="attachment">${f}</span>`).join('');
+            };
+
+            const renderDetail = (record) => {
+                if (!record) {
+                    metaEl.innerHTML = '<span class="empty-tip">请选择左侧记录查看详情</span>';
+                    detailEl.textContent = '';
+                    renderAttachments([]);
+                    return;
+                }
+
+                const meta = [
+                    `收件人：${record.to || '--'}`,
+                    `抄送：${record.cc || '无'}`,
+                    `时间：${record.time}`,
+                    `状态：${statusMap[record.status]?.text || '未知'}`
+                ];
+                metaEl.innerHTML = meta.map(m => `<span>${m}</span>`).join('');
+                detailEl.innerHTML = `
+                    <h4>${record.title}</h4>
+                    <p>${(record.content || '').replace(/\n/g, '<br>')}</p>
+                `;
+                renderAttachments(record.attachments || []);
+            };
+
+            const renderList = () => {
+                const keyword = searchInput.value.trim().toLowerCase();
+                const filtered = records.filter(r => {
+                    const matchStatus = activeStatus === 'all' || r.status === activeStatus;
+                    const text = `${r.title} ${r.to} ${r.cc}`.toLowerCase();
+                    const matchKeyword = !keyword || text.includes(keyword);
+                    return matchStatus && matchKeyword;
+                });
+
+                listEl.innerHTML = '';
+
+                if (!filtered.length) {
+                    listEl.innerHTML = '<li class="history-item"><div class="mail-title">暂无匹配记录</div></li>';
+                    renderDetail(null);
+                    renderStats(filtered);
+                    return;
+                }
+
+                filtered.forEach((item, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'history-item' + (idx === 0 ? ' active' : '');
+                    li.dataset.id = item.id;
+                    li.innerHTML = `
+                        <div>
+                            <div class="mail-title">${item.title}</div>
+                            <div class="mail-meta">
+                                <span class="meta-badge">收件人：${item.to}</span>
+                                ${item.cc ? `<span class="meta-badge">抄送：${item.cc}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="time">
+                            <div class="status ${statusMap[item.status]?.cls || ''}">
+                                <span class="dot"></span>
+                                ${statusMap[item.status]?.text || '未知'}
+                            </div>
+                            <div>${item.time}</div>
+                        </div>
+                    `;
+                    listEl.appendChild(li);
+                });
+
+                activeId = filtered[0].id;
+                renderDetail(filtered[0]);
+                renderStats(filtered);
+            };
+
+            listEl.addEventListener('click', (e) => {
+                const item = e.target.closest('.history-item');
                 if (!item) return;
-                list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
+                const id = Number(item.dataset.id);
+                activeId = id;
+                listEl.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
                 item.classList.add('active');
-                const text = item.dataset.detail || '';
-                detail.textContent = text;
+                const record = records.find(r => r.id === id);
+                renderDetail(record);
             });
+
+            statusGroup.addEventListener('click', (e) => {
+                const btn = e.target.closest('.pill');
+                if (!btn) return;
+                statusGroup.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeStatus = btn.dataset.status || 'all';
+                renderList();
+            });
+
+            searchInput.addEventListener('input', () => {
+                renderList();
+            });
+
+            renderList();
         })();
     </script>
 </body>
-
 </html>

@@ -135,6 +135,69 @@ def qiuanjian_detail_analysis(text: str) -> str:
     return ai_msg.content.strip()
 
 
+# -----------------------------
+# 解析求人案件邮件内容，返回 JSON
+# -----------------------------
+def extract_qiuren_detail(text: str) -> str:
+    messages = [
+        SystemMessage(
+            content=(
+                """
+                你是一个信息抽取模型。
+
+                已知当前邮件类型为【求人】，即邮件内容用于寻找工程师/技术人员参与某个项目或案件。
+
+                现在，请你根据邮件正文内容，抽取案件关键信息，
+                并只输出一个 JSON 对象，不包含任何额外解释文字、说明、前后缀或 markdown 代码块。
+
+                JSON 对象必须且只能包含以下字段：
+                - project_name
+                - project_detail
+                - skills
+                - date
+
+                字段规则如下：
+                1. project_name：
+                - 通常出现在「案件：」「案件名」等位置
+                - 保持邮件中的日文原文，不要自行改写
+
+                2. project_detail：
+                - 对案件内容的说明文字
+                - 一般描述项目背景、做什么系统、负责范围
+                - 只抽取邮件中明确写出的说明，不要总结或扩写
+
+                3. skills：
+                - 从邮件中提取技能要求
+                - 如果是列表，请合并为一个字符串数组输出
+                - 不要自行补充邮件中未出现的技能
+
+                4. date：
+                - 项目开始时间及周期，如「12月～長期予定」「即日～」「1月～」
+                - 保持原文格式
+                - 如果未明确写出，则返回空字符串
+
+                重要限制：
+                - 忽略寒暄语、署名、联系方式、公司信息、分隔线等无关内容
+                - 不要进行任何推测、补全或解释
+
+                输出格式必须严格与以下示例一致（仅结构示例，内容请根据正文填写）：
+
+                {
+                "project_name": "",
+                "project_detail": "",
+                "skills": "",
+                "date": ""
+                }
+                """
+            )
+        ),
+        HumanMessage(content=text),
+    ]
+
+    ai_msg = llm.invoke(messages)
+    return ai_msg.content.strip()
+
+
 # ---------------------------
 #  主运行入口
 # ---------------------------

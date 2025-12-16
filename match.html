@@ -543,6 +543,15 @@
 
     const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
+    const SENSITIVE_WORDS = ['OrientalKingdomGroup', 'Oriental', 'Kingdom', 'Group'];
+    const maskSensitive = (text = '') => {
+        if (!text) return '';
+        const patterns = SENSITIVE_WORDS.map(escapeRegExp);
+        if (!patterns.length) return text;
+        const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
+        return text.replace(regex, '***');
+    };
+
     const stripCssNoise = (text = '') => {
         if (!text) return '';
         const firstGap = text.indexOf('\n\n');
@@ -556,7 +565,8 @@
     function renderDetail(target, text = '', highlights = []) {
         if (!target) return;
         const cleaned = stripCssNoise(text || '');
-        const normalized = cleaned
+        const masked = maskSensitive(cleaned);
+        const normalized = masked
             .replace(/\r\n/g, '\n')
             .replace(/\n{3,}/g, '\n\n')
             .trim();

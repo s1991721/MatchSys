@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <!-- <link rel="icon" href="favicon.png" type="image/png"> -->
     <title>Match</title>
     <style>
         :root {
@@ -543,7 +544,7 @@
 
     const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    const SENSITIVE_WORDS = ['OrientalKingdomGroup', 'Oriental', 'Kingdom', 'Group'];
+    const SENSITIVE_WORDS = ['OrientalKingdomGroup', 'Oriental', 'Kingdom', 'Group', '邱'];
     const maskSensitive = (text = '') => {
         if (!text) return '';
         const patterns = SENSITIVE_WORDS.map(escapeRegExp);
@@ -565,7 +566,7 @@
     function renderDetail(target, text = '', highlights = []) {
         if (!target) return;
         const cleaned = stripCssNoise(text || '');
-        const masked = maskSensitive(cleaned);
+        const masked = cleaned;
         const normalized = masked
             .replace(/\r\n/g, '\n')
             .replace(/\n{3,}/g, '\n\n')

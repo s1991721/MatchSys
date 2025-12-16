@@ -525,7 +525,7 @@
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
             <div class="detail-actions">
-                <button class="primary-btn" type="button" onclick="window.location.href='songxin.html'">
+                <button class="primary-btn" type="button" id="send-btn">
                     送信
                 </button>
             </div>
@@ -603,6 +603,7 @@
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
+    const sendBtn = document.getElementById('send-btn');
 
     let activeJobDetail = '';
     let activeMatchedSkills = [];
@@ -1017,6 +1018,45 @@
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
     });
     fetchPersons(false);
+
+    // 将当前选中的求人与人员信息存入本地并跳转到送信页
+    if (sendBtn) {
+        sendBtn.addEventListener('click', () => {
+            const activeJob = jobList?.querySelector('.item.active');
+            const activePerson = personList?.querySelector('.item.active');
+
+            if (!activeJob || !activePerson) {
+                alert('请先在求人列表与人员列表中各选择一条再送信。');
+                return;
+            }
+
+            const payload = {
+                job: {
+                    id: activeJob.dataset.id || '',
+                    title: activeJob.querySelector('.item-title')?.textContent.trim() || '',
+                    desc: activeJob.querySelector('.item-desc')?.textContent.trim() || '',
+                    detail: activeJob.dataset.detail || '',
+                    time: activeJob.querySelector('.item-time')?.textContent.trim() || ''
+                },
+                person: {
+                    id: activePerson.dataset.id || '',
+                    name: activePerson.querySelector('.person-name')?.textContent.trim() || '',
+                    belong: activePerson.querySelector('.person-belong')?.textContent.trim() || '',
+                    detail: activePerson.dataset.detail || '',
+                    time: activePerson.querySelector('.person-time')?.textContent.trim() || ''
+                },
+                updatedAt: Date.now()
+            };
+
+            try {
+                localStorage.setItem('matchSelection', JSON.stringify(payload));
+            } catch (err) {
+                console.error('无法缓存选中内容', err);
+            }
+
+            window.location.href = 'songxin.html?from=match';
+        });
+    }
 </script>
 </body>
 </html>

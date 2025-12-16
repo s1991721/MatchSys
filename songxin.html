@@ -191,6 +191,7 @@
             color: #455164;
             line-height: 1.7;
             min-height: 140px;
+            white-space: pre-line;
         }
 
         .muted-block {
@@ -421,6 +422,7 @@
                     return;
                 }
 
+                // 使用 textContent 搭配 pre-line 确保换行正常展示
                 preview.textContent = content;
             };
 

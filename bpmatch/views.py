@@ -82,8 +82,15 @@ def log_job_click(request):
 
     # 标准化匹配结果，方便前端直接渲染人员列表
     matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
+    def _match_len(item):
+        if isinstance(item, dict):
+            skills = item.get("matched_skills")
+            if isinstance(skills, list):
+                return len(skills)
+        return 0
+    sorted_matches = sorted(matches_raw or [], key=_match_len, reverse=True)
     items = []
-    for idx, match in enumerate(matches_raw or []):
+    for idx, match in enumerate(sorted_matches):
         matched_skills = match.get("matched_skills") if isinstance(match, dict) else []
         items.append(
             {

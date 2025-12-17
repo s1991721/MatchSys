@@ -85,7 +85,11 @@ DATABASES = {
         "PASSWORD": "YourStrongPassw0rd!",
         "HOST": "127.0.0.1",  # 或数据库地址
         "PORT": "3306",
-        "OPTIONS": {"charset": "utf8mb4"},
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            # 确保数据库连接也使用东京时区
+            "init_command": "SET time_zone = '+09:00'",
+        },
     }
 }
 
@@ -115,7 +119,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+# 统一应用和数据库的时区为日本时间
+TIME_ZONE = "Asia/Tokyo"
 
 USE_I18N = True
 

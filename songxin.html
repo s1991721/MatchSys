@@ -56,9 +56,9 @@
             align-items: stretch;
         }
 
-        .grid + .grid {
-            margin-top: 16px;
-        }
+            .grid + .grid {
+                margin-top: 16px;
+            }
 
         .card {
             background: var(--card);
@@ -219,12 +219,12 @@
             display: none;
         }
 
-        .attachment-list {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+            .attachment-list {
+                margin-top: 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
 
         .attachment-item {
             display: flex;
@@ -269,9 +269,69 @@
                 height: 280px;
             }
         }
+
+        .loading-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(18, 36, 66, 0.14);
+            backdrop-filter: blur(3px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        .loading-box {
+            background: #0c1d36;
+            color: #e9f2ff;
+            padding: 18px 22px;
+            border-radius: 14px;
+            box-shadow: 0 16px 32px rgba(12, 29, 54, 0.35);
+            min-width: 280px;
+            display: grid;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .loading-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.18);
+            border-top-color: #68a8ff;
+            animation: spin 0.9s linear infinite;
+        }
+
+        .loading-sub {
+            color: #9db7dd;
+            font-size: 13px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
+    <div id="loading-mask" class="loading-mask" role="status" aria-live="assertive" aria-busy="true" hidden>
+        <div class="loading-box">
+            <div class="loading-main">
+                <div class="spinner" aria-hidden="true"></div>
+                <div id="loading-text">正在等待 AI 响应…</div>
+            </div>
+            <div class="loading-sub">正在生成邮件内容，通常需要数秒。</div>
+        </div>
+    </div>
     <div class="page">
         <header class="page-header">
             <div>
@@ -348,8 +408,12 @@
             const uploadBtn = document.getElementById('btn-upload');
             const fileInput = document.getElementById('file-input');
             const attachmentList = document.getElementById('attachment-list');
+            const loadingMask = document.getElementById('loading-mask');
+            const loadingText = document.getElementById('loading-text');
+            const API_BASE = 'http://localhost:8000';
             const attachments = [];
             const selectionKey = 'matchSelection';
+            let loadingTimer = null;
 
             const readSelection = () => {
                 const raw = localStorage.getItem(selectionKey);
@@ -363,7 +427,7 @@
 
             const applySelectionFromMatch = () => {
                 const data = readSelection();
-                if (!data || !data.job || !data.person) return;
+                if (!data || !data.job || !data.person) return null;
 
                 const job = data.job || {};
                 const person = data.person || {};
@@ -388,6 +452,58 @@
 
                 if (combined) {
                     editor.value = combined;
+                }
+
+                return job.detail || job.desc || jobLines || '';
+            };
+
+            const setLoading = (isLoading, text = '正在等待 AI 响应…') => {
+                if (isLoading) {
+                    loadingText.textContent = text;
+                    loadingMask.hidden = false;
+                    loadingMask.style.display = 'none';
+                    loadingMask.setAttribute('aria-busy', 'true');
+                    // 避免闪屏：只有超过 200ms 的等待才展示
+                    clearTimeout(loadingTimer);
+                    loadingTimer = setTimeout(() => {
+                        loadingMask.style.display = 'flex';
+                    }, 200);
+                    return;
+                }
+                clearTimeout(loadingTimer);
+                loadingMask.hidden = true;
+                loadingMask.style.display = 'none';
+                loadingMask.setAttribute('aria-busy', 'false');
+            };
+
+            const analyzeQiuren = async (jobText) => {
+                if (!jobText) return;
+                setLoading(true, '正在生成邮件内容…');
+                try {
+                    const res = await fetch(`${API_BASE}/extract-qiuren-detail`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: jobText })
+                    });
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+                    const data = await res.json();
+                    const formatted =
+                        data.data
+                            ? JSON.stringify(data.data, null, 2)
+                            : (typeof data.raw === 'string' ? data.raw : '');
+                    const content = [
+                        '【解析结果】',
+                        formatted || '暂无结果'
+                    ].join('\n');
+                    editor.value = content;
+                    renderPreview();
+                } catch (err) {
+                    console.error('调用 extract_qiuren_detail 失败', err);
+                    alert('AI 解析暂时不可用，请稍后重试。');
+                } finally {
+                    setLoading(false);
                 }
             };
 
@@ -465,9 +581,10 @@
                 window.location.href = 'songxinhistory.html';
             });
 
-            applySelectionFromMatch();
+            const jobText = applySelectionFromMatch();
             renderAttachments();
             renderPreview();
+            analyzeQiuren(jobText);
         })();
     </script>
 </body>

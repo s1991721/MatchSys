@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 
-from . import bpmatch
+from . import bpmatch, llmsTool
 
 
 @csrf_exempt
@@ -110,5 +110,43 @@ def log_job_click(request):
             "status": "ok",
             "match": match_result,
             "matches": items,
+        }
+    )
+
+
+@csrf_exempt
+def extract_qiuren_detail(request):
+    """
+    对外暴露 extract_qiuren_detail，输入邮件正文文本，返回结构化信息。
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST is allowed"}, status=405)
+
+    try:
+        raw_body = request.body.decode("utf-8") if request.body else "{}"
+        payload = json.loads(raw_body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    text = payload.get("text") or payload.get("body") or ""
+    if not text.strip():
+        return JsonResponse({"error": "Missing field: text"}, status=400)
+
+    try:
+        llm_result = llmsTool.extract_qiuren_detail(text)
+    except Exception as exc:
+        return JsonResponse({"error": str(exc)}, status=500)
+
+    # extract_qiuren_detail 返回的是 JSON 字符串，这里尝试解析以便前端直接使用
+    try:
+        parsed = json.loads(llm_result)
+    except Exception:
+        parsed = None
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "data": parsed,
+            "raw": llm_result,
         }
     )

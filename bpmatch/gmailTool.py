@@ -9,6 +9,7 @@ from html.parser import HTMLParser
 
 from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
+from django.utils import timezone as dj_timezone
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -305,7 +306,43 @@ class GmailTool:
 
         sent = service.users().messages().send(userId="me", body=send_body).execute()
 
-        return sent.get("id")
+        message_id = sent.get("id")
+        sent_at = self._extract_sent_time(sent)
+        self._persist_sent_log(message_id, sent_at)
+
+        return message_id
+
+    def _extract_sent_time(self, sent_response: dict) -> datetime:
+        """
+        从 Gmail send API 的返回中提取发送时间。若返回不包含 internalDate，则使用当前时间。
+        """
+        internal_ms = sent_response.get("internalDate")
+        if internal_ms:
+            try:
+                ts = int(internal_ms) / 1000
+                return datetime.fromtimestamp(ts, tz=timezone.utc)
+            except Exception:
+                pass
+        return dj_timezone.now()
+
+    def _persist_sent_log(self, message_id: Optional[str], sent_at: datetime):
+        """
+        将发送结果写入数据库；若 ORM 不可用或写入失败，不影响主流程。
+        """
+        if not message_id:
+            return
+
+        try:
+            from .models import SentEmailLog
+        except Exception:
+            return
+
+        try:
+            SentEmailLog.objects.update_or_create(
+                message_id=message_id, defaults={"sent_at": sent_at}
+            )
+        except Exception as exc:
+            print(f"[gmail] 保存发送记录失败: {exc}")
 
     def _extract_text_from_gmail_msg(self, msg: dict) -> str:
         """

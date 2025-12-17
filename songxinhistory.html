@@ -484,58 +484,8 @@
             const statPending = document.getElementById('stat-pending');
             const statFailed = document.getElementById('stat-failed');
 
-            const records = [
-                {
-                    id: 1,
-                    title: '项目进度更新',
-                    to: 'alice@example.com',
-                    cc: 'pm@example.com',
-                    status: 'sent',
-                    time: '2025-12-01 10:20',
-                    content: 'Hi Team,\n这里是第一封邮件的正文。包含项目进度、下一步计划以及附件说明。',
-                    attachments: ['计划更新.docx', '需求列表.xlsx']
-                },
-                {
-                    id: 2,
-                    title: '需求澄清',
-                    to: 'bob@example.com',
-                    cc: 'qa@example.com',
-                    status: 'pending',
-                    time: '2025-11-25 15:40',
-                    content: 'Hi Bob,\n这是第二封邮件正文，关于需求澄清和会议安排。\n请确认接口参数和交付时间。',
-                    attachments: []
-                },
-                {
-                    id: 3,
-                    title: '客户反馈回复',
-                    to: 'client@example.com',
-                    cc: 'cs@example.com',
-                    status: 'sent',
-                    time: '2025-11-20 09:10',
-                    content: '亲爱的客户，感谢您的反馈，以下是改进计划。\n我们将在下周推送修复版本。',
-                    attachments: ['回复邮件.pdf']
-                },
-                {
-                    id: 4,
-                    title: '会议纪要',
-                    to: 'team@example.com',
-                    cc: '',
-                    status: 'failed',
-                    time: '2025-11-18 18:30',
-                    content: 'Hi team,\n本周会议纪要，请查阅重点任务和负责人。\n如未收到邮件，请告知。',
-                    attachments: ['会议纪要.md']
-                },
-                {
-                    id: 5,
-                    title: '测试报告',
-                    to: 'qa@example.com',
-                    cc: 'dev@example.com',
-                    status: 'draft',
-                    time: '2025-11-12 11:05',
-                    content: 'Hi QA,\n这是测试报告草稿，请确认缺陷列表和修复版本。',
-                    attachments: []
-                }
-            ];
+            let records = [];
+            let lastUpdateText = '无';
 
             let activeStatus = 'all';
             let activeId = null;
@@ -632,6 +582,38 @@
                 renderStats(filtered);
             };
 
+            const API_BASE = 'http://localhost:8000';
+
+            const loadRecords = async () => {
+                try {
+                    const resp = await fetch(`${API_BASE}/send-history`);
+                    const data = await resp.json();
+                    records = (data.items || []).map(item => ({
+                        id: item.id,
+                        title: item.title || '(无标题)',
+                        to: item.to || '',
+                        cc: item.cc || '',
+                        status: item.status || 'sent',
+                        time: item.time || '',
+                        content: item.content || '',
+                        attachments: item.attachments || [],
+                    }));
+                    if (records.length && records[0].time) {
+                        lastUpdateText = records[0].time;
+                    }
+                } catch (err) {
+                    console.error('加载送信历史失败', err);
+                    records = [];
+                    lastUpdateText = '加载失败';
+                }
+                renderList();
+                renderStats(records);
+                const statusNote = document.querySelector('.status-note span:last-child');
+                if (statusNote) {
+                    statusNote.textContent = `最近更新：${lastUpdateText}`;
+                }
+            };
+
             listEl.addEventListener('click', (e) => {
                 const item = e.target.closest('.history-item');
                 if (!item) return;
@@ -656,7 +638,7 @@
                 renderList();
             });
 
-            renderList();
+            loadRecords();
         })();
     </script>
 </body>

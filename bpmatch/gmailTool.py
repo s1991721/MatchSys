@@ -6,6 +6,7 @@ import os.path
 from pathlib import Path
 from html import unescape
 from html.parser import HTMLParser
+import json
 
 from email.message import EmailMessage
 from email.utils import parsedate_to_datetime
@@ -308,7 +309,15 @@ class GmailTool:
 
         message_id = sent.get("id")
         sent_at = self._extract_sent_time(sent)
-        self._persist_sent_log(message_id, sent_at)
+        self._persist_sent_log(
+            message_id=message_id,
+            sent_at=sent_at,
+            to=to,
+            cc=cc,
+            subject=subject,
+            body=body,
+            attachments=attachments,
+        )
 
         return message_id
 
@@ -325,7 +334,16 @@ class GmailTool:
                 pass
         return dj_timezone.now()
 
-    def _persist_sent_log(self, message_id: Optional[str], sent_at: datetime):
+    def _persist_sent_log(
+        self,
+        message_id: Optional[str],
+        sent_at: datetime,
+        to: Optional[str],
+        cc: Optional[str],
+        subject: Optional[str],
+        body: Optional[str],
+        attachments: Optional[List[dict]],
+    ):
         """
         将发送结果写入数据库；若 ORM 不可用或写入失败，不影响主流程。
         """
@@ -338,8 +356,25 @@ class GmailTool:
             return
 
         try:
+            filenames = []
+            for att in attachments or []:
+                if not isinstance(att, dict):
+                    continue
+                fname = att.get("filename")
+                if fname:
+                    filenames.append(str(fname))
+
             SentEmailLog.objects.update_or_create(
-                message_id=message_id, defaults={"sent_at": sent_at}
+                message_id=message_id,
+                defaults={
+                    "sent_at": sent_at,
+                    "to": to or "",
+                    "cc": cc or "",
+                    "subject": subject or "",
+                    "body": body or "",
+                    "attachments": json.dumps(filenames, ensure_ascii=False),
+                    "status": "sent",
+                },
             )
         except Exception as exc:
             print(f"[gmail] 保存发送记录失败: {exc}")

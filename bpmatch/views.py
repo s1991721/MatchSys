@@ -3,9 +3,11 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 
 from . import bpmatch, llmsTool
 from .gmailTool import GmailTool
+from .models import SentEmailLog
 
 
 @csrf_exempt
@@ -206,3 +208,36 @@ def send_mail(request):
         return JsonResponse({"error": str(exc)}, status=500)
 
     return JsonResponse({"status": "ok", "message_id": message_id})
+
+
+@csrf_exempt
+@require_GET
+def send_history(request):
+    """
+    返回发送历史记录，数据来源 sent_email_logs。
+    """
+    logs = SentEmailLog.objects.order_by("-sent_at")[:300]
+    items = []
+    current_tz = timezone.get_current_timezone()
+
+    for log in logs:
+        try:
+            attachments = json.loads(log.attachments or "[]")
+        except Exception:
+            attachments = []
+        items.append(
+            {
+                "id": log.id,
+                "message_id": log.message_id,
+                "title": log.subject or "(无标题)",
+                "to": log.to or "",
+                "cc": log.cc or "",
+                "status": log.status or "sent",
+                "sent_at": timezone.localtime(log.sent_at, current_tz).isoformat(),
+                "time": timezone.localtime(log.sent_at, current_tz).strftime("%Y-%m-%d %H:%M"),
+                "content": log.body or "",
+                "attachments": attachments if isinstance(attachments, list) else [],
+            }
+        )
+
+    return JsonResponse({"items": items, "count": len(items)})

@@ -24,6 +24,7 @@ from bpmatch.views import (
     log_job_click,
     extract_qiuren_detail,
     send_mail,
+    send_history,
 )
 
 urlpatterns = [
@@ -33,4 +34,5 @@ urlpatterns = [
     path("job-click", log_job_click),
     path("extract-qiuren-detail", extract_qiuren_detail),
     path("send-mail", send_mail),
+    path("send-history", send_history),
 ]

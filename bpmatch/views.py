@@ -5,6 +5,7 @@ from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 
 from . import bpmatch, llmsTool
+from .gmailTool import GmailTool
 
 
 @csrf_exempt
@@ -150,3 +151,58 @@ def extract_qiuren_detail(request):
             "raw": llm_result,
         }
     )
+
+
+@csrf_exempt
+def send_mail(request):
+    """
+    发送邮件到指定收件人，支持抄送和附件（base64）。
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST is allowed"}, status=405)
+
+    try:
+        raw_body = request.body.decode("utf-8") if request.body else "{}"
+        payload = json.loads(raw_body or "{}")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    to_addr = (payload.get("to") or "").strip()
+    cc_addr = (payload.get("cc") or "").strip()
+    subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
+    body = payload.get("body") or ""
+    attachments = payload.get("attachments") or []
+
+    if not to_addr:
+        return JsonResponse({"error": "Missing field: to"}, status=400)
+    if not body.strip():
+        return JsonResponse({"error": "Missing field: body"}, status=400)
+
+    # 标准化附件结构
+    normalized_atts = []
+    for att in attachments:
+        if not isinstance(att, dict):
+            continue
+        normalized_atts.append(
+            {
+                "filename": att.get("filename") or "attachment",
+                "content_type": att.get("content_type") or "application/octet-stream",
+                "content": att.get("content") or "",
+            }
+        )
+
+    try:
+        gmail = GmailTool()
+        message_id = gmail.send_message(
+            to=to_addr,
+            cc=cc_addr or None,
+            subject=subject,
+            body=body,
+            attachments=normalized_atts,
+        )
+    except FileNotFoundError as exc:
+        return JsonResponse({"error": f"OAuth credentials missing: {exc}"}, status=500)
+    except Exception as exc:
+        return JsonResponse({"error": str(exc)}, status=500)
+
+    return JsonResponse({"status": "ok", "message_id": message_id})

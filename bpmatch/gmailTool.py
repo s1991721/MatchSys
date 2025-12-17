@@ -260,9 +260,18 @@ class GmailTool:
                 )
             mark_batch.execute()
 
-    def send_message(self, to: str, subject: str, body: str, sender: str = None):
+    def send_message(
+        self,
+        to: str,
+        subject: str,
+        body: str,
+        sender: str = None,
+        cc: str = None,
+        attachments: Optional[List[dict]] = None,
+    ):
         """
-        通过 Gmail API 发送邮件
+        通过 Gmail API 发送邮件，支持抄送和附件。
+        attachments: List[{"filename": str, "content_type": str, "content": bytes}]
         """
         service = self.service
         message = EmailMessage()
@@ -271,14 +280,32 @@ class GmailTool:
         if sender:
             message["From"] = sender
         message["To"] = to
+        if cc:
+            message["Cc"] = cc
         message["Subject"] = subject
+
+        # 附件处理
+        for att in attachments or []:
+            fname = att.get("filename") or "attachment"
+            ctype = att.get("content_type") or "application/octet-stream"
+            raw_bytes = att.get("content") or b""
+            if isinstance(raw_bytes, str):
+                try:
+                    raw_bytes = base64.b64decode(raw_bytes)
+                except Exception:
+                    raw_bytes = raw_bytes.encode("utf-8", errors="ignore")
+            try:
+                maintype, subtype = ctype.split("/", 1)
+            except ValueError:
+                maintype, subtype = "application", "octet-stream"
+            message.add_attachment(raw_bytes, maintype=maintype, subtype=subtype, filename=fname)
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         send_body = {"raw": encoded_message}
 
         sent = service.users().messages().send(userId="me", body=send_body).execute()
 
-        return sent["id"]
+        return sent.get("id")
 
     def _extract_text_from_gmail_msg(self, msg: dict) -> str:
         """

@@ -329,7 +329,7 @@
                 <div class="spinner" aria-hidden="true"></div>
                 <div id="loading-text">正在等待 AI 响应…</div>
             </div>
-            <div class="loading-sub">正在生成邮件内容，通常需要数秒。</div>
+            <div id="loading-sub" class="loading-sub">请稍候，正在处理中…</div>
         </div>
     </div>
     <div class="page">
@@ -410,6 +410,7 @@
             const attachmentList = document.getElementById('attachment-list');
             const loadingMask = document.getElementById('loading-mask');
             const loadingText = document.getElementById('loading-text');
+            const loadingSub = document.getElementById('loading-sub');
             const API_BASE = 'http://localhost:8000';
             const attachments = [];
             const selectionKey = 'matchSelection';
@@ -457,9 +458,15 @@
                 return job.detail || job.desc || jobLines || '';
             };
 
-            const setLoading = (isLoading, text = '正在等待 AI 响应…') => {
+            const setLoading = (isLoading, options = {}) => {
+                const { title = '正在处理…', subtitle = '请稍候，正在处理中…' } =
+                    typeof options === 'string'
+                        ? { title: options, subtitle: '请稍候，正在处理中…' }
+                        : options;
+
                 if (isLoading) {
-                    loadingText.textContent = text;
+                    loadingText.textContent = title;
+                    loadingSub.textContent = subtitle;
                     loadingMask.hidden = false;
                     loadingMask.style.display = 'none';
                     loadingMask.setAttribute('aria-busy', 'true');
@@ -478,7 +485,7 @@
 
             const analyzeQiuren = async (jobText) => {
                 if (!jobText) return;
-                setLoading(true, '正在生成邮件内容…');
+                setLoading(true, { title: '正在生成邮件内容…', subtitle: 'AI 正在解析信息并准备正文，请稍候。' });
                 try {
                     const res = await fetch(`${API_BASE}/extract-qiuren-detail`, {
                         method: 'POST',
@@ -513,6 +520,25 @@
                 return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
             };
 
+            const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result || '';
+                    const base64 = typeof result === 'string' && result.includes(',')
+                        ? result.split(',').pop()
+                        : result;
+                    resolve(base64);
+                };
+                reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
+                reader.readAsDataURL(file);
+            });
+
+            const deriveSubject = (text) => {
+                const firstLine = (text || '').split('\n').map(t => t.trim()).find(Boolean);
+                if (!firstLine) return '送信页邮件';
+                return firstLine.slice(0, 60);
+            };
+
             const renderAttachments = () => {
                 if (!attachments.length) {
                     attachmentList.innerHTML = '<div class="empty-tip">暂无附件</div>';
@@ -523,7 +549,7 @@
                     <div class="attachment-item" data-idx="${idx}">
                         <div class="attachment-name">${file.name}</div>
                         <div class="attachment-meta">
-                            <span>${file.size}</span>
+                            <span>${file.sizeLabel}</span>
                             <span class="remove-link" data-remove="${idx}">移除</span>
                         </div>
                     </div>
@@ -557,7 +583,13 @@
 
             fileInput.addEventListener('change', () => {
                 const files = Array.from(fileInput.files || []);
-                files.forEach(f => attachments.push({ name: f.name, size: formatSize(f.size) }));
+                files.forEach(f => attachments.push({
+                    file: f,
+                    name: f.name,
+                    sizeLabel: formatSize(f.size),
+                    type: f.type || 'application/octet-stream',
+                    size: f.size
+                }));
                 fileInput.value = '';
                 renderAttachments();
             });
@@ -569,16 +601,57 @@
                 renderAttachments();
             });
 
-            sendBtn.addEventListener('click', () => {
+            sendBtn.addEventListener('click', async () => {
                 const target = email.value.trim();
                 if (!target) {
                     alert('请先填写收件人邮箱。');
                     email.focus();
                     return;
                 }
-                const attachTip = attachments.length ? `，附件数量：${attachments.length}` : '';
-                alert('内容已准备好发送至：' + target + attachTip);
-                window.location.href = 'songxinhistory.html';
+                const content = editor.value.trim();
+                if (!content) {
+                    alert('请输入邮件正文后再发送。');
+                    editor.focus();
+                    return;
+                }
+
+                setLoading(true, { title: '正在发送邮件…', subtitle: '正在上传附件并发送，请稍候。' });
+                try {
+                    const attachmentsPayload = await Promise.all(
+                        attachments.map(async (att) => ({
+                            filename: att.name,
+                            content_type: att.type,
+                            content: await readFileAsBase64(att.file)
+                        }))
+                    );
+
+                    const payload = {
+                        to: target,
+                        cc: cc.value.trim(),
+                        subject: deriveSubject(content),
+                        body: content,
+                        attachments: attachmentsPayload
+                    };
+
+                    const res = await fetch(`${API_BASE}/send-mail`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!res.ok) {
+                        const err = await res.json().catch(() => ({}));
+                        throw new Error(err.error || `HTTP ${res.status}`);
+                    }
+
+                    alert('发送成功！即将跳转到历史记录。');
+                    window.location.href = 'songxinhistory.html';
+                } catch (err) {
+                    console.error('发送邮件失败', err);
+                    alert(`发送失败：${err.message || err}`);
+                } finally {
+                    setLoading(false);
+                }
             });
 
             const jobText = applySelectionFromMatch();

@@ -32,7 +32,8 @@ def fetch_recent_two_weeks_emails(
     qiuanjian_other_message = None
     update_time = None
     end_date = datetime.now().date()
-    start_date = end_date - timedelta(days=14)
+    # todo 正式生产环境改回14
+    start_date = end_date - timedelta(days=30)
 
     page = 1
     all_messages: List[Dict] = []

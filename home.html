@@ -242,6 +242,7 @@
     .btn.blue{ background:var(--blue); }
     .btn.green{ background:var(--green); }
     .btn.orange{ background:var(--orange); }
+    .btn.red{ background:var(--red); }
 
     .select{
       border:1px solid var(--border);
@@ -384,7 +385,7 @@
       <div class="card">
         <div class="stat">
           <div>
-            <div class="label">本周新增订单</div>
+            <div class="label">本周match数</div>
             <div class="value">12,580</div>
             <div class="delta up">▲ 8.5% <span class="pill">vs 上周</span></div>
           </div>
@@ -394,9 +395,9 @@
       <div class="card">
         <div class="stat">
           <div>
-            <div class="label">新增用户</div>
+            <div class="label">今天match数</div>
             <div class="value">324</div>
-            <div class="delta up">▲ 2.3% <span class="pill">vs 上周</span></div>
+            <div class="delta up">▲ 2.3% <span class="pill">vs 昨天</span></div>
           </div>
         </div>
       </div>
@@ -404,7 +405,7 @@
       <div class="card">
         <div class="stat">
           <div>
-            <div class="label">待处理工单</div>
+            <div class="label">本月入场人数</div>
             <div class="value">18</div>
             <div class="delta down">▼ 1.2% <span class="pill">vs 上周</span></div>
           </div>
@@ -414,7 +415,7 @@
       <div class="card">
         <div class="stat">
           <div>
-            <div class="label">本月收入</div>
+            <div class="label">两周内求案件人数</div>
             <div class="value">¥52,780</div>
             <div class="delta up">▲ 15.7% <span class="pill">MTD</span></div>
           </div>
@@ -439,8 +440,8 @@
 
         <div class="chart">
           <div class="legend">
-            <div class="lg"><i class="b"></i> 订单</div>
-            <div class="lg"><i class="p"></i> 用户</div>
+            <div class="lg"><i class="b"></i> 入场人数</div>
+            <div class="lg"><i class="p"></i> 退场人数</div>
           </div>
 
           <!-- SVG 折线图（示意，便于直接预览） -->
@@ -518,10 +519,10 @@
         <div class="card-header">
           <div class="h">
             <span class="dot" style="background:var(--purple)"></span>
-            <h2>任务列表</h2>
+            <h2>当月营业技术者（4名）</h2>
           </div>
           <select class="select" aria-label="筛选">
-            <option>营运概览</option>
+            <option>营业概览</option>
             <option>本周</option>
             <option>本月</option>
           </select>
@@ -531,7 +532,8 @@
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">处理客户咨询工单</div>
+              <div class="name">张三</div>
+              <!-- todo 加技能 -->
             </div>
             <button class="btn green">通过 →</button>
           </div>
@@ -539,25 +541,25 @@
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">同步库存与商品信息</div>
+              <div class="name">李四</div>
             </div>
-            <button class="btn blue">执行 →</button>
+            <button class="btn blue">1/2 →</button>
           </div>
 
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">本周财务报表初稿</div>
+              <div class="name">王五</div>
             </div>
-            <button class="btn orange">查看 →</button>
+            <button class="btn red">待机 →</button>
           </div>
 
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">用户权限变更审核</div>
+              <div class="name">赵六</div>
             </div>
-            <button class="btn green">通过 →</button>
+            <button class="btn orange">结果等待 →</button>
           </div>
         </div>
       </div>
@@ -570,7 +572,7 @@
         <div class="card-header">
           <div class="h">
             <span class="dot" style="background:var(--green)"></span>
-            <h2>项目进度</h2>
+            <h2>当月入场</h2>
           </div>
           <div class="tools">
             <button class="tool" title="统计">▦</button>
@@ -582,49 +584,49 @@
           <div class="pitem">
             <div class="meta">
               <span class="ico" style="background:rgba(47,111,236,.18)"></span>
-              <b>后台重构</b>
-              <small>In Progress</small>
+              <b>井氏</b>
+              <small>新大久保</small>
             </div>
             <div class="bar" aria-label="75%">
               <span style="width:75%"></span>
             </div>
-            <small>75%</small>
+            <small>5日</small>
           </div>
 
           <div class="pitem">
             <div class="meta">
               <span class="ico" style="background:rgba(124,58,237,.18)"></span>
-              <b>APP 适配</b>
-              <small>Pending</small>
+              <b>矢田</b>
+              <small>上野</small>
             </div>
             <div class="bar" aria-label="40%">
               <span style="width:40%; background:var(--purple)"></span>
             </div>
-            <small>40%</small>
+            <small>28日</small>
           </div>
 
           <div class="pitem">
             <div class="meta">
               <span class="ico" style="background:rgba(22,163,74,.18)"></span>
-              <b>监控接入</b>
-              <small>In Progress</small>
+              <b>澤田</b>
+              <small>池袋</small>
             </div>
             <div class="bar" aria-label="60%">
               <span style="width:60%; background:var(--green)"></span>
             </div>
-            <small>60%</small>
+            <small>10日</small>
           </div>
 
           <div class="pitem">
             <div class="meta">
               <span class="ico" style="background:rgba(245,158,11,.18)"></span>
-              <b>上线准备</b>
-              <small>Completed</small>
+              <b>新一</b>
+              <small>横浜</small>
             </div>
             <div class="bar" aria-label="85%">
               <span style="width:85%; background:var(--orange)"></span>
             </div>
-            <small>85%</small>
+            <small>8日</small>
           </div>
         </div>
       </div>
@@ -634,10 +636,7 @@
         <div class="card-header">
           <div class="h">
             <span class="dot" style="background:var(--orange)"></span>
-            <h2>最新动态</h2>
-          </div>
-          <div class="tools">
-            <button class="tool" title="列表">≡</button>
+            <h2>下月营业技术者（3名）</h2>
           </div>
         </div>
 
@@ -646,33 +645,33 @@
             <div class="who">
               <div class="face"></div>
               <div class="txt">
-                <b>张三</b>
-                <small>提交了「数据展示」功能</small>
+                <b>達也</b>
+                <small>java</small>
               </div>
             </div>
-            <div class="time">2 小时前</div>
+            <div class="time">1月退场</div>
           </div>
 
           <div class="a">
             <div class="who">
               <div class="face"></div>
               <div class="txt">
-                <b>李四</b>
-                <small>完成了 API 联调</small>
+                <b>石田</b>
+                <small>aws</small>
               </div>
             </div>
-            <div class="time">5 小时前</div>
+            <div class="time">待机</div>
           </div>
 
           <div class="a">
             <div class="who">
               <div class="face"></div>
               <div class="txt">
-                <b>系统</b>
-                <small>已生成本周周报（可下载）</small>
+                <b>田中</b>
+                <small>PM</small>
               </div>
             </div>
-            <div class="time">昨天</div>
+            <div class="time">新人</div>
           </div>
 
           <div style="display:flex; justify-content:flex-end; padding-top:4px;">

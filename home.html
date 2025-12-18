@@ -218,6 +218,22 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
+
+    .name-wrap{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+    }
+    .name-wrap .sub{
+      margin-top:2px;
+      color:var(--muted);
+      font-weight:800;
+      font-size:12px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      line-height:1.1;
+    }
     .btn{
       border:none;
       border-radius:10px;
@@ -532,8 +548,10 @@
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">张三</div>
-              <!-- todo 加技能 -->
+              <div class="name-wrap">
+                <div class="name">张三</div>
+                <div class="sub">java</div>
+              </div>
             </div>
             <button class="btn green">通过 →</button>
           </div>
@@ -541,7 +559,10 @@
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">李四</div>
+              <div class="name-wrap">
+                <div class="name">李四</div>
+                <div class="sub">C#</div>
+              </div>
             </div>
             <button class="btn blue">1/2 →</button>
           </div>
@@ -549,7 +570,10 @@
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">王五</div>
+              <div class="name-wrap">
+                <div class="name">王五</div>
+                <div class="sub">PHP</div>
+              </div>
             </div>
             <button class="btn red">待机 →</button>
           </div>
@@ -557,7 +581,10 @@
           <div class="row">
             <div class="left">
               <div class="check"></div>
-              <div class="name">赵六</div>
+              <div class="name-wrap">
+                <div class="name">赵六</div>
+                <div class="sub">python</div>
+              </div>
             </div>
             <button class="btn orange">结果等待 →</button>
           </div>

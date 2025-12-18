@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>社内人员管理</title>
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --line:#e5e9f2;
+      --primary:#1c7bff;
+      --text:#1f2a3d;
+      --muted:#6b7686;
+      --success:#15b36b;
+      --warn:#ff8b3d;
+      --danger:#ef476f;
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      font-family:"PingFang SC",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      background:transparent;
+      color:var(--text);
+    }
+    .page{
+      padding:10px 14px 20px;
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    .card{
+      background:var(--card);
+      border-radius:14px;
+      border:1px solid var(--line);
+      box-shadow:0 12px 28px rgba(31,53,90,.08);
+      padding:18px 20px;
+    }
+    .section-title{
+      margin:0 0 14px;
+      font-size:17px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .section-title::before{
+      content:"";
+      width:4px;
+      height:20px;
+      border-radius:12px;
+      background:var(--primary);
+      box-shadow:0 0 0 6px rgba(28,123,255,.12);
+    }
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:14px;
+    }
+    .stat{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px 14px;
+      background:#fdfdff;
+    }
+    .stat-label{
+      color:var(--muted);
+      font-size:13px;
+    }
+    .stat-value{
+      font-size:24px;
+      font-weight:800;
+      margin-top:6px;
+    }
+    .filters{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+      gap:12px;
+    }
+    .filter-group{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .filter-label{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .input,.select{
+      width:100%;
+      border-radius:10px;
+      border:1px solid #d7deea;
+      padding:10px 12px;
+      font-size:14px;
+      background:#fdfdff;
+    }
+    .input:focus,.select:focus{
+      border-color:var(--primary);
+      outline:none;
+      box-shadow:0 0 0 4px rgba(28,123,255,.12);
+      background:#fff;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      margin-top:16px;
+      font-size:14px;
+    }
+    thead{
+      background:#f6f8fd;
+    }
+    th,td{
+      text-align:left;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+    }
+    th{
+      font-size:13px;
+      color:#5c6c82;
+    }
+    tbody tr:hover{
+      background:#f0f4ff;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+    }
+    .badge.active{ background:rgba(21,179,107,.12); color:var(--success); }
+    .badge.leave{ background:rgba(239,71,111,.14); color:var(--danger); }
+    .badge.onboard{ background:rgba(255,139,61,.14); color:var(--warn); }
+    .actions{
+      display:flex;
+      gap:8px;
+    }
+    .btn{
+      padding:6px 12px;
+      border-radius:10px;
+      border:1px solid #d7deea;
+      background:#fff;
+      cursor:pointer;
+      font-size:12px;
+      color:#2f4a72;
+      transition:all .12s ease;
+    }
+    .btn:hover{
+      border-color:var(--primary);
+      color:var(--primary);
+    }
+    .table-actions{
+      margin-top:10px;
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+    }
+    .empty{
+      text-align:center;
+      padding:40px 0;
+      color:var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="card">
+      <h3 class="section-title">社内人员管理</h3>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">人员列表</h3>
+      <div class="filters">
+        <label class="filter-group">
+          <span class="filter-label">搜索（姓名 / 邮箱 / 项目）</span>
+          <input id="searchInput" class="input" type="search" placeholder="输入关键字" />
+        </label>
+        <label class="filter-group">
+          <span class="filter-label">部门</span>
+          <select id="deptSelect" class="select">
+            <option value="all">全部部门</option>
+          </select>
+        </label>
+        <label class="filter-group">
+          <span class="filter-label">状态</span>
+          <select id="statusSelect" class="select">
+            <option value="all">全部状态</option>
+            <option value="active">在岗</option>
+            <option value="onboarding">入职中</option>
+            <option value="leave">离任交接</option>
+          </select>
+        </label>
+        <label class="filter-group">
+          <span class="filter-label">班次</span>
+          <select id="shiftSelect" class="select">
+            <option value="all">全部班次</option>
+            <option value="日班">日班</option>
+            <option value="夜班">夜班</option>
+            <option value="弹性">弹性</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="table-actions">
+        <button class="btn" id="resetBtn">重置筛选</button>
+        <button class="btn" id="exportBtn">导出 CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>部门</th>
+            <th>职位</th>
+            <th>当前项目</th>
+            <th>班次</th>
+            <th>状态</th>
+            <th>邮箱</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="8" class="empty">加载中…</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <script>
+    const DATA = [
+      { name:"吉田 彩香", department:"产品企划", position:"产品经理", project:"BP-内推平台", shift:"日班", status:"active", email:"ayaka.yoshida@corp.jp" },
+      { name:"田中 翔太", department:"技术开发", position:"后端工程师", project:"AI 推荐", shift:"弹性", status:"active", email:"shota.tanaka@corp.jp" },
+      { name:"佐藤 美咲", department:"客户成功", position:"客户顾问", project:"社内CRM", shift:"日班", status:"onboarding", email:"misaki.sato@corp.jp" },
+      { name:"王 海", department:"技术开发", position:"DevOps", project:"云平台迁移", shift:"夜班", status:"active", email:"hai.wang@corp.jp" },
+      { name:"刘 佳", department:"人事总务", position:"人事BP", project:"人才盘点", shift:"日班", status:"active", email:"jia.liu@corp.jp" },
+      { name:"张 萌", department:"客户成功", position:"培训讲师", project:"合作方培训", shift:"弹性", status:"leave", email:"meng.zhang@corp.jp" },
+      { name:"中村 大地", department:"数据研究", position:"数据分析师", project:"社内画像", shift:"日班", status:"active", email:"daichi.nakamura@corp.jp" },
+      { name:"高桥 涼", department:"产品企划", position:"UX 设计师", project:"BP-内推平台", shift:"弹性", status:"active", email:"ryo.takahashi@corp.jp" }
+    ];
+
+    const tableBody = document.getElementById("tableBody");
+    const statsBox = document.getElementById("stats");
+    const searchInput = document.getElementById("searchInput");
+    const deptSelect = document.getElementById("deptSelect");
+    const statusSelect = document.getElementById("statusSelect");
+    const shiftSelect = document.getElementById("shiftSelect");
+    const resetBtn = document.getElementById("resetBtn");
+    const exportBtn = document.getElementById("exportBtn");
+
+    let currentList = [...DATA];
+
+    const STATUS_LABEL = {
+      active:"在岗",
+      onboarding:"入职中",
+      leave:"离任"
+    };
+
+    function ensureDepartments(){
+      const set = new Set(DATA.map(item => item.department));
+      set.forEach(dep => {
+        const opt = document.createElement("option");
+        opt.value = dep;
+        opt.textContent = dep;
+        deptSelect.appendChild(opt);
+      });
+    }
+
+    function renderStats(list){
+      const total = list.length;
+      const active = list.filter(item => item.status === "active").length;
+      const onboarding = list.filter(item => item.status === "onboarding").length;
+      const leave = list.filter(item => item.status === "leave").length;
+      const html = [
+        { label:"总人数", value: total },
+        { label:"在岗成员", value: active },
+        { label:"入职中", value: onboarding },
+        { label:"离任交接", value: leave }
+      ].map(item => (
+        `<div class="stat">
+          <div class="stat-label">${item.label}</div>
+          <div class="stat-value">${item.value}</div>
+        </div>`
+      )).join("");
+      statsBox.innerHTML = html;
+    }
+
+    function renderTable(list){
+      if (!list.length){
+        tableBody.innerHTML = `<tr><td colspan="8" class="empty">没有符合条件的人员</td></tr>`;
+        return;
+      }
+      tableBody.innerHTML = list.map(item => (
+        `<tr>
+          <td>${item.name}</td>
+          <td>${item.department}</td>
+          <td>${item.position}</td>
+          <td>${item.project}</td>
+          <td>${item.shift}</td>
+          <td><span class="badge ${item.status === "active" ? "active" : item.status === "leave" ? "leave" : "onboard"}">${STATUS_LABEL[item.status] || item.status}</span></td>
+          <td>${item.email}</td>
+          <td>
+            <div class="actions">
+              <button class="btn" data-action="view" data-name="${item.name}">详情</button>
+              <button class="btn" data-action="handover" data-name="${item.name}">交接</button>
+            </div>
+          </td>
+        </tr>`
+      )).join("");
+    }
+
+    function applyFilter(){
+      const keyword = (searchInput.value || "").trim().toLowerCase();
+      const dep = deptSelect.value;
+      const status = statusSelect.value;
+      const shift = shiftSelect.value;
+
+      const filtered = DATA.filter(item => {
+        const matchKeyword = !keyword || [
+          item.name,
+          item.email,
+          item.project
+        ].some(text => text.toLowerCase().includes(keyword));
+
+        const matchDep = dep === "all" || item.department === dep;
+        const matchStatus = status === "all" || item.status === status;
+        const matchShift = shift === "all" || item.shift === shift;
+
+        return matchKeyword && matchDep && matchStatus && matchShift;
+      });
+
+      currentList = filtered;
+      renderTable(currentList);
+      renderStats(currentList);
+    }
+
+    function handleAction(e){
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      const action = btn.getAttribute("data-action");
+      const name = btn.getAttribute("data-name");
+      if (action === "view"){
+        alert(`${name} 的详细信息可在正式系统中查看。`);
+      } else if (action === "handover"){
+        alert(`已记录 ${name} 的交接需求。`);
+      }
+    }
+
+    function resetFilters(){
+      searchInput.value = "";
+      deptSelect.value = "all";
+      statusSelect.value = "all";
+      shiftSelect.value = "all";
+      applyFilter();
+    }
+
+    function exportCSV(){
+      const rows = [
+        ["姓名","部门","职位","当前项目","班次","状态","邮箱"],
+        ...currentList.map(item => [
+          item.name,
+          item.department,
+          item.position,
+          item.project,
+          item.shift,
+          STATUS_LABEL[item.status] || item.status,
+          item.email
+        ])
+      ];
+      const content = rows.map(row => row.map(cell => `"${cell}"`).join(",")).join("\\n");
+      const blob = new Blob([content], { type:"text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "personnel.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    ensureDepartments();
+    renderStats(currentList);
+    renderTable(currentList);
+
+    searchInput.addEventListener("input", applyFilter);
+    deptSelect.addEventListener("change", applyFilter);
+    statusSelect.addEventListener("change", applyFilter);
+    shiftSelect.addEventListener("change", applyFilter);
+    resetBtn.addEventListener("click", resetFilters);
+    exportBtn.addEventListener("click", exportCSV);
+    tableBody.addEventListener("click", handleAction);
+  </script>
+</body>
+</html>

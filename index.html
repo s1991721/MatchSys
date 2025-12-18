@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MatchSys</title>
+
+  <style>
+    :root{
+      --bg:#f4f6fb;
+      --panel:#ffffff;
+      --line:#e5e9f2;
+      --text:#1f2a3d;
+      --muted:#6b7686;
+      --primary:#1c7bff;
+
+      --sidebar-w: 240px;
+      --sidebar-w-collapsed: 72px;
+      --topbar-h: 60px;
+
+      --radius: 14px;
+      --shadow: 0 10px 24px rgba(31,53,90,.06);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:"PingFang SC",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow:hidden; /* 让滚动发生在 main 内部，整体更像后台 */
+    }
+    a{ color:inherit; text-decoration:none; }
+
+    /* ===== App Shell (结构性布局) ===== */
+    .app{
+      height:100vh;
+      display:grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      grid-template-rows: var(--topbar-h) 1fr;
+      grid-template-areas:
+        "sidebar topbar"
+        "sidebar main";
+      transition: grid-template-columns .25s ease;
+    }
+    body.sidebar-collapsed .app{
+      grid-template-columns: var(--sidebar-w-collapsed) 1fr;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar{
+      grid-area: sidebar;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border-right: 1px solid var(--line);
+      padding: 14px 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+      min-width:0;
+      position: relative;
+      z-index: 50; /* 让侧栏的 tooltip 能覆盖 main */
+      overflow: visible;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border:1px solid rgba(223,230,243,.9);
+      background: linear-gradient(180deg,#fbfcff,#f6f8fe);
+    }
+    .brand-left{
+      min-width:0;
+    }
+    .brand-name{
+      font-weight: 900;
+      letter-spacing:.3px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brand-tag{
+      margin-top:2px;
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .toggle-btn{
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border:1px solid rgba(28,123,255,.35);
+      background: linear-gradient(135deg,#5e90ff,#2e7bff);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      cursor:pointer;
+      box-shadow: 0 10px 20px rgba(46,123,255,.18);
+      transition: transform .12s ease, box-shadow .12s ease;
+      flex:0 0 auto;
+    }
+    .toggle-btn:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 14px 26px rgba(46,123,255,.22);
+    }
+    .toggle-icon{
+      width:16px;
+      height:16px;
+      display:block;
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: transform .2s ease;
+    }
+    .toggle-icon path{
+      fill:none;
+      stroke:currentColor;
+      stroke-width:2.6;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+    }
+    body.sidebar-collapsed .toggle-icon{ transform: rotate(180deg); }
+
+    .nav{
+      margin:0;
+      padding:0;
+      list-style:none;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      flex:1 1 auto;
+      min-width:0;
+      overflow: visible;
+    }
+
+    .nav-item{ overflow: visible; }
+
+    .nav-item a{
+      height:44px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border:1px solid rgba(216,223,236,.9);
+      background: rgba(247,249,253,.92);
+      color:#3b4a60;
+      font-size:13px;
+      transition: background .15s ease, border-color .15s ease, transform .12s ease;
+      position:relative;
+      min-width:0;
+      overflow: visible;
+    }
+    .nav-item a:hover{
+      background: rgba(59,130,246,.08);
+      border-color: rgba(59,130,246,.18);
+      transform: translateY(-1px);
+    }
+    .nav-item a.active{
+      background: rgba(59,130,246,.12);
+      border-color: rgba(59,130,246,.28);
+      color:var(--text);
+    }
+    .nav-item a.active::before{
+      content:"";
+      position:absolute;
+      left:-12px;
+      top:10px;
+      bottom:10px;
+      width:3px;
+      border-radius:3px;
+      background: var(--primary);
+    }
+
+    .nav-icon{ width:18px;height:18px; color:#6a7a92; flex:0 0 auto; }
+    .nav-avatar{
+      width:22px;
+      height:22px;
+      border-radius:999px;
+      border:1px solid rgba(216,223,236,.95);
+      background: radial-gradient(circle at 30% 30%, rgba(94,144,255,.35), rgba(46,123,255,.10) 45%, rgba(247,249,253,.92) 100%);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      flex:0 0 auto;
+      color:#5e90ff;
+    }
+    .nav-avatar svg{ width:14px; height:14px; display:block; }
+    .nav-label{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      min-width:0;
+    }
+
+    /* 折叠侧栏（结构性的：文字隐藏、按钮居中） */
+    body.sidebar-collapsed .brand-left{ display:none; }
+    body.sidebar-collapsed .brand{
+      justify-content:center;
+      padding-left:0;
+      padding-right:0;
+    }
+    body.sidebar-collapsed .nav-item a{
+      justify-content:center;
+      padding:0;
+    }
+    body.sidebar-collapsed .nav-label{ display:none; }
+
+    /* 折叠时 tooltip（更可用） */
+    body.sidebar-collapsed .nav-item a::after{
+      content: attr(data-title);
+      position:absolute;
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(17,24,39,.92);
+      color:#fff;
+      font-size:12px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      white-space:nowrap;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .12s ease;
+      z-index: 999;
+    }
+    body.sidebar-collapsed .nav-item a:hover::after{ opacity:1; }
+
+    /* ===== Topbar ===== */
+    .topbar{
+      grid-area: topbar;
+      height: var(--topbar-h);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-left{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .page-title{
+      font-size:16px;
+      font-weight:900;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .breadcrumb{
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .topbar-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex:0 0 auto;
+    }
+
+    .btn{
+      height:36px;
+      padding: 0 12px;
+      border-radius: 10px;
+      border:1px solid rgba(216,223,236,.95);
+      background: rgba(247,249,253,.95);
+      color:#405169;
+      cursor:pointer;
+      font-size:13px;
+      transition: background .15s ease, border-color .15s ease, transform .12s ease, box-shadow .12s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+    .btn:hover{
+      background: rgba(59,130,246,.08);
+      border-color: rgba(59,130,246,.18);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 18px rgba(31,53,90,.06);
+    }
+    .btn:active{ transform: translateY(0); box-shadow:none; }
+
+    /* ===== Main ===== */
+    .main{
+      grid-area: main;
+      padding: 16px 18px 18px;
+      overflow:auto; /* 主要滚动区域 */
+    }
+
+    .content-card{
+      height: calc(100vh - var(--topbar-h) - 32px);
+      min-height: 620px;
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(10px);
+      border:1px solid rgba(229,233,242,.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .frame-wrap{
+      flex: 1 1 auto;
+      position:relative;
+      background: linear-gradient(180deg,#fbfcff 0%,#f6f7fb 100%);
+    }
+    .empty{
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      padding:18px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
+      background:#fff;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 860px){
+      body{ overflow:auto; }
+      .app{
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+        grid-template-areas:
+          "topbar"
+          "sidebar"
+          "main";
+        overflow:visible;
+      }
+      .sidebar{
+        border-right:none;
+        border-bottom: 1px solid var(--line);
+      }
+      body.sidebar-collapsed .brand-left{ display:block; }
+      body.sidebar-collapsed .nav-label{ display:inline; }
+      body.sidebar-collapsed .nav-item a{ justify-content:flex-start; padding:0 12px; }
+      body.sidebar-collapsed .nav-item a::after{ display:none; }
+      .content-card{ height: 70vh; min-height: 520px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app" aria-label="MatchSys App Shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" aria-label="功能列表">
+      <div class="brand">
+        <div class="brand-left">
+          <div class="brand-name">MatchSys</div>
+          <div class="brand-tag">从左侧选择功能进入对应页面</div>
+        </div>
+        <button class="toggle-btn" type="button" id="collapseBtn" aria-expanded="true" title="收起/展开侧栏">
+          <svg class="toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14 7l-5 5 5 5"/>
+          </svg>
+        </button>
+      </div>
+
+      <ul class="nav" id="nav">
+        <li class="nav-item">
+          <a href="#profile.html" data-src="profile.html" data-title="个人信息" title="个人信息">
+            <span class="nav-avatar" aria-hidden="true">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12zm0 2c-4.8 0-8.7 2.4-8.7 5.4V21h17.4v-1.6C20.7 16.4 16.8 14 12 14z"/>
+              </svg>
+            </span>
+            <span class="nav-label">个人信息</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#home.html" data-src="home.html" data-title="主页" title="主页">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M12 3 3 10.2V21h6v-6h6v6h6V10.2L12 3zm7 16h-2v-6H7v6H5v-8.1l7-5.4 7 5.4V19z"/>
+            </svg>
+            <span class="nav-label">主页</span>
+          </a>
+        </li>
+
+        <!-- 外部新开页：保持你原逻辑 -->
+        <li class="nav-item">
+          <a href="match.html" target="_blank" rel="noreferrer" data-autocollapse="1" data-title="Match" title="Match">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M7 4h10a2 2 0 0 1 2 2v3H5V6a2 2 0 0 1 2-2zm-2 7h14v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7zm4 2v2h6v-2H9z"/>
+            </svg>
+            <span class="nav-label">Match</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="#songxinhistory.html" data-src="songxinhistory.html" data-title="送信历史" title="送信历史">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M12 8a1 1 0 0 1 1 1v3.6l2.4 1.4a1 1 0 1 1-1 1.7l-3-1.8A1 1 0 0 1 11 13V9a1 1 0 0 1 1-1zm0-6a10 10 0 1 1-7.1 17.1 1 1 0 1 1 1.4-1.4A8 8 0 1 0 12 4a7.9 7.9 0 0 0-5.4 2.1H9a1 1 0 0 1 0 2H3V2a1 1 0 1 1 2 0v2.6A9.9 9.9 0 0 1 12 2z"/>
+            </svg>
+            <span class="nav-label">送信历史</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="#people.html" data-src="people.html" data-title="人员管理" title="人员管理">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/>
+            </svg>
+            <span class="nav-label">人员管理</span>
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a href="#attendance.html" data-src="attendance.html" data-title="考勤管理" title="考勤管理">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v13a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1zm14 8H3v10a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V10zM5 6a1 1 0 0 0-1 1v1h16V7a1 1 0 0 0-1-1H5zm6 6h2v2h-2v-2zm-4 0h2v2H7v-2zm8 0h2v2h-2v-2z"/>
+            </svg>
+            <span class="nav-label">考勤管理</span>
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar" aria-label="顶部栏">
+      <div class="topbar-left">
+        <div class="page-title" id="viewerTitle">请选择功能</div>
+        <div class="breadcrumb" id="viewerSub">左侧点击后在右侧展示</div>
+      </div>
+
+      <div class="topbar-actions">
+        <a class="btn" id="openNew" href="#" target="_blank" rel="noreferrer">新窗口打开</a>
+        <button class="btn" type="button" id="reloadBtn">刷新</button>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="main" aria-label="内容区域">
+      <section class="content-card">
+        <div class="frame-wrap" id="frameWrap">
+          <div class="empty" id="viewerEmpty">从左侧功能列表选择一个功能以加载页面</div>
+          <iframe id="viewerFrame" title="内容区" style="display:none;"></iframe>
+        </div>
+      </section>
+    </main>
+
+  </div>
+
+  <script>
+    (function () {
+      const collapseBtn = document.getElementById("collapseBtn");
+      const SIDEBAR_KEY = "matchsys_sidebar_collapsed";
+
+      const nav = document.getElementById("nav");
+      const frame = document.getElementById("viewerFrame");
+      const empty = document.getElementById("viewerEmpty");
+      const openNew = document.getElementById("openNew");
+      const reloadBtn = document.getElementById("reloadBtn");
+      const viewerTitle = document.getElementById("viewerTitle");
+      const viewerSub = document.getElementById("viewerSub");
+
+      if (!collapseBtn || !nav || !frame || !empty || !openNew || !reloadBtn || !viewerTitle || !viewerSub) return;
+
+      const links = Array.from(nav.querySelectorAll("a[data-src]"));
+      const first = links[0];
+
+      function setCollapsed(collapsed) {
+        document.body.classList.toggle("sidebar-collapsed", collapsed);
+        collapseBtn.setAttribute("aria-expanded", String(!collapsed));
+        try { localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0"); } catch (err) {}
+      }
+
+      function readCollapsed() {
+        try {
+          const value = localStorage.getItem(SIDEBAR_KEY);
+          if (value === null) return false; // ✅ 默认不折叠（更像后台系统）
+          return value === "1";
+        } catch (err) {
+          return false;
+        }
+      }
+
+      collapseBtn.addEventListener("click", () => {
+        const next = !document.body.classList.contains("sidebar-collapsed");
+        setCollapsed(next);
+      });
+
+      function setActiveBySrc(src) {
+        for (const link of links) {
+          link.classList.toggle("active", (link.getAttribute("data-src") || "") === src);
+        }
+      }
+
+      function setViewerMeta(link, src) {
+        const title = (link && link.getAttribute("data-title")) || src || "请选择功能";
+        viewerTitle.textContent = title;
+        viewerSub.textContent = src ? src : "左侧点击后在右侧展示";
+        openNew.href = src ? src : "#";
+        openNew.style.pointerEvents = src ? "auto" : "none";
+        openNew.style.opacity = src ? "1" : "0.6";
+      }
+
+      function showExternal(src) {
+        empty.style.display = "none";
+        frame.style.display = "block";
+        frame.src = src;
+      }
+
+      function loadSrc(src, link) {
+        if (!src) return;
+        setActiveBySrc(src);
+        setViewerMeta(link, src);
+        showExternal(src);
+      }
+
+      function resolveFromHash() {
+        const raw = (location.hash || "").replace(/^#/, "").trim();
+        if (!raw) return null;
+        const src = raw.split("?")[0].split("#")[0];
+        return src || null;
+      }
+
+      nav.addEventListener("click", (e) => {
+        const a = e.target && e.target.closest ? e.target.closest("a") : null;
+        if (!a) return;
+
+        const src = a.getAttribute("data-src");
+        if (src) {
+          e.preventDefault();
+          if (location.hash !== "#" + src) location.hash = src;
+          loadSrc(src, a);
+
+          // 你如果还想“点击后自动折叠”，保留这段；不想就删掉这三行
+          // if (!document.body.classList.contains("sidebar-collapsed")) setCollapsed(true);
+          return;
+        }
+
+        const shouldCollapse = a.getAttribute("data-autocollapse") === "1" || a.getAttribute("target") === "_blank";
+        if (shouldCollapse && !document.body.classList.contains("sidebar-collapsed")) {
+          // setCollapsed(true); // 同上：想自动折叠就打开
+        }
+      });
+
+      reloadBtn.addEventListener("click", () => {
+        if (!frame.src) return;
+        try { frame.contentWindow.location.reload(); }
+        catch (err) { frame.src = frame.src; }
+      });
+
+      window.addEventListener("hashchange", () => {
+        const src = resolveFromHash();
+        const link = links.find((l) => (l.getAttribute("data-src") || "") === src);
+        if (src && link) loadSrc(src, link);
+      });
+
+      const initial = resolveFromHash();
+      const initialLink = initial ? links.find((l) => (l.getAttribute("data-src") || "") === initial) : null;
+
+      setCollapsed(readCollapsed());
+
+      if (initial && initialLink) {
+        loadSrc(initial, initialLink);
+      } else {
+        const home = links.find((l) => (l.getAttribute("data-src") || "") === "home.html") || first;
+        const src = home ? home.getAttribute("data-src") : null;
+        if (src && home) {
+          location.hash = src;
+          loadSrc(src, home);
+        } else {
+          setViewerMeta(null, null);
+          empty.style.display = "block";
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

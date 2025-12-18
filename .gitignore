@@ -17,3 +17,4 @@ project/__pycache__/**
 bpmatch/__pycache__/llmsTool.cpython-313.pyc
 bpmatch/__pycache__/bpmatch.cpython-313.pyc
 bpmatch/__pycache__/views.cpython-313.pyc
+/bpmatch/migrations/**

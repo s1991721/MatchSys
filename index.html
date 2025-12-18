@@ -326,6 +326,20 @@
       color:var(--muted);
       font-size:14px;
     }
+    .topbar-mid{
+      flex:1 1 auto;
+      min-width:0;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      padding:0 12px;
+      color:var(--muted);
+      font-weight:700;
+      font-size:14px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
     .top-actions{
       display:flex;
       align-items:center;
@@ -492,6 +506,9 @@
           Welcome back, Admin!
           <span>· 主页概览</span>
         </div>
+        <div class="topbar-mid" aria-label="日期">
+          <span id="topDate"></span>
+        </div>
 
         <div class="top-actions">
           <button class="icon-btn" aria-label="上传">
@@ -544,6 +561,12 @@
       }
 
       setCollapsed(readCollapsed());
+      const topDate = document.getElementById("topDate");
+      if (topDate) {
+        const d = new Date();
+        const jp = ["日", "月", "火", "水", "木", "金", "土"];
+        topDate.textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${jp[d.getDay()]}）`;
+      }
       btn.addEventListener("click", () => {
         setCollapsed(!document.body.classList.contains("sidebar-collapsed"));
       });

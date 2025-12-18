@@ -6,12 +6,13 @@
     <title>考勤管理</title>
     <style>
         :root {
-            --bg: #f4f6fb;
+            --bg: #f3f5fb;
             --card: #ffffff;
             --line: #e5e9f2;
-            --primary: #1c7bff;
+            --primary: #246bfd;
             --text: #1f2a3d;
-            --muted: #6b7686;
+            --muted: #8891a7;
+            --accent: rgba(36, 107, 253, 0.08);
         }
 
         * {
@@ -21,45 +22,187 @@
         body {
             margin: 0;
             font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: transparent;
+            background: var(--bg);
             color: var(--text);
         }
 
         .page {
-            padding: 4px 4px 12px;
+            padding: 24px;
         }
 
         .card {
             background: var(--card);
-            border-radius: 12px;
+            border-radius: 16px;
             border: 1px solid var(--line);
-            box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-            padding: 16px 18px 18px;
+            box-shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
+            padding: 22px 26px 10px;
         }
 
         .title {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 800;
-            margin: 0 0 10px;
+            margin: 0 0 6px;
         }
 
         .title::before {
             content: "";
             width: 4px;
-            height: 18px;
+            height: 20px;
             border-radius: 12px;
             background: var(--primary);
-            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+            box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
         }
 
         .hint {
-            margin: 0;
+            margin: 0 0 18px;
             color: var(--muted);
-            line-height: 1.7;
             font-size: 14px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 18px;
+            align-items: flex-end;
+        }
+
+        .filter-field {
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .filter-field label {
+            margin-bottom: 6px;
+        }
+
+        .filter-field select,
+        .filter-field input {
+            min-width: 180px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            padding: 8px 10px;
+            font-size: 14px;
+            color: var(--text);
+            background: #fff;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-button {
+            border-radius: 8px;
+            border: 1px solid var(--primary);
+            padding: 8px 18px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .filter-apply {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .filter-reset {
+            background: transparent;
+            color: var(--primary);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            text-align: left;
+            font-weight: 600;
+            color: var(--muted);
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        tbody td {
+            padding: 14px 8px;
+            border-bottom: 1px solid var(--line);
+            transition: background 0.2s;
+        }
+
+        tbody tr.summary-row {
+            cursor: pointer;
+        }
+
+        tbody tr.summary-row:hover {
+            background: var(--accent);
+        }
+
+        tbody tr.summary-row.active {
+            background: rgba(36, 107, 253, 0.12);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            min-width: 62px;
+            justify-content: center;
+            font-size: 12px;
+            border-radius: 999px;
+            padding: 2px 10px;
+            color: #fff;
+        }
+
+        .status-normal {
+            background: #00c48c;
+        }
+
+        .status-alert {
+            background: #ff9f43;
+        }
+
+        .status-warning {
+            background: #ff5f5f;
+        }
+
+        .detail-row {
+            background: #f9faff;
+        }
+
+        .detail-wrapper {
+            padding: 8px 0 16px 0;
+        }
+
+        .detail-header {
+            font-weight: 600;
+            margin: 6px 0 12px;
+        }
+
+        .detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .detail-table thead th {
+            border-bottom: 1px solid var(--line);
+            color: var(--muted);
+            padding: 8px;
+        }
+
+        .detail-table tbody td {
+            padding: 8px;
+            border-bottom: 1px solid #edf1ff;
+        }
+
+        .no-data {
+            color: var(--muted);
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
         }
     </style>
 </head>
@@ -67,8 +210,222 @@
 <div class="page">
     <div class="card">
         <h3 class="title">考勤管理</h3>
-        <p class="hint">该功能页面尚未接入（占位页）。你提供实际页面文件名后，我可以把这里替换为真实功能页面。</p>
+        <p class="hint">单击人员行展示其每日打卡明细。</p>
+        <div class="filters">
+            <div class="filter-field">
+                <label for="name-filter">姓名</label>
+                <input type="text" id="name-filter" placeholder="输入姓名" />
+            </div>
+            <div class="filter-field">
+                <label for="month-filter">月份</label>
+                <input type="month" id="month-filter" />
+            </div>
+            <div class="filter-actions">
+                <button class="filter-button filter-apply" id="filter-apply" type="button">筛选</button>
+                <button class="filter-button filter-reset" id="filter-reset" type="button">重置</button>
+            </div>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>月份</th>
+                    <th>出勤日</th>
+                    <th>欠勤日</th>
+                    <th>剩余年休</th>
+                    <th>状态</th>
+                </tr>
+                </thead>
+                <tbody id="summary-body">
+                </tbody>
+            </table>
+            <div id="no-data" class="no-data" style="display: none;">暂无考勤数据</div>
+        </div>
     </div>
 </div>
+<script>
+    const attendanceData = [
+        {
+            name: "宋欣",
+            month: "2024-04",
+            attendanceDays: 20,
+            absenceDays: 2,
+            annualLeave: 5,
+            status: "normal",
+            details: [
+                { date: "2024-04-01", day: "周一", clockIn: "09:02", clockOut: "18:12", note: "正常" },
+                { date: "2024-04-02", day: "周二", clockIn: "09:05", clockOut: "18:05", note: "晚到" },
+                { date: "2024-04-03", day: "周三", clockIn: "08:52", clockOut: "17:59", note: "正常" }
+            ]
+        },
+        {
+            name: "丘安健",
+            month: "2024-04",
+            attendanceDays: 18,
+            absenceDays: 4,
+            annualLeave: 3,
+            status: "alert",
+            details: [
+                { date: "2024-04-01", day: "周一", clockIn: "09:20", clockOut: "18:30", note: "晚到" },
+                { date: "2024-04-05", day: "周五", clockIn: "09:00", clockOut: "18:10", note: "正常" }
+            ]
+        },
+        {
+            name: "邱仁",
+            month: "2024-04",
+            attendanceDays: 15,
+            absenceDays: 5,
+            annualLeave: 0,
+            status: "warning",
+            details: [
+                { date: "2024-04-03", day: "周三", clockIn: "09:40", clockOut: "18:50", note: "晚到" },
+                { date: "2024-04-04", day: "周四", clockIn: "请假", clockOut: "请假", note: "年休" }
+            ]
+        }
+    ];
+
+    const statusMap = {
+        normal: { label: "正常", className: "status-normal" },
+        alert: { label: "关注", className: "status-alert" },
+        warning: { label: "异常", className: "status-warning" }
+    };
+
+    const summaryBody = document.getElementById("summary-body");
+    const noData = document.getElementById("no-data");
+    const nameFilter = document.getElementById("name-filter");
+    const monthFilter = document.getElementById("month-filter");
+    const applyBtn = document.getElementById("filter-apply");
+    const resetBtn = document.getElementById("filter-reset");
+    const filters = { name: "", month: "" };
+
+    function applyFilters(data) {
+        return data.filter(item => {
+            const matchName = filters.name ? item.name === filters.name : true;
+            const matchMonth = filters.month ? item.month === filters.month : true;
+            return matchName && matchMonth;
+        });
+    }
+
+    function renderSummary() {
+        summaryBody.innerHTML = "";
+        const filtered = applyFilters(attendanceData);
+
+        if (!filtered.length) {
+            noData.style.display = "block";
+            return;
+        }
+
+        noData.style.display = "none";
+
+        filtered.forEach((person, index) => {
+            const summaryRow = document.createElement("tr");
+            summaryRow.className = "summary-row";
+            summaryRow.dataset.index = index;
+            summaryRow.innerHTML = `
+                <td>${person.name}</td>
+                <td>${person.month}</td>
+                <td>${person.attendanceDays}</td>
+                <td>${person.absenceDays}</td>
+                <td>${person.annualLeave}</td>
+                <td>
+                    <span class="status-badge ${statusMap[person.status]?.className || ""}">
+                        ${statusMap[person.status]?.label || "未知"}
+                    </span>
+                </td>
+            `;
+
+            const detailRow = document.createElement("tr");
+            detailRow.className = "detail-row";
+            detailRow.style.display = "none";
+            detailRow.innerHTML = `
+                <td colspan="6">
+                    <div class="detail-wrapper">
+                        <div class="detail-header">${person.name} 的每日考勤</div>
+                        ${renderDetailTable(person.details)}
+                    </div>
+                </td>
+            `;
+
+            summaryBody.appendChild(summaryRow);
+            summaryBody.appendChild(detailRow);
+        });
+
+        attachRowEvents();
+    }
+
+    function renderDetailTable(details = []) {
+        if (!details.length) {
+            return `<div class="no-data">暂未录入该员工的考勤明细</div>`;
+        }
+
+        const rows = details.map(
+            item => `
+                <tr>
+                    <td>${item.date}</td>
+                    <td>${item.day}</td>
+                    <td>${item.clockIn}</td>
+                    <td>${item.clockOut}</td>
+                    <td>${item.note || "-"}</td>
+                </tr>
+            `
+        ).join("");
+
+        return `
+            <table class="detail-table">
+                <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>星期</th>
+                        <th>上班打卡</th>
+                        <th>下班打卡</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
+    }
+
+    function handleRowToggle(event) {
+        const row = event.currentTarget;
+        const index = row.dataset.index;
+        const detailRow = row.nextElementSibling;
+
+        const isActive = row.classList.contains("active");
+        document.querySelectorAll(".summary-row").forEach(r => r.classList.remove("active"));
+        document.querySelectorAll(".detail-row").forEach(r => r.style.display = "none");
+
+        if (!isActive) {
+            row.classList.add("active");
+            detailRow.style.display = "table-row";
+        }
+    }
+
+    function attachRowEvents() {
+        summaryBody.querySelectorAll(".summary-row").forEach(row => {
+            row.addEventListener("click", handleRowToggle);
+        });
+    }
+
+    function handleFilterApply() {
+        filters.name = nameFilter.value;
+        filters.month = monthFilter.value;
+        renderSummary();
+    }
+
+    function resetFilters() {
+        filters.name = "";
+        filters.month = "";
+        nameFilter.value = "";
+        monthFilter.value = "";
+        renderSummary();
+    }
+
+    renderSummary();
+
+    applyBtn.addEventListener("click", handleFilterApply);
+    resetBtn.addEventListener("click", resetFilters);
+</script>
 </body>
 </html>

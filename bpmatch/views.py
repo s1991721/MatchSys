@@ -52,6 +52,9 @@ def persons(request):
                 "belong": m.get("from") or "",
                 "detail": m.get("body") or "",
                 "date": m.get("date") or "",
+                "thread_id": m.get("thread_id") or "",
+                "message_id_header": m.get("message_id_header") or "",
+                "references_header": m.get("references_header") or "",
             }
         )
 
@@ -259,6 +262,13 @@ def send_mail(request):
     subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
     body = payload.get("body") or ""
     attachments = payload.get("attachments") or []
+    thread_id = (payload.get("thread_id") or "").strip()
+    in_reply_to = (payload.get("in_reply_to") or "").strip()
+    references = (
+        payload.get("references")
+        or payload.get("references_header")
+        or ""
+    ).strip()
 
     if not to_addr:
         return JsonResponse({"error": "Missing field: to"}, status=400)
@@ -286,6 +296,9 @@ def send_mail(request):
             subject=subject,
             body=body,
             attachments=normalized_atts,
+            thread_id=thread_id or None,
+            in_reply_to=in_reply_to or None,
+            references=references or None,
         )
     except FileNotFoundError as exc:
         return JsonResponse({"error": f"OAuth credentials missing: {exc}"}, status=500)

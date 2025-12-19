@@ -434,15 +434,20 @@
             const attachments = [];
             const selectionKey = 'matchSelection';
             let loadingTimer = null;
+            let currentSelection = null;
 
             const readSelection = () => {
                 const raw = localStorage.getItem(selectionKey);
-                if (!raw) return null;
-                try {
-                    return JSON.parse(raw);
-                } catch {
+                if (!raw) {
+                    currentSelection = null;
                     return null;
                 }
+                try {
+                    currentSelection = JSON.parse(raw);
+                } catch {
+                    currentSelection = null;
+                }
+                return currentSelection;
             };
 
             const applySelectionFromMatch = () => {
@@ -661,6 +666,9 @@
                     return;
                 }
 
+                const selection = currentSelection || readSelection();
+                const jobMeta = selection?.job || null;
+
                 setLoading(true, { title: '正在发送邮件…', subtitle: '正在上传附件并发送，请稍候。' });
                 try {
                     const attachmentsPayload = await Promise.all(
@@ -680,6 +688,17 @@
                         body: content,
                         attachments: attachmentsPayload
                     };
+                    if (jobMeta) {
+                        if (jobMeta.thread_id) {
+                            payload.thread_id = jobMeta.thread_id;
+                        }
+                        if (jobMeta.message_id_header) {
+                            payload.in_reply_to = jobMeta.message_id_header;
+                        }
+                        if (jobMeta.references_header) {
+                            payload.references = jobMeta.references_header;
+                        }
+                    }
 
                     const res = await fetch(`${API_BASE}/send-mail`, {
                         method: 'POST',

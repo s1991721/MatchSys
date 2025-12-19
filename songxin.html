@@ -524,15 +524,19 @@
                         throw new Error(`HTTP ${res.status}`);
                     }
                     const data = await res.json();
-                    const formatted =
-                        data.data
-                            ? JSON.stringify(data.data, null, 2)
-                            : (typeof data.raw === 'string' ? data.raw : '');
-                    const content = [
-                        '【解析结果】',
-                        formatted || '暂无结果'
-                    ].join('\n');
-                    editor.value = content;
+                    const message = typeof data.message === 'string' ? data.message.trim() : '';
+                    let formatted = message;
+                    if (!formatted) {
+                        if (data.data) {
+                            formatted = JSON.stringify(data.data, null, 2);
+                        } else if (typeof data.raw === 'string') {
+                            formatted = data.raw;
+                        } else {
+                            formatted = '';
+                        }
+                    }
+                    const normalized = normalizeMultiline(formatted);
+                    editor.value = normalized || '解析结果暂不可用';
                     renderPreview();
                 } catch (err) {
                     console.error('调用 extract_qiuren_detail 失败', err);
@@ -560,6 +564,19 @@
                 reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
                 reader.readAsDataURL(file);
             });
+
+            const normalizeMultiline = (text) => {
+                if (typeof text !== 'string') return '';
+                let clean = text
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\\n/g, '\n')
+                    .replace(/\t/g, '    ');
+                const trimmed = clean.trim();
+                if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                    clean = trimmed.slice(1, -1);
+                }
+                return clean;
+            };
 
             const deriveSubject = (text) => {
                 const firstLine = (text || '').split('\n').map(t => t.trim()).find(Boolean);

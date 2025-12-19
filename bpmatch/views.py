@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
@@ -85,12 +86,14 @@ def log_job_click(request):
 
     # 标准化匹配结果，方便前端直接渲染人员列表
     matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
+
     def _match_len(item):
         if isinstance(item, dict):
             skills = item.get("matched_skills")
             if isinstance(skills, list):
                 return len(skills)
         return 0
+
     sorted_matches = sorted(matches_raw or [], key=_match_len, reverse=True)
     items = []
     for idx, match in enumerate(sorted_matches):
@@ -98,13 +101,13 @@ def log_job_click(request):
         items.append(
             {
                 "id": match.get("id") or f"match-{idx}",
-                "name": match.get("subject")
-                or match.get("title")
-                or "(无标题)",
+                "name": match.get("subject") or match.get("title") or "(无标题)",
                 "belong": match.get("from") or "",
                 "detail": match.get("body") or match.get("detail") or "",
                 "date": match.get("date") or "",
-                "matched_skills": matched_skills if isinstance(matched_skills, list) else [],
+                "matched_skills": (
+                    matched_skills if isinstance(matched_skills, list) else []
+                ),
             }
         )
 
@@ -144,12 +147,94 @@ def extract_qiuren_detail(request):
     try:
         parsed = json.loads(llm_result)
     except Exception:
-        parsed = None
+        parsed = {}
+
+    if not isinstance(parsed, dict):
+        parsed = {}
+
+    def _format_multiline_section(text_value: str) -> str:
+        """
+        Improve readability by inserting a line break after every Japanese comma 「、」.
+        """
+        if not isinstance(text_value, str):
+            return ""
+        normalized = text_value.replace("\r\n", "\n").strip()
+        if not normalized:
+            return ""
+
+        normalized = re.sub(r"([：:])\s*\n+\s*", r"\1", normalized)
+        normalized = normalized.replace("，", "、").replace(",", "、")
+        normalized = re.sub(r"、\s*", "、\n", normalized)
+        normalized = re.sub(r"\n{3,}", "\n\n", normalized)
+        return normalized.strip()
+
+    fields = {
+        "project_name": parsed.get("project_name") or "",
+        "project_detail": parsed.get("project_detail") or "",
+        "requirement": parsed.get("requirement") or "",
+        "skills_must": parsed.get("skills_must") or "",
+        "skills_can": parsed.get("skills_can") or "",
+        "remark": parsed.get("remark") or "",
+    }
+
+    for section_key in ("requirement", "remark"):
+        fields[section_key] = _format_multiline_section(fields[section_key])
+
+    # todo 根据需求更改模板
+    template = (
+        "いつもお世話になっております。\n"
+        "株式会社の林でございます。\n"
+        "\n"
+        "\n"
+        "技術者をご紹介いただきありがとうございます。\n"
+        "弊社にて対応可能な案件をご紹介させて頂きます。\n"
+        "ご検討頂けますと幸いです。\n"
+        "\n"
+        "\n"
+        "**************************************\n"
+        "【案件名】\n"
+        "{project_name}\n"
+        "\n"
+        "【業務概要】\n"
+        "{project_detail}\n"
+        "\n"
+        "【条件】\n"
+        "{requirement}\n"
+        "\n"
+        "【必須スキル】\n"
+        "{skills_must}\n"
+        "\n"
+        "【尚可スキル】\n"
+        "{skills_can}\n"
+        "\n"
+        "【備考】\n"
+        "{remark}\n"
+        "\n"
+        "**************************************\n"
+        "\n"
+        "\n"
+        "\n"
+        "今後とも何卒よろしくお願い申し上げます。\n"
+        "＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n"
+        "\n"
+        "株式会社\n"
+        "IT サポート\n"
+        "〒141-2222\n"
+        "東京都品川区東五反田\n"
+        "五反田F\n"
+        "営業共通:sales@.co.jp\n"
+        "TEL: 03-6666-8888　FAX: 03-6666-8888\n"
+        "Web: http://.co.jp\n"
+        "労働者派遣事業許可番号：　派 13-311111\n"
+        "有料職業紹介事業許可番号：　13-ユ-311111\n"
+    )
+
+    formatted_message = template.format(**fields)
 
     return JsonResponse(
         {
             "status": "ok",
-            "data": parsed,
+            "data": formatted_message,
             "raw": llm_result,
         }
     )
@@ -234,7 +319,9 @@ def send_history(request):
                 "cc": log.cc or "",
                 "status": log.status or "sent",
                 "sent_at": timezone.localtime(log.sent_at, current_tz).isoformat(),
-                "time": timezone.localtime(log.sent_at, current_tz).strftime("%Y-%m-%d %H:%M"),
+                "time": timezone.localtime(log.sent_at, current_tz).strftime(
+                    "%Y-%m-%d %H:%M"
+                ),
                 "content": log.body or "",
                 "attachments": attachments if isinstance(attachments, list) else [],
             }

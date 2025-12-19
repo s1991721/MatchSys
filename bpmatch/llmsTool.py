@@ -153,13 +153,17 @@ def extract_qiuren_detail(text: str) -> str:
                 ・本文に書かれていない内容は空文字列 "" を返す
                 ・出力は JSON のみ（説明文・コードブロック禁止）
                 ・日本語は原文のまま使用する
+                ・案件情報と無関係な挨拶文、署名、注意書きは抽出対象外とする
+
 
                 【出力フォーマット】
                 {
                 "project_name": "",
                 "project_detail": "",
-                "skills": "",
-                "date": ""
+                "requirement": "",
+                "skills_must": "",
+                "skills_can": "",
+                "remark": ""
                 }
 
                 【各項目の定義】
@@ -169,11 +173,17 @@ def extract_qiuren_detail(text: str) -> str:
                 - project_detail：
                 「【業務概要】」などに記載されている業務内容の説明文
 
-                - skills：
-                「【必須スキル】」「【尚可スキル】」に記載されている内容
+                - requirement：
+                「【条件】」「【応募条件】」などに記載されている応募条件・制約に関する記述
 
-                - date：
-                「時期」「期間」など、開始時期や期間に関する記述
+                - skills_must：
+                「【必須スキル】」に記載されている内容
+
+                - skills_can：
+                「【尚可スキル】」に記載されている内容
+
+                - remark：
+                「【備考】」または「時期」「期間」「開始日」などに明確に記載されている内容
 
                 """
             )

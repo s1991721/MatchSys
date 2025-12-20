@@ -104,10 +104,14 @@ def log_job_click(request):
         items.append(
             {
                 "id": match.get("id") or f"match-{idx}",
+                "subject": match.get("subject") or match.get("title") or "",
                 "name": match.get("subject") or match.get("title") or "(无标题)",
                 "belong": match.get("from") or "",
                 "detail": match.get("body") or match.get("detail") or "",
                 "date": match.get("date") or "",
+                "thread_id": match.get("thread_id") or "",
+                "message_id_header": match.get("message_id_header") or "",
+                "references_header": match.get("references_header") or "",
                 "matched_skills": (
                     matched_skills if isinstance(matched_skills, list) else []
                 ),

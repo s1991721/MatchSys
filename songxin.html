@@ -450,6 +450,16 @@
                 return currentSelection;
             };
 
+            const extractEmail = (raw) => {
+                if (!raw) return '';
+                const bracketMatch = raw.match(/<([^>]+)>/);
+                if (bracketMatch && bracketMatch[1]) {
+                    return bracketMatch[1].trim();
+                }
+                const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+                return emailMatch ? emailMatch[0].trim() : '';
+            };
+
             const applySelectionFromMatch = () => {
                 const data = readSelection();
                 if (!data || !data.job || !data.person) return null;
@@ -479,13 +489,20 @@
                     editor.value = combined;
                 }
 
-                // 默认主题优先使用求人标题，其次人员姓名，再其次取正文首行
-                if (job.title) {
-                    subjectInput.value = job.title;
-                } else if (person.name) {
-                    subjectInput.value = `${person.name} - 应聘`;
+                const personSubject = person.subject || person.title || person.name || '';
+                if (personSubject) {
+                    subjectInput.value = personSubject.startsWith('Re:')
+                        ? personSubject
+                        : `Re: ${personSubject}`;
                 } else {
                     subjectInput.value = deriveSubject(combined);
+                }
+
+                if (!email.value) {
+                    const replyTo = extractEmail(person.belong || person.from || '');
+                    if (replyTo) {
+                        email.value = replyTo;
+                    }
                 }
 
                 return job.detail || job.desc || jobLines || '';
@@ -667,7 +684,7 @@
                 }
 
                 const selection = currentSelection || readSelection();
-                const jobMeta = selection?.job || null;
+                const personMeta = selection?.person || null;
 
                 setLoading(true, { title: '正在发送邮件…', subtitle: '正在上传附件并发送，请稍候。' });
                 try {
@@ -688,15 +705,15 @@
                         body: content,
                         attachments: attachmentsPayload
                     };
-                    if (jobMeta) {
-                        if (jobMeta.thread_id) {
-                            payload.thread_id = jobMeta.thread_id;
+                    if (personMeta) {
+                        if (personMeta.thread_id) {
+                            payload.thread_id = personMeta.thread_id;
                         }
-                        if (jobMeta.message_id_header) {
-                            payload.in_reply_to = jobMeta.message_id_header;
+                        if (personMeta.message_id_header) {
+                            payload.in_reply_to = personMeta.message_id_header;
                         }
-                        if (jobMeta.references_header) {
-                            payload.references = jobMeta.references_header;
+                        if (personMeta.references_header) {
+                            payload.references = personMeta.references_header;
                         }
                     }
 

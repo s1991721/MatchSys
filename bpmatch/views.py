@@ -160,7 +160,8 @@ def extract_qiuren_detail(request):
 
     try:
         parsed = json.loads(clean_llm_json(llm_result))
-    except Exception:
+    except Exception as exc:
+        print(f"[extract_qiuren_detail] 解析 LLM JSON 失败: {exc}")
         parsed = {}
 
     if not isinstance(parsed, dict):

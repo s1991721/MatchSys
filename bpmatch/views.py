@@ -147,75 +147,72 @@ def extract_qiuren_detail(request):
         return JsonResponse({"error": str(exc)}, status=500)
 
     # extract_qiuren_detail 返回的是 JSON 字符串，这里尝试解析以便前端直接使用
+    def clean_llm_json(s: str) -> str:
+        s = s.strip()
+        if s.startswith("```"):
+            s = s.removeprefix("```json").removeprefix("```").strip()
+            s = s.removesuffix("```").strip()
+        return s
+
     try:
-        parsed = json.loads(llm_result)
+        parsed = json.loads(clean_llm_json(llm_result))
     except Exception:
         parsed = {}
 
     if not isinstance(parsed, dict):
         parsed = {}
 
-    def _format_multiline_section(text_value: str) -> str:
+    def make_block(title: str, value) -> str:
         """
-        Improve readability by inserting a line break after every Japanese comma 「、」.
+        生成一个「标题 + 内容 + 空行」的区块
+        - value 为空 / None / 空列表 / 空字符串 → 返回空字符串
+        - value 为 list → 自动换行拼接
         """
-        if not isinstance(text_value, str):
-            return ""
-        normalized = text_value.replace("\r\n", "\n").strip()
-        if not normalized:
+        if not value:
             return ""
 
-        normalized = re.sub(r"([：:])\s*\n+\s*", r"\1", normalized)
-        normalized = normalized.replace("，", "、").replace(",", "、")
-        normalized = re.sub(r"、\s*", "、\n", normalized)
-        normalized = re.sub(r"\n{3,}", "\n\n", normalized)
-        return normalized.strip()
+        if isinstance(value, list):
+            value = "\n".join(v for v in value if v)
+
+        value = str(value).strip()
+        if not value:
+            return ""
+
+        return f"{title}\n{value}\n\n"
+
+    project_name = parsed.get("project_name")
+    project_detail = parsed.get("project_detail")
+    requirement = parsed.get("requirement", [])
+    skills_must = parsed.get("skills_must", [])
+    skills_can = parsed.get("skills_can", [])
+    remark = parsed.get("remark")
 
     fields = {
-        "project_name": parsed.get("project_name") or "",
-        "project_detail": parsed.get("project_detail") or "",
-        "requirement": parsed.get("requirement") or "",
-        "skills_must": parsed.get("skills_must") or "",
-        "skills_can": parsed.get("skills_can") or "",
-        "remark": parsed.get("remark") or "",
+        "project_block": make_block("【案件名】", project_name),
+        "detail_block": make_block("【業務概要】", project_detail),
+        "requirement_block": make_block("【条件】", requirement),
+        "skills_must_block": make_block("【必須スキル】", skills_must),
+        "skills_can_block": make_block("【尚可スキル】", skills_can),
+        "remark_block": make_block("【備考】", remark),
     }
-
-    for section_key in ("requirement", "remark"):
-        fields[section_key] = _format_multiline_section(fields[section_key])
 
     # todo 根据需求更改模板
     template = (
         "いつもお世話になっております。\n"
         "株式会社の林でございます。\n"
         "\n"
-        "\n"
         "技術者をご紹介いただきありがとうございます。\n"
         "弊社にて対応可能な案件をご紹介させて頂きます。\n"
         "ご検討頂けますと幸いです。\n"
         "\n"
-        "\n"
         "**************************************\n"
-        "【案件名】\n"
-        "{project_name}\n"
-        "\n"
-        "【業務概要】\n"
-        "{project_detail}\n"
-        "\n"
-        "【条件】\n"
-        "{requirement}\n"
-        "\n"
-        "【必須スキル】\n"
-        "{skills_must}\n"
-        "\n"
-        "【尚可スキル】\n"
-        "{skills_can}\n"
-        "\n"
-        "【備考】\n"
-        "{remark}\n"
-        "\n"
+        "{project_block}"
+        "{detail_block}"
+        "{requirement_block}"
+        "{skills_must_block}"
+        "{skills_can_block}"
+        "{remark_block}"
         "**************************************\n"
-        "\n"
-        "\n"
         "\n"
         "今後とも何卒よろしくお願い申し上げます。\n"
         "＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n"

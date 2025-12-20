@@ -1,0 +1,6 @@
+Django==5.1.1
+google_api_python_client==2.187.0
+google_auth_oauthlib==1.2.3
+langchain_core==1.2.4
+langchain_ollama==1.0.1
+protobuf==6.33.2

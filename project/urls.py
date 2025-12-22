@@ -29,9 +29,11 @@ from bpmatch.views import (
     send_history,
 )
 from employee.views import (
+    change_password_api,
     employee_detail_api,
     employees_api,
     login_api,
+    logout_api,
     technician_detail_api,
     technician_ss_download,
     technician_ss_upload,
@@ -54,6 +56,8 @@ urlpatterns = [
     path("songxinhistory.html", TemplateView.as_view(template_name="songxinhistory.html")),
     path("login.html", TemplateView.as_view(template_name="login.html")),
     path("api/login", login_api, name="employee-login"),
+    path("api/logout", logout_api, name="employee-logout"),
+    path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),
     path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("api/technicians", technicians_api, name="technician-list"),

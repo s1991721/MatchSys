@@ -53,6 +53,7 @@ def login_api(request):
     request.session.cycle_key()
     request.session["employee_id"] = user_login.employee_id
     request.session["employee_name"] = user_login.employee.name
+    request.session["employee_department_name"] = user_login.employee.department_name
     request.session["employee_position_name"] = user_login.employee.position_name
     request.session["user_name"] = user_login.user_name
 
@@ -66,6 +67,47 @@ def login_api(request):
             "redirect": "index.html",
         }
     )
+
+
+@csrf_exempt
+@require_POST
+def logout_api(request):
+    request.session.flush()
+    return JsonResponse({"status": "ok", "redirect": "login.html"})
+
+
+@csrf_exempt
+@require_POST
+def change_password_api(request):
+    employee_id = request.session.get("employee_id")
+    if not employee_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    payload, error = _parse_json_body(request)
+    if error:
+        return error
+
+    old_password = (payload.get("old_password") or "").strip()
+    new_password = (payload.get("new_password") or "").strip()
+
+    if not old_password or not new_password:
+        return JsonResponse({"error": "Missing old_password or new_password"}, status=400)
+    if old_password == new_password:
+        return JsonResponse({"error": "New password must be different"}, status=400)
+
+    user_login = UserLogin.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).first()
+    if not user_login:
+        return JsonResponse({"error": "User not found"}, status=404)
+    if user_login.password != old_password:
+        return JsonResponse({"error": "Invalid current password"}, status=400)
+
+    user_login.password = new_password
+    user_login.save(update_fields=["password", "updated_at"])
+
+    return JsonResponse({"status": "ok"})
 
 
 def _parse_json_body(request):
@@ -625,4 +667,8 @@ def employee_detail_api(request, employee_id):
         return JsonResponse({"error": "Missing field: name"}, status=400)
 
     employee.save()
+    if request.session.get("employee_id") == employee.id:
+        request.session["employee_name"] = employee.name
+        request.session["employee_department_name"] = employee.department_name
+        request.session["employee_position_name"] = employee.position_name
     return JsonResponse({"status": "ok", "item": _serialize_employee(employee)})

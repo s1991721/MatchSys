@@ -1,163 +1,479 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>个人信息</title>
-    <style>
-        :root {
-            --bg: #f4f6fb;
-            --card: #ffffff;
-            --line: #e5e9f2;
-            --primary: #1c7bff;
-            --text: #1f2a3d;
-            --muted: #6b7686;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人信息</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --line: #e5e9f2;
+      --primary: #1c7bff;
+      --text: #1f2a3d;
+      --muted: #6b7686;
+      --danger: #e5523f;
+      --success: #1f9d64;
+      --shadow: 0 12px 26px rgba(31, 53, 90, 0.08);
+      --radius: 14px;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * { box-sizing: border-box; }
 
-        body {
-            margin: 0;
-            font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: transparent;
-            color: var(--text);
-        }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+      background: transparent;
+      color: var(--text);
+    }
 
-        .page {
-            padding: 4px 4px 12px;
-        }
+    .page {
+      padding: 6px 6px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-        .card {
-            background: var(--card);
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-            padding: 16px 18px 18px;
-        }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+    }
 
-        .title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-            font-weight: 800;
-            margin: 0 0 12px;
-        }
+    .header-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
 
-        .title::before {
-            content: "";
-            width: 4px;
-            height: 18px;
-            border-radius: 12px;
-            background: var(--primary);
-            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
-        }
+    .profile-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 240px;
+    }
 
-        .grid {
-            display: grid;
-            grid-template-columns: 92px 1fr;
-            gap: 14px;
-            align-items: start;
-        }
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      border: 1px solid #d8dfec;
+      background: radial-gradient(circle at 30% 30%, rgba(94, 144, 255, 0.32), rgba(46, 123, 255, 0.12) 45%, rgba(247, 249, 253, 0.95) 100%);
+      display: grid;
+      place-items: center;
+      color: #5e90ff;
+    }
 
-        .avatar {
-            width: 92px;
-            height: 92px;
-            border-radius: 999px;
-            border: 1px solid #d8dfec;
-            background: radial-gradient(circle at 30% 30%, rgba(94, 144, 255, 0.35), rgba(46, 123, 255, 0.10) 45%, rgba(247, 249, 253, 0.92) 100%);
-            display: grid;
-            place-items: center;
-            overflow: hidden;
-            color: #5e90ff;
-        }
+    .avatar svg {
+      width: 30px;
+      height: 30px;
+      display: block;
+    }
 
-        .avatar svg {
-            width: 42px;
-            height: 42px;
-            display: block;
-        }
+    .profile-name {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
 
-        .name {
-            font-size: 18px;
-            font-weight: 900;
-            margin: 2px 0 6px;
-        }
+    .profile-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
 
-        .meta {
-            color: var(--muted);
-            font-size: 13px;
-            line-height: 1.7;
-            margin: 0;
-        }
+    .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: #c5cfde;
+    }
 
-        .row {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
 
-        .pill {
-            border-radius: 12px;
-            border: 1px solid #d8dfec;
-            background: linear-gradient(180deg, #fbfcff 0%, #f6f7fb 100%);
-            padding: 12px 12px;
-        }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0 0 12px;
+    }
 
-        .pill-label {
-            color: var(--muted);
-            font-size: 12px;
-        }
+    .section-title::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      border-radius: 12px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+    }
 
-        .pill-value {
-            margin-top: 6px;
-            font-weight: 800;
-        }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
 
-        @media (max-width: 720px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-            .row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    .form-field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .form-field input,
+    .form-field textarea {
+      border: 1px solid #d8dfec;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      background: #fff;
+    }
+
+    .form-field textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .form-field input:focus,
+    .form-field textarea:focus {
+      border-color: rgba(28, 123, 255, 0.5);
+      box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.12);
+    }
+
+    .form-field input[readonly],
+    .form-field textarea[readonly] {
+      background: #f2f4f8;
+      color: #7a8597;
+      border-color: #e1e6ef;
+      cursor: not-allowed;
+    }
+
+    .form-actions {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border-radius: 10px;
+      border: 1px solid transparent;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 20px rgba(28, 123, 255, 0.2);
+    }
+
+    .btn.primary:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn.outline {
+      background: #fff;
+      color: var(--text);
+      border-color: #d8dfec;
+    }
+
+    .btn.outline:hover {
+      border-color: rgba(28, 123, 255, 0.35);
+    }
+
+    .btn.danger {
+      background: rgba(229, 82, 63, 0.08);
+      color: var(--danger);
+      border-color: rgba(229, 82, 63, 0.3);
+    }
+
+    .status {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      display: none;
+    }
+
+    .status.success {
+      display: block;
+      border-color: rgba(31, 157, 100, 0.3);
+      background: rgba(31, 157, 100, 0.08);
+      color: var(--success);
+    }
+
+    .status.error {
+      display: block;
+      border-color: rgba(229, 82, 63, 0.3);
+      background: rgba(229, 82, 63, 0.08);
+      color: var(--danger);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 <div class="page">
-    <div class="card">
-        <h3 class="title">个人信息</h3>
-        <div class="grid">
-            <div class="avatar" aria-label="用户头像">
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path fill="currentColor" d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12zm0 2c-4.8 0-8.7 2.4-8.7 5.4V21h17.4v-1.6C20.7 16.4 16.8 14 12 14z"/>
-                </svg>
-            </div>
-            <div>
-                <div class="name">admin</div>
-                <p class="meta">这里是占位的个人信息页。你接入真实用户数据后，可以在这里展示姓名、邮箱、角色等。</p>
-                <div class="row" aria-label="概览信息">
-                    <div class="pill">
-                        <div class="pill-label">状态</div>
-                        <div class="pill-value">在线</div>
-                    </div>
-                    <div class="pill">
-                        <div class="pill-label">角色</div>
-                        <div class="pill-value">管理员</div>
-                    </div>
-                    <div class="pill">
-                        <div class="pill-label">最近登录</div>
-                        <div class="pill-value">-</div>
-                    </div>
-                </div>
-            </div>
+  <div class="card header-card">
+    <div class="profile-head">
+      <div class="avatar" aria-label="用户头像">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="currentColor" d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12zm0 2c-4.8 0-8.7 2.4-8.7 5.4V21h17.4v-1.6C20.7 16.4 16.8 14 12 14z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="profile-name" id="profileName">{{ request.session.employee_name }}</div>
+        <div class="profile-meta">
+          <span id="profileDepartment">{{ request.session.employee_department_name }}</span>
+          <span class="dot" aria-hidden="true"></span>
+          <span id="profileAccount">{{ request.session.employee_position_name }}</span>
         </div>
+      </div>
     </div>
+    <div class="profile-actions">
+      <button class="btn danger" type="button" id="logoutBtn">退出登录</button>
+    </div>
+  </div>
+
+  <div id="statusBox" class="status" role="status" aria-live="polite"></div>
+
+  <div class="content-grid">
+    <section class="card">
+      <h3 class="section-title">修改员工信息</h3>
+      <form id="employeeForm" autocomplete="off">
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="empName">姓名</label>
+            <input id="empName" name="name" type="text" required />
+          </div>
+          <div class="form-field">
+            <label for="empPhone">手机</label>
+            <input id="empPhone" name="phone" type="text" />
+          </div>
+          <div class="form-field">
+            <label for="empEmail">邮箱</label>
+            <input id="empEmail" name="email" type="email" />
+          </div>
+          <div class="form-field">
+            <label for="empDepartment">部门</label>
+            <input id="empDepartment" name="department_name" type="text" readonly />
+          </div>
+          <div class="form-field">
+            <label for="empPosition">职位</label>
+            <input id="empPosition" name="position_name" type="text" readonly />
+          </div>
+          <div class="form-field">
+            <label for="empAddress">地址</label>
+            <textarea id="empAddress" name="address" readonly></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">保存信息</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h3 class="section-title">修改密码</h3>
+      <form id="passwordForm" autocomplete="off">
+        <div class="form-field">
+          <label for="oldPassword">当前密码</label>
+          <input id="oldPassword" type="password" required />
+        </div>
+        <div class="form-field">
+          <label for="newPassword">新密码</label>
+          <input id="newPassword" type="password" required />
+        </div>
+        <div class="form-field">
+          <label for="confirmPassword">确认新密码</label>
+          <input id="confirmPassword" type="password" required />
+        </div>
+        <div class="hint">密码修改后需要重新登录。</div>
+        <div class="form-actions">
+          <button class="btn primary" type="submit">更新密码</button>
+        </div>
+      </form>
+    </section>
+  </div>
 </div>
+
+<script>
+  const API_BASE = "";
+  const employeeId = "{{ request.session.employee_id }}";
+
+  const statusBox = document.getElementById("statusBox");
+  const employeeForm = document.getElementById("employeeForm");
+  const passwordForm = document.getElementById("passwordForm");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  function showStatus(message, type) {
+    statusBox.textContent = message;
+    statusBox.className = `status ${type}`;
+  }
+
+  function setDisabled(disabled) {
+    employeeForm.querySelectorAll("input, textarea, button").forEach((el) => {
+      el.disabled = disabled;
+    });
+    passwordForm.querySelectorAll("input, button").forEach((el) => {
+      el.disabled = disabled;
+    });
+    logoutBtn.disabled = disabled;
+  }
+
+  async function loadEmployee() {
+    if (!employeeId) {
+      showStatus("未登录，无法加载个人信息。", "error");
+      setDisabled(true);
+      return;
+    }
+    try {
+      const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "加载失败");
+      const item = data.item || {};
+      document.getElementById("empName").value = item.name || "";
+      document.getElementById("empPhone").value = item.phone || "";
+      document.getElementById("empEmail").value = item.email || "";
+      document.getElementById("empDepartment").value = item.department || item.department_name || "";
+      document.getElementById("empPosition").value = item.position || item.position_name || "";
+      document.getElementById("empAddress").value = item.address || "";
+
+      document.getElementById("profileName").textContent = item.name || "";
+      document.getElementById("profileDepartment").textContent = item.department_name || item.department || "";
+    } catch (err) {
+      showStatus(err.message || "加载失败", "error");
+    }
+  }
+
+  employeeForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!employeeId) return;
+    try {
+      const payload = {
+        name: document.getElementById("empName").value.trim(),
+        phone: document.getElementById("empPhone").value.trim(),
+        email: document.getElementById("empEmail").value.trim(),
+      };
+      const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "保存失败");
+      showStatus("员工信息已更新。", "success");
+      alert("员工信息已更新。");
+      if (data.item) {
+        document.getElementById("profileName").textContent = data.item.name || "";
+        document.getElementById("profileDepartment").textContent = data.item.department_name || "";
+      }
+    } catch (err) {
+      const message = err.message || "保存失败";
+      showStatus(message, "error");
+      alert(message);
+    }
+  });
+
+  passwordForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const oldPassword = document.getElementById("oldPassword").value;
+    const newPassword = document.getElementById("newPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (!oldPassword || !newPassword) {
+      showStatus("请输入完整的密码信息。", "error");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showStatus("两次输入的新密码不一致。", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          old_password: oldPassword,
+          new_password: newPassword,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "修改失败");
+      showStatus("密码已更新，请重新登录。", "success");
+      alert("密码已更新，请重新登录。");
+      passwordForm.reset();
+    } catch (err) {
+      const message = err.message || "修改失败";
+      showStatus(message, "error");
+      alert(message);
+    }
+  });
+
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      const target = (data.redirect || "login.html").replace(/^\//, "");
+      const nextUrl = new URL(target, window.location.href).toString();
+      if (window.top && window.top !== window) {
+        window.top.location.href = nextUrl;
+      } else {
+        window.location.href = nextUrl;
+      }
+    } catch (err) {
+      showStatus("退出失败，请重试。", "error");
+    }
+  });
+
+  loadEmployee();
+</script>
 </body>
 </html>

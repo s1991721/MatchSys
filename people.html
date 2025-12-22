@@ -184,8 +184,8 @@
 
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px 18px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px 16px;
         }
 
         .dual-input {
@@ -480,11 +480,8 @@
         <div class="filters">
             <div class="filter-grid">
                 <label>
-                    年龄范围
-                    <div class="dual-input">
-                        <input type="number" id="filterAgeMin" min="18" max="80" placeholder="最小岁数" />
-                        <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" />
-                    </div>
+                    最大年龄
+                    <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" />
                 </label>
                 <label>
                     国籍
@@ -664,7 +661,6 @@
     const dialogTitle = document.getElementById('dialogTitle');
     const closeDialogBtn = document.getElementById('closeDialogBtn');
     const cancelDialogBtn = document.getElementById('cancelDialogBtn');
-    const filterAgeMin = document.getElementById('filterAgeMin');
     const filterAgeMax = document.getElementById('filterAgeMax');
     const filterNationality = document.getElementById('filterNationality');
     const filterPriceMax = document.getElementById('filterPriceMax');
@@ -672,6 +668,8 @@
     const filterSiteContract = document.getElementById('filterSiteContract');
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const filterResetBtn = document.getElementById('filterResetBtn');
+    const ssFileInput = personForm.querySelector('input[type="file"][name="ssFile"]');
+    let isFileDialogOpen = false;
 
     const showDialogModal = () => {
         if (typeof personDialog.showModal === 'function') {
@@ -970,7 +968,6 @@
     };
 
     const applyFilters = () => {
-        const ageMin = getNumberValue(filterAgeMin.value);
         const ageMax = getNumberValue(filterAgeMax.value);
         const priceMax = getNumberValue(filterPriceMax.value);
         const nationalityValue = filterNationality.value;
@@ -978,7 +975,6 @@
         const siteContractValue = filterSiteContract.value;
 
         const filtered = people.filter(person => {
-            if (ageMin !== null && person.age < ageMin) return false;
             if (ageMax !== null && person.age > ageMax) return false;
             if (priceMax !== null && person.price > priceMax) return false;
             if (nationalityValue && person.nationality !== nationalityValue) return false;
@@ -1042,8 +1038,19 @@
     });
     personDialog.addEventListener('cancel', (event) => {
         event.preventDefault();
-        closeDialog();
+        return;
     });
+    if (ssFileInput) {
+        ssFileInput.addEventListener('click', () => {
+            isFileDialogOpen = true;
+        });
+        ssFileInput.addEventListener('change', () => {
+            isFileDialogOpen = false;
+        });
+        window.addEventListener('focus', () => {
+            isFileDialogOpen = false;
+        });
+    }
 
 
     peopleTableBody.addEventListener('click', (event) => {
@@ -1071,7 +1078,7 @@
         }
     });
 
-    const filterInputs = [filterAgeMin, filterAgeMax, filterPriceMax];
+    const filterInputs = [filterAgeMax, filterPriceMax];
     applyFilterBtn.addEventListener('click', applyFilters);
     filterResetBtn.addEventListener('click', () => {
         filterInputs.forEach(input => input.value = '');

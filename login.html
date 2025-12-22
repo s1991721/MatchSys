@@ -56,7 +56,8 @@
             if (!res.ok) {
                 throw new Error(data.error || "登录失败");
             }
-            window.location.href = data.redirect || "/index.html";
+            const target = (data.redirect || "index.html").replace(/^\//, "");
+            window.location.href = new URL(target, window.location.href).toString();
         } catch (err) {
             errorBox.textContent = err.message || "登录失败";
             errorBox.classList.remove("hidden");

@@ -53,6 +53,6 @@ def login_api(request):
                 "id": user_login.employee_id,
                 "name": user_login.employee.name,
             },
-            "redirect": "/index.html",
+            "redirect": "index.html",
         }
     )

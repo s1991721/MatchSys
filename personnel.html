@@ -55,26 +55,6 @@
       background: var(--primary);
       box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
     }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
-    }
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 12px 14px;
-      background: #fdfdff;
-    }
-    .stat-label {
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      margin-top: 6px;
-    }
     label {
       display: flex;
       flex-direction: column;
@@ -363,11 +343,6 @@
 </head>
 <body>
   <div class="page">
-    <section class="card">
-      <h3 class="title">社内人员管理</h3>
-      <div class="stats" id="stats"></div>
-    </section>
-
     <section class="table-card">
       <div class="filters">
         <div class="filter-grid">
@@ -518,7 +493,6 @@
     const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
 
     const tableBody = document.getElementById("tableBody");
-    const statsBox = document.getElementById("stats");
     const searchInput = document.getElementById("searchInput");
     const deptSelect = document.getElementById("deptSelect");
     const statusSelect = document.getElementById("statusSelect");
@@ -568,27 +542,6 @@
       });
     }
 
-    function renderStats(list){
-      const total = list.length;
-      const active = list.filter(item => item.status === "active").length;
-      const disabled = list.filter(item => item.status === "disabled").length;
-      const leave = list.filter(item => item.status === "leave").length;
-      if (summaryText) {
-        summaryText.textContent = `共 ${total} 人`;
-      }
-      const html = [
-        { label:"总人数", value: total },
-        { label:"在岗成员", value: active },
-        { label:"停用成员", value: disabled },
-        { label:"离职成员", value: leave }
-      ].map(item => (
-        `<div class="stat">
-          <div class="stat-label">${item.label}</div>
-          <div class="stat-value">${item.value}</div>
-        </div>`
-      )).join("");
-      statsBox.innerHTML = html;
-    }
 
     function renderTable(list){
       if (!list.length){
@@ -636,7 +589,9 @@
 
       currentList = filtered;
       renderTable(currentList);
-      renderStats(currentList);
+      if (summaryText) {
+        summaryText.textContent = `共 ${currentList.length} 人`;
+      }
     }
 
     function handleAction(e){
@@ -787,7 +742,9 @@
         applyFilter();
       }catch(err){
         tableBody.innerHTML = `<tr><td colspan="8" class="empty">加载失败：${err.message}</td></tr>`;
-        statsBox.innerHTML = "";
+        if (summaryText) {
+          summaryText.textContent = "共 0 人";
+        }
       }
     }
 

@@ -466,11 +466,14 @@ def technician_detail_api(request, employee_id):
 
 
 @csrf_exempt
-@require_http_methods(["PUT", "PATCH", "DELETE"])
+@require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
 def employee_detail_api(request, employee_id):
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
+
+    if request.method == "GET":
+        return JsonResponse({"item": _serialize_employee(employee)})
 
     if request.method == "DELETE":
         employee.deleted_at = timezone.now()

@@ -529,11 +529,7 @@
                 </label>
             </div>
             <div class="filter-actions">
-                <div class="filter-actions-left">
-                    <button type="button" class="action-btn btn-blue" id="openDialogBtn">
-                        <span class="icon">＋</span>新增
-                    </button>
-                </div>
+                <div class="filter-actions-left"></div>
                 <div class="filter-actions-right">
                     <button type="button" class="btn-search" id="applyFilterBtn">搜索</button>
                     <button type="button" class="btn-reset" id="filterResetBtn">重置</button>
@@ -580,6 +576,7 @@
     <form id="personForm">
         <div class="dialog-body">
             <div class="form-grid">
+                <input type="hidden" name="employee_id" />
                 <label>
                     姓名
                     <input type="text" name="name" placeholder="请输入姓名" required />
@@ -589,8 +586,8 @@
                     <input type="text" name="nickname" placeholder="请输入昵称" />
                 </label>
                 <label>
-                    年龄
-                    <input type="number" name="age" min="18" max="80" placeholder="例如 30" required />
+                    生日
+                    <input type="date" name="birthday" required />
                 </label>
                 <label>
                     国籍
@@ -657,12 +654,12 @@
 <script>
     const API_BASE = 'http://localhost:8000';
     const TECH_ENDPOINT = `${API_BASE}/api/technicians`;
+    const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
 
     const personForm = document.getElementById('personForm');
     const submitBtn = document.getElementById('submitBtn');
     const peopleTableBody = document.querySelector('#peopleTable tbody');
     const summaryText = document.getElementById('summaryText');
-    const openDialogBtn = document.getElementById('openDialogBtn');
     const personDialog = document.getElementById('personDialog');
     const dialogTitle = document.getElementById('dialogTitle');
     const closeDialogBtn = document.getElementById('closeDialogBtn');
@@ -741,13 +738,6 @@
         return age;
     };
 
-    const ageToBirthday = (age) => {
-        if (!Number.isFinite(age)) return '';
-        const today = new Date();
-        const date = new Date(today.getFullYear() - age, today.getMonth(), today.getDate());
-        return date.toISOString().slice(0, 10);
-    };
-
     const parseRemark = (remark) => {
         if (!remark) return { nickname: '', note: '' };
         const lines = String(remark).split('\n');
@@ -808,9 +798,10 @@
     const getFormData = () => {
         const formData = new FormData(personForm);
         return {
+            employee_id: Number(formData.get('employee_id')) || null,
             name: (formData.get('name') || '').trim(),
             nickname: (formData.get('nickname') || '').trim(),
-            age: Number(formData.get('age')),
+            birthday: formData.get('birthday') || '',
             nationality: formData.get('nationality') || '',
             price: Number(formData.get('price')),
             contract: formData.get('contract'),
@@ -821,9 +812,10 @@
     };
 
     const setFormData = (person) => {
+        personForm.employee_id.value = person.id || '';
         personForm.name.value = person.name;
         personForm.nickname.value = person.nickname || '';
-        personForm.age.value = person.age;
+        personForm.birthday.value = person.birthday || '';
         personForm.nationality.value = person.nationality;
         personForm.price.value = person.price;
         personForm.contract.value = person.contract;
@@ -837,6 +829,10 @@
         dialogTitle.textContent = '新增人员';
         submitBtn.textContent = '确认新增';
         personForm.reset();
+        const targetId = getAutoEditId();
+        if (targetId) {
+            personForm.employee_id.value = targetId;
+        }
         personDialog.style.animation = '';
         showDialogModal();
     };
@@ -867,6 +863,7 @@
             if (personForm.ssFile) {
                 personForm.ssFile.value = '';
             }
+            personForm.employee_id.value = '';
             editingId = null;
             dialogTitle.textContent = '新增人员';
             submitBtn.textContent = '确认新增';
@@ -877,6 +874,30 @@
     };
 
     const getNumberValue = (value) => value === '' ? null : Number(value);
+
+    const getAutoEditId = () => {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const direct = params.get('employee_id');
+            if (direct) return direct;
+            const hash = window.location.hash || '';
+            const queryIndex = hash.indexOf('?');
+            if (queryIndex !== -1) {
+                const hashParams = new URLSearchParams(hash.slice(queryIndex + 1));
+                return hashParams.get('employee_id') || '';
+            }
+            try {
+                const cached = localStorage.getItem("tech_edit_employee_id") || "";
+                if (cached) {
+                    localStorage.removeItem("tech_edit_employee_id");
+                    return cached;
+                }
+            } catch (err) {}
+            return '';
+        } catch (error) {
+            return '';
+        }
+    };
 
     const fetchPeople = async () => {
         try {
@@ -890,6 +911,7 @@
                     id: item.employee_id,
                     name: item.name_mask,
                     nickname: remark.nickname,
+                    birthday: item.birthday || '',
                     age: calcAge(item.birthday),
                     nationality: item.nationality || '',
                     price: item.price ? Number(item.price) : 0,
@@ -902,10 +924,34 @@
                 };
             });
             applyFilters();
+            const targetId = getAutoEditId();
+            if (targetId) {
+                const target = people.find(item => String(item.id) === String(targetId));
+                if (target) {
+                    openEditDialog(target);
+                } else {
+                    openCreateDialog();
+                    await prefillFromEmployee(targetId);
+                }
+            }
         } catch (error) {
             peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty">加载失败</td></tr>';
             summaryText.textContent = '共 0 人 · 当前显示 0 人';
         }
+    };
+
+    const prefillFromEmployee = async (employeeId) => {
+        if (!employeeId) return;
+        try {
+            const res = await fetch(`${EMPLOYEE_ENDPOINT}/${employeeId}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const emp = data.item || {};
+            personForm.name.value = emp.name || '';
+            personForm.birthday.value = emp.birthday || '';
+            personForm.nickname.value = personForm.nickname.value || '';
+            personForm.nationality.value = personForm.nationality.value || '';
+        } catch (error) {}
     };
 
     const savePerson = async (payload) => {
@@ -954,9 +1000,9 @@
         }
 
         const payload = {
-            employee_id: editingId ? editingId : Date.now(),
+            employee_id: editingId ? editingId : (formValue.employee_id || Date.now()),
             name_mask: formValue.name,
-            birthday: ageToBirthday(formValue.age),
+            birthday: formValue.birthday || '',
             nationality: formValue.nationality || '',
             price: Number.isFinite(formValue.price) ? formValue.price : null,
             introduction: formValue.intro || '',
@@ -976,7 +1022,6 @@
         }
     });
 
-    openDialogBtn.addEventListener('click', openCreateDialog);
 
     const attachCloseHandler = (element) => {
         if (!element) return;

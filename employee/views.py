@@ -1,6 +1,8 @@
 import json
 from datetime import datetime
 
+from decimal import Decimal, InvalidOperation
+
 from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
@@ -8,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
-from .models import Employee, UserLogin
+from .models import Employee, Technician, UserLogin
 
 
 @csrf_exempt
@@ -127,6 +129,63 @@ def _serialize_employee(emp):
     }
 
 
+def _years_ago(today, years):
+    try:
+        return today.replace(year=today.year - years)
+    except ValueError:
+        return today.replace(year=today.year - years, month=2, day=28)
+
+
+def _serialize_technician(tech):
+    contract_labels = {
+        0: "未定",
+        1: "长期",
+        2: "短期",
+        3: "现场",
+    }
+    business_labels = {
+        0: "待机",
+        1: "可用",
+        2: "忙碌",
+        3: "不可用",
+    }
+    return {
+        "employee_id": tech.employee_id,
+        "name_mask": tech.name_mask,
+        "birthday": tech.birthday.isoformat() if tech.birthday else "",
+        "nationality": tech.nationality or "",
+        "price": str(tech.price) if tech.price is not None else "",
+        "introduction": tech.introduction or "",
+        "contract_type": tech.contract_type,
+        "contract_label": contract_labels.get(tech.contract_type, ""),
+        "spot_contract_deadline": tech.spot_contract_deadline.isoformat()
+        if tech.spot_contract_deadline
+        else "",
+        "business_status": tech.business_status,
+        "business_label": business_labels.get(tech.business_status, ""),
+        "ss": tech.ss if tech.ss is not None else "",
+        "remark": tech.remark or "",
+    }
+
+
+def _parse_decimal(value, field):
+    if value in (None, ""):
+        return None, None
+    try:
+        return Decimal(str(value)), None
+    except (InvalidOperation, ValueError):
+        return None, JsonResponse({"error": f"Invalid number: {field}"}, status=400)
+
+
+def _normalize_smallint(value, field):
+    if value in (None, ""):
+        return None, None
+    try:
+        return int(value), None
+    except (TypeError, ValueError):
+        return None, JsonResponse({"error": f"Invalid value: {field}"}, status=400)
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def employees_api(request):
@@ -240,6 +299,170 @@ def employees_api(request):
             "stats": stats,
         }
     )
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def technicians_api(request):
+    if request.method == "POST":
+        payload, error = _parse_json_body(request)
+        if error:
+            return error
+
+        employee_id, error = _normalize_smallint(payload.get("employee_id"), "employee_id")
+        if error:
+            return error
+        if employee_id is None:
+            return JsonResponse({"error": "Missing field: employee_id"}, status=400)
+        if Technician.objects.filter(employee_id=employee_id).exists():
+            return JsonResponse({"error": "Employee ID already exists"}, status=400)
+
+        name_mask = (payload.get("name_mask") or "").strip()
+        if not name_mask:
+            return JsonResponse({"error": "Missing field: name_mask"}, status=400)
+
+        birthday, error = _parse_date(payload.get("birthday"), "birthday")
+        if error:
+            return error
+        spot_deadline, error = _parse_date(
+            payload.get("spot_contract_deadline"), "spot_contract_deadline"
+        )
+        if error:
+            return error
+
+        price, error = _parse_decimal(payload.get("price"), "price")
+        if error:
+            return error
+
+        contract_type, error = _normalize_smallint(payload.get("contract_type"), "contract_type")
+        if error:
+            return error
+        business_status, error = _normalize_smallint(payload.get("business_status"), "business_status")
+        if error:
+            return error
+        ss_value, error = _normalize_smallint(payload.get("ss"), "ss")
+        if error:
+            return error
+
+        tech = Technician.objects.create(
+            employee_id=employee_id,
+            name_mask=name_mask,
+            birthday=birthday,
+            nationality=(payload.get("nationality") or "").strip() or None,
+            price=price,
+            introduction=(payload.get("introduction") or "").strip() or None,
+            contract_type=contract_type if contract_type is not None else 0,
+            spot_contract_deadline=spot_deadline,
+            business_status=business_status if business_status is not None else 0,
+            ss=ss_value,
+            remark=(payload.get("remark") or "").strip() or None,
+        )
+
+        return JsonResponse({"status": "ok", "item": _serialize_technician(tech)})
+
+    qs = Technician.objects.all()
+
+    age_min, error = _normalize_smallint(request.GET.get("age_min"), "age_min")
+    if error:
+        return error
+    age_max, error = _normalize_smallint(request.GET.get("age_max"), "age_max")
+    if error:
+        return error
+    price_max, error = _parse_decimal(request.GET.get("price_max"), "price_max")
+    if error:
+        return error
+    contract_type, error = _normalize_smallint(request.GET.get("contract_type"), "contract_type")
+    if error:
+        return error
+    business_status, error = _normalize_smallint(request.GET.get("business_status"), "business_status")
+    if error:
+        return error
+
+    nationality = (request.GET.get("nationality") or "").strip()
+    if nationality:
+        qs = qs.filter(nationality=nationality)
+
+    if price_max is not None:
+        qs = qs.filter(price__lte=price_max)
+
+    if contract_type is not None:
+        qs = qs.filter(contract_type=contract_type)
+
+    if business_status is not None:
+        qs = qs.filter(business_status=business_status)
+
+    if age_min is not None or age_max is not None:
+        today = timezone.localdate()
+        if age_min is not None:
+            max_birth = _years_ago(today, age_min)
+            qs = qs.filter(birthday__lte=max_birth)
+        if age_max is not None:
+            min_birth = _years_ago(today, age_max)
+            qs = qs.filter(birthday__gte=min_birth)
+
+    items = [_serialize_technician(tech) for tech in qs.order_by("employee_id")]
+    return JsonResponse({"items": items})
+
+
+@csrf_exempt
+@require_http_methods(["PUT", "PATCH", "DELETE"])
+def technician_detail_api(request, employee_id):
+    tech = Technician.objects.filter(employee_id=employee_id).first()
+    if not tech:
+        return JsonResponse({"error": "Technician not found"}, status=404)
+
+    if request.method == "DELETE":
+        tech.delete()
+        return JsonResponse({"status": "ok"})
+
+    payload, error = _parse_json_body(request)
+    if error:
+        return error
+
+    if "name_mask" in payload:
+        tech.name_mask = (payload.get("name_mask") or "").strip()
+    if "birthday" in payload:
+        value, error = _parse_date(payload.get("birthday"), "birthday")
+        if error:
+            return error
+        tech.birthday = value
+    if "nationality" in payload:
+        tech.nationality = (payload.get("nationality") or "").strip() or None
+    if "price" in payload:
+        value, error = _parse_decimal(payload.get("price"), "price")
+        if error:
+            return error
+        tech.price = value
+    if "introduction" in payload:
+        tech.introduction = (payload.get("introduction") or "").strip() or None
+    if "contract_type" in payload:
+        value, error = _normalize_smallint(payload.get("contract_type"), "contract_type")
+        if error:
+            return error
+        tech.contract_type = value if value is not None else 0
+    if "spot_contract_deadline" in payload:
+        value, error = _parse_date(payload.get("spot_contract_deadline"), "spot_contract_deadline")
+        if error:
+            return error
+        tech.spot_contract_deadline = value
+    if "business_status" in payload:
+        value, error = _normalize_smallint(payload.get("business_status"), "business_status")
+        if error:
+            return error
+        tech.business_status = value if value is not None else 0
+    if "ss" in payload:
+        value, error = _normalize_smallint(payload.get("ss"), "ss")
+        if error:
+            return error
+        tech.ss = value
+    if "remark" in payload:
+        tech.remark = (payload.get("remark") or "").strip() or None
+
+    if not tech.name_mask:
+        return JsonResponse({"error": "Missing field: name_mask"}, status=400)
+
+    tech.save()
+    return JsonResponse({"status": "ok", "item": _serialize_technician(tech)})
 
 
 @csrf_exempt

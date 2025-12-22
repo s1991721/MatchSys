@@ -90,6 +90,7 @@
             cursor: pointer;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+            height: 40px;
         }
 
         .action-btn .icon {
@@ -223,12 +224,24 @@
             background: #10b981;
             color: #fff;
             box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            height: 40px;
         }
 
         .btn-reset {
             background: #f59e0b;
             color: #fff;
             box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            height: 40px;
         }
 
         .table-actions {
@@ -320,6 +333,15 @@
             padding: 6px 10px;
             border-radius: 8px;
             font-size: 12px;
+        }
+
+        .truncate {
+            max-width: 220px;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: bottom;
         }
 
         .empty {
@@ -528,10 +550,10 @@
                 <thead>
                 <tr>
                     <th>姓名</th>
+                    <th>昵称</th>
                     <th>年龄</th>
                     <th>国籍</th>
                     <th>单价（万/月）</th>
-                    <th>技能</th>
                     <th>介绍文</th>
                     <th>契约状况</th>
                     <th>现场契约</th>
@@ -542,7 +564,7 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td colspan="9" class="empty">暂无人员数据</td>
+                    <td colspan="11" class="empty">暂无人员数据</td>
                 </tr>
                 </tbody>
             </table>
@@ -563,6 +585,10 @@
                     <input type="text" name="name" placeholder="请输入姓名" required />
                 </label>
                 <label>
+                    昵称
+                    <input type="text" name="nickname" placeholder="请输入昵称" />
+                </label>
+                <label>
                     年龄
                     <input type="number" name="age" min="18" max="80" placeholder="例如 30" required />
                 </label>
@@ -578,10 +604,6 @@
                 <label>
                     单价（万/月）
                     <input type="number" name="price" min="0" step="0.1" placeholder="例如 2.5" required />
-                </label>
-                <label>
-                    技能
-                    <input type="text" name="skill" placeholder="请输入技能，如 Java、焊接" required />
                 </label>
                 <label>
                     契约状况
@@ -633,6 +655,9 @@
 </dialog>
 
 <script>
+    const API_BASE = 'http://localhost:8000';
+    const TECH_ENDPOINT = `${API_BASE}/api/technicians`;
+
     const personForm = document.getElementById('personForm');
     const submitBtn = document.getElementById('submitBtn');
     const peopleTableBody = document.querySelector('#peopleTable tbody');
@@ -666,59 +691,85 @@
     };
 
     let editingId = null;
-    let people = [
-        {
-            id: 1,
-            name: '李伟',
-            age: 32,
-            nationality: '中国',
-            price: 2.0,
-            skill: 'Java / Spring',
-            contract: '正社员',
-            siteContract: '6月',
-            intro: '10年大型项目经验，擅长后台架构设计。',
-            note: '拥有PMP认证',
-            ssFileName: '',
-            ssFileUrl: ''
-        },
-        {
-            id: 2,
-            name: 'Sato Yuki',
-            age: 28,
-            nationality: '日本',
-            price: 2.5,
-            skill: '前端 / React',
-            contract: 'フリーランス',
-            siteContract: '长期',
-            intro: '熟悉React/Next.js，参与多个跨国项目。',
-            note: '粤语沟通能力优秀',
-            ssFileName: '',
-            ssFileUrl: ''
-        }
-    ];
-    let nextId = 3;
+    let people = [];
 
-    const releasePersonFile = (person) => {
-        if (person && person.ssFileUrl) {
-            try {
-                URL.revokeObjectURL(person.ssFileUrl);
-            } catch (error) {
-                console.warn('释放文件URL失败', error);
-            }
-        }
+    const contractLabelToType = (label) => {
+        const mapping = {
+            '正社员': 1,
+            '契约社员': 2,
+            'フリーランス': 3
+        };
+        return mapping[label] ?? 0;
     };
 
-    const createFileData = (file) => {
-        if (!file) return null;
-        return {
-            name: file.name,
-            url: URL.createObjectURL(file)
+    const contractTypeToLabel = (value) => {
+        const mapping = {
+            1: '正社员',
+            2: '契约社员',
+            3: 'フリーランス'
         };
+        return mapping[value] || '未定';
+    };
+
+    const siteDeadlineToLabel = (value) => {
+        if (!value) return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return `${date.getMonth() + 1}月`;
+    };
+
+    const labelToSiteDeadline = (label) => {
+        if (!label || label === '长期') return '';
+        const match = label.match(/^(\d{1,2})月$/);
+        if (!match) return '';
+        const month = Number(match[1]) - 1;
+        const today = new Date();
+        const date = new Date(today.getFullYear(), month, 1);
+        return date.toISOString().slice(0, 10);
+    };
+
+    const calcAge = (birthday) => {
+        if (!birthday) return null;
+        const date = new Date(birthday);
+        if (Number.isNaN(date.getTime())) return null;
+        const today = new Date();
+        let age = today.getFullYear() - date.getFullYear();
+        const m = today.getMonth() - date.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+            age -= 1;
+        }
+        return age;
+    };
+
+    const ageToBirthday = (age) => {
+        if (!Number.isFinite(age)) return '';
+        const today = new Date();
+        const date = new Date(today.getFullYear() - age, today.getMonth(), today.getDate());
+        return date.toISOString().slice(0, 10);
+    };
+
+    const parseRemark = (remark) => {
+        if (!remark) return { nickname: '', note: '' };
+        const lines = String(remark).split('\n');
+        if (lines[0].startsWith('昵称:')) {
+            return {
+                nickname: lines[0].replace('昵称:', '').trim(),
+                note: lines.slice(1).join('\n').trim()
+            };
+        }
+        return { nickname: '', note: String(remark).trim() };
+    };
+
+    const composeRemark = (nickname, note) => {
+        const parts = [];
+        if (nickname) parts.push(`昵称:${nickname}`);
+        if (note) parts.push(note);
+        return parts.join('\n');
     };
 
     const renderPeople = (list) => {
         if (!list.length) {
-            peopleTableBody.innerHTML = '<tr><td colspan="9" class="empty">未检索到符合条件的记录</td></tr>';
+            peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty">未检索到符合条件的记录</td></tr>';
             summaryText.textContent = `共 ${people.length} 人 · 当前显示 0 人`;
             return;
         }
@@ -732,11 +783,11 @@
             return `
                 <tr>
                     <td data-label="姓名">${person.name}</td>
+                    <td data-label="昵称">${person.nickname || '-'}</td>
                     <td data-label="年龄">${person.age}</td>
                     <td data-label="国籍">${person.nationality}</td>
                     <td data-label="单价">${person.price} 万/月</td>
-                    <td data-label="技能">${person.skill}</td>
-                    <td data-label="介绍文">${person.intro || '-'}</td>
+                    <td data-label="介绍文"><span class="truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
                     <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
                     <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract}</span></td>
                     <td data-label="备注">${person.note || '-'}</td>
@@ -758,10 +809,10 @@
         const formData = new FormData(personForm);
         return {
             name: (formData.get('name') || '').trim(),
+            nickname: (formData.get('nickname') || '').trim(),
             age: Number(formData.get('age')),
             nationality: formData.get('nationality') || '',
             price: Number(formData.get('price')),
-            skill: (formData.get('skill') || '').trim(),
             contract: formData.get('contract'),
             siteContract: formData.get('siteContract') || '',
             intro: (formData.get('intro') || '').trim(),
@@ -771,10 +822,10 @@
 
     const setFormData = (person) => {
         personForm.name.value = person.name;
+        personForm.nickname.value = person.nickname || '';
         personForm.age.value = person.age;
         personForm.nationality.value = person.nationality;
         personForm.price.value = person.price;
-        personForm.skill.value = person.skill;
         personForm.contract.value = person.contract;
         personForm.siteContract.value = person.siteContract;
         personForm.intro.value = person.intro || '';
@@ -827,6 +878,51 @@
 
     const getNumberValue = (value) => value === '' ? null : Number(value);
 
+    const fetchPeople = async () => {
+        try {
+            const res = await fetch(TECH_ENDPOINT);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const items = Array.isArray(data.items) ? data.items : [];
+            people = items.map(item => {
+                const remark = parseRemark(item.remark);
+                return {
+                    id: item.employee_id,
+                    name: item.name_mask,
+                    nickname: remark.nickname,
+                    age: calcAge(item.birthday),
+                    nationality: item.nationality || '',
+                    price: item.price ? Number(item.price) : 0,
+                    contract: contractTypeToLabel(item.contract_type),
+                    siteContract: siteDeadlineToLabel(item.spot_contract_deadline),
+                    intro: item.introduction || '',
+                    note: remark.note || '',
+                    ssFileName: '',
+                    ssFileUrl: ''
+                };
+            });
+            applyFilters();
+        } catch (error) {
+            peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty">加载失败</td></tr>';
+            summaryText.textContent = '共 0 人 · 当前显示 0 人';
+        }
+    };
+
+    const savePerson = async (payload) => {
+        const method = editingId ? 'PUT' : 'POST';
+        const url = editingId ? `${TECH_ENDPOINT}/${editingId}` : TECH_ENDPOINT;
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || '保存失败');
+        }
+        return data;
+    };
+
     const applyFilters = () => {
         const ageMin = getNumberValue(filterAgeMin.value);
         const ageMax = getNumberValue(filterAgeMax.value);
@@ -848,42 +944,36 @@
         renderPeople(filtered);
     };
 
-    personForm.addEventListener('submit', (event) => {
+    personForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formValue = getFormData();
-        const fileData = createFileData(personForm.ssFile.files[0]);
 
         if (!formValue.name) {
             alert('姓名为必填项');
             return;
         }
 
-        if (editingId !== null) {
-            const index = people.findIndex(person => person.id === editingId);
-            if (index > -1) {
-                const existing = people[index];
-                if (fileData && existing.ssFileUrl) {
-                    releasePersonFile(existing);
-                }
-                people[index] = {
-                    ...existing,
-                    ...formValue,
-                    ssFileName: fileData ? fileData.name : existing.ssFileName || '',
-                    ssFileUrl: fileData ? fileData.url : existing.ssFileUrl || ''
-                };
-            }
-        } else {
-            const newPerson = {
-                id: nextId++,
-                ...formValue,
-                ssFileName: fileData ? fileData.name : '',
-                ssFileUrl: fileData ? fileData.url : ''
-            };
-            people.unshift(newPerson);
-        }
+        const payload = {
+            employee_id: editingId ? editingId : Date.now(),
+            name_mask: formValue.name,
+            birthday: ageToBirthday(formValue.age),
+            nationality: formValue.nationality || '',
+            price: Number.isFinite(formValue.price) ? formValue.price : null,
+            introduction: formValue.intro || '',
+            contract_type: contractLabelToType(formValue.contract),
+            spot_contract_deadline: labelToSiteDeadline(formValue.siteContract),
+            business_status: 0,
+            ss: null,
+            remark: composeRemark(formValue.nickname, formValue.note)
+        };
 
-        closeDialog();
-        applyFilters();
+        try {
+            await savePerson(payload);
+            closeDialog();
+            await fetchPeople();
+        } catch (error) {
+            alert(error.message || '保存失败');
+        }
     });
 
     openDialogBtn.addEventListener('click', openCreateDialog);
@@ -921,11 +1011,17 @@
                 openEditDialog(person);
             }
         } else if (deleteId) {
-            const index = people.findIndex(item => String(item.id) === deleteId);
-            if (index > -1 && confirm(`确定删除 ${people[index].name} 吗？`)) {
-                releasePersonFile(people[index]);
-                people.splice(index, 1);
-                applyFilters();
+            const target = people.find(item => String(item.id) === deleteId);
+            if (target && confirm(`确定删除 ${target.name} 吗？`)) {
+                fetch(`${TECH_ENDPOINT}/${deleteId}`, { method: 'DELETE' })
+                    .then(res => res.json().then(data => ({ res, data })))
+                    .then(({ res, data }) => {
+                        if (!res.ok) throw new Error(data.error || '删除失败');
+                        return fetchPeople();
+                    })
+                    .catch((error) => {
+                        alert(error.message || '删除失败');
+                    });
             }
         }
     });
@@ -940,7 +1036,7 @@
         applyFilters();
     });
 
-    applyFilters();
+    fetchPeople();
 </script>
 </body>
 </html>

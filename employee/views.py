@@ -503,19 +503,27 @@ def technician_ss_upload(request, employee_id):
     if not upload:
         return JsonResponse({"error": "Missing file"}, status=400)
 
-    base_dir = _ss_storage_dir()
-    target_dir = os.path.join(base_dir, str(employee_id))
-    os.makedirs(target_dir, exist_ok=True)
+    tech = Technician.objects.filter(employee_id=employee_id).first()
+    if not tech:
+        return JsonResponse({"error": "Technician not found"}, status=404)
 
-    filename = os.path.basename(upload.name) or "ss"
-    dest_path = os.path.join(target_dir, filename)
+    base_dir = _ss_storage_dir()
+    os.makedirs(base_dir, exist_ok=True)
+
+    _, ext = os.path.splitext(upload.name or "")
+    safe_name = os.path.basename(tech.name_mask).strip()
+    if not safe_name:
+        safe_name = str(employee_id)
+    filename = f"{safe_name}{ext or ''}"
+    dest_path = os.path.join(base_dir, filename)
+    if os.path.exists(dest_path):
+        return JsonResponse({"error": "File already exists"}, status=409)
 
     with open(dest_path, "wb") as handle:
         for chunk in upload.chunks():
             handle.write(chunk)
 
-    rel_path = f"{employee_id}/{filename}"
-    tech = Technician.objects.filter(employee_id=employee_id).first()
+    rel_path = filename
     if tech:
         tech.ss = rel_path
         tech.save(update_fields=["ss"])

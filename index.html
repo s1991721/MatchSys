@@ -519,7 +519,7 @@
     <main class="main">
       <header class="topbar">
         <div class="title">
-          Welcome back, Admin!
+          Welcome back, {{ request.session.employee_name }}!
           <span>· 主页概览</span>
         </div>
         <div class="topbar-mid" aria-label="日期">
@@ -542,7 +542,7 @@
           <a class="avatar" href="#profile.html" data-src="profile.html" title="个人信息" aria-label="个人信息">
             <div class="pic"></div>
             <div>
-              <strong>Admin</strong>
+              <strong>{{ request.session.employee_name }}</strong>
               <small>系统管理员</small>
             </div>
           </a>

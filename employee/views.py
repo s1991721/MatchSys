@@ -1,11 +1,14 @@
 import json
 from datetime import datetime
 
+import mimetypes
+import os
 from decimal import Decimal, InvalidOperation
 
 from django.db import transaction
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import FileResponse, JsonResponse
+from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
@@ -160,6 +163,8 @@ def _serialize_technician(tech):
         2: "忙碌",
         3: "不可用",
     }
+    ss_path = tech.ss or ""
+    ss_url = f"/api/ss/{ss_path}" if ss_path else ""
     return {
         "employee_id": tech.employee_id,
         "name": tech.name,
@@ -175,7 +180,8 @@ def _serialize_technician(tech):
         else "",
         "business_status": tech.business_status,
         "business_label": business_labels.get(tech.business_status, ""),
-        "ss": tech.ss if tech.ss is not None else "",
+        "ss": ss_path,
+        "ss_url": ss_url,
         "remark": tech.remark or "",
     }
 
@@ -196,6 +202,10 @@ def _normalize_smallint(value, field):
         return int(value), None
     except (TypeError, ValueError):
         return None, JsonResponse({"error": f"Invalid value: {field}"}, status=400)
+
+
+def _ss_storage_dir():
+    return os.path.join(settings.BASE_DIR, "ss")
 
 
 @csrf_exempt
@@ -356,9 +366,7 @@ def technicians_api(request):
         business_status, error = _normalize_smallint(payload.get("business_status"), "business_status")
         if error:
             return error
-        ss_value, error = _normalize_smallint(payload.get("ss"), "ss")
-        if error:
-            return error
+        ss_value = (payload.get("ss") or "").strip() or None
 
         tech = Technician.objects.create(
             employee_id=employee_id,
@@ -470,10 +478,7 @@ def technician_detail_api(request, employee_id):
             return error
         tech.business_status = value if value is not None else 0
     if "ss" in payload:
-        value, error = _normalize_smallint(payload.get("ss"), "ss")
-        if error:
-            return error
-        tech.ss = value
+        tech.ss = (payload.get("ss") or "").strip() or None
     if "remark" in payload:
         tech.remark = (payload.get("remark") or "").strip() or None
 
@@ -486,6 +491,54 @@ def technician_detail_api(request, employee_id):
 
     tech.save()
     return JsonResponse({"status": "ok", "item": _serialize_technician(tech)})
+
+
+@csrf_exempt
+@require_POST
+def technician_ss_upload(request, employee_id):
+    if not request.session.get("employee_id"):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    upload = request.FILES.get("file")
+    if not upload:
+        return JsonResponse({"error": "Missing file"}, status=400)
+
+    base_dir = _ss_storage_dir()
+    target_dir = os.path.join(base_dir, str(employee_id))
+    os.makedirs(target_dir, exist_ok=True)
+
+    filename = os.path.basename(upload.name) or "ss"
+    dest_path = os.path.join(target_dir, filename)
+
+    with open(dest_path, "wb") as handle:
+        for chunk in upload.chunks():
+            handle.write(chunk)
+
+    rel_path = f"{employee_id}/{filename}"
+    tech = Technician.objects.filter(employee_id=employee_id).first()
+    if tech:
+        tech.ss = rel_path
+        tech.save(update_fields=["ss"])
+
+    return JsonResponse({"status": "ok", "path": rel_path, "url": f"/api/ss/{rel_path}"})
+
+
+@require_http_methods(["GET"])
+def technician_ss_download(request, path):
+    if not request.session.get("employee_id"):
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    base_dir = os.path.realpath(_ss_storage_dir())
+    safe_path = os.path.realpath(os.path.join(base_dir, path))
+    if not safe_path.startswith(base_dir + os.sep):
+        return JsonResponse({"error": "Invalid path"}, status=400)
+    if not os.path.exists(safe_path):
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    content_type, _ = mimetypes.guess_type(safe_path)
+    response = FileResponse(open(safe_path, "rb"), content_type=content_type or "application/octet-stream")
+    response["Content-Disposition"] = "inline"
+    return response
 
 
 @csrf_exempt

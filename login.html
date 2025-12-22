@@ -29,7 +29,7 @@
     </form>
 </div>
 <script>
-    const API_BASE = "http://localhost:8000";
+    const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
 
     const form = document.getElementById("loginForm");
@@ -47,6 +47,7 @@
             const res = await fetch(LOGIN_ENDPOINT, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
                     user_name: document.getElementById("userName").value.trim(),
                     password: document.getElementById("password").value,

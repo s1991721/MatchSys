@@ -99,7 +99,7 @@ CREATE TABLE technician (
 
     business_status TINYINT NOT NULL DEFAULT 0 COMMENT '业务状态：0-待机 1-可用 2-忙碌 3-不可用',
 
-    ss TINYINT NULL COMMENT '技能等级/状态标识',
+    ss VARCHAR(100) NULL COMMENT 'ss文件路径',
 
     remark TEXT NULL COMMENT '备注',
 

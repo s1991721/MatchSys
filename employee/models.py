@@ -181,10 +181,11 @@ class Technician(models.Model):
         verbose_name="业务状态"
     )
 
-    ss = models.SmallIntegerField(
+    ss = models.CharField(
+        max_length=255,
         null=True,
         blank=True,
-        verbose_name="技能等级/状态"
+        verbose_name="SS文件路径"
     )
 
     remark = models.TextField(

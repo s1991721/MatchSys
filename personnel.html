@@ -489,8 +489,16 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:8000";
+    const API_BASE = "";
     const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
+    const fetchWithAuth = async (url, options = {}) => {
+      const res = await fetch(url, options);
+      if (res.status === 401) {
+        window.location.href = "/login.html";
+        throw new Error("Unauthorized");
+      }
+      return res;
+    };
 
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
@@ -713,9 +721,10 @@
     }
 
     async function createEmployee(payload){
-      const res = await fetch(EMPLOYEE_ENDPOINT, {
+      const res = await fetchWithAuth(EMPLOYEE_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -724,9 +733,10 @@
     }
 
     async function updateEmployee(id, payload){
-      const res = await fetch(`${EMPLOYEE_ENDPOINT}/${id}`, {
+      const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload)
       });
       const data = await res.json();
@@ -736,7 +746,7 @@
 
     async function deleteEmployee(id){
       try{
-        const res = await fetch(`${EMPLOYEE_ENDPOINT}/${id}`, { method: "DELETE" });
+        const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${id}`, { method: "DELETE", credentials: "include" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "删除失败");
         await fetchEmployees();
@@ -748,7 +758,7 @@
     async function fetchEmployees(){
       tableBody.innerHTML = `<tr><td colspan="8" class="empty">加载中…</td></tr>`;
       try{
-        const res = await fetch(EMPLOYEE_ENDPOINT);
+        const res = await fetchWithAuth(EMPLOYEE_ENDPOINT, { credentials: "include" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         allEmployees = Array.isArray(data.items) ? data.items : [];

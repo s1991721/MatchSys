@@ -649,9 +649,18 @@
 </dialog>
 
 <script>
-    const API_BASE = 'http://localhost:8000';
+    const API_BASE = '';
     const TECH_ENDPOINT = `${API_BASE}/api/technicians`;
     const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
+    const SS_UPLOAD_ENDPOINT = (employeeId) => `${API_BASE}/api/technicians/${employeeId}/ss`;
+    const fetchWithAuth = async (url, options = {}) => {
+        const res = await fetch(url, options);
+        if (res.status === 401) {
+            window.location.href = '/login.html';
+            throw new Error('Unauthorized');
+        }
+        return res;
+    };
 
     const personForm = document.getElementById('personForm');
     const submitBtn = document.getElementById('submitBtn');
@@ -688,6 +697,7 @@
 
     let editingId = null;
     let people = [];
+    let currentSsPath = '';
 
     const contractLabelToType = (label) => {
         const mapping = {
@@ -778,7 +788,7 @@
                     <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
                     <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract}</span></td>
                     <td data-label="备注">${person.note || '-'}</td>
-                    <td data-label="SS 文件">${person.ssFileName ? `<a class="file-link" href="${person.ssFileUrl}" download="${person.ssFileName}">${person.ssFileName}</a>` : '-'}</td>
+                    <td data-label="SS 文件">${person.ssUrl ? `<a class="file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
                     <td data-label="操作">
                         <div class="row-actions">
                             <button type="button" class="btn-secondary" data-edit="${person.id}">编辑</button>
@@ -826,6 +836,7 @@
         dialogTitle.textContent = '新增人员';
         submitBtn.textContent = '确认新增';
         personForm.reset();
+        currentSsPath = '';
         if (forcedEmployeeId) {
             personForm.employee_id.value = forcedEmployeeId;
             personForm.name.setAttribute('readonly', 'readonly');
@@ -841,6 +852,7 @@
         dialogTitle.textContent = '编辑人员';
         submitBtn.textContent = '保存修改';
         setFormData(person);
+        currentSsPath = person.ssPath || '';
         personForm.name.setAttribute('readonly', 'readonly');
         personDialog.style.animation = '';
         showDialogModal();
@@ -867,6 +879,7 @@
             editingId = null;
             dialogTitle.textContent = '新增人员';
             submitBtn.textContent = '确认新增';
+            currentSsPath = '';
             personForm.name.removeAttribute('readonly');
             personDialog.removeEventListener('animationend', finalizeClose);
         };
@@ -893,7 +906,7 @@
 
     const fetchPeople = async () => {
         try {
-            const res = await fetch(TECH_ENDPOINT);
+            const res = await fetchWithAuth(TECH_ENDPOINT, { credentials: 'include' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const items = Array.isArray(data.items) ? data.items : [];
@@ -912,8 +925,8 @@
                     siteContract: siteDeadlineToLabel(item.spot_contract_deadline),
                     intro: item.introduction || '',
                     note: noteText || '',
-                    ssFileName: '',
-                    ssFileUrl: ''
+                    ssPath: item.ss || '',
+                    ssUrl: item.ss_url || ''
                 };
             });
             applyFilters();
@@ -937,7 +950,7 @@
     const prefillFromEmployee = async (employeeId) => {
         if (!employeeId) return;
         try {
-            const res = await fetch(`${EMPLOYEE_ENDPOINT}/${employeeId}`);
+            const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${employeeId}`, { credentials: 'include' });
             if (!res.ok) return;
             const data = await res.json();
             const emp = data.item || {};
@@ -954,14 +967,30 @@
     const savePerson = async (payload) => {
         const method = editingId ? 'PUT' : 'POST';
         const url = editingId ? `${TECH_ENDPOINT}/${editingId}` : TECH_ENDPOINT;
-        const res = await fetch(url, {
+        const res = await fetchWithAuth(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (!res.ok) {
             throw new Error(data.error || '保存失败');
+        }
+        return data;
+    };
+
+    const uploadSsFile = async (employeeId, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetchWithAuth(SS_UPLOAD_ENDPOINT(employeeId), {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || '上传失败');
         }
         return data;
     };
@@ -998,8 +1027,25 @@
             return;
         }
 
+        const effectiveId = editingId || forcedEmployeeId;
+        if (!effectiveId) {
+            alert('缺少 employee_id');
+            return;
+        }
+
+        let ssPath = currentSsPath;
+        if (ssFileInput && ssFileInput.files && ssFileInput.files.length) {
+            try {
+                const upload = await uploadSsFile(effectiveId, ssFileInput.files[0]);
+                ssPath = upload.path || '';
+            } catch (error) {
+                alert(error.message || '上传失败');
+                return;
+            }
+        }
+
         const payload = {
-            employee_id: editingId || forcedEmployeeId,
+            employee_id: effectiveId,
             name: formValue.name,
             name_mask: formValue.nickname || formValue.name,
             birthday: formValue.birthday || '',
@@ -1009,7 +1055,7 @@
             contract_type: contractLabelToType(formValue.contract),
             spot_contract_deadline: labelToSiteDeadline(formValue.siteContract),
             business_status: 0,
-            ss: null,
+            ss: ssPath || null,
             remark: formValue.note
         };
 
@@ -1069,7 +1115,7 @@
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);
             if (target && confirm(`确定删除 ${target.name} 吗？`)) {
-                fetch(`${TECH_ENDPOINT}/${deleteId}`, { method: 'DELETE' })
+                fetchWithAuth(`${TECH_ENDPOINT}/${deleteId}`, { method: 'DELETE', credentials: 'include' })
                     .then(res => res.json().then(data => ({ res, data })))
                     .then(({ res, data }) => {
                         if (!res.ok) throw new Error(data.error || '删除失败');

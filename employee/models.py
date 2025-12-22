@@ -101,3 +101,108 @@ class Employee(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id}:{self.name}"
+
+
+from django.db import models
+
+
+class Technician(models.Model):
+    CONTRACT_TYPE_CHOICES = (
+        (0, "未定"),
+        (1, "长期"),
+        (2, "短期"),
+        (3, "现场"),
+    )
+
+    BUSINESS_STATUS_CHOICES = (
+        (0, "待机"),
+        (1, "可用"),
+        (2, "忙碌"),
+        (3, "不可用"),
+    )
+
+    employee_id = models.BigIntegerField(
+        unique=True,
+        verbose_name="员工ID"
+    )
+
+    name_mask = models.CharField(
+        max_length=100,
+        verbose_name="姓名掩码"
+    )
+
+    birthday = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="生日"
+    )
+
+    nationality = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True,
+        verbose_name="国籍"
+    )
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name="报价"
+    )
+
+    introduction = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="简介"
+    )
+
+    contract_type = models.SmallIntegerField(
+        choices=CONTRACT_TYPE_CHOICES,
+        default=0,
+        verbose_name="合同类型"
+    )
+
+    spot_contract_deadline = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="现场合同截止日"
+    )
+
+    business_status = models.SmallIntegerField(
+        choices=BUSINESS_STATUS_CHOICES,
+        default=0,
+        verbose_name="业务状态"
+    )
+
+    ss = models.SmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="技能等级/状态"
+    )
+
+    remark = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name="备注"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="创建时间"
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="更新时间"
+    )
+
+    class Meta:
+        managed = False
+        db_table = "technician"
+        verbose_name = "技术人员"
+        verbose_name_plural = "技术人员"
+
+    def __str__(self):
+        return f"{self.employee_id} - {self.name_mask}"

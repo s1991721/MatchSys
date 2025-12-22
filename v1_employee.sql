@@ -76,3 +76,34 @@ KEY idx_employee_deleted_at (deleted_at)
 ) ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4
 COMMENT='员工表';
+
+CREATE TABLE technician (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键',
+
+    employee_id BIGINT NOT NULL COMMENT '员工ID',
+
+    name_mask VARCHAR(100) NOT NULL COMMENT '姓名掩码',
+
+    birthday DATE NULL COMMENT '生日',
+
+    nationality VARCHAR(50) NULL COMMENT '国籍',
+
+    price DECIMAL(10,2) NULL COMMENT '单价/报价',
+
+    introduction TEXT NULL COMMENT '简介',
+
+    contract_type TINYINT NOT NULL DEFAULT 0 COMMENT '合同类型：0-未定 1-长期 2-短期 3-现场',
+
+    spot_contract_deadline DATE NULL COMMENT '现场合同截止日',
+
+    business_status TINYINT NOT NULL DEFAULT 0 COMMENT '业务状态：0-待机 1-可用 2-忙碌 3-不可用',
+
+    ss TINYINT NULL COMMENT '技能等级/状态标识',
+
+    remark TEXT NULL COMMENT '备注',
+
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    UNIQUE KEY uk_technician_employee (employee_id)
+) COMMENT='技术人员表';

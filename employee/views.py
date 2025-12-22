@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse
 from django.utils import timezone
@@ -138,6 +139,13 @@ def employees_api(request):
         if not name:
             return JsonResponse({"error": "Missing field: name"}, status=400)
 
+        email = (payload.get("email") or "").strip()
+        if not email:
+            return JsonResponse({"error": "Missing field: email"}, status=400)
+
+        if UserLogin.objects.filter(user_name=email, deleted_at__isnull=True).exists():
+            return JsonResponse({"error": "User login already exists"}, status=400)
+
         status = _normalize_status(payload.get("status"))
         if status is None:
             status = 1
@@ -152,25 +160,31 @@ def employees_api(request):
         if error:
             return error
 
-        employee = Employee.objects.create(
-            name=name,
-            gender=payload.get("gender") or None,
-            birthday=birthday,
-            phone=(payload.get("phone") or "").strip() or None,
-            email=(payload.get("email") or "").strip() or None,
-            address=(payload.get("address") or "").strip() or None,
-            emergency_contact_name=(payload.get("emergency_contact_name") or "").strip() or None,
-            emergency_contact_phone=(payload.get("emergency_contact_phone") or "").strip() or None,
-            emergency_contact_relationship=(payload.get("emergency_contact_relationship") or "").strip()
-            or None,
-            hire_date=hire_date,
-            leave_date=leave_date,
-            department_name=(payload.get("department") or payload.get("department_name") or "").strip()
-            or None,
-            position_name=(payload.get("position") or payload.get("position_name") or "").strip()
-            or None,
-            status=status,
-        )
+        with transaction.atomic():
+            employee = Employee.objects.create(
+                name=name,
+                gender=payload.get("gender") or None,
+                birthday=birthday,
+                phone=(payload.get("phone") or "").strip() or None,
+                email=email,
+                address=(payload.get("address") or "").strip() or None,
+                emergency_contact_name=(payload.get("emergency_contact_name") or "").strip() or None,
+                emergency_contact_phone=(payload.get("emergency_contact_phone") or "").strip() or None,
+                emergency_contact_relationship=(payload.get("emergency_contact_relationship") or "").strip()
+                or None,
+                hire_date=hire_date,
+                leave_date=leave_date,
+                department_name=(payload.get("department") or payload.get("department_name") or "").strip()
+                or None,
+                position_name=(payload.get("position") or payload.get("position_name") or "").strip()
+                or None,
+                status=status,
+            )
+            UserLogin.objects.create(
+                employee=employee,
+                user_name=email,
+                password="123456",
+            )
 
         return JsonResponse({"status": "ok", "item": _serialize_employee(employee)})
 

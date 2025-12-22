@@ -26,11 +26,13 @@ from bpmatch.views import (
     send_mail,
     send_history,
 )
-from employee.views import login_api
+from employee.views import employee_detail_api, employees_api, login_api
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/login", login_api, name="employee-login"),
+    path("api/employees", employees_api, name="employee-list"),
+    path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("messages", messages),
     path("persons", persons),
     path("job-click", log_job_click),

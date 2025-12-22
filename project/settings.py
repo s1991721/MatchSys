@@ -133,6 +133,9 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Allow same-origin iframes for the dashboard shell.
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

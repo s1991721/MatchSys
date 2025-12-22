@@ -168,7 +168,7 @@
         }
 
         .table-card {
-            margin-top: 18px;
+            margin-top: 0;
             border-radius: 16px;
             border: 1px solid var(--line);
             background: var(--card);
@@ -184,7 +184,7 @@
 
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 16px 18px;
         }
 
@@ -203,21 +203,21 @@
             align-items: center;
         }
 
+        .filter-actions-left:empty {
+            display: none;
+        }
+
+        .filter-actions-left:empty + .filter-actions-right {
+            justify-content: flex-end;
+            width: 100%;
+        }
+
         .filter-actions-left,
         .filter-actions-right {
             display: flex;
             gap: 12px;
             flex-wrap: wrap;
             align-items: center;
-        }
-
-        .filter-actions-right {
-            justify-content: flex-end;
-        }
-
-        .filter-actions button {
-            flex: none;
-            min-width: 120px;
         }
 
         .btn-search {
@@ -229,7 +229,7 @@
             padding: 10px 16px;
             cursor: pointer;
             font-weight: 600;
-            height: 40px;
+            font-size: 13.3333px;
         }
 
         .btn-reset {
@@ -241,7 +241,7 @@
             padding: 10px 16px;
             cursor: pointer;
             font-weight: 600;
-            height: 40px;
+            font-size: 13.3333px;
         }
 
         .table-actions {

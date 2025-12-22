@@ -609,6 +609,12 @@
             localStorage.setItem("tech_edit_employee_id", String(id));
           } catch (err) {}
         }
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.location.hash = "people.html";
+            return;
+          }
+        } catch (err) {}
         window.location.href = "people.html";
       } else if (action === "delete"){
         const name = btn.getAttribute("data-name") || "";

@@ -53,6 +53,7 @@ def login_api(request):
     request.session.cycle_key()
     request.session["employee_id"] = user_login.employee_id
     request.session["employee_name"] = user_login.employee.name
+    request.session["employee_position_name"] = user_login.employee.position_name
     request.session["user_name"] = user_login.user_name
 
     return JsonResponse(

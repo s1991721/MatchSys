@@ -82,7 +82,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "matchSys",
         "USER": "root",
-        "PASSWORD": "YourStrongPassw0rd!",
+        "PASSWORD": "123456",
         "HOST": "127.0.0.1",  # 或数据库地址
         "PORT": "3306",
         "OPTIONS": {

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>通知管理</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --line: #e5e9f2;
+      --primary: #1c7bff;
+      --text: #1f2a3d;
+      --muted: #6b7686;
+      --danger: #ff5b5b;
+      --warn: #ffb020;
+      --success: #16a34a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .page {
+      padding: 4px 4px 14px;
+    }
+
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 800;
+      margin: 0 0 6px;
+    }
+
+    .title::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      border-radius: 12px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: var(--card);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: 0.15s ease;
+    }
+
+    .btn.primary {
+      background: rgba(28, 123, 255, 0.1);
+      border-color: rgba(28, 123, 255, 0.3);
+      color: var(--primary);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .stats {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
+      padding: 14px 16px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 6px 0 4px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+    }
+
+    .table th {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+
+    .badge.info {
+      color: var(--primary);
+      border-color: rgba(28, 123, 255, 0.3);
+      background: rgba(28, 123, 255, 0.08);
+    }
+
+    .badge.warn {
+      color: #b45309;
+      border-color: rgba(251, 191, 36, 0.45);
+      background: rgba(251, 191, 36, 0.15);
+    }
+
+    .badge.success {
+      color: var(--success);
+      border-color: rgba(22, 163, 74, 0.3);
+      background: rgba(22, 163, 74, 0.12);
+    }
+
+    .badge.danger {
+      color: var(--danger);
+      border-color: rgba(255, 91, 91, 0.35);
+      background: rgba(255, 91, 91, 0.12);
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tiny-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 12px 0 2px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .table th:nth-child(3),
+      .table td:nth-child(3),
+      .table th:nth-child(5),
+      .table td:nth-child(5) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <h3 class="title">通知管理</h3>
+        <p class="subtitle">统一管理系统内通知的创建、发布与阅读状态，支持分类筛选与批量操作。</p>
+      </div>
+      <div class="action-row">
+        <button class="btn">导入模板</button>
+        <button class="btn">批量设为已读</button>
+        <button class="btn primary">新建通知</button>
+      </div>
+    </div>
+
+    <div class="grid stats">
+      <div class="card">
+        <div class="stat-label">待处理通知</div>
+        <div class="stat-value">18</div>
+        <div class="stat-label">24小时内新增 6</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">高优先级</div>
+        <div class="stat-value">5</div>
+        <div class="stat-label">需确认回执 2</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">已发布</div>
+        <div class="stat-value">126</div>
+        <div class="stat-label">本月完成率 92%</div>
+      </div>
+      <div class="card">
+        <div class="stat-label">草稿箱</div>
+        <div class="stat-value">7</div>
+        <div class="stat-label">待审批 3</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 12px;">
+      <div class="filters">
+        <label class="field">
+          关键词
+          <input type="text" placeholder="标题/发送人/标签" />
+        </label>
+        <label class="field">
+          分类
+          <select>
+            <option>全部</option>
+            <option>系统通知</option>
+            <option>人事通知</option>
+            <option>项目通知</option>
+            <option>运维通知</option>
+          </select>
+        </label>
+        <label class="field">
+          状态
+          <select>
+            <option>全部</option>
+            <option>已发布</option>
+            <option>草稿</option>
+            <option>已归档</option>
+          </select>
+        </label>
+        <label class="field">
+          时间范围
+          <select>
+            <option>最近7天</option>
+            <option>最近30天</option>
+            <option>本季度</option>
+          </select>
+        </label>
+      </div>
+
+      <table class="table" aria-label="通知列表">
+        <thead>
+          <tr>
+            <th>标题</th>
+            <th>分类</th>
+            <th>优先级</th>
+            <th>状态</th>
+            <th>发布时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>系统维护窗口公告</td>
+            <td><span class="badge info">系统通知</span></td>
+            <td><span class="badge warn">高</span></td>
+            <td><span class="badge success">已发布</span></td>
+            <td>2024-03-21 09:30</td>
+            <td>
+              <div class="row-actions">
+                <button class="tiny-btn">查看</button>
+                <button class="tiny-btn">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>人事调休流程更新</td>
+            <td><span class="badge info">人事通知</span></td>
+            <td><span class="badge info">中</span></td>
+            <td><span class="badge success">已发布</span></td>
+            <td>2024-03-19 16:20</td>
+            <td>
+              <div class="row-actions">
+                <button class="tiny-btn">查看</button>
+                <button class="tiny-btn">推送</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>项目阶段里程碑提醒</td>
+            <td><span class="badge info">项目通知</span></td>
+            <td><span class="badge info">中</span></td>
+            <td><span class="badge warn">草稿</span></td>
+            <td>2024-03-18 11:05</td>
+            <td>
+              <div class="row-actions">
+                <button class="tiny-btn">编辑</button>
+                <button class="tiny-btn">提交审批</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>薪资系统停机提醒</td>
+            <td><span class="badge info">运维通知</span></td>
+            <td><span class="badge danger">紧急</span></td>
+            <td><span class="badge success">已发布</span></td>
+            <td>2024-03-15 22:00</td>
+            <td>
+              <div class="row-actions">
+                <button class="tiny-btn">查看</button>
+                <button class="tiny-btn">复盘</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="empty">当前显示 4 条通知记录</div>
+    </div>
+  </div>
+</body>
+</html>

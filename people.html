@@ -670,6 +670,7 @@
     const filterResetBtn = document.getElementById('filterResetBtn');
     const ssFileInput = personForm.querySelector('input[type="file"][name="ssFile"]');
     let isFileDialogOpen = false;
+    let forcedEmployeeId = '';
 
     const showDialogModal = () => {
         if (typeof personDialog.showModal === 'function') {
@@ -810,7 +811,7 @@
     };
 
     const setFormData = (person) => {
-        personForm.employee_id.value = person.id || '';
+        personForm.employee_id.value = forcedEmployeeId || person.id || '';
         personForm.name.value = person.name;
         personForm.nickname.value = person.nickname || '';
         personForm.birthday.value = person.birthday || '';
@@ -827,9 +828,8 @@
         dialogTitle.textContent = '新增人员';
         submitBtn.textContent = '确认新增';
         personForm.reset();
-        const targetId = getAutoEditId();
-        if (targetId) {
-            personForm.employee_id.value = targetId;
+        if (forcedEmployeeId) {
+            personForm.employee_id.value = forcedEmployeeId;
         }
         personDialog.style.animation = '';
         showDialogModal();
@@ -875,15 +875,6 @@
 
     const getAutoEditId = () => {
         try {
-            const params = new URLSearchParams(window.location.search || '');
-            const direct = params.get('employee_id');
-            if (direct) return direct;
-            const hash = window.location.hash || '';
-            const queryIndex = hash.indexOf('?');
-            if (queryIndex !== -1) {
-                const hashParams = new URLSearchParams(hash.slice(queryIndex + 1));
-                return hashParams.get('employee_id') || '';
-            }
             try {
                 const cached = localStorage.getItem("tech_edit_employee_id") || "";
                 if (cached) {
@@ -924,6 +915,7 @@
             applyFilters();
             const targetId = getAutoEditId();
             if (targetId) {
+                forcedEmployeeId = targetId;
                 const target = people.find(item => String(item.id) === String(targetId));
                 if (target) {
                     openEditDialog(target);
@@ -994,9 +986,13 @@
             alert('姓名为必填项');
             return;
         }
+        if (!forcedEmployeeId) {
+            alert('请从人员管理页进入技术者编辑');
+            return;
+        }
 
         const payload = {
-            employee_id: editingId ? editingId : (formValue.employee_id || Date.now()),
+            employee_id: forcedEmployeeId || formValue.employee_id || editingId,
             name_mask: formValue.name,
             birthday: formValue.birthday || '',
             nationality: formValue.nationality || '',

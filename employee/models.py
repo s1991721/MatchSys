@@ -126,6 +126,11 @@ class Technician(models.Model):
         verbose_name="员工ID"
     )
 
+    name = models.CharField(
+        max_length=100,
+        verbose_name="姓名"
+    )
+
     name_mask = models.CharField(
         max_length=100,
         verbose_name="姓名掩码"

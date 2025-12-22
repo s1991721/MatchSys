@@ -75,7 +75,18 @@ def _parse_json_body(request):
 def _parse_date(value, field):
     if value in (None, ""):
         return None, None
+    if isinstance(value, int):
+        if 1 <= value <= 12:
+            today = timezone.localdate()
+            return today.replace(month=value, day=1), None
+        return None, JsonResponse({"error": f"Invalid date: {field}"}, status=400)
     if isinstance(value, str):
+        if value.isdigit():
+            month = int(value)
+            if 1 <= month <= 12:
+                today = timezone.localdate()
+                return today.replace(month=month, day=1), None
+            return None, JsonResponse({"error": f"Invalid date: {field}"}, status=400)
         try:
             return datetime.strptime(value, "%Y-%m-%d").date(), None
         except ValueError:
@@ -151,6 +162,7 @@ def _serialize_technician(tech):
     }
     return {
         "employee_id": tech.employee_id,
+        "name": tech.name,
         "name_mask": tech.name_mask,
         "birthday": tech.birthday.isoformat() if tech.birthday else "",
         "nationality": tech.nationality or "",
@@ -321,6 +333,10 @@ def technicians_api(request):
         if not name_mask:
             return JsonResponse({"error": "Missing field: name_mask"}, status=400)
 
+        name = (payload.get("name") or "").strip()
+        if not name:
+            return JsonResponse({"error": "Missing field: name"}, status=400)
+
         birthday, error = _parse_date(payload.get("birthday"), "birthday")
         if error:
             return error
@@ -346,6 +362,7 @@ def technicians_api(request):
 
         tech = Technician.objects.create(
             employee_id=employee_id,
+            name=name,
             name_mask=name_mask,
             birthday=birthday,
             nationality=(payload.get("nationality") or "").strip() or None,
@@ -426,6 +443,8 @@ def technician_detail_api(request, employee_id):
         if error:
             return error
         tech.birthday = value
+    if "name" in payload:
+        tech.name = (payload.get("name") or "").strip()
     if "nationality" in payload:
         tech.nationality = (payload.get("nationality") or "").strip() or None
     if "price" in payload:
@@ -458,8 +477,12 @@ def technician_detail_api(request, employee_id):
     if "remark" in payload:
         tech.remark = (payload.get("remark") or "").strip() or None
 
+    # Do not allow employee_id updates for existing technicians.
+
     if not tech.name_mask:
         return JsonResponse({"error": "Missing field: name_mask"}, status=400)
+    if not tech.name:
+        return JsonResponse({"error": "Missing field: name"}, status=400)
 
     tech.save()
     return JsonResponse({"status": "ok", "item": _serialize_technician(tech)})

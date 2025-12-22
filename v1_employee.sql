@@ -82,6 +82,7 @@ CREATE TABLE technician (
 
     employee_id BIGINT NOT NULL COMMENT '员工ID',
 
+    name VARCHAR(100) NOT NULL COMMENT '姓名',
     name_mask VARCHAR(100) NOT NULL COMMENT '姓名掩码',
 
     birthday DATE NULL COMMENT '生日',

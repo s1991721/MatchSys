@@ -709,19 +709,31 @@
 
     const siteDeadlineToLabel = (value) => {
         if (!value) return '';
+        if (typeof value === 'number') {
+            return value >= 1 && value <= 12 ? `${value}月` : '';
+        }
+        if (/^\d{1,2}$/.test(String(value))) {
+            const num = Number(value);
+            return num >= 1 && num <= 12 ? `${num}月` : '';
+        }
+        if (String(value).startsWith('9999-12-31')) {
+            return '长期';
+        }
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return '';
         return `${date.getMonth() + 1}月`;
     };
 
     const labelToSiteDeadline = (label) => {
-        if (!label || label === '长期') return '';
+        if (!label) return '';
+        if (label === '长期') return '9999-12-31';
         const match = label.match(/^(\d{1,2})月$/);
         if (!match) return '';
-        const month = Number(match[1]) - 1;
+        const month = Number(match[1]);
         const today = new Date();
-        const date = new Date(today.getFullYear(), month, 1);
-        return date.toISOString().slice(0, 10);
+        const year = today.getFullYear();
+        const lastDay = new Date(year, month, 0);
+        return lastDay.toISOString().slice(0, 10);
     };
 
     const calcAge = (birthday) => {
@@ -738,22 +750,8 @@
     };
 
     const parseRemark = (remark) => {
-        if (!remark) return { nickname: '', note: '' };
-        const lines = String(remark).split('\n');
-        if (lines[0].startsWith('昵称:')) {
-            return {
-                nickname: lines[0].replace('昵称:', '').trim(),
-                note: lines.slice(1).join('\n').trim()
-            };
-        }
-        return { nickname: '', note: String(remark).trim() };
-    };
-
-    const composeRemark = (nickname, note) => {
-        const parts = [];
-        if (nickname) parts.push(`昵称:${nickname}`);
-        if (note) parts.push(note);
-        return parts.join('\n');
+        if (!remark) return '';
+        return String(remark).trim();
     };
 
     const renderPeople = (list) => {
@@ -830,6 +828,9 @@
         personForm.reset();
         if (forcedEmployeeId) {
             personForm.employee_id.value = forcedEmployeeId;
+            personForm.name.setAttribute('readonly', 'readonly');
+        } else {
+            personForm.name.removeAttribute('readonly');
         }
         personDialog.style.animation = '';
         showDialogModal();
@@ -840,6 +841,7 @@
         dialogTitle.textContent = '编辑人员';
         submitBtn.textContent = '保存修改';
         setFormData(person);
+        personForm.name.setAttribute('readonly', 'readonly');
         personDialog.style.animation = '';
         showDialogModal();
     };
@@ -865,6 +867,7 @@
             editingId = null;
             dialogTitle.textContent = '新增人员';
             submitBtn.textContent = '确认新增';
+            personForm.name.removeAttribute('readonly');
             personDialog.removeEventListener('animationend', finalizeClose);
         };
 
@@ -895,11 +898,12 @@
             const data = await res.json();
             const items = Array.isArray(data.items) ? data.items : [];
             people = items.map(item => {
-                const remark = parseRemark(item.remark);
+                const remarkText = item.remark ? String(item.remark) : '';
+                const noteText = parseRemark(remarkText);
                 return {
                     id: item.employee_id,
-                    name: item.name_mask,
-                    nickname: remark.nickname,
+                    name: item.name || '',
+                    nickname: item.name_mask,
                     birthday: item.birthday || '',
                     age: calcAge(item.birthday),
                     nationality: item.nationality || '',
@@ -907,7 +911,7 @@
                     contract: contractTypeToLabel(item.contract_type),
                     siteContract: siteDeadlineToLabel(item.spot_contract_deadline),
                     intro: item.introduction || '',
-                    note: remark.note || '',
+                    note: noteText || '',
                     ssFileName: '',
                     ssFileUrl: ''
                 };
@@ -938,6 +942,9 @@
             const data = await res.json();
             const emp = data.item || {};
             personForm.name.value = emp.name || '';
+            if (personForm.name.value) {
+                personForm.name.setAttribute('readonly', 'readonly');
+            }
             personForm.birthday.value = emp.birthday || '';
             personForm.nickname.value = personForm.nickname.value || '';
             personForm.nationality.value = personForm.nationality.value || '';
@@ -986,14 +993,15 @@
             alert('姓名为必填项');
             return;
         }
-        if (!forcedEmployeeId) {
+        if (editingId === null && !forcedEmployeeId) {
             alert('请从人员管理页进入技术者编辑');
             return;
         }
 
         const payload = {
-            employee_id: forcedEmployeeId || formValue.employee_id || editingId,
-            name_mask: formValue.name,
+            employee_id: editingId || forcedEmployeeId,
+            name: formValue.name,
+            name_mask: formValue.nickname || formValue.name,
             birthday: formValue.birthday || '',
             nationality: formValue.nationality || '',
             price: Number.isFinite(formValue.price) ? formValue.price : null,
@@ -1002,7 +1010,7 @@
             spot_contract_deadline: labelToSiteDeadline(formValue.siteContract),
             business_status: 0,
             ss: null,
-            remark: composeRemark(formValue.nickname, formValue.note)
+            remark: formValue.note
         };
 
         try {

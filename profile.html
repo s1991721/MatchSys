@@ -140,7 +140,8 @@
     }
 
     .form-field input,
-    .form-field textarea {
+    .form-field textarea,
+    .form-field select {
       border: 1px solid #d8dfec;
       border-radius: 10px;
       padding: 10px 12px;
@@ -150,13 +151,18 @@
       background: #fff;
     }
 
+    .form-field select {
+      appearance: none;
+    }
+
     .form-field textarea {
       min-height: 72px;
       resize: vertical;
     }
 
     .form-field input:focus,
-    .form-field textarea:focus {
+    .form-field textarea:focus,
+    .form-field select:focus {
       border-color: rgba(28, 123, 255, 0.5);
       box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.12);
     }
@@ -167,6 +173,10 @@
       color: #7a8597;
       border-color: #e1e6ef;
       cursor: not-allowed;
+    }
+
+    .form-field.full {
+      grid-column: 1 / -1;
     }
 
     .form-actions {
@@ -286,12 +296,29 @@
             <input id="empName" name="name" type="text" required />
           </div>
           <div class="form-field">
+            <label for="empGender">性别</label>
+            <select id="empGender" name="gender">
+              <option value="">未设置</option>
+              <option value="1">男</option>
+              <option value="2">女</option>
+              <option value="0">未知</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="empBirthday">生日</label>
+            <input id="empBirthday" name="birthday" type="date" />
+          </div>
+          <div class="form-field">
             <label for="empPhone">手机</label>
             <input id="empPhone" name="phone" type="text" />
           </div>
           <div class="form-field">
             <label for="empEmail">邮箱</label>
             <input id="empEmail" name="email" type="email" />
+          </div>
+          <div class="form-field">
+            <label for="empHireDate">入职日期</label>
+            <input id="empHireDate" name="hire_date" type="date" readonly />
           </div>
           <div class="form-field">
             <label for="empDepartment">部门</label>
@@ -301,9 +328,21 @@
             <label for="empPosition">职位</label>
             <input id="empPosition" name="position_name" type="text" readonly />
           </div>
-          <div class="form-field">
+          <div class="form-field full">
             <label for="empAddress">地址</label>
-            <textarea id="empAddress" name="address" readonly></textarea>
+            <textarea id="empAddress" name="address"></textarea>
+          </div>
+          <div class="form-field">
+            <label for="empEmergencyName">紧急联系人姓名</label>
+            <input id="empEmergencyName" name="emergency_contact_name" type="text" />
+          </div>
+          <div class="form-field">
+            <label for="empEmergencyPhone">紧急联系人电话</label>
+            <input id="empEmergencyPhone" name="emergency_contact_phone" type="text" />
+          </div>
+          <div class="form-field">
+            <label for="empEmergencyRelation">紧急联系人关系</label>
+            <input id="empEmergencyRelation" name="emergency_contact_relationship" type="text" />
           </div>
         </div>
         <div class="form-actions">
@@ -350,8 +389,19 @@
     statusBox.className = `status ${type}`;
   }
 
+  function setReadOnlyWhenFilled(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (!field) return;
+    const hasValue = value !== null && value !== undefined && String(value).trim() !== "";
+    if (hasValue) {
+      field.setAttribute("readonly", "readonly");
+    } else {
+      field.removeAttribute("readonly");
+    }
+  }
+
   function setDisabled(disabled) {
-    employeeForm.querySelectorAll("input, textarea, button").forEach((el) => {
+    employeeForm.querySelectorAll("input, textarea, select, button").forEach((el) => {
       el.disabled = disabled;
     });
     passwordForm.querySelectorAll("input, button").forEach((el) => {
@@ -374,11 +424,24 @@
       if (!res.ok) throw new Error(data.error || "加载失败");
       const item = data.item || {};
       document.getElementById("empName").value = item.name || "";
+      document.getElementById("empGender").value = item.gender ?? "";
+      document.getElementById("empBirthday").value = item.birthday || "";
       document.getElementById("empPhone").value = item.phone || "";
       document.getElementById("empEmail").value = item.email || "";
+      document.getElementById("empHireDate").value = item.hire_date || "";
       document.getElementById("empDepartment").value = item.department || item.department_name || "";
       document.getElementById("empPosition").value = item.position || item.position_name || "";
       document.getElementById("empAddress").value = item.address || "";
+      document.getElementById("empEmergencyName").value = item.emergency_contact_name || "";
+      document.getElementById("empEmergencyPhone").value = item.emergency_contact_phone || "";
+      document.getElementById("empEmergencyRelation").value = item.emergency_contact_relationship || "";
+
+      setReadOnlyWhenFilled("empPhone", item.phone);
+      setReadOnlyWhenFilled("empEmail", item.email);
+      setReadOnlyWhenFilled("empAddress", item.address);
+      setReadOnlyWhenFilled("empEmergencyName", item.emergency_contact_name);
+      setReadOnlyWhenFilled("empEmergencyPhone", item.emergency_contact_phone);
+      setReadOnlyWhenFilled("empEmergencyRelation", item.emergency_contact_relationship);
 
       document.getElementById("profileName").textContent = item.name || "";
       document.getElementById("profileDepartment").textContent = item.department_name || item.department || "";
@@ -391,10 +454,17 @@
     event.preventDefault();
     if (!employeeId) return;
     try {
+      const genderRaw = document.getElementById("empGender").value;
       const payload = {
         name: document.getElementById("empName").value.trim(),
+        gender: genderRaw === "" ? null : Number(genderRaw),
+        birthday: document.getElementById("empBirthday").value || "",
         phone: document.getElementById("empPhone").value.trim(),
         email: document.getElementById("empEmail").value.trim(),
+        address: document.getElementById("empAddress").value.trim(),
+        emergency_contact_name: document.getElementById("empEmergencyName").value.trim(),
+        emergency_contact_phone: document.getElementById("empEmergencyPhone").value.trim(),
+        emergency_contact_relationship: document.getElementById("empEmergencyRelation").value.trim(),
       };
       const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
         method: "PUT",
@@ -409,6 +479,19 @@
       if (data.item) {
         document.getElementById("profileName").textContent = data.item.name || "";
         document.getElementById("profileDepartment").textContent = data.item.department_name || "";
+        setReadOnlyWhenFilled("empPhone", data.item.phone);
+        setReadOnlyWhenFilled("empEmail", data.item.email);
+        setReadOnlyWhenFilled("empAddress", data.item.address);
+        setReadOnlyWhenFilled("empEmergencyName", data.item.emergency_contact_name);
+        setReadOnlyWhenFilled("empEmergencyPhone", data.item.emergency_contact_phone);
+        setReadOnlyWhenFilled("empEmergencyRelation", data.item.emergency_contact_relationship);
+      } else {
+        setReadOnlyWhenFilled("empPhone", payload.phone);
+        setReadOnlyWhenFilled("empEmail", payload.email);
+        setReadOnlyWhenFilled("empAddress", payload.address);
+        setReadOnlyWhenFilled("empEmergencyName", payload.emergency_contact_name);
+        setReadOnlyWhenFilled("empEmergencyPhone", payload.emergency_contact_phone);
+        setReadOnlyWhenFilled("empEmergencyRelation", payload.emergency_contact_relationship);
       }
     } catch (err) {
       const message = err.message || "保存失败";

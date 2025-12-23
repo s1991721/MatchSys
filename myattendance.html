@@ -141,7 +141,7 @@
     }
 
     .map{
-      height:170px;
+      height:240px;
       border-radius:16px;
       position:relative;
       overflow:hidden;
@@ -160,6 +160,7 @@
     .map-canvas{
       position:absolute;
       inset:0;
+      z-index:1;
     }
 
     .map::after{
@@ -207,7 +208,7 @@
       position:absolute;
       right:18px;
       bottom:14px;
-      z-index:4;
+      z-index:5;
       display:flex;
       align-items:flex-start;
       gap:10px;
@@ -405,7 +406,7 @@
     /* tiny responsiveness */
     @media (max-width: 380px){
       .title{font-size:20px}
-      .map{height:150px}
+      .map{height:200px}
       .time{font-size:40px}
       .stat-num{font-size:48px}
     }
@@ -709,7 +710,7 @@
           <!-- 中间悬浮按钮（覆盖在 today-bar 上方） -->
           <button class="punch-fab" type="button">
             <span class="big">打卡</span>
-            <span class="small">09:00 上班</span>
+            <span class="small"><span id="punch-time">--:--:--</span></span>
           </button>
 
         </div>
@@ -827,6 +828,8 @@
 
   <script>
     const MAP_FALLBACK = { lat: 35.6852, lng: 139.7528 };
+    const MAP_ZOOM_DEFAULT = 17;
+    const MAP_ZOOM_FOLLOW = 18;
     let mapInstance;
     let userMarker;
     let watchId;
@@ -842,7 +845,7 @@
       mapInstance = L.map("map", {
         zoomControl: false,
         attributionControl: false,
-      }).setView([MAP_FALLBACK.lat, MAP_FALLBACK.lng], 14);
+      }).setView([MAP_FALLBACK.lat, MAP_FALLBACK.lng], MAP_ZOOM_DEFAULT);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
@@ -867,7 +870,7 @@
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           };
-          mapInstance.setView([coords.lat, coords.lng], 16);
+          mapInstance.setView([coords.lat, coords.lng], MAP_ZOOM_FOLLOW);
           userMarker.setLatLng([coords.lat, coords.lng]);
           setStatus("已获取当前位置", "位置已实时更新");
         },
@@ -923,6 +926,20 @@
       },
       true
     );
+
+    function pad2(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function updatePunchTime() {
+      const now = new Date();
+      const timeText = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+      const el = document.getElementById("punch-time");
+      if (el) el.textContent = timeText;
+    }
+
+    updatePunchTime();
+    setInterval(updatePunchTime, 1000);
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

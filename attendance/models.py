@@ -19,6 +19,7 @@ class AttendancePunchBase(models.Model):
     latitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
     location_text = models.CharField(max_length=255, null=True, blank=True)
+    remark = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(
         Employee,
         null=True,
@@ -60,8 +61,8 @@ class AttendanceRecordBase(models.Model):
         related_name="attendance_records",
     )
     punch_date = models.DateField(db_column="punch_date")
-    start_time = models.TimeField(db_column="start_time")
-    end_time = models.TimeField(db_column="end_time")
+    start_time = models.TimeField(db_column="start_time", null=True, blank=True)
+    end_time = models.TimeField(db_column="end_time", null=True, blank=True)
     remark = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(
         Employee,

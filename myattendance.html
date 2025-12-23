@@ -382,7 +382,7 @@
       background: linear-gradient(180deg, rgba(47,128,255,.08), rgba(47,128,255,0));
       padding:12px 14px;
       display:grid;
-      grid-template-columns: 1.2fr 1.2fr .9fr;
+      grid-template-columns: 1.1fr 1.1fr 1.2fr .9fr;
       color:#64748b;
       font-weight:900;
       font-size:18px;
@@ -391,7 +391,7 @@
     .row{
       padding:14px 14px;
       display:grid;
-      grid-template-columns: 1.2fr 1.2fr .9fr;
+      grid-template-columns: 1.1fr 1.1fr 1.2fr .9fr;
       align-items:center;
       border-top:1px solid var(--line);
       font-weight:800;
@@ -420,6 +420,133 @@
       border:0;
       box-shadow: 0 10px 16px rgba(47,128,255,.22);
       cursor:pointer;
+    }
+
+    /* ---------- 修改弹窗 ---------- */
+    .dialog-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(15,23,42,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:999;
+    }
+    .dialog-backdrop.show{
+      display:flex;
+    }
+    .dialog{
+      width:100%;
+      max-width:520px;
+      background:#fff;
+      border-radius:18px;
+      border:1px solid rgba(15,23,42,.08);
+      box-shadow: 0 20px 40px rgba(15,23,42,.18);
+      padding:18px 18px 16px;
+    }
+    .dialog-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .dialog-title{
+      font-weight:900;
+      font-size:20px;
+    }
+    .dialog-close{
+      border:0;
+      background:transparent;
+      font-size:22px;
+      cursor:pointer;
+      color:#94a3b8;
+      font-weight:900;
+    }
+    .dialog-body{
+      display:grid;
+      gap:12px;
+      margin-top:10px;
+    }
+    .field{
+      display:grid;
+      gap:6px;
+    }
+    .field label{
+      font-weight:800;
+      color:#3b4552;
+      font-size:14px;
+    }
+    .field input,
+    .field textarea{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:10px 12px;
+      font-weight:700;
+      font-size:15px;
+      color:#0f172a;
+      outline:none;
+      background:#f8fafc;
+    }
+    .field textarea{
+      min-height:88px;
+      resize:vertical;
+    }
+    .dialog-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:14px;
+    }
+    .dialog-error{
+      color:#dc2626;
+      font-weight:800;
+      font-size:13px;
+      background: rgba(239,68,68,.08);
+      border:1px solid rgba(239,68,68,.18);
+      padding:8px 10px;
+      border-radius:10px;
+    }
+    .btn-ghost{
+      border:1px solid var(--line);
+      background:#fff;
+      color:#3b4a60;
+      padding:8px 14px;
+      border-radius:10px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn-primary{
+      border:0;
+      background: linear-gradient(180deg, #3a8cff, #1f6dff);
+      color:#fff;
+      padding:8px 16px;
+      border-radius:10px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow: 0 10px 16px rgba(47,128,255,.20);
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:28px;
+      transform:translateX(-50%) translateY(10px);
+      background:#0f172a;
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:14px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index:1000;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
     }
 
     /* ---------- header icons (SVG colors) ---------- */
@@ -832,6 +959,7 @@
           <div class="thead">
             <div>日期</div>
             <div style="text-align:center;">上班</div>
+            <div style="text-align:center;">备注</div>
             <div style="text-align:right;">操作</div>
           </div>
 
@@ -840,7 +968,8 @@
             <div style="text-align:center;">
               <span class="worktime">09:00</span><span class="sep">•</span><span class="worktime">18:00</span>
             </div>
-            <button class="btn">修改</button>
+            <div style="text-align:center;color:#64748b;">-</div>
+            <button class="btn" type="button" data-iso="2023-12-08" data-date="12月8日" data-start="09:00" data-end="18:00" data-remark="">修改</button>
           </div>
 
           <div class="row">
@@ -848,13 +977,49 @@
             <div style="text-align:center;">
               <span class="worktime">08:59</span><span class="sep">•</span><span class="worktime">18:31</span>
             </div>
-            <button class="btn">修改</button>
+            <div style="text-align:center;color:#64748b;">-</div>
+            <button class="btn" type="button" data-iso="2023-12-07" data-date="12月7日" data-start="08:59" data-end="18:31" data-remark="">修改</button>
           </div>
         </div>
       </div>
     </details>
 
   </div>
+
+  <!-- 修改考勤弹窗 -->
+  <div class="dialog-backdrop" id="edit-dialog" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
+      <div class="dialog-head">
+        <div class="dialog-title" id="edit-dialog-title">修改考勤</div>
+        <button class="dialog-close" type="button" id="edit-dialog-close">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="dialog-error" id="edit-dialog-error" hidden>备注必填</div>
+        <div class="field">
+          <label for="edit-date">日期</label>
+          <input id="edit-date" type="text" readonly />
+        </div>
+        <div class="field">
+          <label for="edit-start">上班时间</label>
+          <input id="edit-start" type="time" />
+        </div>
+        <div class="field">
+          <label for="edit-end">下班时间</label>
+          <input id="edit-end" type="time" />
+        </div>
+        <div class="field">
+          <label for="edit-remark">备注</label>
+          <textarea id="edit-remark" placeholder="填写备注"></textarea>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
+        <button class="btn-primary" type="button" id="edit-dialog-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
 
   <script>
     const MAP_FALLBACK = { lat: 35.6852, lng: 139.7528 };
@@ -990,13 +1155,50 @@
           const startTime = record.start_time || "--:--";
           const endTime = record.end_time || "--:--";
           const displayDate = record.display_date || formatDisplayDate(record.date);
-          row.innerHTML = `
-            <div style="font-size:22px;font-weight:900;color:#1f2937;">${displayDate}</div>
-            <div style="text-align:center;">
-              <span class="worktime">${startTime}</span><span class="sep">•</span><span class="worktime">${endTime}</span>
-            </div>
-            <button class="btn" type="button">修改</button>
-          `;
+          const remarkText = record.remark || "";
+
+          const dateEl = document.createElement("div");
+          dateEl.style.fontSize = "22px";
+          dateEl.style.fontWeight = "900";
+          dateEl.style.color = "#1f2937";
+          dateEl.textContent = displayDate;
+
+          const timeEl = document.createElement("div");
+          timeEl.style.textAlign = "center";
+          const startSpan = document.createElement("span");
+          startSpan.className = "worktime";
+          startSpan.textContent = startTime;
+          const sepSpan = document.createElement("span");
+          sepSpan.className = "sep";
+          sepSpan.textContent = "•";
+          const endSpan = document.createElement("span");
+          endSpan.className = "worktime";
+          endSpan.textContent = endTime;
+          timeEl.appendChild(startSpan);
+          timeEl.appendChild(sepSpan);
+          timeEl.appendChild(endSpan);
+
+          const remarkEl = document.createElement("div");
+          remarkEl.style.textAlign = "center";
+          remarkEl.style.color = "#64748b";
+          remarkEl.textContent = remarkText || "-";
+
+          const button = document.createElement("button");
+          button.className = "btn";
+          button.type = "button";
+          button.textContent = "修改";
+          button.dataset.iso = record.date || "";
+          button.dataset.date = displayDate;
+          button.dataset.start = startTime;
+          button.dataset.end = endTime;
+          button.dataset.remark = remarkText;
+          button.dataset.originalStart = startTime;
+          button.dataset.originalEnd = endTime;
+
+          row.appendChild(dateEl);
+          row.appendChild(timeEl);
+          row.appendChild(remarkEl);
+          row.appendChild(button);
           table.appendChild(row);
         });
         setTemplatesVisible(details, true);
@@ -1139,6 +1341,151 @@
         })
         .finally(() => {
           punchButton.disabled = false;
+        });
+    });
+
+    let currentEditRow = null;
+    let toastTimer = null;
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1600);
+    }
+
+    function openEditDialog(payload) {
+      const dialog = document.getElementById("edit-dialog");
+      if (!dialog) return;
+      const errorEl = document.getElementById("edit-dialog-error");
+      const dateInput = document.getElementById("edit-date");
+      const startInput = document.getElementById("edit-start");
+      const endInput = document.getElementById("edit-end");
+      const remarkInput = document.getElementById("edit-remark");
+      if (dateInput) dateInput.value = payload.date || "";
+      if (startInput) startInput.value = payload.start || "";
+      if (endInput) endInput.value = payload.end || "";
+      if (remarkInput) remarkInput.value = payload.remark || "";
+      dialog.dataset.dateIso = payload.dateIso || "";
+      dialog.dataset.originalStart = payload.originalStart || "";
+      dialog.dataset.originalEnd = payload.originalEnd || "";
+      if (errorEl) errorEl.hidden = true;
+      dialog.classList.add("show");
+      dialog.setAttribute("aria-hidden", "false");
+    }
+
+    function closeEditDialog() {
+      const dialog = document.getElementById("edit-dialog");
+      if (!dialog) return;
+      dialog.classList.remove("show");
+      dialog.setAttribute("aria-hidden", "true");
+    }
+
+    document.addEventListener("click", (event) => {
+      const editButton = event.target.closest(".row .btn");
+      if (!editButton) return;
+      const payload = {
+        date: editButton.dataset.date || "",
+        dateIso: editButton.dataset.iso || "",
+        start: editButton.dataset.start || "",
+        end: editButton.dataset.end || "",
+        remark: editButton.dataset.remark || "",
+        originalStart: editButton.dataset.originalStart || editButton.dataset.start || "",
+        originalEnd: editButton.dataset.originalEnd || editButton.dataset.end || "",
+      };
+      currentEditRow = editButton.closest(".row");
+      openEditDialog(payload);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.id === "edit-dialog" || event.target.id === "edit-dialog-close" || event.target.id === "edit-dialog-cancel") {
+        closeEditDialog();
+      }
+    });
+
+    document.getElementById("edit-dialog-save")?.addEventListener("click", () => {
+      const dialog = document.getElementById("edit-dialog");
+      const errorEl = document.getElementById("edit-dialog-error");
+      const dateIso = dialog?.dataset.dateIso || "";
+      const originalStart = dialog?.dataset.originalStart || "";
+      const originalEnd = dialog?.dataset.originalEnd || "";
+      const startInput = document.getElementById("edit-start");
+      const endInput = document.getElementById("edit-end");
+      const remarkInput = document.getElementById("edit-remark");
+      const remarkValue = remarkInput ? remarkInput.value.trim() : "";
+
+      if (!remarkValue) {
+        if (errorEl) {
+          errorEl.textContent = "备注必填";
+          errorEl.hidden = false;
+        }
+        return;
+      }
+      if (!dateIso) {
+        if (errorEl) {
+          errorEl.textContent = "缺少日期，无法保存";
+          errorEl.hidden = false;
+        }
+        return;
+      }
+
+      if (errorEl) errorEl.hidden = true;
+
+      fetch("/api/attendance/record/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          date: dateIso,
+          start_time: startInput ? startInput.value : "",
+          end_time: endInput ? endInput.value : "",
+          original_start_time: originalStart,
+          original_end_time: originalEnd,
+          remark: remarkValue,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then((data) => {
+              throw new Error(data && data.error ? data.error : "保存失败");
+            });
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (currentEditRow && data && data.record) {
+            const record = data.record;
+            const times = currentEditRow.querySelectorAll(".worktime");
+            if (times[0]) times[0].textContent = record.start_time || "--:--";
+            if (times[1]) times[1].textContent = record.end_time || "--:--";
+            const remarkCell = currentEditRow.querySelector("div:nth-child(3)");
+            if (remarkCell) {
+              remarkCell.textContent = record.remark ? record.remark : "-";
+              remarkCell.style.color = record.remark ? "#0f172a" : "#64748b";
+            }
+            const editBtn = currentEditRow.querySelector(".btn");
+            if (editBtn) {
+              editBtn.dataset.iso = record.date || dateIso;
+              editBtn.dataset.start = record.start_time || "";
+              editBtn.dataset.end = record.end_time || "";
+              editBtn.dataset.remark = record.remark || "";
+              editBtn.dataset.originalStart = record.start_time || "";
+              editBtn.dataset.originalEnd = record.end_time || "";
+            }
+          }
+          showToast("保存成功");
+          closeEditDialog();
+        })
+        .catch((err) => {
+          if (errorEl) {
+            errorEl.textContent = err.message || "保存失败";
+            errorEl.hidden = false;
+          }
+          showToast("保存失败");
         });
     });
 

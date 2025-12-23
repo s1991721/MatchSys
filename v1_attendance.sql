@@ -44,6 +44,8 @@ CREATE TABLE attendance_punch (
   longitude     DECIMAL(10,7) NULL,
   location_text VARCHAR(255) NULL,
 
+  remark           VARCHAR(255) NULL,
+
   created_by    BIGINT UNSIGNED NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

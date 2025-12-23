@@ -30,6 +30,7 @@ from bpmatch.views import (
 )
 from attendance.views import (
     attendance_punch_api,
+    attendance_record_edit_api,
     attendance_record_today_api,
     my_attendance_summary_api,
     my_attendance_detail_api,
@@ -72,6 +73,7 @@ urlpatterns = [
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),
     path("api/ss/<path:path>", technician_ss_download, name="technician-ss-download"),
     path("api/attendance/punch", attendance_punch_api, name="attendance-punch"),
+    path("api/attendance/record/edit", attendance_record_edit_api, name="attendance-record-edit"),
     path("api/attendance/record/today", attendance_record_today_api, name="attendance-record-today"),
     path("api/my-attendance-summary", my_attendance_summary_api, name="my-attendance-summary"),
     path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),

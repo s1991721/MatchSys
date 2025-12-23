@@ -81,16 +81,31 @@ def _parse_json_body(request):
         return None, JsonResponse({"error": "Invalid JSON body"}, status=400)
 
 
+def _parse_time_value(value, field_name):
+    value = (value or "").strip()
+    if not value or value in {"--:--", "未打卡"}:
+        return None, None
+    for fmt in ("%H:%M:%S", "%H:%M"):
+        try:
+            return datetime.strptime(value, fmt).time(), None
+        except ValueError:
+            continue
+    return None, JsonResponse({"error": f"Invalid {field_name}"}, status=400)
 
-def _create_attendance_punch(model, employee, now, punch_time_value, punch_type, payload):
+
+
+def _create_attendance_punch(
+    model, employee, now, punch_time_value, punch_type, payload, punch_date=None, remark=""
+):
     return model.objects.create(
         employee=employee,
-        punch_date=now.date(),
+        punch_date=punch_date or now.date(),
         punch_time=punch_time_value,
         punch_type=punch_type,
         latitude=payload.get("latitude"),
         longitude=payload.get("longitude"),
         location_text=(payload.get("location_text") or "")[:255],
+        remark=remark or "",
         created_by=employee,
         created_at=now,
         updated_by=employee,
@@ -102,40 +117,170 @@ def _sync_attendance_record(punch_model, record_model, employee, now, punch_type
     punch_queryset = punch_model.objects.filter(
         employee=employee,
         punch_date=now.date(),
-        punch_type=punch_type,
         deleted_at__isnull=True,
     )
-    punch_order = "punch_time" if punch_type == 1 else "-punch_time"
-    selected_punch = punch_queryset.order_by(punch_order).first()
-    if not selected_punch:
+    start_punch = punch_queryset.filter(punch_type=1).order_by("punch_time").first()
+    end_punch = punch_queryset.filter(punch_type=2).order_by("-punch_time").first()
+    if not start_punch and not end_punch:
         return None
 
+    record = record_model.objects.filter(
+        employee=employee,
+        punch_date=now.date(),
+        deleted_at__isnull=True,
+    ).first()
+
+    start_time = start_punch.punch_time if start_punch else None
+    end_time = end_punch.punch_time if end_punch else None
+
+    if record:
+        update_fields = []
+        if start_time is not None:
+            record.start_time = start_time
+            update_fields.append("start_time")
+        if end_time is not None:
+            record.end_time = end_time
+            update_fields.append("end_time")
+        if update_fields:
+            record.updated_by = employee
+            record.updated_at = now
+            update_fields.extend(["updated_by", "updated_at"])
+            record.save(update_fields=update_fields)
+        return record
+
+    record = record_model.objects.create(
+        employee=employee,
+        punch_date=now.date(),
+        start_time=start_time,
+        end_time=end_time,
+        created_by=employee,
+        created_at=now,
+        updated_by=employee,
+        updated_at=now,
+    )
+    return record
+
+
+@csrf_exempt
+@require_POST
+def attendance_record_edit_api(request):
+    employee_id = request.session.get("employee_id")
+    if not employee_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    payload, error = _parse_json_body(request)
+    if error:
+        return error
+
+    date_raw = (payload.get("date") or "").strip()
+    remark = (payload.get("remark") or "").strip()
+    if not date_raw:
+        return JsonResponse({"error": "Missing date"}, status=400)
+    if not remark:
+        return JsonResponse({"error": "Missing remark"}, status=400)
+
+    try:
+        target_date = datetime.strptime(date_raw, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"error": "Invalid date"}, status=400)
+
+    start_time_value, error = _parse_time_value(payload.get("start_time"), "start_time")
+    if error:
+        return error
+    end_time_value, error = _parse_time_value(payload.get("end_time"), "end_time")
+    if error:
+        return error
+    original_start, error = _parse_time_value(
+        payload.get("original_start_time"), "original_start_time"
+    )
+    if error:
+        return error
+    original_end, error = _parse_time_value(
+        payload.get("original_end_time"), "original_end_time"
+    )
+    if error:
+        return error
+
+    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
+    if not employee:
+        return JsonResponse({"error": "Employee not found"}, status=404)
+
+    now = timezone.localtime()
+    punch_model, record_model = get_monthly_attendance_models(target_date)
+
+    final_start = start_time_value if start_time_value is not None else original_start
+    final_end = end_time_value if end_time_value is not None else original_end
+
+    if final_start is None or final_end is None:
+        return JsonResponse({"error": "Missing start_time or end_time"}, status=400)
+
+    start_changed = final_start != original_start
+    end_changed = final_end != original_end
+
+    if start_changed:
+        _create_attendance_punch(
+            punch_model,
+            employee,
+            now,
+            final_start,
+            1,
+            {},
+            punch_date=target_date,
+            remark=remark,
+        )
+    if end_changed:
+        _create_attendance_punch(
+            punch_model,
+            employee,
+            now,
+            final_end,
+            2,
+            {},
+            punch_date=target_date,
+            remark=remark,
+        )
+
     defaults = {
-        "start_time": selected_punch.punch_time if punch_type == 1 else None,
-        "end_time": selected_punch.punch_time if punch_type == 2 else None,
+        "start_time": final_start,
+        "end_time": final_end,
+        "remark": remark,
         "created_by": employee,
         "created_at": now,
         "updated_by": employee,
         "updated_at": now,
     }
-
     record, created = record_model.objects.get_or_create(
         employee=employee,
-        punch_date=selected_punch.punch_date,
+        punch_date=target_date,
         defaults=defaults,
     )
     if not created:
-        if punch_type == 1:
-            record.start_time = selected_punch.punch_time
-            update_fields = ["start_time"]
-        else:
-            record.end_time = selected_punch.punch_time
-            update_fields = ["end_time"]
+        record.start_time = final_start
+        record.end_time = final_end
+        record.remark = remark
         record.updated_by = employee
         record.updated_at = now
-        update_fields.extend(["updated_by", "updated_at"])
-        record.save(update_fields=update_fields)
-    return record
+        record.save(
+            update_fields=[
+                "start_time",
+                "end_time",
+                "remark",
+                "updated_by",
+                "updated_at",
+            ]
+        )
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "record": {
+                "date": target_date.isoformat(),
+                "start_time": final_start.strftime("%H:%M"),
+                "end_time": final_end.strftime("%H:%M"),
+                "remark": remark,
+            },
+        }
+    )
 
 
 
@@ -262,6 +407,7 @@ def my_attendance_detail_api(request):
                 "display_date": f"{record.punch_date.month}月{record.punch_date.day}日",
                 "start_time": record.start_time.strftime("%H:%M") if record.start_time else "",
                 "end_time": record.end_time.strftime("%H:%M") if record.end_time else "",
+                "remark": record.remark or "",
                 "has_missing": not (record.start_time and record.end_time),
             }
         )

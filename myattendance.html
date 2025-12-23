@@ -120,6 +120,28 @@
       padding:8px 4px 2px;
     }
 
+    .month-toggle{
+      display:flex;
+      gap:10px;
+      margin:6px 0 12px;
+    }
+
+    .month-btn{
+      border:1px solid var(--line);
+      background:#f7f9fd;
+      color:#3b4a60;
+      padding:6px 12px;
+      border-radius:10px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .month-btn.active{
+      background: rgba(28,123,255,.10);
+      border-color: rgba(28,123,255,.25);
+      color: var(--primary);
+    }
+
     /* small icons (inline svg look) */
     .ico{
       width:26px;height:26px;
@@ -737,6 +759,10 @@
         </div>
       </summary>
       <div class="accordion-body" data-content="summary">
+        <div class="month-toggle" role="tablist" aria-label="考勤月份选择">
+          <button class="month-btn active" type="button" data-month="current">当月</button>
+          <button class="month-btn" type="button" data-month="previous">上月</button>
+        </div>
         <div class="lazy-placeholder">等待展开加载数据</div>
         <div class="stats" data-template hidden>
           <div class="stat green">
@@ -797,6 +823,10 @@
       </summary>
 
       <div class="accordion-body" data-content="detail">
+        <div class="month-toggle" role="tablist" aria-label="考勤月份选择">
+          <button class="month-btn active" type="button" data-month="current">当月</button>
+          <button class="month-btn" type="button" data-month="previous">上月</button>
+        </div>
         <div class="lazy-placeholder">等待展开加载数据</div>
         <div class="table" data-template hidden>
           <div class="thead">
@@ -885,33 +915,56 @@
       );
     }
 
+    function setTemplatesVisible(details, visible) {
+      const templates = details.querySelectorAll("[data-template]");
+      templates.forEach((el) => {
+        el.hidden = !visible;
+        el.style.display = visible ? "" : "none";
+      });
+    }
+
     function loadAccordion(details) {
-      if (!details || details.dataset.loaded === "true") {
+      if (!details) {
         return;
       }
       const url = details.dataset.url;
       const placeholder = details.querySelector(".lazy-placeholder");
-      const template = details.querySelector("[data-template]");
+      const month = details.dataset.month || "current";
 
       if (!url) {
         if (placeholder) placeholder.textContent = "未配置接口";
         return;
       }
 
+      if (details.dataset.loadedMonth === month) {
+        return;
+      }
+
+      setTemplatesVisible(details, false);
       if (placeholder) placeholder.textContent = "加载中...";
-      fetch(url, { credentials: "same-origin" })
-        .then((res) => res.json())
+      const query = url.includes("?") ? "&" : "?";
+      fetch(`${url}${query}month=${month}`, { credentials: "same-origin" })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("bad response");
+          }
+          return res.json();
+        })
         .then((data) => {
           const rendererName = details.dataset.renderer;
           if (rendererName && typeof window[rendererName] === "function") {
-            window[rendererName](data, details);
+            window[rendererName](data, details, month);
+            if (placeholder) placeholder.textContent = "";
           } else {
-            if (template) template.hidden = false;
-            if (placeholder) placeholder.textContent = "已加载（示例数据）";
+            setTemplatesVisible(details, true);
+            if (placeholder) {
+              placeholder.textContent = month === "current" ? "已加载当月（示例数据）" : "已加载上月（示例数据）";
+            }
           }
-          details.dataset.loaded = "true";
+          details.dataset.loadedMonth = month;
         })
         .catch(() => {
+          setTemplatesVisible(details, false);
           if (placeholder) placeholder.textContent = "加载失败，请稍后重试";
         });
     }
@@ -926,6 +979,20 @@
       },
       true
     );
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest(".month-btn");
+      if (!button) return;
+      const details = button.closest("details");
+      if (!details) return;
+      details.dataset.month = button.dataset.month;
+      details.querySelectorAll(".month-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn === button);
+      });
+      if (details.open) {
+        loadAccordion(details);
+      }
+    });
 
     function pad2(value) {
       return String(value).padStart(2, "0");

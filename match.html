@@ -589,7 +589,15 @@
         target.innerHTML = html || '<p style="color:#9aa4b5">暂无内容</p>';
     }
 
-    const API_BASE = 'http://localhost:8000';
+    const API_BASE = '';
+    const fetchWithAuth = async (url, options = {}) => {
+        const res = await fetch(url, options);
+        if (res.status === 401) {
+            window.location.href = '/login.html';
+            throw new Error('Unauthorized');
+        }
+        return res;
+    };
     const JOB_CLICK_ENDPOINT = `${API_BASE}/job-click`;
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
@@ -840,7 +848,7 @@
         showLoading('正在加载求人...');
 
         try {
-            const res = await fetch(url);
+            const res = await fetchWithAuth(url, { credentials: 'include' });
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);
             }
@@ -878,7 +886,7 @@
 
         try {
             const url = `${API_BASE}/persons${refresh ? '?refresh=1' : ''}`;
-            const res = await fetch(url);
+            const res = await fetchWithAuth(url, { credentials: 'include' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             renderPersonList(data.items || []);
@@ -975,9 +983,10 @@
             personRefreshTime.textContent = '匹配中...';
         }
         try {
-            const res = await fetch(JOB_CLICK_ENDPOINT, {
+            const res = await fetchWithAuth(JOB_CLICK_ENDPOINT, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
+                credentials: 'include',
                 body: JSON.stringify(payload),
             });
             if (!res.ok) {

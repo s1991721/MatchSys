@@ -478,11 +478,19 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#people.html" data-src="people.html" data-title="人员管理" title="人员管理">
+          <a href="#people.html" data-src="people.html" data-title="技术者管理" title="技术者管理">
             <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/>
             </svg>
-            <span class="nav-label">人员管理</span>
+            <span class="nav-label">技术者管理</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#personnel.html" data-src="personnel.html" data-title="社内人员管理" title="社内人员管理">
+            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M16 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 3-1.34 3-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h10v-2.5C14 14.17 9.33 13 8 13zm8 0c-.29 0-.62.02-.97.06 1.16.83 1.97 1.96 1.97 3.44V19h6v-1.5c0-2.33-4.67-3.5-7-3.5z"/>
+            </svg>
+            <span class="nav-label">社内人员管理</span>
           </a>
         </li>
         <li class="nav-item">
@@ -511,7 +519,7 @@
     <main class="main">
       <header class="topbar">
         <div class="title">
-          Welcome back, Admin!
+          Welcome back, {{ request.session.employee_name }}!
           <span>· 主页概览</span>
         </div>
         <div class="topbar-mid" aria-label="日期">
@@ -519,23 +527,16 @@
         </div>
 
         <div class="top-actions">
-          <button class="icon-btn" aria-label="上传">
-            ⤴
-          </button>
           <button class="icon-btn" aria-label="通知">
             🔔
             <span class="badge">2</span>
-          </button>
-          <button class="icon-btn" aria-label="邮件">
-            ✉
-            <span class="badge">1</span>
           </button>
 
           <a class="avatar" href="#profile.html" data-src="profile.html" title="个人信息" aria-label="个人信息">
             <div class="pic"></div>
             <div>
-              <strong>Admin</strong>
-              <small>系统管理员</small>
+              <strong>{{ request.session.employee_name }}</strong>
+              <small>{{ request.session.employee_position_name }}</small>
             </div>
           </a>
         </div>

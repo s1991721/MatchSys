@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "bpmatch",
+    "employee",
     "corsheaders",
 ]
 
@@ -45,6 +46,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "project.middleware.SessionLoginRequiredMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -59,7 +61,7 @@ ROOT_URLCONF = "project.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -82,7 +84,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "matchSys",
         "USER": "root",
-        "PASSWORD": "YourStrongPassw0rd!",
+        "PASSWORD": "123456",
         "HOST": "127.0.0.1",  # 或数据库地址
         "PORT": "3306",
         "OPTIONS": {
@@ -132,7 +134,12 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Allow same-origin iframes for the dashboard shell.
+X_FRAME_OPTIONS = "SAMEORIGIN"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"

@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
 from employee.models import Employee
-from .models import AttendancePunch, AttendanceRecord
+from .models import get_monthly_attendance_models
 
 
 @csrf_exempt
@@ -39,8 +39,13 @@ def attendance_punch_api(request):
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
 
-    punch = _create_attendance_punch(employee, now, punch_time_value, punch_type, payload)
-    record = _sync_attendance_record(employee, now, punch_type)
+    punch_model, record_model = get_monthly_attendance_models(now.date())
+    punch = _create_attendance_punch(
+        punch_model, employee, now, punch_time_value, punch_type, payload
+    )
+    record = _sync_attendance_record(
+        punch_model, record_model, employee, now, punch_type
+    )
 
     return JsonResponse(
         {
@@ -75,8 +80,8 @@ def _parse_json_body(request):
 
 
 
-def _create_attendance_punch(employee, now, punch_time_value, punch_type, payload):
-    return AttendancePunch.objects.create(
+def _create_attendance_punch(model, employee, now, punch_time_value, punch_type, payload):
+    return model.objects.create(
         employee=employee,
         punch_date=now.date(),
         punch_time=punch_time_value,
@@ -91,8 +96,8 @@ def _create_attendance_punch(employee, now, punch_time_value, punch_type, payloa
     )
 
 
-def _sync_attendance_record(employee, now, punch_type):
-    punch_queryset = AttendancePunch.objects.filter(
+def _sync_attendance_record(punch_model, record_model, employee, now, punch_type):
+    punch_queryset = punch_model.objects.filter(
         employee=employee,
         punch_date=now.date(),
         punch_type=punch_type,
@@ -112,7 +117,7 @@ def _sync_attendance_record(employee, now, punch_type):
         "updated_at": now,
     }
 
-    record, created = AttendanceRecord.objects.get_or_create(
+    record, created = record_model.objects.get_or_create(
         employee=employee,
         punch_date=selected_punch.punch_date,
         defaults=defaults,
@@ -139,7 +144,8 @@ def attendance_record_today_api(request):
         return JsonResponse({"error": "Unauthorized"}, status=401)
 
     today = timezone.localdate()
-    record = AttendanceRecord.objects.filter(
+    record_model = get_monthly_attendance_models(today)[1]
+    record = record_model.objects.filter(
         employee_id=employee_id,
         punch_date=today,
         deleted_at__isnull=True,

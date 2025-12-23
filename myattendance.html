@@ -645,7 +645,7 @@
 
       <div class="map-wrap">
         <div class="map">
-          <div id="map" class="map-canvas" aria-label="Google 地图预览"></div>
+          <div id="map" class="map-canvas" aria-label="地图预览"></div>
           <div class="status-pill">
             <div class="tick" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="14" height="14">
@@ -839,25 +839,22 @@
     }
 
     function initMap() {
-      mapInstance = new google.maps.Map(document.getElementById("map"), {
-        center: MAP_FALLBACK,
-        zoom: 14,
-        disableDefaultUI: true,
-        gestureHandling: "greedy",
-      });
+      mapInstance = L.map("map", {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView([MAP_FALLBACK.lat, MAP_FALLBACK.lng], 14);
 
-      userMarker = new google.maps.Marker({
-        map: mapInstance,
-        position: MAP_FALLBACK,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#1c7bff",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 3,
-        },
-      });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(mapInstance);
+
+      userMarker = L.circleMarker([MAP_FALLBACK.lat, MAP_FALLBACK.lng], {
+        radius: 8,
+        fillColor: "#1c7bff",
+        fillOpacity: 1,
+        color: "#ffffff",
+        weight: 3,
+      }).addTo(mapInstance);
 
       if (!navigator.geolocation) {
         setStatus("无法获取位置", "浏览器不支持定位");
@@ -870,9 +867,8 @@
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           };
-          mapInstance.setCenter(coords);
-          mapInstance.setZoom(16);
-          userMarker.setPosition(coords);
+          mapInstance.setView([coords.lat, coords.lng], 16);
+          userMarker.setLatLng([coords.lat, coords.lng]);
           setStatus("已获取当前位置", "位置已实时更新");
         },
         (err) => {
@@ -928,6 +924,10 @@
       true
     );
   </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBiAOx90gpvNlrfKmIsjUMtReTXgT3nbD0&callback=initMap"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    initMap();
+  </script>
 </body>
 </html>

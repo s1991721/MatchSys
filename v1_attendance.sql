@@ -36,10 +36,10 @@ CREATE TABLE attendance_punch (
   employee_id   BIGINT  NOT NULL,
 
   punch_date    DATE NOT NULL,
-  punch_time    DATETIME NOT NULL,
+  punch_time    TIME NOT NULL,
 
   -- check_in / check_out
-  punch_type    VARCHAR(20) NOT NULL,
+  punch_type    VARCHAR(20) NOT NULL, #1上班 2下班
 
   latitude      DECIMAL(10,7) NULL,
   longitude     DECIMAL(10,7) NULL,

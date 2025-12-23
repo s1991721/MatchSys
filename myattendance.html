@@ -863,6 +863,7 @@
     let mapInstance;
     let userMarker;
     let watchId;
+    let lastCoords = { lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng };
 
     function setStatus(title, detail) {
       const titleEl = document.getElementById("map-status");
@@ -900,6 +901,7 @@
             lat: pos.coords.latitude,
             lng: pos.coords.longitude,
           };
+          lastCoords = coords;
           mapInstance.setView([coords.lat, coords.lng], MAP_ZOOM_FOLLOW);
           userMarker.setLatLng([coords.lat, coords.lng]);
           setStatus("已获取当前位置", "位置已实时更新");
@@ -992,6 +994,44 @@
       if (details.open) {
         loadAccordion(details);
       }
+    });
+
+    document.addEventListener("click", (event) => {
+      const punchButton = event.target.closest(".punch-fab");
+      if (!punchButton) return;
+      punchButton.disabled = true;
+      const detailText = document.getElementById("map-detail");
+      const locationText = detailText ? detailText.textContent.trim() : "";
+
+      const punchTimeText = document.getElementById("punch-time");
+      const punchTimeValue = punchTimeText ? punchTimeText.textContent.trim() : "";
+
+      fetch("/api/attendance/punch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          punch_time: punchTimeValue,
+          latitude: lastCoords.lat,
+          longitude: lastCoords.lng,
+          location_text: locationText,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("punch failed");
+          }
+          return res.json();
+        })
+        .then(() => {
+          setStatus("打卡成功", "已记录本次打卡");
+        })
+        .catch(() => {
+          setStatus("打卡失败", "请稍后重试");
+        })
+        .finally(() => {
+          punchButton.disabled = false;
+        });
     });
 
     function pad2(value) {

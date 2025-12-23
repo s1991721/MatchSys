@@ -51,17 +51,10 @@ class AttendanceRecord(models.Model):
         db_column="employee_id",
         related_name="attendance_records",
     )
-    punch = models.ForeignKey(
-        "AttendancePunch",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        db_column="punch_id",
-        related_name="attendance_records",
-    )
     punch_date = models.DateField(db_column="punch_date")
-    punch_time = models.TimeField(db_column="punch_time")
-    punch_type = models.SmallIntegerField(db_column="punch_type")
+    start_time = models.TimeField(db_column="start_time")
+    end_time = models.TimeField(db_column="end_time")
+    remark = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(
         Employee,
         null=True,
@@ -87,7 +80,7 @@ class AttendanceRecord(models.Model):
         db_table = "attendance_record"
 
     def __str__(self) -> str:
-        return f"{self.employee_id} {self.punch_date} {self.punch_time}"
+        return f"{self.employee_id} {self.punch_date}"
 
 
 class AttendancePolicy(models.Model):

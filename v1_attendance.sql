@@ -72,13 +72,11 @@ CREATE TABLE attendance_record (
 
   employee_id  BIGINT  NOT NULL,
 
-  punch_id     BIGINT UNSIGNED NOT NULL,
-
   punch_date   DATE NOT NULL,
-  punch_time   DATETIME NOT NULL,
+  start_time   TIME  NULL,
+  end_time     TIME  NULL,
 
-  -- check_in / check_out（冗余一份，便于查询）
-  punch_type   VARCHAR(20) NOT NULL,
+  remark       VARCHAR(255) NULL,
 
   created_by   BIGINT UNSIGNED NULL,
   created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -91,15 +89,11 @@ CREATE TABLE attendance_record (
 
   PRIMARY KEY (id),
 
-  UNIQUE KEY uk_record_punch (punch_id),
   KEY idx_record_employee_date (employee_id, punch_date),
-  KEY idx_record_type_date (punch_type, punch_date),
 
   CONSTRAINT fk_record_employee
-    FOREIGN KEY (employee_id) REFERENCES employee(id),
+    FOREIGN KEY (employee_id) REFERENCES employee(id)
 
-  CONSTRAINT fk_record_punch
-    FOREIGN KEY (punch_id) REFERENCES attendance_punch(id)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_0900_ai_ci;

@@ -709,7 +709,7 @@
                 <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
               </svg>
             </span>
-            12月9日
+            <span id="today-date">--月--日</span>
           </div>
         </div>
 
@@ -720,12 +720,12 @@
           <div class="today-bar">
             <div class="bar-col">
               <div class="label">上班</div>
-              <div class="time">09:00</div>
+              <div class="time" id="start-time">--:--</div>
             </div>
 
             <div class="bar-col">
               <div class="label">下班</div>
-              <div class="sub">未打卡</div>
+              <div class="sub" id="end-time">未打卡</div>
             </div>
           </div>
 
@@ -996,6 +996,28 @@
       }
     });
 
+    function updateTodayRecord() {
+      fetch("/api/attendance/record/today", { credentials: "same-origin" })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("record fetch failed");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          const startEl = document.getElementById("start-time");
+          const endEl = document.getElementById("end-time");
+          if (startEl) startEl.textContent = data.start_time ? data.start_time.slice(0, 5) : "--:--";
+          if (endEl) endEl.textContent = data.end_time ? data.end_time.slice(0, 5) : "未打卡";
+        })
+        .catch(() => {
+          const startEl = document.getElementById("start-time");
+          const endEl = document.getElementById("end-time");
+          if (startEl) startEl.textContent = "--:--";
+          if (endEl) endEl.textContent = "未打卡";
+        });
+    }
+
     document.addEventListener("click", (event) => {
       const punchButton = event.target.closest(".punch-fab");
       if (!punchButton) return;
@@ -1025,6 +1047,7 @@
         })
         .then(() => {
           setStatus("打卡成功", "已记录本次打卡");
+          updateTodayRecord();
         })
         .catch(() => {
           setStatus("打卡失败", "请稍后重试");
@@ -1045,8 +1068,17 @@
       if (el) el.textContent = timeText;
     }
 
+    function updateTodayDate() {
+      const now = new Date();
+      const dateText = `${now.getMonth() + 1}月${now.getDate()}日`;
+      const el = document.getElementById("today-date");
+      if (el) el.textContent = dateText;
+    }
+
     updatePunchTime();
+    updateTodayDate();
     setInterval(updatePunchTime, 1000);
+    updateTodayRecord();
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

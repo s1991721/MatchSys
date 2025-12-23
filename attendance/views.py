@@ -4,18 +4,10 @@ from datetime import datetime, time
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from employee.models import Employee
-from .models import AttendancePunch
-
-
-def _parse_json_body(request):
-    try:
-        raw = request.body.decode("utf-8") if request.body else "{}"
-        return json.loads(raw or "{}"), None
-    except json.JSONDecodeError:
-        return None, JsonResponse({"error": "Invalid JSON body"}, status=400)
+from .models import AttendancePunch, AttendanceRecord
 
 
 @csrf_exempt
@@ -47,7 +39,44 @@ def attendance_punch_api(request):
     if not employee:
         return JsonResponse({"error": "Employee not found"}, status=404)
 
-    punch = AttendancePunch.objects.create(
+    punch = _create_attendance_punch(employee, now, punch_time_value, punch_type, payload)
+    record = _sync_attendance_record(employee, now, punch_type)
+
+    return JsonResponse(
+        {
+            "status": "ok",
+            "punch": {
+                "id": punch.id,
+                "date": punch.punch_date.isoformat(),
+                "time": punch.punch_time.strftime("%H:%M:%S"),
+                "type": punch.punch_type,
+            },
+            "record": {
+                "id": record.id if record else None,
+                "type": punch_type if record else None,
+                "time": (
+                    record.start_time.strftime("%H:%M:%S")
+                    if record and punch_type == 1 and record.start_time
+                    else record.end_time.strftime("%H:%M:%S")
+                    if record and punch_type == 2 and record.end_time
+                    else None
+                ),
+            },
+        }
+    )
+
+
+def _parse_json_body(request):
+    try:
+        raw = request.body.decode("utf-8") if request.body else "{}"
+        return json.loads(raw or "{}"), None
+    except json.JSONDecodeError:
+        return None, JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+
+
+def _create_attendance_punch(employee, now, punch_time_value, punch_type, payload):
+    return AttendancePunch.objects.create(
         employee=employee,
         punch_date=now.date(),
         punch_time=punch_time_value,
@@ -61,14 +90,65 @@ def attendance_punch_api(request):
         updated_at=now,
     )
 
+
+def _sync_attendance_record(employee, now, punch_type):
+    punch_queryset = AttendancePunch.objects.filter(
+        employee=employee,
+        punch_date=now.date(),
+        punch_type=punch_type,
+        deleted_at__isnull=True,
+    )
+    punch_order = "punch_time" if punch_type == 1 else "-punch_time"
+    selected_punch = punch_queryset.order_by(punch_order).first()
+    if not selected_punch:
+        return None
+
+    defaults = {
+        "start_time": selected_punch.punch_time if punch_type == 1 else None,
+        "end_time": selected_punch.punch_time if punch_type == 2 else None,
+        "created_by": employee,
+        "created_at": now,
+        "updated_by": employee,
+        "updated_at": now,
+    }
+
+    record, created = AttendanceRecord.objects.get_or_create(
+        employee=employee,
+        punch_date=selected_punch.punch_date,
+        defaults=defaults,
+    )
+    if not created:
+        if punch_type == 1:
+            record.start_time = selected_punch.punch_time
+            update_fields = ["start_time"]
+        else:
+            record.end_time = selected_punch.punch_time
+            update_fields = ["end_time"]
+        record.updated_by = employee
+        record.updated_at = now
+        update_fields.extend(["updated_by", "updated_at"])
+        record.save(update_fields=update_fields)
+    return record
+
+
+
+@require_GET
+def attendance_record_today_api(request):
+    employee_id = request.session.get("employee_id")
+    if not employee_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    today = timezone.localdate()
+    record = AttendanceRecord.objects.filter(
+        employee_id=employee_id,
+        punch_date=today,
+        deleted_at__isnull=True,
+    ).first()
+
     return JsonResponse(
         {
-            "status": "ok",
-            "punch": {
-                "id": punch.id,
-                "date": punch.punch_date.isoformat(),
-                "time": punch.punch_time.strftime("%H:%M:%S"),
-                "type": punch.punch_type,
-            },
+            "date": today.isoformat(),
+            "start_time": record.start_time.strftime("%H:%M:%S") if record and record.start_time else "",
+            "end_time": record.end_time.strftime("%H:%M:%S") if record and record.end_time else "",
         }
     )

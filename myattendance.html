@@ -75,6 +75,51 @@
       font-size:14px;
     }
 
+    details.card{
+      padding:14px 16px 16px;
+    }
+
+    .accordion summary{
+      list-style:none;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .accordion summary::-webkit-details-marker{
+      display:none;
+    }
+
+    .accordion .summary-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:700;
+    }
+
+    .accordion .chev{
+      display:inline-block;
+      transition: transform .15s ease;
+    }
+
+    .accordion[open] .chev{
+      transform: rotate(90deg);
+    }
+
+    .accordion-body{
+      margin-top:12px;
+    }
+
+    .lazy-placeholder{
+      font-weight:700;
+      color:var(--muted);
+      padding:8px 4px 2px;
+    }
+
     /* small icons (inline svg look) */
     .ico{
       width:26px;height:26px;
@@ -673,9 +718,9 @@
 
     </section>
 
-    <!-- 我的考勤 -->
-    <section class="card">
-      <div class="card-head">
+    <!-- 我的考勤（折叠） -->
+    <details class="card accordion" data-url="/api/my-attendance-summary" data-renderer="renderAttendanceSummary">
+      <summary>
         <div class="title">
           <span class="ico" aria-hidden="true" style="background:rgba(34,197,94,.12);color:#16a34a">
             <!-- user -->
@@ -685,51 +730,56 @@
           </span>
           我的考勤
         </div>
-        <div class="dots" aria-hidden="true"></div>
+        <div class="summary-right">
+          点击展开
+          <span class="chev">›</span>
+        </div>
+      </summary>
+      <div class="accordion-body" data-content="summary">
+        <div class="lazy-placeholder">等待展开加载数据</div>
+        <div class="stats" data-template hidden>
+          <div class="stat green">
+            <div class="stat-top">
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
+                </svg>
+              </div>
+              出勤
+            </div>
+            <div class="stat-num">20<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
+          </div>
+
+          <div class="stat orange">
+            <div class="stat-top">
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v5l4 2-1 1.8-5-2.8V7Z"/>
+                </svg>
+              </div>
+              迟到
+            </div>
+            <div class="stat-num">3<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
+          </div>
+
+          <div class="stat red">
+            <div class="stat-top">
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.2 6.2 1.6 1.6L13.6 12l4.2 4.2-1.6 1.6L12 13.6l-4.2 4.2-1.6-1.6L10.4 12 6.2 7.8l1.6-1.6L12 10.4Z"/>
+                </svg>
+              </div>
+              旷勤
+            </div>
+            <div class="stat-num">0<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
+          </div>
+        </div>
       </div>
+    </details>
 
-      <div class="stats">
-        <div class="stat green">
-          <div class="stat-top">
-            <div class="badge" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18">
-                <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
-              </svg>
-            </div>
-            出勤
-          </div>
-          <div class="stat-num">20<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
-        </div>
-
-        <div class="stat orange">
-          <div class="stat-top">
-            <div class="badge" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18">
-                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v5l4 2-1 1.8-5-2.8V7Z"/>
-              </svg>
-            </div>
-            迟到
-          </div>
-          <div class="stat-num">3<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
-        </div>
-
-        <div class="stat red">
-          <div class="stat-top">
-            <div class="badge" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="18" height="18">
-                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.2 6.2 1.6 1.6L13.6 12l4.2 4.2-1.6 1.6L12 13.6l-4.2 4.2-1.6-1.6L10.4 12 6.2 7.8l1.6-1.6L12 10.4Z"/>
-              </svg>
-            </div>
-            旷勤
-          </div>
-          <div class="stat-num">0<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 考勤明细 -->
-    <section class="card">
-      <div class="card-head">
+    <!-- 考勤明细（折叠） -->
+    <details class="card accordion" data-url="/api/my-attendance-detail" data-renderer="renderAttendanceDetail">
+      <summary>
         <div class="title">
           <span class="ico" aria-hidden="true">
             <!-- calendar -->
@@ -739,33 +789,39 @@
           </span>
           考勤明细 <span style="font-weight:900;color:#94a3b8">(当月)</span>
         </div>
-        <div class="dots" aria-hidden="true"></div>
-      </div>
-
-      <div class="table">
-        <div class="thead">
-          <div>日期</div>
-          <div style="text-align:center;">上班</div>
-          <div style="text-align:right;">操作</div>
+        <div class="summary-right">
+          点击展开
+          <span class="chev">›</span>
         </div>
+      </summary>
 
-        <div class="row">
-          <div style="font-size:22px;font-weight:900;color:#1f2937;">12月8日</div>
-          <div style="text-align:center;">
-            <span class="worktime">09:00</span><span class="sep">•</span><span class="worktime">18:00</span>
+      <div class="accordion-body" data-content="detail">
+        <div class="lazy-placeholder">等待展开加载数据</div>
+        <div class="table" data-template hidden>
+          <div class="thead">
+            <div>日期</div>
+            <div style="text-align:center;">上班</div>
+            <div style="text-align:right;">操作</div>
           </div>
-          <button class="btn">修改</button>
-        </div>
 
-        <div class="row">
-          <div style="font-size:22px;font-weight:900;color:#1f2937;">12月7日</div>
-          <div style="text-align:center;">
-            <span class="worktime">08:59</span><span class="sep">•</span><span class="worktime">18:31</span>
+          <div class="row">
+            <div style="font-size:22px;font-weight:900;color:#1f2937;">12月8日</div>
+            <div style="text-align:center;">
+              <span class="worktime">09:00</span><span class="sep">•</span><span class="worktime">18:00</span>
+            </div>
+            <button class="btn">修改</button>
           </div>
-          <button class="btn">修改</button>
+
+          <div class="row">
+            <div style="font-size:22px;font-weight:900;color:#1f2937;">12月7日</div>
+            <div style="text-align:center;">
+              <span class="worktime">08:59</span><span class="sep">•</span><span class="worktime">18:31</span>
+            </div>
+            <button class="btn">修改</button>
+          </div>
         </div>
       </div>
-    </section>
+    </details>
 
   </div>
 
@@ -829,6 +885,48 @@
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
       );
     }
+
+    function loadAccordion(details) {
+      if (!details || details.dataset.loaded === "true") {
+        return;
+      }
+      const url = details.dataset.url;
+      const placeholder = details.querySelector(".lazy-placeholder");
+      const template = details.querySelector("[data-template]");
+
+      if (!url) {
+        if (placeholder) placeholder.textContent = "未配置接口";
+        return;
+      }
+
+      if (placeholder) placeholder.textContent = "加载中...";
+      fetch(url, { credentials: "same-origin" })
+        .then((res) => res.json())
+        .then((data) => {
+          const rendererName = details.dataset.renderer;
+          if (rendererName && typeof window[rendererName] === "function") {
+            window[rendererName](data, details);
+          } else {
+            if (template) template.hidden = false;
+            if (placeholder) placeholder.textContent = "已加载（示例数据）";
+          }
+          details.dataset.loaded = "true";
+        })
+        .catch(() => {
+          if (placeholder) placeholder.textContent = "加载失败，请稍后重试";
+        });
+    }
+
+    document.addEventListener(
+      "toggle",
+      (event) => {
+        const details = event.target;
+        if (details.tagName === "DETAILS" && details.open) {
+          loadAccordion(details);
+        }
+      },
+      true
+    );
   </script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBiAOx90gpvNlrfKmIsjUMtReTXgT3nbD0&callback=initMap"></script>
 </body>

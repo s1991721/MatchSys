@@ -20,3 +20,8 @@ bpmatch/__pycache__/views.cpython-313.pyc
 /bpmatch/migrations/**
 /.idea/**
 /ss/**
+.idea/
+*.iml
+__pycache__/
+*.pyc
+.DS_Store

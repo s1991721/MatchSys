@@ -4,7 +4,6 @@ CREATE TABLE attendance_policy (
 
   work_start_time  TIME NOT NULL,
   work_end_time    TIME NOT NULL,
-  workday_mask     TINYINT UNSIGNED NOT NULL DEFAULT 31,
 
   location_name    VARCHAR(100) NOT NULL,
   latitude         DECIMAL(10,7) NOT NULL,

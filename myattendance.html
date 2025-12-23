@@ -814,7 +814,7 @@
               <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
             </svg>
           </span>
-          考勤明细 <span style="font-weight:900;color:#94a3b8">(当月)</span>
+          考勤明细 <span data-month-label style="font-weight:900;color:#94a3b8">(当月)</span>
         </div>
         <div class="summary-right">
           点击展开
@@ -925,6 +925,90 @@
       });
     }
 
+    function setStatValue(element, value) {
+      if (!element) return;
+      const unit = element.querySelector("span");
+      const unitClone = unit ? unit.cloneNode(true) : null;
+      element.textContent = value;
+      if (unitClone) {
+        element.appendChild(unitClone);
+      }
+    }
+
+    function formatMonthLabel(monthKey, monthValue) {
+      if (monthKey === "previous") return "(上月)";
+      if (monthKey === "current") return "(当月)";
+      if (monthValue) return `(${monthValue})`;
+      return "(当月)";
+    }
+
+    function resolveMonthDateParam(monthKey) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const monthIndex = monthKey === "previous" ? now.getMonth() - 1 : now.getMonth();
+      const target = new Date(year, monthIndex, 1);
+      return `${target.getFullYear()}-${pad2(target.getMonth() + 1)}-${pad2(target.getDate())}`;
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return "--";
+      const dateValue = new Date(value);
+      if (!Number.isNaN(dateValue.getTime())) {
+        return `${dateValue.getMonth() + 1}月${dateValue.getDate()}日`;
+      }
+      return value;
+    }
+
+    function renderAttendanceSummary(data, details, monthKey) {
+      const stats = details.querySelector(".stats[data-template]");
+      const placeholder = details.querySelector(".lazy-placeholder");
+      if (!stats) return;
+
+      const summary = data && data.summary ? data.summary : {};
+      setStatValue(stats.querySelectorAll(".stat-num")[0], summary.attendance_days ?? 0);
+      setStatValue(stats.querySelectorAll(".stat-num")[1], summary.late_days ?? 0);
+      setStatValue(stats.querySelectorAll(".stat-num")[2], summary.absent_days ?? 0);
+
+      setTemplatesVisible(details, true);
+      if (placeholder) placeholder.textContent = "";
+    }
+
+    function renderAttendanceDetail(data, details, monthKey) {
+      const table = details.querySelector(".table[data-template]");
+      const placeholder = details.querySelector(".lazy-placeholder");
+      if (!table) return;
+
+      table.querySelectorAll(".row").forEach((row) => row.remove());
+      const records = Array.isArray(data && data.records) ? data.records : [];
+      if (!records.length) {
+        setTemplatesVisible(details, false);
+        if (placeholder) placeholder.textContent = "暂无记录";
+      } else {
+        records.forEach((record) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          const startTime = record.start_time || "--:--";
+          const endTime = record.end_time || "--:--";
+          const displayDate = record.display_date || formatDisplayDate(record.date);
+          row.innerHTML = `
+            <div style="font-size:22px;font-weight:900;color:#1f2937;">${displayDate}</div>
+            <div style="text-align:center;">
+              <span class="worktime">${startTime}</span><span class="sep">•</span><span class="worktime">${endTime}</span>
+            </div>
+            <button class="btn" type="button">修改</button>
+          `;
+          table.appendChild(row);
+        });
+        setTemplatesVisible(details, true);
+        if (placeholder) placeholder.textContent = "";
+      }
+
+      const monthLabel = details.querySelector("[data-month-label]");
+      if (monthLabel) {
+        monthLabel.textContent = formatMonthLabel(monthKey, data ? data.month : "");
+      }
+    }
+
     function loadAccordion(details) {
       if (!details) {
         return;
@@ -932,6 +1016,7 @@
       const url = details.dataset.url;
       const placeholder = details.querySelector(".lazy-placeholder");
       const month = details.dataset.month || "current";
+      const dateParam = resolveMonthDateParam(month);
 
       if (!url) {
         if (placeholder) placeholder.textContent = "未配置接口";
@@ -945,7 +1030,7 @@
       setTemplatesVisible(details, false);
       if (placeholder) placeholder.textContent = "加载中...";
       const query = url.includes("?") ? "&" : "?";
-      fetch(`${url}${query}month=${month}`, { credentials: "same-origin" })
+      fetch(`${url}${query}month=${month}&date=${dateParam}`, { credentials: "same-origin" })
         .then((res) => {
           if (!res.ok) {
             throw new Error("bad response");

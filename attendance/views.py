@@ -1,13 +1,15 @@
 import json
-from datetime import datetime, time
+from datetime import date, datetime, time, timedelta
+import re
 
 from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
+from django.db.models import Q
 
 from employee.models import Employee
-from .models import get_monthly_attendance_models
+from .models import AttendancePolicy, get_monthly_attendance_models
 
 
 @csrf_exempt
@@ -156,5 +158,117 @@ def attendance_record_today_api(request):
             "date": today.isoformat(),
             "start_time": record.start_time.strftime("%H:%M:%S") if record and record.start_time else "",
             "end_time": record.end_time.strftime("%H:%M:%S") if record and record.end_time else "",
+        }
+    )
+
+
+def _shift_month(value, offset):
+    year = value.year + (value.month - 1 + offset) // 12
+    month = (value.month - 1 + offset) % 12 + 1
+    return date(year, month, 1)
+
+
+def _resolve_attendance_month(request):
+    value = (request.GET.get("month") or request.GET.get("date") or "").strip()
+    today = timezone.localdate()
+    if not value or value.lower() in {"current", "this", "now"}:
+        return today
+    if value.lower() in {"previous", "prev", "last"}:
+        return _shift_month(today, -1)
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date()
+        except ValueError:
+            return today
+    if re.fullmatch(r"\d{4}-\d{2}", value):
+        year, month = value.split("-")
+        try:
+            return date(int(year), int(month), 1)
+        except ValueError:
+            return today
+    if re.fullmatch(r"\d{6}", value):
+        try:
+            return date(int(value[:4]), int(value[4:6]), 1)
+        except ValueError:
+            return today
+    return today
+
+
+@require_GET
+def my_attendance_summary_api(request):
+    employee_id = request.session.get("employee_id")
+    if not employee_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    target_date = _resolve_attendance_month(request)
+    record_model = get_monthly_attendance_models(target_date)[1]
+    records = record_model.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    )
+
+    attendance_days = records.filter(
+        Q(start_time__isnull=False) | Q(end_time__isnull=False)
+    ).count()
+
+    policy = AttendancePolicy.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).first()
+    if not policy and employee_id != 1:
+        policy = AttendancePolicy.objects.filter(
+            employee_id=1,
+            deleted_at__isnull=True,
+        ).first()
+    if policy and policy.work_start_time:
+        late_days = records.filter(start_time__gt=policy.work_start_time).count()
+    else:
+        late_days = 0
+
+    absent_days = records.filter(
+        Q(start_time__isnull=True) | Q(end_time__isnull=True)
+    ).count()
+
+    return JsonResponse(
+        {
+            "month": target_date.strftime("%Y-%m"),
+            "summary": {
+                "attendance_days": attendance_days,
+                "late_days": late_days,
+                "absent_days": absent_days,
+            },
+        }
+    )
+
+
+@require_GET
+def my_attendance_detail_api(request):
+    employee_id = request.session.get("employee_id")
+    if not employee_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    target_date = _resolve_attendance_month(request)
+    record_model = get_monthly_attendance_models(target_date)[1]
+    records = record_model.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).order_by("-punch_date")
+
+    payload = []
+    for record in records:
+        payload.append(
+            {
+                "date": record.punch_date.isoformat(),
+                "display_date": f"{record.punch_date.month}月{record.punch_date.day}日",
+                "start_time": record.start_time.strftime("%H:%M") if record.start_time else "",
+                "end_time": record.end_time.strftime("%H:%M") if record.end_time else "",
+                "has_missing": not (record.start_time and record.end_time),
+            }
+        )
+
+    return JsonResponse(
+        {
+            "month": target_date.strftime("%Y-%m"),
+            "records": payload,
         }
     )

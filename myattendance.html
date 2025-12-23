@@ -6,26 +6,27 @@
   <title>考勤打卡</title>
   <style>
     :root{
-      --bg:#f4f7fb;
+      --bg:#f4f6fb;
       --card:#ffffff;
-      --text:#1f2a37;
-      --muted:#6b7280;
-      --line:#e9eef5;
+      --text:#1f2a3d;
+      --muted:#6b7686;
+      --line:#e5e9f2;
 
-      --blue:#2f80ff;
+      --primary:#1c7bff;
+      --blue:#2f6fec;
 
-      --shadow: 0 14px 30px rgba(15, 23, 42, .08);
-      --shadowSoft: 0 10px 20px rgba(15, 23, 42, .06);
-      --radius: 22px;
+      --shadow: 0 12px 28px rgba(31, 53, 90, .08);
+      --shadowSoft: 0 10px 20px rgba(31, 53, 90, .06);
+      --radius: 14px;
     }
 
     *{box-sizing:border-box}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
-                   "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif;
-      background: radial-gradient(900px 500px at 50% -120px, rgba(47,128,255,.10), transparent 60%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", Arial, "Noto Sans", "Apple Color Emoji",
+                   "Segoe UI Emoji";
+      background: transparent;
       color:var(--text);
     }
 
@@ -39,6 +40,7 @@
     .card{
       background:var(--card);
       border-radius:var(--radius);
+      border:1px solid var(--line);
       box-shadow: var(--shadow);
       padding:16px 16px 18px;
       margin:14px 0;
@@ -78,8 +80,8 @@
       width:26px;height:26px;
       border-radius:10px;
       display:grid;place-items:center;
-      background:rgba(47,128,255,.10);
-      color:var(--blue);
+      background:rgba(28,123,255,.10);
+      color:var(--primary);
       flex:0 0 auto;
     }
     .ico svg{width:18px;height:18px;display:block}
@@ -108,6 +110,11 @@
         repeating-linear-gradient(90deg, rgba(120,140,170,.12) 0, rgba(120,140,170,.12) 1px, transparent 1px, transparent 18px);
       background-color:#eef5ff;
       filter:saturate(1.05);
+    }
+
+    .map-canvas{
+      position:absolute;
+      inset:0;
     }
 
     .map::after{
@@ -423,6 +430,14 @@
       z-index:1;
     }
 
+    .bar-col:first-child{
+      justify-self:start;
+    }
+
+    .bar-col:last-child{
+      justify-self:end;
+    }
+
     .today-bar .label{
       font-weight:900;
       font-size:18px;
@@ -585,16 +600,7 @@
 
       <div class="map-wrap">
         <div class="map">
-          <div class="pin-area"></div>
-
-          <div class="pin" aria-hidden="true">
-            <!-- simple "bus" icon -->
-            <svg viewBox="0 0 24 24">
-              <path d="M6 16c0 .6-.4 1-1 1s-1-.4-1-1 .4-1 1-1 1 .4 1 1Zm14 0c0 .6-.4 1-1 1s-1-.4-1-1 .4-1 1-1 1 .4 1 1Z"/>
-              <path d="M7 3h10a3 3 0 0 1 3 3v9a2 2 0 0 1-2 2v2h-2v-2H8v2H6v-2a2 2 0 0 1-2-2V6a3 3 0 0 1 3-3Zm0 4v4h10V7H7Z"/>
-            </svg>
-          </div>
-
+          <div id="map" class="map-canvas" aria-label="Google 地图预览"></div>
           <div class="status-pill">
             <div class="tick" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="14" height="14">
@@ -602,8 +608,8 @@
               </svg>
             </div>
             <div class="status-text">
-              <div class="l1">已在打卡范围内 <span class="chev">›</span></div>
-              <div class="l2">距离公司 120m</div>
+              <div class="l1" id="map-status">正在获取位置 <span class="chev">›</span></div>
+              <div class="l2" id="map-detail">等待定位权限</div>
             </div>
           </div>
 
@@ -762,5 +768,68 @@
     </section>
 
   </div>
+
+  <script>
+    const MAP_FALLBACK = { lat: 35.6852, lng: 139.7528 };
+    let mapInstance;
+    let userMarker;
+    let watchId;
+
+    function setStatus(title, detail) {
+      const titleEl = document.getElementById("map-status");
+      const detailEl = document.getElementById("map-detail");
+      if (titleEl) titleEl.textContent = title;
+      if (detailEl) detailEl.textContent = detail;
+    }
+
+    function initMap() {
+      mapInstance = new google.maps.Map(document.getElementById("map"), {
+        center: MAP_FALLBACK,
+        zoom: 14,
+        disableDefaultUI: true,
+        gestureHandling: "greedy",
+      });
+
+      userMarker = new google.maps.Marker({
+        map: mapInstance,
+        position: MAP_FALLBACK,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 8,
+          fillColor: "#1c7bff",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 3,
+        },
+      });
+
+      if (!navigator.geolocation) {
+        setStatus("无法获取位置", "浏览器不支持定位");
+        return;
+      }
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const coords = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          mapInstance.setCenter(coords);
+          mapInstance.setZoom(16);
+          userMarker.setPosition(coords);
+          setStatus("已获取当前位置", "位置已实时更新");
+        },
+        (err) => {
+          if (err && err.code === err.PERMISSION_DENIED) {
+            setStatus("定位失败", "请允许位置权限");
+            return;
+          }
+          setStatus("定位失败", "请开启定位或稍后重试");
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    }
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBiAOx90gpvNlrfKmIsjUMtReTXgT3nbD0&callback=initMap"></script>
 </body>
 </html>

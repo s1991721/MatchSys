@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime, time, timedelta
+import calendar
 import re
 
 from django.http import JsonResponse
@@ -313,6 +314,19 @@ def _shift_month(value, offset):
     return date(year, month, 1)
 
 
+def _is_workday(value):
+    return value.weekday() < 5
+
+
+def _count_workdays(value):
+    _, days_in_month = calendar.monthrange(value.year, value.month)
+    return sum(
+        1
+        for day in range(1, days_in_month + 1)
+        if _is_workday(date(value.year, value.month, day))
+    )
+
+
 def _resolve_attendance_month(request):
     value = (request.GET.get("month") or request.GET.get("date") or "").strip()
     today = timezone.localdate()
@@ -352,9 +366,13 @@ def my_attendance_summary_api(request):
         deleted_at__isnull=True,
     )
 
-    attendance_days = records.filter(
-        Q(start_time__isnull=False) | Q(end_time__isnull=False)
-    ).count()
+    workdays = _count_workdays(target_date)
+    attendance_days = sum(
+        1
+        for record in records
+        if _is_workday(record.punch_date)
+        and (record.start_time is not None or record.end_time is not None)
+    )
 
     policy = AttendancePolicy.objects.filter(
         employee_id=employee_id,
@@ -370,9 +388,7 @@ def my_attendance_summary_api(request):
     else:
         late_days = 0
 
-    absent_days = records.filter(
-        Q(start_time__isnull=True) | Q(end_time__isnull=True)
-    ).count()
+    absent_days = max(workdays - attendance_days, 0)
 
     return JsonResponse(
         {
@@ -416,5 +432,174 @@ def my_attendance_detail_api(request):
         {
             "month": target_date.strftime("%Y-%m"),
             "records": payload,
+        }
+    )
+
+
+def _weekday_label(value):
+    labels = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+    return labels[value.weekday()]
+
+
+@require_GET
+def attendance_summary_api(request):
+    employee_id = request.session.get("employee_id")
+    if not employee_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    target_date = _resolve_attendance_month(request)
+    name_filter = (request.GET.get("name") or "").strip()
+
+    employees_qs = Employee.objects.filter(deleted_at__isnull=True).order_by("id")
+    if name_filter:
+        employees_qs = employees_qs.filter(name__icontains=name_filter)
+
+    employees = list(employees_qs)
+    if not employees:
+        return JsonResponse({"month": target_date.strftime("%Y-%m"), "employees": []})
+
+    employee_ids = [emp.id for emp in employees]
+    record_model = get_monthly_attendance_models(target_date)[1]
+    records = record_model.objects.filter(
+        employee_id__in=employee_ids,
+        deleted_at__isnull=True,
+    ).order_by("employee_id", "punch_date")
+
+    policies = AttendancePolicy.objects.filter(
+        employee_id__in=employee_ids,
+        deleted_at__isnull=True,
+    )
+    policy_map = {policy.employee_id: policy for policy in policies}
+    default_policy = AttendancePolicy.objects.filter(
+        employee_id=1,
+        deleted_at__isnull=True,
+    ).first()
+
+    summary_map = {
+        emp_id: {"attendance_days": 0, "late_days": 0}
+        for emp_id in employee_ids
+    }
+    workdays = _count_workdays(target_date)
+
+    for record in records:
+        policy = policy_map.get(record.employee_id) or default_policy
+        start_time = record.start_time
+        end_time = record.end_time
+        has_start = start_time is not None
+        has_end = end_time is not None
+        has_any = has_start or has_end
+        is_workday = _is_workday(record.punch_date)
+        is_missing = not (has_start and has_end)
+        is_late = bool(
+            policy and policy.work_start_time and has_start and start_time > policy.work_start_time
+        )
+
+        summary = summary_map[record.employee_id]
+        if has_any and is_workday:
+            summary["attendance_days"] += 1
+        if is_late and is_workday:
+            summary["late_days"] += 1
+
+        note = "正常"
+        if is_missing:
+            note = "缺卡"
+        elif is_late:
+            note = "晚到"
+
+    payload = []
+    month_label = target_date.strftime("%Y-%m")
+    for emp in employees:
+        summary = summary_map.get(emp.id, {})
+        attendance_days = summary.get("attendance_days", 0)
+        absent_days = max(workdays - attendance_days, 0)
+        late_days = summary.get("late_days", 0)
+        status = "normal"
+        if absent_days:
+            status = "warning"
+        elif late_days:
+            status = "alert"
+
+        payload.append(
+            {
+                "employee_id": emp.id,
+                "name": emp.name,
+                "month": month_label,
+                "attendance_days": attendance_days,
+                "absence_days": absent_days,
+                "annual_leave": 0,
+                "status": status,
+            }
+        )
+
+    return JsonResponse(
+        {
+            "month": month_label,
+            "employees": payload,
+        }
+    )
+
+
+@require_GET
+def attendance_detail_api(request, employee_id):
+    requester_id = request.session.get("employee_id")
+    if not requester_id:
+        return JsonResponse({"error": "Unauthorized"}, status=401)
+
+    target_date = _resolve_attendance_month(request)
+    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
+    if not employee:
+        return JsonResponse({"error": "Employee not found"}, status=404)
+
+    record_model = get_monthly_attendance_models(target_date)[1]
+    records = record_model.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).order_by("punch_date")
+
+    policy = AttendancePolicy.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).first()
+    if not policy and employee_id != 1:
+        policy = AttendancePolicy.objects.filter(
+            employee_id=1,
+            deleted_at__isnull=True,
+        ).first()
+
+    details = []
+    for record in records:
+        start_time = record.start_time
+        end_time = record.end_time
+        has_start = start_time is not None
+        has_end = end_time is not None
+        is_missing = not (has_start and has_end)
+        is_late = bool(
+            policy and policy.work_start_time and has_start and start_time > policy.work_start_time
+        )
+
+        note = "正常"
+        if is_missing:
+            note = "缺卡"
+        elif is_late:
+            note = "晚到"
+
+        details.append(
+            {
+                "date": record.punch_date.isoformat(),
+                "day": _weekday_label(record.punch_date),
+                "clock_in": start_time.strftime("%H:%M") if has_start else "未打卡",
+                "clock_out": end_time.strftime("%H:%M") if has_end else "未打卡",
+                "note": note,
+            }
+        )
+
+    return JsonResponse(
+        {
+            "month": target_date.strftime("%Y-%m"),
+            "employee": {
+                "employee_id": employee.id,
+                "name": employee.name,
+            },
+            "details": details,
         }
     )

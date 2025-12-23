@@ -32,6 +32,8 @@ from attendance.views import (
     attendance_punch_api,
     attendance_record_edit_api,
     attendance_record_today_api,
+    attendance_detail_api,
+    attendance_summary_api,
     my_attendance_summary_api,
     my_attendance_detail_api,
 )
@@ -75,6 +77,8 @@ urlpatterns = [
     path("api/attendance/punch", attendance_punch_api, name="attendance-punch"),
     path("api/attendance/record/edit", attendance_record_edit_api, name="attendance-record-edit"),
     path("api/attendance/record/today", attendance_record_today_api, name="attendance-record-today"),
+    path("api/attendance/summary", attendance_summary_api, name="attendance-summary"),
+    path("api/attendance/<int:employee_id>/detail", attendance_detail_api, name="attendance-detail"),
     path("api/my-attendance-summary", my_attendance_summary_api, name="my-attendance-summary"),
     path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),
     path("messages", messages),

@@ -430,7 +430,15 @@
             const loadingMask = document.getElementById('loading-mask');
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
-            const API_BASE = 'http://localhost:8000';
+            const API_BASE = '';
+            const fetchWithAuth = async (url, options = {}) => {
+                const res = await fetch(url, options);
+                if (res.status === 401) {
+                    window.location.href = '/login.html';
+                    throw new Error('Unauthorized');
+                }
+                return res;
+            };
             const attachments = [];
             const selectionKey = 'matchSelection';
             let loadingTimer = null;
@@ -537,9 +545,10 @@
                 if (!jobText) return;
                 setLoading(true, { title: '正在生成邮件内容…', subtitle: 'AI 正在解析信息并准备正文，请稍候。' });
                 try {
-                    const res = await fetch(`${API_BASE}/extract-qiuren-detail`, {
+                    const res = await fetchWithAuth(`${API_BASE}/extract-qiuren-detail`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                         body: JSON.stringify({ text: jobText })
                     });
                     if (!res.ok) {
@@ -717,9 +726,10 @@
                         }
                     }
 
-                    const res = await fetch(`${API_BASE}/send-mail`, {
+                    const res = await fetchWithAuth(`${API_BASE}/send-mail`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
                         body: JSON.stringify(payload)
                     });
 

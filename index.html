@@ -543,7 +543,7 @@
     <main class="main">
       <header class="topbar">
         <div class="title">
-          Welcome back, Admin!
+          Welcome back, {{ request.session.employee_name }}!
           <span>· 主页概览</span>
         </div>
         <div class="topbar-mid" aria-label="日期">
@@ -551,23 +551,16 @@
         </div>
 
         <div class="top-actions">
-          <button class="icon-btn" aria-label="上传">
-            ⤴
-          </button>
           <button class="icon-btn" aria-label="通知">
             🔔
             <span class="badge">2</span>
-          </button>
-          <button class="icon-btn" aria-label="邮件">
-            ✉
-            <span class="badge">1</span>
           </button>
 
           <a class="avatar" href="#profile.html" data-src="profile.html" title="个人信息" aria-label="个人信息">
             <div class="pic"></div>
             <div>
-              <strong>Admin</strong>
-              <small>系统管理员</small>
+              <strong>{{ request.session.employee_name }}</strong>
+              <small>{{ request.session.employee_position_name }}</small>
             </div>
           </a>
         </div>

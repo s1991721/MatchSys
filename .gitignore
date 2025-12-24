@@ -2,25 +2,15 @@ qiuren/credentials.json
 qiuren/token.json
 qiuren/__pycache__/**
 qiuren/migrations/__pycache__/__init__.cpython-313.pyc
-project/__pycache__/urls.cpython-313.pyc
-project/__pycache__/settings.cpython-313.pyc
-project/__pycache__/urls.cpython-313.pyc
-project/__pycache__/settings.cpython-313.pyc
-project/__pycache__/settings.cpython-313.pyc
 credentials.json
 token.json
 project/__pycache__/**
-bpmatch/__pycache__/llmsTool.cpython-313.pyc
-bpmatch/__pycache__/bpmatch.cpython-313.pyc
-bpmatch/__pycache__/views.cpython-313.pyc
+bpmatch/__pycache__/**
 /bpmatch/migrations/**
-
-# PyCharm
+/.idea/**
+/ss/**
 .idea/
-
-# Python
+*.iml
 __pycache__/
 *.pyc
-
-# OS
 .DS_Store

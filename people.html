@@ -90,6 +90,7 @@
             cursor: pointer;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+            height: 40px;
         }
 
         .action-btn .icon {
@@ -167,7 +168,7 @@
         }
 
         .table-card {
-            margin-top: 18px;
+            margin-top: 0;
             border-radius: 16px;
             border: 1px solid var(--line);
             background: var(--card);
@@ -183,8 +184,8 @@
 
         .filter-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px 18px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px 16px;
         }
 
         .dual-input {
@@ -202,6 +203,15 @@
             align-items: center;
         }
 
+        .filter-actions-left:empty {
+            display: none;
+        }
+
+        .filter-actions-left:empty + .filter-actions-right {
+            justify-content: flex-end;
+            width: 100%;
+        }
+
         .filter-actions-left,
         .filter-actions-right {
             display: flex;
@@ -210,25 +220,28 @@
             align-items: center;
         }
 
-        .filter-actions-right {
-            justify-content: flex-end;
-        }
-
-        .filter-actions button {
-            flex: none;
-            min-width: 120px;
-        }
-
         .btn-search {
             background: #10b981;
             color: #fff;
             box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13.3333px;
         }
 
         .btn-reset {
             background: #f59e0b;
             color: #fff;
             box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13.3333px;
         }
 
         .table-actions {
@@ -320,6 +333,15 @@
             padding: 6px 10px;
             border-radius: 8px;
             font-size: 12px;
+        }
+
+        .truncate {
+            max-width: 220px;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: bottom;
         }
 
         .empty {
@@ -458,11 +480,8 @@
         <div class="filters">
             <div class="filter-grid">
                 <label>
-                    年龄范围
-                    <div class="dual-input">
-                        <input type="number" id="filterAgeMin" min="18" max="80" placeholder="最小岁数" />
-                        <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" />
-                    </div>
+                    最大年龄
+                    <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" />
                 </label>
                 <label>
                     国籍
@@ -507,11 +526,7 @@
                 </label>
             </div>
             <div class="filter-actions">
-                <div class="filter-actions-left">
-                    <button type="button" class="action-btn btn-blue" id="openDialogBtn">
-                        <span class="icon">＋</span>新增
-                    </button>
-                </div>
+                <div class="filter-actions-left"></div>
                 <div class="filter-actions-right">
                     <button type="button" class="btn-search" id="applyFilterBtn">搜索</button>
                     <button type="button" class="btn-reset" id="filterResetBtn">重置</button>
@@ -528,10 +543,10 @@
                 <thead>
                 <tr>
                     <th>姓名</th>
+                    <th>昵称</th>
                     <th>年龄</th>
                     <th>国籍</th>
                     <th>单价（万/月）</th>
-                    <th>技能</th>
                     <th>介绍文</th>
                     <th>契约状况</th>
                     <th>现场契约</th>
@@ -542,7 +557,7 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td colspan="9" class="empty">暂无人员数据</td>
+                    <td colspan="11" class="empty">暂无人员数据</td>
                 </tr>
                 </tbody>
             </table>
@@ -558,13 +573,18 @@
     <form id="personForm">
         <div class="dialog-body">
             <div class="form-grid">
+                <input type="hidden" name="employee_id" />
                 <label>
                     姓名
                     <input type="text" name="name" placeholder="请输入姓名" required />
                 </label>
                 <label>
-                    年龄
-                    <input type="number" name="age" min="18" max="80" placeholder="例如 30" required />
+                    昵称
+                    <input type="text" name="nickname" placeholder="请输入昵称" />
+                </label>
+                <label>
+                    生日
+                    <input type="date" name="birthday" required />
                 </label>
                 <label>
                     国籍
@@ -578,10 +598,6 @@
                 <label>
                     单价（万/月）
                     <input type="number" name="price" min="0" step="0.1" placeholder="例如 2.5" required />
-                </label>
-                <label>
-                    技能
-                    <input type="text" name="skill" placeholder="请输入技能，如 Java、焊接" required />
                 </label>
                 <label>
                     契约状况
@@ -633,16 +649,27 @@
 </dialog>
 
 <script>
+    const API_BASE = '';
+    const TECH_ENDPOINT = `${API_BASE}/api/technicians`;
+    const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
+    const SS_UPLOAD_ENDPOINT = (employeeId) => `${API_BASE}/api/technicians/${employeeId}/ss`;
+    const fetchWithAuth = async (url, options = {}) => {
+        const res = await fetch(url, options);
+        if (res.status === 401) {
+            window.location.href = '/login.html';
+            throw new Error('Unauthorized');
+        }
+        return res;
+    };
+
     const personForm = document.getElementById('personForm');
     const submitBtn = document.getElementById('submitBtn');
     const peopleTableBody = document.querySelector('#peopleTable tbody');
     const summaryText = document.getElementById('summaryText');
-    const openDialogBtn = document.getElementById('openDialogBtn');
     const personDialog = document.getElementById('personDialog');
     const dialogTitle = document.getElementById('dialogTitle');
     const closeDialogBtn = document.getElementById('closeDialogBtn');
     const cancelDialogBtn = document.getElementById('cancelDialogBtn');
-    const filterAgeMin = document.getElementById('filterAgeMin');
     const filterAgeMax = document.getElementById('filterAgeMax');
     const filterNationality = document.getElementById('filterNationality');
     const filterPriceMax = document.getElementById('filterPriceMax');
@@ -650,6 +677,9 @@
     const filterSiteContract = document.getElementById('filterSiteContract');
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const filterResetBtn = document.getElementById('filterResetBtn');
+    const ssFileInput = personForm.querySelector('input[type="file"][name="ssFile"]');
+    let isFileDialogOpen = false;
+    let forcedEmployeeId = '';
 
     const showDialogModal = () => {
         if (typeof personDialog.showModal === 'function') {
@@ -666,59 +696,77 @@
     };
 
     let editingId = null;
-    let people = [
-        {
-            id: 1,
-            name: '李伟',
-            age: 32,
-            nationality: '中国',
-            price: 2.0,
-            skill: 'Java / Spring',
-            contract: '正社员',
-            siteContract: '6月',
-            intro: '10年大型项目经验，擅长后台架构设计。',
-            note: '拥有PMP认证',
-            ssFileName: '',
-            ssFileUrl: ''
-        },
-        {
-            id: 2,
-            name: 'Sato Yuki',
-            age: 28,
-            nationality: '日本',
-            price: 2.5,
-            skill: '前端 / React',
-            contract: 'フリーランス',
-            siteContract: '长期',
-            intro: '熟悉React/Next.js，参与多个跨国项目。',
-            note: '粤语沟通能力优秀',
-            ssFileName: '',
-            ssFileUrl: ''
-        }
-    ];
-    let nextId = 3;
+    let people = [];
+    let currentSsPath = '';
 
-    const releasePersonFile = (person) => {
-        if (person && person.ssFileUrl) {
-            try {
-                URL.revokeObjectURL(person.ssFileUrl);
-            } catch (error) {
-                console.warn('释放文件URL失败', error);
-            }
-        }
+    const contractLabelToType = (label) => {
+        const mapping = {
+            '正社员': 1,
+            '契约社员': 2,
+            'フリーランス': 3
+        };
+        return mapping[label] ?? 0;
     };
 
-    const createFileData = (file) => {
-        if (!file) return null;
-        return {
-            name: file.name,
-            url: URL.createObjectURL(file)
+    const contractTypeToLabel = (value) => {
+        const mapping = {
+            1: '正社员',
+            2: '契约社员',
+            3: 'フリーランス'
         };
+        return mapping[value] || '未定';
+    };
+
+    const siteDeadlineToLabel = (value) => {
+        if (!value) return '';
+        if (typeof value === 'number') {
+            return value >= 1 && value <= 12 ? `${value}月` : '';
+        }
+        if (/^\d{1,2}$/.test(String(value))) {
+            const num = Number(value);
+            return num >= 1 && num <= 12 ? `${num}月` : '';
+        }
+        if (String(value).startsWith('9999-12-31')) {
+            return '长期';
+        }
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return `${date.getMonth() + 1}月`;
+    };
+
+    const labelToSiteDeadline = (label) => {
+        if (!label) return '';
+        if (label === '长期') return '9999-12-31';
+        const match = label.match(/^(\d{1,2})月$/);
+        if (!match) return '';
+        const month = Number(match[1]);
+        const today = new Date();
+        const year = today.getFullYear();
+        const lastDay = new Date(year, month, 0);
+        return lastDay.toISOString().slice(0, 10);
+    };
+
+    const calcAge = (birthday) => {
+        if (!birthday) return null;
+        const date = new Date(birthday);
+        if (Number.isNaN(date.getTime())) return null;
+        const today = new Date();
+        let age = today.getFullYear() - date.getFullYear();
+        const m = today.getMonth() - date.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+            age -= 1;
+        }
+        return age;
+    };
+
+    const parseRemark = (remark) => {
+        if (!remark) return '';
+        return String(remark).trim();
     };
 
     const renderPeople = (list) => {
         if (!list.length) {
-            peopleTableBody.innerHTML = '<tr><td colspan="9" class="empty">未检索到符合条件的记录</td></tr>';
+            peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty">未检索到符合条件的记录</td></tr>';
             summaryText.textContent = `共 ${people.length} 人 · 当前显示 0 人`;
             return;
         }
@@ -732,15 +780,15 @@
             return `
                 <tr>
                     <td data-label="姓名">${person.name}</td>
+                    <td data-label="昵称">${person.nickname || '-'}</td>
                     <td data-label="年龄">${person.age}</td>
                     <td data-label="国籍">${person.nationality}</td>
                     <td data-label="单价">${person.price} 万/月</td>
-                    <td data-label="技能">${person.skill}</td>
-                    <td data-label="介绍文">${person.intro || '-'}</td>
+                    <td data-label="介绍文"><span class="truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
                     <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
                     <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract}</span></td>
                     <td data-label="备注">${person.note || '-'}</td>
-                    <td data-label="SS 文件">${person.ssFileName ? `<a class="file-link" href="${person.ssFileUrl}" download="${person.ssFileName}">${person.ssFileName}</a>` : '-'}</td>
+                    <td data-label="SS 文件">${person.ssUrl ? `<a class="file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
                     <td data-label="操作">
                         <div class="row-actions">
                             <button type="button" class="btn-secondary" data-edit="${person.id}">编辑</button>
@@ -757,11 +805,12 @@
     const getFormData = () => {
         const formData = new FormData(personForm);
         return {
+            employee_id: Number(formData.get('employee_id')) || null,
             name: (formData.get('name') || '').trim(),
-            age: Number(formData.get('age')),
+            nickname: (formData.get('nickname') || '').trim(),
+            birthday: formData.get('birthday') || '',
             nationality: formData.get('nationality') || '',
             price: Number(formData.get('price')),
-            skill: (formData.get('skill') || '').trim(),
             contract: formData.get('contract'),
             siteContract: formData.get('siteContract') || '',
             intro: (formData.get('intro') || '').trim(),
@@ -770,11 +819,12 @@
     };
 
     const setFormData = (person) => {
+        personForm.employee_id.value = forcedEmployeeId || person.id || '';
         personForm.name.value = person.name;
-        personForm.age.value = person.age;
+        personForm.nickname.value = person.nickname || '';
+        personForm.birthday.value = person.birthday || '';
         personForm.nationality.value = person.nationality;
         personForm.price.value = person.price;
-        personForm.skill.value = person.skill;
         personForm.contract.value = person.contract;
         personForm.siteContract.value = person.siteContract;
         personForm.intro.value = person.intro || '';
@@ -786,6 +836,13 @@
         dialogTitle.textContent = '新增人员';
         submitBtn.textContent = '确认新增';
         personForm.reset();
+        currentSsPath = '';
+        if (forcedEmployeeId) {
+            personForm.employee_id.value = forcedEmployeeId;
+            personForm.name.setAttribute('readonly', 'readonly');
+        } else {
+            personForm.name.removeAttribute('readonly');
+        }
         personDialog.style.animation = '';
         showDialogModal();
     };
@@ -795,6 +852,8 @@
         dialogTitle.textContent = '编辑人员';
         submitBtn.textContent = '保存修改';
         setFormData(person);
+        currentSsPath = person.ssPath || '';
+        personForm.name.setAttribute('readonly', 'readonly');
         personDialog.style.animation = '';
         showDialogModal();
     };
@@ -816,9 +875,12 @@
             if (personForm.ssFile) {
                 personForm.ssFile.value = '';
             }
+            personForm.employee_id.value = '';
             editingId = null;
             dialogTitle.textContent = '新增人员';
             submitBtn.textContent = '确认新增';
+            currentSsPath = '';
+            personForm.name.removeAttribute('readonly');
             personDialog.removeEventListener('animationend', finalizeClose);
         };
 
@@ -827,8 +889,113 @@
 
     const getNumberValue = (value) => value === '' ? null : Number(value);
 
+    const getAutoEditId = () => {
+        try {
+            try {
+                const cached = localStorage.getItem("tech_edit_employee_id") || "";
+                if (cached) {
+                    localStorage.removeItem("tech_edit_employee_id");
+                    return cached;
+                }
+            } catch (err) {}
+            return '';
+        } catch (error) {
+            return '';
+        }
+    };
+
+    const fetchPeople = async () => {
+        try {
+            const res = await fetchWithAuth(TECH_ENDPOINT, { credentials: 'include' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const items = Array.isArray(data.items) ? data.items : [];
+            people = items.map(item => {
+                const remarkText = item.remark ? String(item.remark) : '';
+                const noteText = parseRemark(remarkText);
+                return {
+                    id: item.employee_id,
+                    name: item.name || '',
+                    nickname: item.name_mask,
+                    birthday: item.birthday || '',
+                    age: calcAge(item.birthday),
+                    nationality: item.nationality || '',
+                    price: item.price ? Number(item.price) : 0,
+                    contract: contractTypeToLabel(item.contract_type),
+                    siteContract: siteDeadlineToLabel(item.spot_contract_deadline),
+                    intro: item.introduction || '',
+                    note: noteText || '',
+                    ssPath: item.ss || '',
+                    ssUrl: item.ss_url || ''
+                };
+            });
+            applyFilters();
+            const targetId = getAutoEditId();
+            if (targetId) {
+                forcedEmployeeId = targetId;
+                const target = people.find(item => String(item.id) === String(targetId));
+                if (target) {
+                    openEditDialog(target);
+                } else {
+                    openCreateDialog();
+                    await prefillFromEmployee(targetId);
+                }
+            }
+        } catch (error) {
+            peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty">加载失败</td></tr>';
+            summaryText.textContent = '共 0 人 · 当前显示 0 人';
+        }
+    };
+
+    const prefillFromEmployee = async (employeeId) => {
+        if (!employeeId) return;
+        try {
+            const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${employeeId}`, { credentials: 'include' });
+            if (!res.ok) return;
+            const data = await res.json();
+            const emp = data.item || {};
+            personForm.name.value = emp.name || '';
+            if (personForm.name.value) {
+                personForm.name.setAttribute('readonly', 'readonly');
+            }
+            personForm.birthday.value = emp.birthday || '';
+            personForm.nickname.value = personForm.nickname.value || '';
+            personForm.nationality.value = personForm.nationality.value || '';
+        } catch (error) {}
+    };
+
+    const savePerson = async (payload) => {
+        const method = editingId ? 'PUT' : 'POST';
+        const url = editingId ? `${TECH_ENDPOINT}/${editingId}` : TECH_ENDPOINT;
+        const res = await fetchWithAuth(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || '保存失败');
+        }
+        return data;
+    };
+
+    const uploadSsFile = async (employeeId, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await fetchWithAuth(SS_UPLOAD_ENDPOINT(employeeId), {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || '上传失败');
+        }
+        return data;
+    };
+
     const applyFilters = () => {
-        const ageMin = getNumberValue(filterAgeMin.value);
         const ageMax = getNumberValue(filterAgeMax.value);
         const priceMax = getNumberValue(filterPriceMax.value);
         const nationalityValue = filterNationality.value;
@@ -836,7 +1003,6 @@
         const siteContractValue = filterSiteContract.value;
 
         const filtered = people.filter(person => {
-            if (ageMin !== null && person.age < ageMin) return false;
             if (ageMax !== null && person.age > ageMax) return false;
             if (priceMax !== null && person.price > priceMax) return false;
             if (nationalityValue && person.nationality !== nationalityValue) return false;
@@ -848,45 +1014,60 @@
         renderPeople(filtered);
     };
 
-    personForm.addEventListener('submit', (event) => {
+    personForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         const formValue = getFormData();
-        const fileData = createFileData(personForm.ssFile.files[0]);
 
         if (!formValue.name) {
             alert('姓名为必填项');
             return;
         }
-
-        if (editingId !== null) {
-            const index = people.findIndex(person => person.id === editingId);
-            if (index > -1) {
-                const existing = people[index];
-                if (fileData && existing.ssFileUrl) {
-                    releasePersonFile(existing);
-                }
-                people[index] = {
-                    ...existing,
-                    ...formValue,
-                    ssFileName: fileData ? fileData.name : existing.ssFileName || '',
-                    ssFileUrl: fileData ? fileData.url : existing.ssFileUrl || ''
-                };
-            }
-        } else {
-            const newPerson = {
-                id: nextId++,
-                ...formValue,
-                ssFileName: fileData ? fileData.name : '',
-                ssFileUrl: fileData ? fileData.url : ''
-            };
-            people.unshift(newPerson);
+        if (editingId === null && !forcedEmployeeId) {
+            alert('请从人员管理页进入技术者编辑');
+            return;
         }
 
-        closeDialog();
-        applyFilters();
+        const effectiveId = editingId || forcedEmployeeId;
+        if (!effectiveId) {
+            alert('缺少 employee_id');
+            return;
+        }
+
+        let ssPath = currentSsPath;
+        if (ssFileInput && ssFileInput.files && ssFileInput.files.length) {
+            try {
+                const upload = await uploadSsFile(effectiveId, ssFileInput.files[0]);
+                ssPath = upload.path || '';
+            } catch (error) {
+                alert(error.message || '上传失败');
+                return;
+            }
+        }
+
+        const payload = {
+            employee_id: effectiveId,
+            name: formValue.name,
+            name_mask: formValue.nickname || formValue.name,
+            birthday: formValue.birthday || '',
+            nationality: formValue.nationality || '',
+            price: Number.isFinite(formValue.price) ? formValue.price : null,
+            introduction: formValue.intro || '',
+            contract_type: contractLabelToType(formValue.contract),
+            spot_contract_deadline: labelToSiteDeadline(formValue.siteContract),
+            business_status: 0,
+            ss: ssPath || null,
+            remark: formValue.note
+        };
+
+        try {
+            await savePerson(payload);
+            closeDialog();
+            await fetchPeople();
+        } catch (error) {
+            alert(error.message || '保存失败');
+        }
     });
 
-    openDialogBtn.addEventListener('click', openCreateDialog);
 
     const attachCloseHandler = (element) => {
         if (!element) return;
@@ -907,8 +1088,19 @@
     });
     personDialog.addEventListener('cancel', (event) => {
         event.preventDefault();
-        closeDialog();
+        return;
     });
+    if (ssFileInput) {
+        ssFileInput.addEventListener('click', () => {
+            isFileDialogOpen = true;
+        });
+        ssFileInput.addEventListener('change', () => {
+            isFileDialogOpen = false;
+        });
+        window.addEventListener('focus', () => {
+            isFileDialogOpen = false;
+        });
+    }
 
 
     peopleTableBody.addEventListener('click', (event) => {
@@ -921,16 +1113,22 @@
                 openEditDialog(person);
             }
         } else if (deleteId) {
-            const index = people.findIndex(item => String(item.id) === deleteId);
-            if (index > -1 && confirm(`确定删除 ${people[index].name} 吗？`)) {
-                releasePersonFile(people[index]);
-                people.splice(index, 1);
-                applyFilters();
+            const target = people.find(item => String(item.id) === deleteId);
+            if (target && confirm(`确定删除 ${target.name} 吗？`)) {
+                fetchWithAuth(`${TECH_ENDPOINT}/${deleteId}`, { method: 'DELETE', credentials: 'include' })
+                    .then(res => res.json().then(data => ({ res, data })))
+                    .then(({ res, data }) => {
+                        if (!res.ok) throw new Error(data.error || '删除失败');
+                        return fetchPeople();
+                    })
+                    .catch((error) => {
+                        alert(error.message || '删除失败');
+                    });
             }
         }
     });
 
-    const filterInputs = [filterAgeMin, filterAgeMax, filterPriceMax];
+    const filterInputs = [filterAgeMax, filterPriceMax];
     applyFilterBtn.addEventListener('click', applyFilters);
     filterResetBtn.addEventListener('click', () => {
         filterInputs.forEach(input => input.value = '');
@@ -940,7 +1138,7 @@
         applyFilters();
     });
 
-    applyFilters();
+    fetchPeople();
 </script>
 </body>
 </html>

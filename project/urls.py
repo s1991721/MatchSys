@@ -17,6 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from django.views.generic import TemplateView
+from django.views.generic.base import RedirectView
 
 from bpmatch.views import (
     messages,
@@ -26,9 +28,42 @@ from bpmatch.views import (
     send_mail,
     send_history,
 )
+from employee.views import (
+    change_password_api,
+    employee_detail_api,
+    employees_api,
+    login_api,
+    logout_api,
+    technician_detail_api,
+    technician_ss_download,
+    technician_ss_upload,
+    technicians_api,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", RedirectView.as_view(url="/index.html", permanent=False)),
+    path("index.html", TemplateView.as_view(template_name="index.html")),
+    path("home.html", TemplateView.as_view(template_name="home.html")),
+    path("attendance.html", TemplateView.as_view(template_name="attendance.html")),
+    path("match.html", TemplateView.as_view(template_name="match.html")),
+    path("people.html", TemplateView.as_view(template_name="people.html")),
+    path("personnel.html", TemplateView.as_view(template_name="personnel.html")),
+    path("profile.html", TemplateView.as_view(template_name="profile.html")),
+    path("qiuanjian.html", TemplateView.as_view(template_name="qiuanjian.html")),
+    path("qiuren.html", TemplateView.as_view(template_name="qiuren.html")),
+    path("songxin.html", TemplateView.as_view(template_name="songxin.html")),
+    path("songxinhistory.html", TemplateView.as_view(template_name="songxinhistory.html")),
+    path("login.html", TemplateView.as_view(template_name="login.html")),
+    path("api/login", login_api, name="employee-login"),
+    path("api/logout", logout_api, name="employee-logout"),
+    path("api/change-password", change_password_api, name="employee-change-password"),
+    path("api/employees", employees_api, name="employee-list"),
+    path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
+    path("api/technicians", technicians_api, name="technician-list"),
+    path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
+    path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),
+    path("api/ss/<path:path>", technician_ss_download, name="technician-ss-download"),
     path("messages", messages),
     path("persons", persons),
     path("job-click", log_job_click),

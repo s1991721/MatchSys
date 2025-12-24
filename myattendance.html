@@ -1,165 +1,1517 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>我的考勤</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>考勤打卡</title>
   <style>
-    :root {
-      --bg: #f4f6fb;
-      --card: #ffffff;
-      --line: #e5e9f2;
-      --primary: #1c7bff;
-      --text: #1f2a3d;
-      --muted: #6b7686;
+    :root{
+      --bg:#f3f5fb;
+      --card:#ffffff;
+      --text:#1f2a3d;
+      --muted:#8891a7;
+      --line:#e5e9f2;
+      --accent: rgba(36, 107, 253, 0.08);
+
+      --primary:#246bfd;
+      --blue:#2f6fec;
+
+      --shadow: 0 12px 28px rgba(31, 53, 90, .08);
+      --shadowSoft: 0 10px 20px rgba(31, 53, 90, .06);
+      --radius: 16px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
       font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background: transparent;
-      color: var(--text);
+      background: var(--bg);
+      color:var(--text);
     }
 
-    .page {
-      padding: 4px 4px 12px;
+    .page{
+      width:100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
     }
 
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-      padding: 16px 18px 18px;
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      border:1px solid var(--line);
+      box-shadow: var(--shadow);
+      padding:16px 16px 18px;
     }
 
-    .title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
+    .card-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
     }
 
-    .title h1 {
-      font-size: 18px;
-      margin: 0;
-      letter-spacing: 0.5px;
+    .title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight:800;
+      font-size:20px;
+      letter-spacing:.2px;
+    }
+    .title::before{
+      content:"";
+      width:4px;
+      height:20px;
+      border-radius:12px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
     }
 
-    .title span {
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #f7f9fd;
+    details.card{
+      padding:14px 16px 16px;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 14px;
+    .accordion summary{
+      list-style:none;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
     }
 
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px 12px;
-      background: #fbfcff;
+    .accordion summary::-webkit-details-marker{
+      display:none;
     }
 
-    .stat strong {
-      display: block;
-      font-size: 16px;
-      margin-bottom: 4px;
+    .accordion .summary-right{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:14px;
+      font-weight:700;
     }
 
-    .stat span {
-      font-size: 12px;
-      color: var(--muted);
+    .accordion .chev{
+      display:inline-block;
+      transition: transform .15s ease;
     }
 
-    .list {
-      border-top: 1px dashed var(--line);
-      padding-top: 12px;
-      font-size: 13px;
-      color: var(--muted);
-      display: grid;
-      gap: 8px;
+    .accordion[open] .chev{
+      transform: rotate(90deg);
     }
 
-    .item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 10px;
-      border-radius: 8px;
-      background: #f7f9fd;
-      border: 1px solid #edf1f7;
+    .accordion-body{
+      margin-top:12px;
     }
 
-    .item b {
-      color: var(--text);
-      font-weight: 600;
+    .lazy-placeholder{
+      font-weight:700;
+      color:var(--muted);
+      padding:8px 4px 2px;
     }
 
-    .pill {
-      font-size: 12px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: rgba(28, 123, 255, 0.12);
+    .month-toggle{
+      display:flex;
+      gap:10px;
+      margin:6px 0 12px;
+    }
+
+    .month-btn{
+      border:1px solid var(--line);
+      background:#f7f9fd;
+      color:#3b4a60;
+      padding:6px 12px;
+      border-radius:10px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .month-btn.active{
+      background: rgba(28,123,255,.10);
+      border-color: rgba(28,123,255,.25);
       color: var(--primary);
-      border: 1px solid rgba(28, 123, 255, 0.18);
+    }
+
+    /* small icons (inline svg look) */
+    .ico{
+      width:26px;height:26px;
+      border-radius:10px;
+      display:grid;place-items:center;
+      background:rgba(28,123,255,.10);
+      color:var(--primary);
+      flex:0 0 auto;
+    }
+    .ico svg{width:18px;height:18px;display:block}
+
+    /* ---------- 打卡位置 ---------- */
+    .map-wrap{
+      padding:14px;
+      border-radius:18px;
+      background: linear-gradient(#ffffff, #ffffff) padding-box,
+                  linear-gradient(180deg, rgba(47,128,255,.18), rgba(47,128,255,0)) border-box;
+      border:1px solid transparent;
+    }
+
+    .map{
+      height:240px;
+      border-radius:16px;
+      position:relative;
+      overflow:hidden;
+
+      /* 替换这里：把 background-image 改成你的地图截图即可 */
+      background-image:
+        radial-gradient(circle at 25% 35%, rgba(90,173,255,.25), transparent 45%),
+        radial-gradient(circle at 70% 55%, rgba(90,173,255,.18), transparent 48%),
+        linear-gradient(135deg, rgba(62,131,255,.15), rgba(255,255,255,0)),
+        repeating-linear-gradient(0deg, rgba(120,140,170,.14) 0, rgba(120,140,170,.14) 1px, transparent 1px, transparent 18px),
+        repeating-linear-gradient(90deg, rgba(120,140,170,.12) 0, rgba(120,140,170,.12) 1px, transparent 1px, transparent 18px);
+      background-color:#eef5ff;
+      filter:saturate(1.05);
+    }
+
+    .map-canvas{
+      position:absolute;
+      inset:0;
+      z-index:1;
+    }
+
+    .map::after{
+      /* 一层“雾化”的浅白覆盖，贴近原图 */
+      content:"";
+      position:absolute;inset:0;
+      background: linear-gradient(180deg, rgba(255,255,255,.45), rgba(255,255,255,.15));
+      pointer-events:none;
+    }
+
+    .pin-area{
+      position:absolute;
+      left:50%; top:46%;
+      transform:translate(-50%,-50%);
+      width:160px; height:160px;
+      border-radius:50%;
+      background: radial-gradient(circle, rgba(47,128,255,.22), rgba(47,128,255,0) 62%);
+      outline: 2px solid rgba(47,128,255,.18);
+      outline-offset:-1px;
+    }
+
+    .pin{
+      position:absolute;
+      left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      width:54px;height:54px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, #7bd0ff, #2f80ff 55%, #1a64ff 100%);
+      box-shadow: 0 14px 24px rgba(47,128,255,.26);
+      display:grid;place-items:center;
+      z-index:3;
+    }
+    .pin::before{
+      content:"";
+      width:36px;height:36px;
+      border-radius:50%;
+      background: rgba(255,255,255,.18);
+      filter: blur(.2px);
+      position:absolute;
+      inset:9px;
+    }
+    .pin svg{position:relative; width:22px;height:22px; color:#fff}
+
+    .status-pill{
+      position:absolute;
+      right:18px;
+      bottom:14px;
+      z-index:5;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 10px 18px rgba(15,23,42,.08);
+      border:1px solid rgba(47,128,255,.10);
+      max-width: 220px;
+    }
+    .tick{
+      width:22px;height:22px;
+      border-radius:50%;
+      background: rgba(34,197,94,.14);
+      display:grid;place-items:center;
+      color:#16a34a;
+      flex:0 0 auto;
+      margin-top:1px;
+    }
+    .status-text{
+      line-height:1.12;
+    }
+    .status-text .l1{
+      font-weight:800;
+      font-size:16px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .status-text .l1 .chev{
+      color:#9aa6b2;
+      font-weight:900;
+      transform: translateY(-1px);
+    }
+    .status-text .l2{
+      margin-top:6px;
+      font-weight:700;
+      font-size:18px;
+      color:#3b4552;
+    }
+
+    /* ---------- 今日考勤 ---------- */
+    .today-inner{
+      padding:12px 14px 14px;
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(47,128,255,.05), rgba(47,128,255,0) 75%);
+      border:1px solid rgba(47,128,255,.08);
+    }
+
+    .date-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:16px;
+      background:#e9f2ff;
+      color:#1f2a37;
+      font-weight:800;
+      margin-bottom:10px;
+    }
+    .date-chip .mini{
+      width:26px;height:26px;border-radius:10px;
+      background: rgba(47,128,255,.12);
+      display:grid;place-items:center;
+      color:var(--blue);
+    }
+
+    .label{
+      font-weight:800;
+      color:#3d4653;
+      opacity:.75;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .time{
+      margin-top:8px;
+      font-weight:900;
+      font-size:44px;
+      letter-spacing:1px;
+      color:#0f172a;
+    }
+    .sub{
+      margin-top:10px;
+      font-weight:800;
+      font-size:34px;
+      color:#9aa6b2;
+    }
+
+    /* ---------- 我的考勤 ---------- */
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+    }
+
+    .stat{
+      border-radius:18px;
+      padding:14px 14px 16px;
+      box-shadow: var(--shadowSoft);
+      border:1px solid rgba(15,23,42,.05);
+      background: #fff;
+    }
+
+    .stat.green{
+      background: linear-gradient(180deg, rgba(34,197,94,.10), rgba(255,255,255,.90));
+    }
+    .stat.orange{
+      background: linear-gradient(180deg, rgba(245,158,11,.12), rgba(255,255,255,.92));
+    }
+    .stat.red{
+      background: linear-gradient(180deg, rgba(239,68,68,.10), rgba(255,255,255,.92));
+    }
+
+    .stat-top{
+      display:flex; align-items:center; gap:10px;
+      font-weight:900;
+      font-size:22px;
+    }
+    .badge{
+      width:30px;height:30px;border-radius:50%;
+      display:grid;place-items:center;
+      flex:0 0 auto;
+      background: rgba(15,23,42,.06);
+    }
+    .stat.green .badge{background: rgba(34,197,94,.16); color:#16a34a}
+    .stat.orange .badge{background: rgba(245,158,11,.18); color:#d97706}
+    .stat.red .badge{background: rgba(239,68,68,.16); color:#dc2626}
+
+    .stat-num{
+      margin-top:12px;
+      font-weight:950;
+      font-size:54px;
+      letter-spacing:1px;
+      color:#0f172a;
+      opacity:.9;
+    }
+    .stat.orange .stat-num{color:#c26b00}
+    .stat.red .stat-num{color:#b42323}
+
+    /* ---------- 明细表格 ---------- */
+    .table{
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(47,128,255,.08);
+      background: #fff;
+    }
+
+    .thead{
+      background: linear-gradient(180deg, rgba(47,128,255,.08), rgba(47,128,255,0));
+      padding:12px 14px;
+      display:grid;
+      grid-template-columns: 1.1fr 1.1fr 1.2fr .9fr;
+      color:#64748b;
+      font-weight:900;
+      font-size:18px;
+    }
+
+    .row{
+      padding:14px 14px;
+      display:grid;
+      grid-template-columns: 1.1fr 1.1fr 1.2fr .9fr;
+      align-items:center;
+      border-top:1px solid var(--line);
+      font-weight:800;
+      color:#0f172a;
+    }
+
+    .worktime{
+      color:#0f172a;
+      font-weight:900;
+      font-size:20px;
+      letter-spacing:.3px;
+    }
+    .sep{
+      color:#94a3b8;
+      font-weight:900;
+      padding:0 10px;
+    }
+
+    .btn{
+      justify-self:end;
+      padding:10px 16px;
+      border-radius:10px;
+      background: linear-gradient(180deg, #3a8cff, #1f6dff);
+      color:#fff;
+      font-weight:900;
+      border:0;
+      box-shadow: 0 10px 16px rgba(47,128,255,.22);
+      cursor:pointer;
+    }
+
+    /* ---------- 修改弹窗 ---------- */
+    .dialog-backdrop{
+      position:fixed;
+      inset:0;
+      background: rgba(15,23,42,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:999;
+    }
+    .dialog-backdrop.show{
+      display:flex;
+    }
+    .dialog{
+      width:100%;
+      max-width:520px;
+      background:#fff;
+      border-radius:18px;
+      border:1px solid rgba(15,23,42,.08);
+      box-shadow: 0 20px 40px rgba(15,23,42,.18);
+      padding:18px 18px 16px;
+    }
+    .dialog-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .dialog-title{
+      font-weight:900;
+      font-size:20px;
+    }
+    .dialog-close{
+      border:0;
+      background:transparent;
+      font-size:22px;
+      cursor:pointer;
+      color:#94a3b8;
+      font-weight:900;
+    }
+    .dialog-body{
+      display:grid;
+      gap:12px;
+      margin-top:10px;
+    }
+    .field{
+      display:grid;
+      gap:6px;
+    }
+    .field label{
+      font-weight:800;
+      color:#3b4552;
+      font-size:14px;
+    }
+    .field input,
+    .field textarea{
+      width:100%;
+      border-radius:12px;
+      border:1px solid var(--line);
+      padding:10px 12px;
+      font-weight:700;
+      font-size:15px;
+      color:#0f172a;
+      outline:none;
+      background:#f8fafc;
+    }
+    .field textarea{
+      min-height:88px;
+      resize:vertical;
+    }
+    .dialog-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:10px;
+      margin-top:14px;
+    }
+    .dialog-error{
+      color:#dc2626;
+      font-weight:800;
+      font-size:13px;
+      background: rgba(239,68,68,.08);
+      border:1px solid rgba(239,68,68,.18);
+      padding:8px 10px;
+      border-radius:10px;
+    }
+    .btn-ghost{
+      border:1px solid var(--line);
+      background:#fff;
+      color:#3b4a60;
+      padding:8px 14px;
+      border-radius:10px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .btn-primary{
+      border:0;
+      background: linear-gradient(180deg, #3a8cff, #1f6dff);
+      color:#fff;
+      padding:8px 16px;
+      border-radius:10px;
+      font-weight:900;
+      cursor:pointer;
+      box-shadow: 0 10px 16px rgba(47,128,255,.20);
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:28px;
+      transform:translateX(-50%) translateY(10px);
+      background:#0f172a;
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:14px;
+      opacity:0;
+      pointer-events:none;
+      transition: opacity .18s ease, transform .18s ease;
+      z-index:1000;
+    }
+    .toast.show{
+      opacity:1;
+      transform:translateX(-50%) translateY(0);
+    }
+
+    /* ---------- header icons (SVG colors) ---------- */
+    svg{fill:currentColor}
+
+    /* tiny responsiveness */
+    @media (max-width: 380px){
+      .title{font-size:20px}
+      .map{height:200px}
+      .time{font-size:40px}
+      .stat-num{font-size:48px}
+    }
+
+    /* ===== 今日考勤（按你红框结构重做） ===== */
+    .today-v2{
+      padding:14px 14px 18px;
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(47,128,255,.05), rgba(47,128,255,0) 72%);
+      border:1px solid rgba(47,128,255,.08);
+    }
+
+    .today-top{
+      display:flex;
+      justify-content:flex-start;
+      margin-bottom:12px;
+    }
+
+    /* 舞台：按钮要覆盖底条，所以必须相对定位 + 留出按钮空间 */
+    .today-stage{
+      position:relative;
+      padding-top:12px;           /* 顶部留一点呼吸 */
+      padding-bottom:4px;
+    }
+
+    /* 底部大条（你红框最外层那条） */
+    .today-bar{
+      height:128px;
+      border-radius:22px;
+      background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(245,250,255,.92));
+      border:1px solid rgba(47,128,255,.10);
+      box-shadow: inset 0 10px 18px rgba(15,23,42,.05);
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      align-items:center;
+      padding:18px 52px;
+      column-gap:120px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* 底条内部淡淡的层次（更像原型的“雾化面板”） */
+    .today-bar::before{
+      content:"";
+      position:absolute;
+      inset:-40px -60px auto -60px;
+      height:120px;
+      background: radial-gradient(circle at 50% 50%,
+        rgba(47,128,255,.10),
+        rgba(47,128,255,0) 65%);
+      transform: translateY(20px);
+      pointer-events:none;
+    }
+    .today-bar::after{
+      content:"";
+      position:absolute;
+      inset:auto 0 0 0;
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(47,128,255,.18), transparent);
+      opacity:.6;
+      pointer-events:none;
+    }
+
+    .bar-col{
+      text-align:center;
+      position:relative;
+      z-index:1;
+    }
+
+    .bar-col:first-child{
+      justify-self:start;
+    }
+
+    .bar-col:last-child{
+      justify-self:end;
+    }
+
+    .today-bar .label{
+      font-weight:900;
+      font-size:18px;
+      color:#2a3442;
+      opacity:.75;
+      letter-spacing:.2px;
+    }
+
+    .today-bar .time{
+      margin-top:10px;
+      font-weight:950;
+      font-size:44px;
+      letter-spacing:1px;
+      color:#0f172a;
+    }
+
+    .today-bar .sub{
+      margin-top:10px;
+      font-weight:950;
+      font-size:34px;
+      color:#9aa6b2;
+    }
+
+    /* 中间悬浮按钮（覆盖在底条中间） */
+    .punch-fab{
+      position:absolute;
+      left:50%;
+      top:0;
+      transform: translate(-50%, -26px); /* 往上抬，覆盖底条 */
+      width:156px;
+      height:156px;
+      border-radius:50%;
+      border:0;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      color:#fff;
+      user-select:none;
+
+      /* 按钮本体渐变 */
+      background: radial-gradient(circle at 30% 26%, #c7f0ff 0%, #63bfff 22%, #2f80ff 58%, #1a64ff 100%);
+
+      /* “突出”靠：外光晕 + 悬浮阴影 + 内高光/内暗部 */
+      box-shadow:
+        0 30px 44px rgba(47,128,255,.42),
+        0 12px 20px rgba(47,128,255,.22),
+        0 8px 14px rgba(15,23,42,.14),
+        inset 0 10px 16px rgba(255,255,255,.42),
+        inset 0 -14px 22px rgba(0,0,0,.22);
+
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      z-index:3;
+    }
+
+    /* 按钮外圈光晕（让它更 C 位） */
+    .punch-fab::before{
+      content:"";
+      position:absolute;
+      inset:-18px;
+      border-radius:50%;
+      background: radial-gradient(circle,
+        rgba(47,128,255,.28),
+        rgba(47,128,255,0) 62%);
+      filter: blur(3px);
+      pointer-events:none;
+      z-index:-1;
+    }
+
+    /* 按钮顶部镜面高光 */
+    .punch-fab::after{
+      content:"";
+      position:absolute;
+      top:16px;
+      left:18px;
+      right:18px;
+      height:42px;
+      border-radius:999px;
+      background: radial-gradient(ellipse at 50% 50%,
+        rgba(255,255,255,.92),
+        rgba(255,255,255,0) 70%);
+      opacity:.95;
+      pointer-events:none;
+    }
+
+    /* 文案 */
+    .punch-fab .big{
+      font-weight:1000;
+      font-size:40px;
+      letter-spacing:2px;
+      text-shadow: 0 8px 16px rgba(0,0,0,.16);
+      line-height:1;
+    }
+    .punch-fab .small{
+      font-weight:900;
+      font-size:16px;
+      opacity:.95;
+      text-shadow: 0 8px 16px rgba(0,0,0,.16);
+    }
+
+    /* 悬浮更突出（桌面） */
+    .punch-fab:hover{
+      filter: saturate(1.06) brightness(1.03);
+      transform: translate(-50%, -30px);
+    }
+
+    /* ✅ 单击下沉：更短阴影 + 位移 */
+    .punch-fab:active{
+      transform: translate(-50%, -18px) scale(.985);
+      box-shadow:
+        0 16px 26px rgba(47,128,255,.28),
+        0 8px 14px rgba(15,23,42,.18),
+        inset 0 6px 12px rgba(255,255,255,.30),
+        inset 0 -10px 18px rgba(0,0,0,.26);
+    }
+
+    /* 让按钮“嵌入感”更强：给底条中间做一个凹槽圈; 由舞台伪元素完成 */
+    .today-stage::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:0;
+      transform: translate(-50%, -28px);
+      width:156px;
+      height:156px;
+      border-radius:50%;
+      background: radial-gradient(circle at 50% 45%,
+        rgba(255,255,255,.90),
+        rgba(240,246,255,.90) 55%,
+        rgba(230,240,255,.92) 100%);
+      box-shadow:
+        inset 0 12px 18px rgba(15,23,42,.08),
+        inset 0 -8px 14px rgba(255,255,255,.85);
+      border:1px solid rgba(47,128,255,.08);
+      z-index:2; /* 在底条之上，但在按钮之下 */
+      pointer-events:none;
     }
   </style>
 </head>
+
 <body>
   <div class="page">
-    <div class="card">
-      <div class="title">
-        <h1>我的考勤</h1>
-        <span>本月概览</span>
+
+    <!-- 打卡位置 -->
+    <section class="card">
+      <div class="card-head">
+        <div class="title">
+          <span class="ico" aria-hidden="true">
+            <!-- location pin -->
+            <svg viewBox="0 0 24 24">
+              <path d="M12 22s7-6.2 7-12.2A7 7 0 0 0 5 9.8C5 15.8 12 22 12 22Zm0-9.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/>
+            </svg>
+          </span>
+          打卡位置
+        </div>
+        <span style="width:34px;height:26px;"></span>
       </div>
 
-      <div class="stats">
-        <div class="stat">
-          <strong>20 天</strong>
-          <span>出勤天数</span>
+      <div class="map-wrap">
+        <div class="map">
+          <div id="map" class="map-canvas" aria-label="地图预览"></div>
+          <div class="status-pill">
+            <div class="tick" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="14" height="14">
+                <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
+              </svg>
+            </div>
+            <div class="status-text">
+              <div class="l1" id="map-status">正在获取位置 <span class="chev">›</span></div>
+              <div class="l2" id="map-detail">等待定位权限</div>
+            </div>
+          </div>
+
         </div>
-        <div class="stat">
-          <strong>1 次</strong>
-          <span>迟到记录</span>
+      </div>
+    </section>
+
+    <!-- 今日考勤 -->
+    <section class="card">
+      <div class="card-head">
+        <div class="title" style="font-size:22px;">
+          <span class="ico" aria-hidden="true">
+            <!-- calendar check -->
+            <svg viewBox="0 0 24 24">
+              <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Zm-4.2 2.5 1.4 1.4-6 6-3-3 1.4-1.4 1.6 1.6 4.6-4.6Z"/>
+            </svg>
+          </span>
+          今日考勤
         </div>
-        <div class="stat">
-          <strong>0 次</strong>
-          <span>缺勤记录</span>
+        <span style="width:34px;height:26px;"></span>
+      </div>
+
+      <div class="today-inner today-v2">
+
+        <div class="today-top">
+          <div class="date-chip">
+            <span class="mini" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
+              </svg>
+            </span>
+            <span id="today-date">--月--日</span>
+          </div>
         </div>
-        <div class="stat">
-          <strong>2 次</strong>
-          <span>加班记录</span>
+
+        <!-- 这个区域就是你红框的“底条 + 中间按钮覆盖” -->
+        <div class="today-stage">
+
+          <!-- 底部大条 -->
+          <div class="today-bar">
+            <div class="bar-col">
+              <div class="label">上班</div>
+              <div class="time" id="start-time">--:--</div>
+            </div>
+
+            <div class="bar-col">
+              <div class="label">下班</div>
+              <div class="sub" id="end-time">未打卡</div>
+            </div>
+          </div>
+
+          <!-- 中间悬浮按钮（覆盖在 today-bar 上方） -->
+          <button class="punch-fab" type="button">
+            <span class="big">打卡</span>
+            <span class="small"><span id="punch-time">--:--:--</span></span>
+          </button>
+
         </div>
       </div>
 
-      <div class="list">
-        <div class="item">
-          <span>2024/04/08 · 09:02 - 18:12</span>
-          <span class="pill">正常</span>
+
+    </section>
+
+    <!-- 我的考勤（折叠） -->
+    <details class="card accordion" data-url="/api/my-attendance-summary" data-renderer="renderAttendanceSummary">
+      <summary>
+        <div class="title">
+          <span class="ico" aria-hidden="true" style="background:rgba(34,197,94,.12);color:#16a34a">
+            <!-- user -->
+            <svg viewBox="0 0 24 24">
+              <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z"/>
+            </svg>
+          </span>
+          我的考勤
         </div>
-        <div class="item">
-          <span>2024/04/07 · 09:12 - 18:05</span>
-          <span class="pill">轻微迟到</span>
+        <div class="summary-right">
+          点击展开
+          <span class="chev">›</span>
         </div>
-        <div class="item">
-          <span>2024/04/06 · 09:00 - 19:03</span>
-          <span class="pill">加班</span>
+      </summary>
+      <div class="accordion-body" data-content="summary">
+        <div class="month-toggle" role="tablist" aria-label="考勤月份选择">
+          <button class="month-btn active" type="button" data-month="current">当月</button>
+          <button class="month-btn" type="button" data-month="previous">上月</button>
         </div>
+        <div class="lazy-placeholder">等待展开加载数据</div>
+        <div class="stats" data-template hidden>
+          <div class="stat green">
+            <div class="stat-top">
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
+                </svg>
+              </div>
+              出勤
+            </div>
+            <div class="stat-num">20<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
+          </div>
+
+          <div class="stat orange">
+            <div class="stat-top">
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v5l4 2-1 1.8-5-2.8V7Z"/>
+                </svg>
+              </div>
+              迟到
+            </div>
+            <div class="stat-num">3<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
+          </div>
+
+          <div class="stat red">
+            <div class="stat-top">
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.2 6.2 1.6 1.6L13.6 12l4.2 4.2-1.6 1.6L12 13.6l-4.2 4.2-1.6-1.6L10.4 12 6.2 7.8l1.6-1.6L12 10.4Z"/>
+                </svg>
+              </div>
+              旷勤
+            </div>
+            <div class="stat-num">0<span style="font-size:22px;font-weight:900;margin-left:6px;opacity:.85">天</span></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- 考勤明细（折叠） -->
+    <details class="card accordion" data-url="/api/my-attendance-detail" data-renderer="renderAttendanceDetail">
+      <summary>
+        <div class="title">
+          <span class="ico" aria-hidden="true">
+            <!-- calendar -->
+            <svg viewBox="0 0 24 24">
+              <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
+            </svg>
+          </span>
+          考勤明细 <span data-month-label style="font-weight:900;color:#94a3b8">(当月)</span>
+        </div>
+        <div class="summary-right">
+          点击展开
+          <span class="chev">›</span>
+        </div>
+      </summary>
+
+      <div class="accordion-body" data-content="detail">
+        <div class="month-toggle" role="tablist" aria-label="考勤月份选择">
+          <button class="month-btn active" type="button" data-month="current">当月</button>
+          <button class="month-btn" type="button" data-month="previous">上月</button>
+        </div>
+        <div class="lazy-placeholder">等待展开加载数据</div>
+        <div class="table" data-template hidden>
+          <div class="thead">
+            <div>日期</div>
+            <div style="text-align:center;">上班</div>
+            <div style="text-align:center;">备注</div>
+            <div style="text-align:right;">操作</div>
+          </div>
+
+          <div class="row">
+            <div style="font-size:22px;font-weight:900;color:#1f2937;">12月8日</div>
+            <div style="text-align:center;">
+              <span class="worktime">09:00</span><span class="sep">•</span><span class="worktime">18:00</span>
+            </div>
+            <div style="text-align:center;color:#64748b;">-</div>
+            <button class="btn" type="button" data-iso="2023-12-08" data-date="12月8日" data-start="09:00" data-end="18:00" data-remark="">修改</button>
+          </div>
+
+          <div class="row">
+            <div style="font-size:22px;font-weight:900;color:#1f2937;">12月7日</div>
+            <div style="text-align:center;">
+              <span class="worktime">08:59</span><span class="sep">•</span><span class="worktime">18:31</span>
+            </div>
+            <div style="text-align:center;color:#64748b;">-</div>
+            <button class="btn" type="button" data-iso="2023-12-07" data-date="12月7日" data-start="08:59" data-end="18:31" data-remark="">修改</button>
+          </div>
+        </div>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- 修改考勤弹窗 -->
+  <div class="dialog-backdrop" id="edit-dialog" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
+      <div class="dialog-head">
+        <div class="dialog-title" id="edit-dialog-title">修改考勤</div>
+        <button class="dialog-close" type="button" id="edit-dialog-close">×</button>
+      </div>
+      <div class="dialog-body">
+        <div class="dialog-error" id="edit-dialog-error" hidden>备注必填</div>
+        <div class="field">
+          <label for="edit-date">日期</label>
+          <input id="edit-date" type="text" readonly />
+        </div>
+        <div class="field">
+          <label for="edit-start">上班时间</label>
+          <input id="edit-start" type="time" />
+        </div>
+        <div class="field">
+          <label for="edit-end">下班时间</label>
+          <input id="edit-end" type="time" />
+        </div>
+        <div class="field">
+          <label for="edit-remark">备注</label>
+          <textarea id="edit-remark" placeholder="填写备注"></textarea>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
+        <button class="btn-primary" type="button" id="edit-dialog-save">保存</button>
       </div>
     </div>
   </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MAP_FALLBACK = { lat: 35.6852, lng: 139.7528 };
+    const MAP_ZOOM_DEFAULT = 17;
+    const MAP_ZOOM_FOLLOW = 18;
+    let mapInstance;
+    let userMarker;
+    let watchId;
+    let lastCoords = { lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng };
+
+    function setStatus(title, detail) {
+      const titleEl = document.getElementById("map-status");
+      const detailEl = document.getElementById("map-detail");
+      if (titleEl) titleEl.textContent = title;
+      if (detailEl) detailEl.textContent = detail;
+    }
+
+    function initMap() {
+      mapInstance = L.map("map", {
+        zoomControl: false,
+        attributionControl: false,
+      }).setView([MAP_FALLBACK.lat, MAP_FALLBACK.lng], MAP_ZOOM_DEFAULT);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+      }).addTo(mapInstance);
+
+      userMarker = L.circleMarker([MAP_FALLBACK.lat, MAP_FALLBACK.lng], {
+        radius: 8,
+        fillColor: "#1c7bff",
+        fillOpacity: 1,
+        color: "#ffffff",
+        weight: 3,
+      }).addTo(mapInstance);
+
+      if (!navigator.geolocation) {
+        setStatus("无法获取位置", "浏览器不支持定位");
+        return;
+      }
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const coords = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+          lastCoords = coords;
+          mapInstance.setView([coords.lat, coords.lng], MAP_ZOOM_FOLLOW);
+          userMarker.setLatLng([coords.lat, coords.lng]);
+          setStatus("已获取当前位置", "位置已实时更新");
+        },
+        (err) => {
+          if (err && err.code === err.PERMISSION_DENIED) {
+            setStatus("定位失败", "请允许位置权限");
+            return;
+          }
+          setStatus("定位失败", "请开启定位或稍后重试");
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    }
+
+    function setTemplatesVisible(details, visible) {
+      const templates = details.querySelectorAll("[data-template]");
+      templates.forEach((el) => {
+        el.hidden = !visible;
+        el.style.display = visible ? "" : "none";
+      });
+    }
+
+    function setStatValue(element, value) {
+      if (!element) return;
+      const unit = element.querySelector("span");
+      const unitClone = unit ? unit.cloneNode(true) : null;
+      element.textContent = value;
+      if (unitClone) {
+        element.appendChild(unitClone);
+      }
+    }
+
+    function formatMonthLabel(monthKey, monthValue) {
+      if (monthKey === "previous") return "(上月)";
+      if (monthKey === "current") return "(当月)";
+      if (monthValue) return `(${monthValue})`;
+      return "(当月)";
+    }
+
+    function resolveMonthDateParam(monthKey) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const monthIndex = monthKey === "previous" ? now.getMonth() - 1 : now.getMonth();
+      const target = new Date(year, monthIndex, 1);
+      return `${target.getFullYear()}-${pad2(target.getMonth() + 1)}-${pad2(target.getDate())}`;
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return "--";
+      const dateValue = new Date(value);
+      if (!Number.isNaN(dateValue.getTime())) {
+        return `${dateValue.getMonth() + 1}月${dateValue.getDate()}日`;
+      }
+      return value;
+    }
+
+    function renderAttendanceSummary(data, details, monthKey) {
+      const stats = details.querySelector(".stats[data-template]");
+      const placeholder = details.querySelector(".lazy-placeholder");
+      if (!stats) return;
+
+      const summary = data && data.summary ? data.summary : {};
+      setStatValue(stats.querySelectorAll(".stat-num")[0], summary.attendance_days ?? 0);
+      setStatValue(stats.querySelectorAll(".stat-num")[1], summary.late_days ?? 0);
+      setStatValue(stats.querySelectorAll(".stat-num")[2], summary.absent_days ?? 0);
+
+      setTemplatesVisible(details, true);
+      if (placeholder) placeholder.textContent = "";
+    }
+
+    function renderAttendanceDetail(data, details, monthKey) {
+      const table = details.querySelector(".table[data-template]");
+      const placeholder = details.querySelector(".lazy-placeholder");
+      if (!table) return;
+
+      table.querySelectorAll(".row").forEach((row) => row.remove());
+      const records = Array.isArray(data && data.records) ? data.records : [];
+      if (!records.length) {
+        setTemplatesVisible(details, false);
+        if (placeholder) placeholder.textContent = "暂无记录";
+      } else {
+        records.forEach((record) => {
+          const row = document.createElement("div");
+          row.className = "row";
+          const startTime = record.start_time || "--:--";
+          const endTime = record.end_time || "--:--";
+          const displayDate = record.display_date || formatDisplayDate(record.date);
+          const remarkText = record.remark || "";
+
+          const dateEl = document.createElement("div");
+          dateEl.style.fontSize = "22px";
+          dateEl.style.fontWeight = "900";
+          dateEl.style.color = "#1f2937";
+          dateEl.textContent = displayDate;
+
+          const timeEl = document.createElement("div");
+          timeEl.style.textAlign = "center";
+          const startSpan = document.createElement("span");
+          startSpan.className = "worktime";
+          startSpan.textContent = startTime;
+          const sepSpan = document.createElement("span");
+          sepSpan.className = "sep";
+          sepSpan.textContent = "•";
+          const endSpan = document.createElement("span");
+          endSpan.className = "worktime";
+          endSpan.textContent = endTime;
+          timeEl.appendChild(startSpan);
+          timeEl.appendChild(sepSpan);
+          timeEl.appendChild(endSpan);
+
+          const remarkEl = document.createElement("div");
+          remarkEl.style.textAlign = "center";
+          remarkEl.style.color = "#64748b";
+          remarkEl.textContent = remarkText || "-";
+
+          const button = document.createElement("button");
+          button.className = "btn";
+          button.type = "button";
+          button.textContent = "修改";
+          button.dataset.iso = record.date || "";
+          button.dataset.date = displayDate;
+          button.dataset.start = startTime;
+          button.dataset.end = endTime;
+          button.dataset.remark = remarkText;
+          button.dataset.originalStart = startTime;
+          button.dataset.originalEnd = endTime;
+
+          row.appendChild(dateEl);
+          row.appendChild(timeEl);
+          row.appendChild(remarkEl);
+          row.appendChild(button);
+          table.appendChild(row);
+        });
+        setTemplatesVisible(details, true);
+        if (placeholder) placeholder.textContent = "";
+      }
+
+      const monthLabel = details.querySelector("[data-month-label]");
+      if (monthLabel) {
+        monthLabel.textContent = formatMonthLabel(monthKey, data ? data.month : "");
+      }
+    }
+
+    function loadAccordion(details) {
+      if (!details) {
+        return;
+      }
+      const url = details.dataset.url;
+      const placeholder = details.querySelector(".lazy-placeholder");
+      const month = details.dataset.month || "current";
+      const dateParam = resolveMonthDateParam(month);
+
+      if (!url) {
+        if (placeholder) placeholder.textContent = "未配置接口";
+        return;
+      }
+
+      if (details.dataset.loadedMonth === month) {
+        return;
+      }
+
+      setTemplatesVisible(details, false);
+      if (placeholder) placeholder.textContent = "加载中...";
+      const query = url.includes("?") ? "&" : "?";
+      fetch(`${url}${query}month=${month}&date=${dateParam}`, { credentials: "same-origin" })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("bad response");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          const rendererName = details.dataset.renderer;
+          if (rendererName && typeof window[rendererName] === "function") {
+            window[rendererName](data, details, month);
+            if (placeholder) placeholder.textContent = "";
+          } else {
+            setTemplatesVisible(details, true);
+            if (placeholder) {
+              placeholder.textContent = month === "current" ? "已加载当月（示例数据）" : "已加载上月（示例数据）";
+            }
+          }
+          details.dataset.loadedMonth = month;
+        })
+        .catch(() => {
+          setTemplatesVisible(details, false);
+          if (placeholder) placeholder.textContent = "加载失败，请稍后重试";
+        });
+    }
+
+    document.addEventListener(
+      "toggle",
+      (event) => {
+        const details = event.target;
+        if (details.tagName === "DETAILS" && details.open) {
+          loadAccordion(details);
+        }
+      },
+      true
+    );
+
+    document.addEventListener("click", (event) => {
+      const button = event.target.closest(".month-btn");
+      if (!button) return;
+      const details = button.closest("details");
+      if (!details) return;
+      details.dataset.month = button.dataset.month;
+      details.querySelectorAll(".month-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn === button);
+      });
+      if (details.open) {
+        loadAccordion(details);
+      }
+    });
+
+    function updateTodayRecord() {
+      fetch("/api/attendance/record/today", { credentials: "same-origin" })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("record fetch failed");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          const startEl = document.getElementById("start-time");
+          const endEl = document.getElementById("end-time");
+          if (startEl) startEl.textContent = data.start_time ? data.start_time.slice(0, 5) : "--:--";
+          if (endEl) endEl.textContent = data.end_time ? data.end_time.slice(0, 5) : "未打卡";
+        })
+        .catch(() => {
+          const startEl = document.getElementById("start-time");
+          const endEl = document.getElementById("end-time");
+          if (startEl) startEl.textContent = "--:--";
+          if (endEl) endEl.textContent = "未打卡";
+        });
+    }
+
+    document.addEventListener("click", (event) => {
+      const punchButton = event.target.closest(".punch-fab");
+      if (!punchButton) return;
+      punchButton.disabled = true;
+      const detailText = document.getElementById("map-detail");
+      const locationText = detailText ? detailText.textContent.trim() : "";
+
+      const punchTimeText = document.getElementById("punch-time");
+      const punchTimeValue = punchTimeText ? punchTimeText.textContent.trim() : "";
+
+      fetch("/api/attendance/punch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          punch_time: punchTimeValue,
+          latitude: lastCoords.lat,
+          longitude: lastCoords.lng,
+          location_text: locationText,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            throw new Error("punch failed");
+          }
+          return res.json();
+        })
+        .then(() => {
+          setStatus("打卡成功", "已记录本次打卡");
+          updateTodayRecord();
+        })
+        .catch(() => {
+          setStatus("打卡失败", "请稍后重试");
+        })
+        .finally(() => {
+          punchButton.disabled = false;
+        });
+    });
+
+    let currentEditRow = null;
+    let toastTimer = null;
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 1600);
+    }
+
+    function openEditDialog(payload) {
+      const dialog = document.getElementById("edit-dialog");
+      if (!dialog) return;
+      const errorEl = document.getElementById("edit-dialog-error");
+      const dateInput = document.getElementById("edit-date");
+      const startInput = document.getElementById("edit-start");
+      const endInput = document.getElementById("edit-end");
+      const remarkInput = document.getElementById("edit-remark");
+      if (dateInput) dateInput.value = payload.date || "";
+      if (startInput) startInput.value = payload.start || "";
+      if (endInput) endInput.value = payload.end || "";
+      if (remarkInput) remarkInput.value = payload.remark || "";
+      dialog.dataset.dateIso = payload.dateIso || "";
+      dialog.dataset.originalStart = payload.originalStart || "";
+      dialog.dataset.originalEnd = payload.originalEnd || "";
+      if (errorEl) errorEl.hidden = true;
+      dialog.classList.add("show");
+      dialog.setAttribute("aria-hidden", "false");
+    }
+
+    function closeEditDialog() {
+      const dialog = document.getElementById("edit-dialog");
+      if (!dialog) return;
+      dialog.classList.remove("show");
+      dialog.setAttribute("aria-hidden", "true");
+    }
+
+    document.addEventListener("click", (event) => {
+      const editButton = event.target.closest(".row .btn");
+      if (!editButton) return;
+      const payload = {
+        date: editButton.dataset.date || "",
+        dateIso: editButton.dataset.iso || "",
+        start: editButton.dataset.start || "",
+        end: editButton.dataset.end || "",
+        remark: editButton.dataset.remark || "",
+        originalStart: editButton.dataset.originalStart || editButton.dataset.start || "",
+        originalEnd: editButton.dataset.originalEnd || editButton.dataset.end || "",
+      };
+      currentEditRow = editButton.closest(".row");
+      openEditDialog(payload);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (event.target.id === "edit-dialog" || event.target.id === "edit-dialog-close" || event.target.id === "edit-dialog-cancel") {
+        closeEditDialog();
+      }
+    });
+
+    document.getElementById("edit-dialog-save")?.addEventListener("click", () => {
+      const dialog = document.getElementById("edit-dialog");
+      const errorEl = document.getElementById("edit-dialog-error");
+      const dateIso = dialog?.dataset.dateIso || "";
+      const originalStart = dialog?.dataset.originalStart || "";
+      const originalEnd = dialog?.dataset.originalEnd || "";
+      const startInput = document.getElementById("edit-start");
+      const endInput = document.getElementById("edit-end");
+      const remarkInput = document.getElementById("edit-remark");
+      const remarkValue = remarkInput ? remarkInput.value.trim() : "";
+
+      if (!remarkValue) {
+        if (errorEl) {
+          errorEl.textContent = "备注必填";
+          errorEl.hidden = false;
+        }
+        return;
+      }
+      if (!dateIso) {
+        if (errorEl) {
+          errorEl.textContent = "缺少日期，无法保存";
+          errorEl.hidden = false;
+        }
+        return;
+      }
+
+      if (errorEl) errorEl.hidden = true;
+
+      fetch("/api/attendance/record/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          date: dateIso,
+          start_time: startInput ? startInput.value : "",
+          end_time: endInput ? endInput.value : "",
+          original_start_time: originalStart,
+          original_end_time: originalEnd,
+          remark: remarkValue,
+        }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            return res.json().then((data) => {
+              throw new Error(data && data.error ? data.error : "保存失败");
+            });
+          }
+          return res.json();
+        })
+        .then((data) => {
+          if (currentEditRow && data && data.record) {
+            const record = data.record;
+            const times = currentEditRow.querySelectorAll(".worktime");
+            if (times[0]) times[0].textContent = record.start_time || "--:--";
+            if (times[1]) times[1].textContent = record.end_time || "--:--";
+            const remarkCell = currentEditRow.querySelector("div:nth-child(3)");
+            if (remarkCell) {
+              remarkCell.textContent = record.remark ? record.remark : "-";
+              remarkCell.style.color = record.remark ? "#0f172a" : "#64748b";
+            }
+            const editBtn = currentEditRow.querySelector(".btn");
+            if (editBtn) {
+              editBtn.dataset.iso = record.date || dateIso;
+              editBtn.dataset.start = record.start_time || "";
+              editBtn.dataset.end = record.end_time || "";
+              editBtn.dataset.remark = record.remark || "";
+              editBtn.dataset.originalStart = record.start_time || "";
+              editBtn.dataset.originalEnd = record.end_time || "";
+            }
+          }
+          showToast("保存成功");
+          closeEditDialog();
+        })
+        .catch((err) => {
+          if (errorEl) {
+            errorEl.textContent = err.message || "保存失败";
+            errorEl.hidden = false;
+          }
+          showToast("保存失败");
+        });
+    });
+
+    function pad2(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function updatePunchTime() {
+      const now = new Date();
+      const timeText = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+      const el = document.getElementById("punch-time");
+      if (el) el.textContent = timeText;
+    }
+
+    function updateTodayDate() {
+      const now = new Date();
+      const dateText = `${now.getMonth() + 1}月${now.getDate()}日`;
+      const el = document.getElementById("today-date");
+      if (el) el.textContent = dateText;
+    }
+
+    updatePunchTime();
+    updateTodayDate();
+    setInterval(updatePunchTime, 1000);
+    updateTodayRecord();
+  </script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    initMap();
+  </script>
 </body>
 </html>

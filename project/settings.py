@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "bpmatch",
     "employee",
     "corsheaders",
+    "attendance",
 ]
 
 MIDDLEWARE = [

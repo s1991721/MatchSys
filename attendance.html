@@ -245,45 +245,7 @@
     </div>
 </div>
 <script>
-    const attendanceData = [
-        {
-            name: "宋欣",
-            month: "2024-04",
-            attendanceDays: 20,
-            absenceDays: 2,
-            annualLeave: 5,
-            status: "normal",
-            details: [
-                { date: "2024-04-01", day: "周一", clockIn: "09:02", clockOut: "18:12", note: "正常" },
-                { date: "2024-04-02", day: "周二", clockIn: "09:05", clockOut: "18:05", note: "晚到" },
-                { date: "2024-04-03", day: "周三", clockIn: "08:52", clockOut: "17:59", note: "正常" }
-            ]
-        },
-        {
-            name: "丘安健",
-            month: "2024-04",
-            attendanceDays: 18,
-            absenceDays: 4,
-            annualLeave: 3,
-            status: "alert",
-            details: [
-                { date: "2024-04-01", day: "周一", clockIn: "09:20", clockOut: "18:30", note: "晚到" },
-                { date: "2024-04-05", day: "周五", clockIn: "09:00", clockOut: "18:10", note: "正常" }
-            ]
-        },
-        {
-            name: "邱仁",
-            month: "2024-04",
-            attendanceDays: 15,
-            absenceDays: 5,
-            annualLeave: 0,
-            status: "warning",
-            details: [
-                { date: "2024-04-03", day: "周三", clockIn: "09:40", clockOut: "18:50", note: "晚到" },
-                { date: "2024-04-04", day: "周四", clockIn: "请假", clockOut: "请假", note: "年休" }
-            ]
-        }
-    ];
+    let attendanceData = [];
 
     const statusMap = {
         normal: { label: "正常", className: "status-normal" },
@@ -299,35 +261,27 @@
     const resetBtn = document.getElementById("filter-reset");
     const filters = { name: "", month: "" };
 
-    function applyFilters(data) {
-        return data.filter(item => {
-            const matchName = filters.name ? item.name === filters.name : true;
-            const matchMonth = filters.month ? item.month === filters.month : true;
-            return matchName && matchMonth;
-        });
-    }
-
     function renderSummary() {
         summaryBody.innerHTML = "";
-        const filtered = applyFilters(attendanceData);
 
-        if (!filtered.length) {
+        if (!attendanceData.length) {
             noData.style.display = "block";
             return;
         }
 
         noData.style.display = "none";
 
-        filtered.forEach((person, index) => {
+        attendanceData.forEach((person, index) => {
             const summaryRow = document.createElement("tr");
             summaryRow.className = "summary-row";
             summaryRow.dataset.index = index;
+            summaryRow.dataset.employeeId = person.employee_id;
             summaryRow.innerHTML = `
                 <td>${person.name}</td>
                 <td>${person.month}</td>
-                <td>${person.attendanceDays}</td>
-                <td>${person.absenceDays}</td>
-                <td>${person.annualLeave}</td>
+                <td>${person.attendance_days}</td>
+                <td>${person.absence_days}</td>
+                <td>${person.annual_leave}</td>
                 <td>
                     <span class="status-badge ${statusMap[person.status]?.className || ""}">
                         ${statusMap[person.status]?.label || "未知"}
@@ -342,7 +296,7 @@
                 <td colspan="6">
                     <div class="detail-wrapper">
                         <div class="detail-header">${person.name} 的每日考勤</div>
-                        ${renderDetailTable(person.details)}
+                        ${renderDetailTable([])}
                     </div>
                 </td>
             `;
@@ -364,8 +318,8 @@
                 <tr>
                     <td>${item.date}</td>
                     <td>${item.day}</td>
-                    <td>${item.clockIn}</td>
-                    <td>${item.clockOut}</td>
+                    <td>${item.clock_in}</td>
+                    <td>${item.clock_out}</td>
                     <td>${item.note || "-"}</td>
                 </tr>
             `
@@ -387,7 +341,7 @@
         `;
     }
 
-    function handleRowToggle(event) {
+    async function handleRowToggle(event) {
         const row = event.currentTarget;
         const index = row.dataset.index;
         const detailRow = row.nextElementSibling;
@@ -399,6 +353,52 @@
         if (!isActive) {
             row.classList.add("active");
             detailRow.style.display = "table-row";
+            await loadDetail(row.dataset.employeeId, detailRow, index);
+        }
+    }
+
+    async function loadDetail(employeeId, detailRow, index) {
+        const params = new URLSearchParams();
+        if (filters.month) {
+            params.set("month", filters.month);
+        }
+
+        const url = params.toString()
+            ? `/api/attendance/${employeeId}/detail?${params.toString()}`
+            : `/api/attendance/${employeeId}/detail`;
+
+        const wrapper = detailRow.querySelector(".detail-wrapper");
+        if (!wrapper) {
+            return;
+        }
+
+        wrapper.innerHTML = `
+            <div class="detail-header">加载中...</div>
+            <div class="no-data">正在获取考勤明细</div>
+        `;
+
+        try {
+            const response = await fetch(url, { credentials: "same-origin" });
+            const data = await response.json();
+            if (!response.ok) {
+                wrapper.innerHTML = `
+                    <div class="detail-header">明细加载失败</div>
+                    <div class="no-data">${data.error || "请稍后重试"}</div>
+                `;
+                return;
+            }
+
+            const name = data.employee?.name || attendanceData[index]?.name || "";
+            const details = data.details || [];
+            wrapper.innerHTML = `
+                <div class="detail-header">${name} 的每日考勤</div>
+                ${renderDetailTable(details)}
+            `;
+        } catch (error) {
+            wrapper.innerHTML = `
+                <div class="detail-header">明细加载失败</div>
+                <div class="no-data">请稍后重试</div>
+            `;
         }
     }
 
@@ -411,18 +411,67 @@
     function handleFilterApply() {
         filters.name = nameFilter.value;
         filters.month = monthFilter.value;
-        renderSummary();
+        loadAttendance();
     }
 
     function resetFilters() {
         filters.name = "";
-        filters.month = "";
+        filters.month = getCurrentMonth();
         nameFilter.value = "";
-        monthFilter.value = "";
-        renderSummary();
+        monthFilter.value = filters.month;
+        loadAttendance();
     }
 
-    renderSummary();
+    function getCurrentMonth() {
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        return `${today.getFullYear()}-${month}`;
+    }
+
+    function setNoData(message) {
+        noData.textContent = message || "暂无考勤数据";
+        noData.style.display = "block";
+    }
+
+    async function loadAttendance() {
+        const params = new URLSearchParams();
+        if (filters.name) {
+            params.set("name", filters.name);
+        }
+        if (filters.month) {
+            params.set("month", filters.month);
+        }
+
+        const url = params.toString()
+            ? `/api/attendance/summary?${params.toString()}`
+            : "/api/attendance/summary";
+
+        summaryBody.innerHTML = "";
+        setNoData("正在加载考勤数据...");
+
+        try {
+            const response = await fetch(url, { credentials: "same-origin" });
+            const data = await response.json();
+            if (!response.ok) {
+                attendanceData = [];
+                setNoData(data.error || "加载考勤数据失败");
+                return;
+            }
+
+            attendanceData = data.employees || [];
+            if (!filters.month && data.month) {
+                monthFilter.value = data.month;
+            }
+            renderSummary();
+        } catch (error) {
+            attendanceData = [];
+            setNoData("加载考勤数据失败");
+        }
+    }
+
+    filters.month = getCurrentMonth();
+    monthFilter.value = filters.month;
+    loadAttendance();
 
     applyBtn.addEventListener("click", handleFilterApply);
     resetBtn.addEventListener("click", resetFilters);

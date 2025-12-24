@@ -28,6 +28,15 @@ from bpmatch.views import (
     send_mail,
     send_history,
 )
+from attendance.views import (
+    attendance_punch_api,
+    attendance_record_edit_api,
+    attendance_record_today_api,
+    attendance_detail_api,
+    attendance_summary_api,
+    my_attendance_summary_api,
+    my_attendance_detail_api,
+)
 from employee.views import (
     change_password_api,
     employee_detail_api,
@@ -46,6 +55,7 @@ urlpatterns = [
     path("index.html", TemplateView.as_view(template_name="index.html")),
     path("home.html", TemplateView.as_view(template_name="home.html")),
     path("attendance.html", TemplateView.as_view(template_name="attendance.html")),
+    path("myattendance.html", TemplateView.as_view(template_name="myattendance.html")),
     path("match.html", TemplateView.as_view(template_name="match.html")),
     path("people.html", TemplateView.as_view(template_name="people.html")),
     path("personnel.html", TemplateView.as_view(template_name="personnel.html")),
@@ -64,6 +74,13 @@ urlpatterns = [
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),
     path("api/ss/<path:path>", technician_ss_download, name="technician-ss-download"),
+    path("api/attendance/punch", attendance_punch_api, name="attendance-punch"),
+    path("api/attendance/record/edit", attendance_record_edit_api, name="attendance-record-edit"),
+    path("api/attendance/record/today", attendance_record_today_api, name="attendance-record-today"),
+    path("api/attendance/summary", attendance_summary_api, name="attendance-summary"),
+    path("api/attendance/<int:employee_id>/detail", attendance_detail_api, name="attendance-detail"),
+    path("api/my-attendance-summary", my_attendance_summary_api, name="my-attendance-summary"),
+    path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),
     path("messages", messages),
     path("persons", persons),
     path("job-click", log_job_click),

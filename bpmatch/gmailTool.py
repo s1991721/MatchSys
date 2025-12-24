@@ -172,6 +172,8 @@ class GmailTool:
         from_ = get_header("From")
         to = get_header("To")
         date_header = get_header("Date")
+        message_id_header = get_header("Message-ID")
+        references_header = get_header("References")
         internal_ts_ms = msg.get("internalDate")  # 接收时间（毫秒）
         received_headers = get_header_list("Received")
 
@@ -188,6 +190,9 @@ class GmailTool:
             "to": to,
             "date": iso_ts or date_header or "",  # 前端显示使用 ISO，缺失则原始
             "date_header": date_header,
+            "thread_id": msg.get("threadId"),
+            "message_id_header": message_id_header,
+            "references_header": references_header,
             "internal_ts": ts_float,
             "body": body_text,
         }
@@ -270,10 +275,14 @@ class GmailTool:
         sender: str = None,
         cc: str = None,
         attachments: Optional[List[dict]] = None,
+        thread_id: Optional[str] = None,
+        in_reply_to: Optional[str] = None,
+        references: Optional[str] = None,
     ):
         """
-        通过 Gmail API 发送邮件，支持抄送和附件。
+        通过 Gmail API 发送邮件，支持抄送、附件和回复现有线程。
         attachments: List[{"filename": str, "content_type": str, "content": bytes}]
+        thread_id/in_reply_to/references 用于保持 Gmail 会话上下文。
         """
         service = self.service
         message = EmailMessage()
@@ -285,6 +294,13 @@ class GmailTool:
         if cc:
             message["Cc"] = cc
         message["Subject"] = subject
+        if in_reply_to:
+            message["In-Reply-To"] = in_reply_to
+        ref_to_use = references or ""
+        if not ref_to_use and in_reply_to:
+            ref_to_use = in_reply_to
+        if ref_to_use:
+            message["References"] = ref_to_use
 
         # 附件处理
         for att in attachments or []:
@@ -304,6 +320,8 @@ class GmailTool:
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
         send_body = {"raw": encoded_message}
+        if thread_id:
+            send_body["threadId"] = thread_id
 
         sent = service.users().messages().send(userId="me", body=send_body).execute()
 

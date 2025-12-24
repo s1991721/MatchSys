@@ -434,15 +434,30 @@
             const attachments = [];
             const selectionKey = 'matchSelection';
             let loadingTimer = null;
+            let currentSelection = null;
 
             const readSelection = () => {
                 const raw = localStorage.getItem(selectionKey);
-                if (!raw) return null;
-                try {
-                    return JSON.parse(raw);
-                } catch {
+                if (!raw) {
+                    currentSelection = null;
                     return null;
                 }
+                try {
+                    currentSelection = JSON.parse(raw);
+                } catch {
+                    currentSelection = null;
+                }
+                return currentSelection;
+            };
+
+            const extractEmail = (raw) => {
+                if (!raw) return '';
+                const bracketMatch = raw.match(/<([^>]+)>/);
+                if (bracketMatch && bracketMatch[1]) {
+                    return bracketMatch[1].trim();
+                }
+                const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+                return emailMatch ? emailMatch[0].trim() : '';
             };
 
             const applySelectionFromMatch = () => {
@@ -474,13 +489,20 @@
                     editor.value = combined;
                 }
 
-                // 默认主题优先使用求人标题，其次人员姓名，再其次取正文首行
-                if (job.title) {
-                    subjectInput.value = job.title;
-                } else if (person.name) {
-                    subjectInput.value = `${person.name} - 应聘`;
+                const personSubject = person.subject || person.title || person.name || '';
+                if (personSubject) {
+                    subjectInput.value = personSubject.startsWith('Re:')
+                        ? personSubject
+                        : `Re: ${personSubject}`;
                 } else {
                     subjectInput.value = deriveSubject(combined);
+                }
+
+                if (!email.value) {
+                    const replyTo = extractEmail(person.belong || person.from || '');
+                    if (replyTo) {
+                        email.value = replyTo;
+                    }
                 }
 
                 return job.detail || job.desc || jobLines || '';
@@ -524,15 +546,19 @@
                         throw new Error(`HTTP ${res.status}`);
                     }
                     const data = await res.json();
-                    const formatted =
-                        data.data
-                            ? JSON.stringify(data.data, null, 2)
-                            : (typeof data.raw === 'string' ? data.raw : '');
-                    const content = [
-                        '【解析结果】',
-                        formatted || '暂无结果'
-                    ].join('\n');
-                    editor.value = content;
+                    const message = typeof data.message === 'string' ? data.message.trim() : '';
+                    let formatted = message;
+                    if (!formatted) {
+                        if (data.data) {
+                            formatted = JSON.stringify(data.data, null, 2);
+                        } else if (typeof data.raw === 'string') {
+                            formatted = data.raw;
+                        } else {
+                            formatted = '';
+                        }
+                    }
+                    const normalized = normalizeMultiline(formatted);
+                    editor.value = normalized || '解析结果暂不可用';
                     renderPreview();
                 } catch (err) {
                     console.error('调用 extract_qiuren_detail 失败', err);
@@ -560,6 +586,19 @@
                 reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
                 reader.readAsDataURL(file);
             });
+
+            const normalizeMultiline = (text) => {
+                if (typeof text !== 'string') return '';
+                let clean = text
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\\n/g, '\n')
+                    .replace(/\t/g, '    ');
+                const trimmed = clean.trim();
+                if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                    clean = trimmed.slice(1, -1);
+                }
+                return clean;
+            };
 
             const deriveSubject = (text) => {
                 const firstLine = (text || '').split('\n').map(t => t.trim()).find(Boolean);
@@ -644,6 +683,9 @@
                     return;
                 }
 
+                const selection = currentSelection || readSelection();
+                const personMeta = selection?.person || null;
+
                 setLoading(true, { title: '正在发送邮件…', subtitle: '正在上传附件并发送，请稍候。' });
                 try {
                     const attachmentsPayload = await Promise.all(
@@ -663,6 +705,17 @@
                         body: content,
                         attachments: attachmentsPayload
                     };
+                    if (personMeta) {
+                        if (personMeta.thread_id) {
+                            payload.thread_id = personMeta.thread_id;
+                        }
+                        if (personMeta.message_id_header) {
+                            payload.in_reply_to = personMeta.message_id_header;
+                        }
+                        if (personMeta.references_header) {
+                            payload.references = personMeta.references_header;
+                        }
+                    }
 
                     const res = await fetch(`${API_BASE}/send-mail`, {
                         method: 'POST',

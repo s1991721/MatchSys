@@ -155,6 +155,9 @@ def fetch_page_emails(
                     "detail": m.get("body") or "",
                     "date": m.get("date") or "",
                     "type": "0",
+                    "thread_id": m.get("thread_id") or "",
+                    "message_id_header": m.get("message_id_header") or "",
+                    "references_header": m.get("references_header") or "",
                 }
             )
 

@@ -733,9 +733,11 @@
         items.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'item' + (index === 0 ? ' active' : '');
-            li.dataset.detail = item.detail || item.body || item.desc || '';
+            const detail = item.detail || item.body || item.desc || '';
+            li.dataset.detail = detail;
             li.dataset.id = item.id || '';
             li.dataset.matchedSkills = JSON.stringify(item.matched_skills || []);
+            li.dataset.item = JSON.stringify({ ...item, detail });
 
             const header = document.createElement('div');
             header.className = 'person-header';
@@ -1030,21 +1032,45 @@
                 return;
             }
 
+            const parseDatasetJSON = (el, key) => {
+                if (!el || !el.dataset) return null;
+                const raw = el.dataset[key];
+                if (!raw) return null;
+                try {
+                    return JSON.parse(raw);
+                } catch {
+                    return null;
+                }
+            };
+
+            const jobData = parseDatasetJSON(activeJob, 'item') || {};
+            const personData = parseDatasetJSON(activePerson, 'item') || {};
+
+            const jobPayload = {
+                id: jobData.id || activeJob.dataset.id || '',
+                title: jobData.title || jobData.subject || activeJob.querySelector('.item-title')?.textContent.trim() || '',
+                desc: jobData.desc || jobData.from || activeJob.querySelector('.item-desc')?.textContent.trim() || '',
+                detail: jobData.detail || jobData.body || activeJob.dataset.detail || '',
+                time: jobData.date || jobData.time || activeJob.querySelector('.item-time')?.textContent.trim() || '',
+                thread_id: jobData.thread_id || '',
+                message_id_header: jobData.message_id_header || '',
+                references_header: jobData.references_header || ''
+            };
+
+            const personPayload = {
+                id: personData.id || activePerson.dataset.id || '',
+                name: personData.name || personData.title || activePerson.querySelector('.person-name')?.textContent.trim() || '',
+                belong: personData.belong || personData.from || activePerson.querySelector('.person-belong')?.textContent.trim() || '',
+                detail: personData.detail || personData.body || activePerson.dataset.detail || '',
+                time: personData.date || personData.time || activePerson.querySelector('.person-time')?.textContent.trim() || '',
+                thread_id: personData.thread_id || '',
+                message_id_header: personData.message_id_header || '',
+                references_header: personData.references_header || ''
+            };
+
             const payload = {
-                job: {
-                    id: activeJob.dataset.id || '',
-                    title: activeJob.querySelector('.item-title')?.textContent.trim() || '',
-                    desc: activeJob.querySelector('.item-desc')?.textContent.trim() || '',
-                    detail: activeJob.dataset.detail || '',
-                    time: activeJob.querySelector('.item-time')?.textContent.trim() || ''
-                },
-                person: {
-                    id: activePerson.dataset.id || '',
-                    name: activePerson.querySelector('.person-name')?.textContent.trim() || '',
-                    belong: activePerson.querySelector('.person-belong')?.textContent.trim() || '',
-                    detail: activePerson.dataset.detail || '',
-                    time: activePerson.querySelector('.person-time')?.textContent.trim() || ''
-                },
+                job: jobPayload,
+                person: personPayload,
                 updatedAt: Date.now()
             };
 

@@ -6,11 +6,7 @@ project/__pycache__/urls.cpython-313.pyc
 project/__pycache__/settings.cpython-313.pyc
 project/__pycache__/urls.cpython-313.pyc
 project/__pycache__/settings.cpython-313.pyc
-.DS_Store
-.DS_Store
 project/__pycache__/settings.cpython-313.pyc
-.idea/project.iml
-.DS_Store
 credentials.json
 token.json
 project/__pycache__/**
@@ -18,3 +14,13 @@ bpmatch/__pycache__/llmsTool.cpython-313.pyc
 bpmatch/__pycache__/bpmatch.cpython-313.pyc
 bpmatch/__pycache__/views.cpython-313.pyc
 /bpmatch/migrations/**
+
+# PyCharm
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store

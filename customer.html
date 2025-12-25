@@ -25,9 +25,9 @@
       background: var(--bg);
     }
     .page {
-      max-width: 1240px;
-      margin: 24px auto 60px;
-      padding: 0 20px;
+      max-width: 100%;
+      margin: 18px auto 50px;
+      padding: 0 12px;
     }
     .panel {
       background: var(--card);
@@ -173,12 +173,17 @@
     }
     th, td {
       padding: 16px 14px;
-      text-align: left;
+      text-align: center;
       border-bottom: 1px solid #eef2fa;
       vertical-align: middle;
     }
     tbody tr:hover {
       background: #f7faff;
+    }
+    .empty {
+      text-align: center;
+      padding: 28px 0;
+      color: var(--muted);
     }
     .status {
       display: inline-flex;
@@ -190,31 +195,135 @@
       background: #e6f6ec;
       color: #2f9e64;
     }
-    .actions-td {
+    .row-actions {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
-    .tag-btn {
-      border-radius: 10px;
-      padding: 7px 12px;
-      border: 1px solid #dbe6ff;
-      background: #edf3ff;
-      color: #2a6dff;
-      font-weight: 600;
-      font-size: 13px;
+    .row-actions button {
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      border: none;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
     }
-    .tag-btn.edit {
-      background: #e7f2ff;
+    .btn-secondary {
+      background: #eef2ff;
       color: #1c7bff;
     }
-    .tag-btn.del {
-      background: #ffefef;
-      border-color: #ffd6d6;
-      color: #ef5757;
+    .btn-primary {
+      background: #1c7bff;
+      color: #fff;
+      box-shadow: 0 12px 20px rgba(28, 123, 255, 0.25);
+    }
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      color: #fff;
+      background: #1c7bff;
+      box-shadow: 0 12px 20px rgba(28, 123, 255, 0.28);
+    }
+    dialog {
+      border: none;
+      border-radius: 16px;
+      padding: 0;
+      width: min(720px, 95%);
+      box-shadow: 0 30px 50px rgba(15, 23, 42, 0.2);
+    }
+    dialog::backdrop {
+      background: rgba(15, 23, 42, 0.45);
+    }
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px 0;
+    }
+    .dialog-header h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .dialog-close {
+      background: transparent;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+    .dialog-body {
+      padding: 0 24px 10px;
+    }
+    .dialog-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 16px;
+    }
+    .dialog-group {
+      grid-column: 1 / -1;
+      border: 1px solid #eef2fa;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fbfcff;
+    }
+    .dialog-group-title {
+      font-size: 13px;
+      color: #4b5a72;
+      font-weight: 600;
+      margin: 0 0 10px;
+    }
+    .dialog-group .group-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 16px;
+    }
+    .dialog-grid label {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      color: var(--muted);
+      gap: 6px;
+    }
+    .dialog-grid input,
+    .dialog-grid textarea {
+      font: inherit;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #f9fafc;
+    }
+    .dialog-grid textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+    .file-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .dialog-actions {
+      padding: 12px 24px 22px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      border-top: 1px solid var(--line);
+      background: #f8f9fb;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+    .dialog-actions button {
+      min-width: 120px;
+      padding: 10px 18px;
+      border-radius: 12px;
     }
     .pager {
       display: flex;
@@ -265,133 +374,55 @@
 <body>
   <div class="page">
     <section class="panel">
-      <div class="panel-header">
-        <span class="panel-icon">□</span>
-        <h1 class="panel-title">客户管理</h1>
-      </div>
       <div class="filters">
         <div class="filter-grid">
           <div class="field">
             <label>公司名称
-              <input type="text" value="AA 公司" />
+              <input id="filter-company" type="text" placeholder="请输入公司名称" />
             </label>
           </div>
           <div class="field">
             <label>负责人
-              <input type="text" list="employee-names" placeholder="请输入负责人" />
+              <input id="filter-owner" type="text" list="employee-names" placeholder="请输入负责人" />
             </label>
             <datalist id="employee-names"></datalist>
           </div>
         </div>
         <div class="filter-actions">
-          <div class="filter-actions-left"></div>
+          <div class="filter-actions-left">
+            <button class="btn-add" id="btn-add" type="button">+ 新增客户</button>
+          </div>
           <div class="filter-actions-right">
-            <button class="btn-search" type="button">
+            <button class="btn-search" id="btn-search" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="7"></circle>
                 <path d="M20 20l-3.5-3.5"></path>
               </svg>
               搜索
             </button>
-            <button class="btn-reset" type="button">重置</button>
+            <button class="btn-reset" id="btn-reset" type="button">重置</button>
           </div>
         </div>
       </div>
       <div class="table-area">
-        <div class="table-info">共 1 条 当前显示第 1 页</div>
+        <div class="table-info">共 0 条 当前显示第 1 页</div>
         <div class="table-card">
           <table>
             <thead>
               <tr>
                 <th>公司名称</th>
                 <th>公司地址</th>
-                <th>合同备注</th>
+                <th>备注</th>
                 <th>联系人</th>
                 <th>职位</th>
                 <th>邮箱</th>
                 <th>电话</th>
                 <th>负责人</th>
                 <th>创建时间</th>
-                <th>合同状态</th>
                 <th>操作</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>AA 公司</td>
-                <td>中国北京市</td>
-                <td>签订三年的合同</td>
-                <td>张三</td>
-                <td>经理</td>
-                <td>zhangsan@example.com</td>
-                <td>13812345678</td>
-                <td>李四</td>
-                <td>2024-04-01 10:00</td>
-                <td><span class="status">有效合同</span></td>
-                <td>
-                  <div class="actions-td">
-                    <button class="tag-btn">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      预览
-                    </button>
-                    <button class="tag-btn edit">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 17.25V21h3.75L19.81 7.94l-3.75-3.75L3 17.25z"></path>
-                      </svg>
-                      编辑
-                    </button>
-                    <button class="tag-btn del">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M8 6V4h8v2"></path>
-                        <path d="M6 6l1 14h10l1-14"></path>
-                      </svg>
-                      删除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>BB 公司</td>
-                <td>中国 北京</td>
-                <td>年度合作合同</td>
-                <td>王五</td>
-                <td>总监</td>
-                <td>wangwu@example.com</td>
-                <td>13912345678</td>
-                <td>李四</td>
-                <td>2024-04-05 09:30</td>
-                <td><span class="status">有效合同</span></td>
-                <td>
-                  <div class="actions-td">
-                    <button class="tag-btn">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      预览
-                    </button>
-                    <button class="tag-btn edit">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 17.25V21h3.75L19.81 7.94l-3.75-3.75L3 17.25z"></path>
-                      </svg>
-                      编辑
-                    </button>
-                    <button class="tag-btn del">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M8 6V4h8v2"></path>
-                        <path d="M6 6l1 14h10l1-14"></path>
-                      </svg>
-                      删除
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
+            <tbody id="customer-body"></tbody>
           </table>
           <div class="pager">
             <button class="page-btn">‹</button>
@@ -407,13 +438,213 @@
       </div>
     </section>
   </div>
+  <dialog id="edit-dialog">
+    <div class="dialog-header">
+      <h3 id="dialog-title">编辑客户</h3>
+      <button class="dialog-close" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="dialog-body">
+      <div class="dialog-grid">
+        <label>公司名称
+          <input id="edit-company" type="text" />
+        </label>
+        <label>公司地址
+          <input id="edit-address" type="text" />
+        </label>
+        <label>契约
+          <input id="edit-contract" type="file" />
+          <span class="file-hint" id="contract-hint">未上传</span>
+        </label>
+        <label>备注
+          <textarea id="edit-remark"></textarea>
+        </label>
+        <label>负责人
+          <input id="edit-owner" type="text" list="employee-names" />
+        </label>
+        <div class="dialog-group">
+          <p class="dialog-group-title">联系人1</p>
+          <div class="group-grid">
+            <label>联系人1姓名
+              <input id="edit-contact1-name" type="text" />
+            </label>
+            <label>联系人1职位
+              <input id="edit-contact1-position" type="text" />
+            </label>
+            <label>联系人1电话
+              <input id="edit-contact1-phone" type="text" />
+            </label>
+            <label>联系人1邮箱
+              <input id="edit-contact1-email" type="email" />
+            </label>
+          </div>
+        </div>
+        <div class="dialog-group">
+          <p class="dialog-group-title">联系人2</p>
+          <div class="group-grid">
+            <label>联系人2姓名
+              <input id="edit-contact2-name" type="text" />
+            </label>
+            <label>联系人2职位
+              <input id="edit-contact2-position" type="text" />
+            </label>
+            <label>联系人2电话
+              <input id="edit-contact2-phone" type="text" />
+            </label>
+            <label>联系人2邮箱
+              <input id="edit-contact2-email" type="email" />
+            </label>
+          </div>
+        </div>
+        <div class="dialog-group">
+          <p class="dialog-group-title">联系人3</p>
+          <div class="group-grid">
+            <label>联系人3姓名
+              <input id="edit-contact3-name" type="text" />
+            </label>
+            <label>联系人3职位
+              <input id="edit-contact3-position" type="text" />
+            </label>
+            <label>联系人3电话
+              <input id="edit-contact3-phone" type="text" />
+            </label>
+            <label>联系人3邮箱
+              <input id="edit-contact3-email" type="email" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button class="btn-secondary" type="button" data-dialog-close>取消</button>
+      <button class="btn-primary" id="dialog-save" type="button">保存</button>
+    </div>
+  </dialog>
   <script>
     const nameList = document.getElementById("employee-names");
+    const tableBody = document.getElementById("customer-body");
+    const summaryText = document.querySelector(".table-info");
+    const filterCompany = document.getElementById("filter-company");
+    const filterOwner = document.getElementById("filter-owner");
+    const addButton = document.getElementById("btn-add");
+    const searchButton = document.getElementById("btn-search");
+    const resetButton = document.getElementById("btn-reset");
+    const editDialog = document.getElementById("edit-dialog");
+    const dialogTitle = document.getElementById("dialog-title");
+    const dialogSave = document.getElementById("dialog-save");
+    const contractHint = document.getElementById("contract-hint");
+    const editFields = {
+      company: document.getElementById("edit-company"),
+      address: document.getElementById("edit-address"),
+      contract: document.getElementById("edit-contract"),
+      remark: document.getElementById("edit-remark"),
+      owner: document.getElementById("edit-owner"),
+      contact1Name: document.getElementById("edit-contact1-name"),
+      contact1Position: document.getElementById("edit-contact1-position"),
+      contact1Phone: document.getElementById("edit-contact1-phone"),
+      contact1Email: document.getElementById("edit-contact1-email"),
+      contact2Name: document.getElementById("edit-contact2-name"),
+      contact2Position: document.getElementById("edit-contact2-position"),
+      contact2Phone: document.getElementById("edit-contact2-phone"),
+      contact2Email: document.getElementById("edit-contact2-email"),
+      contact3Name: document.getElementById("edit-contact3-name"),
+      contact3Position: document.getElementById("edit-contact3-position"),
+      contact3Phone: document.getElementById("edit-contact3-phone"),
+      contact3Email: document.getElementById("edit-contact3-email"),
+    };
+
+    let currentEditId = null;
+    let cachedItems = [];
+    let currentContract = "";
 
     const renderNames = (names) => {
       nameList.innerHTML = names
         .map((name) => `<option value="${name}"></option>`)
         .join("");
+    };
+
+    const renderRows = (items, totalCount) => {
+      const count = Number.isFinite(totalCount) ? totalCount : items.length;
+      if (!items.length) {
+        tableBody.innerHTML = `<tr><td colspan="10" class="empty">暂无数据</td></tr>`;
+        summaryText.textContent = `共 ${count} 条 当前显示第 1 页`;
+        return;
+      }
+
+      tableBody.innerHTML = items
+        .map(
+          (item) => `
+            <tr>
+              <td>${item.company_name || "-"}</td>
+              <td>${item.company_address || "-"}</td>
+              <td>${item.remark || "-"}</td>
+              <td>${item.contact1_name || "-"}</td>
+              <td>${item.contact1_position || "-"}</td>
+              <td>${item.contact1_email || "-"}</td>
+              <td>${item.contact1_phone || "-"}</td>
+              <td>${item.person_in_charge || "-"}</td>
+              <td>${item.created_at || "-"}</td>
+              <td>
+                <div class="row-actions">
+                  <button class="btn-secondary edit-btn" type="button" data-id="${item.id}">编辑</button>
+                </div>
+              </td>
+            </tr>
+          `
+        )
+        .join("");
+
+      summaryText.textContent = `共 ${count} 条 当前显示第 1 页`;
+    };
+
+    const fetchCustomers = () => {
+      const params = new URLSearchParams();
+      if (filterCompany.value.trim()) {
+        params.append("company_name", filterCompany.value.trim());
+      }
+      if (filterOwner.value.trim()) {
+        params.append("person_in_charge", filterOwner.value.trim());
+      }
+      const url = `/api/customers${params.toString() ? `?${params.toString()}` : ""}`;
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          cachedItems = Array.isArray(data.items) ? data.items : [];
+          renderRows(cachedItems, data.total);
+        })
+        .catch(() => {
+          cachedItems = [];
+          renderRows([], 0);
+        });
+    };
+
+    const openEditDialog = (item) => {
+      currentEditId = item ? item.id : null;
+      dialogTitle.textContent = item ? "编辑客户" : "新增客户";
+      editFields.company.value = item?.company_name || "";
+      editFields.address.value = item?.company_address || "";
+      editFields.contract.value = "";
+      currentContract = item?.contract || "";
+      contractHint.textContent = currentContract ? `已上传：${currentContract}` : "未上传";
+      editFields.remark.value = item?.remark || "";
+      editFields.owner.value = item?.person_in_charge || "";
+      editFields.contact1Name.value = item?.contact1_name || "";
+      editFields.contact1Position.value = item?.contact1_position || "";
+      editFields.contact1Phone.value = item?.contact1_phone || "";
+      editFields.contact1Email.value = item?.contact1_email || "";
+      editFields.contact2Name.value = item?.contact2_name || "";
+      editFields.contact2Position.value = item?.contact2_position || "";
+      editFields.contact2Phone.value = item?.contact2_phone || "";
+      editFields.contact2Email.value = item?.contact2_email || "";
+      editFields.contact3Name.value = item?.contact3_name || "";
+      editFields.contact3Position.value = item?.contact3_position || "";
+      editFields.contact3Phone.value = item?.contact3_phone || "";
+      editFields.contact3Email.value = item?.contact3_email || "";
+
+      if (typeof editDialog.showModal === "function") {
+        editDialog.showModal();
+      } else {
+        editDialog.setAttribute("open", "true");
+      }
     };
 
     fetch("/api/employees/names")
@@ -426,6 +657,123 @@
       .catch(() => {
         renderNames([]);
       });
+
+    tableBody.addEventListener("click", (event) => {
+      const target = event.target.closest(".edit-btn");
+      if (!target) return;
+      const id = target.dataset.id;
+      const item = cachedItems.find((entry) => String(entry.id) === String(id));
+      if (item) {
+        openEditDialog(item);
+      }
+    });
+
+    addButton.addEventListener("click", () => {
+      openEditDialog(null);
+    });
+
+    searchButton.addEventListener("click", () => {
+      fetchCustomers();
+    });
+
+    resetButton.addEventListener("click", () => {
+      filterCompany.value = "";
+      filterOwner.value = "";
+      fetchCustomers();
+    });
+
+    editFields.contract.addEventListener("change", () => {
+      const file = editFields.contract.files[0];
+      contractHint.textContent = file ? `待上传：${file.name}` : (currentContract ? `已上传：${currentContract}` : "未上传");
+    });
+
+    editDialog.addEventListener("click", (event) => {
+      if (event.target === editDialog) {
+        editDialog.close();
+      }
+    });
+
+    document.querySelectorAll("[data-dialog-close]").forEach((button) => {
+      button.addEventListener("click", () => editDialog.close());
+    });
+
+    const closeBtn = editDialog.querySelector(".dialog-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => editDialog.close());
+    }
+
+    const uploadContract = (customerId, file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      return fetch(`/api/customers/${customerId}/contract`, {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          currentContract = data.path || file.name;
+          contractHint.textContent = `已上传：${currentContract}`;
+          return data;
+        });
+    };
+
+    dialogSave.addEventListener("click", () => {
+      const contractFile = editFields.contract.files[0];
+      const payload = {
+        company_name: editFields.company.value.trim(),
+        company_address: editFields.address.value.trim(),
+        remark: editFields.remark.value.trim(),
+        contact1_name: editFields.contact1Name.value.trim(),
+        contact1_position: editFields.contact1Position.value.trim(),
+        contact1_email: editFields.contact1Email.value.trim(),
+        contact1_phone: editFields.contact1Phone.value.trim(),
+        contact2_name: editFields.contact2Name.value.trim(),
+        contact2_position: editFields.contact2Position.value.trim(),
+        contact2_email: editFields.contact2Email.value.trim(),
+        contact2_phone: editFields.contact2Phone.value.trim(),
+        contact3_name: editFields.contact3Name.value.trim(),
+        contact3_position: editFields.contact3Position.value.trim(),
+        contact3_email: editFields.contact3Email.value.trim(),
+        contact3_phone: editFields.contact3Phone.value.trim(),
+        person_in_charge: editFields.owner.value.trim(),
+      };
+
+      if (!payload.company_name) {
+        alert("请输入公司名称");
+        return;
+      }
+
+      const url = currentEditId ? `/api/customers/${currentEditId}` : "/api/customers";
+      const method = currentEditId ? "PUT" : "POST";
+      fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.error) {
+            throw new Error(data.error);
+          }
+          const savedId = currentEditId || data.item?.id;
+          if (contractFile && savedId) {
+            return uploadContract(savedId, contractFile);
+          }
+          return null;
+        })
+        .then(() => {
+          editDialog.close();
+          fetchCustomers();
+        })
+        .catch((error) => {
+          alert(error.message || "保存失败，请稍后重试");
+        });
+    });
+
+    fetchCustomers();
   </script>
 </body>
 </html>

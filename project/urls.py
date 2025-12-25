@@ -48,7 +48,12 @@ from employee.views import (
     technician_ss_upload,
     technicians_api,
 )
-from customer.views import employee_names_api
+from customer.views import (
+    employee_names_api,
+    customers_api,
+    customer_detail_api,
+    customer_contract_upload,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -68,6 +73,9 @@ urlpatterns = [
     path("songxinhistory.html", TemplateView.as_view(template_name="songxinhistory.html")),
     path("login.html", TemplateView.as_view(template_name="login.html")),
     path("api/employees/names", employee_names_api, name="employee-names"),
+    path("api/customers", customers_api, name="customer-list"),
+    path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),
+    path("api/customers/<int:customer_id>/contract", customer_contract_upload, name="customer-contract-upload"),
     path("api/login", login_api, name="employee-login"),
     path("api/logout", logout_api, name="employee-logout"),
     path("api/change-password", change_password_api, name="employee-change-password"),

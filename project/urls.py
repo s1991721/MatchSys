@@ -64,6 +64,7 @@ urlpatterns = [
     path("qiuren.html", TemplateView.as_view(template_name="qiuren.html")),
     path("songxin.html", TemplateView.as_view(template_name="songxin.html")),
     path("songxinhistory.html", TemplateView.as_view(template_name="songxinhistory.html")),
+    path("permission.html", TemplateView.as_view(template_name="permission.html")),
     path("login.html", TemplateView.as_view(template_name="login.html")),
     path("api/login", login_api, name="employee-login"),
     path("api/logout", logout_api, name="employee-logout"),

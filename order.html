@@ -192,6 +192,10 @@
       min-width:120px;
       flex:1 1 auto;
     }
+    .field > span{
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
     .field.wide{ grid-column: span 1; }
     .field.narrow{ grid-column: span 1; }
     .field .range{
@@ -199,11 +203,10 @@
       align-items:center;
       gap:6px;
     }
-    .field .range input{ min-width:110px; }
 
     table{ width:100%; border-collapse:collapse; font-size:13px; }
     thead th{
-      text-align:left;
+      text-align:center;
       padding:12px 8px;
       color:var(--muted);
       font-weight:600;
@@ -211,10 +214,18 @@
       background: transparent;
     }
     tbody td{
+      text-align:center;
       padding:14px 8px;
       border-bottom:1px solid var(--border);
       font-weight:600;
       color:#2c3d55;
+    }
+    .cell-ellipsis{
+      max-width:220px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin:0 auto;
     }
     tbody tr:hover{ background: rgba(36, 107, 253, 0.08); }
 
@@ -264,6 +275,34 @@
       box-shadow: 0 24px 60px rgba(31, 53, 90, 0.25);
       font-family: inherit;
     }
+    .modal-form{
+      display:grid;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .modal-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    .modal .field{
+      padding:10px 12px;
+      min-height:unset;
+    }
+    .modal .field input,
+    .modal .field select{
+      min-width:0;
+    }
+    .modal input[readonly],
+    .modal input:disabled,
+    .modal select:disabled{
+      background:#f1f5f9;
+      color:#64748b;
+      cursor:not-allowed;
+    }
+    .modal .field.full{
+      grid-column:1 / -1;
+    }
     .modal::backdrop{
       background: rgba(15, 23, 42, 0.4);
     }
@@ -291,6 +330,7 @@
       .switch-wrap{ justify-self:flex-start; }
       .filters-grid{ grid-template-columns: 1fr; }
       .field{ min-height:44px; }
+      .modal-grid{ grid-template-columns: 1fr; }
       table{ display:block; overflow:auto; }
     }
   </style>
@@ -331,17 +371,18 @@
           <div class="field narrow">
             <span>状态</span>
             <select id="statusFilter"
-                    data-issue-options="草稿,承认中,已送付,已受注,已取消"
-                    data-accept-options="已送付,已受注,拒绝">
+                    data-issue-options="承认中,已受注,拒绝,已取消"
+                    data-accept-options="已受注,拒绝,已取消"
+                    data-default-option="全部">
               <option>全部</option>
             </select>
           </div>
           <div class="field wide">
-            <span>契约期间</span>
+            <span>创建期间</span>
             <div class="range">
-              <input type="text" placeholder="From" />
+              <input type="date" />
               <span>~</span>
-              <input type="text" placeholder="To" />
+              <input type="date" />
             </div>
           </div>
         </div>
@@ -358,50 +399,123 @@
 
       <table>
         <thead>
-          <tr>
+          <tr data-order-no="PO-2024-019"
+              data-project="数据平台升级"
+              data-client-issue="富士商事"
+              data-client-accept="富士商事"
+              data-engineer="田中"
+              data-price="¥ 480,000"
+              data-hours="160h"
+              data-start="2024-06-01"
+              data-end="2024-12-31"
+              data-created-at="2024-05-18"
+              data-creator="王敏"
+              data-owner="高桥"
+              data-updated-at="2024-06-05"
+              data-updater="刘洋">
             <th>注文No</th>
             <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）">案件名 / 取引先（下请）</th>
-            <th>SES 工程师</th>
+            <th>技术者</th>
             <th>契约单价</th>
             <th>契约工时</th>
             <th>契约期间</th>
-            <th>稼动H</th>
+            <th>创建时间</th>
+            <th>创建人</th>
+            <th>负责人</th>
+            <th>修改时间</th>
+            <th>修改人</th>
             <th>状态</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
+          <tr data-order-no="PO-2024-031"
+              data-project="移动端改版"
+              data-client-issue="星河科技"
+              data-client-accept="星河科技"
+              data-engineer="李娜"
+              data-price="¥ 220,000"
+              data-hours="180h"
+              data-start="2024-07-01"
+              data-end="2025-01-31"
+              data-created-at="2024-06-02"
+              data-creator="陈洁"
+              data-owner="铃木"
+              data-updated-at="2024-06-20"
+              data-updater="张昊">
             <td>PO-2024-019</td>
-            <td>数据平台升级 / 富士商事</td>
+            <td>
+              <div class="cell-ellipsis" title="数据平台升级">数据平台升级</div>
+              <div class="cell-ellipsis" title="富士商事">富士商事</div>
+            </td>
             <td>田中</td>
             <td>¥ 480,000</td>
             <td>160h</td>
-            <td>2024-06 ~ 2024-12</td>
-            <td>86h / 420h</td>
-            <td><span class="tag" data-status-badge data-issue-status="草稿" data-accept-status="已送付">草稿</span></td>
+            <td>
+              <div>2024-06</div>
+              <div>2024-12</div>
+            </td>
+            <td>2024-05-18</td>
+            <td>王敏</td>
+            <td>高桥</td>
+            <td>2024-06-05</td>
+            <td>刘洋</td>
+            <td><span class="tag" data-status-badge data-issue-status="承认中" data-accept-status="已受注">承认中</span></td>
             <td><div class="row-actions" data-row-actions></div></td>
           </tr>
-          <tr>
+          <tr data-order-no="PO-2024-038"
+              data-project="接口整合"
+              data-client-issue="日科解决方案"
+              data-client-accept="日科解决方案"
+              data-engineer="佐藤"
+              data-price="¥ 95,000"
+              data-hours="160h"
+              data-start="2024-05-01"
+              data-end="2024-10-31"
+              data-created-at="2024-04-21"
+              data-creator="赵磊"
+              data-owner="山本"
+              data-updated-at="2024-05-02"
+              data-updater="吴敏">
             <td>PO-2024-031</td>
-            <td>移动端改版 / 星河科技</td>
+            <td>
+              <div class="cell-ellipsis" title="移动端改版">移动端改版</div>
+              <div class="cell-ellipsis" title="星河科技">星河科技</div>
+            </td>
             <td>李娜</td>
             <td>¥ 220,000</td>
             <td>180h</td>
-            <td>2024-07 ~ 2025-01</td>
-            <td>120h / 310h</td>
-            <td><span class="tag" data-status-badge data-issue-status="承认中" data-accept-status="已受注">承认中</span></td>
+            <td>
+              <div>2024-07</div>
+              <div>2025-01</div>
+            </td>
+            <td>2024-06-02</td>
+            <td>陈洁</td>
+            <td>铃木</td>
+            <td>2024-06-20</td>
+            <td>张昊</td>
+            <td><span class="tag" data-status-badge data-issue-status="已受注" data-accept-status="拒绝">已受注</span></td>
             <td><div class="row-actions" data-row-actions></div></td>
           </tr>
           <tr>
             <td>PO-2024-038</td>
-            <td>接口整合 / 日科解决方案</td>
+            <td>
+              <div class="cell-ellipsis" title="接口整合">接口整合</div>
+              <div class="cell-ellipsis" title="日科解决方案">日科解决方案</div>
+            </td>
             <td>佐藤</td>
             <td>¥ 95,000</td>
             <td>160h</td>
-            <td>2024-05 ~ 2024-10</td>
-            <td>40h / 200h</td>
-            <td><span class="tag" data-status-badge data-issue-status="已取消" data-accept-status="拒绝">已取消</span></td>
+            <td>
+              <div>2024-05</div>
+              <div>2024-10</div>
+            </td>
+            <td>2024-04-21</td>
+            <td>赵磊</td>
+            <td>山本</td>
+            <td>2024-05-02</td>
+            <td>吴敏</td>
+            <td><span class="tag" data-status-badge data-issue-status="已取消" data-accept-status="已取消">已取消</span></td>
             <td><div class="row-actions" data-row-actions></div></td>
           </tr>
         </tbody>
@@ -409,12 +523,225 @@
     </section>
   </div>
 
-  <dialog class="modal" id="createDialog" aria-labelledby="createTitle">
-    <h3 id="createTitle">新建注文书</h3>
-    <p>请在后续流程中填写详细信息。</p>
+  <dialog class="modal" id="createDialogIssue" aria-labelledby="createTitleIssue">
+    <h3 id="createTitleIssue">新建注文书</h3>
+    <p>请根据注文书字段填写基础信息。</p>
+    <div class="modal-form">
+      <div class="modal-grid">
+        <label class="field">
+          <span>注文No</span>
+          <input type="text" placeholder="PO-2024-XXX" />
+        </label>
+        <label class="field">
+          <span>案件名</span>
+          <input type="text" placeholder="案件名称" />
+        </label>
+        <label class="field full">
+          <span>取引先（下请公司）</span>
+          <input type="text" placeholder="下请公司" />
+        </label>
+        <label class="field">
+          <span>SES 工程师</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>状态</span>
+          <select>
+            <option>请选择状态</option>
+            <option>承认中</option>
+            <option>已受注</option>
+            <option>拒绝</option>
+            <option>已取消</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>契约单价</span>
+          <input type="text" placeholder="¥ 0" />
+        </label>
+        <label class="field">
+          <span>契约工时</span>
+          <input type="text" placeholder="160h" />
+        </label>
+        <label class="field full">
+          <span>契约期间</span>
+          <div class="range">
+            <input type="date" />
+            <span>~</span>
+            <input type="date" />
+          </div>
+        </label>
+        <label class="field">
+          <span>创建时间</span>
+          <input type="date" />
+        </label>
+        <label class="field">
+          <span>创建人</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>负责人</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>修改时间</span>
+          <input type="date" />
+        </label>
+        <label class="field">
+          <span>修改人</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+      </div>
+    </div>
     <div class="modal-actions">
-      <button class="btn" type="button" id="dialogCancel">取消</button>
-      <button class="btn" type="button" id="dialogConfirm">开始创建</button>
+      <button class="btn" type="button" data-dialog-close>取消</button>
+      <button class="btn" type="button" data-dialog-close>开始创建</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="createDialogAccept" aria-labelledby="createTitleAccept">
+    <h3 id="createTitleAccept">新建受注</h3>
+    <p>请根据受注字段填写基础信息。</p>
+    <div class="modal-form">
+      <div class="modal-grid">
+        <label class="field">
+          <span>注文No</span>
+          <input type="text" placeholder="PO-2024-XXX" />
+        </label>
+        <label class="field">
+          <span>案件名</span>
+          <input type="text" placeholder="案件名称" />
+        </label>
+        <label class="field full">
+          <span>取引先（客户公司）</span>
+          <input type="text" placeholder="客户公司" />
+        </label>
+        <label class="field">
+          <span>SES 工程师</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>状态</span>
+          <select>
+            <option>请选择状态</option>
+            <option>已受注</option>
+            <option>拒绝</option>
+            <option>已取消</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>契约单价</span>
+          <input type="text" placeholder="¥ 0" />
+        </label>
+        <label class="field">
+          <span>契约工时</span>
+          <input type="text" placeholder="160h" />
+        </label>
+        <label class="field full">
+          <span>契约期间</span>
+          <div class="range">
+            <input type="date" />
+            <span>~</span>
+            <input type="date" />
+          </div>
+        </label>
+        <label class="field">
+          <span>创建时间</span>
+          <input type="date" />
+        </label>
+        <label class="field">
+          <span>创建人</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>负责人</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>修改时间</span>
+          <input type="date" />
+        </label>
+        <label class="field">
+          <span>修改人</span>
+          <input type="text" placeholder="姓名" />
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-dialog-close>取消</button>
+      <button class="btn" type="button" data-dialog-close>开始创建</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="detailDialog" aria-labelledby="detailTitle">
+    <h3 id="detailTitle">查看注文书</h3>
+    <p id="detailSubtitle">查看订单详情</p>
+    <div class="modal-form">
+      <div class="modal-grid">
+        <label class="field">
+          <span>注文No</span>
+          <input type="text" data-field="orderNo" />
+        </label>
+        <label class="field">
+          <span>案件名</span>
+          <input type="text" data-field="project" />
+        </label>
+        <label class="field full">
+          <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
+          <input type="text" data-field="client" />
+        </label>
+        <label class="field">
+          <span>技术者</span>
+          <input type="text" data-field="engineer" />
+        </label>
+        <label class="field">
+          <span>状态</span>
+          <select data-field="status"
+                  data-issue-options="承认中,已受注,拒绝,已取消"
+                  data-accept-options="已受注,拒绝,已取消"
+                  data-default-option="请选择状态">
+          </select>
+        </label>
+        <label class="field">
+          <span>契约单价</span>
+          <input type="text" data-field="price" />
+        </label>
+        <label class="field">
+          <span>契约工时</span>
+          <input type="text" data-field="hours" />
+        </label>
+        <label class="field full">
+          <span>契约期间</span>
+          <div class="range">
+            <input type="date" data-field="start" />
+            <span>~</span>
+            <input type="date" data-field="end" />
+          </div>
+        </label>
+        <label class="field">
+          <span>创建时间</span>
+          <input type="date" data-field="createdAt" />
+        </label>
+        <label class="field">
+          <span>创建人</span>
+          <input type="text" data-field="creator" />
+        </label>
+        <label class="field">
+          <span>负责人</span>
+          <input type="text" data-field="owner" />
+        </label>
+        <label class="field">
+          <span>修改时间</span>
+          <input type="date" data-field="updatedAt" />
+        </label>
+        <label class="field">
+          <span>修改人</span>
+          <input type="text" data-field="updater" />
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-dialog-close>关闭</button>
+      <button class="btn" type="button" data-dialog-close id="detailSave">保存</button>
     </div>
   </dialog>
   <script>
@@ -425,10 +752,29 @@
       const rows = Array.from(document.querySelectorAll("tbody tr"));
       const statusFilter = document.getElementById("statusFilter");
       const createBtn = document.getElementById("createBtn");
-      const createDialog = document.getElementById("createDialog");
-      const createTitle = document.getElementById("createTitle");
-      const dialogCancel = document.getElementById("dialogCancel");
-      const dialogConfirm = document.getElementById("dialogConfirm");
+      const createDialogIssue = document.getElementById("createDialogIssue");
+      const createDialogAccept = document.getElementById("createDialogAccept");
+      const detailDialog = document.getElementById("detailDialog");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailSubtitle = document.getElementById("detailSubtitle");
+      const detailSave = document.getElementById("detailSave");
+      const detailFields = {
+        orderNo: document.querySelector('[data-field="orderNo"]'),
+        project: document.querySelector('[data-field="project"]'),
+        client: document.querySelector('[data-field="client"]'),
+        engineer: document.querySelector('[data-field="engineer"]'),
+        status: document.querySelector('[data-field="status"]'),
+        price: document.querySelector('[data-field="price"]'),
+        hours: document.querySelector('[data-field="hours"]'),
+        start: document.querySelector('[data-field="start"]'),
+        end: document.querySelector('[data-field="end"]'),
+        createdAt: document.querySelector('[data-field="createdAt"]'),
+        creator: document.querySelector('[data-field="creator"]'),
+        owner: document.querySelector('[data-field="owner"]'),
+        updatedAt: document.querySelector('[data-field="updatedAt"]'),
+        updater: document.querySelector('[data-field="updater"]')
+      };
+      const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
 
       const statusClass = {
         "草稿": "neutral",
@@ -441,16 +787,18 @@
 
       const actionsByView = {
         issue: {
-          "草稿": ["编辑", "删除"],
-          "承认中": ["查看"],
-          "已送付": ["详情"],
-          "已受注": ["详情"],
-          "已取消": ["仅查看"]
+          "草稿": ["编辑", "查看"],
+          "承认中": ["编辑", "查看"],
+          "已送付": ["编辑", "查看"],
+          "已受注": ["编辑", "查看"],
+          "已取消": ["编辑", "查看"],
+          "拒绝": ["编辑", "查看"]
         },
         accept: {
-          "已送付": ["受注确认"],
-          "已受注": ["详情"],
-          "拒绝": ["详情"]
+          "已送付": ["编辑", "查看"],
+          "已受注": ["编辑", "查看"],
+          "拒绝": ["编辑", "查看"],
+          "已取消": ["编辑", "查看"]
         }
       };
 
@@ -458,11 +806,27 @@
         container.innerHTML = "";
         labels.forEach((label) => {
           const btn = document.createElement("button");
-          const isPrimary = label === "详情" || label === "受注确认" || label === "查看";
+          const isPrimary = label === "查看";
           btn.className = isPrimary ? "btn-lite" : "btn-ghost";
           btn.type = "button";
           btn.textContent = label;
+          btn.dataset.action = label === "编辑" ? "edit" : "view";
           container.appendChild(btn);
+        });
+      }
+
+      function fillStatusOptions(select, view) {
+        if (!select) return;
+        const options = (view === "accept"
+          ? select.dataset.acceptOptions
+          : select.dataset.issueOptions) || "";
+        const values = options.split(",").map((v) => v.trim()).filter(Boolean);
+        const defaultOption = select.dataset.defaultOption || "";
+        select.innerHTML = defaultOption ? `<option>${defaultOption}</option>` : "";
+        values.forEach((value) => {
+          const opt = document.createElement("option");
+          opt.textContent = value;
+          select.appendChild(opt);
         });
       }
 
@@ -481,18 +845,7 @@
             view === "accept" ? node.dataset.acceptPlaceholder : node.dataset.issuePlaceholder
           );
         });
-        if (statusFilter) {
-          const options = (view === "accept"
-            ? statusFilter.dataset.acceptOptions
-            : statusFilter.dataset.issueOptions) || "";
-          const values = options.split(",").map((v) => v.trim()).filter(Boolean);
-          statusFilter.innerHTML = "<option>全部</option>";
-          values.forEach((value) => {
-            const opt = document.createElement("option");
-            opt.textContent = value;
-            statusFilter.appendChild(opt);
-          });
-        }
+        fillStatusOptions(statusFilter, view);
         rows.forEach((row) => {
           const badge = row.querySelector("[data-status-badge]");
           const status = badge
@@ -520,16 +873,77 @@
         return active ? active.dataset.view : "issue";
       }
 
-      if (createBtn && createDialog) {
-        createBtn.addEventListener("click", () => {
-          const view = currentView();
-          const title = view === "accept" ? "新建受注" : "新建注文书";
-          if (createTitle) createTitle.textContent = title;
-          createDialog.showModal();
+      function setDialogMode(mode) {
+        const isView = mode === "view";
+        if (detailTitle) detailTitle.textContent = isView ? "查看订单" : "编辑订单";
+        if (detailSubtitle) {
+          detailSubtitle.textContent = isView ? "查看订单详情" : "修改订单信息";
+        }
+        if (detailSave) detailSave.style.display = isView ? "none" : "";
+        Object.values(detailFields).forEach((field) => {
+          if (!field) return;
+          if (field.tagName === "SELECT") {
+            field.disabled = isView;
+            return;
+          }
+          if (field.type === "date") {
+            field.disabled = isView;
+          } else {
+            field.readOnly = isView;
+          }
         });
       }
-      if (dialogCancel) dialogCancel.addEventListener("click", () => createDialog.close());
-      if (dialogConfirm) dialogConfirm.addEventListener("click", () => createDialog.close());
+
+      function openDetailDialog(mode, row) {
+        if (!detailDialog || !row) return;
+        const view = currentView();
+        const status = view === "accept" ? row.dataset.acceptStatus : row.dataset.issueStatus;
+        const client = view === "accept" ? row.dataset.clientAccept : row.dataset.clientIssue;
+
+        if (detailFields.orderNo) detailFields.orderNo.value = row.dataset.orderNo || "";
+        if (detailFields.project) detailFields.project.value = row.dataset.project || "";
+        if (detailFields.client) detailFields.client.value = client || "";
+        if (detailFields.engineer) detailFields.engineer.value = row.dataset.engineer || "";
+        if (detailFields.price) detailFields.price.value = row.dataset.price || "";
+        if (detailFields.hours) detailFields.hours.value = row.dataset.hours || "";
+        if (detailFields.start) detailFields.start.value = row.dataset.start || "";
+        if (detailFields.end) detailFields.end.value = row.dataset.end || "";
+        if (detailFields.createdAt) detailFields.createdAt.value = row.dataset.createdAt || "";
+        if (detailFields.creator) detailFields.creator.value = row.dataset.creator || "";
+        if (detailFields.owner) detailFields.owner.value = row.dataset.owner || "";
+        if (detailFields.updatedAt) detailFields.updatedAt.value = row.dataset.updatedAt || "";
+        if (detailFields.updater) detailFields.updater.value = row.dataset.updater || "";
+
+        fillStatusOptions(detailFields.status, view);
+        if (detailFields.status && status) detailFields.status.value = status;
+
+        setDialogMode(mode);
+        detailDialog.showModal();
+      }
+
+      if (createBtn) {
+        createBtn.addEventListener("click", () => {
+          const view = currentView();
+          if (view === "accept") {
+            if (createDialogAccept) createDialogAccept.showModal();
+          } else {
+            if (createDialogIssue) createDialogIssue.showModal();
+          }
+        });
+      }
+      document.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-action]");
+        if (!btn) return;
+        const row = btn.closest("tr");
+        if (!row) return;
+        openDetailDialog(btn.dataset.action, row);
+      });
+      dialogCloseButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const dialog = button.closest("dialog");
+          if (dialog) dialog.close();
+        });
+      });
     })();
   </script>
 </body>

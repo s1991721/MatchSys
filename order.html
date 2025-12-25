@@ -6,55 +6,101 @@
   <title>注文书管理</title>
   <style>
     :root{
-      --bg:#f4f6fb;
+      --bg:#f3f5fb;
       --card:#ffffff;
       --text:#1f2a3d;
-      --muted:#6b7686;
+      --muted:#8891a7;
       --border:#e5e9f2;
-      --brand:#1c7bff;
-      --green:#16a34a;
-      --orange:#f59e0b;
-      --red:#ef4444;
+      --primary:#246bfd;
       --shadow: 0 12px 28px rgba(31, 53, 90, .08);
-      --radius: 14px;
+      --radius: 16px;
     }
 
     *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
-                   "Hiragino Sans GB", "Microsoft YaHei", Arial, "Noto Sans";
-      background: transparent;
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
       color:var(--text);
     }
 
-    .container{ padding:22px; max-width:1200px; margin:0 auto; }
+    .container{
+      padding:24px;
+      width:100%;
+      margin:0;
+    }
     .page-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items:center;
       gap:16px;
       margin-bottom:16px;
     }
-    .title h1{ margin:0 0 6px; font-size:22px; font-weight:900; }
-    .title p{ margin:0; color:var(--muted); font-size:13px; font-weight:700; }
-
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
-    .btn{
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background: var(--card);
+    .title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:20px;
       font-weight:800;
+      margin:0;
+    }
+    .title::before{
+      content:"";
+      width:4px;
+      height:20px;
+      border-radius:12px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
+    }
+    .title h1{
+      margin:0;
+      font-size:inherit;
+      font-weight:inherit;
+    }
+    .btn{
+      padding:10px 16px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background: var(--primary);
+      font-weight:700;
       font-size:13px;
       cursor:pointer;
-      color:#2c3d55;
-      box-shadow: var(--shadow);
+      color:#fff;
     }
-    .btn.primary{
-      border-color: rgba(28,123,255,.35);
-      background: rgba(28,123,255,.12);
-      color:#0f4cb7;
+    .action-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 18px;
+      border-radius:10px;
+      font-weight:600;
+      color:#fff;
+      border:none;
+      cursor:pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+    }
+    .action-btn:active{ transform: scale(0.97); }
+    .btn-blue{ background:#1c7bff; }
+    .btn-search{
+      background:#10b981;
+      color:#fff;
+      box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
+      border:none;
+      border-radius:12px;
+      padding:10px 16px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn-reset{
+      background:#f59e0b;
+      color:#fff;
+      box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
+      border:none;
+      border-radius:12px;
+      padding:10px 16px;
+      cursor:pointer;
+      font-weight:600;
     }
 
     .card{
@@ -63,54 +109,114 @@
       border-radius:var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
+      padding:22px 26px 10px;
+    }
+
+    .switch-wrap{
+      justify-self:center;
+      display:flex;
+      align-items:center;
+    }
+    .switcher{
+      display:inline-flex;
+      gap:6px;
+      padding:6px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.5);
+      background: rgba(248,250,252,.95);
+      box-shadow: 0 10px 20px rgba(30,41,59,.08);
+    }
+    .switch-btn{
+      border:0;
+      background:transparent;
+      padding:8px 20px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      color:#334155;
+    }
+    .switch-btn.active{
+      background: rgba(30,64,175,.16);
+      color:#1d4ed8;
+      box-shadow: 0 6px 14px rgba(29,78,216,.12);
     }
 
     .filters{
+      padding:0;
+      border-bottom:0;
+      background: transparent;
+      display:grid;
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .filters-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:14px;
+    }
+    .filters-actions{
       display:flex;
+      justify-content:space-between;
+      align-items:center;
       flex-wrap:wrap;
       gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      background: rgba(247,249,253,.9);
+    }
+    .filters-actions-left,
+    .filters-actions-right{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
     }
     .field{
       display:flex;
       align-items:center;
       gap:8px;
-      padding:8px 10px;
-      border-radius:10px;
+      padding:10px 12px;
+      border-radius:8px;
       border:1px solid var(--border);
       background:#fff;
       font-size:13px;
       font-weight:700;
-      color:#3b4a60;
+      color:#2c3d55;
+      min-height:44px;
     }
     .field input, .field select{
       border:0;
       outline:none;
-      font-size:13px;
-      font-weight:700;
-      color:#2c3d55;
+      font-size:14px;
+      font-weight:600;
+      color:#1f2937;
       background:transparent;
-      min-width:140px;
+      min-width:120px;
+      flex:1 1 auto;
     }
+    .field.wide{ grid-column: span 1; }
+    .field.narrow{ grid-column: span 1; }
+    .field .range{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .field .range input{ min-width:110px; }
 
     table{ width:100%; border-collapse:collapse; font-size:13px; }
     thead th{
       text-align:left;
-      padding:12px 16px;
+      padding:12px 8px;
       color:var(--muted);
-      font-weight:800;
+      font-weight:600;
       border-bottom:1px solid var(--border);
-      background: rgba(247,249,253,.9);
+      background: transparent;
     }
     tbody td{
-      padding:12px 16px;
+      padding:14px 8px;
       border-bottom:1px solid var(--border);
-      font-weight:700;
+      font-weight:600;
       color:#2c3d55;
     }
-    tbody tr:hover{ background: rgba(59,130,246,.06); }
+    tbody tr:hover{ background: rgba(36, 107, 253, 0.08); }
 
     .tag{
       display:inline-flex;
@@ -124,13 +230,67 @@
     .tag.success{ color:#0f7a3a; background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.22); }
     .tag.warn{ color:#a16207; background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.25); }
     .tag.danger{ color:#b91c1c; background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.25); }
+    .tag.info{ color:#1d4ed8; background: rgba(28,123,255,.12); border-color: rgba(28,123,255,.22); }
+    .tag.neutral{ color:#4b5563; background: rgba(148,163,184,.16); border-color: rgba(148,163,184,.3); }
 
-    .link{ color:var(--brand); text-decoration:none; font-weight:800; }
-
+    .btn-lite{
+      padding:6px 10px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background: var(--primary);
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn-ghost{
+      padding:6px 10px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background: var(--primary);
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .row-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .modal{
+      border:0;
+      border-radius:16px;
+      padding:20px;
+      width:min(420px, 92vw);
+      box-shadow: 0 24px 60px rgba(31, 53, 90, 0.25);
+      font-family: inherit;
+    }
+    .modal::backdrop{
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .modal h3{
+      margin:0 0 8px;
+      font-size:18px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .modal p{
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .modal-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+    }
     @media (max-width: 900px){
-      .page-head{ flex-direction:column; align-items:stretch; }
-      .filters{ align-items:stretch; }
-      .field{ flex:1 1 100%; }
+      .page-head{
+        grid-template-columns: 1fr;
+        align-items:stretch;
+      }
+      .switch-wrap{ justify-self:flex-start; }
+      .filters-grid{ grid-template-columns: 1fr; }
+      .field{ min-height:44px; }
       table{ display:block; overflow:auto; }
     }
   </style>
@@ -140,83 +300,237 @@
     <div class="page-head">
       <div class="title">
         <h1>注文书管理</h1>
-        <p>集中管理客户订单、进度与付款状态</p>
       </div>
-      <div class="actions">
-        <button class="btn primary" type="button">新建注文书</button>
-        <button class="btn" type="button">导出</button>
-        <button class="btn" type="button">批量更新</button>
+      <div class="switch-wrap">
+        <div class="switcher" role="tablist" aria-label="视角切换">
+          <button class="switch-btn active" type="button" data-view="issue" role="tab" aria-selected="true">发注</button>
+          <button class="switch-btn" type="button" data-view="accept" role="tab" aria-selected="false">受注</button>
+        </div>
       </div>
     </div>
 
     <section class="card">
       <div class="filters">
-        <div class="field">
-          <span>状态</span>
-          <select>
-            <option>全部</option>
-            <option>进行中</option>
-            <option>已完成</option>
-            <option>异常</option>
-          </select>
+        <div class="filters-grid">
+          <div class="field wide">
+            <span>注文书号</span>
+            <input type="text" placeholder="PO-XXXX" />
+          </div>
+          <div class="field wide">
+            <span>案件名</span>
+            <input type="text" placeholder="SES 案件名" />
+          </div>
+          <div class="field wide">
+            <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
+            <input type="text" placeholder="下请公司" data-issue-placeholder="下请公司" data-accept-placeholder="客户公司" />
+          </div>
+          <div class="field wide">
+            <span>技术者</span>
+            <input type="text" placeholder="姓名" />
+          </div>
+          <div class="field narrow">
+            <span>状态</span>
+            <select id="statusFilter"
+                    data-issue-options="草稿,承认中,已送付,已受注,已取消"
+                    data-accept-options="已送付,已受注,拒绝">
+              <option>全部</option>
+            </select>
+          </div>
+          <div class="field wide">
+            <span>契约期间</span>
+            <div class="range">
+              <input type="text" placeholder="From" />
+              <span>~</span>
+              <input type="text" placeholder="To" />
+            </div>
+          </div>
         </div>
-        <div class="field">
-          <span>日期</span>
-          <input type="text" placeholder="2024-01 ~ 2024-12" />
-        </div>
-        <div class="field">
-          <span>关键字</span>
-          <input type="text" placeholder="订单号/客户/项目" />
+        <div class="filters-actions">
+          <div class="filters-actions-left">
+            <button class="action-btn btn-blue" id="createBtn" type="button" data-issue="新建注文书" data-accept="新建受注">＋ 新建注文书</button>
+          </div>
+          <div class="filters-actions-right">
+            <button class="btn-search" type="button">搜索</button>
+            <button class="btn-reset" type="button">重置</button>
+          </div>
         </div>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th>订单号</th>
-            <th>客户</th>
-            <th>项目</th>
-            <th>金额</th>
+            <th>注文No</th>
+            <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）">案件名 / 取引先（下请）</th>
+            <th>SES 工程师</th>
+            <th>契约单价</th>
+            <th>契约工时</th>
+            <th>契约期间</th>
+            <th>稼动H</th>
             <th>状态</th>
-            <th>负责人</th>
-            <th>更新时间</th>
             <th>操作</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>ODR-2024-019</td>
-            <td>富士商事</td>
-            <td>数据平台升级</td>
-            <td>¥ 480,000</td>
-            <td><span class="tag success">已完成</span></td>
+            <td>PO-2024-019</td>
+            <td>数据平台升级 / 富士商事</td>
             <td>田中</td>
-            <td>2024-07-06</td>
-            <td><a class="link" href="#">详情</a></td>
+            <td>¥ 480,000</td>
+            <td>160h</td>
+            <td>2024-06 ~ 2024-12</td>
+            <td>86h / 420h</td>
+            <td><span class="tag" data-status-badge data-issue-status="草稿" data-accept-status="已送付">草稿</span></td>
+            <td><div class="row-actions" data-row-actions></div></td>
           </tr>
           <tr>
-            <td>ODR-2024-031</td>
-            <td>星河科技</td>
-            <td>移动端改版</td>
-            <td>¥ 220,000</td>
-            <td><span class="tag warn">进行中</span></td>
+            <td>PO-2024-031</td>
+            <td>移动端改版 / 星河科技</td>
             <td>李娜</td>
-            <td>2024-07-10</td>
-            <td><a class="link" href="#">详情</a></td>
+            <td>¥ 220,000</td>
+            <td>180h</td>
+            <td>2024-07 ~ 2025-01</td>
+            <td>120h / 310h</td>
+            <td><span class="tag" data-status-badge data-issue-status="承认中" data-accept-status="已受注">承认中</span></td>
+            <td><div class="row-actions" data-row-actions></div></td>
           </tr>
           <tr>
-            <td>ODR-2024-038</td>
-            <td>日科解决方案</td>
-            <td>接口整合</td>
-            <td>¥ 95,000</td>
-            <td><span class="tag danger">异常</span></td>
+            <td>PO-2024-038</td>
+            <td>接口整合 / 日科解决方案</td>
             <td>佐藤</td>
-            <td>2024-07-12</td>
-            <td><a class="link" href="#">详情</a></td>
+            <td>¥ 95,000</td>
+            <td>160h</td>
+            <td>2024-05 ~ 2024-10</td>
+            <td>40h / 200h</td>
+            <td><span class="tag" data-status-badge data-issue-status="已取消" data-accept-status="拒绝">已取消</span></td>
+            <td><div class="row-actions" data-row-actions></div></td>
           </tr>
         </tbody>
       </table>
     </section>
   </div>
+
+  <dialog class="modal" id="createDialog" aria-labelledby="createTitle">
+    <h3 id="createTitle">新建注文书</h3>
+    <p>请在后续流程中填写详细信息。</p>
+    <div class="modal-actions">
+      <button class="btn" type="button" id="dialogCancel">取消</button>
+      <button class="btn" type="button" id="dialogConfirm">开始创建</button>
+    </div>
+  </dialog>
+  <script>
+    (function () {
+      const switches = Array.from(document.querySelectorAll(".switch-btn"));
+      const swapNodes = Array.from(document.querySelectorAll("[data-issue][data-accept]"));
+      const swapPlaceholders = Array.from(document.querySelectorAll("[data-issue-placeholder][data-accept-placeholder]"));
+      const rows = Array.from(document.querySelectorAll("tbody tr"));
+      const statusFilter = document.getElementById("statusFilter");
+      const createBtn = document.getElementById("createBtn");
+      const createDialog = document.getElementById("createDialog");
+      const createTitle = document.getElementById("createTitle");
+      const dialogCancel = document.getElementById("dialogCancel");
+      const dialogConfirm = document.getElementById("dialogConfirm");
+
+      const statusClass = {
+        "草稿": "neutral",
+        "承认中": "warn",
+        "已送付": "info",
+        "已受注": "success",
+        "已取消": "danger",
+        "拒绝": "danger"
+      };
+
+      const actionsByView = {
+        issue: {
+          "草稿": ["编辑", "删除"],
+          "承认中": ["查看"],
+          "已送付": ["详情"],
+          "已受注": ["详情"],
+          "已取消": ["仅查看"]
+        },
+        accept: {
+          "已送付": ["受注确认"],
+          "已受注": ["详情"],
+          "拒绝": ["详情"]
+        }
+      };
+
+      function renderActions(container, labels) {
+        container.innerHTML = "";
+        labels.forEach((label) => {
+          const btn = document.createElement("button");
+          const isPrimary = label === "详情" || label === "受注确认" || label === "查看";
+          btn.className = isPrimary ? "btn-lite" : "btn-ghost";
+          btn.type = "button";
+          btn.textContent = label;
+          container.appendChild(btn);
+        });
+      }
+
+      function setView(view) {
+        switches.forEach((btn) => {
+          const active = btn.dataset.view === view;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        swapNodes.forEach((node) => {
+          node.textContent = view === "accept" ? node.dataset.accept : node.dataset.issue;
+        });
+        swapPlaceholders.forEach((node) => {
+          node.setAttribute(
+            "placeholder",
+            view === "accept" ? node.dataset.acceptPlaceholder : node.dataset.issuePlaceholder
+          );
+        });
+        if (statusFilter) {
+          const options = (view === "accept"
+            ? statusFilter.dataset.acceptOptions
+            : statusFilter.dataset.issueOptions) || "";
+          const values = options.split(",").map((v) => v.trim()).filter(Boolean);
+          statusFilter.innerHTML = "<option>全部</option>";
+          values.forEach((value) => {
+            const opt = document.createElement("option");
+            opt.textContent = value;
+            statusFilter.appendChild(opt);
+          });
+        }
+        rows.forEach((row) => {
+          const badge = row.querySelector("[data-status-badge]");
+          const status = badge
+            ? (view === "accept" ? badge.dataset.acceptStatus : badge.dataset.issueStatus)
+            : (view === "accept" ? row.dataset.acceptStatus : row.dataset.issueStatus);
+          const actions = row.querySelector("[data-row-actions]");
+          if (badge) {
+            badge.textContent = status;
+            badge.className = "tag " + (statusClass[status] || "neutral");
+          }
+          if (actions) {
+            const labels = (actionsByView[view] || {})[status] || ["详情"];
+            renderActions(actions, labels);
+          }
+        });
+      }
+
+      switches.forEach((btn) => {
+        btn.addEventListener("click", () => setView(btn.dataset.view));
+      });
+      setView("issue");
+
+      function currentView() {
+        const active = document.querySelector(".switch-btn.active");
+        return active ? active.dataset.view : "issue";
+      }
+
+      if (createBtn && createDialog) {
+        createBtn.addEventListener("click", () => {
+          const view = currentView();
+          const title = view === "accept" ? "新建受注" : "新建注文书";
+          if (createTitle) createTitle.textContent = title;
+          createDialog.showModal();
+        });
+      }
+      if (dialogCancel) dialogCancel.addEventListener("click", () => createDialog.close());
+      if (dialogConfirm) dialogConfirm.addEventListener("click", () => createDialog.close());
+    })();
+  </script>
 </body>
 </html>

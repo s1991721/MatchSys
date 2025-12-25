@@ -59,6 +59,7 @@ urlpatterns = [
     path("match.html", TemplateView.as_view(template_name="match.html")),
     path("people.html", TemplateView.as_view(template_name="people.html")),
     path("personnel.html", TemplateView.as_view(template_name="personnel.html")),
+    path("customer.html", TemplateView.as_view(template_name="customer.html")),
     path("profile.html", TemplateView.as_view(template_name="profile.html")),
     path("qiuanjian.html", TemplateView.as_view(template_name="qiuanjian.html")),
     path("qiuren.html", TemplateView.as_view(template_name="qiuren.html")),

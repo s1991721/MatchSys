@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>客户管理</title>
+  <style>
+    :root {
+      --bg: #f4f6fb;
+      --card: #ffffff;
+      --line: #e5e9f2;
+      --primary: #1c7bff;
+      --text: #1f2a3d;
+      --muted: #6b7686;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .page {
+      padding: 18px;
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
+      padding: 20px 22px 24px;
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0 0 14px;
+    }
+    .title::before {
+      content: "";
+      width: 4px;
+      height: 18px;
+      border-radius: 12px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .tile {
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      background: #f9fafc;
+    }
+    .tile h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+    .tile p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="card">
+      <h1 class="title">客户管理</h1>
+      <p class="muted">客户资料维护、跟进记录与合作概况将在此页面呈现。</p>
+      <div class="grid">
+        <div class="tile">
+          <h3>客户列表</h3>
+          <p>查看与筛选客户信息。</p>
+        </div>
+        <div class="tile">
+          <h3>新增客户</h3>
+          <p>录入联系人、行业与合作状态。</p>
+        </div>
+        <div class="tile">
+          <h3>跟进记录</h3>
+          <p>记录拜访、沟通与下一步计划。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

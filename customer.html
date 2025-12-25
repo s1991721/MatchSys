@@ -280,11 +280,7 @@
             <label>负责人
               <input type="text" list="employee-names" placeholder="请输入负责人" />
             </label>
-            <datalist id="employee-names">
-              <option value="李四"></option>
-              <option value="王五"></option>
-              <option value="赵六"></option>
-            </datalist>
+            <datalist id="employee-names"></datalist>
           </div>
         </div>
         <div class="filter-actions">
@@ -411,5 +407,25 @@
       </div>
     </section>
   </div>
+  <script>
+    const nameList = document.getElementById("employee-names");
+
+    const renderNames = (names) => {
+      nameList.innerHTML = names
+        .map((name) => `<option value="${name}"></option>`)
+        .join("");
+    };
+
+    fetch("/api/employees/names")
+      .then((response) => response.json())
+      .then((data) => {
+        if (Array.isArray(data.names)) {
+          renderNames(data.names);
+        }
+      })
+      .catch(() => {
+        renderNames([]);
+      });
+  </script>
 </body>
 </html>

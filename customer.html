@@ -8,93 +8,405 @@
     :root {
       --bg: #f4f6fb;
       --card: #ffffff;
-      --line: #e5e9f2;
-      --primary: #1c7bff;
-      --text: #1f2a3d;
-      --muted: #6b7686;
+      --card-soft: #f6f8ff;
+      --line: #dfe6f3;
+      --text: #1c2b45;
+      --muted: #6b7688;
+      --primary: #35b779;
+      --primary-strong: #2aa469;
+      --warning: #f5a031;
+      --shadow: 0 16px 40px rgba(30, 60, 110, 0.08);
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background: var(--bg);
+      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
       color: var(--text);
+      background: var(--bg);
     }
     .page {
-      padding: 18px;
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
+      max-width: 1240px;
+      margin: 24px auto 60px;
+      padding: 0 20px;
     }
-    .card {
+    .panel {
       background: var(--card);
-      border-radius: 16px;
+      border-radius: 20px;
       border: 1px solid var(--line);
-      box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-      padding: 20px 22px 24px;
+      box-shadow: var(--shadow);
     }
-    .title {
+    .panel-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 18px;
-      font-weight: 800;
-      margin: 0 0 14px;
+      gap: 12px;
+      padding: 20px 24px 8px;
     }
-    .title::before {
-      content: "";
-      width: 4px;
-      height: 18px;
-      border-radius: 12px;
-      background: var(--primary);
-      box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
+    .panel-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
     }
-    .muted {
-      color: var(--muted);
-      font-size: 13px;
+    .panel-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #4d92ff, #2c6dff);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      box-shadow: 0 8px 18px rgba(44, 109, 255, 0.25);
     }
-    .grid {
+    .filters {
+      padding: 20px;
+      border-bottom: 1px solid var(--line);
+      background: radial-gradient(circle at top, rgba(28, 123, 255, 0.08), transparent 70%);
+      margin: 14px 18px 0;
+      border-radius: 18px;
+      border: 1px solid #e2e8f5;
+    }
+    .filter-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-top: 12px;
+      gap: 12px 16px;
     }
-    .tile {
-      border: 1px dashed var(--line);
-      border-radius: 12px;
-      padding: 14px;
+    .field label {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      color: var(--muted);
+      gap: 6px;
+    }
+    .field input,
+    .field select {
+      font: inherit;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
       background: #f9fafc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      height: 42px;
     }
-    .tile h3 {
-      margin: 0 0 6px;
+    .field input:focus,
+    .field select:focus {
+      outline: none;
+      border-color: #1c7bff;
+      box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.15);
+      background: #fff;
+    }
+    .filter-actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-actions-left:empty {
+      display: none;
+    }
+    .filter-actions-left:empty + .filter-actions-right {
+      justify-content: flex-end;
+      width: 100%;
+    }
+    .filter-actions-left,
+    .filter-actions-right {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .btn-search {
+      background: #10b981;
+      color: #fff;
+      box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-reset {
+      background: #f59e0b;
+      color: #fff;
+      box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
+      border: none;
+      border-radius: 12px;
+      padding: 10px 18px;
+      cursor: pointer;
+      font-weight: 600;
       font-size: 14px;
     }
-    .tile p {
-      margin: 0;
-      font-size: 12px;
+    .btn-search svg { width: 16px; height: 16px; }
+    .table-area {
+      margin-top: 22px;
+      border-top: 1px solid var(--line);
+      padding: 12px 18px 18px;
+    }
+    .table-info {
+      display: flex;
+      justify-content: flex-end;
+      font-size: 13px;
       color: var(--muted);
+      padding: 4px 6px 14px;
+    }
+    .table-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    thead {
+      background: #f2f5ff;
+      color: #5b6b86;
+    }
+    th, td {
+      padding: 16px 14px;
+      text-align: left;
+      border-bottom: 1px solid #eef2fa;
+      vertical-align: middle;
+    }
+    tbody tr:hover {
+      background: #f7faff;
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e6f6ec;
+      color: #2f9e64;
+    }
+    .actions-td {
+      display: flex;
+      gap: 10px;
+    }
+    .tag-btn {
+      border-radius: 10px;
+      padding: 7px 12px;
+      border: 1px solid #dbe6ff;
+      background: #edf3ff;
+      color: #2a6dff;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tag-btn.edit {
+      background: #e7f2ff;
+      color: #1c7bff;
+    }
+    .tag-btn.del {
+      background: #ffefef;
+      border-color: #ffd6d6;
+      color: #ef5757;
+    }
+    .pager {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #fbfcff;
+    }
+    .pager .page-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #dfe7f5;
+      display: grid;
+      place-items: center;
+      color: #6c7b94;
+      background: #fff;
+      cursor: pointer;
+    }
+    .pager .page-num {
+      font-weight: 600;
+      color: #44526d;
+    }
+    .pager select {
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid #dfe7f5;
+      padding: 0 10px;
+      background: #fff;
+      color: #5c6b83;
+    }
+    @media (max-width: 980px) {
+      .filter-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+      table {
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="card">
-      <h1 class="title">客户管理</h1>
-      <p class="muted">客户资料维护、跟进记录与合作概况将在此页面呈现。</p>
-      <div class="grid">
-        <div class="tile">
-          <h3>客户列表</h3>
-          <p>查看与筛选客户信息。</p>
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-icon">□</span>
+        <h1 class="panel-title">客户管理</h1>
+      </div>
+      <div class="filters">
+        <div class="filter-grid">
+          <div class="field">
+            <label>公司名称
+              <input type="text" value="AA 公司" />
+            </label>
+          </div>
+          <div class="field">
+            <label>负责人
+              <input type="text" list="employee-names" placeholder="请输入负责人" />
+            </label>
+            <datalist id="employee-names">
+              <option value="李四"></option>
+              <option value="王五"></option>
+              <option value="赵六"></option>
+            </datalist>
+          </div>
         </div>
-        <div class="tile">
-          <h3>新增客户</h3>
-          <p>录入联系人、行业与合作状态。</p>
+        <div class="filter-actions">
+          <div class="filter-actions-left"></div>
+          <div class="filter-actions-right">
+            <button class="btn-search" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="M20 20l-3.5-3.5"></path>
+              </svg>
+              搜索
+            </button>
+            <button class="btn-reset" type="button">重置</button>
+          </div>
         </div>
-        <div class="tile">
-          <h3>跟进记录</h3>
-          <p>记录拜访、沟通与下一步计划。</p>
+      </div>
+      <div class="table-area">
+        <div class="table-info">共 1 条 当前显示第 1 页</div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>公司名称</th>
+                <th>公司地址</th>
+                <th>合同备注</th>
+                <th>联系人</th>
+                <th>职位</th>
+                <th>邮箱</th>
+                <th>电话</th>
+                <th>负责人</th>
+                <th>创建时间</th>
+                <th>合同状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AA 公司</td>
+                <td>中国北京市</td>
+                <td>签订三年的合同</td>
+                <td>张三</td>
+                <td>经理</td>
+                <td>zhangsan@example.com</td>
+                <td>13812345678</td>
+                <td>李四</td>
+                <td>2024-04-01 10:00</td>
+                <td><span class="status">有效合同</span></td>
+                <td>
+                  <div class="actions-td">
+                    <button class="tag-btn">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      预览
+                    </button>
+                    <button class="tag-btn edit">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 17.25V21h3.75L19.81 7.94l-3.75-3.75L3 17.25z"></path>
+                      </svg>
+                      编辑
+                    </button>
+                    <button class="tag-btn del">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4h8v2"></path>
+                        <path d="M6 6l1 14h10l1-14"></path>
+                      </svg>
+                      删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>BB 公司</td>
+                <td>中国 北京</td>
+                <td>年度合作合同</td>
+                <td>王五</td>
+                <td>总监</td>
+                <td>wangwu@example.com</td>
+                <td>13912345678</td>
+                <td>李四</td>
+                <td>2024-04-05 09:30</td>
+                <td><span class="status">有效合同</span></td>
+                <td>
+                  <div class="actions-td">
+                    <button class="tag-btn">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      预览
+                    </button>
+                    <button class="tag-btn edit">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 17.25V21h3.75L19.81 7.94l-3.75-3.75L3 17.25z"></path>
+                      </svg>
+                      编辑
+                    </button>
+                    <button class="tag-btn del">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M8 6V4h8v2"></path>
+                        <path d="M6 6l1 14h10l1-14"></path>
+                      </svg>
+                      删除
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pager">
+            <button class="page-btn">‹</button>
+            <span class="page-num">1</span>
+            <span class="page-num">1</span>
+            <button class="page-btn">›</button>
+            <select>
+              <option>10 条/页</option>
+              <option>20 条/页</option>
+            </select>
+          </div>
         </div>
       </div>
     </section>

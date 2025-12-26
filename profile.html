@@ -381,6 +381,7 @@
   </div>
 </div>
 
+<script src="common.js"></script>
 <script>
   const API_BASE = "";
   const employeeId = "{{ request.session.employee_id }}";
@@ -389,20 +390,6 @@
   const employeeForm = document.getElementById("employeeForm");
   const passwordForm = document.getElementById("passwordForm");
   const logoutBtn = document.getElementById("logoutBtn");
-
-  const normalizeApiResponse = (raw) => {
-    if (raw && typeof raw === "object" && "success" in raw) {
-      return raw;
-    }
-    return {
-      success: false,
-      code: "ERR_INVALID_RESPONSE",
-      message: "Invalid response",
-      data: null,
-      meta: {},
-    };
-  };
-
   function showStatus(message, type) {
     statusBox.textContent = message;
     statusBox.className = `status ${type}`;

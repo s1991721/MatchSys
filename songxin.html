@@ -435,7 +435,8 @@
         </section>
     </div>
 
-    <script>
+    <script src="common.js"></script>
+<script>
         (function () {
             const editor = document.getElementById('editor');
             const email = document.getElementById('email');
@@ -451,18 +452,6 @@
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
             const API_BASE = '';
-            const normalizeApiResponse = (raw) => {
-                if (raw && typeof raw === 'object' && 'success' in raw) {
-                    return raw;
-                }
-                return {
-                    success: false,
-                    code: 'ERR_INVALID_RESPONSE',
-                    message: 'Invalid response',
-                    data: null,
-                    meta: {},
-                };
-            };
             const fetchWithAuth = async (url, options = {}) => {
                 const res = await fetch(url, options);
                 if (res.status === 401) {

@@ -505,7 +505,8 @@
       <button class="btn-primary" id="dialog-save" type="button">保存</button>
     </div>
   </dialog>
-  <script>
+  <script src="common.js"></script>
+<script>
     const nameList = document.getElementById("employee-names");
     const tableBody = document.getElementById("customer-body");
     const summaryText = document.querySelector(".table-info");
@@ -549,19 +550,6 @@
     let currentPage = 1;
     let pageSize = 10;
     let totalPages = 1;
-
-    const normalizeApiResponse = (raw) => {
-      if (raw && typeof raw === "object" && "success" in raw) {
-        return raw;
-      }
-      return {
-        success: false,
-        code: "ERR_INVALID_RESPONSE",
-        message: "Invalid response",
-        data: null,
-        meta: {},
-      };
-    };
 
     const renderNames = (names) => {
       nameList.innerHTML = names

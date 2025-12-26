@@ -1019,7 +1019,8 @@
 
   <div class="toast" id="toast"></div>
 
-  <script>
+  <script src="common.js"></script>
+<script>
     const MAP_FALLBACK = { lat: 35.6852, lng: 139.7528 };
     const MAP_ZOOM_DEFAULT = 17;
     const MAP_ZOOM_FOLLOW = 18;
@@ -1027,18 +1028,6 @@
     let userMarker;
     let watchId;
     let lastCoords = { lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng };
-
-    const normalizeApiResponse = (raw) => {
-      if (raw && typeof raw === "object" && "success" in raw) {
-        return raw;
-      }
-      return {
-        success: false,
-        code: "ERR_INVALID_RESPONSE",
-        message: "Invalid response",
-        data: null,
-        meta: {},
-      };
     };
 
     function setStatus(title, detail) {

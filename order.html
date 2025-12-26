@@ -711,7 +711,8 @@
       <button class="btn" type="button" data-dialog-close id="detailSave">保存</button>
     </div>
   </dialog>
-  <script>
+  <script src="common.js"></script>
+<script>
     (function () {
       const switches = Array.from(document.querySelectorAll(".switch-btn"));
       const swapNodes = Array.from(document.querySelectorAll("[data-issue][data-accept]"));
@@ -747,19 +748,6 @@
         status: statusFilter,
         start: document.getElementById("filter-start"),
         end: document.getElementById("filter-end"),
-      };
-
-      const normalizeApiResponse = (raw) => {
-        if (raw && typeof raw === "object" && "success" in raw) {
-          return raw;
-        }
-        return {
-          success: false,
-          code: "ERR_INVALID_RESPONSE",
-          message: "Invalid response",
-          data: null,
-          meta: {},
-        };
       };
 
       const issueForm = {

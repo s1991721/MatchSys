@@ -156,6 +156,7 @@
         </button>
     </form>
 </div>
+<script src="common.js"></script>
 <script>
     const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
@@ -163,20 +164,6 @@
     const form = document.getElementById("loginForm");
     const errorBox = document.getElementById("errorBox");
     const submitBtn = document.getElementById("submitBtn");
-
-    const normalizeApiResponse = (raw) => {
-        if (raw && typeof raw === "object" && "success" in raw) {
-            return raw;
-        }
-        return {
-            success: false,
-            code: "ERR_INVALID_RESPONSE",
-            message: "Invalid response",
-            data: null,
-            meta: {},
-        };
-    };
-
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         errorBox.classList.add("hidden");

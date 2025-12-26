@@ -82,6 +82,7 @@ urlpatterns = [
     path("permission.html", TemplateView.as_view(template_name="permission.html")),
     path("notification.html", TemplateView.as_view(template_name="notification.html")),
     path("login.html", TemplateView.as_view(template_name="login.html")),
+    path("common.js", TemplateView.as_view(template_name="common.js", content_type="application/javascript")),
     path("api/employees/names", employee_names_api, name="employee-names"),
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),

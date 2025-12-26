@@ -263,6 +263,7 @@
         </div>
     </div>
 </div>
+<script src="common.js"></script>
 <script>
     let attendanceData = [];
 
@@ -271,20 +272,6 @@
         alert: { label: "关注", className: "status-alert" },
         warning: { label: "异常", className: "status-warning" }
     };
-
-    const normalizeApiResponse = (raw) => {
-        if (raw && typeof raw === "object" && "success" in raw) {
-            return raw;
-        }
-        return {
-            success: false,
-            code: "ERR_INVALID_RESPONSE",
-            message: "Invalid response",
-            data: null,
-            meta: {},
-        };
-    };
-
     const summaryBody = document.getElementById("summary-body");
     const noData = document.getElementById("no-data");
     const nameFilter = document.getElementById("name-filter");

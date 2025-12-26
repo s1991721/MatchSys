@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>注文书管理</title>
+  <style>
+    :root{
+      --bg:#f3f5fb;
+      --card:#ffffff;
+      --text:#1f2a3d;
+      --muted:#8891a7;
+      --border:#e5e9f2;
+      --primary:#246bfd;
+      --shadow: 0 12px 28px rgba(31, 53, 90, .08);
+      --radius: 16px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color:var(--text);
+    }
+
+    .container{
+      padding:24px;
+      width:100%;
+      margin:0;
+    }
+    .page-head{
+      display:grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items:center;
+      gap:16px;
+      margin-bottom:16px;
+    }
+    .title{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:20px;
+      font-weight:800;
+      margin:0;
+    }
+    .title::before{
+      content:"";
+      width:4px;
+      height:20px;
+      border-radius:12px;
+      background: var(--primary);
+      box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
+    }
+    .title h1{
+      margin:0;
+      font-size:inherit;
+      font-weight:inherit;
+    }
+    .btn{
+      padding:10px 16px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background: var(--primary);
+      font-weight:700;
+      font-size:13px;
+      cursor:pointer;
+      color:#fff;
+    }
+    .action-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 18px;
+      border-radius:10px;
+      font-weight:600;
+      color:#fff;
+      border:none;
+      cursor:pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+    }
+    .action-btn:active{ transform: scale(0.97); }
+    .btn-blue{ background:#1c7bff; }
+    .btn-search{
+      background:#10b981;
+      color:#fff;
+      box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
+      border:none;
+      border-radius:12px;
+      padding:10px 16px;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .btn-reset{
+      background:#f59e0b;
+      color:#fff;
+      box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
+      border:none;
+      border-radius:12px;
+      padding:10px 16px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      padding:22px 26px 10px;
+    }
+
+    .switch-wrap{
+      justify-self:center;
+      display:flex;
+      align-items:center;
+    }
+    .switcher{
+      display:inline-flex;
+      gap:6px;
+      padding:6px;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,.5);
+      background: rgba(248,250,252,.95);
+      box-shadow: 0 10px 20px rgba(30,41,59,.08);
+    }
+    .switch-btn{
+      border:0;
+      background:transparent;
+      padding:8px 20px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:900;
+      cursor:pointer;
+      color:#334155;
+    }
+    .switch-btn.active{
+      background: rgba(30,64,175,.16);
+      color:#1d4ed8;
+      box-shadow: 0 6px 14px rgba(29,78,216,.12);
+    }
+
+    .filters{
+      padding:0;
+      border-bottom:0;
+      background: transparent;
+      display:grid;
+      gap:14px;
+      margin-bottom:18px;
+    }
+    .filters-grid{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:14px;
+    }
+    .filters-actions{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:12px;
+    }
+    .filters-actions-left,
+    .filters-actions-right{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .field{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:13px;
+      font-weight:700;
+      color:#2c3d55;
+      min-height:44px;
+    }
+    .field input, .field select{
+      border:0;
+      outline:none;
+      font-size:14px;
+      font-weight:600;
+      color:#1f2937;
+      background:transparent;
+      min-width:120px;
+      flex:1 1 auto;
+    }
+    .field > span{
+      white-space:nowrap;
+      flex:0 0 auto;
+    }
+    .field.wide{ grid-column: span 1; }
+    .field.narrow{ grid-column: span 1; }
+    .field .range{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+
+    table{ width:100%; border-collapse:collapse; font-size:13px; }
+    thead th{
+      text-align:center;
+      padding:12px 8px;
+      color:var(--muted);
+      font-weight:600;
+      border-bottom:1px solid var(--border);
+      background: transparent;
+    }
+    tbody td{
+      text-align:center;
+      padding:14px 8px;
+      border-bottom:1px solid var(--border);
+      font-weight:600;
+      color:#2c3d55;
+    }
+    .cell-ellipsis{
+      max-width:220px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin:0 auto;
+    }
+    tbody tr:hover{ background: rgba(36, 107, 253, 0.08); }
+
+    .table-info{
+      display:flex;
+      justify-content:flex-end;
+      color:var(--muted);
+      font-size:13px;
+      margin:6px 0 12px;
+    }
+    .pager{
+      display:flex;
+      justify-content:flex-end;
+      align-items:center;
+      gap:10px;
+      padding:12px 0 4px;
+    }
+    .page-btn{
+      width:32px;
+      height:32px;
+      border-radius:8px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:#64748b;
+      cursor:pointer;
+    }
+    .page-btn[disabled]{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    .page-num{
+      font-weight:700;
+      color:#4b5563;
+    }
+    .pager select{
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:6px 10px;
+      background:#fff;
+      color:#475569;
+      font-weight:600;
+    }
+    .empty{
+      text-align:center;
+      padding:24px 0;
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+      border:1px solid transparent;
+    }
+    .tag.success{ color:#0f7a3a; background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.22); }
+    .tag.warn{ color:#a16207; background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.25); }
+    .tag.danger{ color:#b91c1c; background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.25); }
+    .tag.info{ color:#1d4ed8; background: rgba(28,123,255,.12); border-color: rgba(28,123,255,.22); }
+    .tag.neutral{ color:#4b5563; background: rgba(148,163,184,.16); border-color: rgba(148,163,184,.3); }
+
+    .btn-lite{
+      padding:6px 10px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background: var(--primary);
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .btn-ghost{
+      padding:6px 10px;
+      border-radius:8px;
+      border:1px solid var(--primary);
+      background: var(--primary);
+      color:#fff;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .row-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .modal{
+      border:0;
+      border-radius:16px;
+      padding:20px;
+      width:min(420px, 92vw);
+      box-shadow: 0 24px 60px rgba(31, 53, 90, 0.25);
+      font-family: inherit;
+    }
+    .modal-form{
+      display:grid;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .modal-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+    }
+    .modal .field{
+      padding:10px 12px;
+      min-height:unset;
+    }
+    .modal .field input,
+    .modal .field select{
+      min-width:0;
+    }
+    .modal input[readonly],
+    .modal input:disabled,
+    .modal select:disabled{
+      background:#f1f5f9;
+      color:#64748b;
+      cursor:not-allowed;
+    }
+    .modal .field.full{
+      grid-column:1 / -1;
+    }
+    .modal::backdrop{
+      background: rgba(15, 23, 42, 0.4);
+    }
+    .modal h3{
+      margin:0 0 8px;
+      font-size:18px;
+      font-weight:800;
+      color:var(--text);
+    }
+    .modal p{
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .modal-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+    }
+    @media (max-width: 900px){
+      .page-head{
+        grid-template-columns: 1fr;
+        align-items:stretch;
+      }
+      .switch-wrap{ justify-self:flex-start; }
+      .filters-grid{ grid-template-columns: 1fr; }
+      .field{ min-height:44px; }
+      .modal-grid{ grid-template-columns: 1fr; }
+      table{ display:block; overflow:auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="page-head">
+      <div class="title">
+        <h1>注文书管理</h1>
+      </div>
+      <div class="switch-wrap">
+        <div class="switcher" role="tablist" aria-label="视角切换">
+          <button class="switch-btn active" type="button" data-view="issue" role="tab" aria-selected="true">发注</button>
+          <button class="switch-btn" type="button" data-view="accept" role="tab" aria-selected="false">受注</button>
+        </div>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="filters">
+        <div class="filters-grid">
+          <div class="field wide">
+            <span>注文书号</span>
+            <input id="filter-order-no" type="text" placeholder="PO-XXXX" />
+          </div>
+          <div class="field wide">
+            <span>案件名</span>
+            <input id="filter-project" type="text" placeholder="SES 案件名" />
+          </div>
+          <div class="field wide">
+            <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
+            <input id="filter-customer" type="text" placeholder="下请公司" data-issue-placeholder="下请公司" data-accept-placeholder="客户公司" list="filter-customer-list" />
+            <input id="filter-customer-id" type="hidden" />
+          </div>
+          <datalist id="filter-customer-list"></datalist>
+          <div class="field wide">
+            <span>技术者</span>
+            <input id="filter-technician" type="text" placeholder="姓名" />
+          </div>
+          <div class="field narrow">
+            <span>状态</span>
+            <select id="statusFilter"
+                    data-issue-options="承认中,已受注,拒绝,已取消"
+                    data-accept-options="已受注,拒绝,已取消"
+                    data-default-option="全部">
+              <option>全部</option>
+            </select>
+          </div>
+          <div class="field wide">
+            <span>创建期间</span>
+            <div class="range">
+              <input id="filter-start" type="date" />
+              <span>~</span>
+              <input id="filter-end" type="date" />
+            </div>
+          </div>
+        </div>
+        <div class="filters-actions">
+          <div class="filters-actions-left">
+            <button class="action-btn btn-blue" id="createBtn" type="button" data-issue="新建注文书" data-accept="新建受注">＋ 新建注文书</button>
+          </div>
+          <div class="filters-actions-right">
+            <button class="btn-search" id="searchBtn" type="button">搜索</button>
+            <button class="btn-reset" id="resetBtn" type="button">重置</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-info" id="table-info">共 0 条 当前显示第 1 页</div>
+      <table>
+        <thead>
+          <tr>
+            <th>注文No</th>
+            <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）">案件名 / 取引先（下请）</th>
+            <th>技术者</th>
+            <th>契约单价</th>
+            <th>契约工时</th>
+            <th>契约期间</th>
+            <th>创建时间</th>
+            <th>创建人</th>
+            <th>负责人</th>
+            <th>修改时间</th>
+            <th>修改人</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="order-body"></tbody>
+      </table>
+      <div class="pager">
+        <button class="page-btn" id="page-prev">‹</button>
+        <span class="page-num" id="page-current">1</span>
+        <span class="page-num" id="page-total">/ 1</span>
+        <button class="page-btn" id="page-next">›</button>
+        <select id="page-size">
+          <option value="10">10 条/页</option>
+          <option value="20">20 条/页</option>
+          <option value="50">50 条/页</option>
+        </select>
+      </div>
+    </section>
+  </div>
+
+  <dialog class="modal" id="createDialogIssue" aria-labelledby="createTitleIssue">
+    <h3 id="createTitleIssue">新建注文书</h3>
+    <p>请根据注文书字段填写基础信息。</p>
+    <div class="modal-form">
+      <div class="modal-grid">
+        <label class="field">
+          <span>注文No</span>
+          <input id="issue-order-no" type="text" placeholder="PO-2024-XXX" />
+        </label>
+        <label class="field">
+          <span>案件名</span>
+          <input id="issue-project-name" type="text" placeholder="案件名称" />
+        </label>
+        <label class="field full">
+          <span>取引先（下请公司）</span>
+          <input id="issue-customer-name" type="text" placeholder="下请公司" list="issue-customer-list" />
+        </label>
+        <datalist id="issue-customer-list"></datalist>
+        <input id="issue-customer-id" type="hidden" />
+        <label class="field">
+          <span>技术者</span>
+          <input id="issue-technician-name" type="text" placeholder="姓名" />
+        </label>
+        <label class="field">
+          <span>状态</span>
+          <select id="issue-status">
+            <option>请选择状态</option>
+            <option selected>承认中</option>
+            <option>已受注</option>
+            <option>拒绝</option>
+            <option>已取消</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>契约单价</span>
+          <input id="issue-price" type="text" placeholder="¥ 0" />
+        </label>
+        <label class="field">
+          <span>契约工时</span>
+          <input id="issue-hours" type="text" placeholder="160h" />
+        </label>
+        <label class="field full">
+          <span>契约期间</span>
+          <div class="range">
+            <input id="issue-start" type="date" />
+            <span>~</span>
+            <input id="issue-end" type="date" />
+          </div>
+        </label>
+        <label class="field">
+          <span>负责人</span>
+          <input id="issue-owner" type="text" placeholder="姓名" list="issue-owner-list" />
+        </label>
+        <datalist id="issue-owner-list"></datalist>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-dialog-close>取消</button>
+      <button class="btn" type="button" id="issue-create-submit">开始创建</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="createDialogAccept" aria-labelledby="createTitleAccept">
+    <h3 id="createTitleAccept">新建受注</h3>
+    <p>请根据受注字段填写基础信息。</p>
+    <div class="modal-form">
+      <div class="modal-grid">
+        <label class="field">
+          <span>注文No</span>
+          <input id="accept-order-no" type="text" placeholder="PO-2024-XXX" />
+        </label>
+        <label class="field">
+          <span>案件名</span>
+          <input id="accept-project-name" type="text" placeholder="案件名称" />
+        </label>
+        <label class="field">
+          <span>对应发注ID</span>
+          <input id="accept-purchase-id" type="number" placeholder="发注ID" />
+        </label>
+        <label class="field full">
+          <span>取引先（客户公司）</span>
+          <input id="accept-customer-name" type="text" placeholder="客户公司" list="accept-customer-list" />
+        </label>
+        <datalist id="accept-customer-list"></datalist>
+        <input id="accept-customer-id" type="hidden" />
+        <label class="field">
+          <span>技术者</span>
+          <input id="accept-technician-name" type="text" placeholder="姓名" list="accept-technician-list" />
+        </label>
+        <datalist id="accept-technician-list"></datalist>
+        <input id="accept-technician-id" type="hidden" />
+        <label class="field">
+          <span>状态</span>
+          <select id="accept-status">
+            <option>请选择状态</option>
+            <option selected>已受注</option>
+            <option>拒绝</option>
+            <option>已取消</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>契约单价</span>
+          <input id="accept-price" type="text" placeholder="¥ 0" />
+        </label>
+        <label class="field">
+          <span>契约工时</span>
+          <input id="accept-hours" type="text" placeholder="160h" />
+        </label>
+        <label class="field full">
+          <span>契约期间</span>
+          <div class="range">
+            <input id="accept-start" type="date" />
+            <span>~</span>
+            <input id="accept-end" type="date" />
+          </div>
+        </label>
+        <label class="field">
+          <span>负责人</span>
+          <input id="accept-owner" type="text" placeholder="姓名" list="accept-owner-list" />
+        </label>
+        <datalist id="accept-owner-list"></datalist>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-dialog-close>取消</button>
+      <button class="btn" type="button" id="accept-create-submit">开始创建</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal" id="detailDialog" aria-labelledby="detailTitle">
+    <h3 id="detailTitle">查看注文书</h3>
+    <p id="detailSubtitle">查看订单详情</p>
+    <div class="modal-form">
+      <div class="modal-grid">
+        <label class="field">
+          <span>注文No</span>
+          <input type="text" data-field="orderNo" />
+        </label>
+        <label class="field">
+          <span>案件名</span>
+          <input type="text" data-field="project" />
+        </label>
+        <label class="field">
+          <span>客户ID</span>
+          <input type="number" data-field="customerId" />
+        </label>
+        <label class="field" data-accept-only>
+          <span>对应发注ID</span>
+          <input type="number" data-field="purchaseId" />
+        </label>
+        <label class="field full">
+          <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
+          <input type="text" data-field="client" />
+        </label>
+        <label class="field">
+          <span>技术者</span>
+          <input type="text" data-field="engineer" />
+        </label>
+        <label class="field" data-accept-only>
+          <span>技术人员ID</span>
+          <input type="number" data-field="technicianId" />
+        </label>
+        <label class="field">
+          <span>状态</span>
+          <select data-field="status"
+                  data-issue-options="承认中,已受注,拒绝,已取消"
+                  data-accept-options="已受注,拒绝,已取消"
+                  data-default-option="请选择状态">
+          </select>
+        </label>
+        <label class="field">
+          <span>契约单价</span>
+          <input type="text" data-field="price" />
+        </label>
+        <label class="field">
+          <span>契约工时</span>
+          <input type="text" data-field="hours" />
+        </label>
+        <label class="field full">
+          <span>契约期间</span>
+          <div class="range">
+            <input type="date" data-field="start" />
+            <span>~</span>
+            <input type="date" data-field="end" />
+          </div>
+        </label>
+        <label class="field">
+          <span>创建时间</span>
+          <input type="date" data-field="createdAt" />
+        </label>
+        <label class="field">
+          <span>创建人</span>
+          <input type="text" data-field="creator" />
+        </label>
+        <label class="field">
+          <span>负责人</span>
+          <input type="text" data-field="owner" />
+        </label>
+        <label class="field">
+          <span>修改时间</span>
+          <input type="date" data-field="updatedAt" />
+        </label>
+        <label class="field">
+          <span>修改人</span>
+          <input type="text" data-field="updater" />
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" data-dialog-close>关闭</button>
+      <button class="btn" type="button" data-dialog-close id="detailSave">保存</button>
+    </div>
+  </dialog>
+  <script>
+    (function () {
+      const switches = Array.from(document.querySelectorAll(".switch-btn"));
+      const swapNodes = Array.from(document.querySelectorAll("[data-issue][data-accept]"));
+      const swapPlaceholders = Array.from(document.querySelectorAll("[data-issue-placeholder][data-accept-placeholder]"));
+      const acceptOnlyFields = Array.from(document.querySelectorAll("[data-accept-only]"));
+      const statusFilter = document.getElementById("statusFilter");
+      const createBtn = document.getElementById("createBtn");
+      const createDialogIssue = document.getElementById("createDialogIssue");
+      const createDialogAccept = document.getElementById("createDialogAccept");
+      const issueCreateSubmit = document.getElementById("issue-create-submit");
+      const acceptCreateSubmit = document.getElementById("accept-create-submit");
+      const detailDialog = document.getElementById("detailDialog");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailSubtitle = document.getElementById("detailSubtitle");
+      const detailSave = document.getElementById("detailSave");
+      const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
+      const tableBody = document.getElementById("order-body");
+      const tableInfo = document.getElementById("table-info");
+      const searchBtn = document.getElementById("searchBtn");
+      const resetBtn = document.getElementById("resetBtn");
+      const pagePrev = document.getElementById("page-prev");
+      const pageNext = document.getElementById("page-next");
+      const pageCurrent = document.getElementById("page-current");
+      const pageTotal = document.getElementById("page-total");
+      const pageSizeSelect = document.getElementById("page-size");
+      const filters = {
+        orderNo: document.getElementById("filter-order-no"),
+        project: document.getElementById("filter-project"),
+        customer: document.getElementById("filter-customer"),
+        customerId: document.getElementById("filter-customer-id"),
+        customerList: document.getElementById("filter-customer-list"),
+        technician: document.getElementById("filter-technician"),
+        status: statusFilter,
+        start: document.getElementById("filter-start"),
+        end: document.getElementById("filter-end"),
+      };
+
+      const issueForm = {
+        orderNo: document.getElementById("issue-order-no"),
+        projectName: document.getElementById("issue-project-name"),
+        customerName: document.getElementById("issue-customer-name"),
+        customerId: document.getElementById("issue-customer-id"),
+        customerList: document.getElementById("issue-customer-list"),
+        technicianName: document.getElementById("issue-technician-name"),
+        status: document.getElementById("issue-status"),
+        price: document.getElementById("issue-price"),
+        hours: document.getElementById("issue-hours"),
+        start: document.getElementById("issue-start"),
+        end: document.getElementById("issue-end"),
+        owner: document.getElementById("issue-owner"),
+        ownerList: document.getElementById("issue-owner-list"),
+      };
+
+      const acceptForm = {
+        orderNo: document.getElementById("accept-order-no"),
+        projectName: document.getElementById("accept-project-name"),
+        purchaseId: document.getElementById("accept-purchase-id"),
+        customerName: document.getElementById("accept-customer-name"),
+        customerId: document.getElementById("accept-customer-id"),
+        customerList: document.getElementById("accept-customer-list"),
+        technicianName: document.getElementById("accept-technician-name"),
+        technicianId: document.getElementById("accept-technician-id"),
+        technicianList: document.getElementById("accept-technician-list"),
+        status: document.getElementById("accept-status"),
+        price: document.getElementById("accept-price"),
+        hours: document.getElementById("accept-hours"),
+        start: document.getElementById("accept-start"),
+        end: document.getElementById("accept-end"),
+        owner: document.getElementById("accept-owner"),
+        ownerList: document.getElementById("accept-owner-list"),
+      };
+
+      const detailFields = {
+        orderNo: document.querySelector('[data-field="orderNo"]'),
+        project: document.querySelector('[data-field="project"]'),
+        customerId: document.querySelector('[data-field="customerId"]'),
+        purchaseId: document.querySelector('[data-field="purchaseId"]'),
+        client: document.querySelector('[data-field="client"]'),
+        engineer: document.querySelector('[data-field="engineer"]'),
+        technicianId: document.querySelector('[data-field="technicianId"]'),
+        status: document.querySelector('[data-field="status"]'),
+        price: document.querySelector('[data-field="price"]'),
+        hours: document.querySelector('[data-field="hours"]'),
+        start: document.querySelector('[data-field="start"]'),
+        end: document.querySelector('[data-field="end"]'),
+        createdAt: document.querySelector('[data-field="createdAt"]'),
+        creator: document.querySelector('[data-field="creator"]'),
+        owner: document.querySelector('[data-field="owner"]'),
+        updatedAt: document.querySelector('[data-field="updatedAt"]'),
+        updater: document.querySelector('[data-field="updater"]'),
+      };
+
+      const statusClass = {
+        "草稿": "neutral",
+        "承认中": "warn",
+        "已送付": "info",
+        "已受注": "success",
+        "已取消": "danger",
+        "拒绝": "danger"
+      };
+
+      let currentView = "issue";
+      let currentPage = 1;
+      let pageSize = 10;
+      let totalPages = 1;
+      let currentItems = [];
+      let currentDetailId = null;
+      let detailMode = "view";
+      const issueCustomerMap = new Map();
+      const acceptCustomerMap = new Map();
+      const filterCustomerMap = new Map();
+      const acceptTechnicianMap = new Map();
+
+      function renderActions(container) {
+        container.innerHTML = "";
+        ["编辑", "查看"].forEach((label) => {
+          const btn = document.createElement("button");
+          const isPrimary = label === "查看";
+          btn.className = isPrimary ? "btn-lite" : "btn-ghost";
+          btn.type = "button";
+          btn.textContent = label;
+          btn.dataset.action = label === "编辑" ? "edit" : "view";
+          container.appendChild(btn);
+        });
+      }
+
+      function fillStatusOptions(select, view) {
+        if (!select) return;
+        const options = (view === "accept"
+          ? select.dataset.acceptOptions
+          : select.dataset.issueOptions) || "";
+        const values = options.split(",").map((v) => v.trim()).filter(Boolean);
+        const defaultOption = select.dataset.defaultOption || "";
+        select.innerHTML = defaultOption ? `<option>${defaultOption}</option>` : "";
+        values.forEach((value) => {
+          const opt = document.createElement("option");
+          opt.textContent = value;
+          select.appendChild(opt);
+        });
+      }
+
+      function setView(view) {
+        currentView = view;
+        currentPage = 1;
+        switches.forEach((btn) => {
+          const active = btn.dataset.view === view;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        swapNodes.forEach((node) => {
+          node.textContent = view === "accept" ? node.dataset.accept : node.dataset.issue;
+        });
+        swapPlaceholders.forEach((node) => {
+          node.setAttribute(
+            "placeholder",
+            view === "accept" ? node.dataset.acceptPlaceholder : node.dataset.issuePlaceholder
+          );
+        });
+        acceptOnlyFields.forEach((node) => {
+          node.style.display = view === "accept" ? "" : "none";
+        });
+        if (createBtn) {
+          createBtn.textContent = view === "accept" ? createBtn.dataset.accept : createBtn.dataset.issue;
+        }
+        fillStatusOptions(statusFilter, view);
+        fetchOrders();
+      }
+
+      function setDialogMode(mode) {
+        const isView = mode === "view";
+        detailMode = mode;
+        if (detailTitle) detailTitle.textContent = isView ? "查看订单" : "编辑订单";
+        if (detailSubtitle) {
+          detailSubtitle.textContent = isView ? "查看订单详情" : "修改订单信息";
+        }
+        if (detailSave) detailSave.style.display = isView ? "none" : "";
+        Object.values(detailFields).forEach((field) => {
+          if (!field) return;
+          if (field.tagName === "SELECT") {
+            field.disabled = isView;
+            return;
+          }
+          if (field.type === "date") {
+            field.disabled = isView;
+          } else {
+            field.readOnly = isView;
+          }
+        });
+        if (detailFields.createdAt) detailFields.createdAt.readOnly = true;
+        if (detailFields.updatedAt) detailFields.updatedAt.readOnly = true;
+        if (detailFields.creator) detailFields.creator.readOnly = true;
+        if (detailFields.updater) detailFields.updater.readOnly = true;
+      }
+
+      function formatPrice(value) {
+        if (value === null || value === undefined || value === "") return "-";
+        return String(value);
+      }
+
+      function formatHours(value) {
+        if (value === null || value === undefined || value === "") return "-";
+        return String(value);
+      }
+
+      function renderRows(items, totalCount, page, totalPageCount) {
+        const count = Number.isFinite(totalCount) ? totalCount : items.length;
+        totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
+        currentPage = Number.isFinite(page) ? page : 1;
+        pageCurrent.textContent = String(currentPage);
+        pageTotal.textContent = `/ ${totalPages}`;
+        pagePrev.disabled = currentPage <= 1;
+        pageNext.disabled = currentPage >= totalPages;
+        if (!items.length) {
+          tableBody.innerHTML = `<tr><td colspan="13" class="empty">暂无数据</td></tr>`;
+          tableInfo.textContent = `共 ${count} 条 当前显示第 ${currentPage} 页`;
+          return;
+        }
+        tableBody.innerHTML = items.map((item) => {
+          const status = item.status || "草稿";
+          const periodStart = item.period_start || "-";
+          const periodEnd = item.period_end || "-";
+          return `
+            <tr data-id="${item.id}">
+              <td>${item.order_no || "-"}</td>
+              <td>
+                <div class="cell-ellipsis" title="${item.project_name || ""}">${item.project_name || "-"}</div>
+                <div class="cell-ellipsis" title="${item.customer_name || ""}">${item.customer_name || "-"}</div>
+              </td>
+              <td>${item.technician_name || "-"}</td>
+              <td>${formatPrice(item.price)}</td>
+              <td>${formatHours(item.working_hours)}</td>
+              <td>
+                <div>${periodStart}</div>
+                <div>${periodEnd}</div>
+              </td>
+              <td>${item.created_at || "-"}</td>
+              <td>${item.created_by || "-"}</td>
+              <td>${item.person_in_charge || "-"}</td>
+              <td>${item.updated_at || "-"}</td>
+              <td>${item.updated_by || "-"}</td>
+              <td><span class="tag ${statusClass[status] || "neutral"}">${status}</span></td>
+              <td><div class="row-actions" data-row-actions></div></td>
+            </tr>
+          `;
+        }).join("");
+        tableInfo.textContent = `共 ${count} 条 当前显示第 ${currentPage} 页`;
+        Array.from(document.querySelectorAll("[data-row-actions]")).forEach(renderActions);
+      }
+
+      function fetchOrders() {
+        const params = new URLSearchParams();
+        if (filters.orderNo.value.trim()) params.append("order_no", filters.orderNo.value.trim());
+        if (filters.project.value.trim()) params.append("project_name", filters.project.value.trim());
+        if (filters.customerId.value.trim()) params.append("customer_id", filters.customerId.value.trim());
+        if (filters.technician.value.trim()) params.append("technician_name", filters.technician.value.trim());
+        if (filters.status.value && filters.status.value !== "全部") params.append("status", filters.status.value);
+        if (filters.start.value) params.append("created_start", filters.start.value);
+        if (filters.end.value) params.append("created_end", filters.end.value);
+        params.append("page", String(currentPage));
+        params.append("page_size", String(pageSize));
+        const baseUrl = currentView === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
+        fetch(`${baseUrl}?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            currentItems = Array.isArray(data.items) ? data.items : [];
+            renderRows(currentItems, data.total, data.page, data.total_pages);
+          })
+          .catch(() => {
+            currentItems = [];
+            renderRows([], 0, 1, 1);
+          });
+      }
+
+      function openDetailDialog(mode, item) {
+        if (!detailDialog || !item) return;
+        fillStatusOptions(detailFields.status, currentView);
+        if (detailFields.orderNo) detailFields.orderNo.value = item.order_no || "";
+        if (detailFields.project) detailFields.project.value = item.project_name || "";
+        if (detailFields.customerId) detailFields.customerId.value = item.customer_id || "";
+        if (detailFields.purchaseId) detailFields.purchaseId.value = item.purchase_id || "";
+        if (detailFields.client) detailFields.client.value = item.customer_name || "";
+        if (detailFields.engineer) detailFields.engineer.value = item.technician_name || "";
+        if (detailFields.technicianId) detailFields.technicianId.value = item.technician_id || "";
+        if (detailFields.status && item.status) detailFields.status.value = item.status;
+        if (detailFields.price) detailFields.price.value = item.price || "";
+        if (detailFields.hours) detailFields.hours.value = item.working_hours || "";
+        if (detailFields.start) detailFields.start.value = item.period_start || "";
+        if (detailFields.end) detailFields.end.value = item.period_end || "";
+        if (detailFields.createdAt) detailFields.createdAt.value = item.created_at || "";
+        if (detailFields.creator) detailFields.creator.value = item.created_by || "";
+        if (detailFields.owner) detailFields.owner.value = item.person_in_charge || "";
+        if (detailFields.updatedAt) detailFields.updatedAt.value = item.updated_at || "";
+        if (detailFields.updater) detailFields.updater.value = item.updated_by || "";
+
+        currentDetailId = item.id;
+        setDialogMode(mode);
+        detailDialog.showModal();
+      }
+
+      function buildIssuePayload(fromDetail) {
+        return {
+          order_no: fromDetail ? detailFields.orderNo.value.trim() : issueForm.orderNo.value.trim(),
+          project_name: fromDetail ? detailFields.project.value.trim() : issueForm.projectName.value.trim(),
+          customer_id: Number(fromDetail ? detailFields.customerId.value : issueForm.customerId.value) || 0,
+          customer_name: fromDetail ? detailFields.client.value.trim() : issueForm.customerName.value.trim(),
+          technician_name: fromDetail ? detailFields.engineer.value.trim() : issueForm.technicianName.value.trim(),
+          status: fromDetail ? detailFields.status.value : issueForm.status.value,
+          price: fromDetail ? detailFields.price.value.trim() : issueForm.price.value.trim(),
+          working_hours: fromDetail ? detailFields.hours.value.trim() : issueForm.hours.value.trim(),
+          period_start: fromDetail ? detailFields.start.value : issueForm.start.value,
+          period_end: fromDetail ? detailFields.end.value : issueForm.end.value,
+          person_in_charge: fromDetail ? detailFields.owner.value.trim() : issueForm.owner.value.trim(),
+        };
+      }
+
+      function buildAcceptPayload(fromDetail) {
+        return {
+          order_no: fromDetail ? detailFields.orderNo.value.trim() : acceptForm.orderNo.value.trim(),
+          project_name: fromDetail ? detailFields.project.value.trim() : acceptForm.projectName.value.trim(),
+          purchase_id: Number(fromDetail ? detailFields.purchaseId.value : acceptForm.purchaseId.value) || 0,
+          customer_id: Number(fromDetail ? detailFields.customerId.value : acceptForm.customerId.value) || 0,
+          customer_name: fromDetail ? detailFields.client.value.trim() : acceptForm.customerName.value.trim(),
+          technician_id: Number(fromDetail ? detailFields.technicianId.value : acceptForm.technicianId.value) || 0,
+          technician_name: fromDetail ? detailFields.engineer.value.trim() : acceptForm.technicianName.value.trim(),
+          status: fromDetail ? detailFields.status.value : acceptForm.status.value,
+          price: fromDetail ? detailFields.price.value.trim() : acceptForm.price.value.trim(),
+          working_hours: fromDetail ? detailFields.hours.value.trim() : acceptForm.hours.value.trim(),
+          period_start: fromDetail ? detailFields.start.value : acceptForm.start.value,
+          period_end: fromDetail ? detailFields.end.value : acceptForm.end.value,
+          person_in_charge: fromDetail ? detailFields.owner.value.trim() : acceptForm.owner.value.trim(),
+        };
+      }
+
+      function submitCreate(view) {
+        const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
+        const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            if (view === "accept" && createDialogAccept) createDialogAccept.close();
+            if (view === "issue" && createDialogIssue) createDialogIssue.close();
+            fetchOrders();
+          })
+          .catch(() => {
+            alert("创建失败，请稍后重试");
+          });
+      }
+
+      function submitUpdate() {
+        if (!currentDetailId) return;
+        const payload = currentView === "accept" ? buildAcceptPayload(true) : buildIssuePayload(true);
+        const url = currentView === "accept"
+          ? `/api/sales-orders/${currentDetailId}`
+          : `/api/purchase-orders/${currentDetailId}`;
+        fetch(url, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            if (detailDialog) detailDialog.close();
+            fetchOrders();
+          })
+          .catch(() => {
+            alert("保存失败，请稍后重试");
+          });
+      }
+
+      function renderCustomerOptions(listEl, map, items) {
+        map.clear();
+        listEl.innerHTML = "";
+        items.forEach((item) => {
+          if (!item || !item.company_name) return;
+          map.set(item.company_name, item.id);
+          const opt = document.createElement("option");
+          opt.value = item.company_name;
+          listEl.appendChild(opt);
+        });
+      }
+
+      function fetchCustomerOptions(inputEl, listEl, map) {
+        const keyword = inputEl.value.trim();
+        if (!keyword) {
+          listEl.innerHTML = "";
+          map.clear();
+          return;
+        }
+        const params = new URLSearchParams();
+        params.append("company_name", keyword);
+        params.append("page", "1");
+        params.append("page_size", "10");
+        fetch(`/api/customers?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const items = Array.isArray(data.items) ? data.items : [];
+            renderCustomerOptions(listEl, map, items);
+          })
+          .catch(() => {
+            listEl.innerHTML = "";
+            map.clear();
+          });
+      }
+
+      function bindCustomerLookup(inputEl, idEl, listEl, map) {
+        if (!inputEl || !idEl || !listEl) return;
+        inputEl.addEventListener("input", () => {
+          fetchCustomerOptions(inputEl, listEl, map);
+          idEl.value = "";
+        });
+        inputEl.addEventListener("change", () => {
+          const id = map.get(inputEl.value.trim());
+          idEl.value = id ? String(id) : "";
+        });
+      }
+
+      function fetchEmployeeOptions(inputEl, listEl) {
+        const keyword = inputEl.value.trim();
+        if (!keyword) {
+          listEl.innerHTML = "";
+          return;
+        }
+        const params = new URLSearchParams();
+        params.append("keyword", keyword);
+        fetch(`/api/employees?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const items = Array.isArray(data.items) ? data.items : [];
+            listEl.innerHTML = "";
+            items.forEach((item) => {
+              if (!item || !item.name) return;
+              const opt = document.createElement("option");
+              opt.value = item.name;
+              listEl.appendChild(opt);
+            });
+          })
+          .catch(() => {
+            listEl.innerHTML = "";
+          });
+      }
+
+      function bindOwnerLookup(form) {
+        if (!form.owner || !form.ownerList) return;
+        form.owner.addEventListener("input", () => {
+          fetchEmployeeOptions(form.owner, form.ownerList);
+        });
+      }
+
+      function renderTechnicianOptions(listEl, map, items) {
+        map.clear();
+        listEl.innerHTML = "";
+        items.forEach((item) => {
+          if (!item || !item.name) return;
+          map.set(item.name, item.employee_id);
+          const opt = document.createElement("option");
+          opt.value = item.name;
+          listEl.appendChild(opt);
+        });
+      }
+
+      function fetchTechnicianOptions(inputEl, listEl, map) {
+        const keyword = inputEl.value.trim();
+        if (!keyword) {
+          listEl.innerHTML = "";
+          map.clear();
+          return;
+        }
+        const params = new URLSearchParams();
+        params.append("keyword", keyword);
+        fetch(`/api/technicians?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const items = Array.isArray(data.items) ? data.items : [];
+            renderTechnicianOptions(listEl, map, items);
+          })
+          .catch(() => {
+            listEl.innerHTML = "";
+            map.clear();
+          });
+      }
+
+      function bindTechnicianLookup(inputEl, idEl, listEl, map) {
+        if (!inputEl || !idEl || !listEl) return;
+        inputEl.addEventListener("input", () => {
+          fetchTechnicianOptions(inputEl, listEl, map);
+          idEl.value = "";
+        });
+        inputEl.addEventListener("change", () => {
+          const id = map.get(inputEl.value.trim());
+          idEl.value = id ? String(id) : "";
+        });
+      }
+
+      switches.forEach((btn) => {
+        btn.addEventListener("click", () => setView(btn.dataset.view));
+      });
+
+      if (createBtn) {
+        createBtn.addEventListener("click", () => {
+          if (currentView === "accept") {
+            if (createDialogAccept) createDialogAccept.showModal();
+          } else if (createDialogIssue) {
+            createDialogIssue.showModal();
+          }
+        });
+      }
+
+      if (issueCreateSubmit) {
+        issueCreateSubmit.addEventListener("click", () => submitCreate("issue"));
+      }
+      if (acceptCreateSubmit) {
+        acceptCreateSubmit.addEventListener("click", () => submitCreate("accept"));
+      }
+
+      if (searchBtn) {
+        searchBtn.addEventListener("click", () => {
+          currentPage = 1;
+          fetchOrders();
+        });
+      }
+
+      if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+          Object.values(filters).forEach((field) => {
+            if (!field) return;
+            if (field.tagName === "SELECT") {
+              field.value = "全部";
+            } else {
+              field.value = "";
+            }
+          });
+          filterCustomerMap.clear();
+          currentPage = 1;
+          fetchOrders();
+        });
+      }
+
+      if (pagePrev) {
+        pagePrev.addEventListener("click", () => {
+          if (currentPage > 1) {
+            currentPage -= 1;
+            fetchOrders();
+          }
+        });
+      }
+      if (pageNext) {
+        pageNext.addEventListener("click", () => {
+          if (currentPage < totalPages) {
+            currentPage += 1;
+            fetchOrders();
+          }
+        });
+      }
+      if (pageSizeSelect) {
+        pageSizeSelect.addEventListener("change", () => {
+          const value = parseInt(pageSizeSelect.value, 10);
+          pageSize = Number.isFinite(value) ? value : 10;
+          currentPage = 1;
+          fetchOrders();
+        });
+      }
+
+      if (tableBody) {
+        tableBody.addEventListener("click", (event) => {
+          const btn = event.target.closest("button[data-action]");
+          if (!btn) return;
+          const row = btn.closest("tr");
+          if (!row) return;
+          const id = row.dataset.id;
+          const item = currentItems.find((entry) => String(entry.id) === String(id));
+          if (!item) return;
+          openDetailDialog(btn.dataset.action, item);
+        });
+      }
+
+      if (detailSave) {
+        detailSave.addEventListener("click", () => {
+          if (detailMode === "edit") {
+            submitUpdate();
+          }
+        });
+      }
+
+      dialogCloseButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const dialog = button.closest("dialog");
+          if (dialog) dialog.close();
+        });
+      });
+
+      bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap);
+      bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap);
+      bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap);
+      bindOwnerLookup(issueForm);
+      bindOwnerLookup(acceptForm);
+      bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap);
+
+      setView("issue");
+    })();
+  </script>
+</body>
+</html>

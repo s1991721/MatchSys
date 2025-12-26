@@ -429,6 +429,11 @@ def technicians_api(request):
         return JsonResponse({"status": "ok", "item": _serialize_technician(tech)})
 
     qs = Technician.objects.all()
+    keyword = (request.GET.get("keyword") or "").strip()
+    if keyword:
+        qs = qs.filter(
+            Q(name__icontains=keyword) | Q(name_mask__icontains=keyword)
+        )
 
     age_min, error = _normalize_smallint(request.GET.get("age_min"), "age_min")
     if error:

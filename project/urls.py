@@ -54,6 +54,12 @@ from customer.views import (
     customer_detail_api,
     customer_contract_upload,
 )
+from order.views import (
+    purchase_orders_api,
+    purchase_order_detail_api,
+    sales_orders_api,
+    sales_order_detail_api,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -78,6 +84,10 @@ urlpatterns = [
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),
     path("api/customers/<int:customer_id>/contract", customer_contract_upload, name="customer-contract-upload"),
+    path("api/purchase-orders", purchase_orders_api, name="purchase-orders"),
+    path("api/purchase-orders/<int:order_id>", purchase_order_detail_api, name="purchase-order-detail"),
+    path("api/sales-orders", sales_orders_api, name="sales-orders"),
+    path("api/sales-orders/<int:order_id>", sales_order_detail_api, name="sales-order-detail"),
     path("api/login", login_api, name="employee-login"),
     path("api/logout", logout_api, name="employee-logout"),
     path("api/change-password", change_password_api, name="employee-change-password"),

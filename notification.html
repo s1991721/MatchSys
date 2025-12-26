@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>通知管理</title>
   <style>
 * {
@@ -61,27 +62,6 @@
       flex-wrap: wrap;
     }
 
-    .btn {
-      border: 1px solid var(--line);
-      background: var(--card);
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: 0.15s ease;
-    }
-
-    .btn.primary {
-      background: rgba(28, 123, 255, 0.1);
-      border-color: rgba(28, 123, 255, 0.3);
-      color: var(--primary);
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-    }
 
     .grid {
       display: grid;
@@ -91,16 +71,7 @@
     .stats {
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
-
-    .card {
-      background: var(--card);
-      border-radius: 12px;
-      border: 1px solid var(--line);
-      box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-      padding: 14px 16px;
-    }
-
-    .stat-value {
+.stat-value {
       font-size: 20px;
       font-weight: 800;
       margin: 6px 0 4px;
@@ -136,14 +107,8 @@
       background: #fff;
     }
 
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 13px;
-    }
-
-    .table th,
+    .
+.table th,
     .table td {
       text-align: left;
       padding: 10px 8px;
@@ -200,14 +165,6 @@
       gap: 6px;
     }
 
-    .tiny-btn {
-      border: 1px solid var(--line);
-      background: #fff;
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-size: 12px;
-      cursor: pointer;
-    }
 
     .empty {
       text-align: center;
@@ -238,36 +195,36 @@
         <p class="subtitle">统一管理系统内通知的创建、发布与阅读状态，支持分类筛选与批量操作。</p>
       </div>
       <div class="action-row">
-        <button class="btn">导入模板</button>
-        <button class="btn">批量设为已读</button>
-        <button class="btn primary">新建通知</button>
+        <button class="c-btn c-btn-secondary">导入模板</button>
+        <button class="c-btn c-btn-secondary">批量设为已读</button>
+        <button class="c-btn c-btn-primary">新建通知</button>
       </div>
     </div>
 
     <div class="grid stats">
-      <div class="card">
+      <div class="c-card">
         <div class="stat-label">待处理通知</div>
         <div class="stat-value">18</div>
         <div class="stat-label">24小时内新增 6</div>
       </div>
-      <div class="card">
+      <div class="c-card">
         <div class="stat-label">高优先级</div>
         <div class="stat-value">5</div>
         <div class="stat-label">需确认回执 2</div>
       </div>
-      <div class="card">
+      <div class="c-card">
         <div class="stat-label">已发布</div>
         <div class="stat-value">126</div>
         <div class="stat-label">本月完成率 92%</div>
       </div>
-      <div class="card">
+      <div class="c-card">
         <div class="stat-label">草稿箱</div>
         <div class="stat-value">7</div>
         <div class="stat-label">待审批 3</div>
       </div>
     </div>
 
-    <div class="card" style="margin-top: 12px;">
+    <div class="c-card" style="margin-top: 12px;">
       <div class="filters">
         <label class="field">
           关键词
@@ -302,7 +259,7 @@
         </label>
       </div>
 
-      <table class="table" aria-label="通知列表">
+      <table c-table class="table c-table" aria-label="通知列表">
         <thead>
           <tr>
             <th>标题</th>
@@ -322,8 +279,8 @@
             <td>2024-03-21 09:30</td>
             <td>
               <div class="row-actions">
-                <button class="tiny-btn">查看</button>
-                <button class="tiny-btn">编辑</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">查看</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">编辑</button>
               </div>
             </td>
           </tr>
@@ -335,8 +292,8 @@
             <td>2024-03-19 16:20</td>
             <td>
               <div class="row-actions">
-                <button class="tiny-btn">查看</button>
-                <button class="tiny-btn">推送</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">查看</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">推送</button>
               </div>
             </td>
           </tr>
@@ -348,8 +305,8 @@
             <td>2024-03-18 11:05</td>
             <td>
               <div class="row-actions">
-                <button class="tiny-btn">编辑</button>
-                <button class="tiny-btn">提交审批</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">编辑</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">提交审批</button>
               </div>
             </td>
           </tr>
@@ -361,8 +318,8 @@
             <td>2024-03-15 22:00</td>
             <td>
               <div class="row-actions">
-                <button class="tiny-btn">查看</button>
-                <button class="tiny-btn">复盘</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">查看</button>
+                <button class="c-btn c-btn-sm c-btn-secondary">复盘</button>
               </div>
             </td>
           </tr>

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>送信历史</title>
     <style>
 * {
@@ -71,36 +72,6 @@
         .grid + .grid {
             margin-top: 16px;
         }
-
-        .card {
-            background: var(--card);
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
-            padding: 16px 18px 18px;
-            display: flex;
-            flex-direction: column;
-            min-height: 260px;
-        }
-
-        .card-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .card-title::before {
-            content: "";
-            width: 4px;
-            height: 18px;
-            border-radius: 12px;
-            background: var(--primary);
-            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
-        }
-
         .filter-row {
             display: flex;
             align-items: center;
@@ -395,8 +366,8 @@
         </header>
 
         <section class="grid">
-            <div class="card">
-                <div class="card-title">历史列表</div>
+            <div class="c-card">
+                <div class="c-card-title">历史列表</div>
                 <div class="filter-row">
                     <div class="pill-group" id="status-group">
                         <button class="pill active" data-status="all" type="button">全部</button>
@@ -412,8 +383,8 @@
                 <ul id="history-list" class="history-list"></ul>
             </div>
 
-            <div class="card">
-                <div class="card-title">送信详情</div>
+            <div class="c-card">
+                <div class="c-card-title">送信详情</div>
                 <div class="detail-meta" id="detail-meta"></div>
                 <div class="section-title">正文</div>
                 <div id="history-detail" class="detail"></div>
@@ -423,26 +394,26 @@
         </section>
 
         <section class="grid">
-            <div class="card">
-                <div class="card-title">统计概览</div>
+            <div class="c-card">
+                <div class="c-card-title">统计概览</div>
                 <div class="stat-grid">
-                    <div class="stat-card">
+                    <div class="stat-card c-card c-card-compact">
                         <div class="stat-label">本周已发送</div>
                         <div class="stat-value" id="stat-sent">0</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card c-card c-card-compact">
                         <div class="stat-label">待处理</div>
                         <div class="stat-value" id="stat-pending">0</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card c-card c-card-compact">
                         <div class="stat-label">失败重试</div>
                         <div class="stat-value" id="stat-failed">0</div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-title">提醒</div>
+            <div class="c-card">
+                <div class="c-card-title">提醒</div>
                 <div class="tips">
                     <div class="tips-item">
                         <span class="tips-bullet"></span>

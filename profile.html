@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>个人信息</title>
   <style>
 * { box-sizing: border-box; }
@@ -22,16 +23,7 @@
       flex-direction: column;
       gap: 16px;
     }
-
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      border: 1px solid var(--line);
-      box-shadow: var(--shadow);
-      padding: 18px 20px;
-    }
-
-    .header-card {
+.header-card {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -175,31 +167,6 @@
       flex-wrap: wrap;
     }
 
-    .btn {
-      border-radius: 10px;
-      border: 1px solid transparent;
-      padding: 10px 16px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    }
-
-    .btn.primary {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 10px 20px rgba(28, 123, 255, 0.2);
-    }
-
-    .btn.primary:hover {
-      transform: translateY(-1px);
-    }
-
-    .btn.danger {
-      background: rgba(229, 82, 63, 0.08);
-      color: var(--danger);
-      border-color: rgba(229, 82, 63, 0.3);
-    }
-
     .status {
       padding: 10px 12px;
       border-radius: 10px;
@@ -241,7 +208,7 @@
 </head>
 <body>
 <div class="page">
-  <div class="card header-card">
+  <div class="header-card c-card c-card-pad">
     <div class="profile-head">
       <div class="avatar" aria-label="用户头像">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -258,14 +225,14 @@
       </div>
     </div>
     <div class="profile-actions">
-      <button class="btn danger" type="button" id="logoutBtn">退出登录</button>
+      <button class="c-btn c-btn-danger" type="button" id="logoutBtn">退出登录</button>
     </div>
   </div>
 
   <div id="statusBox" class="status" role="status" aria-live="polite"></div>
 
   <div class="content-grid">
-    <section class="card">
+    <section class="c-card">
       <h3 class="section-title">修改员工信息</h3>
       <form id="employeeForm" autocomplete="off">
         <div class="form-grid">
@@ -324,12 +291,12 @@
           </div>
         </div>
         <div class="form-actions">
-          <button class="btn primary" type="submit">保存信息</button>
+          <button class="c-btn c-btn-primary" type="submit">保存信息</button>
         </div>
       </form>
     </section>
 
-    <section class="card">
+    <section class="c-card">
       <h3 class="section-title">修改密码</h3>
       <form id="passwordForm" autocomplete="off">
         <div class="form-field">
@@ -346,7 +313,7 @@
         </div>
         <div class="hint">密码修改后需要重新登录。</div>
         <div class="form-actions">
-          <button class="btn primary" type="submit">更新密码</button>
+          <button class="c-btn c-btn-primary" type="submit">更新密码</button>
         </div>
       </form>
     </section>
@@ -445,6 +412,7 @@
         emergency_contact_name: document.getElementById("empEmergencyName").value.trim(),
         emergency_contact_phone: document.getElementById("empEmergencyPhone").value.trim(),
         emergency_contact_relationship: document.getElementById("empEmergencyRelation").value.trim(),
+      };
       const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

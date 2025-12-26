@@ -18,7 +18,14 @@ class SessionLoginRequiredMiddleware:
 
     @staticmethod
     def _should_skip(path: str) -> bool:
-        if path in {"/login.html", "/favicon.ico", "/favicon.png"}:
+        if path in {
+            "/login.html",
+            "/favicon.ico",
+            "/favicon.png",
+            "/common.css",
+            "/components.css",
+            "/common.js",
+        }:
             return True
         if path.startswith(("/api/", "/admin/", "/static/")):
             return True

@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>考勤打卡</title>
   <style>
 *{box-sizing:border-box}
@@ -23,16 +24,7 @@
       flex-direction:column;
       gap:18px;
     }
-
-    .card{
-      background:var(--card);
-      border-radius:var(--radius);
-      border:1px solid var(--line);
-      box-shadow: var(--shadow);
-      padding:16px 16px 18px;
-    }
-
-    .card-head{
+.card-head{
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -56,11 +48,8 @@
       box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
     }
 
-    details.card{
-      padding:14px 16px 16px;
-    }
-
-    .accordion summary{
+    details
+.accordion summary{
       list-style:none;
       cursor:pointer;
       display:flex;
@@ -107,20 +96,10 @@
       margin:6px 0 12px;
     }
 
-    .month-btn{
-      border:1px solid var(--line);
-      background:#f7f9fd;
-      color:#3b4a60;
-      padding:6px 12px;
-      border-radius:10px;
-      font-weight:800;
-      cursor:pointer;
-    }
-
-    .month-btn.active{
-      background: rgba(28,123,255,.10);
-      border-color: rgba(28,123,255,.25);
-      color: var(--primary);
+    .month-toggle .c-toggle {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-size: 12px;
     }
 
     /* small icons (inline svg look) */
@@ -341,24 +320,9 @@
     .stat.red .stat-num{color:#b42323}
 
     /* ---------- 明细表格 ---------- */
-    .table{
-      border-radius:18px;
-      overflow:hidden;
-      border:1px solid rgba(47,128,255,.08);
-      background: #fff;
-    }
-
-    .thead{
-      background: linear-gradient(180deg, rgba(47,128,255,.08), rgba(47,128,255,0));
-      padding:12px 14px;
-      display:grid;
-      grid-template-columns: 1.1fr 1.1fr 1.2fr .9fr;
-      color:#64748b;
-      font-weight:900;
-      font-size:18px;
-    }
-
-    .row{
+    .
+.
+.row{
       padding:14px 14px;
       display:grid;
       grid-template-columns: 1.1fr 1.1fr 1.2fr .9fr;
@@ -378,18 +342,6 @@
       color:#94a3b8;
       font-weight:900;
       padding:0 10px;
-    }
-
-    .btn{
-      justify-self:end;
-      padding:10px 16px;
-      border-radius:10px;
-      background: linear-gradient(180deg, #3a8cff, #1f6dff);
-      color:#fff;
-      font-weight:900;
-      border:0;
-      box-shadow: 0 10px 16px rgba(47,128,255,.22);
-      cursor:pointer;
     }
 
     /* ---------- 修改弹窗 ---------- */
@@ -478,27 +430,7 @@
       padding:8px 10px;
       border-radius:10px;
     }
-    .btn-ghost{
-      border:1px solid var(--line);
-      background:#fff;
-      color:#3b4a60;
-      padding:8px 14px;
-      border-radius:10px;
-      font-weight:800;
-      cursor:pointer;
-    }
-    .btn-primary{
-      border:0;
-      background: linear-gradient(180deg, #3a8cff, #1f6dff);
-      color:#fff;
-      padding:8px 16px;
-      border-radius:10px;
-      font-weight:900;
-      cursor:pointer;
-      box-shadow: 0 10px 16px rgba(47,128,255,.20);
-    }
-
-    .toast{
+.toast{
       position:fixed;
       left:50%;
       bottom:28px;
@@ -749,7 +681,7 @@
   <div class="page">
 
     <!-- 打卡位置 -->
-    <section class="card">
+    <section class="c-card">
       <div class="card-head">
         <div class="title">
           <span class="ico" aria-hidden="true">
@@ -783,7 +715,7 @@
     </section>
 
     <!-- 今日考勤 -->
-    <section class="card">
+    <section class="c-card">
       <div class="card-head">
         <div class="title" style="font-size:22px;">
           <span class="ico" aria-hidden="true">
@@ -839,7 +771,7 @@
     </section>
 
     <!-- 我的考勤（折叠） -->
-    <details class="card accordion" data-url="/api/my-attendance-summary" data-renderer="renderAttendanceSummary">
+    <details class="accordion c-card" data-url="/api/my-attendance-summary" data-renderer="renderAttendanceSummary">
       <summary>
         <div class="title">
           <span class="ico" aria-hidden="true" style="background:rgba(34,197,94,.12);color:#16a34a">
@@ -857,8 +789,8 @@
       </summary>
       <div class="accordion-body" data-content="summary">
         <div class="month-toggle" role="tablist" aria-label="考勤月份选择">
-          <button class="month-btn active" type="button" data-month="current">当月</button>
-          <button class="month-btn" type="button" data-month="previous">上月</button>
+          <button class="c-toggle is-active" type="button" data-month="current">当月</button>
+          <button class="c-toggle" type="button" data-month="previous">上月</button>
         </div>
         <div class="lazy-placeholder">等待展开加载数据</div>
         <div class="stats" data-template hidden>
@@ -902,7 +834,7 @@
     </details>
 
     <!-- 考勤明细（折叠） -->
-    <details class="card accordion" data-url="/api/my-attendance-detail" data-renderer="renderAttendanceDetail">
+    <details class="accordion c-card" data-url="/api/my-attendance-detail" data-renderer="renderAttendanceDetail">
       <summary>
         <div class="title">
           <span class="ico" aria-hidden="true">
@@ -921,8 +853,8 @@
 
       <div class="accordion-body" data-content="detail">
         <div class="month-toggle" role="tablist" aria-label="考勤月份选择">
-          <button class="month-btn active" type="button" data-month="current">当月</button>
-          <button class="month-btn" type="button" data-month="previous">上月</button>
+          <button class="c-toggle is-active" type="button" data-month="current">当月</button>
+          <button class="c-toggle" type="button" data-month="previous">上月</button>
         </div>
         <div class="lazy-placeholder">等待展开加载数据</div>
         <div class="table" data-template hidden>
@@ -939,7 +871,7 @@
               <span class="worktime">09:00</span><span class="sep">•</span><span class="worktime">18:00</span>
             </div>
             <div style="text-align:center;color:#64748b;">-</div>
-            <button class="btn" type="button" data-iso="2023-12-08" data-date="12月8日" data-start="09:00" data-end="18:00" data-remark="">修改</button>
+            <button class="c-btn c-btn-secondary" type="button" data-iso="2023-12-08" data-date="12月8日" data-start="09:00" data-end="18:00" data-remark="">修改</button>
           </div>
 
           <div class="row">
@@ -948,7 +880,7 @@
               <span class="worktime">08:59</span><span class="sep">•</span><span class="worktime">18:31</span>
             </div>
             <div style="text-align:center;color:#64748b;">-</div>
-            <button class="btn" type="button" data-iso="2023-12-07" data-date="12月7日" data-start="08:59" data-end="18:31" data-remark="">修改</button>
+            <button class="c-btn c-btn-secondary" type="button" data-iso="2023-12-07" data-date="12月7日" data-start="08:59" data-end="18:31" data-remark="">修改</button>
           </div>
         </div>
       </div>
@@ -983,8 +915,8 @@
         </div>
       </div>
       <div class="dialog-actions">
-        <button class="btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
-        <button class="btn-primary" type="button" id="edit-dialog-save">保存</button>
+        <button class="c-btn c-btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="edit-dialog-save">保存</button>
       </div>
     </div>
   </div>
@@ -1155,7 +1087,7 @@
           remarkEl.textContent = remarkText || "-";
 
           const button = document.createElement("button");
-          button.className = "btn";
+          button.className = "c-btn c-btn-secondary c-btn-sm";
           button.type = "button";
           button.textContent = "修改";
           button.dataset.iso = record.date || "";
@@ -1246,13 +1178,13 @@
     );
 
     document.addEventListener("click", (event) => {
-      const button = event.target.closest(".month-btn");
+      const button = event.target.closest(".c-toggle[data-month]");
       if (!button) return;
       const details = button.closest("details");
       if (!details) return;
       details.dataset.month = button.dataset.month;
-      details.querySelectorAll(".month-btn").forEach((btn) => {
-        btn.classList.toggle("active", btn === button);
+      details.querySelectorAll(".c-toggle[data-month]").forEach((btn) => {
+        btn.classList.toggle("is-active", btn === button);
       });
       if (details.open) {
         loadAccordion(details);
@@ -1371,7 +1303,7 @@
     }
 
     document.addEventListener("click", (event) => {
-      const editButton = event.target.closest(".row .btn");
+      const editButton = event.target.closest(".row .c-btn");
       if (!editButton) return;
       const payload = {
         date: editButton.dataset.date || "",
@@ -1454,7 +1386,7 @@
               remarkCell.textContent = record.remark ? record.remark : "-";
               remarkCell.style.color = record.remark ? "#0f172a" : "#64748b";
             }
-            const editBtn = currentEditRow.querySelector(".btn");
+            const editBtn = currentEditRow.querySelector(".c-btn");
             if (editBtn) {
               editBtn.dataset.iso = record.date || dateIso;
               editBtn.dataset.start = record.start_time || "";

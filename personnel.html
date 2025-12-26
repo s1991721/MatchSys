@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>社内人员管理</title>
   <style>
 * {
@@ -23,14 +24,7 @@
       flex-direction: column;
       gap: 18px;
     }
-    .card {
-      background: var(--card);
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-      padding: 20px 22px 24px;
-    }
-    .title {
+.title {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -69,61 +63,7 @@
       box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.15);
       background: #fff;
     }
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 18px;
-      border-radius: 10px;
-      font-weight: 600;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-    }
-    .action-btn:active {
-      transform: scale(0.97);
-    }
-    .btn-blue { background: #1c7bff; }
-    .btn-search {
-      background: #10b981;
-      color: #fff;
-      box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
-      border: none;
-      border-radius: 12px;
-      padding: 10px 16px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .btn-reset {
-      background: #f59e0b;
-      color: #fff;
-      box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
-      border: none;
-      border-radius: 12px;
-      padding: 10px 16px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .btn-secondary {
-      background: #eef2ff;
-      color: var(--primary);
-      border: none;
-      border-radius: 12px;
-      padding: 10px 16px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .table-card {
-      margin-top: 0;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: var(--card);
-      box-shadow: 0 20px 30px rgba(17, 24, 39, 0.08);
-      overflow: hidden;
-    }
-    .filters {
+.filters {
       padding: 20px;
       border-bottom: 1px solid var(--line);
       background: radial-gradient(circle at top, rgba(28, 123, 255, 0.08), transparent 70%);
@@ -160,31 +100,10 @@
       overflow-x: auto;
       padding: 12px 20px 20px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    thead th {
-      text-align: left;
-      font-size: 13px;
-      letter-spacing: 0.4px;
-      padding: 12px 10px;
-      color: #6b7280;
-      font-weight: 600;
-      border-bottom: 1px solid var(--line);
-    }
-    tbody td {
-      padding: 14px 10px;
-      border-bottom: 1px solid #f0f3fa;
-      font-size: 13px;
-    }
-    tbody tr:last-child td {
+tbody tr:last-child td {
       border-bottom: none;
     }
-    tbody tr:hover {
-      background: #f8fbff;
-    }
-    .badge {
+.badge {
       padding: 4px 10px;
       border-radius: 999px;
       font-size: 12px;
@@ -294,47 +213,25 @@
       border-bottom-left-radius: 20px;
       border-bottom-right-radius: 20px;
     }
-    .modal-actions .btn-primary {
-      background: var(--primary);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 10px 16px;
-      cursor: pointer;
-      font-weight: 600;
-      box-shadow: 0 12px 20px rgba(28, 123, 255, 0.25);
-    }
-    @media (max-width: 640px) {
+    .modal-actions
+@media (max-width: 640px) {
       .filter-actions {
         flex-direction: column;
         align-items: stretch;
       }
-      thead {
-        display: none;
-      }
-      tbody tr {
+tbody tr {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 6px 10px;
         border-bottom: 1px solid #eef2ff;
         padding: 12px 0;
       }
-      tbody td {
-        padding: 0;
-        font-size: 12px;
-      }
-      tbody td::before {
-        content: attr(data-label);
-        font-weight: 600;
-        display: block;
-        color: var(--muted);
-      }
-    }
+}
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="table-card">
+    <section class="c-card">
       <div class="filters">
         <div class="filter-grid">
           <label>
@@ -359,12 +256,12 @@
         </div>
         <div class="filter-actions">
           <div class="filter-actions-left">
-            <button type="button" class="action-btn btn-blue" id="addBtn">＋ 新增人员</button>
+            <button type="button" class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="addBtn">＋ 新增人员</button>
           </div>
           <div class="filter-actions-right">
-            <button type="button" class="btn-search" id="applyFilterBtn">搜索</button>
-            <button type="button" class="btn-reset" id="resetBtn">重置</button>
-            <button type="button" class="btn-secondary" id="exportBtn">导出 CSV</button>
+            <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn">搜索</button>
+            <button type="button" class="c-btn c-btn-warn" id="resetBtn">重置</button>
+            <button type="button" class="c-btn c-btn-secondary" id="exportBtn">导出 CSV</button>
           </div>
         </div>
       </div>
@@ -376,7 +273,7 @@
       </div>
 
       <div class="table-wrapper">
-        <table>
+        <table class="c-table">
           <thead>
             <tr>
               <th>姓名</th>
@@ -398,7 +295,7 @@
   </div>
 
   <div class="modal" id="employeeModal" aria-hidden="true">
-    <div class="modal-card">
+    <div class="modal-card c-card c-card-pad">
       <div class="modal-header">
         <h4 id="modalTitle">新增人员</h4>
         <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
@@ -472,8 +369,8 @@
           </label>
         </div>
         <div class="modal-actions">
-          <button type="button" class="btn-secondary" id="cancelBtn">取消</button>
-          <button type="submit" class="btn-primary" id="saveBtn">保存</button>
+          <button type="button" class="c-btn c-btn-secondary" id="cancelBtn">取消</button>
+          <button type="submit" class="c-btn c-btn-primary" id="saveBtn">保存</button>
         </div>
       </form>
     </div>
@@ -556,7 +453,7 @@
           <td data-label="手机">${item.phone}</td>
           <td data-label="邮箱">${item.email}</td>
           <td data-label="入职日期">${formatDate(item.hire_date)}</td>
-          <td data-label="状态"><span class="badge ${item.status === "active" ? "active" : item.status === "leave" ? "leave" : "disabled"}">${STATUS_LABEL[item.status] || item.status}</span></td>
+          <td data-label="状态"><span class="badge ${item.status ==="active" ? "active" : item.status === "leave" ? "leave" : "disabled"}">${STATUS_LABEL[item.status] || item.status}</span></td>
           <td data-label="操作">
             <div class="row-actions">
               <button data-action="edit" data-id="${item.id}">编辑</button>

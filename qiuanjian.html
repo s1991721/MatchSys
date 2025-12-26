@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>求案件</title>
     <style>
 * {
@@ -24,16 +25,7 @@
             grid-template-columns: 7fr 5fr;
             gap: 16px;
         }
-
-        .panel {
-            background: var(--card);
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-            padding: 14px 16px 16px;
-        }
-
-        .split-left {
+.split-left {
             display: grid;
             grid-template-rows: 1fr 240px;
             gap: 14px;
@@ -244,40 +236,6 @@
             gap: 10px;
         }
 
-        .ghost {
-            border: 1px solid #d7deea;
-            background: #f6f8fd;
-            color: #3b4a60;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background 0.12s ease, border-color 0.12s ease;
-        }
-
-        .ghost:hover {
-            background: #eaf0fb;
-            border-color: #cfd7e6;
-        }
-
-        .primary {
-            border: none;
-            background: linear-gradient(135deg, #5e90ff, #2e7bff);
-            color: #fff;
-            border-radius: 10px;
-            padding: 11px 16px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(46, 123, 255, 0.25);
-            transition: transform 0.12s ease, box-shadow 0.12s ease;
-        }
-
-        .primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 24px rgba(46, 123, 255, 0.28);
-        }
-
         @media (max-width: 1080px) {
             .page {
                 grid-template-columns: 1fr;
@@ -297,7 +255,7 @@
 <body>
     <div class="page">
         <section class="split-left">
-            <div class="panel">
+            <div class="c-card">
                 <h2 class="title">求案件列表</h2>
                 <div class="filters">
                     <div class="filter-group">
@@ -318,7 +276,7 @@
                 </ul>
             </div>
 
-            <div class="panel">
+            <div class="c-card">
                 <h2 class="title">求案件详情</h2>
                 <div id="case-detail" class="detail">
                     这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
@@ -326,7 +284,7 @@
             </div>
         </section>
 
-        <section class="panel">
+        <section class="c-card">
             <h2 class="title">内容编辑保存</h2>
             <div class="form">
                 <div class="field">
@@ -362,8 +320,8 @@
                     <textarea id="intro" class="textarea" placeholder="请输入人员介绍、技能或补充说明。"></textarea>
                 </div>
                 <div class="actions">
-                    <button id="btn-reset" class="ghost" type="button">清空</button>
-                    <button id="btn-save" class="primary" type="button">保存</button>
+                    <button id="btn-reset" class="c-btn c-btn-ghost" type="button">清空</button>
+                    <button id="btn-save" class="c-btn c-btn-primary" type="button">保存</button>
                 </div>
             </div>
         </section>

@@ -83,6 +83,7 @@ urlpatterns = [
     path("notification.html", TemplateView.as_view(template_name="notification.html")),
     path("login.html", TemplateView.as_view(template_name="login.html")),
     path("common.css", TemplateView.as_view(template_name="common.css", content_type="text/css")),
+    path("components.css", TemplateView.as_view(template_name="components.css", content_type="text/css")),
     path("common.js", TemplateView.as_view(template_name="common.js", content_type="application/javascript")),
     path("api/employees/names", employee_names_api, name="employee-names"),
     path("api/customers", customers_api, name="customer-list"),

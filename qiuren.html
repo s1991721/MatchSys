@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>求人</title>
     <style>
 * {
@@ -31,19 +32,7 @@
         .row + .row {
             margin-top: 16px;
         }
-
-        .panel {
-            background: var(--card);
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-            padding: 14px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            min-height: 240px;
-        }
-
-        .panel-left {
+.panel-left {
             flex: 2;
         }
 
@@ -264,7 +253,7 @@
 <div class="page">
     <!-- 上半部分：列表 -->
     <div class="row">
-        <div class="panel panel-left">
+        <div class="panel-left c-card">
             <div class="panel-title">求人列表</div>
             <div class="filters">
                 <div class="filter-group">
@@ -285,7 +274,7 @@
             </ul>
         </div>
 
-        <div class="panel panel-right">
+        <div class="panel-right c-card">
             <div class="panel-title">人员列表</div>
             <ul class="list persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
@@ -379,14 +368,14 @@
 
     <!-- 下半部分：详情 -->
     <div class="row">
-        <div class="panel panel-left detail">
+        <div class="panel-left detail c-card">
             <div class="panel-title">求人详情</div>
             <div class="detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
 
-        <div class="panel panel-right detail">
+        <div class="panel-right detail c-card">
             <div class="panel-title">技术者详情</div>
             <div class="detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。

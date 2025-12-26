@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>考勤管理</title>
     <style>
 * {
@@ -20,16 +21,7 @@
         .page {
             padding: 24px;
         }
-
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            border: 1px solid var(--line);
-            box-shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
-            padding: 22px 26px 10px;
-        }
-
-        .title {
+.title {
             display: flex;
             align-items: center;
             gap: 10px;
@@ -88,44 +80,7 @@
             gap: 8px;
         }
 
-        .filter-button {
-            border-radius: 8px;
-            border: 1px solid var(--primary);
-            padding: 8px 18px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        .filter-apply {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .filter-reset {
-            background: transparent;
-            color: var(--primary);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        thead th {
-            text-align: left;
-            font-weight: 600;
-            color: var(--muted);
-            padding: 12px 8px;
-            border-bottom: 1px solid var(--line);
-        }
-
-        tbody td {
-            padding: 14px 8px;
-            border-bottom: 1px solid var(--line);
-            transition: background 0.2s;
-        }
-
-        tbody tr.summary-row {
+tbody tr.summary-row {
             cursor: pointer;
         }
 
@@ -172,24 +127,10 @@
             margin: 6px 0 12px;
         }
 
-        .detail-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-
-        .detail-table thead th {
-            border-bottom: 1px solid var(--line);
-            color: var(--muted);
-            padding: 8px;
-        }
-
-        .detail-table tbody td {
-            padding: 8px;
-            border-bottom: 1px solid #edf1ff;
-        }
-
-        .no-data {
+        .detail-
+.detail-table
+.detail-table
+.no-data {
             color: var(--muted);
             font-size: 14px;
             text-align: center;
@@ -199,7 +140,7 @@
 </head>
 <body>
 <div class="page">
-    <div class="card">
+    <div class="c-card">
         <h3 class="title">考勤管理</h3>
         <p class="hint">单击人员行展示其每日打卡明细。</p>
         <div class="filters">
@@ -212,12 +153,12 @@
                 <input type="month" id="month-filter" />
             </div>
             <div class="filter-actions">
-                <button class="filter-button filter-apply" id="filter-apply" type="button">筛选</button>
-                <button class="filter-button filter-reset" id="filter-reset" type="button">重置</button>
+                <button class="c-btn c-btn-primary" id="filter-apply" type="button">筛选</button>
+                <button class="c-btn c-btn-ghost" id="filter-reset" type="button">重置</button>
             </div>
         </div>
         <div class="table-wrapper">
-            <table>
+            <table class="c-table">
                 <thead>
                 <tr>
                     <th>姓名</th>
@@ -274,7 +215,7 @@
                 <td>${person.absence_days}</td>
                 <td>${person.annual_leave}</td>
                 <td>
-                    <span class="status-badge ${statusMap[person.status]?.className || ""}">
+                    <span class="status-badge ${statusMap[person.status]?.className ||""}">
                         ${statusMap[person.status]?.label || "未知"}
                     </span>
                 </td>
@@ -317,7 +258,7 @@
         ).join("");
 
         return `
-            <table class="detail-table">
+            <table class="detail-table c-table">
                 <thead>
                     <tr>
                         <th>日期</th>

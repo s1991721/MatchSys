@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>注文书管理</title>
   <style>
 *{ box-sizing:border-box; }
@@ -47,62 +48,7 @@
       font-size:inherit;
       font-weight:inherit;
     }
-    .btn{
-      padding:10px 16px;
-      border-radius:8px;
-      border:1px solid var(--primary);
-      background: var(--primary);
-      font-weight:700;
-      font-size:13px;
-      cursor:pointer;
-      color:#fff;
-    }
-    .action-btn{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      padding:10px 18px;
-      border-radius:10px;
-      font-weight:600;
-      color:#fff;
-      border:none;
-      cursor:pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
-    }
-    .action-btn:active{ transform: scale(0.97); }
-    .btn-blue{ background:#1c7bff; }
-    .btn-search{
-      background:#10b981;
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(16, 185, 129, 0.3);
-      border:none;
-      border-radius:12px;
-      padding:10px 16px;
-      cursor:pointer;
-      font-weight:600;
-    }
-    .btn-reset{
-      background:#f59e0b;
-      color:#fff;
-      box-shadow: 0 10px 18px rgba(245, 158, 11, 0.35);
-      border:none;
-      border-radius:12px;
-      padding:10px 16px;
-      cursor:pointer;
-      font-weight:600;
-    }
-
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      padding:22px 26px 10px;
-    }
-
-    .switch-wrap{
+.switch-wrap{
       justify-self:center;
       display:flex;
       align-items:center;
@@ -116,20 +62,8 @@
       background: rgba(248,250,252,.95);
       box-shadow: 0 10px 20px rgba(30,41,59,.08);
     }
-    .switch-btn{
-      border:0;
-      background:transparent;
-      padding:8px 20px;
-      border-radius:999px;
-      font-size:14px;
-      font-weight:900;
-      cursor:pointer;
-      color:#334155;
-    }
-    .switch-btn.active{
-      background: rgba(30,64,175,.16);
-      color:#1d4ed8;
-      box-shadow: 0 6px 14px rgba(29,78,216,.12);
+    .switcher .c-toggle{
+      border: 0;
     }
 
     .filters{
@@ -193,33 +127,14 @@
       align-items:center;
       gap:6px;
     }
-
-    table{ width:100%; border-collapse:collapse; font-size:13px; }
-    thead th{
-      text-align:center;
-      padding:12px 8px;
-      color:var(--muted);
-      font-weight:600;
-      border-bottom:1px solid var(--border);
-      background: transparent;
-    }
-    tbody td{
-      text-align:center;
-      padding:14px 8px;
-      border-bottom:1px solid var(--border);
-      font-weight:600;
-      color:#2c3d55;
-    }
-    .cell-ellipsis{
+.cell-ellipsis{
       max-width:220px;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
       margin:0 auto;
     }
-    tbody tr:hover{ background: rgba(36, 107, 253, 0.08); }
-
-    .table-info{
+.table-info{
       display:flex;
       justify-content:flex-end;
       color:var(--muted);
@@ -232,19 +147,6 @@
       align-items:center;
       gap:10px;
       padding:12px 0 4px;
-    }
-    .page-btn{
-      width:32px;
-      height:32px;
-      border-radius:8px;
-      border:1px solid var(--border);
-      background:#fff;
-      color:#64748b;
-      cursor:pointer;
-    }
-    .page-btn[disabled]{
-      opacity:.45;
-      cursor:not-allowed;
     }
     .page-num{
       font-weight:700;
@@ -279,26 +181,7 @@
     .tag.danger{ color:#b91c1c; background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.25); }
     .tag.info{ color:#1d4ed8; background: rgba(28,123,255,.12); border-color: rgba(28,123,255,.22); }
     .tag.neutral{ color:#4b5563; background: rgba(148,163,184,.16); border-color: rgba(148,163,184,.3); }
-
-    .btn-lite{
-      padding:6px 10px;
-      border-radius:8px;
-      border:1px solid var(--primary);
-      background: var(--primary);
-      color:#fff;
-      font-weight:600;
-      cursor:pointer;
-    }
-    .btn-ghost{
-      padding:6px 10px;
-      border-radius:8px;
-      border:1px solid var(--primary);
-      background: var(--primary);
-      color:#fff;
-      font-weight:600;
-      cursor:pointer;
-    }
-    .row-actions{
+.row-actions{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
@@ -367,8 +250,7 @@
       .filters-grid{ grid-template-columns: 1fr; }
       .field{ min-height:44px; }
       .modal-grid{ grid-template-columns: 1fr; }
-      table{ display:block; overflow:auto; }
-    }
+}
   </style>
 </head>
 <body>
@@ -379,13 +261,13 @@
       </div>
       <div class="switch-wrap">
         <div class="switcher" role="tablist" aria-label="视角切换">
-          <button class="switch-btn active" type="button" data-view="issue" role="tab" aria-selected="true">发注</button>
-          <button class="switch-btn" type="button" data-view="accept" role="tab" aria-selected="false">受注</button>
+          <button class="c-toggle is-active" type="button" data-view="issue" role="tab" aria-selected="true">发注</button>
+          <button class="c-toggle" type="button" data-view="accept" role="tab" aria-selected="false">受注</button>
         </div>
       </div>
     </div>
 
-    <section class="card">
+    <section class="c-card">
       <div class="filters">
         <div class="filters-grid">
           <div class="field wide">
@@ -426,17 +308,17 @@
         </div>
         <div class="filters-actions">
           <div class="filters-actions-left">
-            <button class="action-btn btn-blue" id="createBtn" type="button" data-issue="新建注文书" data-accept="新建受注">＋ 新建注文书</button>
+            <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createBtn" type="button" data-issue="新建注文书" data-accept="新建受注">＋ 新建注文书</button>
           </div>
           <div class="filters-actions-right">
-            <button class="btn-search" id="searchBtn" type="button">搜索</button>
-            <button class="btn-reset" id="resetBtn" type="button">重置</button>
+            <button class="c-btn c-btn-primary" id="searchBtn" type="button">搜索</button>
+            <button class="c-btn c-btn-warn" id="resetBtn" type="button">重置</button>
           </div>
         </div>
       </div>
 
       <div class="table-info" id="table-info">共 0 条 当前显示第 1 页</div>
-      <table>
+      <table class="c-table c-table-center">
         <thead>
           <tr>
             <th>注文No</th>
@@ -457,10 +339,10 @@
         <tbody id="order-body"></tbody>
       </table>
       <div class="pager">
-        <button class="page-btn" id="page-prev">‹</button>
+        <button class="c-btn c-btn-sm c-btn-secondary" id="page-prev">‹</button>
         <span class="page-num" id="page-current">1</span>
         <span class="page-num" id="page-total">/ 1</span>
-        <button class="page-btn" id="page-next">›</button>
+        <button class="c-btn c-btn-sm c-btn-secondary" id="page-next">›</button>
         <select id="page-size">
           <option value="10">10 条/页</option>
           <option value="20">20 条/页</option>
@@ -527,8 +409,8 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn" type="button" data-dialog-close>取消</button>
-      <button class="btn" type="button" id="issue-create-submit">开始创建</button>
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+      <button class="c-btn c-btn-primary" type="button" id="issue-create-submit">开始创建</button>
     </div>
   </dialog>
 
@@ -594,8 +476,8 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn" type="button" data-dialog-close>取消</button>
-      <button class="btn" type="button" id="accept-create-submit">开始创建</button>
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+      <button class="c-btn c-btn-primary" type="button" id="accept-create-submit">开始创建</button>
     </div>
   </dialog>
 
@@ -679,14 +561,14 @@
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn" type="button" data-dialog-close>关闭</button>
-      <button class="btn" type="button" data-dialog-close id="detailSave">保存</button>
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close>关闭</button>
+      <button class="c-btn c-btn-primary" type="button" data-dialog-close id="detailSave">保存</button>
     </div>
   </dialog>
   <script src="common.js"></script>
 <script>
     (function () {
-      const switches = Array.from(document.querySelectorAll(".switch-btn"));
+      const switches = Array.from(document.querySelectorAll(".switcher .c-toggle"));
       const swapNodes = Array.from(document.querySelectorAll("[data-issue][data-accept]"));
       const swapPlaceholders = Array.from(document.querySelectorAll("[data-issue-placeholder][data-accept-placeholder]"));
       const acceptOnlyFields = Array.from(document.querySelectorAll("[data-accept-only]"));
@@ -803,7 +685,9 @@
         ["编辑", "查看"].forEach((label) => {
           const btn = document.createElement("button");
           const isPrimary = label === "查看";
-          btn.className = isPrimary ? "btn-lite" : "btn-ghost";
+          btn.className = isPrimary
+            ? "c-btn c-btn-lite c-btn-sm"
+            : "c-btn c-btn-ghost c-btn-sm";
           btn.type = "button";
           btn.textContent = label;
           btn.dataset.action = label === "编辑" ? "edit" : "view";
@@ -831,7 +715,7 @@
         currentPage = 1;
         switches.forEach((btn) => {
           const active = btn.dataset.view === view;
-          btn.classList.toggle("active", active);
+          btn.classList.toggle("is-active", active);
           btn.setAttribute("aria-selected", active ? "true" : "false");
         });
         swapNodes.forEach((node) => {
@@ -925,7 +809,7 @@
               <td>${item.person_in_charge || "-"}</td>
               <td>${item.updated_at || "-"}</td>
               <td>${item.updated_by || "-"}</td>
-              <td><span class="tag ${statusClass[status] || "neutral"}">${status}</span></td>
+              <td><span class="tag ${statusClass[status] ||"neutral"}">${status}</span></td>
               <td><div class="row-actions" data-row-actions></div></td>
             </tr>
           `;

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <!-- <link rel="icon" href="favicon.png" type="image/png"> -->
     <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>Match</title>
     <style>
 * {
@@ -34,20 +35,7 @@
         .row + .row {
             margin-top: 16px;
         }
-
-        .panel {
-            background: var(--card);
-            border-radius: 12px;
-            border: 1px solid var(--line);
-            box-shadow: 0 10px 24px rgba(31, 53, 90, 0.07);
-            padding: 14px 16px 16px;
-            display: flex;
-            flex-direction: column;
-            min-height: 240px;
-            min-width: 0;
-        }
-
-        .panel-left {
+.panel-left {
             flex: 1.2;
             min-width: 0;
         }
@@ -315,28 +303,6 @@
             margin-top: 12px;
         }
 
-        .primary-btn {
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--primary);
-            background: var(--primary);
-            color: #fff;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 10px 24px rgba(28, 123, 255, 0.2);
-            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
-        }
-
-        .primary-btn:hover {
-            background: #1669d8;
-            transform: translateY(-1px);
-            box-shadow: 0 12px 28px rgba(28, 123, 255, 0.3);
-        }
-
-        .primary-btn:active {
-            transform: translateY(0);
-            box-shadow: 0 8px 18px rgba(28, 123, 255, 0.2);
-        }
 
         .pagination {
             display: flex;
@@ -346,27 +312,6 @@
             padding: 10px 2px 0;
         }
 
-        .pager-btn {
-            padding: 8px 12px;
-            border-radius: 10px;
-            border: 1px solid var(--line);
-            background: #f6f8fd;
-            color: #2f3d52;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
-        }
-
-        .pager-btn:hover:not(:disabled) {
-            background: #edf3ff;
-            border-color: #c6d2ea;
-        }
-
-        .pager-btn:disabled {
-            cursor: not-allowed;
-            color: #b0b8c5;
-            background: #f1f3f7;
-        }
 
         .loading-row {
             display: flex;
@@ -415,7 +360,7 @@
 <div class="page">
     <!-- 上半部分：列表 -->
     <div class="row">
-        <div class="panel panel-left">
+        <div class="panel-left c-card">
             <div class="panel-title">求人列表</div>
             <div class="filters">
                 <div class="filter-group">
@@ -435,13 +380,13 @@
             <ul class="list jobs" id="job-list">
             </ul>
             <div class="pagination" id="job-pagination">
-                <button class="pager-btn" id="prev-page" type="button">上一页</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" id="prev-page" type="button">上一页</button>
                 <div class="page-info" id="page-info">第 1 页</div>
-                <button class="pager-btn" id="next-page" type="button">下一页</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" id="next-page" type="button">下一页</button>
             </div>
         </div>
 
-        <div class="panel panel-right">
+        <div class="panel-right c-card">
             <div class="panel-title">
                 <span>人员列表</span>
                 <span class="panel-refresh" aria-label="刷新时间">
@@ -500,20 +445,20 @@
 
     <!-- 下半部分：详情 -->
     <div class="row">
-        <div class="panel panel-left detail">
+        <div class="panel-left detail c-card">
             <div class="panel-title">求人详情</div>
             <div class="detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
 
-        <div class="panel panel-right detail">
+        <div class="panel-right detail c-card">
             <div class="panel-title">技术者详情</div>
             <div class="detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
             <div class="detail-actions">
-                <button class="primary-btn" type="button" id="send-btn">
+                <button class="c-btn c-btn-primary" type="button" id="send-btn">
                     送信
                 </button>
             </div>

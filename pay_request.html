@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
   <title>请求书管理</title>
   <style>
 *{ box-sizing:border-box; }
@@ -26,37 +27,13 @@
     .title h1{ margin:0 0 6px; font-size:22px; font-weight:900; }
     .title p{ margin:0; color:var(--muted); font-size:13px; font-weight:700; }
     .actions{ display:flex; gap:10px; flex-wrap:wrap; }
-    .btn{
-      padding:10px 14px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background: var(--card);
-      font-weight:800;
-      font-size:13px;
-      cursor:pointer;
-      color:#2c3d55;
-      box-shadow: var(--shadow);
-    }
-    .btn.primary{
-      border-color: rgba(28,123,255,.35);
-      background: rgba(28,123,255,.12);
-      color:#0f4cb7;
-    }
-
     .stats{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
       gap:12px;
       margin-bottom:14px;
     }
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .stat{
+.stat{
       padding:14px 16px;
       display:flex;
       align-items:center;
@@ -154,14 +131,14 @@
         <p>管理付款请求的提交、审批与执行进度</p>
       </div>
       <div class="actions">
-        <button class="btn primary" type="button">新增请求书</button>
-        <button class="btn" type="button">批量审批</button>
-        <button class="btn" type="button">导出</button>
+        <button class="c-btn c-btn-primary" type="button">新增请求书</button>
+        <button class="c-btn c-btn-secondary" type="button">批量审批</button>
+        <button class="c-btn c-btn-secondary" type="button">导出</button>
       </div>
     </div>
 
     <section class="stats">
-      <div class="card">
+      <div class="c-card">
         <div class="stat">
           <div>
             <div class="label">待审批</div>
@@ -170,7 +147,7 @@
           <span class="chip">本周 +3</span>
         </div>
       </div>
-      <div class="card">
+      <div class="c-card">
         <div class="stat">
           <div>
             <div class="label">已提交</div>
@@ -179,7 +156,7 @@
           <span class="chip" style="background: rgba(28,123,255,.12); color:#1d4ed8; border-color: rgba(28,123,255,.22);">进行中</span>
         </div>
       </div>
-      <div class="card">
+      <div class="c-card">
         <div class="stat">
           <div>
             <div class="label">已付款</div>
@@ -188,7 +165,7 @@
           <span class="chip" style="background: rgba(22,163,74,.12); color:#0f7a3a; border-color: rgba(22,163,74,.22);">完成</span>
         </div>
       </div>
-      <div class="card">
+      <div class="c-card">
         <div class="stat">
           <div>
             <div class="label">异常处理</div>
@@ -199,7 +176,7 @@
       </div>
     </section>
 
-    <section class="card">
+    <section class="c-card">
       <div class="filters">
         <div class="field">
           <span>月份</span>

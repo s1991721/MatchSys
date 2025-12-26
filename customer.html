@@ -9,13 +9,29 @@
       --bg: #f4f6fb;
       --card: #ffffff;
       --card-soft: #f6f8ff;
-      --line: #dfe6f3;
-      --text: #1c2b45;
-      --muted: #6b7688;
-      --primary: #35b779;
-      --primary-strong: #2aa469;
-      --warning: #f5a031;
-      --shadow: 0 16px 40px rgba(30, 60, 110, 0.08);
+      --text: #1f2a3d;
+      --muted: #6b7686;
+      --border: #e5e9f2;
+      --line: #e5e9f2;
+      --primary: #1c7bff;
+      --primary-strong: #1b6fe8;
+      --brand: #1c7bff;
+      --brand2: #2e7bff;
+      --accent: rgba(28, 123, 255, 0.08);
+      --blue: #2f6fec;
+      --purple: #7c3aed;
+      --green: #16a34a;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --warn: #f59e0b;
+      --success: #10b981;
+      --shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
+      --shadowSoft: 0 10px 24px rgba(31, 53, 90, 0.07);
+      --radius: 14px;
+      --sidebar-w: 260px;
+      --sidebar-w-collapsed: 68px;
     }
     * { box-sizing: border-box; }
     body {
@@ -34,30 +50,6 @@
       border-radius: 20px;
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
-    }
-    .panel-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 20px 24px 8px;
-    }
-    .panel-title {
-      margin: 0;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 1px;
-    }
-    .panel-icon {
-      width: 28px;
-      height: 28px;
-      display: grid;
-      place-items: center;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #4d92ff, #2c6dff);
-      color: #fff;
-      font-size: 16px;
-      font-weight: 700;
-      box-shadow: 0 8px 18px rgba(44, 109, 255, 0.25);
     }
     .filters {
       padding: 20px;
@@ -184,16 +176,6 @@
       text-align: center;
       padding: 28px 0;
       color: var(--muted);
-    }
-    .status {
-      display: inline-flex;
-      align-items: center;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      background: #e6f6ec;
-      color: #2f9e64;
     }
     .row-actions {
       display: flex;

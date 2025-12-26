@@ -4,26 +4,154 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>系统登录 - 求人案件管理</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --card-soft: #f6f8ff;
+            --text: #1f2a3d;
+            --muted: #6b7686;
+            --border: #e5e9f2;
+            --line: #e5e9f2;
+            --primary: #1c7bff;
+            --primary-strong: #1b6fe8;
+            --brand: #1c7bff;
+            --brand2: #2e7bff;
+            --accent: rgba(28, 123, 255, 0.08);
+            --blue: #2f6fec;
+            --purple: #7c3aed;
+            --green: #16a34a;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --warn: #f59e0b;
+            --success: #10b981;
+            --shadow: 0 12px 28px rgba(31, 53, 90, 0.08);
+            --shadowSoft: 0 10px 24px rgba(31, 53, 90, 0.07);
+            --radius: 14px;
+            --sidebar-w: 260px;
+            --sidebar-w-collapsed: 68px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: var(--card);
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 32px 28px;
+            width: 360px;
+            max-width: 92vw;
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            margin: 6px 0 0;
+        }
+
+        .form-group {
+            margin: 18px 0;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font: inherit;
+            background: #fff;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.15);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 12px 20px rgba(28, 123, 255, 0.2);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-strong);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .error-box {
+            margin: 12px 0;
+            border-radius: 10px;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            background: rgba(239, 68, 68, 0.08);
+            padding: 10px 12px;
+            font-size: 13px;
+            color: var(--danger);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 h-screen flex items-center justify-center font-sans">
-<div class="bg-white p-10 rounded-xl shadow-lg w-96 border border-gray-100">
-    <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-blue-600">Recruit System</h1>
-        <p class="text-gray-400 text-sm mt-2">求人案件管理平台</p>
+<body>
+<div class="login-card">
+    <div>
+        <h1 class="brand-title">Recruit System</h1>
+        <p class="brand-subtitle">求人案件管理平台</p>
     </div>
 
     <form id="loginForm" method="post" action="javascript:void(0);">
-        <div id="errorBox" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600"></div>
-        <div class="mb-5">
-            <label class="block text-gray-700 text-sm font-bold mb-2">账号</label>
-            <input id="userName" type="text" name="user_name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="admin" required>
+        <div id="errorBox" class="error-box hidden"></div>
+        <div class="form-group">
+            <label>账号</label>
+            <input id="userName" type="text" name="user_name" placeholder="admin" required>
         </div>
-        <div class="mb-6">
-            <label class="block text-gray-700 text-sm font-bold mb-2">密码</label>
-            <input id="password" type="password" name="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="••••••••" required>
+        <div class="form-group">
+            <label>密码</label>
+            <input id="password" type="password" name="password" placeholder="••••••••" required>
         </div>
-        <button id="submitBtn" type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition duration-300 shadow-md">
+        <button id="submitBtn" type="submit" class="btn-submit">
             登 录
         </button>
     </form>

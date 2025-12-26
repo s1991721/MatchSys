@@ -114,14 +114,40 @@ def customers_api(request):
     if request.method == "GET":
         company_name = (request.GET.get("company_name") or "").strip()
         person_in_charge = (request.GET.get("person_in_charge") or "").strip()
+        try:
+            page = int(request.GET.get("page", 1))
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            page_size = int(request.GET.get("page_size", 10))
+        except (TypeError, ValueError):
+            page_size = 10
+        page = max(page, 1)
+        page_size = max(min(page_size, 100), 1)
         queryset = Customer.objects.filter(deleted_at__isnull=True)
         if company_name:
             queryset = queryset.filter(company_name__icontains=company_name)
         if person_in_charge:
             queryset = queryset.filter(person_in_charge__icontains=person_in_charge)
         queryset = queryset.order_by("-created_at", "-id")
-        items = [_serialize_customer(customer) for customer in queryset]
-        return JsonResponse({"items": items, "total": queryset.count()})
+        total = queryset.count()
+        total_pages = max((total + page_size - 1) // page_size, 1)
+        if page > total_pages:
+            page = total_pages
+        offset = (page - 1) * page_size
+        items = [
+            _serialize_customer(customer)
+            for customer in queryset[offset : offset + page_size]
+        ]
+        return JsonResponse(
+            {
+                "items": items,
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": total_pages,
+            }
+        )
 
     if request.method == "POST":
         payload, error = _parse_json_body(request)

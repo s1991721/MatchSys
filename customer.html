@@ -344,6 +344,10 @@
       background: #fff;
       cursor: pointer;
     }
+    .pager .page-btn[disabled] {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
     .pager .page-num {
       font-weight: 600;
       color: #44526d;
@@ -425,13 +429,13 @@
             <tbody id="customer-body"></tbody>
           </table>
           <div class="pager">
-            <button class="page-btn">‹</button>
-            <span class="page-num">1</span>
-            <span class="page-num">1</span>
-            <button class="page-btn">›</button>
-            <select>
-              <option>10 条/页</option>
-              <option>20 条/页</option>
+            <button class="page-btn" id="page-prev">‹</button>
+            <span class="page-num" id="page-current">1</span>
+            <span class="page-num" id="page-total">/ 1</span>
+            <button class="page-btn" id="page-next">›</button>
+            <select id="page-size">
+              <option value="10">10 条/页</option>
+              <option value="20">20 条/页</option>
             </select>
           </div>
         </div>
@@ -528,6 +532,11 @@
     const addButton = document.getElementById("btn-add");
     const searchButton = document.getElementById("btn-search");
     const resetButton = document.getElementById("btn-reset");
+    const pagePrev = document.getElementById("page-prev");
+    const pageNext = document.getElementById("page-next");
+    const pageCurrent = document.getElementById("page-current");
+    const pageTotal = document.getElementById("page-total");
+    const pageSizeSelect = document.getElementById("page-size");
     const editDialog = document.getElementById("edit-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
@@ -555,6 +564,9 @@
     let currentEditId = null;
     let cachedItems = [];
     let currentContract = "";
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalPages = 1;
 
     const renderNames = (names) => {
       nameList.innerHTML = names
@@ -562,8 +574,14 @@
         .join("");
     };
 
-    const renderRows = (items, totalCount) => {
+    const renderRows = (items, totalCount, page, totalPageCount) => {
       const count = Number.isFinite(totalCount) ? totalCount : items.length;
+      totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
+      currentPage = Number.isFinite(page) ? page : 1;
+      pageCurrent.textContent = String(currentPage);
+      pageTotal.textContent = `/ ${totalPages}`;
+      pagePrev.disabled = currentPage <= 1;
+      pageNext.disabled = currentPage >= totalPages;
       if (!items.length) {
         tableBody.innerHTML = `<tr><td colspan="10" class="empty">暂无数据</td></tr>`;
         summaryText.textContent = `共 ${count} 条 当前显示第 1 页`;
@@ -593,7 +611,7 @@
         )
         .join("");
 
-      summaryText.textContent = `共 ${count} 条 当前显示第 1 页`;
+      summaryText.textContent = `共 ${count} 条 当前显示第 ${currentPage} 页`;
     };
 
     const fetchCustomers = () => {
@@ -604,16 +622,18 @@
       if (filterOwner.value.trim()) {
         params.append("person_in_charge", filterOwner.value.trim());
       }
+      params.append("page", String(currentPage));
+      params.append("page_size", String(pageSize));
       const url = `/api/customers${params.toString() ? `?${params.toString()}` : ""}`;
       fetch(url)
         .then((response) => response.json())
         .then((data) => {
           cachedItems = Array.isArray(data.items) ? data.items : [];
-          renderRows(cachedItems, data.total);
+          renderRows(cachedItems, data.total, data.page, data.total_pages);
         })
         .catch(() => {
           cachedItems = [];
-          renderRows([], 0);
+          renderRows([], 0, 1, 1);
         });
     };
 
@@ -673,12 +693,35 @@
     });
 
     searchButton.addEventListener("click", () => {
+      currentPage = 1;
       fetchCustomers();
     });
 
     resetButton.addEventListener("click", () => {
       filterCompany.value = "";
       filterOwner.value = "";
+      currentPage = 1;
+      fetchCustomers();
+    });
+
+    pagePrev.addEventListener("click", () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        fetchCustomers();
+      }
+    });
+
+    pageNext.addEventListener("click", () => {
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        fetchCustomers();
+      }
+    });
+
+    pageSizeSelect.addEventListener("change", () => {
+      const value = parseInt(pageSizeSelect.value, 10);
+      pageSize = Number.isFinite(value) ? value : 10;
+      currentPage = 1;
       fetchCustomers();
     });
 

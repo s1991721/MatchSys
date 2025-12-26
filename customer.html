@@ -554,13 +554,12 @@
       if (raw && typeof raw === "object" && "success" in raw) {
         return raw;
       }
-      const message = raw?.error || "";
       return {
-        success: !message,
-        code: message ? "ERR_UNKNOWN" : "OK",
-        message,
-        data: raw,
-        meta: raw?.meta || {},
+        success: false,
+        code: "ERR_INVALID_RESPONSE",
+        message: "Invalid response",
+        data: null,
+        meta: {},
       };
     };
 
@@ -631,10 +630,10 @@
             return;
           }
           const result = payload.data || {};
-          cachedItems = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
-          const total = result.total ?? data.total;
-          const page = result.page ?? data.page;
-          const totalPages = result.total_pages ?? data.total_pages;
+          cachedItems = Array.isArray(result.items) ? result.items : [];
+          const total = result.total ?? 0;
+          const page = result.page ?? 1;
+          const totalPages = result.total_pages ?? 1;
           renderRows(cachedItems, total, page, totalPages);
         })
         .catch(() => {
@@ -677,8 +676,8 @@
       .then((response) => response.json())
       .then((data) => {
         const payload = normalizeApiResponse(data);
-        if (payload.success && Array.isArray(payload.data?.names || data.names)) {
-          renderNames(payload.data?.names || data.names);
+        if (payload.success && Array.isArray(payload.data?.names)) {
+          renderNames(payload.data?.names);
         }
       })
       .catch(() => {
@@ -765,7 +764,7 @@
           if (!payload.success) {
             throw new Error(payload.message || "上传失败");
           }
-          currentContract = payload.data?.path || data.path || file.name;
+          currentContract = payload.data?.path || file.name;
           contractHint.textContent = `已上传：${currentContract}`;
           return data;
         });
@@ -810,7 +809,7 @@
           if (!payload.success) {
             throw new Error(payload.message || "保存失败");
           }
-          const savedId = currentEditId || payload.data?.item?.id || data.item?.id;
+          const savedId = currentEditId || payload.data?.item?.id;
           if (contractFile && savedId) {
             return uploadContract(savedId, contractFile);
           }

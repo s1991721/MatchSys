@@ -753,13 +753,12 @@
         if (raw && typeof raw === "object" && "success" in raw) {
           return raw;
         }
-        const message = raw?.error || "";
         return {
-          success: !message,
-          code: message ? "ERR_UNKNOWN" : "OK",
-          message,
-          data: raw,
-          meta: raw?.meta || {},
+          success: false,
+          code: "ERR_INVALID_RESPONSE",
+          message: "Invalid response",
+          data: null,
+          meta: {},
         };
       };
 
@@ -997,14 +996,12 @@
               return;
             }
             const result = payload.data || {};
-            currentItems = Array.isArray(result.items || data.items)
-              ? (result.items || data.items)
-              : [];
+            currentItems = Array.isArray(result.items) ? result.items : [];
             renderRows(
               currentItems,
-              result.total ?? data.total,
-              result.page ?? data.page,
-              result.total_pages ?? data.total_pages
+              result.total ?? 0,
+              result.page ?? 1,
+              result.total_pages ?? 1
             );
           })
           .catch(() => {
@@ -1151,7 +1148,7 @@
           .then((data) => {
             const payload = normalizeApiResponse(data);
             const result = payload.data || {};
-            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
+            const items = Array.isArray(result.items) ? result.items : [];
             renderCustomerOptions(listEl, map, items);
           })
           .catch(() => {
@@ -1185,7 +1182,7 @@
           .then((data) => {
             const payload = normalizeApiResponse(data);
             const result = payload.data || {};
-            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
+            const items = Array.isArray(result.items) ? result.items : [];
             listEl.innerHTML = "";
             items.forEach((item) => {
               if (!item || !item.name) return;
@@ -1232,7 +1229,7 @@
           .then((data) => {
             const payload = normalizeApiResponse(data);
             const result = payload.data || {};
-            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
+            const items = Array.isArray(result.items) ? result.items : [];
             renderTechnicianOptions(listEl, map, items);
           })
           .catch(() => {

@@ -513,13 +513,12 @@
       if (raw && typeof raw === "object" && "success" in raw) {
         return raw;
       }
-      const message = raw?.error || "";
       return {
-        success: !message,
-        code: message ? "ERR_UNKNOWN" : "OK",
-        message,
-        data: raw,
-        meta: raw?.meta || {},
+        success: false,
+        code: "ERR_INVALID_RESPONSE",
+        message: "Invalid response",
+        data: null,
+        meta: {},
       };
     };
     const fetchWithAuth = async (url, options = {}) => {
@@ -763,7 +762,7 @@
       if (!res.ok || !responsePayload.success) {
         throw new Error(responsePayload.message || "新增失败");
       }
-      return responsePayload.data || data;
+      return responsePayload.data || {};
     }
 
     async function updateEmployee(id, payload){
@@ -778,7 +777,7 @@
       if (!res.ok || !responsePayload.success) {
         throw new Error(responsePayload.message || "更新失败");
       }
-      return responsePayload.data || data;
+      return responsePayload.data || {};
     }
 
     async function deleteEmployee(id){
@@ -805,9 +804,9 @@
         if (!payload.success) {
           throw new Error(payload.message || "加载失败");
         }
-        const result = payload.data || data;
-        allEmployees = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
-        ensureDepartments(result.departments || data.departments || []);
+        const result = payload.data || {};
+        allEmployees = Array.isArray(result.items) ? result.items : [];
+        ensureDepartments(result.departments || []);
         applyFilter();
       }catch(err){
         tableBody.innerHTML = `<tr><td colspan="8" class="empty">加载失败：${err.message}</td></tr>`;

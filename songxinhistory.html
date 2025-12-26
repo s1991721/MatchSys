@@ -604,13 +604,12 @@
                 if (raw && typeof raw === 'object' && 'success' in raw) {
                     return raw;
                 }
-                const message = raw?.error || '';
                 return {
-                    success: !message,
-                    code: message ? 'ERR_UNKNOWN' : 'OK',
-                    message,
-                    data: raw,
-                    meta: raw?.meta || {},
+                    success: false,
+                    code: 'ERR_INVALID_RESPONSE',
+                    message: 'Invalid response',
+                    data: null,
+                    meta: {},
                 };
             };
             const fetchWithAuth = async (url, options = {}) => {
@@ -630,8 +629,8 @@
                     if (!payload.success) {
                         throw new Error(payload.message || '加载失败');
                     }
-                    const result = payload.data || data;
-                    records = (result.items || data.items || []).map(item => ({
+                    const result = payload.data || {};
+                    records = (result.items || []).map(item => ({
                         id: item.id,
                         title: item.title || '(无标题)',
                         to: item.to || '',

@@ -619,13 +619,12 @@
         if (raw && typeof raw === 'object' && 'success' in raw) {
             return raw;
         }
-        const message = raw?.error || '';
         return {
-            success: !message,
-            code: message ? 'ERR_UNKNOWN' : 'OK',
-            message,
-            data: raw,
-            meta: raw?.meta || {},
+            success: false,
+            code: 'ERR_INVALID_RESPONSE',
+            message: 'Invalid response',
+            data: null,
+            meta: {},
         };
     };
     const fetchWithAuth = async (url, options = {}) => {
@@ -888,8 +887,8 @@
             if (!payload.success) {
                 throw new Error(payload.message || '加载失败');
             }
-            const result = payload.data || data;
-            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
+            const result = payload.data || {};
+            const items = Array.isArray(result.items) ? result.items : [];
             people = items.map(item => {
                 const remarkText = item.remark ? String(item.remark) : '';
                 const noteText = parseRemark(remarkText);
@@ -934,8 +933,8 @@
             if (!res.ok) return;
             const data = await res.json();
             const payload = normalizeApiResponse(data);
-            const result = payload.data || data;
-            const emp = result.item || data.item || {};
+            const result = payload.data || {};
+            const emp = result.item || {};
             personForm.name.value = emp.name || '';
             if (personForm.name.value) {
                 personForm.name.setAttribute('readonly', 'readonly');
@@ -960,7 +959,7 @@
         if (!res.ok || !responsePayload.success) {
             throw new Error(responsePayload.message || '保存失败');
         }
-        return responsePayload.data || data;
+        return responsePayload.data || {};
     };
 
     const uploadSsFile = async (employeeId, file) => {
@@ -976,7 +975,7 @@
         if (!res.ok || !responsePayload.success) {
             throw new Error(responsePayload.message || '上传失败');
         }
-        return responsePayload.data || data;
+        return responsePayload.data || {};
     };
 
     const applyFilters = () => {

@@ -276,13 +276,12 @@
         if (raw && typeof raw === "object" && "success" in raw) {
             return raw;
         }
-        const message = raw?.error || "";
         return {
-            success: !message,
-            code: message ? "ERR_UNKNOWN" : "OK",
-            message,
-            data: raw,
-            meta: raw?.meta || {},
+            success: false,
+            code: "ERR_INVALID_RESPONSE",
+            message: "Invalid response",
+            data: null,
+            meta: {},
         };
     };
 
@@ -423,8 +422,8 @@
             }
 
             const result = payload.data || {};
-            const name = result.employee?.name || data.employee?.name || attendanceData[index]?.name || "";
-            const details = result.details || data.details || [];
+            const name = result.employee?.name || attendanceData[index]?.name || "";
+            const details = result.details || [];
             wrapper.innerHTML = `
                 <div class="detail-header">${name} 的每日考勤</div>
                 ${renderDetailTable(details)}
@@ -495,8 +494,8 @@
             }
 
             const result = payload.data || {};
-            attendanceData = result.employees || data.employees || [];
-            const resolvedMonth = result.month || data.month;
+            attendanceData = result.employees || [];
+            const resolvedMonth = result.month;
             if (!filters.month && resolvedMonth) {
                 monthFilter.value = resolvedMonth;
             }

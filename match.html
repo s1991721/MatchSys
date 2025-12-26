@@ -610,13 +610,12 @@
         if (raw && typeof raw === 'object' && 'success' in raw) {
             return raw;
         }
-        const message = raw?.error || '';
         return {
-            success: !message,
-            code: message ? 'ERR_UNKNOWN' : 'OK',
-            message,
-            data: raw,
-            meta: raw?.meta || {},
+            success: false,
+            code: 'ERR_INVALID_RESPONSE',
+            message: 'Invalid response',
+            data: null,
+            meta: {},
         };
     };
     const fetchWithAuth = async (url, options = {}) => {
@@ -888,7 +887,7 @@
             if (!payload.success) {
                 throw new Error(payload.message || '加载失败');
             }
-            const result = payload.data || data;
+            const result = payload.data || {};
             currentPage = result.page || currentPage;
             hasNextPage = Boolean(result.has_next);
             renderJobList(result.items || []);
@@ -929,7 +928,7 @@
             if (!payload.success) {
                 throw new Error(payload.message || '加载失败');
             }
-            const result = payload.data || data;
+            const result = payload.data || {};
             renderPersonList(result.items || []);
             if (personRefreshTime) {
                 personRefreshTime.textContent = formatRefreshTime(result.update_time);
@@ -1038,7 +1037,7 @@
             if (!payload.success) {
                 throw new Error(payload.message || '匹配失败');
             }
-            const result = payload.data || data;
+            const result = payload.data || {};
             const rawMatches =
                 (result && result.matches) ||
                 (result && result.match && result.match.matches) ||

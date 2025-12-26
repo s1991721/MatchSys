@@ -394,13 +394,12 @@
     if (raw && typeof raw === "object" && "success" in raw) {
       return raw;
     }
-    const message = raw?.error || "";
     return {
-      success: !message,
-      code: message ? "ERR_UNKNOWN" : "OK",
-      message,
-      data: raw,
-      meta: raw?.meta || {},
+      success: false,
+      code: "ERR_INVALID_RESPONSE",
+      message: "Invalid response",
+      data: null,
+      meta: {},
     };
   };
 
@@ -443,8 +442,8 @@
       const data = await res.json();
       const payload = normalizeApiResponse(data);
       if (!res.ok || !payload.success) throw new Error(payload.message || "加载失败");
-      const result = payload.data || data;
-      const item = result.item || data.item || {};
+      const result = payload.data || {};
+      const item = result.item || {};
       document.getElementById("empName").value = item.name || "";
       document.getElementById("empGender").value = item.gender ?? "";
       document.getElementById("empBirthday").value = item.birthday || "";
@@ -501,9 +500,9 @@
       }
       showStatus("员工信息已更新。", "success");
       alert("员工信息已更新。");
-      const result = responsePayload.data || data;
-      if (result.item || data.item) {
-        const item = result.item || data.item;
+      const result = responsePayload.data || {};
+      if (result.item) {
+        const item = result.item;
         document.getElementById("profileName").textContent = item.name || "";
         document.getElementById("profileDepartment").textContent = item.department_name || "";
         setReadOnlyWhenFilled("empPhone", item.phone);
@@ -575,8 +574,8 @@
       });
       const data = await res.json();
       const payload = normalizeApiResponse(data);
-      const result = payload.data || data;
-      const target = (result.redirect || data.redirect || "login.html").replace(/^\//, "");
+      const result = payload.data || {};
+      const target = (result.redirect || "login.html").replace(/^\//, "");
       const nextUrl = new URL(target, window.location.href).toString();
       if (window.top && window.top !== window) {
         window.top.location.href = nextUrl;

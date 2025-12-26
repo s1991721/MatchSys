@@ -1032,13 +1032,12 @@
       if (raw && typeof raw === "object" && "success" in raw) {
         return raw;
       }
-      const message = raw?.error || "";
       return {
-        success: !message,
-        code: message ? "ERR_UNKNOWN" : "OK",
-        message,
-        data: raw,
-        meta: raw?.meta || {},
+        success: false,
+        code: "ERR_INVALID_RESPONSE",
+        message: "Invalid response",
+        data: null,
+        meta: {},
       };
     };
 
@@ -1256,7 +1255,7 @@
           if (!payload.success) {
             throw new Error(payload.message || "加载失败");
           }
-          const result = payload.data || data;
+          const result = payload.data || {};
           const rendererName = details.dataset.renderer;
           if (rendererName && typeof window[rendererName] === "function") {
             window[rendererName](result, details, month);
@@ -1313,7 +1312,7 @@
           if (!payload.success) {
             throw new Error(payload.message || "record fetch failed");
           }
-          const result = payload.data || data;
+          const result = payload.data || {};
           const startEl = document.getElementById("start-time");
           const endEl = document.getElementById("end-time");
           if (startEl) startEl.textContent = result.start_time ? result.start_time.slice(0, 5) : "--:--";

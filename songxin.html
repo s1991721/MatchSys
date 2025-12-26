@@ -455,13 +455,12 @@
                 if (raw && typeof raw === 'object' && 'success' in raw) {
                     return raw;
                 }
-                const message = raw?.error || '';
                 return {
-                    success: !message,
-                    code: message ? 'ERR_UNKNOWN' : 'OK',
-                    message,
-                    data: raw,
-                    meta: raw?.meta || {},
+                    success: false,
+                    code: 'ERR_INVALID_RESPONSE',
+                    message: 'Invalid response',
+                    data: null,
+                    meta: {},
                 };
             };
             const fetchWithAuth = async (url, options = {}) => {
@@ -592,8 +591,8 @@
                     if (!payload.success) {
                         throw new Error(payload.message || '解析失败');
                     }
-                    const result = payload.data || data;
-                    const message = typeof result.message === 'string' ? result.message.trim() : '';
+                    const result = payload.data || {};
+                    const message = typeof result.data === 'string' ? result.data.trim() : '';
                     let formatted = message;
                     if (!formatted) {
                         if (result.data) {

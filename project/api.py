@@ -25,8 +25,6 @@ def api_success(data=None, message="", code="OK", meta=None, legacy=None, status
         "data": data,
         "meta": meta or {},
     }
-    if legacy:
-        payload.update(legacy)
     return JsonResponse(payload, status=status)
 
 
@@ -38,8 +36,6 @@ def api_error(message, status=400, code=None, meta=None, legacy=None):
         "data": None,
         "meta": meta or {},
     }
-    if legacy:
-        payload.update(legacy)
     return JsonResponse(payload, status=status)
 
 
@@ -61,20 +57,10 @@ def api_paginated(
         "total_pages": total_pages,
     }
     data = {"items": items}
-    legacy_payload = {
-        "items": items,
-        "page": page,
-        "page_size": page_size,
-        "total": total,
-        "total_pages": total_pages,
-    }
-    if legacy:
-        legacy_payload.update(legacy)
     return api_success(
         data=data,
         message=message,
         code=code,
         meta=meta,
-        legacy=legacy_payload,
         status=status,
     )

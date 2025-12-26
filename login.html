@@ -168,13 +168,12 @@
         if (raw && typeof raw === "object" && "success" in raw) {
             return raw;
         }
-        const message = raw?.error || "";
         return {
-            success: !message,
-            code: message ? "ERR_UNKNOWN" : "OK",
-            message,
-            data: raw,
-            meta: raw?.meta || {},
+            success: false,
+            code: "ERR_INVALID_RESPONSE",
+            message: "Invalid response",
+            data: null,
+            meta: {},
         };
     };
 
@@ -200,7 +199,7 @@
             if (!res.ok || !payload.success) {
                 throw new Error(payload.message || "登录失败");
             }
-            const target = (payload.data?.redirect || data.redirect || "index.html").replace(/^\//, "");
+            const target = (payload.data?.redirect || "index.html").replace(/^\//, "");
             window.location.href = new URL(target, window.location.href).toString();
         } catch (err) {
             errorBox.textContent = err.message || "登录失败";

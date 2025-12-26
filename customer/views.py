@@ -1,7 +1,7 @@
 import json
 import os
 
-from django.http import JsonResponse
+from project.api import api_error, api_paginated, api_success
 from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -16,7 +16,11 @@ def _parse_json_body(request):
         raw = request.body.decode("utf-8") if request.body else "{}"
         return json.loads(raw or "{}"), None
     except json.JSONDecodeError:
-        return None, JsonResponse({"error": "Invalid JSON body"}, status=400)
+        return None, api_error(
+            "Invalid JSON body",
+            status=400,
+            legacy={"error": "Invalid JSON body"},
+        )
 
 
 def _serialize_customer(customer):
@@ -73,7 +77,8 @@ def employee_names_api(request):
         .values_list("name", flat=True)
         .distinct()
     )
-    return JsonResponse({"names": list(employee_names)})
+    names = list(employee_names)
+    return api_success(data={"names": names}, legacy={"names": names})
 
 
 def _contract_storage_dir():
@@ -85,11 +90,19 @@ def _contract_storage_dir():
 def customer_contract_upload(request, customer_id):
     upload = request.FILES.get("file")
     if not upload:
-        return JsonResponse({"error": "Missing file"}, status=400)
+        return api_error(
+            "Missing file",
+            status=400,
+            legacy={"error": "Missing file"},
+        )
 
     customer = Customer.objects.filter(pk=customer_id, deleted_at__isnull=True).first()
     if not customer:
-        return JsonResponse({"error": "Customer not found"}, status=404)
+        return api_error(
+            "Customer not found",
+            status=404,
+            legacy={"error": "Customer not found"},
+        )
 
     base_dir = _contract_storage_dir()
     os.makedirs(base_dir, exist_ok=True)
@@ -106,7 +119,10 @@ def customer_contract_upload(request, customer_id):
     customer.updated_at = timezone.now()
     customer.save(update_fields=["contract", "updated_at"])
 
-    return JsonResponse({"status": "ok", "path": filename})
+    return api_success(
+        data={"path": filename},
+        legacy={"status": "ok", "path": filename},
+    )
 
 
 @csrf_exempt
@@ -139,14 +155,12 @@ def customers_api(request):
             _serialize_customer(customer)
             for customer in queryset[offset : offset + page_size]
         ]
-        return JsonResponse(
-            {
-                "items": items,
-                "total": total,
-                "page": page,
-                "page_size": page_size,
-                "total_pages": total_pages,
-            }
+        return api_paginated(
+            items=items,
+            page=page,
+            page_size=page_size,
+            total=total,
+            total_pages=total_pages,
         )
 
     if request.method == "POST":
@@ -154,16 +168,28 @@ def customers_api(request):
         if error:
             return error
         if not (payload.get("company_name") or "").strip():
-            return JsonResponse({"error": "Missing field: company_name"}, status=400)
+            return api_error(
+                "Missing field: company_name",
+                status=400,
+                legacy={"error": "Missing field: company_name"},
+            )
         customer = Customer()
         _apply_customer_payload(customer, payload)
         now = timezone.now()
         customer.created_at = now
         customer.updated_at = now
         customer.save()
-        return JsonResponse({"status": "ok", "item": _serialize_customer(customer)})
+        item = _serialize_customer(customer)
+        return api_success(
+            data={"item": item},
+            legacy={"status": "ok", "item": item},
+        )
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    return api_error(
+        "Method not allowed",
+        status=405,
+        legacy={"error": "Method not allowed"},
+    )
 
 
 @csrf_exempt
@@ -171,20 +197,37 @@ def customer_detail_api(request, customer_id):
     try:
         customer = Customer.objects.get(pk=customer_id, deleted_at__isnull=True)
     except Customer.DoesNotExist:
-        return JsonResponse({"error": "Customer not found"}, status=404)
+        return api_error(
+            "Customer not found",
+            status=404,
+            legacy={"error": "Customer not found"},
+        )
 
     if request.method == "PUT":
         payload, error = _parse_json_body(request)
         if error:
             return error
         if not (payload.get("company_name") or "").strip():
-            return JsonResponse({"error": "Missing field: company_name"}, status=400)
+            return api_error(
+                "Missing field: company_name",
+                status=400,
+                legacy={"error": "Missing field: company_name"},
+            )
         _apply_customer_payload(customer, payload)
         customer.updated_at = timezone.now()
         customer.save()
-        return JsonResponse({"status": "ok", "item": _serialize_customer(customer)})
+        item = _serialize_customer(customer)
+        return api_success(
+            data={"item": item},
+            legacy={"status": "ok", "item": item},
+        )
 
     if request.method == "GET":
-        return JsonResponse({"item": _serialize_customer(customer)})
+        item = _serialize_customer(customer)
+        return api_success(data={"item": item}, legacy={"item": item})
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    return api_error(
+        "Method not allowed",
+        status=405,
+        legacy={"error": "Method not allowed"},
+    )

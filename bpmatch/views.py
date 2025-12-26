@@ -1,7 +1,7 @@
 import json
 import re
 
-from django.http import JsonResponse
+from project.api import api_error, api_success
 from django.views.decorators.http import require_GET
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
@@ -25,9 +25,13 @@ def messages(request):
             limit_str=request.GET.get("limit", ""),
         )
     except Exception as exc:
-        return JsonResponse({"error": str(exc)}, status=500)
+        return api_error(
+            str(exc),
+            status=500,
+            legacy={"error": str(exc)},
+        )
 
-    return JsonResponse(payload)
+    return api_success(data=payload, legacy=payload)
 
 
 @csrf_exempt
@@ -41,7 +45,11 @@ def persons(request):
             msgs = bpmatch.qiuanjian_message or []
         refreshed_at = bpmatch.update_time
     except Exception as exc:
-        return JsonResponse({"error": str(exc)}, status=500)
+        return api_error(
+            str(exc),
+            status=500,
+            legacy={"error": str(exc)},
+        )
 
     items = []
     for m in msgs or []:
@@ -58,12 +66,11 @@ def persons(request):
             }
         )
 
-    return JsonResponse(
-        {
-            "items": items,
-            "update_time": refreshed_at.isoformat() if refreshed_at else "",
-        }
-    )
+    payload = {
+        "items": items,
+        "update_time": refreshed_at.isoformat() if refreshed_at else "",
+    }
+    return api_success(data=payload, legacy=payload)
 
 
 @csrf_exempt
@@ -72,20 +79,32 @@ def log_job_click(request):
     Receive a job click event from the frontend and log the payload for debugging.
     """
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST is allowed"}, status=405)
+        return api_error(
+            "Only POST is allowed",
+            status=405,
+            legacy={"error": "Only POST is allowed"},
+        )
 
     try:
         raw_body = request.body.decode("utf-8") if request.body else "{}"
         payload = json.loads(raw_body or "{}")
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+        return api_error(
+            "Invalid JSON body",
+            status=400,
+            legacy={"error": "Invalid JSON body"},
+        )
 
     print(f"[job_click] 收到求人点击: {json.dumps(payload, ensure_ascii=False)}")
     try:
         match_result = bpmatch.match(payload)
     except Exception as exc:
         print(f"[job_click] 调用 match 失败: {exc}")
-        return JsonResponse({"error": str(exc)}, status=500)
+        return api_error(
+            str(exc),
+            status=500,
+            legacy={"error": str(exc)},
+        )
 
     # 标准化匹配结果，方便前端直接渲染人员列表
     matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
@@ -118,13 +137,8 @@ def log_job_click(request):
             }
         )
 
-    return JsonResponse(
-        {
-            "status": "ok",
-            "match": match_result,
-            "matches": items,
-        }
-    )
+    response_payload = {"match": match_result, "matches": items}
+    return api_success(data=response_payload, legacy={"status": "ok", **response_payload})
 
 
 @csrf_exempt
@@ -133,22 +147,38 @@ def extract_qiuren_detail(request):
     对外暴露 extract_qiuren_detail，输入邮件正文文本，返回结构化信息。
     """
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST is allowed"}, status=405)
+        return api_error(
+            "Only POST is allowed",
+            status=405,
+            legacy={"error": "Only POST is allowed"},
+        )
 
     try:
         raw_body = request.body.decode("utf-8") if request.body else "{}"
         payload = json.loads(raw_body or "{}")
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+        return api_error(
+            "Invalid JSON body",
+            status=400,
+            legacy={"error": "Invalid JSON body"},
+        )
 
     text = payload.get("text") or payload.get("body") or ""
     if not text.strip():
-        return JsonResponse({"error": "Missing field: text"}, status=400)
+        return api_error(
+            "Missing field: text",
+            status=400,
+            legacy={"error": "Missing field: text"},
+        )
 
     try:
         llm_result = llmsTool.extract_qiuren_detail(text)
     except Exception as exc:
-        return JsonResponse({"error": str(exc)}, status=500)
+        return api_error(
+            str(exc),
+            status=500,
+            legacy={"error": str(exc)},
+        )
 
     # extract_qiuren_detail 返回的是 JSON 字符串，这里尝试解析以便前端直接使用
     def clean_llm_json(s: str) -> str:
@@ -236,13 +266,8 @@ def extract_qiuren_detail(request):
 
     formatted_message = template.format(**fields)
 
-    return JsonResponse(
-        {
-            "status": "ok",
-            "data": formatted_message,
-            "raw": llm_result,
-        }
-    )
+    response_payload = {"data": formatted_message, "raw": llm_result}
+    return api_success(data=response_payload, legacy={"status": "ok", **response_payload})
 
 
 @csrf_exempt
@@ -251,13 +276,21 @@ def send_mail(request):
     发送邮件到指定收件人，支持抄送和附件（base64）。
     """
     if request.method != "POST":
-        return JsonResponse({"error": "Only POST is allowed"}, status=405)
+        return api_error(
+            "Only POST is allowed",
+            status=405,
+            legacy={"error": "Only POST is allowed"},
+        )
 
     try:
         raw_body = request.body.decode("utf-8") if request.body else "{}"
         payload = json.loads(raw_body or "{}")
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+        return api_error(
+            "Invalid JSON body",
+            status=400,
+            legacy={"error": "Invalid JSON body"},
+        )
 
     to_addr = (payload.get("to") or "").strip()
     cc_addr = (payload.get("cc") or "").strip()
@@ -273,9 +306,17 @@ def send_mail(request):
     ).strip()
 
     if not to_addr:
-        return JsonResponse({"error": "Missing field: to"}, status=400)
+        return api_error(
+            "Missing field: to",
+            status=400,
+            legacy={"error": "Missing field: to"},
+        )
     if not body.strip():
-        return JsonResponse({"error": "Missing field: body"}, status=400)
+        return api_error(
+            "Missing field: body",
+            status=400,
+            legacy={"error": "Missing field: body"},
+        )
 
     # 标准化附件结构
     normalized_atts = []
@@ -303,11 +344,21 @@ def send_mail(request):
             references=references or None,
         )
     except FileNotFoundError as exc:
-        return JsonResponse({"error": f"OAuth credentials missing: {exc}"}, status=500)
+        message = f"OAuth credentials missing: {exc}"
+        return api_error(
+            message,
+            status=500,
+            legacy={"error": message},
+        )
     except Exception as exc:
-        return JsonResponse({"error": str(exc)}, status=500)
+        return api_error(
+            str(exc),
+            status=500,
+            legacy={"error": str(exc)},
+        )
 
-    return JsonResponse({"status": "ok", "message_id": message_id})
+    payload = {"message_id": message_id}
+    return api_success(data=payload, legacy={"status": "ok", **payload})
 
 
 @csrf_exempt
@@ -342,4 +393,5 @@ def send_history(request):
             }
         )
 
-    return JsonResponse({"items": items, "count": len(items)})
+    payload = {"items": items, "count": len(items)}
+    return api_success(data=payload, legacy=payload)

@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-from django.http import JsonResponse
+from project.api import api_error, api_paginated, api_success
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
@@ -11,7 +11,11 @@ from order.models import PurchaseOrder, SalesOrder
 
 def _require_login(request):
     if not request.session.get("employee_id"):
-        return JsonResponse({"error": "Unauthorized"}, status=401)
+        return api_error(
+            "Unauthorized",
+            status=401,
+            legacy={"error": "Unauthorized"},
+        )
     return None
 
 
@@ -20,7 +24,11 @@ def _parse_json_body(request):
         raw = request.body.decode("utf-8") if request.body else "{}"
         return json.loads(raw or "{}"), None
     except json.JSONDecodeError:
-        return None, JsonResponse({"error": "Invalid JSON body"}, status=400)
+        return None, api_error(
+            "Invalid JSON body",
+            status=400,
+            legacy={"error": "Invalid JSON body"},
+        )
 
 
 def _parse_date(value, field):
@@ -29,7 +37,11 @@ def _parse_date(value, field):
     try:
         return datetime.strptime(value, "%Y-%m-%d").date(), None
     except (TypeError, ValueError):
-        return None, JsonResponse({"error": f"Invalid date: {field}"}, status=400)
+        return None, api_error(
+            f"Invalid date: {field}",
+            status=400,
+            legacy={"error": f"Invalid date: {field}"},
+        )
 
 
 def _normalize_number(value):
@@ -51,7 +63,11 @@ def _parse_decimal(value, field):
     try:
         return Decimal(raw), None
     except (InvalidOperation, ValueError):
-        return None, JsonResponse({"error": f"Invalid number: {field}"}, status=400)
+        return None, api_error(
+            f"Invalid number: {field}",
+            status=400,
+            legacy={"error": f"Invalid number: {field}"},
+        )
 
 
 def _parse_int(value, field):
@@ -60,7 +76,11 @@ def _parse_int(value, field):
     try:
         return int(value), None
     except (TypeError, ValueError):
-        return None, JsonResponse({"error": f"Invalid number: {field}"}, status=400)
+        return None, api_error(
+            f"Invalid number: {field}",
+            status=400,
+            legacy={"error": f"Invalid number: {field}"},
+        )
 
 
 def _serialize_purchase(order):
@@ -255,7 +275,11 @@ def _apply_filters(queryset, request):
         try:
             queryset = queryset.filter(customer_id=int(customer_id))
         except ValueError:
-            return None, JsonResponse({"error": "Invalid customer_id"}, status=400)
+            return None, api_error(
+                "Invalid customer_id",
+                status=400,
+                legacy={"error": "Invalid customer_id"},
+            )
     if technician_name:
         queryset = queryset.filter(technician_name__icontains=technician_name)
     if status:
@@ -291,14 +315,12 @@ def purchase_orders_api(request):
             return error
         paged, total, page, page_size, total_pages = _paginate_queryset(queryset, request)
         items = [_serialize_purchase(order) for order in paged]
-        return JsonResponse(
-            {
-                "items": items,
-                "total": total,
-                "page": page,
-                "page_size": page_size,
-                "total_pages": total_pages,
-            }
+        return api_paginated(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
 
     if request.method == "POST":
@@ -317,7 +339,11 @@ def purchase_orders_api(request):
         ]
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
-                return JsonResponse({"error": f"Missing field: {field}"}, status=400)
+                return api_error(
+                    f"Missing field: {field}",
+                    status=400,
+                    legacy={"error": f"Missing field: {field}"},
+                )
         order = PurchaseOrder()
         apply_error = _apply_purchase_payload(order, payload)
         if apply_error:
@@ -329,9 +355,14 @@ def purchase_orders_api(request):
         order.created_at = now
         order.updated_at = now
         order.save()
-        return JsonResponse({"status": "ok", "item": _serialize_purchase(order)})
+        item = _serialize_purchase(order)
+        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    return api_error(
+        "Method not allowed",
+        status=405,
+        legacy={"error": "Method not allowed"},
+    )
 
 
 @csrf_exempt
@@ -342,10 +373,15 @@ def purchase_order_detail_api(request, order_id):
 
     order = PurchaseOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
     if not order:
-        return JsonResponse({"error": "Order not found"}, status=404)
+        return api_error(
+            "Order not found",
+            status=404,
+            legacy={"error": "Order not found"},
+        )
 
     if request.method == "GET":
-        return JsonResponse({"item": _serialize_purchase(order)})
+        item = _serialize_purchase(order)
+        return api_success(data={"item": item}, legacy={"item": item})
 
     if request.method == "PUT":
         payload, error = _parse_json_body(request)
@@ -357,9 +393,14 @@ def purchase_order_detail_api(request, order_id):
         order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
         order.updated_at = timezone.now()
         order.save()
-        return JsonResponse({"status": "ok", "item": _serialize_purchase(order)})
+        item = _serialize_purchase(order)
+        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    return api_error(
+        "Method not allowed",
+        status=405,
+        legacy={"error": "Method not allowed"},
+    )
 
 
 @csrf_exempt
@@ -375,14 +416,12 @@ def sales_orders_api(request):
             return error
         paged, total, page, page_size, total_pages = _paginate_queryset(queryset, request)
         items = [_serialize_sales(order) for order in paged]
-        return JsonResponse(
-            {
-                "items": items,
-                "total": total,
-                "page": page,
-                "page_size": page_size,
-                "total_pages": total_pages,
-            }
+        return api_paginated(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
         )
 
     if request.method == "POST":
@@ -402,7 +441,11 @@ def sales_orders_api(request):
         ]
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
-                return JsonResponse({"error": f"Missing field: {field}"}, status=400)
+                return api_error(
+                    f"Missing field: {field}",
+                    status=400,
+                    legacy={"error": f"Missing field: {field}"},
+                )
         order = SalesOrder()
         apply_error = _apply_sales_payload(order, payload)
         if apply_error:
@@ -414,9 +457,14 @@ def sales_orders_api(request):
         order.created_at = now
         order.updated_at = now
         order.save()
-        return JsonResponse({"status": "ok", "item": _serialize_sales(order)})
+        item = _serialize_sales(order)
+        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    return api_error(
+        "Method not allowed",
+        status=405,
+        legacy={"error": "Method not allowed"},
+    )
 
 
 @csrf_exempt
@@ -427,10 +475,15 @@ def sales_order_detail_api(request, order_id):
 
     order = SalesOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
     if not order:
-        return JsonResponse({"error": "Order not found"}, status=404)
+        return api_error(
+            "Order not found",
+            status=404,
+            legacy={"error": "Order not found"},
+        )
 
     if request.method == "GET":
-        return JsonResponse({"item": _serialize_sales(order)})
+        item = _serialize_sales(order)
+        return api_success(data={"item": item}, legacy={"item": item})
 
     if request.method == "PUT":
         payload, error = _parse_json_body(request)
@@ -442,6 +495,11 @@ def sales_order_detail_api(request, order_id):
         order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
         order.updated_at = timezone.now()
         order.save()
-        return JsonResponse({"status": "ok", "item": _serialize_sales(order)})
+        item = _serialize_sales(order)
+        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
 
-    return JsonResponse({"error": "Method not allowed"}, status=405)
+    return api_error(
+        "Method not allowed",
+        status=405,
+        legacy={"error": "Method not allowed"},
+    )

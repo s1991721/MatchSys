@@ -408,8 +408,10 @@
           </div>
           <div class="field wide">
             <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
-            <input id="filter-customer" type="text" placeholder="下请公司" data-issue-placeholder="下请公司" data-accept-placeholder="客户公司" />
+            <input id="filter-customer" type="text" placeholder="下请公司" data-issue-placeholder="下请公司" data-accept-placeholder="客户公司" list="filter-customer-list" />
+            <input id="filter-customer-id" type="hidden" />
           </div>
+          <datalist id="filter-customer-list"></datalist>
           <div class="field wide">
             <span>技术者</span>
             <input id="filter-technician" type="text" placeholder="姓名" />
@@ -493,21 +495,19 @@
         </label>
         <label class="field full">
           <span>取引先（下请公司）</span>
-          <input id="issue-customer-name" type="text" placeholder="下请公司" />
+          <input id="issue-customer-name" type="text" placeholder="下请公司" list="issue-customer-list" />
         </label>
+        <datalist id="issue-customer-list"></datalist>
+        <input id="issue-customer-id" type="hidden" />
         <label class="field">
-          <span>客户ID</span>
-          <input id="issue-customer-id" type="number" placeholder="客户ID" />
-        </label>
-        <label class="field">
-          <span>SES 工程师</span>
+          <span>技术者</span>
           <input id="issue-technician-name" type="text" placeholder="姓名" />
         </label>
         <label class="field">
           <span>状态</span>
           <select id="issue-status">
             <option>请选择状态</option>
-            <option>承认中</option>
+            <option selected>承认中</option>
             <option>已受注</option>
             <option>拒绝</option>
             <option>已取消</option>
@@ -530,17 +530,10 @@
           </div>
         </label>
         <label class="field">
-          <span>创建人</span>
-          <input id="issue-created-by" type="text" placeholder="姓名" />
-        </label>
-        <label class="field">
           <span>负责人</span>
-          <input id="issue-owner" type="text" placeholder="姓名" />
+          <input id="issue-owner" type="text" placeholder="姓名" list="issue-owner-list" />
         </label>
-        <label class="field">
-          <span>修改人</span>
-          <input id="issue-updated-by" type="text" placeholder="姓名" />
-        </label>
+        <datalist id="issue-owner-list"></datalist>
       </div>
     </div>
     <div class="modal-actions">
@@ -568,25 +561,21 @@
         </label>
         <label class="field full">
           <span>取引先（客户公司）</span>
-          <input id="accept-customer-name" type="text" placeholder="客户公司" />
+          <input id="accept-customer-name" type="text" placeholder="客户公司" list="accept-customer-list" />
         </label>
+        <datalist id="accept-customer-list"></datalist>
+        <input id="accept-customer-id" type="hidden" />
         <label class="field">
-          <span>客户ID</span>
-          <input id="accept-customer-id" type="number" placeholder="客户ID" />
+          <span>技术者</span>
+          <input id="accept-technician-name" type="text" placeholder="姓名" list="accept-technician-list" />
         </label>
-        <label class="field">
-          <span>SES 工程师</span>
-          <input id="accept-technician-name" type="text" placeholder="姓名" />
-        </label>
-        <label class="field">
-          <span>技术人员ID</span>
-          <input id="accept-technician-id" type="number" placeholder="技术人员ID" />
-        </label>
+        <datalist id="accept-technician-list"></datalist>
+        <input id="accept-technician-id" type="hidden" />
         <label class="field">
           <span>状态</span>
           <select id="accept-status">
             <option>请选择状态</option>
-            <option>已受注</option>
+            <option selected>已受注</option>
             <option>拒绝</option>
             <option>已取消</option>
           </select>
@@ -608,17 +597,10 @@
           </div>
         </label>
         <label class="field">
-          <span>创建人</span>
-          <input id="accept-created-by" type="text" placeholder="姓名" />
-        </label>
-        <label class="field">
           <span>负责人</span>
-          <input id="accept-owner" type="text" placeholder="姓名" />
+          <input id="accept-owner" type="text" placeholder="姓名" list="accept-owner-list" />
         </label>
-        <label class="field">
-          <span>修改人</span>
-          <input id="accept-updated-by" type="text" placeholder="姓名" />
-        </label>
+        <datalist id="accept-owner-list"></datalist>
       </div>
     </div>
     <div class="modal-actions">
@@ -741,6 +723,8 @@
         orderNo: document.getElementById("filter-order-no"),
         project: document.getElementById("filter-project"),
         customer: document.getElementById("filter-customer"),
+        customerId: document.getElementById("filter-customer-id"),
+        customerList: document.getElementById("filter-customer-list"),
         technician: document.getElementById("filter-technician"),
         status: statusFilter,
         start: document.getElementById("filter-start"),
@@ -752,15 +736,15 @@
         projectName: document.getElementById("issue-project-name"),
         customerName: document.getElementById("issue-customer-name"),
         customerId: document.getElementById("issue-customer-id"),
+        customerList: document.getElementById("issue-customer-list"),
         technicianName: document.getElementById("issue-technician-name"),
         status: document.getElementById("issue-status"),
         price: document.getElementById("issue-price"),
         hours: document.getElementById("issue-hours"),
         start: document.getElementById("issue-start"),
         end: document.getElementById("issue-end"),
-        createdBy: document.getElementById("issue-created-by"),
         owner: document.getElementById("issue-owner"),
-        updatedBy: document.getElementById("issue-updated-by"),
+        ownerList: document.getElementById("issue-owner-list"),
       };
 
       const acceptForm = {
@@ -769,16 +753,17 @@
         purchaseId: document.getElementById("accept-purchase-id"),
         customerName: document.getElementById("accept-customer-name"),
         customerId: document.getElementById("accept-customer-id"),
+        customerList: document.getElementById("accept-customer-list"),
         technicianName: document.getElementById("accept-technician-name"),
         technicianId: document.getElementById("accept-technician-id"),
+        technicianList: document.getElementById("accept-technician-list"),
         status: document.getElementById("accept-status"),
         price: document.getElementById("accept-price"),
         hours: document.getElementById("accept-hours"),
         start: document.getElementById("accept-start"),
         end: document.getElementById("accept-end"),
-        createdBy: document.getElementById("accept-created-by"),
         owner: document.getElementById("accept-owner"),
-        updatedBy: document.getElementById("accept-updated-by"),
+        ownerList: document.getElementById("accept-owner-list"),
       };
 
       const detailFields = {
@@ -817,6 +802,10 @@
       let currentItems = [];
       let currentDetailId = null;
       let detailMode = "view";
+      const issueCustomerMap = new Map();
+      const acceptCustomerMap = new Map();
+      const filterCustomerMap = new Map();
+      const acceptTechnicianMap = new Map();
 
       function renderActions(container) {
         container.innerHTML = "";
@@ -893,6 +882,10 @@
             field.readOnly = isView;
           }
         });
+        if (detailFields.createdAt) detailFields.createdAt.readOnly = true;
+        if (detailFields.updatedAt) detailFields.updatedAt.readOnly = true;
+        if (detailFields.creator) detailFields.creator.readOnly = true;
+        if (detailFields.updater) detailFields.updater.readOnly = true;
       }
 
       function formatPrice(value) {
@@ -954,7 +947,7 @@
         const params = new URLSearchParams();
         if (filters.orderNo.value.trim()) params.append("order_no", filters.orderNo.value.trim());
         if (filters.project.value.trim()) params.append("project_name", filters.project.value.trim());
-        if (filters.customer.value.trim()) params.append("customer_name", filters.customer.value.trim());
+        if (filters.customerId.value.trim()) params.append("customer_id", filters.customerId.value.trim());
         if (filters.technician.value.trim()) params.append("technician_name", filters.technician.value.trim());
         if (filters.status.value && filters.status.value !== "全部") params.append("status", filters.status.value);
         if (filters.start.value) params.append("created_start", filters.start.value);
@@ -1012,9 +1005,7 @@
           working_hours: fromDetail ? detailFields.hours.value.trim() : issueForm.hours.value.trim(),
           period_start: fromDetail ? detailFields.start.value : issueForm.start.value,
           period_end: fromDetail ? detailFields.end.value : issueForm.end.value,
-          created_by: fromDetail ? detailFields.creator.value.trim() : issueForm.createdBy.value.trim(),
           person_in_charge: fromDetail ? detailFields.owner.value.trim() : issueForm.owner.value.trim(),
-          updated_by: fromDetail ? detailFields.updater.value.trim() : issueForm.updatedBy.value.trim(),
         };
       }
 
@@ -1032,9 +1023,7 @@
           working_hours: fromDetail ? detailFields.hours.value.trim() : acceptForm.hours.value.trim(),
           period_start: fromDetail ? detailFields.start.value : acceptForm.start.value,
           period_end: fromDetail ? detailFields.end.value : acceptForm.end.value,
-          created_by: fromDetail ? detailFields.creator.value.trim() : acceptForm.createdBy.value.trim(),
           person_in_charge: fromDetail ? detailFields.owner.value.trim() : acceptForm.owner.value.trim(),
-          updated_by: fromDetail ? detailFields.updater.value.trim() : acceptForm.updatedBy.value.trim(),
         };
       }
 
@@ -1086,6 +1075,130 @@
           });
       }
 
+      function renderCustomerOptions(listEl, map, items) {
+        map.clear();
+        listEl.innerHTML = "";
+        items.forEach((item) => {
+          if (!item || !item.company_name) return;
+          map.set(item.company_name, item.id);
+          const opt = document.createElement("option");
+          opt.value = item.company_name;
+          listEl.appendChild(opt);
+        });
+      }
+
+      function fetchCustomerOptions(inputEl, listEl, map) {
+        const keyword = inputEl.value.trim();
+        if (!keyword) {
+          listEl.innerHTML = "";
+          map.clear();
+          return;
+        }
+        const params = new URLSearchParams();
+        params.append("company_name", keyword);
+        params.append("page", "1");
+        params.append("page_size", "10");
+        fetch(`/api/customers?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const items = Array.isArray(data.items) ? data.items : [];
+            renderCustomerOptions(listEl, map, items);
+          })
+          .catch(() => {
+            listEl.innerHTML = "";
+            map.clear();
+          });
+      }
+
+      function bindCustomerLookup(inputEl, idEl, listEl, map) {
+        if (!inputEl || !idEl || !listEl) return;
+        inputEl.addEventListener("input", () => {
+          fetchCustomerOptions(inputEl, listEl, map);
+          idEl.value = "";
+        });
+        inputEl.addEventListener("change", () => {
+          const id = map.get(inputEl.value.trim());
+          idEl.value = id ? String(id) : "";
+        });
+      }
+
+      function fetchEmployeeOptions(inputEl, listEl) {
+        const keyword = inputEl.value.trim();
+        if (!keyword) {
+          listEl.innerHTML = "";
+          return;
+        }
+        const params = new URLSearchParams();
+        params.append("keyword", keyword);
+        fetch(`/api/employees?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const items = Array.isArray(data.items) ? data.items : [];
+            listEl.innerHTML = "";
+            items.forEach((item) => {
+              if (!item || !item.name) return;
+              const opt = document.createElement("option");
+              opt.value = item.name;
+              listEl.appendChild(opt);
+            });
+          })
+          .catch(() => {
+            listEl.innerHTML = "";
+          });
+      }
+
+      function bindOwnerLookup(form) {
+        if (!form.owner || !form.ownerList) return;
+        form.owner.addEventListener("input", () => {
+          fetchEmployeeOptions(form.owner, form.ownerList);
+        });
+      }
+
+      function renderTechnicianOptions(listEl, map, items) {
+        map.clear();
+        listEl.innerHTML = "";
+        items.forEach((item) => {
+          if (!item || !item.name) return;
+          map.set(item.name, item.employee_id);
+          const opt = document.createElement("option");
+          opt.value = item.name;
+          listEl.appendChild(opt);
+        });
+      }
+
+      function fetchTechnicianOptions(inputEl, listEl, map) {
+        const keyword = inputEl.value.trim();
+        if (!keyword) {
+          listEl.innerHTML = "";
+          map.clear();
+          return;
+        }
+        const params = new URLSearchParams();
+        params.append("keyword", keyword);
+        fetch(`/api/technicians?${params.toString()}`)
+          .then((response) => response.json())
+          .then((data) => {
+            const items = Array.isArray(data.items) ? data.items : [];
+            renderTechnicianOptions(listEl, map, items);
+          })
+          .catch(() => {
+            listEl.innerHTML = "";
+            map.clear();
+          });
+      }
+
+      function bindTechnicianLookup(inputEl, idEl, listEl, map) {
+        if (!inputEl || !idEl || !listEl) return;
+        inputEl.addEventListener("input", () => {
+          fetchTechnicianOptions(inputEl, listEl, map);
+          idEl.value = "";
+        });
+        inputEl.addEventListener("change", () => {
+          const id = map.get(inputEl.value.trim());
+          idEl.value = id ? String(id) : "";
+        });
+      }
+
       switches.forEach((btn) => {
         btn.addEventListener("click", () => setView(btn.dataset.view));
       });
@@ -1124,6 +1237,7 @@
               field.value = "";
             }
           });
+          filterCustomerMap.clear();
           currentPage = 1;
           fetchOrders();
         });
@@ -1181,6 +1295,13 @@
           if (dialog) dialog.close();
         });
       });
+
+      bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap);
+      bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap);
+      bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap);
+      bindOwnerLookup(issueForm);
+      bindOwnerLookup(acceptForm);
+      bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap);
 
       setView("issue");
     })();

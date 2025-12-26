@@ -124,11 +124,6 @@ def _apply_purchase_payload(order, payload):
         order.customer_name = (payload.get("customer_name") or "").strip()
     if "technician_name" in payload:
         order.technician_name = (payload.get("technician_name") or "").strip()
-    if "created_by" in payload:
-        order.created_by = (payload.get("created_by") or "").strip() or "系统"
-    if "updated_by" in payload:
-        order.updated_by = (payload.get("updated_by") or "").strip()
-
     if "customer_id" in payload:
         value, error = _parse_int(payload.get("customer_id"), "customer_id")
         if error:
@@ -177,11 +172,6 @@ def _apply_sales_payload(order, payload):
         order.customer_name = (payload.get("customer_name") or "").strip()
     if "technician_name" in payload:
         order.technician_name = (payload.get("technician_name") or "").strip()
-    if "created_by" in payload:
-        order.created_by = (payload.get("created_by") or "").strip() or "系统"
-    if "updated_by" in payload:
-        order.updated_by = (payload.get("updated_by") or "").strip()
-
     if "customer_id" in payload:
         value, error = _parse_int(payload.get("customer_id"), "customer_id")
         if error:
@@ -251,7 +241,7 @@ def _paginate_queryset(queryset, request):
 def _apply_filters(queryset, request):
     order_no = (request.GET.get("order_no") or "").strip()
     project_name = (request.GET.get("project_name") or "").strip()
-    customer_name = (request.GET.get("customer_name") or "").strip()
+    customer_id = (request.GET.get("customer_id") or "").strip()
     technician_name = (request.GET.get("technician_name") or "").strip()
     status = (request.GET.get("status") or "").strip()
     created_start = request.GET.get("created_start")
@@ -261,8 +251,11 @@ def _apply_filters(queryset, request):
         queryset = queryset.filter(order_no__icontains=order_no)
     if project_name:
         queryset = queryset.filter(project_name__icontains=project_name)
-    if customer_name:
-        queryset = queryset.filter(customer_name__icontains=customer_name)
+    if customer_id:
+        try:
+            queryset = queryset.filter(customer_id=int(customer_id))
+        except ValueError:
+            return None, JsonResponse({"error": "Invalid customer_id"}, status=400)
     if technician_name:
         queryset = queryset.filter(technician_name__icontains=technician_name)
     if status:
@@ -330,10 +323,11 @@ def purchase_orders_api(request):
         if apply_error:
             return apply_error
         now = timezone.now()
+        current_user = request.session.get("employee_name") or request.session.get("user_name") or "系统"
+        order.created_by = current_user
+        order.updated_by = current_user
         order.created_at = now
         order.updated_at = now
-        if not order.created_by:
-            order.created_by = "系统"
         order.save()
         return JsonResponse({"status": "ok", "item": _serialize_purchase(order)})
 
@@ -360,6 +354,7 @@ def purchase_order_detail_api(request, order_id):
         apply_error = _apply_purchase_payload(order, payload)
         if apply_error:
             return apply_error
+        order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
         order.updated_at = timezone.now()
         order.save()
         return JsonResponse({"status": "ok", "item": _serialize_purchase(order)})
@@ -413,10 +408,11 @@ def sales_orders_api(request):
         if apply_error:
             return apply_error
         now = timezone.now()
+        current_user = request.session.get("employee_name") or request.session.get("user_name") or "系统"
+        order.created_by = current_user
+        order.updated_by = current_user
         order.created_at = now
         order.updated_at = now
-        if not order.created_by:
-            order.created_by = "系统"
         order.save()
         return JsonResponse({"status": "ok", "item": _serialize_sales(order)})
 
@@ -443,6 +439,7 @@ def sales_order_detail_api(request, order_id):
         apply_error = _apply_sales_payload(order, payload)
         if apply_error:
             return apply_error
+        order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
         order.updated_at = timezone.now()
         order.save()
         return JsonResponse({"status": "ok", "item": _serialize_sales(order)})

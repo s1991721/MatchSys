@@ -1,10 +1,10 @@
 CREATE TABLE purchase_order (
-    id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id              BIGINT  NOT NULL AUTO_INCREMENT COMMENT '主键',
     order_no        VARCHAR(50) NOT NULL COMMENT '发注单号',
     person_in_charge VARCHAR(100) NOT NULL COMMENT '负责人',
     status          VARCHAR(50) NOT NULL COMMENT '状态',
     project_name    VARCHAR(255) NOT NULL COMMENT '项目名称',
-    customer_id     BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
+    customer_id     BIGINT  NOT NULL COMMENT '客户ID',
     customer_name   VARCHAR(255) NOT NULL COMMENT '客户名称',
     technician_name VARCHAR(255) COMMENT '技术人员名称',
     price           DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '金额',
@@ -24,15 +24,15 @@ CREATE TABLE purchase_order (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='发注表';
 
 CREATE TABLE sales_order (
-    id              BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id              BIGINT  NOT NULL AUTO_INCREMENT COMMENT '主键',
     order_no        VARCHAR(50) NOT NULL COMMENT '受注单号',
     person_in_charge VARCHAR(100) NOT NULL COMMENT '负责人',
     status          VARCHAR(50) NOT NULL COMMENT '状态',
-    purchase_id     BIGINT UNSIGNED NOT NULL COMMENT '对应发注ID',
+    purchase_id     BIGINT  NOT NULL COMMENT '对应发注ID',
     project_name    VARCHAR(255) NOT NULL COMMENT '项目名称',
-    customer_id     BIGINT UNSIGNED NOT NULL COMMENT '客户ID',
+    customer_id     BIGINT  NOT NULL COMMENT '客户ID',
     customer_name   VARCHAR(255) NOT NULL COMMENT '客户名称',
-    technician_id   BIGINT UNSIGNED COMMENT '技术人员ID',
+    technician_id   BIGINT  COMMENT '技术人员ID',
     technician_name VARCHAR(255) COMMENT '技术人员名称',
     price           DECIMAL(12,2) NOT NULL DEFAULT 0 COMMENT '金额',
     working_hours   DECIMAL(8,2) DEFAULT 0 COMMENT '工时',

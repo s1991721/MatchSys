@@ -19,12 +19,6 @@
             color: var(--text);
         }
 
-        .page {
-            max-width: 1240px;
-            margin: 24px auto 32px;
-            padding: 0 20px 28px;
-        }
-
         .status-note {
             display: inline-flex;
             align-items: center;
@@ -43,12 +37,6 @@
             border-radius: 50%;
             background: var(--success);
             box-shadow: 0 0 0 4px rgba(43, 183, 117, 0.18);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.25fr 1fr;
-            gap: 16px;
         }
 
         .grid + .grid {
@@ -324,10 +312,6 @@
         }
 
         @media (max-width: 1060px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
             .history-list {
                 max-height: none;
             }
@@ -335,7 +319,7 @@
   </style>
 </head>
 <body>
-    <div class="page">
+    <div class="page page-wide">
         <header class="page-header c-page-header">
             <div>
                 <div class="title c-page-title-soft">送信历史</div>
@@ -347,8 +331,8 @@
             </div>
         </header>
 
-        <section class="grid">
-            <div class="c-card">
+        <section class="grid c-split-grid-wide">
+            <div class="c-card c-card-pad">
                 <div class="c-card-title">历史列表</div>
                 <div class="filter-row">
                     <div class="pill-group" id="status-group">
@@ -365,7 +349,7 @@
                 <ul id="history-list" class="history-list"></ul>
             </div>
 
-            <div class="c-card">
+            <div class="c-card c-card-pad">
                 <div class="c-card-title">送信详情</div>
                 <div class="detail-meta" id="detail-meta"></div>
                 <div class="section-title">正文</div>
@@ -375,8 +359,8 @@
             </div>
         </section>
 
-        <section class="grid">
-            <div class="c-card">
+        <section class="grid c-split-grid-wide">
+            <div class="c-card c-card-pad">
                 <div class="c-card-title">统计概览</div>
                 <div class="stat-grid">
                     <div class="stat-card c-card c-card-compact">
@@ -394,7 +378,7 @@
                 </div>
             </div>
 
-            <div class="c-card">
+            <div class="c-card c-card-pad">
                 <div class="c-card-title">提醒</div>
                 <div class="tips">
                     <div class="tips-item">

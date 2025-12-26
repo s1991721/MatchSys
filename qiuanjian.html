@@ -17,14 +17,6 @@
             color: var(--text);
         }
 
-        .page {
-            max-width: 1280px;
-            margin: 24px auto;
-            padding: 0 20px 24px;
-            display: grid;
-            grid-template-columns: 7fr 5fr;
-            gap: 16px;
-        }
 .split-left {
             display: grid;
             grid-template-rows: 1fr 240px;
@@ -149,10 +141,6 @@
         }
 
         @media (max-width: 1080px) {
-            .page {
-                grid-template-columns: 1fr;
-            }
-
             .split-left {
                 grid-template-rows: auto auto;
                 min-height: auto;
@@ -165,9 +153,9 @@
   </style>
 </head>
 <body>
-    <div class="page">
+    <div class="page page-wide c-split-grid">
         <section class="split-left">
-            <div class="c-card">
+            <div class="c-card c-card-pad">
                 <h2 class="title c-panel-title">求案件列表</h2>
                 <div class="filters c-filter-grid">
                     <div class="filter-group c-filter-group">
@@ -188,7 +176,7 @@
                 </ul>
             </div>
 
-            <div class="c-card">
+            <div class="c-card c-card-pad">
                 <h2 class="title c-panel-title">求案件详情</h2>
                 <div id="case-detail" class="detail">
                     这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
@@ -196,7 +184,7 @@
             </div>
         </section>
 
-        <section class="c-card">
+        <section class="c-card c-card-pad">
             <h2 class="title c-panel-title">内容编辑保存</h2>
             <div class="form">
                 <div class="field">

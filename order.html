@@ -15,11 +15,6 @@
       color:var(--text);
     }
 
-    .container{
-      padding:24px;
-      width:100%;
-      margin:0;
-    }
     .page-head{
       display:grid;
       grid-template-columns: 1fr auto 1fr;
@@ -63,20 +58,6 @@
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap:14px;
     }
-    .filters-actions{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      flex-wrap:wrap;
-      gap:12px;
-    }
-    .filters-actions-left,
-    .filters-actions-right{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
     .field{
       display:flex;
       align-items:center;
@@ -111,13 +92,6 @@
       align-items:center;
       gap:6px;
     }
-.cell-ellipsis{
-      max-width:220px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      margin:0 auto;
-    }
 .table-info{
       display:flex;
       justify-content:flex-end;
@@ -144,12 +118,6 @@
       color:#475569;
       font-weight:600;
     }
-    .empty{
-      text-align:center;
-      padding:24px 0;
-      color:var(--muted);
-      font-weight:600;
-    }
 
     .tag{
       display:inline-flex;
@@ -165,11 +133,6 @@
     .tag.danger{ color:#b91c1c; background: rgba(239,68,68,.14); border-color: rgba(239,68,68,.25); }
     .tag.info{ color:#1d4ed8; background: rgba(28,123,255,.12); border-color: rgba(28,123,255,.22); }
     .tag.neutral{ color:#4b5563; background: rgba(148,163,184,.16); border-color: rgba(148,163,184,.3); }
-.row-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-    }
     .modal{
       border:0;
       border-radius:16px;
@@ -238,7 +201,7 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container page-wide c-stack">
     <div class="page-head">
       <div class="title c-title-bar c-title-bar-lg">
         <h1>注文书管理</h1>
@@ -251,7 +214,7 @@
       </div>
     </div>
 
-    <section class="c-card">
+    <section class="c-card c-card-pad">
       <div class="filters">
         <div class="filters-grid">
           <div class="field wide">
@@ -290,11 +253,11 @@
             </div>
           </div>
         </div>
-        <div class="filters-actions">
+        <div class="filters-actions c-filter-actions-bar">
           <div class="filters-actions-left">
             <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createBtn" type="button" data-issue="新建注文书" data-accept="新建受注">＋ 新建注文书</button>
           </div>
-          <div class="filters-actions-right">
+          <div class="filters-actions-right c-filter-actions-group">
             <button class="c-btn c-btn-primary" id="searchBtn" type="button">搜索</button>
             <button class="c-btn c-btn-warn" id="resetBtn" type="button">重置</button>
           </div>
@@ -302,36 +265,38 @@
       </div>
 
       <div class="table-info" id="table-info">共 0 条 当前显示第 1 页</div>
-      <table class="c-table c-table-center">
-        <thead>
-          <tr>
-            <th>注文No</th>
-            <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）">案件名 / 取引先（下请）</th>
-            <th>技术者</th>
-            <th>契约单价</th>
-            <th>契约工时</th>
-            <th>契约期间</th>
-            <th>创建时间</th>
-            <th>创建人</th>
-            <th>负责人</th>
-            <th>修改时间</th>
-            <th>修改人</th>
-            <th>状态</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody id="order-body"></tbody>
-      </table>
-      <div class="pager">
-        <button class="c-btn c-btn-sm c-btn-secondary" id="page-prev">‹</button>
-        <span class="page-num" id="page-current">1</span>
-        <span class="page-num" id="page-total">/ 1</span>
-        <button class="c-btn c-btn-sm c-btn-secondary" id="page-next">›</button>
-        <select id="page-size">
-          <option value="10">10 条/页</option>
-          <option value="20">20 条/页</option>
-          <option value="50">50 条/页</option>
-        </select>
+      <div class="table-wrap c-table-wrapper">
+        <table class="c-table">
+          <thead>
+            <tr>
+              <th>注文No</th>
+              <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）">案件名 / 取引先（下请）</th>
+              <th>技术者</th>
+              <th>契约单价</th>
+              <th>契约工时</th>
+              <th>契约期间</th>
+              <th>创建时间</th>
+              <th>创建人</th>
+              <th>负责人</th>
+              <th>修改时间</th>
+              <th>修改人</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="order-body"></tbody>
+        </table>
+        <div class="pager">
+          <button class="c-btn c-btn-sm c-btn-secondary" id="page-prev">‹</button>
+          <span class="page-num" id="page-current">1</span>
+          <span class="page-num" id="page-total">/ 1</span>
+          <button class="c-btn c-btn-sm c-btn-secondary" id="page-next">›</button>
+          <select id="page-size">
+            <option value="10">10 条/页</option>
+            <option value="20">20 条/页</option>
+            <option value="50">50 条/页</option>
+          </select>
+        </div>
       </div>
     </section>
   </div>
@@ -766,7 +731,7 @@
         pagePrev.disabled = currentPage <= 1;
         pageNext.disabled = currentPage >= totalPages;
         if (!items.length) {
-          tableBody.innerHTML = `<tr><td colspan="13" class="empty">暂无数据</td></tr>`;
+          tableBody.innerHTML = `<tr><td colspan="13" class="empty c-empty">暂无数据</td></tr>`;
           tableInfo.textContent = `共 ${count} 条 当前显示第 ${currentPage} 页`;
           return;
         }
@@ -778,8 +743,8 @@
             <tr data-id="${item.id}">
               <td>${item.order_no || "-"}</td>
               <td>
-                <div class="cell-ellipsis" title="${item.project_name || ""}">${item.project_name || "-"}</div>
-                <div class="cell-ellipsis" title="${item.customer_name || ""}">${item.customer_name || "-"}</div>
+                <div class="c-truncate" title="${item.project_name || ""}">${item.project_name || "-"}</div>
+                <div class="c-truncate" title="${item.customer_name || ""}">${item.customer_name || "-"}</div>
               </td>
               <td>${item.technician_name || "-"}</td>
               <td>${formatPrice(item.price)}</td>
@@ -794,7 +759,7 @@
               <td>${item.updated_at || "-"}</td>
               <td>${item.updated_by || "-"}</td>
               <td><span class="tag ${statusClass[status] ||"neutral"}">${status}</span></td>
-              <td><div class="row-actions" data-row-actions></div></td>
+              <td><div class="row-actions c-row-actions" data-row-actions></div></td>
             </tr>
           `;
         }).join("");

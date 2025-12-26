@@ -18,20 +18,6 @@
             color: var(--text);
         }
 
-        .page {
-            max-width: 1260px;
-            margin: 24px auto 32px;
-            padding: 0 20px 24px;
-        }
-
-        .row {
-            display: flex;
-            gap: 16px;
-        }
-
-        .row + .row {
-            margin-top: 16px;
-        }
 .panel-left {
             flex: 2;
         }
@@ -144,10 +130,6 @@
         }
 
         @media (max-width: 1100px) {
-            .row {
-                flex-direction: column;
-            }
-
             .list.jobs,
             .list.persons {
                 max-height: 320px;
@@ -160,10 +142,10 @@
   </style>
 </head>
 <body>
-<div class="page">
+<div class="page page-wide c-stack">
     <!-- 上半部分：列表 -->
-    <div class="row">
-        <div class="panel-left c-card">
+    <div class="row c-split-grid">
+        <div class="panel-left c-card c-card-pad">
             <div class="panel-title c-panel-title">求人列表</div>
             <div class="filters c-filter-grid">
                 <div class="filter-group c-filter-group">
@@ -184,7 +166,7 @@
             </ul>
         </div>
 
-        <div class="panel-right c-card">
+        <div class="panel-right c-card c-card-pad">
             <div class="panel-title c-panel-title">人员列表</div>
             <ul class="list c-list c-list-spaced persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
@@ -277,15 +259,15 @@
     </div>
 
     <!-- 下半部分：详情 -->
-    <div class="row">
-        <div class="panel-left detail c-card">
+    <div class="row c-split-grid">
+        <div class="panel-left detail c-card c-card-pad">
             <div class="panel-title c-panel-title">求人详情</div>
             <div class="detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
 
-        <div class="panel-right detail c-card">
+        <div class="panel-right detail c-card c-card-pad">
             <div class="panel-title c-panel-title">技术者详情</div>
             <div class="detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。

@@ -451,6 +451,19 @@
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
             const API_BASE = '';
+            const normalizeApiResponse = (raw) => {
+                if (raw && typeof raw === 'object' && 'success' in raw) {
+                    return raw;
+                }
+                const message = raw?.error || '';
+                return {
+                    success: !message,
+                    code: message ? 'ERR_UNKNOWN' : 'OK',
+                    message,
+                    data: raw,
+                    meta: raw?.meta || {},
+                };
+            };
             const fetchWithAuth = async (url, options = {}) => {
                 const res = await fetch(url, options);
                 if (res.status === 401) {
@@ -575,13 +588,18 @@
                         throw new Error(`HTTP ${res.status}`);
                     }
                     const data = await res.json();
-                    const message = typeof data.message === 'string' ? data.message.trim() : '';
+                    const payload = normalizeApiResponse(data);
+                    if (!payload.success) {
+                        throw new Error(payload.message || '解析失败');
+                    }
+                    const result = payload.data || data;
+                    const message = typeof result.message === 'string' ? result.message.trim() : '';
                     let formatted = message;
                     if (!formatted) {
-                        if (data.data) {
-                            formatted = JSON.stringify(data.data, null, 2);
-                        } else if (typeof data.raw === 'string') {
-                            formatted = data.raw;
+                        if (result.data) {
+                            formatted = JSON.stringify(result.data, null, 2);
+                        } else if (typeof result.raw === 'string') {
+                            formatted = result.raw;
                         } else {
                             formatted = '';
                         }
@@ -755,7 +773,13 @@
 
                     if (!res.ok) {
                         const err = await res.json().catch(() => ({}));
-                        throw new Error(err.error || `HTTP ${res.status}`);
+                        const errPayload = normalizeApiResponse(err);
+                        throw new Error(errPayload.message || `HTTP ${res.status}`);
+                    }
+                    const data = await res.json().catch(() => ({}));
+                    const responsePayload = normalizeApiResponse(data);
+                    if (!responsePayload.success) {
+                        throw new Error(responsePayload.message || '发送失败');
                     }
 
                     alert('发送成功！即将跳转到历史记录。');

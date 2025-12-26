@@ -749,6 +749,20 @@
         end: document.getElementById("filter-end"),
       };
 
+      const normalizeApiResponse = (raw) => {
+        if (raw && typeof raw === "object" && "success" in raw) {
+          return raw;
+        }
+        const message = raw?.error || "";
+        return {
+          success: !message,
+          code: message ? "ERR_UNKNOWN" : "OK",
+          message,
+          data: raw,
+          meta: raw?.meta || {},
+        };
+      };
+
       const issueForm = {
         orderNo: document.getElementById("issue-order-no"),
         projectName: document.getElementById("issue-project-name"),
@@ -976,8 +990,22 @@
         fetch(`${baseUrl}?${params.toString()}`)
           .then((response) => response.json())
           .then((data) => {
-            currentItems = Array.isArray(data.items) ? data.items : [];
-            renderRows(currentItems, data.total, data.page, data.total_pages);
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) {
+              currentItems = [];
+              renderRows([], 0, 1, 1);
+              return;
+            }
+            const result = payload.data || {};
+            currentItems = Array.isArray(result.items || data.items)
+              ? (result.items || data.items)
+              : [];
+            renderRows(
+              currentItems,
+              result.total ?? data.total,
+              result.page ?? data.page,
+              result.total_pages ?? data.total_pages
+            );
           })
           .catch(() => {
             currentItems = [];
@@ -1055,8 +1083,9 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            if (data.error) {
-              alert(data.error);
+            const responsePayload = normalizeApiResponse(data);
+            if (!responsePayload.success) {
+              alert(responsePayload.message || "创建失败");
               return;
             }
             if (view === "accept" && createDialogAccept) createDialogAccept.close();
@@ -1081,8 +1110,9 @@
         })
           .then((response) => response.json())
           .then((data) => {
-            if (data.error) {
-              alert(data.error);
+            const responsePayload = normalizeApiResponse(data);
+            if (!responsePayload.success) {
+              alert(responsePayload.message || "保存失败");
               return;
             }
             if (detailDialog) detailDialog.close();
@@ -1119,7 +1149,9 @@
         fetch(`/api/customers?${params.toString()}`)
           .then((response) => response.json())
           .then((data) => {
-            const items = Array.isArray(data.items) ? data.items : [];
+            const payload = normalizeApiResponse(data);
+            const result = payload.data || {};
+            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
             renderCustomerOptions(listEl, map, items);
           })
           .catch(() => {
@@ -1151,7 +1183,9 @@
         fetch(`/api/employees?${params.toString()}`)
           .then((response) => response.json())
           .then((data) => {
-            const items = Array.isArray(data.items) ? data.items : [];
+            const payload = normalizeApiResponse(data);
+            const result = payload.data || {};
+            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
             listEl.innerHTML = "";
             items.forEach((item) => {
               if (!item || !item.name) return;
@@ -1196,7 +1230,9 @@
         fetch(`/api/technicians?${params.toString()}`)
           .then((response) => response.json())
           .then((data) => {
-            const items = Array.isArray(data.items) ? data.items : [];
+            const payload = normalizeApiResponse(data);
+            const result = payload.data || {};
+            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
             renderTechnicianOptions(listEl, map, items);
           })
           .catch(() => {

@@ -550,6 +550,20 @@
     let pageSize = 10;
     let totalPages = 1;
 
+    const normalizeApiResponse = (raw) => {
+      if (raw && typeof raw === "object" && "success" in raw) {
+        return raw;
+      }
+      const message = raw?.error || "";
+      return {
+        success: !message,
+        code: message ? "ERR_UNKNOWN" : "OK",
+        message,
+        data: raw,
+        meta: raw?.meta || {},
+      };
+    };
+
     const renderNames = (names) => {
       nameList.innerHTML = names
         .map((name) => `<option value="${name}"></option>`)
@@ -610,8 +624,18 @@
       fetch(url)
         .then((response) => response.json())
         .then((data) => {
-          cachedItems = Array.isArray(data.items) ? data.items : [];
-          renderRows(cachedItems, data.total, data.page, data.total_pages);
+          const payload = normalizeApiResponse(data);
+          if (!payload.success) {
+            cachedItems = [];
+            renderRows([], 0, 1, 1);
+            return;
+          }
+          const result = payload.data || {};
+          cachedItems = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
+          const total = result.total ?? data.total;
+          const page = result.page ?? data.page;
+          const totalPages = result.total_pages ?? data.total_pages;
+          renderRows(cachedItems, total, page, totalPages);
         })
         .catch(() => {
           cachedItems = [];
@@ -652,8 +676,9 @@
     fetch("/api/employees/names")
       .then((response) => response.json())
       .then((data) => {
-        if (Array.isArray(data.names)) {
-          renderNames(data.names);
+        const payload = normalizeApiResponse(data);
+        if (payload.success && Array.isArray(payload.data?.names || data.names)) {
+          renderNames(payload.data?.names || data.names);
         }
       })
       .catch(() => {
@@ -736,10 +761,11 @@
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.error) {
-            throw new Error(data.error);
+          const payload = normalizeApiResponse(data);
+          if (!payload.success) {
+            throw new Error(payload.message || "上传失败");
           }
-          currentContract = data.path || file.name;
+          currentContract = payload.data?.path || data.path || file.name;
           contractHint.textContent = `已上传：${currentContract}`;
           return data;
         });
@@ -780,10 +806,11 @@
       })
         .then((response) => response.json())
         .then((data) => {
-          if (data.error) {
-            throw new Error(data.error);
+          const payload = normalizeApiResponse(data);
+          if (!payload.success) {
+            throw new Error(payload.message || "保存失败");
           }
-          const savedId = currentEditId || data.item?.id;
+          const savedId = currentEditId || payload.data?.item?.id || data.item?.id;
           if (contractFile && savedId) {
             return uploadContract(savedId, contractFile);
           }

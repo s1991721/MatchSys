@@ -272,6 +272,20 @@
         warning: { label: "异常", className: "status-warning" }
     };
 
+    const normalizeApiResponse = (raw) => {
+        if (raw && typeof raw === "object" && "success" in raw) {
+            return raw;
+        }
+        const message = raw?.error || "";
+        return {
+            success: !message,
+            code: message ? "ERR_UNKNOWN" : "OK",
+            message,
+            data: raw,
+            meta: raw?.meta || {},
+        };
+    };
+
     const summaryBody = document.getElementById("summary-body");
     const noData = document.getElementById("no-data");
     const nameFilter = document.getElementById("name-filter");
@@ -399,16 +413,18 @@
         try {
             const response = await fetch(url, { credentials: "same-origin" });
             const data = await response.json();
-            if (!response.ok) {
+            const payload = normalizeApiResponse(data);
+            if (!response.ok || !payload.success) {
                 wrapper.innerHTML = `
                     <div class="detail-header">明细加载失败</div>
-                    <div class="no-data">${data.error || "请稍后重试"}</div>
+                    <div class="no-data">${payload.message || "请稍后重试"}</div>
                 `;
                 return;
             }
 
-            const name = data.employee?.name || attendanceData[index]?.name || "";
-            const details = data.details || [];
+            const result = payload.data || {};
+            const name = result.employee?.name || data.employee?.name || attendanceData[index]?.name || "";
+            const details = result.details || data.details || [];
             wrapper.innerHTML = `
                 <div class="detail-header">${name} 的每日考勤</div>
                 ${renderDetailTable(details)}
@@ -471,15 +487,18 @@
         try {
             const response = await fetch(url, { credentials: "same-origin" });
             const data = await response.json();
-            if (!response.ok) {
+            const payload = normalizeApiResponse(data);
+            if (!response.ok || !payload.success) {
                 attendanceData = [];
-                setNoData(data.error || "加载考勤数据失败");
+                setNoData(payload.message || "加载考勤数据失败");
                 return;
             }
 
-            attendanceData = data.employees || [];
-            if (!filters.month && data.month) {
-                monthFilter.value = data.month;
+            const result = payload.data || {};
+            attendanceData = result.employees || data.employees || [];
+            const resolvedMonth = result.month || data.month;
+            if (!filters.month && resolvedMonth) {
+                monthFilter.value = resolvedMonth;
             }
             renderSummary();
         } catch (error) {

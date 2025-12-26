@@ -1028,6 +1028,20 @@
     let watchId;
     let lastCoords = { lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng };
 
+    const normalizeApiResponse = (raw) => {
+      if (raw && typeof raw === "object" && "success" in raw) {
+        return raw;
+      }
+      const message = raw?.error || "";
+      return {
+        success: !message,
+        code: message ? "ERR_UNKNOWN" : "OK",
+        message,
+        data: raw,
+        meta: raw?.meta || {},
+      };
+    };
+
     function setStatus(title, detail) {
       const titleEl = document.getElementById("map-status");
       const detailEl = document.getElementById("map-detail");
@@ -1238,9 +1252,14 @@
           return res.json();
         })
         .then((data) => {
+          const payload = normalizeApiResponse(data);
+          if (!payload.success) {
+            throw new Error(payload.message || "加载失败");
+          }
+          const result = payload.data || data;
           const rendererName = details.dataset.renderer;
           if (rendererName && typeof window[rendererName] === "function") {
-            window[rendererName](data, details, month);
+            window[rendererName](result, details, month);
             if (placeholder) placeholder.textContent = "";
           } else {
             setTemplatesVisible(details, true);
@@ -1290,10 +1309,15 @@
           return res.json();
         })
         .then((data) => {
+          const payload = normalizeApiResponse(data);
+          if (!payload.success) {
+            throw new Error(payload.message || "record fetch failed");
+          }
+          const result = payload.data || data;
           const startEl = document.getElementById("start-time");
           const endEl = document.getElementById("end-time");
-          if (startEl) startEl.textContent = data.start_time ? data.start_time.slice(0, 5) : "--:--";
-          if (endEl) endEl.textContent = data.end_time ? data.end_time.slice(0, 5) : "未打卡";
+          if (startEl) startEl.textContent = result.start_time ? result.start_time.slice(0, 5) : "--:--";
+          if (endEl) endEl.textContent = result.end_time ? result.end_time.slice(0, 5) : "未打卡";
         })
         .catch(() => {
           const startEl = document.getElementById("start-time");
@@ -1330,7 +1354,11 @@
           }
           return res.json();
         })
-        .then(() => {
+        .then((data) => {
+          const payload = normalizeApiResponse(data);
+          if (!payload.success) {
+            throw new Error(payload.message || "punch failed");
+          }
           setStatus("打卡成功", "已记录本次打卡");
           updateTodayRecord();
         })
@@ -1447,16 +1475,18 @@
         }),
       })
         .then((res) => {
-          if (!res.ok) {
-            return res.json().then((data) => {
-              throw new Error(data && data.error ? data.error : "保存失败");
-            });
-          }
-          return res.json();
+          return res.json().then((data) => {
+            const payload = normalizeApiResponse(data);
+            if (!res.ok || !payload.success) {
+              throw new Error(payload.message || "保存失败");
+            }
+            return payload;
+          });
         })
-        .then((data) => {
-          if (currentEditRow && data && data.record) {
-            const record = data.record;
+        .then((payload) => {
+          const result = payload.data || {};
+          if (currentEditRow && result.record) {
+            const record = result.record;
             const times = currentEditRow.querySelectorAll(".worktime");
             if (times[0]) times[0].textContent = record.start_time || "--:--";
             if (times[1]) times[1].textContent = record.end_time || "--:--";

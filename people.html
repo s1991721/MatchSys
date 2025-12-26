@@ -615,6 +615,19 @@
     const TECH_ENDPOINT = `${API_BASE}/api/technicians`;
     const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
     const SS_UPLOAD_ENDPOINT = (employeeId) => `${API_BASE}/api/technicians/${employeeId}/ss`;
+    const normalizeApiResponse = (raw) => {
+        if (raw && typeof raw === 'object' && 'success' in raw) {
+            return raw;
+        }
+        const message = raw?.error || '';
+        return {
+            success: !message,
+            code: message ? 'ERR_UNKNOWN' : 'OK',
+            message,
+            data: raw,
+            meta: raw?.meta || {},
+        };
+    };
     const fetchWithAuth = async (url, options = {}) => {
         const res = await fetch(url, options);
         if (res.status === 401) {
@@ -871,7 +884,12 @@
             const res = await fetchWithAuth(TECH_ENDPOINT, { credentials: 'include' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            const items = Array.isArray(data.items) ? data.items : [];
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) {
+                throw new Error(payload.message || '加载失败');
+            }
+            const result = payload.data || data;
+            const items = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
             people = items.map(item => {
                 const remarkText = item.remark ? String(item.remark) : '';
                 const noteText = parseRemark(remarkText);
@@ -915,7 +933,9 @@
             const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${employeeId}`, { credentials: 'include' });
             if (!res.ok) return;
             const data = await res.json();
-            const emp = data.item || {};
+            const payload = normalizeApiResponse(data);
+            const result = payload.data || data;
+            const emp = result.item || data.item || {};
             personForm.name.value = emp.name || '';
             if (personForm.name.value) {
                 personForm.name.setAttribute('readonly', 'readonly');
@@ -936,10 +956,11 @@
             body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!res.ok) {
-            throw new Error(data.error || '保存失败');
+        const responsePayload = normalizeApiResponse(data);
+        if (!res.ok || !responsePayload.success) {
+            throw new Error(responsePayload.message || '保存失败');
         }
-        return data;
+        return responsePayload.data || data;
     };
 
     const uploadSsFile = async (employeeId, file) => {
@@ -951,10 +972,11 @@
             body: formData
         });
         const data = await res.json();
-        if (!res.ok) {
-            throw new Error(data.error || '上传失败');
+        const responsePayload = normalizeApiResponse(data);
+        if (!res.ok || !responsePayload.success) {
+            throw new Error(responsePayload.message || '上传失败');
         }
-        return data;
+        return responsePayload.data || data;
     };
 
     const applyFilters = () => {
@@ -1080,7 +1102,10 @@
                 fetchWithAuth(`${TECH_ENDPOINT}/${deleteId}`, { method: 'DELETE', credentials: 'include' })
                     .then(res => res.json().then(data => ({ res, data })))
                     .then(({ res, data }) => {
-                        if (!res.ok) throw new Error(data.error || '删除失败');
+                        const responsePayload = normalizeApiResponse(data);
+                        if (!res.ok || !responsePayload.success) {
+                            throw new Error(responsePayload.message || '删除失败');
+                        }
                         return fetchPeople();
                     })
                     .catch((error) => {

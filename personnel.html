@@ -509,6 +509,19 @@
   <script>
     const API_BASE = "";
     const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
+    const normalizeApiResponse = (raw) => {
+      if (raw && typeof raw === "object" && "success" in raw) {
+        return raw;
+      }
+      const message = raw?.error || "";
+      return {
+        success: !message,
+        code: message ? "ERR_UNKNOWN" : "OK",
+        message,
+        data: raw,
+        meta: raw?.meta || {},
+      };
+    };
     const fetchWithAuth = async (url, options = {}) => {
       const res = await fetch(url, options);
       if (res.status === 401) {
@@ -746,8 +759,11 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "新增失败");
-      return data;
+      const responsePayload = normalizeApiResponse(data);
+      if (!res.ok || !responsePayload.success) {
+        throw new Error(responsePayload.message || "新增失败");
+      }
+      return responsePayload.data || data;
     }
 
     async function updateEmployee(id, payload){
@@ -758,15 +774,21 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "更新失败");
-      return data;
+      const responsePayload = normalizeApiResponse(data);
+      if (!res.ok || !responsePayload.success) {
+        throw new Error(responsePayload.message || "更新失败");
+      }
+      return responsePayload.data || data;
     }
 
     async function deleteEmployee(id){
       try{
         const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${id}`, { method: "DELETE", credentials: "include" });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "删除失败");
+        const payload = normalizeApiResponse(data);
+        if (!res.ok || !payload.success) {
+          throw new Error(payload.message || "删除失败");
+        }
         await fetchEmployees();
       }catch(err){
         alert(`删除失败：${err.message}`);
@@ -779,8 +801,13 @@
         const res = await fetchWithAuth(EMPLOYEE_ENDPOINT, { credentials: "include" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        allEmployees = Array.isArray(data.items) ? data.items : [];
-        ensureDepartments(data.departments || []);
+        const payload = normalizeApiResponse(data);
+        if (!payload.success) {
+          throw new Error(payload.message || "加载失败");
+        }
+        const result = payload.data || data;
+        allEmployees = Array.isArray(result.items || data.items) ? (result.items || data.items) : [];
+        ensureDepartments(result.departments || data.departments || []);
         applyFilter();
       }catch(err){
         tableBody.innerHTML = `<tr><td colspan="8" class="empty">加载失败：${err.message}</td></tr>`;

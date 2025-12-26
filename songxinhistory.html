@@ -600,6 +600,19 @@
             };
 
             const API_BASE = '';
+            const normalizeApiResponse = (raw) => {
+                if (raw && typeof raw === 'object' && 'success' in raw) {
+                    return raw;
+                }
+                const message = raw?.error || '';
+                return {
+                    success: !message,
+                    code: message ? 'ERR_UNKNOWN' : 'OK',
+                    message,
+                    data: raw,
+                    meta: raw?.meta || {},
+                };
+            };
             const fetchWithAuth = async (url, options = {}) => {
                 const res = await fetch(url, options);
                 if (res.status === 401) {
@@ -613,7 +626,12 @@
                 try {
                     const resp = await fetchWithAuth(`${API_BASE}/send-history`, { credentials: 'include' });
                     const data = await resp.json();
-                    records = (data.items || []).map(item => ({
+                    const payload = normalizeApiResponse(data);
+                    if (!payload.success) {
+                        throw new Error(payload.message || '加载失败');
+                    }
+                    const result = payload.data || data;
+                    records = (result.items || data.items || []).map(item => ({
                         id: item.id,
                         title: item.title || '(无标题)',
                         to: item.to || '',

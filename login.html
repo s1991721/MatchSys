@@ -164,6 +164,20 @@
     const errorBox = document.getElementById("errorBox");
     const submitBtn = document.getElementById("submitBtn");
 
+    const normalizeApiResponse = (raw) => {
+        if (raw && typeof raw === "object" && "success" in raw) {
+            return raw;
+        }
+        const message = raw?.error || "";
+        return {
+            success: !message,
+            code: message ? "ERR_UNKNOWN" : "OK",
+            message,
+            data: raw,
+            meta: raw?.meta || {},
+        };
+    };
+
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         errorBox.classList.add("hidden");
@@ -182,10 +196,11 @@
                 }),
             });
             const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.error || "登录失败");
+            const payload = normalizeApiResponse(data);
+            if (!res.ok || !payload.success) {
+                throw new Error(payload.message || "登录失败");
             }
-            const target = (data.redirect || "index.html").replace(/^\//, "");
+            const target = (payload.data?.redirect || data.redirect || "index.html").replace(/^\//, "");
             window.location.href = new URL(target, window.location.href).toString();
         } catch (err) {
             errorBox.textContent = err.message || "登录失败";

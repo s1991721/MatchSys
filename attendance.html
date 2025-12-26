@@ -21,63 +21,10 @@
         .page {
             padding: 24px;
         }
-.title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 20px;
-            font-weight: 800;
-            margin: 0 0 6px;
-        }
-
-        .title::before {
-            content: "";
-            width: 4px;
-            height: 20px;
-            border-radius: 12px;
-            background: var(--primary);
-            box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
-        }
-
         .hint {
             margin: 0 0 18px;
             color: var(--muted);
             font-size: 14px;
-        }
-
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 18px;
-            align-items: flex-end;
-        }
-
-        .filter-field {
-            display: flex;
-            flex-direction: column;
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .filter-field label {
-            margin-bottom: 6px;
-        }
-
-        .filter-field select,
-        .filter-field input {
-            min-width: 180px;
-            border-radius: 8px;
-            border: 1px solid var(--line);
-            padding: 8px 10px;
-            font-size: 14px;
-            color: var(--text);
-            background: #fff;
-        }
-
-        .filter-actions {
-            display: flex;
-            gap: 8px;
         }
 
 tbody tr.summary-row {
@@ -141,18 +88,18 @@ tbody tr.summary-row {
 <body>
 <div class="page">
     <div class="c-card">
-        <h3 class="title">考勤管理</h3>
+        <h3 class="title c-title-bar c-title-bar-lg">考勤管理</h3>
         <p class="hint">单击人员行展示其每日打卡明细。</p>
-        <div class="filters">
-            <div class="filter-field">
+        <div class="filters c-filter-row">
+            <div class="filter-field c-filter-field">
                 <label for="name-filter">姓名</label>
                 <input type="text" id="name-filter" placeholder="输入姓名" />
             </div>
-            <div class="filter-field">
+            <div class="filter-field c-filter-field">
                 <label for="month-filter">月份</label>
                 <input type="month" id="month-filter" />
             </div>
-            <div class="filter-actions">
+            <div class="filter-actions c-filter-actions">
                 <button class="c-btn c-btn-primary" id="filter-apply" type="button">筛选</button>
                 <button class="c-btn c-btn-ghost" id="filter-reset" type="button">重置</button>
             </div>

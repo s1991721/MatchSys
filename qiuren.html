@@ -40,102 +40,12 @@
             flex: 1;
         }
 
-        .panel-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .panel-title::before {
-            content: "";
-            width: 4px;
-            height: 18px;
-            border-radius: 12px;
-            background: var(--primary);
-            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
-        }
-
-        ul {
-            list-style: none;
-        }
-
-        .list {
-            margin-top: 4px;
-            overflow-y: auto;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-        }
-
         .list.jobs {
             max-height: 380px;
         }
 
         .list.persons {
             max-height: 380px;
-        }
-
-        .filters {
-            display: grid;
-            grid-template-columns: 2fr 3fr;
-            gap: 12px;
-            margin: 0 0 12px;
-            align-items: end;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filter-label {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .chip-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .chip {
-            padding: 8px 12px;
-            border: 1px solid #d7deea;
-            background: #f6f8fd;
-            border-radius: 12px;
-            color: #3b4a60;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-        }
-
-        .chip.active {
-            background: rgba(28, 123, 255, 0.12);
-            border-color: #5e90ff;
-            color: #1f60d8;
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-        }
-
-        .input {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 1px solid #d7deea;
-            background: #fdfdff;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.12s ease, box-shadow 0.12s ease;
-        }
-
-        .input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-            background: #ffffff;
         }
 
         .date-input {
@@ -243,7 +153,7 @@
                 max-height: 320px;
             }
 
-            .filters {
+            .c-filter-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -254,29 +164,29 @@
     <!-- 上半部分：列表 -->
     <div class="row">
         <div class="panel-left c-card">
-            <div class="panel-title">求人列表</div>
-            <div class="filters">
-                <div class="filter-group">
-                    <span class="filter-label">时间</span>
-                    <div class="chip-row">
-                        <button class="chip active" data-range="all" type="button">全部</button>
-                        <button class="chip" data-range="today" type="button">今天</button>
-                        <button class="chip" data-range="yesterday" type="button">昨天</button>
-                        <input id="job-date" class="input date-input" type="date" aria-label="选择日期">
+            <div class="panel-title c-panel-title">求人列表</div>
+            <div class="filters c-filter-grid">
+                <div class="filter-group c-filter-group">
+                    <span class="filter-label c-filter-label">时间</span>
+                    <div class="chip-row c-chip-row">
+                        <button class="chip c-chip active" data-range="all" type="button">全部</button>
+                        <button class="chip c-chip" data-range="today" type="button">今天</button>
+                        <button class="chip c-chip" data-range="yesterday" type="button">昨天</button>
+                        <input id="job-date" class="input c-input date-input" type="date" aria-label="选择日期">
                     </div>
                 </div>
-                <div class="filter-group">
-                    <span class="filter-label">关键字</span>
-                    <input id="job-keyword" class="input search-input" type="search" placeholder="搜索案件标题、描述或细节">
+                <div class="filter-group c-filter-group">
+                    <span class="filter-label c-filter-label">关键字</span>
+                    <input id="job-keyword" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节">
                 </div>
             </div>
-            <ul class="list jobs" id="job-list">
+            <ul class="list c-list c-list-spaced jobs" id="job-list">
             </ul>
         </div>
 
         <div class="panel-right c-card">
-            <div class="panel-title">人员列表</div>
-            <ul class="list persons" id="person-list">
+            <div class="panel-title c-panel-title">人员列表</div>
+            <ul class="list c-list c-list-spaced persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
                 <li class="item active"
                     data-detail="这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
@@ -369,14 +279,14 @@
     <!-- 下半部分：详情 -->
     <div class="row">
         <div class="panel-left detail c-card">
-            <div class="panel-title">求人详情</div>
+            <div class="panel-title c-panel-title">求人详情</div>
             <div class="detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
 
         <div class="panel-right detail c-card">
-            <div class="panel-title">技术者详情</div>
+            <div class="panel-title c-panel-title">技术者详情</div>
             <div class="detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>

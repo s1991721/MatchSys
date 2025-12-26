@@ -32,81 +32,6 @@
             min-height: 580px;
         }
 
-        .title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            margin: 0 0 10px;
-        }
-
-        .title::before {
-            content: "";
-            width: 4px;
-            height: 18px;
-            border-radius: 12px;
-            background: var(--primary);
-            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
-        }
-
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .list {
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            overflow: auto;
-            max-height: 360px;
-        }
-
-        .filters {
-            display: grid;
-            grid-template-columns: 2fr 3fr;
-            gap: 12px;
-            margin: 0 0 12px;
-            align-items: end;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .filter-label {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .chip-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .chip {
-            padding: 8px 12px;
-            border: 1px solid #d7deea;
-            background: #f6f8fd;
-            border-radius: 12px;
-            color: #3b4a60;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-        }
-
-        .chip.active {
-            background: rgba(28, 123, 255, 0.12);
-            border-color: #5e90ff;
-            color: #1f60d8;
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-        }
-
         .date-input {
             max-width: 160px;
             padding-left: 10px;
@@ -199,25 +124,12 @@
             color: var(--muted);
         }
 
-        .input,
-        .textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 1px solid #d7deea;
-            background: #fdfdff;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.12s ease, box-shadow 0.12s ease;
-        }
-
         .textarea {
             min-height: 140px;
             resize: vertical;
             line-height: 1.6;
         }
 
-        .input:focus,
         .textarea:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
@@ -246,7 +158,7 @@
                 min-height: auto;
             }
 
-            .filters {
+            .c-filter-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -256,28 +168,28 @@
     <div class="page">
         <section class="split-left">
             <div class="c-card">
-                <h2 class="title">求案件列表</h2>
-                <div class="filters">
-                    <div class="filter-group">
-                        <span class="filter-label">时间</span>
-                        <div class="chip-row">
-                            <button class="chip active" data-range="all" type="button">全部</button>
-                            <button class="chip" data-range="today" type="button">今天</button>
-                            <button class="chip" data-range="yesterday" type="button">昨天</button>
-                            <input id="date-picker" class="input date-input" type="date" aria-label="选择日期">
+                <h2 class="title c-panel-title">求案件列表</h2>
+                <div class="filters c-filter-grid">
+                    <div class="filter-group c-filter-group">
+                        <span class="filter-label c-filter-label">时间</span>
+                        <div class="chip-row c-chip-row">
+                            <button class="chip c-chip active" data-range="all" type="button">全部</button>
+                            <button class="chip c-chip" data-range="today" type="button">今天</button>
+                            <button class="chip c-chip" data-range="yesterday" type="button">昨天</button>
+                            <input id="date-picker" class="input c-input date-input" type="date" aria-label="选择日期">
                         </div>
                     </div>
-                    <div class="filter-group">
-                        <span class="filter-label">关键字</span>
-                        <input id="keyword-input" class="input search-input" type="search" placeholder="搜索案件标题、描述或细节">
+                    <div class="filter-group c-filter-group">
+                        <span class="filter-label c-filter-label">关键字</span>
+                        <input id="keyword-input" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节">
                     </div>
                 </div>
-                <ul id="case-list" class="list">
+                <ul id="case-list" class="list c-list">
                 </ul>
             </div>
 
             <div class="c-card">
-                <h2 class="title">求案件详情</h2>
+                <h2 class="title c-panel-title">求案件详情</h2>
                 <div id="case-detail" class="detail">
                     这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                 </div>
@@ -285,20 +197,20 @@
         </section>
 
         <section class="c-card">
-            <h2 class="title">内容编辑保存</h2>
+            <h2 class="title c-panel-title">内容编辑保存</h2>
             <div class="form">
                 <div class="field">
                     <label class="label" for="name">人员名称</label>
-                    <input id="name" class="input" type="text" placeholder="请输入人员名称">
+                    <input id="name" class="input c-input" type="text" placeholder="请输入人员名称">
                 </div>
                 <div class="form-row">
                     <div class="field">
                         <label class="label" for="belong">所属</label>
-                        <input id="belong" class="input" type="text" placeholder="请输入所属部门或公司">
+                        <input id="belong" class="input c-input" type="text" placeholder="请输入所属部门或公司">
                     </div>
                     <div class="field">
                         <label class="label" for="nation">国籍</label>
-                        <select id="nation" class="input">
+                        <select id="nation" class="input c-input">
                             <option value="">请选择</option>
                             <option value="中国">中国</option>
                             <option value="日本">日本</option>
@@ -308,16 +220,16 @@
                 <div class="form-row">
                     <div class="field">
                         <label class="label" for="age">年龄</label>
-                        <input id="age" class="input" type="number" placeholder="例如：32">
+                        <input id="age" class="input c-input" type="number" placeholder="例如：32">
                     </div>
                     <div class="field">
                         <label class="label" for="price">金额</label>
-                        <input id="price" class="input" type="text" placeholder="例如：￥50,000">
+                        <input id="price" class="input c-input" type="text" placeholder="例如：￥50,000">
                     </div>
                 </div>
                 <div class="field">
                     <label class="label" for="intro">介绍文</label>
-                    <textarea id="intro" class="textarea" placeholder="请输入人员介绍、技能或补充说明。"></textarea>
+                    <textarea id="intro" class="textarea c-input" placeholder="请输入人员介绍、技能或补充说明。"></textarea>
                 </div>
                 <div class="actions">
                     <button id="btn-reset" class="c-btn c-btn-ghost" type="button">清空</button>

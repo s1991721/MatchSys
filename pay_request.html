@@ -24,8 +24,6 @@
       gap:16px;
       margin-bottom:16px;
     }
-    .title h1{ margin:0 0 6px; font-size:22px; font-weight:900; }
-    .title p{ margin:0; color:var(--muted); font-size:13px; font-weight:700; }
     .actions{ display:flex; gap:10px; flex-wrap:wrap; }
     .stats{
       display:grid;
@@ -82,7 +80,6 @@
       min-width:140px;
     }
 
-    .list{ padding:0; margin:0; list-style:none; }
     .item{
       display:grid;
       grid-template-columns: 1.2fr .8fr .8fr .6fr .6fr;
@@ -127,8 +124,8 @@
   <div class="container">
     <div class="page-head">
       <div class="title">
-        <h1>请求书管理</h1>
-        <p>管理付款请求的提交、审批与执行进度</p>
+        <h1 class="c-page-title">请求书管理</h1>
+        <p class="c-page-subtitle">管理付款请求的提交、审批与执行进度</p>
       </div>
       <div class="actions">
         <button class="c-btn c-btn-primary" type="button">新增请求书</button>
@@ -201,7 +198,7 @@
         </div>
       </div>
 
-      <ul class="list">
+      <ul class="list c-list">
         <li class="item head">
           <div>请求书号</div>
           <div>项目</div>

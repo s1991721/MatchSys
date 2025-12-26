@@ -31,23 +31,6 @@
       margin-bottom:12px;
     }
 
-    .title{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      font-weight:800;
-      font-size:20px;
-      letter-spacing:.2px;
-    }
-    .title::before{
-      content:"";
-      width:4px;
-      height:20px;
-      border-radius:12px;
-      background: var(--primary);
-      box-shadow: 0 0 0 6px rgba(36, 107, 253, 0.15);
-    }
-
     details
 .accordion summary{
       list-style:none;
@@ -683,7 +666,7 @@
     <!-- 打卡位置 -->
     <section class="c-card">
       <div class="card-head">
-        <div class="title">
+        <div class="title c-title-bar c-title-bar-lg">
           <span class="ico" aria-hidden="true">
             <!-- location pin -->
             <svg viewBox="0 0 24 24">
@@ -717,7 +700,7 @@
     <!-- 今日考勤 -->
     <section class="c-card">
       <div class="card-head">
-        <div class="title" style="font-size:22px;">
+        <div class="title c-title-bar c-title-bar-lg" style="font-size:22px;">
           <span class="ico" aria-hidden="true">
             <!-- calendar check -->
             <svg viewBox="0 0 24 24">
@@ -773,7 +756,7 @@
     <!-- 我的考勤（折叠） -->
     <details class="accordion c-card" data-url="/api/my-attendance-summary" data-renderer="renderAttendanceSummary">
       <summary>
-        <div class="title">
+        <div class="title c-title-bar c-title-bar-lg">
           <span class="ico" aria-hidden="true" style="background:rgba(34,197,94,.12);color:#16a34a">
             <!-- user -->
             <svg viewBox="0 0 24 24">
@@ -836,7 +819,7 @@
     <!-- 考勤明细（折叠） -->
     <details class="accordion c-card" data-url="/api/my-attendance-detail" data-renderer="renderAttendanceDetail">
       <summary>
-        <div class="title">
+        <div class="title c-title-bar c-title-bar-lg">
           <span class="ico" aria-hidden="true">
             <!-- calendar -->
             <svg viewBox="0 0 24 24">

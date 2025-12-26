@@ -83,24 +83,6 @@
       gap: 16px;
     }
 
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 16px;
-      font-weight: 800;
-      margin: 0 0 12px;
-    }
-
-    .section-title::before {
-      content: "";
-      width: 4px;
-      height: 18px;
-      border-radius: 12px;
-      background: var(--primary);
-      box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
-    }
-
     .form-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -233,7 +215,7 @@
 
   <div class="content-grid">
     <section class="c-card">
-      <h3 class="section-title">修改员工信息</h3>
+      <h3 class="section-title c-panel-title">修改员工信息</h3>
       <form id="employeeForm" autocomplete="off">
         <div class="form-grid">
           <div class="form-field">
@@ -297,7 +279,7 @@
     </section>
 
     <section class="c-card">
-      <h3 class="section-title">修改密码</h3>
+      <h3 class="section-title c-panel-title">修改密码</h3>
       <form id="passwordForm" autocomplete="off">
         <div class="form-field">
           <label for="oldPassword">当前密码</label>

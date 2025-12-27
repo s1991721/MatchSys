@@ -17,17 +17,21 @@
 
     <form id="loginForm" method="post" action="javascript:void(0);">
         <div id="errorBox" class="error-box hidden"></div>
-        <div class="form-group c-form-group">
-            <label>账号</label>
-            <input id="userName" type="text" name="user_name" placeholder="admin" required>
+        <div class="form-grid form-grid-single">
+            <div class="form-field">
+                <label>账号</label>
+                <input id="userName" type="text" name="user_name" placeholder="admin" required>
+            </div>
+            <div class="form-field">
+                <label>密码</label>
+                <input id="password" type="password" name="password" placeholder="••••••••" required>
+            </div>
         </div>
-        <div class="form-group c-form-group">
-            <label>密码</label>
-            <input id="password" type="password" name="password" placeholder="••••••••" required>
+        <div class="form-actions">
+            <button id="submitBtn" type="submit" class="c-btn c-btn-primary c-btn-block">
+                登 录
+            </button>
         </div>
-        <button id="submitBtn" type="submit" class="c-btn c-btn-primary">
-            登 录
-        </button>
     </form>
 </div>
 <script src="common.js"></script>

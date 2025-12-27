@@ -159,8 +159,8 @@
             return;
         }
         try {
-            const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-                credentials: "include",
+            const res = await fetchWithAuth(`${API_BASE}/api/employees/${employeeId}`, {
+                method: "GET",
             });
             const data = await res.json();
             const payload = normalizeApiResponse(data);
@@ -211,10 +211,8 @@
                 emergency_contact_phone: document.getElementById("empEmergencyPhone").value.trim(),
                 emergency_contact_relationship: document.getElementById("empEmergencyRelation").value.trim(),
             };
-            const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+            const res = await fetchWithAuth(`${API_BASE}/api/employees/${employeeId}`, {
                 method: "PUT",
-                headers: {"Content-Type": "application/json"},
-                credentials: "include",
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
@@ -266,10 +264,7 @@
         }
 
         try {
-            const res = await fetch(`${API_BASE}/api/change-password`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                credentials: "include",
+            const res = await fetchWithAuth(`${API_BASE}/api/change-password`, {
                 body: JSON.stringify({
                     old_password: oldPassword,
                     new_password: newPassword,
@@ -292,10 +287,7 @@
 
     logoutBtn.addEventListener("click", async () => {
         try {
-            const res = await fetch(`${API_BASE}/api/logout`, {
-                method: "POST",
-                credentials: "include",
-            });
+            const res = await fetchWithAuth(`${API_BASE}/api/logout`, {});
             const data = await res.json();
             const responsePayload = normalizeApiResponse(data);
             if (!res.ok || !responsePayload.success) {

@@ -879,26 +879,31 @@ body.sidebar-collapsed .nav-item a:hover::after {
 .personnel-page .c-table td {
   text-align: center;
 }
-.personnel-page .c-pagination {
+.c-pagination {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 10px;
   padding: 10px 18px 16px;
 }
-.personnel-page .pagination-pages {
+.pagination-summary {
+  margin-right: 32px;
+  font-size: 13px;
+  color: #6b7280;
+}
+.pagination-pages {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
   justify-content: center;
 }
-.personnel-page .c-pagination .c-btn.is-active {
+.c-pagination .c-btn.is-active {
   background: rgba(28, 123, 255, 0.12);
   border-color: rgba(28, 123, 255, 0.3);
   color: var(--primary);
   font-weight: 700;
 }
-.personnel-page .c-pagination .c-btn.is-ellipsis {
+.c-pagination .c-btn.is-ellipsis {
   cursor: default;
   opacity: 0.6;
 }

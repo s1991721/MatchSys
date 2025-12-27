@@ -37,9 +37,6 @@
         </div>
 
         <div class="table-actions c-table-actions">
-            <div class="table-summary">
-                <span id="summaryText">共 0 人</span>
-            </div>
         </div>
 
         <div class="table-wrapper c-table-wrapper">
@@ -62,7 +59,10 @@
                 </tbody>
             </table>
         </div>
-        <div class="pagination c-pagination hidden" id="pagination">
+        <div class="pagination c-pagination" id="pagination">
+            <div class="pagination-summary">
+                <span id="summaryText">共 0 人</span>
+            </div>
             <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="prev">上一页</button>
             <div class="pagination-pages" id="paginationPages"></div>
             <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="next">下一页</button>
@@ -227,8 +227,8 @@
         tableBody.innerHTML = list.map(item => (
             `<tr>
           <td data-label="姓名">${item.name}</td>
-          <td data-label="部门">${item.department}</td>
-          <td data-label="职位">${item.position}</td>
+          <td data-label="部门">${item.department_name}</td>
+          <td data-label="职位">${item.position_name}</td>
           <td data-label="手机">${item.phone}</td>
           <td data-label="邮箱">${item.email}</td>
           <td data-label="入职日期">${formatDate(item.hire_date)}</td>
@@ -261,7 +261,6 @@
         if (!pagination || !paginationPages) return;
         const safeTotalPages = Math.max(1, totalPages);
         if (currentPage > safeTotalPages) currentPage = safeTotalPages;
-        pagination.classList.toggle("hidden", safeTotalPages <= 1);
         paginationPages.innerHTML = "";
         const pageItems = buildPageItems(safeTotalPages, currentPage);
         paginationPages.append(...pageItems.map((page) => {

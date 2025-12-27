@@ -1,25 +1,23 @@
-
-from datetime import datetime
-
 import mimetypes
 import os
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse
-from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
-from project.api import api_error, api_success
-from project.common_tools import parse_json_body
+from project.api import api_error, api_paginated, api_success
+from project.common_tools import parse_date, parse_json_body
 from .models import Employee, Technician, UserLogin
 
 
 @csrf_exempt
 @require_POST
+# 登录
 def login_api(request):
     payload, error = parse_json_body(request)
     if error:
@@ -55,14 +53,18 @@ def login_api(request):
 
     return api_success()
 
+
 @csrf_exempt
 @require_POST
+# 登出
 def logout_api(request):
     request.session.flush()
     return api_success()
 
+
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
+# 获取用户详情、更新用户信息、删除用户
 def employee_detail_api(request, employee_id):
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
@@ -99,56 +101,37 @@ def employee_detail_api(request, employee_id):
         employee.email = (payload.get("email") or "").strip() or None
     if "address" in payload:
         employee.address = (payload.get("address") or "").strip() or None
-    if "department" in payload or "department_name" in payload:
-        employee.department_name = (
-                                           payload.get("department") or payload.get("department_name") or ""
-                                   ).strip() or None
-    if "position" in payload or "position_name" in payload:
-        employee.position_name = (
-                                         payload.get("position") or payload.get("position_name") or ""
-                                 ).strip() or None
-    if "status" in payload:
-        status = _normalize_status(payload.get("status"))
-        if status is None:
-            return api_error(
-                "Invalid status",
-                status=400,
-            )
-        employee.status = status
-
+    if "department_name" in payload:
+        employee.department_name = (payload.get("department_name") or "").strip() or None
+    if "position_name" in payload:
+        employee.position_name = (payload.get("position_name") or "").strip() or None
     if "hire_date" in payload:
-        value, error = _parse_date(payload.get("hire_date"), "hire_date")
+        value, error = parse_date(payload.get("hire_date"))
         if error:
             return error
         employee.hire_date = value
     if "leave_date" in payload:
-        value, error = _parse_date(payload.get("leave_date"), "leave_date")
+        value, error = parse_date(payload.get("leave_date"))
         if error:
             return error
         employee.leave_date = value
     if "birthday" in payload:
-        value, error = _parse_date(payload.get("birthday"), "birthday")
+        value, error = parse_date(payload.get("birthday"))
         if error:
             return error
         employee.birthday = value
     if "emergency_contact_name" in payload:
-        employee.emergency_contact_name = (
-                                                  payload.get("emergency_contact_name") or ""
-                                          ).strip() or None
+        employee.emergency_contact_name = (payload.get("emergency_contact_name") or "").strip() or None
     if "emergency_contact_phone" in payload:
-        employee.emergency_contact_phone = (
-                                                   payload.get("emergency_contact_phone") or ""
-                                           ).strip() or None
+        employee.emergency_contact_phone = (payload.get("emergency_contact_phone") or "").strip() or None
     if "emergency_contact_relationship" in payload:
-        employee.emergency_contact_relationship = (
-                                                          payload.get("emergency_contact_relationship") or ""
-                                                  ).strip() or None
+        employee.emergency_contact_relationship = (payload.get("emergency_contact_relationship") or "").strip() or None
 
     if not employee.name:
         return api_error(
-            "Missing field: name",
-            status=400,
+            "Missing field: name"
         )
+    employee.updated_by = request.session.get("employee_id")
 
     employee.save()
     if request.session.get("employee_id") == employee.id:
@@ -156,7 +139,8 @@ def employee_detail_api(request, employee_id):
         request.session["employee_department_name"] = employee.department_name
         request.session["employee_position_name"] = employee.position_name
     item = _serialize_employee(employee)
-    return api_success(data={"item": item})
+    return api_success(data=item)
+
 
 @csrf_exempt
 @require_POST
@@ -205,58 +189,6 @@ def change_password_api(request):
     user_login.save(update_fields=["password", "updated_at"])
 
     return api_success()
-
-
-
-
-
-def _parse_date(value, field):
-    if value in (None, ""):
-        return None, None
-    if isinstance(value, int):
-        if 1 <= value <= 12:
-            today = timezone.localdate()
-            return today.replace(month=value, day=1), None
-        return None, api_error(
-            f"Invalid date: {field}",
-            status=400,
-        )
-    if isinstance(value, str):
-        if value.isdigit():
-            month = int(value)
-            if 1 <= month <= 12:
-                today = timezone.localdate()
-                return today.replace(month=month, day=1), None
-            return None, api_error(
-                f"Invalid date: {field}",
-                status=400,
-            )
-        try:
-            return datetime.strptime(value, "%Y-%m-%d").date(), None
-        except ValueError:
-            return None, api_error(
-                f"Invalid date: {field}",
-                status=400,
-            )
-    return None, api_error(
-        f"Invalid date: {field}",
-        status=400,
-    )
-
-
-def _normalize_status(value):
-    if value in (None, ""):
-        return None
-    if isinstance(value, int):
-        return value
-    raw = str(value).strip().lower()
-    mapping = {"active": 1, "leave": 0, "disabled": 2}
-    if raw in mapping:
-        return mapping[raw]
-    try:
-        return int(raw)
-    except ValueError:
-        return None
 
 
 def _serialize_employee(emp):
@@ -381,13 +313,13 @@ def employees_api(request):
         if status is None:
             status = 1
 
-        hire_date, error = _parse_date(payload.get("hire_date"), "hire_date")
+        hire_date, error = parse_date(payload.get("hire_date"))
         if error:
             return error
-        leave_date, error = _parse_date(payload.get("leave_date"), "leave_date")
+        leave_date, error = parse_date(payload.get("leave_date"))
         if error:
             return error
-        birthday, error = _parse_date(payload.get("birthday"), "birthday")
+        birthday, error = parse_date(payload.get("birthday"))
         if error:
             return error
 
@@ -420,25 +352,57 @@ def employees_api(request):
         item = _serialize_employee(employee)
         return api_success(data={"item": item})
 
-    keyword = (request.GET.get("keyword") or "").strip()
-    department = (request.GET.get("department") or "").strip()
+    if request.method == "GET":
+        keyword = (request.GET.get("keyword") or "").strip()
+        department = (request.GET.get("department") or "").strip()
+        try:
+            page = int(request.GET.get("page") or 1)
+        except (TypeError, ValueError):
+            page = 1
+        try:
+            page_size = int(request.GET.get("page_size") or 10)
+        except (TypeError, ValueError):
+            page_size = 10
+        if page < 1:
+            page = 1
+        if page_size < 1:
+            page_size = 10
 
-    qs = Employee.objects.filter(deleted_at__isnull=True)
+        qs = Employee.objects.filter(deleted_at__isnull=True)
 
-    if keyword:
-        qs = qs.filter(
-            Q(name__icontains=keyword)
-            | Q(email__icontains=keyword)
-            | Q(phone__icontains=keyword)
-            | Q(department_name__icontains=keyword)
-            | Q(position_name__icontains=keyword)
-        )
+        if keyword:
+            qs = qs.filter(
+                Q(name__icontains=keyword)
+                | Q(email__icontains=keyword)
+                | Q(phone__icontains=keyword)
+                | Q(department_name__icontains=keyword)
+                | Q(position_name__icontains=keyword)
+            )
 
-    if department and department != "all":
-        qs = qs.filter(department_name=department)
+        if department and department != "all":
+            qs = qs.filter(department_name=department)
 
-    items = [_serialize_employee(emp) for emp in qs.order_by("id")]
+    total = qs.count()
+    total_pages = (total + page_size - 1) // page_size if page_size else 1
+    if total_pages < 1:
+        total_pages = 1
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+    items = [_serialize_employee(emp) for emp in qs.order_by("id")[offset:offset + page_size]]
 
+    return api_paginated(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages
+    )
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def employee_departments_api(request):
     departments = (
         Employee.objects.filter(deleted_at__isnull=True)
         .exclude(department_name__isnull=True)
@@ -448,13 +412,7 @@ def employees_api(request):
         .order_by("department_name")
     )
     dept_list = list(departments)
-
-
-    payload = {
-        "items": items,
-        "departments": dept_list,
-    }
-    return api_success(data=payload)
+    return api_success(data={"departments": dept_list})
 
 
 @csrf_exempt
@@ -493,11 +451,11 @@ def technicians_api(request):
                 status=400,
             )
 
-        birthday, error = _parse_date(payload.get("birthday"), "birthday")
+        birthday, error = parse_date(payload.get("birthday"))
         if error:
             return error
-        spot_deadline, error = _parse_date(
-            payload.get("spot_contract_deadline"), "spot_contract_deadline"
+        spot_deadline, error = parse_date(
+            payload.get("spot_contract_deadline")
         )
         if error:
             return error
@@ -603,7 +561,7 @@ def technician_detail_api(request, employee_id):
     if "name_mask" in payload:
         tech.name_mask = (payload.get("name_mask") or "").strip()
     if "birthday" in payload:
-        value, error = _parse_date(payload.get("birthday"), "birthday")
+        value, error = parse_date(payload.get("birthday"))
         if error:
             return error
         tech.birthday = value
@@ -624,7 +582,7 @@ def technician_detail_api(request, employee_id):
             return error
         tech.contract_type = value if value is not None else 0
     if "spot_contract_deadline" in payload:
-        value, error = _parse_date(payload.get("spot_contract_deadline"), "spot_contract_deadline")
+        value, error = parse_date(payload.get("spot_contract_deadline"))
         if error:
             return error
         tech.spot_contract_deadline = value

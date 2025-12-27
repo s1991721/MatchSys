@@ -154,7 +154,7 @@
 
     async function loadEmployee() {
         if (!employeeId) {
-            showStatus("未登录，无法加载个人信息。", "error");
+            alert("未登录，无法加载个人信息。");
             setDisabled(true);
             return;
         }
@@ -220,7 +220,6 @@
             if (!res.ok || !responsePayload.success) {
                 throw new Error(responsePayload.message || "保存失败");
             }
-            showStatus("员工信息已更新。", "success");
             alert("员工信息已更新。");
             const result = responsePayload.data || {};
             if (result.item) {
@@ -243,7 +242,6 @@
             }
         } catch (err) {
             const message = err.message || "保存失败";
-            showStatus(message, "error");
             alert(message);
         }
     });
@@ -255,11 +253,11 @@
         const confirmPassword = document.getElementById("confirmPassword").value;
 
         if (!oldPassword || !newPassword) {
-            showStatus("请输入完整的密码信息。", "error");
+            alert("请输入完整的密码信息。");
             return;
         }
         if (newPassword !== confirmPassword) {
-            showStatus("两次输入的新密码不一致。", "error");
+            alert("两次输入的新密码不一致。");
             return;
         }
 
@@ -275,12 +273,10 @@
             if (!res.ok || !responsePayload.success) {
                 throw new Error(responsePayload.message || "修改失败");
             }
-            showStatus("密码已更新，请重新登录。", "success");
             alert("密码已更新，请重新登录。");
             passwordForm.reset();
         } catch (err) {
             const message = err.message || "修改失败";
-            showStatus(message, "error");
             alert(message);
         }
     });
@@ -301,7 +297,7 @@
                 window.location.href = nextUrl;
             }
         } catch (err) {
-            showStatus("退出失败，请重试。", "error");
+            alert("退出失败，请重试。");
         }
     });
 

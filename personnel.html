@@ -32,7 +32,6 @@
                 <div class="filter-actions-right c-filter-actions-group">
                     <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn">搜索</button>
                     <button type="button" class="c-btn c-btn-warn" id="resetBtn">重置</button>
-                    <button type="button" class="c-btn c-btn-secondary" id="exportBtn">导出 CSV</button>
                 </div>
             </div>
         </div>
@@ -160,15 +159,11 @@
 
 <script src="common.js"></script>
 <script>
-    const API_BASE = "";
-    const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
-
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
     const deptSelect = document.getElementById("deptSelect");
     const applyFilterBtn = document.getElementById("applyFilterBtn");
     const resetBtn = document.getElementById("resetBtn");
-    const exportBtn = document.getElementById("exportBtn");
     const addBtn = document.getElementById("addBtn");
     const summaryText = document.getElementById("summaryText");
     const pagination = document.getElementById("pagination");
@@ -196,10 +191,12 @@
     const fieldLeaveDate = document.getElementById("fieldLeaveDate");
 
     let allEmployees = [];
-    let currentList = [];
     let editingId = null;
     let currentPage = 1;
     const pageSize = 10;
+    let totalPages = 1;
+    let totalCount = 0;
+    let currentFilters = {keyword: "", department: "all"};
 
     function formatDate(raw) {
         if (!raw) return "";
@@ -246,11 +243,6 @@
         )).join("");
     }
 
-    function getPagedList(list) {
-        const start = (currentPage - 1) * pageSize;
-        return list.slice(start, start + pageSize);
-    }
-
     function buildPageItems(totalPages, activePage) {
         if (totalPages <= 7) {
             return Array.from({length: totalPages}, (_, i) => i + 1);
@@ -267,11 +259,11 @@
 
     function renderPagination() {
         if (!pagination || !paginationPages) return;
-        const totalPages = Math.max(1, Math.ceil(currentList.length / pageSize));
-        if (currentPage > totalPages) currentPage = totalPages;
-        pagination.classList.remove("hidden");
+        const safeTotalPages = Math.max(1, totalPages);
+        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
+        pagination.classList.toggle("hidden", safeTotalPages <= 1);
         paginationPages.innerHTML = "";
-        const pageItems = buildPageItems(totalPages, currentPage);
+        const pageItems = buildPageItems(safeTotalPages, currentPage);
         paginationPages.append(...pageItems.map((page) => {
             const btn = document.createElement("button");
             btn.type = "button";
@@ -291,11 +283,11 @@
     }
 
     function renderPage() {
-        renderTable(getPagedList(currentList));
+        renderTable(allEmployees);
         renderPagination();
         if (summaryText) {
-            const totalPages = Math.max(1, Math.ceil(currentList.length / pageSize));
-            summaryText.textContent = `共 ${currentList.length} 人 · 第 ${currentPage}/${totalPages} 页`;
+            const safeTotalPages = Math.max(1, totalPages);
+            summaryText.textContent = `共 ${totalCount} 人 · 第 ${currentPage}/${safeTotalPages} 页`;
         }
     }
 
@@ -318,9 +310,12 @@
     }
 
     function applyFilter() {
-        const keyword = (searchInput.value || "").trim();
-        const department = deptSelect.value;
-        fetchEmployees({ keyword, department });
+        currentFilters = {
+            keyword: (searchInput.value || "").trim(),
+            department: deptSelect.value
+        };
+        currentPage = 1;
+        fetchEmployees();
     }
 
     function resetFilters() {
@@ -329,29 +324,6 @@
         applyFilter();
     }
 
-    function exportCSV() {
-        const rows = [
-            ["姓名", "部门", "职位", "手机", "邮箱", "入职日期"],
-            ...currentList.map(item => [
-                item.name,
-                item.department,
-                item.position,
-                item.phone,
-                item.email,
-                formatDate(item.hire_date)
-            ])
-        ];
-        const content = rows.map(row => row.map(cell => `"${cell}"`).join(",")).join("\\n");
-        const blob = new Blob([content], {type: "text/csv;charset=utf-8;"});
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "personnel.csv";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-    }
 
     function handleAction(e) {
         const btn = e.target.closest("button[data-action]");
@@ -426,7 +398,7 @@
     }
 
     async function createEmployee(payload) {
-        const res = await fetchWithAuth(EMPLOYEE_ENDPOINT, {
+        const res = await fetchWithAuth(`/api/employees`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
@@ -440,7 +412,7 @@
     }
 
     async function updateEmployee(id, payload) {
-        const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${id}`, {
+        const res = await fetchWithAuth(`/api/employees/${id}`, {
             method: "PUT",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
@@ -455,7 +427,7 @@
 
     async function deleteEmployee(id) {
         try {
-            const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${id}`, {method: "DELETE"});
+            const res = await fetchWithAuth(`/api/employees/${id}`, {method: "DELETE"});
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!res.ok || !payload.success) {
@@ -467,16 +439,18 @@
         }
     }
 
-    async function fetchEmployees(filters = {}) {
+    async function fetchEmployees() {
         tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">加载中…</td></tr>`;
         try {
             const params = new URLSearchParams();
-            if (filters.keyword) params.append("keyword", filters.keyword);
-            if (filters.department && filters.department !== "all") {
-                params.append("department", filters.department);
+            if (currentFilters.keyword) params.append("keyword", currentFilters.keyword);
+            if (currentFilters.department && currentFilters.department !== "all") {
+                params.append("department", currentFilters.department);
             }
+            params.append("page", String(currentPage));
+            params.append("page_size", String(pageSize));
             const query = params.toString();
-            const url = query ? `${EMPLOYEE_ENDPOINT}?${query}` : EMPLOYEE_ENDPOINT;
+            const url = query ? `/api/employees?${query}` : "/api/employees";
             const res = await fetchWithAuth(url, {method: "GET"});
             const data = await res.json();
             const payload = normalizeApiResponse(data);
@@ -484,37 +458,56 @@
                 throw new Error(payload.message || "加载失败");
             }
             const result = payload.data || {};
+            const meta = payload.meta || {};
             allEmployees = Array.isArray(result.items) ? result.items : [];
-            currentList = allEmployees;
-            currentPage = 1;
-            ensureDepartments(result.departments || []);
+            totalCount = Number.isFinite(meta.total) ? meta.total : allEmployees.length;
+            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
             renderPage();
         } catch (err) {
             tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">加载失败：${err.message}</td></tr>`;
             if (summaryText) {
                 summaryText.textContent = "共 0 人";
             }
+            totalCount = 0;
+            totalPages = 1;
         }
     }
 
+    async function fetchDepartments() {
+        try {
+            const res = await fetchWithAuth("/api/employees/departments", {method: "GET"});
+            const data = await res.json();
+            const payload = normalizeApiResponse(data);
+            if (!res.ok || !payload.success) {
+                throw new Error(payload.message || "加载失败");
+            }
+            const result = payload.data || {};
+            ensureDepartments(result.departments || []);
+        } catch (err) {
+            ensureDepartments([]);
+        }
+    }
+
+    fetchDepartments();
     fetchEmployees();
     applyFilterBtn.addEventListener("click", applyFilter);
+    deptSelect.addEventListener("change", applyFilter);
     resetBtn.addEventListener("click", resetFilters);
-    exportBtn.addEventListener("click", exportCSV);
     pagination.addEventListener("click", (e) => {
         const btn = e.target.closest("button[data-page]");
         if (!btn) return;
         const value = btn.dataset.page;
-        const totalPages = Math.max(1, Math.ceil(currentList.length / pageSize));
+        const safeTotalPages = Math.max(1, totalPages);
         if (value === "prev") {
             currentPage = Math.max(1, currentPage - 1);
         } else if (value === "next") {
-            currentPage = Math.min(totalPages, currentPage + 1);
+            currentPage = Math.min(safeTotalPages, currentPage + 1);
         } else {
             const targetPage = Number(value);
             if (!Number.isNaN(targetPage)) currentPage = targetPage;
         }
-        renderPage();
+        fetchEmployees();
     });
     tableBody.addEventListener("click", handleAction);
     addBtn.addEventListener("click", () => openModal("add"));

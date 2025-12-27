@@ -39,6 +39,7 @@ from attendance.views import (
 from employee.views import (
     change_password_api,
     employee_detail_api,
+    employee_departments_api,
     employees_api,
     login_api,
     logout_api,
@@ -101,6 +102,7 @@ urlpatterns = [
     path("api/logout", logout_api, name="employee-logout"),
     path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),
+    path("api/employees/departments", employee_departments_api, name="employee-departments"),
     path("api/technicians", technicians_api, name="technician-list"),
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),

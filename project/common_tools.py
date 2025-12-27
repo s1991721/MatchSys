@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+
 from project.api import api_error
 
 def parse_json_body(request):
@@ -7,6 +9,20 @@ def parse_json_body(request):
         return json.loads(raw or "{}"), None
     except json.JSONDecodeError:
         return None, api_error(
-            "Invalid JSON body",
-            status=400,
+            "Invalid JSON body"
         )
+
+
+def parse_date(value):
+    if value in (None, ""):
+        return None, None
+    if isinstance(value, str):
+        try:
+            return datetime.strptime(value, "%Y-%m-%d").date(), None
+        except ValueError:
+            return None, api_error(
+                "Invalid date"
+            )
+    return None, api_error(
+        "Invalid date"
+    )

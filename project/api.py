@@ -44,10 +44,7 @@ def api_paginated(
         page,
         page_size,
         total,
-        total_pages,
-        message="",
-        code="OK",
-        status=200,
+        total_pages
 ):
     meta = {
         "page": page,
@@ -58,8 +55,5 @@ def api_paginated(
     data = {"items": items}
     return api_success(
         data=data,
-        message=message,
-        code=code,
         meta=meta,
-        status=status,
     )

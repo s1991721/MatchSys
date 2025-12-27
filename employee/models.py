@@ -55,23 +55,16 @@ class Employee(models.Model):
     status = models.SmallIntegerField(default=1)  # 1在职/0离职/2停用...
 
     # 审计字段（谁创建/更新）
-    created_by = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        db_column='created_by',
-        related_name='created_employees',
+    created_by = models.BigIntegerField(
+        unique=True,
+        verbose_name="员工ID"
     )
+
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
 
-    updated_by = models.ForeignKey(
-        'self',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        db_column='updated_by',
-        related_name='updated_employees',
+    updated_by = models.BigIntegerField(
+        unique=True,
+        verbose_name="员工ID"
     )
     updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
 
@@ -79,21 +72,9 @@ class Employee(models.Model):
 
     class Meta:
         db_table = 'employee'
-        indexes = [
-            models.Index(fields=['phone']),
-            models.Index(fields=['email']),
-            models.Index(fields=['department_name']),
-            models.Index(fields=['position_name']),
-            models.Index(fields=['status']),
-            models.Index(fields=['deleted_at']),
-        ]
 
     def __str__(self) -> str:
         return f"{self.id}:{self.name}"
-
-
-from django.db import models
-
 
 class Technician(models.Model):
     CONTRACT_TYPE_CHOICES = (

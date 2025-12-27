@@ -6,25 +6,10 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title>个人信息</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "PingFang SC",
-                   "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
-      background: transparent;
-      color: var(--text);
-    }
-
-    .page {
-      padding: 6px 6px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-  </style>
+  <style></style>
 </head>
 <body>
-<div class="page">
+<div class="page page-gap-compact">
   <div class="header-card c-card c-card-pad">
     <div class="profile-head">
       <div class="avatar" aria-label="用户头像">
@@ -45,7 +30,7 @@
       <button class="c-btn c-btn-danger" type="button" id="logoutBtn">退出登录</button>
     </div>
   </div>
-  <div class="content-grid content-spaced">
+  <div class="content-grid content-spaced content-spaced-compact">
     <section class="c-card">
       <h3 class="section-title c-panel-title">修改员工信息</h3>
       <form id="employeeForm" autocomplete="off">
@@ -113,17 +98,19 @@
     <section class="c-card">
       <h3 class="section-title c-panel-title">修改密码</h3>
       <form id="passwordForm" autocomplete="off">
-        <div class="form-field">
-          <label for="oldPassword">当前密码</label>
-          <input id="oldPassword" type="password" required />
-        </div>
-        <div class="form-field">
-          <label for="newPassword">新密码</label>
-          <input id="newPassword" type="password" required />
-        </div>
-        <div class="form-field">
-          <label for="confirmPassword">确认新密码</label>
-          <input id="confirmPassword" type="password" required />
+        <div class="form-grid form-grid-single">
+          <div class="form-field">
+            <label for="oldPassword">当前密码</label>
+            <input id="oldPassword" type="password" required />
+          </div>
+          <div class="form-field">
+            <label for="newPassword">新密码</label>
+            <input id="newPassword" type="password" required />
+          </div>
+          <div class="form-field">
+            <label for="confirmPassword">确认新密码</label>
+            <input id="confirmPassword" type="password" required />
+          </div>
         </div>
         <div class="hint">密码修改后需要重新登录。</div>
         <div class="form-actions">

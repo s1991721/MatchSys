@@ -31,6 +31,27 @@
   box-sizing: border-box;
 }
 
+body {
+  margin: 0;
+  font-family: "PingFang SC", "Microsoft YaHei", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.hidden {
+  display: none;
+}
+
+.error-box {
+  margin: 12px 0;
+  border-radius: 10px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.08);
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--danger);
+}
+
 body > .page {
   margin: 0;
   padding: 18px;
@@ -215,7 +236,7 @@ body > .page {
   min-width: 240px;
 }
 
-.avatar {
+.profile-head .avatar {
   width: 64px;
   height: 64px;
   border-radius: 999px;
@@ -226,7 +247,7 @@ body > .page {
   color: #5e90ff;
 }
 
-.avatar svg {
+.profile-head .avatar svg {
   width: 30px;
   height: 30px;
   display: block;
@@ -266,48 +287,87 @@ body > .page {
   gap: 12px;
 }
 
+.form-grid-single {
+  grid-template-columns: 1fr;
+}
+
+.form-grid-spaced {
+  gap: 14px;
+  margin-top: 18px;
+}
+
 .form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.form-field label {
+.form-field label,
+.c-field,
+.c-form-page label {
   font-size: 12px;
   color: var(--muted);
   font-weight: 600;
 }
 
+.c-field,
+.c-form-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .form-field input,
 .form-field textarea,
-.form-field select {
+.form-field select,
+.c-field input,
+.c-field textarea,
+.c-field select,
+.c-form-page input,
+.c-form-page textarea,
+.c-form-page select {
   border: 1px solid #d8dfec;
   border-radius: 10px;
   padding: 10px 12px;
+  width: 100%;
   font-size: 14px;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   background: #fff;
 }
 
-.form-field select {
+.form-field select,
+.c-field select,
+.c-form-page select {
   appearance: none;
 }
 
-.form-field textarea {
+.form-field textarea,
+.c-field textarea,
+.c-form-page textarea {
   min-height: 72px;
   resize: vertical;
 }
 
 .form-field input:focus,
 .form-field textarea:focus,
-.form-field select:focus {
+.form-field select:focus,
+.c-field input:focus,
+.c-field textarea:focus,
+.c-field select:focus,
+.c-form-page input:focus,
+.c-form-page textarea:focus,
+.c-form-page select:focus {
   border-color: rgba(28, 123, 255, 0.5);
   box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.12);
 }
 
 .form-field input[readonly],
-.form-field textarea[readonly] {
+.form-field textarea[readonly],
+.c-field input[readonly],
+.c-field textarea[readonly],
+.c-form-page input[readonly],
+.c-form-page textarea[readonly] {
   background: #f2f4f8;
   color: #7a8597;
   border-color: #e1e6ef;
@@ -417,24 +477,6 @@ body > .page {
 .c-filter-actions {
   display: flex;
   gap: 8px;
-}
-
-.c-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.c-field input,
-.c-field select {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 13px;
-  color: var(--text);
-  background: #fff;
 }
 
 .c-title-bar-md {
@@ -574,36 +616,6 @@ body > .page {
   vertical-align: bottom;
 }
 
-.c-form-page label {
-  display: flex;
-  flex-direction: column;
-  font-size: 13px;
-  color: var(--muted);
-  gap: 6px;
-  font-weight: 600;
-}
-
-.c-form-page input,
-.c-form-page select,
-.c-form-page textarea {
-  font: inherit;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: #f9fafc;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.c-form-page input:focus,
-.c-form-page select:focus,
-.c-form-page textarea:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.15);
-  background: #fff;
-}
-
 .c-center-page {
   min-height: 100vh;
   display: flex;
@@ -614,6 +626,34 @@ body > .page {
 .c-auth-card {
   width: 360px;
   max-width: 92vw;
+}
+
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 420px;
+  max-width: 92vw;
+  padding: 26px 28px;
+}
+
+.login-card form {
+  margin-top: 4px;
+}
+
+.login-card .form-group label {
+  display: block;
+  margin-bottom: 6px;
+  padding-left: 12px;
+}
+
+.login-card .c-form-group {
+  margin: 14px 0;
+}
+
+.login-card .c-btn {
+  width: 100%;
+  margin-top: 8px;
 }
 
 .c-brand-title {

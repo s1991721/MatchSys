@@ -416,12 +416,14 @@ body > .page {
   font-size: 13px;
   color: var(--muted);
   gap: 6px;
+  font-weight: 600;
 }
 
 .c-form-page input,
 .c-form-page select,
 .c-form-page textarea {
   font: inherit;
+  width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid var(--line);
@@ -436,4 +438,33 @@ body > .page {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.15);
   background: #fff;
+}
+
+.c-center-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.c-auth-card {
+  width: 360px;
+  max-width: 92vw;
+}
+
+.c-brand-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 0;
+}
+
+.c-brand-subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 0;
+}
+
+.c-form-group {
+  margin: 18px 0;
 }

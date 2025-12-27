@@ -962,10 +962,12 @@ body.sidebar-collapsed .nav-item a:hover::after {
   padding-right: 6px;
 }
 .personnel-page .modal-actions {
-  padding-top: 12px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  align-items: center;
+  margin: 12px -24px -16px;
+  padding: 12px 24px 16px;
   border-top: 1px solid var(--line);
   background: #f8f9fb;
   border-bottom-left-radius: 20px;

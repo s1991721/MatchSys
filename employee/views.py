@@ -82,10 +82,9 @@ def employee_detail_api(request, employee_id):
         if login_id:
             employee.deleted_at = timezone.now()
             employee.updated_by = login_id
-            employee.updated_at = timezone.now()
             employee.save()
             return api_success()
-        return api_error(status=400, message="请先登录")
+        return api_error(status=401, message="请先登录")
 
     payload, error = parse_json_body(request)
     if error:

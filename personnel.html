@@ -138,7 +138,7 @@
             </div>
             <div class="modal-actions">
                 <button type="button" class="c-btn c-btn-secondary" id="cancelBtn">取消</button>
-                <button type="button" class="c-btn c-btn-danger hidden" id="deleteBtn">删除人员</button>
+                <button type="button" class="c-btn c-btn-danger" id="deleteBtn" hidden>删除人员</button>
                 <button type="submit" class="c-btn c-btn-primary" id="saveBtn">保存</button>
             </div>
         </form>
@@ -197,16 +197,6 @@
     let totalPages = 1;
     let totalCount = 0;
     let currentFilters = {keyword: "", department: "all"};
-
-    function formatDate(raw) {
-        if (!raw) return "";
-        const d = new Date(raw);
-        if (Number.isNaN(d.getTime())) return raw;
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
-        return `${y}-${m}-${day}`;
-    }
 
     function ensureDepartments(departments) {
         deptSelect.innerHTML = `<option value="all">全部部门</option>`;
@@ -294,17 +284,17 @@
         return {
             name: fieldName.value.trim(),
             gender: fieldGender.value === "" ? null : Number(fieldGender.value),
-            birthday: fieldBirthday.value || "",
-            department: fieldDepartment.value.trim(),
-            position: fieldPosition.value.trim(),
             phone: fieldPhone.value.trim(),
             email: fieldEmail.value.trim(),
             address: fieldAddress.value.trim(),
+            department_name: fieldDepartment.value.trim(),
+            position_name: fieldPosition.value.trim(),
+            hire_date: fieldHireDate.value || "",
+            leave_date: fieldLeaveDate.value || "",
+            birthday: fieldBirthday.value || "",
             emergency_contact_name: fieldEmergencyName.value.trim(),
             emergency_contact_phone: fieldEmergencyPhone.value.trim(),
-            emergency_contact_relationship: fieldEmergencyRelation.value.trim(),
-            hire_date: fieldHireDate.value || "",
-            leave_date: fieldLeaveDate.value || ""
+            emergency_contact_relationship: fieldEmergencyRelation.value.trim()
         };
     }
 
@@ -333,13 +323,8 @@
             const target = allEmployees.find(item => String(item.id) === String(id));
             if (target) openModal("edit", target);
         } else if (action === "tech-edit") {
-            if (id) {
-                try {
-                    localStorage.setItem("tech_edit_employee_id", String(id));
-                } catch (err) {
-                }
-            }
             try {
+                localStorage.setItem("tech_edit_employee_id", String(id));
                 if (window.parent && window.parent !== window) {
                     window.parent.location.hash = "people.html";
                     return;
@@ -369,7 +354,7 @@
         fieldHireDate.value = formatDate(data?.hire_date || "");
         fieldLeaveDate.value = formatDate(data?.leave_date || "");
         if (deleteBtn) {
-            deleteBtn.classList.toggle("hidden", mode !== "edit");
+            deleteBtn.hidden = mode !== "edit";
         }
         employeeModal.classList.add("show");
         employeeModal.setAttribute("aria-hidden", "false");
@@ -380,6 +365,9 @@
         employeeModal.setAttribute("aria-hidden", "true");
         employeeForm.reset();
         editingId = null;
+        if (deleteBtn) {
+            deleteBtn.hidden = true;
+        }
     }
 
     function openPermissionModal(id) {
@@ -398,8 +386,6 @@
 
     async function createEmployee(payload) {
         const res = await fetchWithAuth(`/api/employees`, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -413,7 +399,6 @@
     async function updateEmployee(id, payload) {
         const res = await fetchWithAuth(`/api/employees/${id}`, {
             method: "PUT",
-            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload)
         });
         const data = await res.json();

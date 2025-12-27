@@ -20,7 +20,9 @@ from .models import Employee, Technician, UserLogin
 @csrf_exempt
 @require_POST
 def login_api(request):
-    payload = json.loads(request.body.decode("utf-8") or "{}")
+    payload, error = _parse_json_body(request)
+    if error:
+        return error
 
     user_name = (payload.get("user_name") or "").strip()
     password = payload.get("password") or ""
@@ -54,11 +56,109 @@ def login_api(request):
 
 
 @csrf_exempt
+@require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
+def employee_detail_api(request, employee_id):
+    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
+    if not employee:
+        return api_error(
+            "Employee not found",
+            status=404,
+        )
+
+    if request.method == "GET":
+        item = _serialize_employee(employee)
+        return api_success(data={"item": item})
+
+    if request.method == "DELETE":
+        login_id = request.session.get("employee_id")
+        if login_id:
+            employee.deleted_at = timezone.now()
+            employee.updated_by = login_id
+            employee.updated_at = timezone.now()
+            employee.save()
+            return api_success()
+        return api_error(status=400, message="请先登录")
+
+    payload, error = _parse_json_body(request)
+    if error:
+        return error
+
+    if "name" in payload:
+        employee.name = (payload.get("name") or "").strip()
+    if "gender" in payload:
+        employee.gender = payload.get("gender") or None
+    if "phone" in payload:
+        employee.phone = (payload.get("phone") or "").strip() or None
+    if "email" in payload:
+        employee.email = (payload.get("email") or "").strip() or None
+    if "address" in payload:
+        employee.address = (payload.get("address") or "").strip() or None
+    if "department" in payload or "department_name" in payload:
+        employee.department_name = (
+                                           payload.get("department") or payload.get("department_name") or ""
+                                   ).strip() or None
+    if "position" in payload or "position_name" in payload:
+        employee.position_name = (
+                                         payload.get("position") or payload.get("position_name") or ""
+                                 ).strip() or None
+    if "status" in payload:
+        status = _normalize_status(payload.get("status"))
+        if status is None:
+            return api_error(
+                "Invalid status",
+                status=400,
+            )
+        employee.status = status
+
+    if "hire_date" in payload:
+        value, error = _parse_date(payload.get("hire_date"), "hire_date")
+        if error:
+            return error
+        employee.hire_date = value
+    if "leave_date" in payload:
+        value, error = _parse_date(payload.get("leave_date"), "leave_date")
+        if error:
+            return error
+        employee.leave_date = value
+    if "birthday" in payload:
+        value, error = _parse_date(payload.get("birthday"), "birthday")
+        if error:
+            return error
+        employee.birthday = value
+    if "emergency_contact_name" in payload:
+        employee.emergency_contact_name = (
+                                                  payload.get("emergency_contact_name") or ""
+                                          ).strip() or None
+    if "emergency_contact_phone" in payload:
+        employee.emergency_contact_phone = (
+                                                   payload.get("emergency_contact_phone") or ""
+                                           ).strip() or None
+    if "emergency_contact_relationship" in payload:
+        employee.emergency_contact_relationship = (
+                                                          payload.get("emergency_contact_relationship") or ""
+                                                  ).strip() or None
+
+    if not employee.name:
+        return api_error(
+            "Missing field: name",
+            status=400,
+        )
+
+    employee.save()
+    if request.session.get("employee_id") == employee.id:
+        request.session["employee_name"] = employee.name
+        request.session["employee_department_name"] = employee.department_name
+        request.session["employee_position_name"] = employee.position_name
+    item = _serialize_employee(employee)
+    return api_success(data={"item": item})
+
+
+@csrf_exempt
 @require_POST
 def logout_api(request):
     request.session.flush()
     payload = {"redirect": "login.html"}
-    return api_success(data=payload, legacy={"status": "ok", **payload})
+    return api_success(data=payload)
 
 
 @csrf_exempt
@@ -69,7 +169,6 @@ def change_password_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
     payload, error = _parse_json_body(request)
@@ -83,13 +182,11 @@ def change_password_api(request):
         return api_error(
             "Missing old_password or new_password",
             status=400,
-            legacy={"error": "Missing old_password or new_password"},
         )
     if old_password == new_password:
         return api_error(
             "New password must be different",
             status=400,
-            legacy={"error": "New password must be different"},
         )
 
     user_login = UserLogin.objects.filter(
@@ -100,19 +197,17 @@ def change_password_api(request):
         return api_error(
             "User not found",
             status=404,
-            legacy={"error": "User not found"},
         )
     if user_login.password != old_password:
         return api_error(
             "Invalid current password",
             status=400,
-            legacy={"error": "Invalid current password"},
         )
 
     user_login.password = new_password
     user_login.save(update_fields=["password", "updated_at"])
 
-    return api_success(data=None, legacy={"status": "ok"})
+    return api_success(data=None)
 
 
 def _parse_json_body(request):
@@ -123,7 +218,6 @@ def _parse_json_body(request):
         return None, api_error(
             "Invalid JSON body",
             status=400,
-            legacy={"error": "Invalid JSON body"},
         )
 
 
@@ -137,7 +231,6 @@ def _parse_date(value, field):
         return None, api_error(
             f"Invalid date: {field}",
             status=400,
-            legacy={"error": f"Invalid date: {field}"},
         )
     if isinstance(value, str):
         if value.isdigit():
@@ -148,7 +241,6 @@ def _parse_date(value, field):
             return None, api_error(
                 f"Invalid date: {field}",
                 status=400,
-                legacy={"error": f"Invalid date: {field}"},
             )
         try:
             return datetime.strptime(value, "%Y-%m-%d").date(), None
@@ -156,12 +248,10 @@ def _parse_date(value, field):
             return None, api_error(
                 f"Invalid date: {field}",
                 status=400,
-                legacy={"error": f"Invalid date: {field}"},
             )
     return None, api_error(
         f"Invalid date: {field}",
         status=400,
-        legacy={"error": f"Invalid date: {field}"},
     )
 
 
@@ -263,7 +353,6 @@ def _parse_decimal(value, field):
         return None, api_error(
             f"Invalid number: {field}",
             status=400,
-            legacy={"error": f"Invalid number: {field}"},
         )
 
 
@@ -276,7 +365,6 @@ def _normalize_smallint(value, field):
         return None, api_error(
             f"Invalid value: {field}",
             status=400,
-            legacy={"error": f"Invalid value: {field}"},
         )
 
 
@@ -297,7 +385,6 @@ def employees_api(request):
             return api_error(
                 "Missing field: name",
                 status=400,
-                legacy={"error": "Missing field: name"},
             )
 
         email = (payload.get("email") or "").strip()
@@ -305,14 +392,12 @@ def employees_api(request):
             return api_error(
                 "Missing field: email",
                 status=400,
-                legacy={"error": "Missing field: email"},
             )
 
         if UserLogin.objects.filter(user_name=email, deleted_at__isnull=True).exists():
             return api_error(
                 "User login already exists",
                 status=400,
-                legacy={"error": "User login already exists"},
             )
 
         status = _normalize_status(payload.get("status"))
@@ -356,7 +441,7 @@ def employees_api(request):
             )
 
         item = _serialize_employee(employee)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     keyword = (request.GET.get("keyword") or "").strip()
     department = (request.GET.get("department") or "").strip()
@@ -408,7 +493,7 @@ def employees_api(request):
         "departments": dept_list,
         "stats": stats,
     }
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)
 
 
 @csrf_exempt
@@ -426,13 +511,11 @@ def technicians_api(request):
             return api_error(
                 "Missing field: employee_id",
                 status=400,
-                legacy={"error": "Missing field: employee_id"},
             )
         if Technician.objects.filter(employee_id=employee_id).exists():
             return api_error(
                 "Employee ID already exists",
                 status=400,
-                legacy={"error": "Employee ID already exists"},
             )
 
         name_mask = (payload.get("name_mask") or "").strip()
@@ -440,7 +523,6 @@ def technicians_api(request):
             return api_error(
                 "Missing field: name_mask",
                 status=400,
-                legacy={"error": "Missing field: name_mask"},
             )
 
         name = (payload.get("name") or "").strip()
@@ -448,7 +530,6 @@ def technicians_api(request):
             return api_error(
                 "Missing field: name",
                 status=400,
-                legacy={"error": "Missing field: name"},
             )
 
         birthday, error = _parse_date(payload.get("birthday"), "birthday")
@@ -488,7 +569,7 @@ def technicians_api(request):
         )
 
         item = _serialize_technician(tech)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     qs = Technician.objects.all()
     keyword = (request.GET.get("keyword") or "").strip()
@@ -537,7 +618,7 @@ def technicians_api(request):
 
     items = [_serialize_technician(tech) for tech in qs.order_by("employee_id")]
     payload = {"items": items}
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)
 
 
 @csrf_exempt
@@ -548,12 +629,11 @@ def technician_detail_api(request, employee_id):
         return api_error(
             "Technician not found",
             status=404,
-            legacy={"error": "Technician not found"},
         )
 
     if request.method == "DELETE":
         tech.delete()
-        return api_success(data=None, legacy={"status": "ok"})
+        return api_success(data=None)
 
     payload, error = _parse_json_body(request)
     if error:
@@ -603,18 +683,16 @@ def technician_detail_api(request, employee_id):
         return api_error(
             "Missing field: name_mask",
             status=400,
-            legacy={"error": "Missing field: name_mask"},
         )
     if not tech.name:
         return api_error(
             "Missing field: name",
-            status=400,
-            legacy={"error": "Missing field: name"},
+            status=400
         )
 
     tech.save()
     item = _serialize_technician(tech)
-    return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+    return api_success(data={"item": item})
 
 
 @csrf_exempt
@@ -623,8 +701,7 @@ def technician_ss_upload(request, employee_id):
     if not request.session.get("employee_id"):
         return api_error(
             "Unauthorized",
-            status=401,
-            legacy={"error": "Unauthorized"},
+            status=401
         )
 
     upload = request.FILES.get("file")
@@ -632,15 +709,13 @@ def technician_ss_upload(request, employee_id):
         return api_error(
             "Missing file",
             status=400,
-            legacy={"error": "Missing file"},
         )
 
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
         return api_error(
             "Technician not found",
-            status=404,
-            legacy={"error": "Technician not found"},
+            status=404
         )
 
     base_dir = _ss_storage_dir()
@@ -656,7 +731,6 @@ def technician_ss_upload(request, employee_id):
         return api_error(
             "File already exists",
             status=409,
-            legacy={"error": "File already exists"},
         )
 
     with open(dest_path, "wb") as handle:
@@ -669,7 +743,7 @@ def technician_ss_upload(request, employee_id):
         tech.save(update_fields=["ss"])
 
     payload = {"path": rel_path, "url": f"/api/ss/{rel_path}"}
-    return api_success(data=payload, legacy={"status": "ok", **payload})
+    return api_success(data=payload)
 
 
 @require_http_methods(["GET"])
@@ -677,8 +751,7 @@ def technician_ss_download(request, path):
     if not request.session.get("employee_id"):
         return api_error(
             "Unauthorized",
-            status=401,
-            legacy={"error": "Unauthorized"},
+            status=401
         )
 
     base_dir = os.path.realpath(_ss_storage_dir())
@@ -686,113 +759,15 @@ def technician_ss_download(request, path):
     if not safe_path.startswith(base_dir + os.sep):
         return api_error(
             "Invalid path",
-            status=400,
-            legacy={"error": "Invalid path"},
+            status=400
         )
     if not os.path.exists(safe_path):
         return api_error(
             "File not found",
-            status=404,
-            legacy={"error": "File not found"},
+            status=404
         )
 
     content_type, _ = mimetypes.guess_type(safe_path)
     response = FileResponse(open(safe_path, "rb"), content_type=content_type or "application/octet-stream")
     response["Content-Disposition"] = "inline"
     return response
-
-
-@csrf_exempt
-@require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
-def employee_detail_api(request, employee_id):
-    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
-    if not employee:
-        return api_error(
-            "Employee not found",
-            status=404,
-            legacy={"error": "Employee not found"},
-        )
-
-    if request.method == "GET":
-        item = _serialize_employee(employee)
-        return api_success(data={"item": item}, legacy={"item": item})
-
-    if request.method == "DELETE":
-        employee.deleted_at = timezone.now()
-        employee.save(update_fields=["deleted_at"])
-        return api_success(data=None, legacy={"status": "ok"})
-
-    payload, error = _parse_json_body(request)
-    if error:
-        return error
-
-    if "name" in payload:
-        employee.name = (payload.get("name") or "").strip()
-    if "gender" in payload:
-        employee.gender = payload.get("gender") or None
-    if "phone" in payload:
-        employee.phone = (payload.get("phone") or "").strip() or None
-    if "email" in payload:
-        employee.email = (payload.get("email") or "").strip() or None
-    if "address" in payload:
-        employee.address = (payload.get("address") or "").strip() or None
-    if "department" in payload or "department_name" in payload:
-        employee.department_name = (
-                                           payload.get("department") or payload.get("department_name") or ""
-                                   ).strip() or None
-    if "position" in payload or "position_name" in payload:
-        employee.position_name = (
-                                         payload.get("position") or payload.get("position_name") or ""
-                                 ).strip() or None
-    if "status" in payload:
-        status = _normalize_status(payload.get("status"))
-        if status is None:
-            return api_error(
-                "Invalid status",
-                status=400,
-                legacy={"error": "Invalid status"},
-            )
-        employee.status = status
-
-    if "hire_date" in payload:
-        value, error = _parse_date(payload.get("hire_date"), "hire_date")
-        if error:
-            return error
-        employee.hire_date = value
-    if "leave_date" in payload:
-        value, error = _parse_date(payload.get("leave_date"), "leave_date")
-        if error:
-            return error
-        employee.leave_date = value
-    if "birthday" in payload:
-        value, error = _parse_date(payload.get("birthday"), "birthday")
-        if error:
-            return error
-        employee.birthday = value
-    if "emergency_contact_name" in payload:
-        employee.emergency_contact_name = (
-                                                  payload.get("emergency_contact_name") or ""
-                                          ).strip() or None
-    if "emergency_contact_phone" in payload:
-        employee.emergency_contact_phone = (
-                                                   payload.get("emergency_contact_phone") or ""
-                                           ).strip() or None
-    if "emergency_contact_relationship" in payload:
-        employee.emergency_contact_relationship = (
-                                                          payload.get("emergency_contact_relationship") or ""
-                                                  ).strip() or None
-
-    if not employee.name:
-        return api_error(
-            "Missing field: name",
-            status=400,
-            legacy={"error": "Missing field: name"},
-        )
-
-    employee.save()
-    if request.session.get("employee_id") == employee.id:
-        request.session["employee_name"] = employee.name
-        request.session["employee_department_name"] = employee.department_name
-        request.session["employee_position_name"] = employee.position_name
-    item = _serialize_employee(employee)
-    return api_success(data={"item": item}, legacy={"status": "ok", "item": item})

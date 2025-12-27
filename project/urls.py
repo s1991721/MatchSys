@@ -98,10 +98,10 @@ urlpatterns = [
     # ###################################-API-###################################
     # -------------------------------employee API-------------------------------
     path("api/login", login_api, name="employee-login"),
+    path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("api/logout", logout_api, name="employee-logout"),
     path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),
-    path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("api/technicians", technicians_api, name="technician-list"),
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),

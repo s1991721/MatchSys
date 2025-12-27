@@ -17,11 +17,11 @@ def _resolve_error_code(status, code=None):
     return ERROR_CODE_MAP.get(status, "ERR_UNKNOWN")
 
 
-def api_success(data=None, message="", code="OK", meta=None, status=200):
+def api_success(data=None, meta=None, status=200):
     payload = {
         "success": True,
-        "code": code,
-        "message": message or "",
+        "code": status,
+        "message": "OK",
         "data": data,
         "meta": meta or {},
     }
@@ -31,8 +31,8 @@ def api_success(data=None, message="", code="OK", meta=None, status=200):
 def api_error(message, status=400, code=None, meta=None):
     payload = {
         "success": False,
-        "code": _resolve_error_code(status, code),
-        "message": message or "",
+        "code": status,
+        "message": message or _resolve_error_code(status, code),
         "data": None,
         "meta": meta or {},
     }

@@ -118,16 +118,21 @@ body > .page {
   }
 }
 
-.c-panel-title {
+.c-panel-title,
+.c-title-bar {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.c-panel-title {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 10px;
 }
 
-.c-panel-title::before {
+.c-panel-title::before,
+.c-title-bar::before {
   content: "";
   width: 4px;
   height: 18px;
@@ -211,20 +216,8 @@ body > .page {
 }
 
 .c-title-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   font-weight: 800;
   margin: 0 0 6px;
-}
-
-.c-title-bar::before {
-  content: "";
-  width: 4px;
-  height: 18px;
-  border-radius: 12px;
-  background: var(--primary);
-  box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
 }
 
 .header-card {
@@ -308,6 +301,7 @@ body > .page {
   gap: 6px;
 }
 
+.form-base label,
 .form-field label,
 .c-field,
 .c-form-page label {
@@ -316,6 +310,9 @@ body > .page {
   font-weight: 600;
 }
 
+.form-base label,
+.form-base .c-field,
+.form-base .c-form-page label,
 .c-field,
 .c-form-page label {
   display: flex;
@@ -323,6 +320,9 @@ body > .page {
   gap: 6px;
 }
 
+.form-base input,
+.form-base textarea,
+.form-base select,
 .form-field input,
 .form-field textarea,
 .form-field select,
@@ -343,11 +343,13 @@ body > .page {
 }
 
 .form-field select,
+.form-base select,
 .c-field select,
 .c-form-page select {
   appearance: none;
 }
 
+.form-base textarea,
 .form-field textarea,
 .c-field textarea,
 .c-form-page textarea {
@@ -355,6 +357,9 @@ body > .page {
   resize: vertical;
 }
 
+.form-base input:focus,
+.form-base textarea:focus,
+.form-base select:focus,
 .form-field input:focus,
 .form-field textarea:focus,
 .form-field select:focus,
@@ -370,6 +375,8 @@ body > .page {
 
 .form-field input[readonly],
 .form-field textarea[readonly],
+.form-base input[readonly],
+.form-base textarea[readonly],
 .c-field input[readonly],
 .c-field textarea[readonly],
 .c-form-page input[readonly],
@@ -378,6 +385,34 @@ body > .page {
   color: #7a8597;
   border-color: #e1e6ef;
   cursor: not-allowed;
+}
+
+.form-compact label,
+.form-compact .form-field label,
+.form-compact .c-field,
+.form-compact .c-form-page label {
+  font-size: 11px;
+}
+
+.form-compact .form-field,
+.form-compact .c-field {
+  gap: 4px;
+}
+
+.form-compact input,
+.form-compact textarea,
+.form-compact select,
+.form-compact .form-field input,
+.form-compact .form-field textarea,
+.form-compact .form-field select,
+.form-compact .c-field input,
+.form-compact .c-field textarea,
+.form-compact .c-field select,
+.form-compact .c-form-page input,
+.form-compact .c-form-page textarea,
+.form-compact .c-form-page select {
+  padding: 8px 10px;
+  font-size: 13px;
 }
 
 .form-field.full {
@@ -493,15 +528,23 @@ body > .page {
   height: 18px;
 }
 
+.c-page-title,
+.c-page-title-soft {
+  font-size: 22px;
+}
+
 .c-page-title {
   margin: 0 0 6px;
-  font-size: 22px;
   font-weight: 900;
 }
 
-.c-page-subtitle {
+.c-page-subtitle,
+.c-page-subtitle-soft {
   margin: 0;
   color: var(--muted);
+}
+
+.c-page-subtitle {
   font-size: 13px;
   font-weight: 700;
 }
@@ -514,16 +557,13 @@ body > .page {
 }
 
 .c-page-title-soft {
-  font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.3px;
   margin: 0;
 }
 
 .c-page-subtitle-soft {
-  color: var(--muted);
   font-size: 14px;
-  margin: 0;
 }
 
 .content-spaced {

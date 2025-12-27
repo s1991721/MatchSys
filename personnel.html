@@ -40,7 +40,7 @@
         </div>
 
         <div class="table-wrapper c-table-wrapper">
-            <table class="c-table">
+            <table class="c-table c-table-center c-table-compact-last">
                 <thead>
                 <tr>
                     <th>姓名</th>
@@ -49,7 +49,7 @@
                     <th>手机</th>
                     <th>邮箱</th>
                     <th>入职日期</th>
-                    <th>操作</th>
+                    <th class="c-actions-col">操作</th>
                 </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -223,10 +223,10 @@
           <td data-label="邮箱">${item.email}</td>
           <td data-label="入职日期">${formatDate(item.hire_date)}</td>
           <td data-label="操作">
-            <div class="row-actions c-row-actions">
-              <button data-action="edit" data-id="${item.id}">信息编辑</button>
-              <button data-action="tech-edit" data-id="${item.id}">技术者编辑</button>
-              <button data-action="permission" data-id="${item.id}">权限编辑</button>
+            <div class="row-actions c-row-actions c-row-actions-nowrap">
+              <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">信息编辑</button>
+              <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">技术者编辑</button>
+              <button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">权限编辑</button>
             </div>
           </td>
         </tr>`

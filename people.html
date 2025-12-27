@@ -6,197 +6,6 @@
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title>人员管理</title>
-    <style>
-* {
-            box-sizing: border-box;
-        }
-
-body {
-            margin: 0;
-            font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .page {
-            padding: 18px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        button {
-            border: none;
-            border-radius: 12px;
-            font: inherit;
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        button:active {
-            transform: scale(0.98);
-        }
-        .filter-actions-left:empty {
-            display: none;
-        }
-
-        .filter-actions-left:empty + .filter-actions-right {
-            justify-content: flex-end;
-            width: 100%;
-        }
-
-        .filter-actions-left,
-        .filter-actions-right {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-
-        .table-actions > div {
-            flex: 1;
-            min-width: 220px;
-        }
-
-tbody tr:last-child td {
-            border-bottom: none;
-        }
-.chip {
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #eef2ff;
-            color: var(--primary);
-        }
-
-        .chip.success {
-            background: rgba(16, 185, 129, 0.18);
-            color: var(--success);
-        }
-
-        .chip.danger {
-            background: rgba(255, 95, 95, 0.18);
-            color: var(--danger);
-        }
-
-        .file-link {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .file-link:hover {
-            text-decoration: underline;
-        }
-
-        .row-actions button {
-            padding: 6px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-        }
-
-        dialog {
-            border: none;
-            border-radius: 20px;
-            padding: 0;
-            box-shadow: 0 30px 50px rgba(15, 23, 42, 0.25);
-            width: min(820px, 95%);
-            max-width: 820px;
-            animation: fadeIn 0.3s ease forwards;
-            display: none;
-        }
-
-        dialog::backdrop {
-            background: rgba(15, 23, 42, 0.55);
-        }
-
-        dialog[open] {
-            display: block;
-            animation: fadeIn 0.3s ease forwards;
-        }
-
-        .dialog-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 24px 0;
-        }
-
-        .dialog-header h3 {
-            margin: 0;
-            font-size: 18px;
-        }
-
-        .dialog-close {
-            background: transparent;
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            color: var(--muted);
-            padding: 0;
-        }
-
-        .dialog-body {
-            padding: 0 24px 10px;
-        }
-
-        .dialog-actions {
-            padding: 12px 24px 22px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            border-top: 1px solid var(--line);
-            background: #f8f9fb;
-            border-bottom-left-radius: 20px;
-            border-bottom-right-radius: 20px;
-        }
-
-        .dialog-actions button {
-            min-width: 120px;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-        }
-
-        @media (max-width: 640px) {
-            .row-actions {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-tbody tr {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 6px 10px;
-                border-bottom: 1px solid #eef2ff;
-                padding: 12px 0;
-            }
-.filter-actions {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-  </style>
 </head>
 <body class="c-form-page">
 <div class="page">
@@ -249,21 +58,16 @@ tbody tr {
                     </select>
                 </label>
             </div>
-            <div class="filter-actions c-filter-actions-bar">
-                <div class="filter-actions-left"></div>
-                <div class="filter-actions-right c-filter-actions-group">
+            <div class="filter-actions c-filter-actions-bar c-filter-actions-stack">
+                <div class="filter-actions-left c-filter-actions-left"></div>
+                <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
                     <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn">搜索</button>
                     <button type="button" class="c-btn c-btn-warn" id="filterResetBtn">重置</button>
                 </div>
             </div>
         </div>
-        <div class="table-actions c-table-actions">
-            <div style="text-align:right;font-size:13px;color:#6b7280;">
-                <span id="summaryText">共 0 人</span>
-            </div>
-        </div>
         <div class="table-wrapper c-table-wrapper">
-            <table class="c-table" id="peopleTable">
+            <table class="c-table c-table-center c-table-stack c-table-compact-last" id="peopleTable">
                 <thead>
                 <tr>
                     <th>姓名</th>
@@ -276,7 +80,7 @@ tbody tr {
                     <th>现场契约</th>
                     <th>备注</th>
                     <th>SS 文件</th>
-                    <th style="width:130px;">操作</th>
+                    <th class="c-actions-col">操作</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -286,16 +90,24 @@ tbody tr {
                 </tbody>
             </table>
         </div>
+        <div class="pagination c-pagination" id="pagination">
+            <div class="pagination-summary">
+                <span id="summaryText">共 0 人</span>
+            </div>
+            <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="prev">上一页</button>
+            <div class="pagination-pages" id="paginationPages"></div>
+            <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="next">下一页</button>
+        </div>
     </div>
 </div>
 
-<dialog id="personDialog">
-    <div class="dialog-header">
+<dialog id="personDialog" class="c-dialog">
+    <div class="dialog-header c-dialog-header">
         <h3 id="dialogTitle">新增人员</h3>
-        <button type="button" class="dialog-close" id="closeDialogBtn" data-close-dialog aria-label="关闭">&times;</button>
+        <button type="button" class="dialog-close c-dialog-close" id="closeDialogBtn" data-close-dialog aria-label="关闭">&times;</button>
     </div>
     <form id="personForm">
-        <div class="dialog-body">
+        <div class="dialog-body c-dialog-body">
             <div class="form-grid form-grid-single form-grid-spaced">
                 <input type="hidden" name="employee_id" />
                 <label>
@@ -365,7 +177,7 @@ tbody tr {
                 </label>
             </div>
         </div>
-        <div class="dialog-actions">
+        <div class="dialog-actions c-dialog-actions">
             <button type="button" class="c-btn c-btn-secondary" id="cancelDialogBtn" data-close-dialog>取消</button>
             <button type="submit" class="c-btn c-btn-primary" id="submitBtn">确认新增</button>
         </div>
@@ -391,6 +203,8 @@ tbody tr {
     const submitBtn = document.getElementById('submitBtn');
     const peopleTableBody = document.querySelector('#peopleTable tbody');
     const summaryText = document.getElementById('summaryText');
+    const pagination = document.getElementById('pagination');
+    const paginationPages = document.getElementById('paginationPages');
     const personDialog = document.getElementById('personDialog');
     const dialogTitle = document.getElementById('dialogTitle');
     const closeDialogBtn = document.getElementById('closeDialogBtn');
@@ -422,7 +236,12 @@ tbody tr {
 
     let editingId = null;
     let people = [];
+    let filteredPeople = [];
     let currentSsPath = '';
+    let currentPage = 1;
+    const pageSize = 10;
+    let totalPages = 1;
+    let totalCount = 0;
 
     const contractLabelToType = (label) => {
         const mapping = {
@@ -489,18 +308,55 @@ tbody tr {
         return String(remark).trim();
     };
 
+    const buildPageItems = (totalPageCount, activePage) => {
+        if (totalPageCount <= 7) {
+            return Array.from({ length: totalPageCount }, (_, i) => i + 1);
+        }
+        const pages = [1];
+        const start = Math.max(2, activePage - 1);
+        const end = Math.min(totalPageCount - 1, activePage + 1);
+        if (start > 2) pages.push('…');
+        for (let i = start; i <= end; i += 1) pages.push(i);
+        if (end < totalPageCount - 1) pages.push('…');
+        pages.push(totalPageCount);
+        return pages;
+    };
+
+    const renderPagination = () => {
+        if (!pagination || !paginationPages) return;
+        const safeTotalPages = Math.max(1, totalPages);
+        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
+        paginationPages.innerHTML = '';
+        const pageItems = buildPageItems(safeTotalPages, currentPage);
+        paginationPages.append(...pageItems.map((page) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'c-btn c-btn-ghost c-btn-sm';
+            btn.textContent = String(page);
+            if (page === '…') {
+                btn.disabled = true;
+                btn.classList.add('is-ellipsis');
+                return btn;
+            }
+            btn.dataset.page = String(page);
+            if (page === currentPage) {
+                btn.classList.add('is-active');
+            }
+            return btn;
+        }));
+    };
+
     const renderPeople = (list) => {
         if (!list.length) {
             peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty c-empty">未检索到符合条件的记录</td></tr>';
-            summaryText.textContent = `共 ${people.length} 人 · 当前显示 0 人`;
             return;
         }
 
         peopleTableBody.innerHTML = list.map((person) => {
-            const chipClass = person.contract === '正社员' ? 'chip success'
-                : person.contract === 'フリーランス' ? 'chip danger'
-                    : 'chip';
-            const siteContractClass = person.siteContract === '长期' ? 'chip success' : 'chip';
+            const chipClass = person.contract === '正社员' ? 'c-pill c-pill-success'
+                : person.contract === 'フリーランス' ? 'c-pill c-pill-danger'
+                    : 'c-pill';
+            const siteContractClass = person.siteContract === '长期' ? 'c-pill c-pill-success' : 'c-pill';
 
             return `
                 <tr>
@@ -513,18 +369,34 @@ tbody tr {
                     <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
                     <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract}</span></td>
                     <td data-label="备注">${person.note || '-'}</td>
-                    <td data-label="SS 文件">${person.ssUrl ? `<a class="file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
+                    <td data-label="SS 文件">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
                     <td data-label="操作">
-                        <div class="row-actions c-row-actions">
-                            <button type="button" class="c-btn c-btn-secondary" data-edit="${person.id}">编辑</button>
-                            <button type="button" class="c-btn c-btn-danger" data-delete="${person.id}">删除</button>
+                        <div class="row-actions c-row-actions c-row-actions-nowrap">
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">编辑</button>
+                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">删除</button>
                         </div>
                     </td>
                 </tr>
             `;
         }).join('');
 
-        summaryText.textContent = `共 ${people.length} 人 · 当前显示 ${list.length} 人`;
+    };
+
+    const renderPage = () => {
+        totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+        const safeTotalPages = Math.max(1, totalPages);
+        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
+        const startIndex = (currentPage - 1) * pageSize;
+        const pageItems = filteredPeople.slice(startIndex, startIndex + pageSize);
+        renderPeople(pageItems);
+        renderPagination();
+        if (summaryText) {
+            if (totalCount === 0) {
+                summaryText.textContent = '共 0 人 · 当前显示 0 人';
+            } else {
+                summaryText.textContent = `共 ${totalCount} 人 · 第 ${currentPage}/${safeTotalPages} 页`;
+            }
+        }
     };
 
     const getFormData = () => {
@@ -674,6 +546,11 @@ tbody tr {
         } catch (error) {
             peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty c-empty">加载失败</td></tr>';
             summaryText.textContent = '共 0 人 · 当前显示 0 人';
+            filteredPeople = [];
+            totalCount = 0;
+            totalPages = 1;
+            currentPage = 1;
+            renderPagination();
         }
     };
 
@@ -736,7 +613,7 @@ tbody tr {
         const contractValue = filterContract.value;
         const siteContractValue = filterSiteContract.value;
 
-        const filtered = people.filter(person => {
+        filteredPeople = people.filter(person => {
             if (ageMax !== null && person.age > ageMax) return false;
             if (priceMax !== null && person.price > priceMax) return false;
             if (nationalityValue && person.nationality !== nationalityValue) return false;
@@ -745,7 +622,9 @@ tbody tr {
             return true;
         });
 
-        renderPeople(filtered);
+        totalCount = filteredPeople.length;
+        currentPage = 1;
+        renderPage();
     };
 
     personForm.addEventListener('submit', async (event) => {
@@ -874,6 +753,23 @@ tbody tr {
         filterSiteContract.value = '';
         applyFilters();
     });
+    if (pagination) {
+        pagination.addEventListener('click', (event) => {
+            const btn = event.target.closest('button[data-page]');
+            if (!btn) return;
+            const value = btn.dataset.page;
+            const safeTotalPages = Math.max(1, totalPages);
+            if (value === 'prev') {
+                currentPage = Math.max(1, currentPage - 1);
+            } else if (value === 'next') {
+                currentPage = Math.min(safeTotalPages, currentPage + 1);
+            } else {
+                const targetPage = Number(value);
+                if (!Number.isNaN(targetPage)) currentPage = targetPage;
+            }
+            renderPage();
+        });
+    }
 
     fetchPeople();
 </script>

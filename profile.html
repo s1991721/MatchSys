@@ -173,8 +173,8 @@
             document.getElementById("empPhone").value = item.phone || "";
             document.getElementById("empEmail").value = item.email || "";
             document.getElementById("empHireDate").value = item.hire_date || "";
-            document.getElementById("empDepartment").value = item.department || item.department_name || "";
-            document.getElementById("empPosition").value = item.position || item.position_name || "";
+            document.getElementById("empDepartment").value = item.department_name || "";
+            document.getElementById("empPosition").value = item.position_name || "";
             document.getElementById("empAddress").value = item.address || "";
             document.getElementById("empEmergencyName").value = item.emergency_contact_name || "";
             document.getElementById("empEmergencyPhone").value = item.emergency_contact_phone || "";
@@ -188,8 +188,8 @@
             setReadOnlyWhenFilled("empEmergencyRelation", item.emergency_contact_relationship);
 
             document.getElementById("profileName").textContent = item.name || "";
-            document.getElementById("profileDepartment").textContent = item.department_name || item.department || "";
-            document.getElementById("profilePosition").textContent = item.position || item.position_name || "";
+            document.getElementById("profileDepartment").textContent = item.department_name ||"";
+            document.getElementById("profilePosition").textContent = item.position_name || "";
         } catch (err) {
             showStatus(err.message || "加载失败", "error");
         }

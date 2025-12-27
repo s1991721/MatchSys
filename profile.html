@@ -1,316 +1,319 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title>个人信息</title>
-  <style></style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title>个人信息</title>
+    <style></style>
 </head>
 <body>
 <div class="page page-gap-compact">
-  <div class="header-card c-card c-card-pad">
-    <div class="profile-head">
-      <div class="avatar" aria-label="用户头像">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="currentColor" d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12zm0 2c-4.8 0-8.7 2.4-8.7 5.4V21h17.4v-1.6C20.7 16.4 16.8 14 12 14z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="profile-name" id="profileName">{{ request.session.employee_name }}</div>
-        <div class="profile-meta">
-          <span id="profileDepartment">{{ request.session.employee_department_name }}</span>
-          <span class="dot" aria-hidden="true"></span>
-          <span id="profilePosition">{{ request.session.employee_position_name }}</span>
+    <div class="header-card c-card c-card-pad">
+        <div class="profile-head">
+            <div class="avatar" aria-label="用户头像">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor"
+                          d="M12 12a4.2 4.2 0 1 0-4.2-4.2A4.2 4.2 0 0 0 12 12zm0 2c-4.8 0-8.7 2.4-8.7 5.4V21h17.4v-1.6C20.7 16.4 16.8 14 12 14z"/>
+                </svg>
+            </div>
+            <div>
+                <div class="profile-name" id="profileName">{{ request.session.employee_name }}</div>
+                <div class="profile-meta">
+                    <span id="profileDepartment">{{ request.session.employee_department_name }}</span>
+                    <span class="dot" aria-hidden="true"></span>
+                    <span id="profilePosition">{{ request.session.employee_position_name }}</span>
+                </div>
+            </div>
         </div>
-      </div>
+        <div class="profile-actions">
+            <button class="c-btn c-btn-danger" type="button" id="logoutBtn">退出登录</button>
+        </div>
     </div>
-    <div class="profile-actions">
-      <button class="c-btn c-btn-danger" type="button" id="logoutBtn">退出登录</button>
-    </div>
-  </div>
-  <div class="content-grid content-spaced content-spaced-compact">
-    <section class="c-card">
-      <h3 class="section-title c-panel-title">修改员工信息</h3>
-      <form id="employeeForm" autocomplete="off">
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="empName">姓名</label>
-            <input id="empName" name="name" type="text" required />
-          </div>
-          <div class="form-field">
-            <label for="empGender">性别</label>
-            <select id="empGender" name="gender">
-              <option value="">未设置</option>
-              <option value="1">男</option>
-              <option value="2">女</option>
-              <option value="0">未知</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label for="empBirthday">生日</label>
-            <input id="empBirthday" name="birthday" type="date" />
-          </div>
-          <div class="form-field">
-            <label for="empPhone">手机</label>
-            <input id="empPhone" name="phone" type="text" />
-          </div>
-          <div class="form-field">
-            <label for="empEmail">邮箱</label>
-            <input id="empEmail" name="email" type="email" />
-          </div>
-          <div class="form-field">
-            <label for="empHireDate">入职日期</label>
-            <input id="empHireDate" name="hire_date" type="date" readonly />
-          </div>
-          <div class="form-field">
-            <label for="empDepartment">部门</label>
-            <input id="empDepartment" name="department_name" type="text" readonly />
-          </div>
-          <div class="form-field">
-            <label for="empPosition">职位</label>
-            <input id="empPosition" name="position_name" type="text" readonly />
-          </div>
-          <div class="form-field full">
-            <label for="empAddress">地址</label>
-            <textarea id="empAddress" name="address"></textarea>
-          </div>
-          <div class="form-field">
-            <label for="empEmergencyName">紧急联系人姓名</label>
-            <input id="empEmergencyName" name="emergency_contact_name" type="text" />
-          </div>
-          <div class="form-field">
-            <label for="empEmergencyPhone">紧急联系人电话</label>
-            <input id="empEmergencyPhone" name="emergency_contact_phone" type="text" />
-          </div>
-          <div class="form-field">
-            <label for="empEmergencyRelation">紧急联系人关系</label>
-            <input id="empEmergencyRelation" name="emergency_contact_relationship" type="text" />
-          </div>
-        </div>
-        <div class="form-actions">
-          <button class="c-btn c-btn-primary" type="submit">保存信息</button>
-        </div>
-      </form>
-    </section>
+    <div class="content-grid content-spaced content-spaced-compact">
+        <section class="c-card">
+            <h3 class="section-title c-panel-title">修改员工信息</h3>
+            <form id="employeeForm" autocomplete="off">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="empName">姓名</label>
+                        <input id="empName" name="name" type="text" required/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empGender">性别</label>
+                        <select id="empGender" name="gender">
+                            <option value="">未设置</option>
+                            <option value="1">男</option>
+                            <option value="2">女</option>
+                            <option value="0">未知</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="empBirthday">生日</label>
+                        <input id="empBirthday" name="birthday" type="date"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empPhone">手机</label>
+                        <input id="empPhone" name="phone" type="text"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empEmail">邮箱</label>
+                        <input id="empEmail" name="email" type="email"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empHireDate">入职日期</label>
+                        <input id="empHireDate" name="hire_date" type="date" readonly/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empDepartment">部门</label>
+                        <input id="empDepartment" name="department_name" type="text" readonly/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empPosition">职位</label>
+                        <input id="empPosition" name="position_name" type="text" readonly/>
+                    </div>
+                    <div class="form-field full">
+                        <label for="empAddress">地址</label>
+                        <textarea id="empAddress" name="address"></textarea>
+                    </div>
+                    <div class="form-field">
+                        <label for="empEmergencyName">紧急联系人姓名</label>
+                        <input id="empEmergencyName" name="emergency_contact_name" type="text"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empEmergencyPhone">紧急联系人电话</label>
+                        <input id="empEmergencyPhone" name="emergency_contact_phone" type="text"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empEmergencyRelation">紧急联系人关系</label>
+                        <input id="empEmergencyRelation" name="emergency_contact_relationship" type="text"/>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="c-btn c-btn-primary" type="submit">保存信息</button>
+                </div>
+            </form>
+        </section>
 
-    <section class="c-card">
-      <h3 class="section-title c-panel-title">修改密码</h3>
-      <form id="passwordForm" autocomplete="off">
-        <div class="form-grid form-grid-single">
-          <div class="form-field">
-            <label for="oldPassword">当前密码</label>
-            <input id="oldPassword" type="password" required />
-          </div>
-          <div class="form-field">
-            <label for="newPassword">新密码</label>
-            <input id="newPassword" type="password" required />
-          </div>
-          <div class="form-field">
-            <label for="confirmPassword">确认新密码</label>
-            <input id="confirmPassword" type="password" required />
-          </div>
-        </div>
-        <div class="hint">密码修改后需要重新登录。</div>
-        <div class="form-actions">
-          <button class="c-btn c-btn-primary" type="submit">更新密码</button>
-        </div>
-      </form>
-    </section>
-  </div>
+        <section class="c-card">
+            <h3 class="section-title c-panel-title">修改密码</h3>
+            <form id="passwordForm" autocomplete="off">
+                <div class="form-grid form-grid-single">
+                    <div class="form-field">
+                        <label for="oldPassword">当前密码</label>
+                        <input id="oldPassword" type="password" required/>
+                    </div>
+                    <div class="form-field">
+                        <label for="newPassword">新密码</label>
+                        <input id="newPassword" type="password" required/>
+                    </div>
+                    <div class="form-field">
+                        <label for="confirmPassword">确认新密码</label>
+                        <input id="confirmPassword" type="password" required/>
+                    </div>
+                </div>
+                <div class="hint">密码修改后需要重新登录。</div>
+                <div class="form-actions">
+                    <button class="c-btn c-btn-primary" type="submit">更新密码</button>
+                </div>
+            </form>
+        </section>
+    </div>
 </div>
 
 <script src="common.js"></script>
 <script>
-  const API_BASE = "";
-  const employeeId = "{{ request.session.employee_id }}";
+    const API_BASE = "";
+    const employeeId = "{{ request.session.employee_id }}";
 
-  const employeeForm = document.getElementById("employeeForm");
-  const passwordForm = document.getElementById("passwordForm");
-  const logoutBtn = document.getElementById("logoutBtn");
+    const employeeForm = document.getElementById("employeeForm");
+    const passwordForm = document.getElementById("passwordForm");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-  function setReadOnlyWhenFilled(fieldId, value) {
-    const field = document.getElementById(fieldId);
-    if (!field) return;
-    const hasValue = value !== null && value !== undefined && String(value).trim() !== "";
-    if (hasValue) {
-      field.setAttribute("readonly", "readonly");
-    } else {
-      field.removeAttribute("readonly");
+    function setReadOnlyWhenFilled(fieldId, value) {
+        const field = document.getElementById(fieldId);
+        if (!field) return;
+        const hasValue = value !== null && value !== undefined && String(value).trim() !== "";
+        if (hasValue) {
+            field.setAttribute("readonly", "readonly");
+        } else {
+            field.removeAttribute("readonly");
+        }
     }
-  }
 
-  function setDisabled(disabled) {
-    employeeForm.querySelectorAll("input, textarea, select, button").forEach((el) => {
-      el.disabled = disabled;
+    function setDisabled(disabled) {
+        employeeForm.querySelectorAll("input, textarea, select, button").forEach((el) => {
+            el.disabled = disabled;
+        });
+        passwordForm.querySelectorAll("input, button").forEach((el) => {
+            el.disabled = disabled;
+        });
+        logoutBtn.disabled = disabled;
+    }
+
+    async function loadEmployee() {
+        if (!employeeId) {
+            showStatus("未登录，无法加载个人信息。", "error");
+            setDisabled(true);
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+                credentials: "include",
+            });
+            const data = await res.json();
+            const payload = normalizeApiResponse(data);
+            if (!res.ok || !payload.success) throw new Error(payload.message || "加载失败");
+            const result = payload.data || {};
+            const item = result.item || {};
+            document.getElementById("empName").value = item.name || "";
+            document.getElementById("empGender").value = item.gender ?? "";
+            document.getElementById("empBirthday").value = item.birthday || "";
+            document.getElementById("empPhone").value = item.phone || "";
+            document.getElementById("empEmail").value = item.email || "";
+            document.getElementById("empHireDate").value = item.hire_date || "";
+            document.getElementById("empDepartment").value = item.department || item.department_name || "";
+            document.getElementById("empPosition").value = item.position || item.position_name || "";
+            document.getElementById("empAddress").value = item.address || "";
+            document.getElementById("empEmergencyName").value = item.emergency_contact_name || "";
+            document.getElementById("empEmergencyPhone").value = item.emergency_contact_phone || "";
+            document.getElementById("empEmergencyRelation").value = item.emergency_contact_relationship || "";
+
+            setReadOnlyWhenFilled("empPhone", item.phone);
+            setReadOnlyWhenFilled("empEmail", item.email);
+            setReadOnlyWhenFilled("empAddress", item.address);
+            setReadOnlyWhenFilled("empEmergencyName", item.emergency_contact_name);
+            setReadOnlyWhenFilled("empEmergencyPhone", item.emergency_contact_phone);
+            setReadOnlyWhenFilled("empEmergencyRelation", item.emergency_contact_relationship);
+
+            document.getElementById("profileName").textContent = item.name || "";
+            document.getElementById("profileDepartment").textContent = item.department_name || item.department || "";
+            document.getElementById("profilePosition").textContent = item.position || item.position_name || "";
+        } catch (err) {
+            showStatus(err.message || "加载失败", "error");
+        }
+    }
+
+    employeeForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!employeeId) return;
+        try {
+            const genderRaw = document.getElementById("empGender").value;
+            const payload = {
+                name: document.getElementById("empName").value.trim(),
+                gender: genderRaw === "" ? null : Number(genderRaw),
+                birthday: document.getElementById("empBirthday").value || "",
+                phone: document.getElementById("empPhone").value.trim(),
+                email: document.getElementById("empEmail").value.trim(),
+                address: document.getElementById("empAddress").value.trim(),
+                emergency_contact_name: document.getElementById("empEmergencyName").value.trim(),
+                emergency_contact_phone: document.getElementById("empEmergencyPhone").value.trim(),
+                emergency_contact_relationship: document.getElementById("empEmergencyRelation").value.trim(),
+            };
+            const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify(payload),
+            });
+            const data = await res.json();
+            const responsePayload = normalizeApiResponse(data);
+            if (!res.ok || !responsePayload.success) {
+                throw new Error(responsePayload.message || "保存失败");
+            }
+            showStatus("员工信息已更新。", "success");
+            alert("员工信息已更新。");
+            const result = responsePayload.data || {};
+            if (result.item) {
+                const item = result.item;
+                document.getElementById("profileName").textContent = item.name || "";
+                document.getElementById("profileDepartment").textContent = item.department_name || "";
+                setReadOnlyWhenFilled("empPhone", item.phone);
+                setReadOnlyWhenFilled("empEmail", item.email);
+                setReadOnlyWhenFilled("empAddress", item.address);
+                setReadOnlyWhenFilled("empEmergencyName", item.emergency_contact_name);
+                setReadOnlyWhenFilled("empEmergencyPhone", item.emergency_contact_phone);
+                setReadOnlyWhenFilled("empEmergencyRelation", item.emergency_contact_relationship);
+            } else {
+                setReadOnlyWhenFilled("empPhone", payload.phone);
+                setReadOnlyWhenFilled("empEmail", payload.email);
+                setReadOnlyWhenFilled("empAddress", payload.address);
+                setReadOnlyWhenFilled("empEmergencyName", payload.emergency_contact_name);
+                setReadOnlyWhenFilled("empEmergencyPhone", payload.emergency_contact_phone);
+                setReadOnlyWhenFilled("empEmergencyRelation", payload.emergency_contact_relationship);
+            }
+        } catch (err) {
+            const message = err.message || "保存失败";
+            showStatus(message, "error");
+            alert(message);
+        }
     });
-    passwordForm.querySelectorAll("input, button").forEach((el) => {
-      el.disabled = disabled;
+
+    passwordForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const oldPassword = document.getElementById("oldPassword").value;
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+
+        if (!oldPassword || !newPassword) {
+            showStatus("请输入完整的密码信息。", "error");
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            showStatus("两次输入的新密码不一致。", "error");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/change-password`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                credentials: "include",
+                body: JSON.stringify({
+                    old_password: oldPassword,
+                    new_password: newPassword,
+                }),
+            });
+            const data = await res.json();
+            const responsePayload = normalizeApiResponse(data);
+            if (!res.ok || !responsePayload.success) {
+                throw new Error(responsePayload.message || "修改失败");
+            }
+            showStatus("密码已更新，请重新登录。", "success");
+            alert("密码已更新，请重新登录。");
+            passwordForm.reset();
+        } catch (err) {
+            const message = err.message || "修改失败";
+            showStatus(message, "error");
+            alert(message);
+        }
     });
-    logoutBtn.disabled = disabled;
-  }
 
-  async function loadEmployee() {
-    if (!employeeId) {
-      showStatus("未登录，无法加载个人信息。", "error");
-      setDisabled(true);
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      const payload = normalizeApiResponse(data);
-      if (!res.ok || !payload.success) throw new Error(payload.message || "加载失败");
-      const result = payload.data || {};
-      const item = result.item || {};
-      document.getElementById("empName").value = item.name || "";
-      document.getElementById("empGender").value = item.gender ?? "";
-      document.getElementById("empBirthday").value = item.birthday || "";
-      document.getElementById("empPhone").value = item.phone || "";
-      document.getElementById("empEmail").value = item.email || "";
-      document.getElementById("empHireDate").value = item.hire_date || "";
-      document.getElementById("empDepartment").value = item.department || item.department_name || "";
-      document.getElementById("empPosition").value = item.position || item.position_name || "";
-      document.getElementById("empAddress").value = item.address || "";
-      document.getElementById("empEmergencyName").value = item.emergency_contact_name || "";
-      document.getElementById("empEmergencyPhone").value = item.emergency_contact_phone || "";
-      document.getElementById("empEmergencyRelation").value = item.emergency_contact_relationship || "";
+    logoutBtn.addEventListener("click", async () => {
+        try {
+            const res = await fetch(`${API_BASE}/api/logout`, {
+                method: "POST",
+                credentials: "include",
+            });
+            const data = await res.json();
+            const responsePayload = normalizeApiResponse(data);
+            if (!res.ok || !responsePayload.success) {
+                throw new Error(responsePayload.message || "退出失败");
+            }
+            const target = "login.html".replace(/^\//, "");
+            const nextUrl = new URL(target, window.location.href).toString();
+            if (window.top && window.top !== window) {
+                window.top.location.href = nextUrl;
+            } else {
+                window.location.href = nextUrl;
+            }
+        } catch (err) {
+            showStatus("退出失败，请重试。", "error");
+        }
+    });
 
-      setReadOnlyWhenFilled("empPhone", item.phone);
-      setReadOnlyWhenFilled("empEmail", item.email);
-      setReadOnlyWhenFilled("empAddress", item.address);
-      setReadOnlyWhenFilled("empEmergencyName", item.emergency_contact_name);
-      setReadOnlyWhenFilled("empEmergencyPhone", item.emergency_contact_phone);
-      setReadOnlyWhenFilled("empEmergencyRelation", item.emergency_contact_relationship);
-
-      document.getElementById("profileName").textContent = item.name || "";
-      document.getElementById("profileDepartment").textContent = item.department_name || item.department || "";
-      document.getElementById("profilePosition").textContent = item.position || item.position_name || "";
-    } catch (err) {
-      showStatus(err.message || "加载失败", "error");
-    }
-  }
-
-  employeeForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (!employeeId) return;
-    try {
-      const genderRaw = document.getElementById("empGender").value;
-      const payload = {
-        name: document.getElementById("empName").value.trim(),
-        gender: genderRaw === "" ? null : Number(genderRaw),
-        birthday: document.getElementById("empBirthday").value || "",
-        phone: document.getElementById("empPhone").value.trim(),
-        email: document.getElementById("empEmail").value.trim(),
-        address: document.getElementById("empAddress").value.trim(),
-        emergency_contact_name: document.getElementById("empEmergencyName").value.trim(),
-        emergency_contact_phone: document.getElementById("empEmergencyPhone").value.trim(),
-        emergency_contact_relationship: document.getElementById("empEmergencyRelation").value.trim(),
-      };
-      const res = await fetch(`${API_BASE}/api/employees/${employeeId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      const responsePayload = normalizeApiResponse(data);
-      if (!res.ok || !responsePayload.success) {
-        throw new Error(responsePayload.message || "保存失败");
-      }
-      showStatus("员工信息已更新。", "success");
-      alert("员工信息已更新。");
-      const result = responsePayload.data || {};
-      if (result.item) {
-        const item = result.item;
-        document.getElementById("profileName").textContent = item.name || "";
-        document.getElementById("profileDepartment").textContent = item.department_name || "";
-        setReadOnlyWhenFilled("empPhone", item.phone);
-        setReadOnlyWhenFilled("empEmail", item.email);
-        setReadOnlyWhenFilled("empAddress", item.address);
-        setReadOnlyWhenFilled("empEmergencyName", item.emergency_contact_name);
-        setReadOnlyWhenFilled("empEmergencyPhone", item.emergency_contact_phone);
-        setReadOnlyWhenFilled("empEmergencyRelation", item.emergency_contact_relationship);
-      } else {
-        setReadOnlyWhenFilled("empPhone", payload.phone);
-        setReadOnlyWhenFilled("empEmail", payload.email);
-        setReadOnlyWhenFilled("empAddress", payload.address);
-        setReadOnlyWhenFilled("empEmergencyName", payload.emergency_contact_name);
-        setReadOnlyWhenFilled("empEmergencyPhone", payload.emergency_contact_phone);
-        setReadOnlyWhenFilled("empEmergencyRelation", payload.emergency_contact_relationship);
-      }
-    } catch (err) {
-      const message = err.message || "保存失败";
-      showStatus(message, "error");
-      alert(message);
-    }
-  });
-
-  passwordForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const oldPassword = document.getElementById("oldPassword").value;
-    const newPassword = document.getElementById("newPassword").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
-
-    if (!oldPassword || !newPassword) {
-      showStatus("请输入完整的密码信息。", "error");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      showStatus("两次输入的新密码不一致。", "error");
-      return;
-    }
-
-    try {
-      const res = await fetch(`${API_BASE}/api/change-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          old_password: oldPassword,
-          new_password: newPassword,
-        }),
-      });
-      const data = await res.json();
-      const responsePayload = normalizeApiResponse(data);
-      if (!res.ok || !responsePayload.success) {
-        throw new Error(responsePayload.message || "修改失败");
-      }
-      showStatus("密码已更新，请重新登录。", "success");
-      alert("密码已更新，请重新登录。");
-      passwordForm.reset();
-    } catch (err) {
-      const message = err.message || "修改失败";
-      showStatus(message, "error");
-      alert(message);
-    }
-  });
-
-  logoutBtn.addEventListener("click", async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-      const data = await res.json();
-      const payload = normalizeApiResponse(data);
-      const result = payload.data || {};
-      const target = (result.redirect || "login.html").replace(/^\//, "");
-      const nextUrl = new URL(target, window.location.href).toString();
-      if (window.top && window.top !== window) {
-        window.top.location.href = nextUrl;
-      } else {
-        window.location.href = nextUrl;
-      }
-    } catch (err) {
-      showStatus("退出失败，请重试。", "error");
-    }
-  });
-
-  loadEmployee();
+    loadEmployee();
 </script>
 </body>
 </html>

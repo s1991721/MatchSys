@@ -1,4 +1,4 @@
-import json
+
 from datetime import datetime
 
 import mimetypes
@@ -14,13 +14,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from project.api import api_error, api_success
+from project.common_tools import parse_json_body
 from .models import Employee, Technician, UserLogin
 
 
 @csrf_exempt
 @require_POST
 def login_api(request):
-    payload, error = _parse_json_body(request)
+    payload, error = parse_json_body(request)
     if error:
         return error
 
@@ -54,6 +55,11 @@ def login_api(request):
 
     return api_success()
 
+@csrf_exempt
+@require_POST
+def logout_api(request):
+    request.session.flush()
+    return api_success()
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
@@ -79,7 +85,7 @@ def employee_detail_api(request, employee_id):
             return api_success()
         return api_error(status=400, message="请先登录")
 
-    payload, error = _parse_json_body(request)
+    payload, error = parse_json_body(request)
     if error:
         return error
 
@@ -152,15 +158,6 @@ def employee_detail_api(request, employee_id):
     item = _serialize_employee(employee)
     return api_success(data={"item": item})
 
-
-@csrf_exempt
-@require_POST
-def logout_api(request):
-    request.session.flush()
-    payload = {"redirect": "login.html"}
-    return api_success(data=payload)
-
-
 @csrf_exempt
 @require_POST
 def change_password_api(request):
@@ -171,7 +168,7 @@ def change_password_api(request):
             status=401,
         )
 
-    payload, error = _parse_json_body(request)
+    payload, error = parse_json_body(request)
     if error:
         return error
 
@@ -207,18 +204,10 @@ def change_password_api(request):
     user_login.password = new_password
     user_login.save(update_fields=["password", "updated_at"])
 
-    return api_success(data=None)
+    return api_success()
 
 
-def _parse_json_body(request):
-    try:
-        raw = request.body.decode("utf-8") if request.body else "{}"
-        return json.loads(raw or "{}"), None
-    except json.JSONDecodeError:
-        return None, api_error(
-            "Invalid JSON body",
-            status=400,
-        )
+
 
 
 def _parse_date(value, field):
@@ -376,7 +365,7 @@ def _ss_storage_dir():
 @require_http_methods(["GET", "POST"])
 def employees_api(request):
     if request.method == "POST":
-        payload, error = _parse_json_body(request)
+        payload, error = parse_json_body(request)
         if error:
             return error
 
@@ -500,7 +489,7 @@ def employees_api(request):
 @require_http_methods(["GET", "POST"])
 def technicians_api(request):
     if request.method == "POST":
-        payload, error = _parse_json_body(request)
+        payload, error = parse_json_body(request)
         if error:
             return error
 
@@ -635,7 +624,7 @@ def technician_detail_api(request, employee_id):
         tech.delete()
         return api_success(data=None)
 
-    payload, error = _parse_json_body(request)
+    payload, error = parse_json_body(request)
     if error:
         return error
 

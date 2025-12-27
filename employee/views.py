@@ -260,16 +260,6 @@ def _normalize_status(value):
 
 
 def _serialize_employee(emp):
-    if emp.status == 1:
-        status_key = "active"
-        status_label = "在岗"
-    elif emp.status == 0:
-        status_key = "leave"
-        status_label = "离职"
-    else:
-        status_key = "disabled"
-        status_label = "停用"
-
     return {
         "id": emp.id,
         "name": emp.name,
@@ -285,8 +275,6 @@ def _serialize_employee(emp):
         "emergency_contact_relationship": emp.emergency_contact_relationship or "",
         "hire_date": emp.hire_date.isoformat() if emp.hire_date else "",
         "leave_date": emp.leave_date.isoformat() if emp.leave_date else "",
-        "status": status_key,
-        "status_label": status_label,
     }
 
 
@@ -434,7 +422,6 @@ def employees_api(request):
 
     keyword = (request.GET.get("keyword") or "").strip()
     department = (request.GET.get("department") or "").strip()
-    status = (request.GET.get("status") or "").strip()
 
     qs = Employee.objects.filter(deleted_at__isnull=True)
 
@@ -450,14 +437,6 @@ def employees_api(request):
     if department and department != "all":
         qs = qs.filter(department_name=department)
 
-    status_map = {
-        "active": 1,
-        "leave": 0,
-        "disabled": 2,
-    }
-    if status and status in status_map:
-        qs = qs.filter(status=status_map[status])
-
     items = [_serialize_employee(emp) for emp in qs.order_by("id")]
 
     departments = (
@@ -470,17 +449,10 @@ def employees_api(request):
     )
     dept_list = list(departments)
 
-    stats = {
-        "total": len(items),
-        "active": sum(1 for item in items if item["status"] == "active"),
-        "leave": sum(1 for item in items if item["status"] == "leave"),
-        "disabled": sum(1 for item in items if item["status"] == "disabled"),
-    }
 
     payload = {
         "items": items,
         "departments": dept_list,
-        "stats": stats,
     }
     return api_success(data=payload)
 

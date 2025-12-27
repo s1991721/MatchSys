@@ -82,7 +82,7 @@
             if (!res.ok || !payload.success) {
                 throw new Error(payload.message || "登录失败");
             }
-            const target = (payload.data?.redirect || "index.html").replace(/^\//, "");
+            const target = "index.html".replace(/^\//, "");
             window.location.href = new URL(target, window.location.href).toString();
         } catch (err) {
             errorBox.textContent = err.message || "登录失败";

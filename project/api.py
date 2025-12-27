@@ -17,7 +17,7 @@ def _resolve_error_code(status, code=None):
     return ERROR_CODE_MAP.get(status, "ERR_UNKNOWN")
 
 
-def api_success(data=None, message="", code="OK", meta=None, legacy=None, status=200):
+def api_success(data=None, message="", code="OK", meta=None, status=200):
     payload = {
         "success": True,
         "code": code,
@@ -28,7 +28,7 @@ def api_success(data=None, message="", code="OK", meta=None, legacy=None, status
     return JsonResponse(payload, status=status)
 
 
-def api_error(message, status=400, code=None, meta=None, legacy=None):
+def api_error(message, status=400, code=None, meta=None):
     payload = {
         "success": False,
         "code": _resolve_error_code(status, code),
@@ -40,15 +40,14 @@ def api_error(message, status=400, code=None, meta=None, legacy=None):
 
 
 def api_paginated(
-    items,
-    page,
-    page_size,
-    total,
-    total_pages,
-    message="",
-    code="OK",
-    legacy=None,
-    status=200,
+        items,
+        page,
+        page_size,
+        total,
+        total_pages,
+        message="",
+        code="OK",
+        status=200,
 ):
     meta = {
         "page": page,

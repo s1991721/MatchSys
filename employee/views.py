@@ -20,64 +20,37 @@ from .models import Employee, Technician, UserLogin
 @csrf_exempt
 @require_POST
 def login_api(request):
-    user_name = ""
-    password = ""
+    payload = json.loads(request.body.decode("utf-8") or "{}")
 
-    if request.content_type and "application/json" in request.content_type:
-        try:
-            payload = json.loads(request.body.decode("utf-8") or "{}")
-        except json.JSONDecodeError:
-            return api_error(
-                "Invalid JSON body",
-                status=400,
-                legacy={"error": "Invalid JSON body"},
-            )
-        user_name = (payload.get("user_name") or "").strip()
-        password = payload.get("password") or ""
-    else:
-        user_name = (request.POST.get("user_name") or "").strip()
-        password = request.POST.get("password") or ""
+    user_name = (payload.get("user_name") or "").strip()
+    password = payload.get("password") or ""
 
     if not user_name or not password:
         return api_error(
             "Missing user_name or password",
             status=400,
-            legacy={"error": "Missing user_name or password"},
         )
 
     user_login = (
-        UserLogin.objects.select_related("employee")
-        .filter(
+        UserLogin.objects.filter(
             user_name=user_name,
-            deleted_at__isnull=True,
-            employee__deleted_at__isnull=True,
-            employee__status=1,
+            password=password,
+            deleted_at__isnull=True
         )
         .first()
     )
 
-    if not user_login or user_login.password != password:
+    if not user_login:
         return api_error(
             "Invalid credentials",
             status=401,
-            legacy={"error": "Invalid credentials"},
         )
 
     request.session.cycle_key()
     request.session["employee_id"] = user_login.employee_id
-    request.session["employee_name"] = user_login.employee.name
-    request.session["employee_department_name"] = user_login.employee.department_name
-    request.session["employee_position_name"] = user_login.employee.position_name
-    request.session["user_name"] = user_login.user_name
+    request.session["employee_name"] = user_login.employee_name
 
-    payload = {
-        "employee": {
-            "id": user_login.employee_id,
-            "name": user_login.employee.name,
-        },
-        "redirect": "index.html",
-    }
-    return api_success(data=payload, legacy={"status": "ok", **payload})
+    return api_success()
 
 
 @csrf_exempt
@@ -367,13 +340,13 @@ def employees_api(request):
                 emergency_contact_name=(payload.get("emergency_contact_name") or "").strip() or None,
                 emergency_contact_phone=(payload.get("emergency_contact_phone") or "").strip() or None,
                 emergency_contact_relationship=(payload.get("emergency_contact_relationship") or "").strip()
-                or None,
+                                               or None,
                 hire_date=hire_date,
                 leave_date=leave_date,
                 department_name=(payload.get("department") or payload.get("department_name") or "").strip()
-                or None,
+                                or None,
                 position_name=(payload.get("position") or payload.get("position_name") or "").strip()
-                or None,
+                              or None,
                 status=status,
             )
             UserLogin.objects.create(
@@ -765,12 +738,12 @@ def employee_detail_api(request, employee_id):
         employee.address = (payload.get("address") or "").strip() or None
     if "department" in payload or "department_name" in payload:
         employee.department_name = (
-            payload.get("department") or payload.get("department_name") or ""
-        ).strip() or None
+                                           payload.get("department") or payload.get("department_name") or ""
+                                   ).strip() or None
     if "position" in payload or "position_name" in payload:
         employee.position_name = (
-            payload.get("position") or payload.get("position_name") or ""
-        ).strip() or None
+                                         payload.get("position") or payload.get("position_name") or ""
+                                 ).strip() or None
     if "status" in payload:
         status = _normalize_status(payload.get("status"))
         if status is None:
@@ -798,16 +771,16 @@ def employee_detail_api(request, employee_id):
         employee.birthday = value
     if "emergency_contact_name" in payload:
         employee.emergency_contact_name = (
-            payload.get("emergency_contact_name") or ""
-        ).strip() or None
+                                                  payload.get("emergency_contact_name") or ""
+                                          ).strip() or None
     if "emergency_contact_phone" in payload:
         employee.emergency_contact_phone = (
-            payload.get("emergency_contact_phone") or ""
-        ).strip() or None
+                                                   payload.get("emergency_contact_phone") or ""
+                                           ).strip() or None
     if "emergency_contact_relationship" in payload:
         employee.emergency_contact_relationship = (
-            payload.get("emergency_contact_relationship") or ""
-        ).strip() or None
+                                                          payload.get("emergency_contact_relationship") or ""
+                                                  ).strip() or None
 
     if not employee.name:
         return api_error(

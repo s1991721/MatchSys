@@ -1,43 +1,32 @@
 from django.db import models
 
-# Create your models here.
+
+# 登录实体
 class UserLogin(models.Model):
-    employee = models.OneToOneField(
-        'Employee',
-        on_delete=models.CASCADE,
+    employee_id = models.BigIntegerField(
         primary_key=True,
-        db_column='employee_id',
-        related_name='user_login'
+        unique=True,
+        verbose_name="员工ID"
     )
 
-    user_name = models.CharField(max_length=100, unique=True)
-    password = models.CharField(max_length=255)
+    employee_name = models.CharField(max_length=100, verbose_name="员工姓名")
+    user_name = models.CharField(max_length=100, unique=True, verbose_name="登录账号")
+    password = models.CharField(max_length=255, verbose_name="密码")
 
-    created_by = models.ForeignKey(
-        'Employee',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='created_user_logins',
-        db_column='created_by'
-    )
+    created_by = models.CharField(max_length=100)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_by = models.ForeignKey(
-        'Employee',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='updated_user_logins',
-        db_column='updated_by'
-    )
+    updated_by = models.CharField(max_length=100)
 
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        managed = False
         db_table = 'user_login'
+        verbose_name = "登录表"
+
 
 class Employee(models.Model):
     # 基本信息

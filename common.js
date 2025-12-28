@@ -11,6 +11,7 @@
       window.location.href = "/login.html";
       throw new Error("Unauthorized");
     }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res;
   };
 

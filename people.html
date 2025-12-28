@@ -289,11 +289,6 @@
         return age;
     };
 
-    const parseRemark = (remark) => {
-        if (!remark) return '';
-        return String(remark).trim();
-    };
-
     const buildPageItems = (totalPageCount, activePage) => {
         if (totalPageCount <= 7) {
             return Array.from({ length: totalPageCount }, (_, i) => i + 1);
@@ -490,7 +485,6 @@
     const fetchPeople = async () => {
         try {
             const res = await fetchWithAuth('/api/technicians', { method: 'GET' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!payload.success) {
@@ -500,7 +494,6 @@
             const items = Array.isArray(result.items) ? result.items : [];
             people = items.map(item => {
                 const remarkText = item.remark ? String(item.remark) : '';
-                const noteText = parseRemark(remarkText);
                 return {
                     id: item.employee_id,
                     name: item.name || '',
@@ -512,7 +505,7 @@
                     contract: contractTypeToLabel(item.contract_type),
                     siteContract: siteDeadlineToLabel(item.spot_contract_deadline),
                     intro: item.introduction || '',
-                    note: noteText || '',
+                    note: remarkText || '',
                     ssPath: item.ss || '',
                     ssUrl: item.ss_url || ''
                 };

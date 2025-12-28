@@ -299,8 +299,12 @@ def _ss_storage_dir():
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
+# 获取员工列表
 def employees_api(request):
     if request.method == "POST":
+        login_id = request.session.get("employee_id")
+        if not login_id:
+           return api_error(status=401,message="employee id is required")
         payload, error = parse_json_body(request)
         if error:
             return error
@@ -342,20 +346,19 @@ def employees_api(request):
                 address=(payload.get("address") or "").strip() or None,
                 emergency_contact_name=(payload.get("emergency_contact_name") or "").strip() or None,
                 emergency_contact_phone=(payload.get("emergency_contact_phone") or "").strip() or None,
-                emergency_contact_relationship=(payload.get("emergency_contact_relationship") or "").strip()
-                                               or None,
+                emergency_contact_relationship=(payload.get("emergency_contact_relationship") or "").strip() or None,
                 hire_date=hire_date,
                 leave_date=leave_date,
-                department_name=(payload.get("department") or payload.get("department_name") or "").strip()
-                                or None,
-                position_name=(payload.get("position") or payload.get("position_name") or "").strip()
-                              or None,
-                status=status,
+                department_name=(payload.get("department_name") or "").strip() or None,
+                position_name=(payload.get("position_name") or "").strip() or None,
+                created_by=login_id
             )
             UserLogin.objects.create(
-                employee=employee,
+                employee_id=employee.id,
+                employee_name=employee.name,
                 user_name=email,
                 password="123456",
+                created_by=login_id
             )
 
         item = _serialize_employee(employee)
@@ -391,25 +394,22 @@ def employees_api(request):
         if department and department != "all":
             qs = qs.filter(department_name=department)
 
-    total = qs.count()
-    total_pages = (total + page_size - 1) // page_size if page_size else 1
-    if total_pages < 1:
-        total_pages = 1
-    if page > total_pages:
-        page = total_pages
-    offset = (page - 1) * page_size
-    items = [_serialize_employee(emp) for emp in qs.order_by("id")[offset:offset + page_size]]
+        total = qs.count()
+        total_pages = (total + page_size - 1) // page_size if page_size else 1
+        if total_pages < 1:
+            total_pages = 1
+        if page > total_pages:
+            page = total_pages
+        offset = (page - 1) * page_size
+        items = [_serialize_employee(emp) for emp in qs.order_by("id")[offset:offset + page_size]]
 
-    return api_paginated(
-        items=items,
-        page=page,
-        page_size=page_size,
-        total=total,
-        total_pages=total_pages
-    )
-
-
-
+        return api_paginated(
+            items=items,
+            page=page,
+            page_size=page_size,
+            total=total,
+            total_pages=total_pages
+        )
 
 
 @csrf_exempt

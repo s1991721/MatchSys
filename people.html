@@ -186,19 +186,6 @@
 
 <script src="common.js"></script>
 <script>
-    const API_BASE = '';
-    const TECH_ENDPOINT = `${API_BASE}/api/technicians`;
-    const EMPLOYEE_ENDPOINT = `${API_BASE}/api/employees`;
-    const SS_UPLOAD_ENDPOINT = (employeeId) => `${API_BASE}/api/technicians/${employeeId}/ss`;
-    const fetchWithAuth = async (url, options = {}) => {
-        const res = await fetch(url, options);
-        if (res.status === 401) {
-            window.location.href = '/login.html';
-            throw new Error('Unauthorized');
-        }
-        return res;
-    };
-
     const personForm = document.getElementById('personForm');
     const submitBtn = document.getElementById('submitBtn');
     const peopleTableBody = document.querySelector('#peopleTable tbody');
@@ -217,7 +204,6 @@
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const filterResetBtn = document.getElementById('filterResetBtn');
     const ssFileInput = personForm.querySelector('input[type="file"][name="ssFile"]');
-    let isFileDialogOpen = false;
     let forcedEmployeeId = '';
 
     const showDialogModal = () => {
@@ -503,7 +489,7 @@
 
     const fetchPeople = async () => {
         try {
-            const res = await fetchWithAuth(TECH_ENDPOINT, { credentials: 'include' });
+            const res = await fetchWithAuth('/api/technicians', { method: 'GET' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const payload = normalizeApiResponse(data);
@@ -557,7 +543,7 @@
     const prefillFromEmployee = async (employeeId) => {
         if (!employeeId) return;
         try {
-            const res = await fetchWithAuth(`${EMPLOYEE_ENDPOINT}/${employeeId}`, { credentials: 'include' });
+            const res = await fetchWithAuth(`/api/employees/${employeeId}`, { method: 'GET' });
             if (!res.ok) return;
             const data = await res.json();
             const payload = normalizeApiResponse(data);
@@ -575,11 +561,10 @@
 
     const savePerson = async (payload) => {
         const method = editingId ? 'PUT' : 'POST';
-        const url = editingId ? `${TECH_ENDPOINT}/${editingId}` : TECH_ENDPOINT;
+        const url = editingId ? `/api/technicians/${editingId}` : '/api/technicians';
         const res = await fetchWithAuth(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
             body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -593,9 +578,9 @@
     const uploadSsFile = async (employeeId, file) => {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetchWithAuth(SS_UPLOAD_ENDPOINT(employeeId), {
+        const res = await fetchWithAuth(`/api/technicians/${employeeId}/ss`, {
             method: 'POST',
-            credentials: 'include',
+            headers: {},
             body: formData
         });
         const data = await res.json();
@@ -703,19 +688,6 @@
         event.preventDefault();
         return;
     });
-    if (ssFileInput) {
-        ssFileInput.addEventListener('click', () => {
-            isFileDialogOpen = true;
-        });
-        ssFileInput.addEventListener('change', () => {
-            isFileDialogOpen = false;
-        });
-        window.addEventListener('focus', () => {
-            isFileDialogOpen = false;
-        });
-    }
-
-
     peopleTableBody.addEventListener('click', (event) => {
         const editId = event.target.getAttribute('data-edit');
         const deleteId = event.target.getAttribute('data-delete');
@@ -728,7 +700,7 @@
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);
             if (target && confirm(`确定删除 ${target.name} 吗？`)) {
-                fetchWithAuth(`${TECH_ENDPOINT}/${deleteId}`, { method: 'DELETE', credentials: 'include' })
+                fetchWithAuth(`/api/technicians/${deleteId}`, { method: 'DELETE' })
                     .then(res => res.json().then(data => ({ res, data })))
                     .then(({ res, data }) => {
                         const responsePayload = normalizeApiResponse(data);

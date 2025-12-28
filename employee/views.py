@@ -143,6 +143,7 @@ def employee_detail_api(request, employee_id):
 
 @csrf_exempt
 @require_POST
+# 修改密码
 def change_password_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
@@ -188,6 +189,22 @@ def change_password_api(request):
     user_login.save(update_fields=["password", "updated_at"])
 
     return api_success()
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+# 获取部门列表
+def employee_departments_api(request):
+    departments = (
+        Employee.objects.filter(deleted_at__isnull=True)
+        .exclude(department_name__isnull=True)
+        .exclude(department_name__exact="")
+        .values_list("department_name", flat=True)
+        .distinct()
+        .order_by("department_name")
+    )
+    dept_list = list(departments)
+    return api_success(data={"departments": dept_list})
 
 
 def _serialize_employee(emp):
@@ -291,26 +308,19 @@ def employees_api(request):
         name = (payload.get("name") or "").strip()
         if not name:
             return api_error(
-                "Missing field: name",
-                status=400,
+                "Missing field: name"
             )
 
         email = (payload.get("email") or "").strip()
         if not email:
             return api_error(
-                "Missing field: email",
-                status=400,
+                "Missing field: email"
             )
 
         if UserLogin.objects.filter(user_name=email, deleted_at__isnull=True).exists():
             return api_error(
-                "User login already exists",
-                status=400,
+                "User login already exists"
             )
-
-        status = _normalize_status(payload.get("status"))
-        if status is None:
-            status = 1
 
         hire_date, error = parse_date(payload.get("hire_date"))
         if error:
@@ -399,19 +409,7 @@ def employees_api(request):
     )
 
 
-@csrf_exempt
-@require_http_methods(["GET"])
-def employee_departments_api(request):
-    departments = (
-        Employee.objects.filter(deleted_at__isnull=True)
-        .exclude(department_name__isnull=True)
-        .exclude(department_name__exact="")
-        .values_list("department_name", flat=True)
-        .distinct()
-        .order_by("department_name")
-    )
-    dept_list = list(departments)
-    return api_success(data={"departments": dept_list})
+
 
 
 @csrf_exempt

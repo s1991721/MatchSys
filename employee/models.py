@@ -3,11 +3,7 @@ from django.db import models
 
 # 登录实体
 class UserLogin(models.Model):
-    employee_id = models.BigIntegerField(
-        primary_key=True,
-        unique=True,
-        verbose_name="员工ID"
-    )
+    employee_id = models.BigIntegerField(primary_key=True, unique=True, verbose_name="员工ID")
 
     employee_name = models.CharField(max_length=100, verbose_name="员工姓名")
     user_name = models.CharField(max_length=100, unique=True, verbose_name="登录账号")
@@ -94,6 +90,7 @@ class Employee(models.Model):
             "leave_date": emp.leave_date.isoformat() if emp.leave_date else "",
         }
 
+
 class Technician(models.Model):
     CONTRACT_TYPE_CHOICES = (
         (0, "正社员"),
@@ -107,88 +104,33 @@ class Technician(models.Model):
         (2, "现场已确定"),
     )
 
-    employee_id = models.BigIntegerField(
-        unique=True,
-        verbose_name="员工ID"
-    )
+    employee_id = models.BigIntegerField(unique=True, verbose_name="员工ID")
 
-    name = models.CharField(
-        max_length=100,
-        verbose_name="姓名"
-    )
+    name = models.CharField(max_length=100, verbose_name="姓名")
 
-    name_mask = models.CharField(
-        max_length=100,
-        verbose_name="姓名掩码"
-    )
+    name_mask = models.CharField(max_length=100, verbose_name="姓名掩码")
 
-    birthday = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="生日"
-    )
+    birthday = models.DateField(null=True, blank=True, verbose_name="生日")
 
-    nationality = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True,
-        verbose_name="国籍"
-    )
+    nationality = models.CharField(max_length=50, null=True, blank=True, verbose_name="国籍")
 
-    price = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
-        verbose_name="报价"
-    )
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="报价")
 
-    introduction = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="简介"
-    )
+    introduction = models.TextField(null=True, blank=True, verbose_name="简介")
 
-    contract_type = models.SmallIntegerField(
-        choices=CONTRACT_TYPE_CHOICES,
-        default=0,
-        verbose_name="合同类型"
-    )
+    contract_type = models.SmallIntegerField(choices=CONTRACT_TYPE_CHOICES, default=0, verbose_name="合同类型")
 
-    spot_contract_deadline = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="现场合同截止日"
-    )
+    spot_contract_deadline = models.DateField(null=True, blank=True, verbose_name="现场合同截止日")
 
-    business_status = models.SmallIntegerField(
-        choices=BUSINESS_STATUS_CHOICES,
-        default=0,
-        verbose_name="业务状态"
-    )
+    business_status = models.SmallIntegerField(choices=BUSINESS_STATUS_CHOICES, default=0, verbose_name="业务状态")
 
-    ss = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        verbose_name="SS文件路径"
-    )
+    ss = models.CharField(max_length=255, null=True, blank=True, verbose_name="SS文件路径")
 
-    remark = models.TextField(
-        null=True,
-        blank=True,
-        verbose_name="备注"
-    )
+    remark = models.TextField(null=True, blank=True, verbose_name="备注")
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="创建时间"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
 
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="更新时间"
-    )
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
 
     class Meta:
         managed = False

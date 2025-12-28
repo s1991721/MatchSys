@@ -1,6 +1,6 @@
 import mimetypes
 import os
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_date, parse_json_body
+from project.common_tools import parse_date, parse_json_body,years_ago
 from .models import Employee, Technician, UserLogin
 
 
@@ -74,7 +74,7 @@ def employee_detail_api(request, employee_id):
         )
 
     if request.method == "GET":
-        item = _serialize_employee(employee)
+        item = Employee.serialize(employee)
         return api_success(data={"item": item})
 
     if request.method == "DELETE":
@@ -137,7 +137,7 @@ def employee_detail_api(request, employee_id):
         request.session["employee_name"] = employee.name
         request.session["employee_department_name"] = employee.department_name
         request.session["employee_position_name"] = employee.position_name
-    item = _serialize_employee(employee)
+    item = Employee.serialize(employee)
     return api_success(data=item)
 
 
@@ -207,92 +207,6 @@ def employee_departments_api(request):
     return api_success(data={"departments": dept_list})
 
 
-def _serialize_employee(emp):
-    return {
-        "id": emp.id,
-        "name": emp.name,
-        "gender": emp.gender,
-        "birthday": emp.birthday.isoformat() if emp.birthday else "",
-        "department_name": emp.department_name or "",
-        "position_name": emp.position_name or "",
-        "phone": emp.phone or "",
-        "email": emp.email or "",
-        "address": emp.address or "",
-        "emergency_contact_name": emp.emergency_contact_name or "",
-        "emergency_contact_phone": emp.emergency_contact_phone or "",
-        "emergency_contact_relationship": emp.emergency_contact_relationship or "",
-        "hire_date": emp.hire_date.isoformat() if emp.hire_date else "",
-        "leave_date": emp.leave_date.isoformat() if emp.leave_date else "",
-    }
-
-
-def _years_ago(today, years):
-    try:
-        return today.replace(year=today.year - years)
-    except ValueError:
-        return today.replace(year=today.year - years, month=2, day=28)
-
-
-def _serialize_technician(tech):
-    contract_labels = {
-        0: "未定",
-        1: "长期",
-        2: "短期",
-        3: "现场",
-    }
-    business_labels = {
-        0: "待机",
-        1: "可用",
-        2: "忙碌",
-        3: "不可用",
-    }
-    ss_path = tech.ss or ""
-    ss_url = f"/api/ss/{ss_path}" if ss_path else ""
-    return {
-        "employee_id": tech.employee_id,
-        "name": tech.name,
-        "name_mask": tech.name_mask,
-        "birthday": tech.birthday.isoformat() if tech.birthday else "",
-        "nationality": tech.nationality or "",
-        "price": str(tech.price) if tech.price is not None else "",
-        "introduction": tech.introduction or "",
-        "contract_type": tech.contract_type,
-        "contract_label": contract_labels.get(tech.contract_type, ""),
-        "spot_contract_deadline": tech.spot_contract_deadline.isoformat()
-        if tech.spot_contract_deadline
-        else "",
-        "business_status": tech.business_status,
-        "business_label": business_labels.get(tech.business_status, ""),
-        "ss": ss_path,
-        "ss_url": ss_url,
-        "remark": tech.remark or "",
-    }
-
-
-def _parse_decimal(value, field):
-    if value in (None, ""):
-        return None, None
-    try:
-        return Decimal(str(value)), None
-    except (InvalidOperation, ValueError):
-        return None, api_error(
-            f"Invalid number: {field}",
-            status=400,
-        )
-
-
-def _normalize_smallint(value, field):
-    if value in (None, ""):
-        return None, None
-    try:
-        return int(value), None
-    except (TypeError, ValueError):
-        return None, api_error(
-            f"Invalid value: {field}",
-            status=400,
-        )
-
-
 def _ss_storage_dir():
     return os.path.join(settings.BASE_DIR, "ss")
 
@@ -304,7 +218,7 @@ def employees_api(request):
     if request.method == "POST":
         login_id = request.session.get("employee_id")
         if not login_id:
-           return api_error(status=401,message="employee id is required")
+            return api_error(status=401, message="employee id is required")
         payload, error = parse_json_body(request)
         if error:
             return error
@@ -361,7 +275,7 @@ def employees_api(request):
                 created_by=login_id
             )
 
-        item = _serialize_employee(employee)
+        item = Employee.serialize(employee)
         return api_success(data={"item": item})
 
     if request.method == "GET":
@@ -401,7 +315,7 @@ def employees_api(request):
         if page > total_pages:
             page = total_pages
         offset = (page - 1) * page_size
-        items = [_serialize_employee(emp) for emp in qs.order_by("id")[offset:offset + page_size]]
+        items = [Employee.serialize(emp) for emp in qs.order_by("id")[offset:offset + page_size]]
 
         return api_paginated(
             items=items,
@@ -410,63 +324,51 @@ def employees_api(request):
             total=total,
             total_pages=total_pages
         )
+    return None
 
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def technicians_api(request):
     if request.method == "POST":
+        login_id = request.session.get("employee_id")
+        if not login_id:
+            return api_error(status=401, message="employee id is required")
+
         payload, error = parse_json_body(request)
         if error:
             return error
 
-        employee_id, error = _normalize_smallint(payload.get("employee_id"), "employee_id")
-        if error:
-            return error
+        employee_id = payload.get("employee_id")
+
         if employee_id is None:
-            return api_error(
-                "Missing field: employee_id",
-                status=400,
-            )
+            return api_error("Missing field: employee_id")
+
         if Technician.objects.filter(employee_id=employee_id).exists():
-            return api_error(
-                "Employee ID already exists",
-                status=400,
-            )
+            return api_error("Employee ID already exists")
 
         name_mask = (payload.get("name_mask") or "").strip()
         if not name_mask:
-            return api_error(
-                "Missing field: name_mask",
-                status=400,
-            )
+            return api_error("Missing field: name_mask")
 
         name = (payload.get("name") or "").strip()
         if not name:
-            return api_error(
-                "Missing field: name",
-                status=400,
-            )
+            return api_error("Missing field: name")
 
         birthday, error = parse_date(payload.get("birthday"))
         if error:
             return error
-        spot_deadline, error = parse_date(
-            payload.get("spot_contract_deadline")
-        )
+
+        spot_deadline, error = parse_date(payload.get("spot_contract_deadline"))
         if error:
             return error
 
-        price, error = _parse_decimal(payload.get("price"), "price")
-        if error:
-            return error
+        price = Decimal(str(payload.get("price")))
 
-        contract_type, error = _normalize_smallint(payload.get("contract_type"), "contract_type")
-        if error:
-            return error
-        business_status, error = _normalize_smallint(payload.get("business_status"), "business_status")
-        if error:
-            return error
+        contract_type = payload.get("contract_type")
+
+        business_status = payload.get("business_status")
+
         ss_value = (payload.get("ss") or "").strip() or None
 
         tech = Technician.objects.create(
@@ -484,57 +386,73 @@ def technicians_api(request):
             remark=(payload.get("remark") or "").strip() or None,
         )
 
-        item = _serialize_technician(tech)
+        item = Technician.serialize(tech)
         return api_success(data={"item": item})
 
-    qs = Technician.objects.all()
-    keyword = (request.GET.get("keyword") or "").strip()
-    if keyword:
-        qs = qs.filter(
-            Q(name__icontains=keyword) | Q(name_mask__icontains=keyword)
-        )
+    if request.method == "GET":
+        filters = {}
 
-    age_min, error = _normalize_smallint(request.GET.get("age_min"), "age_min")
-    if error:
-        return error
-    age_max, error = _normalize_smallint(request.GET.get("age_max"), "age_max")
-    if error:
-        return error
-    price_max, error = _parse_decimal(request.GET.get("price_max"), "price_max")
-    if error:
-        return error
-    contract_type, error = _normalize_smallint(request.GET.get("contract_type"), "contract_type")
-    if error:
-        return error
-    business_status, error = _normalize_smallint(request.GET.get("business_status"), "business_status")
-    if error:
-        return error
+        keyword = (request.GET.get("keyword") or "").strip()
+        age_max = request.GET.get("age_max")
+        nationality = (request.GET.get("nationality") or "").strip()
+        price_max = request.GET.get("price_max")
+        contract_type = request.GET.get("contract_type")
+        business_status = request.GET.get("business_status")
 
-    nationality = (request.GET.get("nationality") or "").strip()
-    if nationality:
-        qs = qs.filter(nationality=nationality)
+        if nationality:
+            filters["nationality"] = nationality
 
-    if price_max is not None:
-        qs = qs.filter(price__lte=price_max)
+        if price_max is not None:
+            filters["price__lte"] = price_max
 
-    if contract_type is not None:
-        qs = qs.filter(contract_type=contract_type)
+        if contract_type is not None:
+            filters["contract_type"] = contract_type
 
-    if business_status is not None:
-        qs = qs.filter(business_status=business_status)
+        if business_status is not None:
+            filters["business_status"] = business_status
 
-    if age_min is not None or age_max is not None:
-        today = timezone.localdate()
-        if age_min is not None:
-            max_birth = _years_ago(today, age_min)
-            qs = qs.filter(birthday__lte=max_birth)
+        qs = Technician.objects.filter(**filters)
+        if keyword:
+            qs = qs.filter(Q(name__icontains=keyword) | Q(name_mask__icontains=keyword))
+
         if age_max is not None:
-            min_birth = _years_ago(today, age_max)
+            today = timezone.localdate()
+            min_birth = years_ago(today, age_max)
             qs = qs.filter(birthday__gte=min_birth)
 
-    items = [_serialize_technician(tech) for tech in qs.order_by("employee_id")]
-    payload = {"items": items}
-    return api_success(data=payload)
+        site_contract_value = (request.GET.get("site_contract") or "").strip()
+        if site_contract_value:
+            site_date, error = parse_date(site_contract_value)
+            if error:
+                return error
+            if site_date:
+                qs = qs.filter(spot_contract_deadline=site_date)
+
+        page = int(request.GET.get("page", 1))
+        page_size = int(request.GET.get("page_size", 10))
+
+        page = max(page, 1)
+        page_size = min(page_size, 100)
+
+        total = qs.count()
+        total_pages = max((total + page_size - 1) // page_size, 1)
+        if page > total_pages:
+            page = total_pages
+        offset = (page - 1) * page_size
+        items = [
+            Technician.serialize(tech)
+            for tech in qs.order_by("employee_id")[offset: offset + page_size]
+        ]
+        return api_paginated(
+            items=items,
+            page=page,
+            page_size=page_size,
+            total=total,
+            total_pages=total_pages,
+        )
+    return None
+
+
 
 
 @csrf_exempt
@@ -567,16 +485,14 @@ def technician_detail_api(request, employee_id):
     if "nationality" in payload:
         tech.nationality = (payload.get("nationality") or "").strip() or None
     if "price" in payload:
-        value, error = _parse_decimal(payload.get("price"), "price")
-        if error:
-            return error
+        value = payload.get("price")
+
         tech.price = value
     if "introduction" in payload:
         tech.introduction = (payload.get("introduction") or "").strip() or None
     if "contract_type" in payload:
-        value, error = _normalize_smallint(payload.get("contract_type"), "contract_type")
-        if error:
-            return error
+        value = payload.get("contract_type")
+
         tech.contract_type = value if value is not None else 0
     if "spot_contract_deadline" in payload:
         value, error = parse_date(payload.get("spot_contract_deadline"))
@@ -584,9 +500,8 @@ def technician_detail_api(request, employee_id):
             return error
         tech.spot_contract_deadline = value
     if "business_status" in payload:
-        value, error = _normalize_smallint(payload.get("business_status"), "business_status")
-        if error:
-            return error
+        value  = payload.get("business_status")
+
         tech.business_status = value if value is not None else 0
     if "ss" in payload:
         tech.ss = (payload.get("ss") or "").strip() or None
@@ -607,7 +522,7 @@ def technician_detail_api(request, employee_id):
         )
 
     tech.save()
-    item = _serialize_technician(tech)
+    item = Technician.serialize(tech)
     return api_success(data={"item": item})
 
 
@@ -623,8 +538,7 @@ def technician_ss_upload(request, employee_id):
     upload = request.FILES.get("file")
     if not upload:
         return api_error(
-            "Missing file",
-            status=400,
+            "Missing file"
         )
 
     tech = Technician.objects.filter(employee_id=employee_id).first()
@@ -674,8 +588,7 @@ def technician_ss_download(request, path):
     safe_path = os.path.realpath(os.path.join(base_dir, path))
     if not safe_path.startswith(base_dir + os.sep):
         return api_error(
-            "Invalid path",
-            status=400
+            "Invalid path"
         )
     if not os.path.exists(safe_path):
         return api_error(

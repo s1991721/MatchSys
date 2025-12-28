@@ -76,19 +76,35 @@ class Employee(models.Model):
     def __str__(self) -> str:
         return f"{self.id}:{self.name}"
 
+    def serialize(emp):
+        return {
+            "id": emp.id,
+            "name": emp.name,
+            "gender": emp.gender,
+            "birthday": emp.birthday.isoformat() if emp.birthday else "",
+            "department_name": emp.department_name or "",
+            "position_name": emp.position_name or "",
+            "phone": emp.phone or "",
+            "email": emp.email or "",
+            "address": emp.address or "",
+            "emergency_contact_name": emp.emergency_contact_name or "",
+            "emergency_contact_phone": emp.emergency_contact_phone or "",
+            "emergency_contact_relationship": emp.emergency_contact_relationship or "",
+            "hire_date": emp.hire_date.isoformat() if emp.hire_date else "",
+            "leave_date": emp.leave_date.isoformat() if emp.leave_date else "",
+        }
+
 class Technician(models.Model):
     CONTRACT_TYPE_CHOICES = (
-        (0, "未定"),
-        (1, "长期"),
-        (2, "短期"),
-        (3, "现场"),
+        (0, "正社员"),
+        (1, "契约社员"),
+        (2, "フリーランス"),
     )
 
     BUSINESS_STATUS_CHOICES = (
-        (0, "待机"),
-        (1, "可用"),
-        (2, "忙碌"),
-        (3, "不可用"),
+        (0, "营业中"),
+        (1, "现场中"),
+        (2, "现场已确定"),
     )
 
     employee_id = models.BigIntegerField(
@@ -182,3 +198,35 @@ class Technician(models.Model):
 
     def __str__(self):
         return f"{self.employee_id} - {self.name_mask}"
+
+    # 序列化技术者实体
+    def serialize(tech):
+        contract_labels = {
+            0: "正社员",
+            1: "契约社员",
+            2: "フリーランス",
+        }
+        business_labels = {
+            0: "营业中",
+            1: "现场中",
+            2: "现场已确定",
+        }
+        ss_path = tech.ss or ""
+        ss_url = f"/api/ss/{ss_path}" if ss_path else ""
+        return {
+            "employee_id": tech.employee_id,
+            "name": tech.name,
+            "name_mask": tech.name_mask,
+            "birthday": tech.birthday.isoformat() if tech.birthday else "",
+            "nationality": tech.nationality or "",
+            "price": str(tech.price) if tech.price is not None else "",
+            "introduction": tech.introduction or "",
+            "contract_type": tech.contract_type,
+            "contract_label": contract_labels.get(tech.contract_type, ""),
+            "spot_contract_deadline": tech.spot_contract_deadline.isoformat() if tech.spot_contract_deadline else "",
+            "business_status": tech.business_status,
+            "business_label": business_labels.get(tech.business_status, ""),
+            "ss": ss_path,
+            "ss_url": ss_url,
+            "remark": tech.remark or "",
+        }

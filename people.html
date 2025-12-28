@@ -13,6 +13,10 @@
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-auto">
                 <label>
+                    姓名/昵称
+                    <input type="text" id="filterKeyword" placeholder="输入姓名或昵称" />
+                </label>
+                <label>
                     最大年龄
                     <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" />
                 </label>
@@ -39,23 +43,8 @@
                     </select>
                 </label>
                 <label>
-                    现场契约
-                    <select id="filterSiteContract">
-                        <option value="">全部</option>
-                        <option value="1月">1月</option>
-                        <option value="2月">2月</option>
-                        <option value="3月">3月</option>
-                        <option value="4月">4月</option>
-                        <option value="5月">5月</option>
-                        <option value="6月">6月</option>
-                        <option value="7月">7月</option>
-                        <option value="8月">8月</option>
-                        <option value="9月">9月</option>
-                        <option value="10月">10月</option>
-                        <option value="11月">11月</option>
-                        <option value="12月">12月</option>
-                        <option value="长期">长期</option>
-                    </select>
+                    现场契约截止
+                    <input type="date" id="filterSiteContract" />
                 </label>
             </div>
             <div class="filter-actions c-filter-actions-bar c-filter-actions-stack">
@@ -146,22 +135,7 @@
                 </label>
                 <label>
                     现场契约
-                    <select name="siteContract" required>
-                        <option value="">请选择</option>
-                        <option value="1月">1月</option>
-                        <option value="2月">2月</option>
-                        <option value="3月">3月</option>
-                        <option value="4月">4月</option>
-                        <option value="5月">5月</option>
-                        <option value="6月">6月</option>
-                        <option value="7月">7月</option>
-                        <option value="8月">8月</option>
-                        <option value="9月">9月</option>
-                        <option value="10月">10月</option>
-                        <option value="11月">11月</option>
-                        <option value="12月">12月</option>
-                        <option value="长期">长期</option>
-                    </select>
+                    <input type="date" name="siteContract" required />
                 </label>
                 <label>
                     介绍文
@@ -196,6 +170,7 @@
     const dialogTitle = document.getElementById('dialogTitle');
     const closeDialogBtn = document.getElementById('closeDialogBtn');
     const cancelDialogBtn = document.getElementById('cancelDialogBtn');
+    const filterKeyword = document.getElementById('filterKeyword');
     const filterAgeMax = document.getElementById('filterAgeMax');
     const filterNationality = document.getElementById('filterNationality');
     const filterPriceMax = document.getElementById('filterPriceMax');
@@ -222,12 +197,19 @@
 
     let editingId = null;
     let people = [];
-    let filteredPeople = [];
     let currentSsPath = '';
     let currentPage = 1;
     const pageSize = 10;
     let totalPages = 1;
     let totalCount = 0;
+    let currentFilters = {
+        keyword: '',
+        ageMax: null,
+        priceMax: null,
+        nationality: '',
+        contractType: null,
+        siteContract: ''
+    };
 
     const contractLabelToType = (label) => {
         const mapping = {
@@ -247,33 +229,11 @@
         return mapping[value] || '未定';
     };
 
-    const siteDeadlineToLabel = (value) => {
+    const normalizeDateInput = (value) => {
         if (!value) return '';
-        if (typeof value === 'number') {
-            return value >= 1 && value <= 12 ? `${value}月` : '';
-        }
-        if (/^\d{1,2}$/.test(String(value))) {
-            const num = Number(value);
-            return num >= 1 && num <= 12 ? `${num}月` : '';
-        }
-        if (String(value).startsWith('9999-12-31')) {
-            return '长期';
-        }
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return '';
-        return `${date.getMonth() + 1}月`;
-    };
-
-    const labelToSiteDeadline = (label) => {
-        if (!label) return '';
-        if (label === '长期') return '9999-12-31';
-        const match = label.match(/^(\d{1,2})月$/);
-        if (!match) return '';
-        const month = Number(match[1]);
-        const today = new Date();
-        const year = today.getFullYear();
-        const lastDay = new Date(year, month, 0);
-        return lastDay.toISOString().slice(0, 10);
+        return date.toISOString().slice(0, 10);
     };
 
     const calcAge = (birthday) => {
@@ -337,7 +297,7 @@
             const chipClass = person.contract === '正社员' ? 'c-pill c-pill-success'
                 : person.contract === 'フリーランス' ? 'c-pill c-pill-danger'
                     : 'c-pill';
-            const siteContractClass = person.siteContract === '长期' ? 'c-pill c-pill-success' : 'c-pill';
+            const siteContractClass = person.siteContract ? 'c-pill c-pill-success' : 'c-pill';
 
             return `
                 <tr>
@@ -348,7 +308,7 @@
                     <td data-label="单价">${person.price} 万/月</td>
                     <td data-label="介绍文"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
                     <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
-                    <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract}</span></td>
+                    <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
                     <td data-label="备注">${person.note || '-'}</td>
                     <td data-label="SS 文件">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
                     <td data-label="操作">
@@ -364,12 +324,9 @@
     };
 
     const renderPage = () => {
-        totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
         const safeTotalPages = Math.max(1, totalPages);
         if (currentPage > safeTotalPages) currentPage = safeTotalPages;
-        const startIndex = (currentPage - 1) * pageSize;
-        const pageItems = filteredPeople.slice(startIndex, startIndex + pageSize);
-        renderPeople(pageItems);
+        renderPeople(people);
         renderPagination();
         if (summaryText) {
             if (totalCount === 0) {
@@ -390,7 +347,7 @@
             nationality: formData.get('nationality') || '',
             price: Number(formData.get('price')),
             contract: formData.get('contract'),
-            siteContract: formData.get('siteContract') || '',
+            siteContract: normalizeDateInput(formData.get('siteContract')),
             intro: (formData.get('intro') || '').trim(),
             note: (formData.get('note') || '').trim()
         };
@@ -404,7 +361,7 @@
         personForm.nationality.value = person.nationality;
         personForm.price.value = person.price;
         personForm.contract.value = person.contract;
-        personForm.siteContract.value = person.siteContract;
+        personForm.siteContract.value = person.siteContract || '';
         personForm.intro.value = person.intro || '';
         personForm.note.value = person.note || '';
     };
@@ -484,13 +441,24 @@
 
     const fetchPeople = async () => {
         try {
-            const res = await fetchWithAuth('/api/technicians', { method: 'GET' });
+            const params = new URLSearchParams();
+            params.set('page', String(currentPage));
+            params.set('page_size', String(pageSize));
+            if (currentFilters.keyword) params.set('keyword', currentFilters.keyword);
+            if (currentFilters.ageMax !== null) params.set('age_max', String(currentFilters.ageMax));
+            if (currentFilters.priceMax !== null) params.set('price_max', String(currentFilters.priceMax));
+            if (currentFilters.nationality) params.set('nationality', currentFilters.nationality);
+            if (currentFilters.contractType !== null) params.set('contract_type', String(currentFilters.contractType));
+            if (currentFilters.siteContract) params.set('site_contract', currentFilters.siteContract);
+
+            const res = await fetchWithAuth(`/api/technicians?${params.toString()}`, { method: 'GET' });
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!payload.success) {
                 throw new Error(payload.message || '加载失败');
             }
             const result = payload.data || {};
+            const meta = payload.meta || {};
             const items = Array.isArray(result.items) ? result.items : [];
             people = items.map(item => {
                 const remarkText = item.remark ? String(item.remark) : '';
@@ -503,14 +471,17 @@
                     nationality: item.nationality || '',
                     price: item.price ? Number(item.price) : 0,
                     contract: contractTypeToLabel(item.contract_type),
-                    siteContract: siteDeadlineToLabel(item.spot_contract_deadline),
+                    siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
                     intro: item.introduction || '',
                     note: remarkText || '',
                     ssPath: item.ss || '',
                     ssUrl: item.ss_url || ''
                 };
             });
-            applyFilters();
+            totalCount = Number.isFinite(meta.total) ? meta.total : people.length;
+            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+            renderPage();
             const targetId = getAutoEditId();
             if (targetId) {
                 forcedEmployeeId = targetId;
@@ -525,7 +496,7 @@
         } catch (error) {
             peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty c-empty">加载失败</td></tr>';
             summaryText.textContent = '共 0 人 · 当前显示 0 人';
-            filteredPeople = [];
+            people = [];
             totalCount = 0;
             totalPages = 1;
             currentPage = 1;
@@ -585,24 +556,22 @@
     };
 
     const applyFilters = () => {
+        const keywordValue = (filterKeyword.value || '').trim();
         const ageMax = getNumberValue(filterAgeMax.value);
         const priceMax = getNumberValue(filterPriceMax.value);
         const nationalityValue = filterNationality.value;
         const contractValue = filterContract.value;
-        const siteContractValue = filterSiteContract.value;
-
-        filteredPeople = people.filter(person => {
-            if (ageMax !== null && person.age > ageMax) return false;
-            if (priceMax !== null && person.price > priceMax) return false;
-            if (nationalityValue && person.nationality !== nationalityValue) return false;
-            if (contractValue && person.contract !== contractValue) return false;
-            if (siteContractValue && person.siteContract !== siteContractValue) return false;
-            return true;
-        });
-
-        totalCount = filteredPeople.length;
+        const siteContractValue = normalizeDateInput(filterSiteContract.value);
+        currentFilters = {
+            keyword: keywordValue,
+            ageMax,
+            priceMax,
+            nationality: nationalityValue,
+            contractType: contractValue ? contractLabelToType(contractValue) : null,
+            siteContract: siteContractValue
+        };
         currentPage = 1;
-        renderPage();
+        fetchPeople();
     };
 
     personForm.addEventListener('submit', async (event) => {
@@ -644,7 +613,7 @@
             price: Number.isFinite(formValue.price) ? formValue.price : null,
             introduction: formValue.intro || '',
             contract_type: contractLabelToType(formValue.contract),
-            spot_contract_deadline: labelToSiteDeadline(formValue.siteContract),
+            spot_contract_deadline: formValue.siteContract || null,
             business_status: 0,
             ss: ssPath || null,
             remark: formValue.note
@@ -713,6 +682,7 @@
     applyFilterBtn.addEventListener('click', applyFilters);
     filterResetBtn.addEventListener('click', () => {
         filterInputs.forEach(input => input.value = '');
+        filterKeyword.value = '';
         filterNationality.value = '';
         filterContract.value = '';
         filterSiteContract.value = '';
@@ -732,7 +702,7 @@
                 const targetPage = Number(value);
                 if (!Number.isNaN(targetPage)) currentPage = targetPage;
             }
-            renderPage();
+            fetchPeople();
         });
     }
 

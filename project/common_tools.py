@@ -3,6 +3,7 @@ from datetime import datetime
 
 from project.api import api_error
 
+# 解析请求体
 def parse_json_body(request):
     try:
         raw = request.body.decode("utf-8") if request.body else "{}"
@@ -12,7 +13,7 @@ def parse_json_body(request):
             "Invalid JSON body"
         )
 
-
+# 格式化时间
 def parse_date(value):
     if value in (None, ""):
         return None, None
@@ -26,3 +27,10 @@ def parse_date(value):
     return None, api_error(
         "Invalid date"
     )
+
+# 几年前
+def years_ago(today, years):
+    try:
+        return today.replace(year=today.year - years)
+    except ValueError:
+        return today.replace(year=today.year - years, month=2, day=28)

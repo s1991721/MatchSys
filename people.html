@@ -163,6 +163,7 @@
                 <label>
                     SS 文件
                     <input type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
+                    <span class="ss-file-name" id="ssFileName"></span>
                 </label>
                 <label>
                     备注
@@ -198,6 +199,7 @@
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const filterResetBtn = document.getElementById('filterResetBtn');
     const ssFileInput = personForm.querySelector('input[type="file"][name="ssFile"]');
+    const ssFileName = document.getElementById('ssFileName');
     let forcedEmployeeId = '';
 
     const showDialogModal = () => {
@@ -362,6 +364,7 @@
         submitBtn.textContent = '确认新增';
         personForm.reset();
         currentSsPath = '';
+        updateSsFileName('', null);
         if (forcedEmployeeId) {
             personForm.employee_id.value = forcedEmployeeId;
             personForm.name.setAttribute('readonly', 'readonly');
@@ -378,6 +381,7 @@
         submitBtn.textContent = '保存修改';
         setFormData(person);
         currentSsPath = person.ssPath || '';
+        updateSsFileName(currentSsPath, null);
         personForm.name.setAttribute('readonly', 'readonly');
         personDialog.style.animation = '';
         showDialogModal();
@@ -405,6 +409,7 @@
             dialogTitle.textContent = '新增人员';
             submitBtn.textContent = '确认新增';
             currentSsPath = '';
+            updateSsFileName('', null);
             personForm.name.removeAttribute('readonly');
             personDialog.removeEventListener('animationend', finalizeClose);
         };
@@ -413,6 +418,16 @@
     };
 
     const getNumberValue = (value) => value === '' ? null : Number(value);
+
+    const updateSsFileName = (path, file) => {
+        if (!ssFileName) return;
+        if (file) {
+            ssFileName.textContent = `将上传文件：${file.name}`;
+            return;
+        }
+        const name = (path || '').split('/').pop();
+        ssFileName.textContent = name ? `已存在文件：${name}` : '';
+    };
 
     {#员工页跳转编辑时，获取员工信息#}
     const getAutoEditId = () => {
@@ -534,7 +549,6 @@
         const formData = new FormData();
         formData.append('file', file);
         const res = await fetchWithAuth(`/api/technicians/${employeeId}/ss`, {
-            method: 'POST',
             headers: {},
             body: formData
         });
@@ -586,6 +600,12 @@
 
         let ssPath = currentSsPath;
         if (ssFileInput && ssFileInput.files && ssFileInput.files.length) {
+            if (currentSsPath) {
+                const confirmed = confirm('已存在 SS 文件，继续上传将覆盖原文件，是否继续？');
+                if (!confirmed) {
+                    return;
+                }
+            }
             try {
                 const upload = await uploadSsFile(effectiveId, ssFileInput.files[0]);
                 ssPath = upload.path || '';
@@ -618,6 +638,13 @@
             alert(error.message || '保存失败');
         }
     });
+
+    if (ssFileInput) {
+        ssFileInput.addEventListener('change', (event) => {
+            const file = event.target.files && event.target.files[0];
+            updateSsFileName(currentSsPath, file || null);
+        });
+    }
 
 
     const attachCloseHandler = (element) => {

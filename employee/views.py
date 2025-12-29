@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_date, parse_json_body,years_ago,ss_storage_dir
+from project.common_tools import parse_date, parse_json_body, years_ago, ss_storage_dir
 from .models import Employee, Technician, UserLogin
 
 
@@ -449,21 +449,17 @@ def technicians_api(request):
     return None
 
 
-
-
 @csrf_exempt
 @require_http_methods(["PUT", "PATCH", "DELETE"])
+# 删除技术者、
 def technician_detail_api(request, employee_id):
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
-        return api_error(
-            "Technician not found",
-            status=404,
-        )
+        return api_error("Technician not found", status=404)
 
     if request.method == "DELETE":
         tech.delete()
-        return api_success(data=None)
+        return api_success()
 
     payload, error = parse_json_body(request)
     if error:
@@ -496,7 +492,7 @@ def technician_detail_api(request, employee_id):
             return error
         tech.spot_contract_deadline = value
     if "business_status" in payload:
-        value  = payload.get("business_status")
+        value = payload.get("business_status")
 
         tech.business_status = value if value is not None else 0
     if "ss" in payload:
@@ -524,25 +520,18 @@ def technician_detail_api(request, employee_id):
 
 @csrf_exempt
 @require_POST
+# 上传ss
 def technician_ss_upload(request, employee_id):
     if not request.session.get("employee_id"):
-        return api_error(
-            "Unauthorized",
-            status=401
-        )
+        return api_error("Unauthorized", status=401)
 
     upload = request.FILES.get("file")
     if not upload:
-        return api_error(
-            "Missing file"
-        )
+        return api_error("Missing file")
 
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
-        return api_error(
-            "Technician not found",
-            status=404
-        )
+        return api_error("Technician not found", status=404)
 
     base_dir = ss_storage_dir()
     os.makedirs(base_dir, exist_ok=True)
@@ -553,11 +542,6 @@ def technician_ss_upload(request, employee_id):
         safe_name = str(employee_id)
     filename = f"{safe_name}{ext or ''}"
     dest_path = os.path.join(base_dir, filename)
-    if os.path.exists(dest_path):
-        return api_error(
-            "File already exists",
-            status=409,
-        )
 
     with open(dest_path, "wb") as handle:
         for chunk in upload.chunks():

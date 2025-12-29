@@ -63,9 +63,7 @@
             <div class="pagination-summary">
                 <span id="summaryText">共 0 人</span>
             </div>
-            <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="prev">上一页</button>
             <div class="pagination-pages" id="paginationPages"></div>
-            <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="next">下一页</button>
         </div>
     </section>
 </div>
@@ -233,42 +231,8 @@
         )).join("");
     }
 
-    function buildPageItems(totalPages, activePage) {
-        if (totalPages <= 7) {
-            return Array.from({length: totalPages}, (_, i) => i + 1);
-        }
-        const pages = [1];
-        const start = Math.max(2, activePage - 1);
-        const end = Math.min(totalPages - 1, activePage + 1);
-        if (start > 2) pages.push("…");
-        for (let i = start; i <= end; i += 1) pages.push(i);
-        if (end < totalPages - 1) pages.push("…");
-        pages.push(totalPages);
-        return pages;
-    }
-
     function renderPagination() {
-        if (!pagination || !paginationPages) return;
-        const safeTotalPages = Math.max(1, totalPages);
-        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
-        paginationPages.innerHTML = "";
-        const pageItems = buildPageItems(safeTotalPages, currentPage);
-        paginationPages.append(...pageItems.map((page) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "c-btn c-btn-ghost c-btn-sm";
-            btn.textContent = String(page);
-            if (page === "…") {
-                btn.disabled = true;
-                btn.classList.add("is-ellipsis");
-                return btn;
-            }
-            btn.dataset.page = String(page);
-            if (page === currentPage) {
-                btn.classList.add("is-active");
-            }
-            return btn;
-        }));
+        window.renderPagination(pagination, paginationPages, currentPage, totalPages);
     }
 
     function renderPage() {
@@ -478,10 +442,7 @@
     applyFilterBtn.addEventListener("click", applyFilter);
     deptSelect.addEventListener("change", applyFilter);
     resetBtn.addEventListener("click", resetFilters);
-    pagination.addEventListener("click", (e) => {
-        const btn = e.target.closest("button[data-page]");
-        if (!btn) return;
-        const value = btn.dataset.page;
+    window.bindPagination(pagination, (value) => {
         const safeTotalPages = Math.max(1, totalPages);
         if (value === "prev") {
             currentPage = Math.max(1, currentPage - 1);

@@ -1110,6 +1110,211 @@ body.sidebar-collapsed .nav-item a:hover::after {
     align-items: stretch;
   }
 }
+/* Shared inline layout */
+.c-page-head-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.c-title-reset {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.c-switch-wrap {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+}
+.c-switcher-group {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(248, 250, 252, 0.95);
+  box-shadow: 0 10px 20px rgba(30, 41, 59, 0.08);
+}
+.c-switcher-group .c-toggle {
+  border: 0;
+}
+.c-inline-filters {
+  padding: 0;
+  border-bottom: 0;
+  background: transparent;
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.c-inline-filters-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.c-inline-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  color: #2c3d55;
+  min-height: 44px;
+}
+.c-inline-field input,
+.c-inline-field select {
+  border: 0;
+  outline: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  background: transparent;
+  min-width: 120px;
+  flex: 1 1 auto;
+}
+.c-inline-field > span {
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.c-inline-field-range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.c-inline-field-full {
+  grid-column: 1 / -1;
+}
+.c-table-info {
+  display: flex;
+  justify-content: flex-end;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 12px;
+}
+.c-pager {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0 4px;
+}
+.c-pager select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  color: #475569;
+  font-weight: 600;
+}
+.c-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+.c-tag-success {
+  color: #0f7a3a;
+  background: rgba(22, 163, 74, 0.12);
+  border-color: rgba(22, 163, 74, 0.22);
+}
+.c-tag-warn {
+  color: #a16207;
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+.c-tag-danger {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+.c-tag-info {
+  color: #1d4ed8;
+  background: rgba(28, 123, 255, 0.12);
+  border-color: rgba(28, 123, 255, 0.22);
+}
+.c-tag-neutral {
+  color: #4b5563;
+  background: rgba(148, 163, 184, 0.16);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+.c-modal {
+  border: 0;
+  border-radius: 16px;
+  padding: 20px;
+  width: min(420px, 92vw);
+  box-shadow: 0 24px 60px rgba(31, 53, 90, 0.25);
+  font-family: inherit;
+}
+.c-modal-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.c-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.c-modal .c-inline-field {
+  padding: 10px 12px;
+  min-height: unset;
+}
+.c-modal .c-inline-field input,
+.c-modal .c-inline-field select {
+  min-width: 0;
+}
+.c-modal input[readonly],
+.c-modal input:disabled,
+.c-modal select:disabled {
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+.c-modal::backdrop {
+  background: rgba(15, 23, 42, 0.4);
+}
+.c-modal h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.c-modal p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.c-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+@media (max-width: 900px) {
+  .c-page-head-grid {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .c-switch-wrap {
+    justify-self: flex-start;
+  }
+  .c-inline-filters-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .c-inline-field {
+    min-height: 44px;
+  }
+  .c-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
 @media (max-width: 820px) {
   body > .page {
     padding: 14px;

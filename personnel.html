@@ -196,7 +196,7 @@
     let totalCount = 0;
     let currentFilters = {keyword: "", department: "all"};
 
-    function ensureDepartments(departments) {
+    const ensureDepartments = (departments) => {
         deptSelect.innerHTML = `<option value="all">全部部门</option>`;
         (departments || []).forEach(dep => {
             if (!dep) return;
@@ -207,7 +207,7 @@
         });
     }
 
-    function renderTable(list) {
+    const renderTable = (list) => {
         if (!list.length) {
             tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">没有符合条件的人员</td></tr>`;
             return;
@@ -231,11 +231,11 @@
         )).join("");
     }
 
-    function renderPagination() {
+    const renderPagination = () => {
         window.renderPagination(pagination, paginationPages, currentPage, totalPages);
     }
 
-    function renderPage() {
+    const renderPage = () => {
         renderTable(allEmployees);
         renderPagination();
         if (summaryText) {
@@ -244,7 +244,7 @@
         }
     }
 
-    function buildPayload() {
+    const buildPayload = () => {
         return {
             name: fieldName.value.trim(),
             gender: fieldGender.value === "" ? null : Number(fieldGender.value),
@@ -262,7 +262,7 @@
         };
     }
 
-    function applyFilter() {
+    const applyFilter = () => {
         currentFilters = {
             keyword: (searchInput.value || "").trim(),
             department: deptSelect.value
@@ -271,14 +271,14 @@
         fetchEmployees();
     }
 
-    function resetFilters() {
+    const resetFilters = () => {
         searchInput.value = "";
         deptSelect.value = "all";
         applyFilter();
     }
 
 
-    function handleAction(e) {
+    const handleAction = (e) => {
         const btn = e.target.closest("button[data-action]");
         if (!btn) return;
         const action = btn.getAttribute("data-action");
@@ -301,7 +301,7 @@
         }
     }
 
-    function openModal(mode, data) {
+    const openModal = (mode, data) => {
         editingId = mode === "edit" ? data?.id : null;
         modalTitle.textContent = mode === "edit" ? "编辑人员" : "新增人员";
         fieldName.value = data?.name || "";
@@ -324,7 +324,7 @@
         employeeModal.setAttribute("aria-hidden", "false");
     }
 
-    function closeModal() {
+    const closeModal = () => {
         employeeModal.classList.remove("show");
         employeeModal.setAttribute("aria-hidden", "true");
         employeeForm.reset();
@@ -334,7 +334,7 @@
         }
     }
 
-    function openPermissionModal(id) {
+    const openPermissionModal = (id) => {
         try {
             permissionModal?.setAttribute("data-employee-id", id ? String(id) : "");
         } catch (err) {
@@ -343,12 +343,12 @@
         permissionModal.setAttribute("aria-hidden", "false");
     }
 
-    function closePermissionModal() {
+    const closePermissionModal = () => {
         permissionModal.classList.remove("show");
         permissionModal.setAttribute("aria-hidden", "true");
     }
 
-    async function createEmployee(payload) {
+    const createEmployee = async (payload) => {
         const res = await fetchWithAuth(`/api/employees`, {
             body: JSON.stringify(payload)
         });
@@ -360,7 +360,7 @@
         return responsePayload.data || {};
     }
 
-    async function updateEmployee(id, payload) {
+    const updateEmployee = async (id, payload) => {
         const res = await fetchWithAuth(`/api/employees/${id}`, {
             method: "PUT",
             body: JSON.stringify(payload)
@@ -373,7 +373,7 @@
         return responsePayload.data || {};
     }
 
-    async function deleteEmployee(id) {
+    const deleteEmployee = async (id) => {
         try {
             const res = await fetchWithAuth(`/api/employees/${id}`, {method: "DELETE"});
             const data = await res.json();
@@ -387,7 +387,7 @@
         }
     }
 
-    async function fetchEmployees() {
+    const fetchEmployees = async () => {
         tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">加载中…</td></tr>`;
         try {
             const params = new URLSearchParams();
@@ -422,7 +422,7 @@
         }
     }
 
-    async function fetchDepartments() {
+    const fetchDepartments = async () => {
         try {
             const res = await fetchWithAuth("/api/employees/departments", {method: "GET"});
             const data = await res.json();

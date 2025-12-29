@@ -403,7 +403,7 @@
         return text;
     };
 
-    function renderDetail(target, text = '', highlights = []) {
+    const renderDetail = (target, text = '', highlights = []) => {
         if (!target) return;
         const cleaned = stripCssNoise(text || '');
         const masked = cleaned;
@@ -466,7 +466,7 @@
     };
 
     // 公共函数：给列表加点击事件
-    function bindListClick(listId, detailId, onSelect) {
+    const bindListClick = (listId, detailId, onSelect) => {
         const list = document.getElementById(listId);
         const detail = document.getElementById(detailId);
 
@@ -511,7 +511,7 @@
         return `${y}-${m}-${d}`;
     };
 
-    function renderJobList(items) {
+    const renderJobList = (items) => {
         jobList.innerHTML = '';
         activeMatchedSkills = [];
 
@@ -563,7 +563,7 @@
         }
     }
 
-    function renderPersonList(items) {
+    const renderPersonList = (items) => {
         if (!personList) return;
         personList.innerHTML = '';
         activeMatchedSkills = [];
@@ -624,21 +624,21 @@
         }
     }
 
-    function formatDisplayDate(raw) {
+    const formatDisplayDate = (raw) => {
         const d = raw ? new Date(raw) : null;
         if (!d || Number.isNaN(d.getTime())) return raw || '';
         const pad = (n) => String(n).padStart(2, '0');
         return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
-    function formatRefreshTime(raw) {
+    const formatRefreshTime = (raw) => {
         const d = raw ? new Date(raw) : null;
         if (!d || Number.isNaN(d.getTime())) return '未刷新';
         const pad = (n) => String(n).padStart(2, '0');
         return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} 刷新`;
     }
 
-    function currentFilterDate() {
+    const currentFilterDate = () => {
         const today = formatDate(new Date());
         const yesterdayDate = new Date();
         yesterdayDate.setDate(yesterdayDate.getDate() - 1);
@@ -653,7 +653,7 @@
                     : '';
     }
 
-    function updatePaginationUI() {
+    const updatePaginationUI = () => {
         if (pageInfo) {
             pageInfo.textContent = `第 ${currentPage} 页`;
         }
@@ -665,7 +665,7 @@
         }
     }
 
-    function showLoading(message = '加载中...') {
+    const showLoading = (message = '加载中...') => {
         jobList.innerHTML = '';
         const loading = document.createElement('li');
         loading.className = 'empty';
@@ -675,7 +675,7 @@
         updatePaginationUI();
     }
 
-    async function fetchJobs(page = 1) {
+    const fetchJobs = async (page = 1) => {
         currentPage = page;
         const params = new URLSearchParams();
         const keyword = jobKeyword.value.trim();
@@ -716,7 +716,7 @@
         }
     }
 
-    function setPersonLoading(message = '正在匹配技术者...') {
+    const setPersonLoading = (message = '正在匹配技术者...') => {
         if (!personList) return;
         personList.innerHTML = '';
         const loading = document.createElement('li');
@@ -725,7 +725,7 @@
         personList.appendChild(loading);
     }
 
-    async function fetchPersons(refresh = false) {
+    const fetchPersons = async (refresh = false) => {
         if (personRefreshTime) {
             personRefreshTime.textContent = '刷新中...';
         }

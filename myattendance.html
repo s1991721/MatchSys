@@ -907,14 +907,14 @@
     let watchId;
     let lastCoords = { lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng };
 
-    function setStatus(title, detail) {
+    const setStatus = (title, detail) => {
       const titleEl = document.getElementById("map-status");
       const detailEl = document.getElementById("map-detail");
       if (titleEl) titleEl.textContent = title;
       if (detailEl) detailEl.textContent = detail;
     }
 
-    function initMap() {
+    const initMap = () => {
       mapInstance = L.map("map", {
         zoomControl: false,
         attributionControl: false,
@@ -959,7 +959,7 @@
       );
     }
 
-    function setTemplatesVisible(details, visible) {
+    const setTemplatesVisible = (details, visible) => {
       const templates = details.querySelectorAll("[data-template]");
       templates.forEach((el) => {
         el.hidden = !visible;
@@ -967,7 +967,7 @@
       });
     }
 
-    function setStatValue(element, value) {
+    const setStatValue = (element, value) => {
       if (!element) return;
       const unit = element.querySelector("span");
       const unitClone = unit ? unit.cloneNode(true) : null;
@@ -977,14 +977,14 @@
       }
     }
 
-    function formatMonthLabel(monthKey, monthValue) {
+    const formatMonthLabel = (monthKey, monthValue) => {
       if (monthKey === "previous") return "(上月)";
       if (monthKey === "current") return "(当月)";
       if (monthValue) return `(${monthValue})`;
       return "(当月)";
     }
 
-    function resolveMonthDateParam(monthKey) {
+    const resolveMonthDateParam = (monthKey) => {
       const now = new Date();
       const year = now.getFullYear();
       const monthIndex = monthKey === "previous" ? now.getMonth() - 1 : now.getMonth();
@@ -992,7 +992,7 @@
       return `${target.getFullYear()}-${pad2(target.getMonth() + 1)}-${pad2(target.getDate())}`;
     }
 
-    function formatDisplayDate(value) {
+    const formatDisplayDate = (value) => {
       if (!value) return "--";
       const dateValue = new Date(value);
       if (!Number.isNaN(dateValue.getTime())) {
@@ -1001,7 +1001,7 @@
       return value;
     }
 
-    function renderAttendanceSummary(data, details, monthKey) {
+    const renderAttendanceSummary = (data, details, monthKey) => {
       const stats = details.querySelector(".stats[data-template]");
       const placeholder = details.querySelector(".lazy-placeholder");
       if (!stats) return;
@@ -1015,7 +1015,7 @@
       if (placeholder) placeholder.textContent = "";
     }
 
-    function renderAttendanceDetail(data, details, monthKey) {
+    const renderAttendanceDetail = (data, details, monthKey) => {
       const table = details.querySelector(".table[data-template]");
       const placeholder = details.querySelector(".lazy-placeholder");
       if (!table) return;
@@ -1088,7 +1088,7 @@
       }
     }
 
-    function loadAccordion(details) {
+    const loadAccordion = (details) => {
       if (!details) {
         return;
       }
@@ -1165,7 +1165,7 @@
       }
     });
 
-    function updateTodayRecord() {
+    const updateTodayRecord = () => {
       fetch("/api/attendance/record/today", { credentials: "same-origin" })
         .then((res) => {
           if (!res.ok) {
@@ -1238,7 +1238,7 @@
     let currentEditRow = null;
     let toastTimer = null;
 
-    function showToast(message) {
+    const showToast = (message) => {
       const toast = document.getElementById("toast");
       if (!toast) return;
       toast.textContent = message;
@@ -1249,7 +1249,7 @@
       }, 1600);
     }
 
-    function openEditDialog(payload) {
+    const openEditDialog = (payload) => {
       const dialog = document.getElementById("edit-dialog");
       if (!dialog) return;
       const errorEl = document.getElementById("edit-dialog-error");
@@ -1269,7 +1269,7 @@
       dialog.setAttribute("aria-hidden", "false");
     }
 
-    function closeEditDialog() {
+    const closeEditDialog = () => {
       const dialog = document.getElementById("edit-dialog");
       if (!dialog) return;
       dialog.classList.remove("show");
@@ -1382,18 +1382,18 @@
         });
     });
 
-    function pad2(value) {
+    const pad2 = (value) => {
       return String(value).padStart(2, "0");
     }
 
-    function updatePunchTime() {
+    const updatePunchTime = () => {
       const now = new Date();
       const timeText = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
       const el = document.getElementById("punch-time");
       if (el) el.textContent = timeText;
     }
 
-    function updateTodayDate() {
+    const updateTodayDate = () => {
       const now = new Date();
       const dateText = `${now.getMonth() + 1}月${now.getDate()}日`;
       const el = document.getElementById("today-date");

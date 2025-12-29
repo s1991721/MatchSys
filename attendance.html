@@ -137,7 +137,7 @@ tbody tr.summary-row {
     const resetBtn = document.getElementById("filter-reset");
     const filters = { name: "", month: "" };
 
-    function renderSummary() {
+    const renderSummary = () => {
         summaryBody.innerHTML = "";
 
         if (!attendanceData.length) {
@@ -184,7 +184,7 @@ tbody tr.summary-row {
         attachRowEvents();
     }
 
-    function renderDetailTable(details = []) {
+    const renderDetailTable = (details = []) => {
         if (!details.length) {
             return `<div class="no-data">暂未录入该员工的考勤明细</div>`;
         }
@@ -217,7 +217,7 @@ tbody tr.summary-row {
         `;
     }
 
-    async function handleRowToggle(event) {
+    const handleRowToggle = async (event) => {
         const row = event.currentTarget;
         const index = row.dataset.index;
         const detailRow = row.nextElementSibling;
@@ -233,7 +233,7 @@ tbody tr.summary-row {
         }
     }
 
-    async function loadDetail(employeeId, detailRow, index) {
+    const loadDetail = async (employeeId, detailRow, index) => {
         const params = new URLSearchParams();
         if (filters.month) {
             params.set("month", filters.month);
@@ -280,19 +280,19 @@ tbody tr.summary-row {
         }
     }
 
-    function attachRowEvents() {
+    const attachRowEvents = () => {
         summaryBody.querySelectorAll(".summary-row").forEach(row => {
             row.addEventListener("click", handleRowToggle);
         });
     }
 
-    function handleFilterApply() {
+    const handleFilterApply = () => {
         filters.name = nameFilter.value;
         filters.month = monthFilter.value;
         loadAttendance();
     }
 
-    function resetFilters() {
+    const resetFilters = () => {
         filters.name = "";
         filters.month = getCurrentMonth();
         nameFilter.value = "";
@@ -300,18 +300,18 @@ tbody tr.summary-row {
         loadAttendance();
     }
 
-    function getCurrentMonth() {
+    const getCurrentMonth = () => {
         const today = new Date();
         const month = String(today.getMonth() + 1).padStart(2, "0");
         return `${today.getFullYear()}-${month}`;
     }
 
-    function setNoData(message) {
+    const setNoData = (message) => {
         noData.textContent = message || "暂无考勤数据";
         noData.style.display = "block";
     }
 
-    async function loadAttendance() {
+    const loadAttendance = async () => {
         const params = new URLSearchParams();
         if (filters.name) {
             params.set("name", filters.name);

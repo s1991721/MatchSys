@@ -131,7 +131,7 @@
     const passwordForm = document.getElementById("passwordForm");
     const logoutBtn = document.getElementById("logoutBtn");
 
-    function setReadOnlyWhenFilled(fieldId, value) {
+    const setReadOnlyWhenFilled = (fieldId, value) => {
         const field = document.getElementById(fieldId);
         if (!field) return;
         const hasValue = value !== null && value !== undefined && String(value).trim() !== "";
@@ -142,7 +142,7 @@
         }
     }
 
-    function setDisabled(disabled) {
+    const setDisabled = (disabled) => {
         employeeForm.querySelectorAll("input, textarea, select, button").forEach((el) => {
             el.disabled = disabled;
         });
@@ -152,7 +152,7 @@
         logoutBtn.disabled = disabled;
     }
 
-    async function loadEmployee() {
+    const loadEmployee = async () => {
         if (!employeeId) {
             alert("未登录，无法加载个人信息。");
             setDisabled(true);

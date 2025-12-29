@@ -300,7 +300,7 @@
     };
 
     // 公共函数：给列表加点击事件
-    function bindListClick(listId, detailId) {
+    const bindListClick = (listId, detailId) => {
         const list = document.getElementById(listId);
         const detail = document.getElementById(detailId);
 
@@ -320,7 +320,7 @@
 
     const formatDate = (date) => date.toISOString().slice(0, 10);
 
-    function renderJobList(items) {
+    const renderJobList = (items) => {
         jobList.innerHTML = '';
 
         if (!items.length) {
@@ -366,7 +366,7 @@
         }
     }
 
-    function applyFilters() {
+    const applyFilters = () => {
         const today = formatDate(new Date());
         const yesterdayDate = new Date();
         yesterdayDate.setDate(yesterdayDate.getDate() - 1);

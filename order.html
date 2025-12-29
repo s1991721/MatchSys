@@ -437,7 +437,7 @@
       const filterCustomerMap = new Map();
       const acceptTechnicianMap = new Map();
 
-      function renderActions(container) {
+      const renderActions = (container) => {
         container.innerHTML = "";
         ["编辑", "查看"].forEach((label) => {
           const btn = document.createElement("button");
@@ -452,7 +452,7 @@
         });
       }
 
-      function fillStatusOptions(select, view) {
+      const fillStatusOptions = (select, view) => {
         if (!select) return;
         const options = (view === "accept"
           ? select.dataset.acceptOptions
@@ -467,7 +467,7 @@
         });
       }
 
-      function setView(view) {
+      const setView = (view) => {
         currentView = view;
         currentPage = 1;
         switches.forEach((btn) => {
@@ -494,7 +494,7 @@
         fetchOrders();
       }
 
-      function setDialogMode(mode) {
+      const setDialogMode = (mode) => {
         const isView = mode === "view";
         detailMode = mode;
         if (detailTitle) detailTitle.textContent = isView ? "查看订单" : "编辑订单";
@@ -520,17 +520,17 @@
         if (detailFields.updater) detailFields.updater.readOnly = true;
       }
 
-      function formatPrice(value) {
+      const formatPrice = (value) => {
         if (value === null || value === undefined || value === "") return "-";
         return String(value);
       }
 
-      function formatHours(value) {
+      const formatHours = (value) => {
         if (value === null || value === undefined || value === "") return "-";
         return String(value);
       }
 
-      function renderRows(items, totalCount, page, totalPageCount) {
+      const renderRows = (items, totalCount, page, totalPageCount) => {
         const count = Number.isFinite(totalCount) ? totalCount : items.length;
         totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
         currentPage = Number.isFinite(page) ? page : 1;
@@ -575,7 +575,7 @@
         Array.from(document.querySelectorAll("[data-row-actions]")).forEach(renderActions);
       }
 
-      function fetchOrders() {
+      const fetchOrders = () => {
         const params = new URLSearchParams();
         if (filters.orderNo.value.trim()) params.append("order_no", filters.orderNo.value.trim());
         if (filters.project.value.trim()) params.append("project_name", filters.project.value.trim());
@@ -611,7 +611,7 @@
           });
       }
 
-      function openDetailDialog(mode, item) {
+      const openDetailDialog = (mode, item) => {
         if (!detailDialog || !item) return;
         fillStatusOptions(detailFields.status, currentView);
         if (detailFields.orderNo) detailFields.orderNo.value = item.order_no || "";
@@ -637,7 +637,7 @@
         detailDialog.showModal();
       }
 
-      function buildIssuePayload(fromDetail) {
+      const buildIssuePayload = (fromDetail) => {
         return {
           order_no: fromDetail ? detailFields.orderNo.value.trim() : issueForm.orderNo.value.trim(),
           project_name: fromDetail ? detailFields.project.value.trim() : issueForm.projectName.value.trim(),
@@ -653,7 +653,7 @@
         };
       }
 
-      function buildAcceptPayload(fromDetail) {
+      const buildAcceptPayload = (fromDetail) => {
         return {
           order_no: fromDetail ? detailFields.orderNo.value.trim() : acceptForm.orderNo.value.trim(),
           project_name: fromDetail ? detailFields.project.value.trim() : acceptForm.projectName.value.trim(),
@@ -671,7 +671,7 @@
         };
       }
 
-      function submitCreate(view) {
+      const submitCreate = (view) => {
         const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
         const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
         fetch(url, {
@@ -695,7 +695,7 @@
           });
       }
 
-      function submitUpdate() {
+      const submitUpdate = () => {
         if (!currentDetailId) return;
         const payload = currentView === "accept" ? buildAcceptPayload(true) : buildIssuePayload(true);
         const url = currentView === "accept"
@@ -721,7 +721,7 @@
           });
       }
 
-      function renderCustomerOptions(listEl, map, items) {
+      const renderCustomerOptions = (listEl, map, items) => {
         map.clear();
         listEl.innerHTML = "";
         items.forEach((item) => {
@@ -733,7 +733,7 @@
         });
       }
 
-      function fetchCustomerOptions(inputEl, listEl, map) {
+      const fetchCustomerOptions = (inputEl, listEl, map) => {
         const keyword = inputEl.value.trim();
         if (!keyword) {
           listEl.innerHTML = "";
@@ -758,7 +758,7 @@
           });
       }
 
-      function bindCustomerLookup(inputEl, idEl, listEl, map) {
+      const bindCustomerLookup = (inputEl, idEl, listEl, map) => {
         if (!inputEl || !idEl || !listEl) return;
         inputEl.addEventListener("input", () => {
           fetchCustomerOptions(inputEl, listEl, map);
@@ -770,7 +770,7 @@
         });
       }
 
-      function fetchEmployeeOptions(inputEl, listEl) {
+      const fetchEmployeeOptions = (inputEl, listEl) => {
         const keyword = inputEl.value.trim();
         if (!keyword) {
           listEl.innerHTML = "";
@@ -797,14 +797,14 @@
           });
       }
 
-      function bindOwnerLookup(form) {
+      const bindOwnerLookup = (form) => {
         if (!form.owner || !form.ownerList) return;
         form.owner.addEventListener("input", () => {
           fetchEmployeeOptions(form.owner, form.ownerList);
         });
       }
 
-      function renderTechnicianOptions(listEl, map, items) {
+      const renderTechnicianOptions = (listEl, map, items) => {
         map.clear();
         listEl.innerHTML = "";
         items.forEach((item) => {
@@ -816,7 +816,7 @@
         });
       }
 
-      function fetchTechnicianOptions(inputEl, listEl, map) {
+      const fetchTechnicianOptions = (inputEl, listEl, map) => {
         const keyword = inputEl.value.trim();
         if (!keyword) {
           listEl.innerHTML = "";
@@ -839,7 +839,7 @@
           });
       }
 
-      function bindTechnicianLookup(inputEl, idEl, listEl, map) {
+      const bindTechnicianLookup = (inputEl, idEl, listEl, map) => {
         if (!inputEl || !idEl || !listEl) return;
         inputEl.addEventListener("input", () => {
           fetchTechnicianOptions(inputEl, listEl, map);

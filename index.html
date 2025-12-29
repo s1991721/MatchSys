@@ -184,13 +184,13 @@
       const nav = document.getElementById("nav");
       const frame = document.getElementById("mainFrame");
 
-      function setCollapsed(collapsed) {
+      const setCollapsed = (collapsed) => {
         document.body.classList.toggle("sidebar-collapsed", collapsed);
         btn.setAttribute("aria-expanded", String(!collapsed));
         try { localStorage.setItem(KEY, collapsed ? "1" : "0"); } catch (e) {}
       }
 
-      function readCollapsed() {
+      const readCollapsed = () => {
         try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
       }
 
@@ -209,27 +209,27 @@
 
       const links = Array.from(nav.querySelectorAll("a[data-src]"));
 
-      function setActive(src) {
+      const setActive = (src) => {
         for (const a of links) {
           a.classList.toggle("active", (a.getAttribute("data-src") || "") === src);
         }
       }
 
-      function loadSrc(src) {
+      const loadSrc = (src) => {
         if (!src) return;
         setActive(src);
         frame.src = src;
         frame.setAttribute("title", src);
       }
 
-      function resolveFromHash() {
+      const resolveFromHash = () => {
         const raw = (location.hash || "").replace(/^#/, "").trim();
         if (!raw) return null;
         const src = raw.split("?")[0].split("#")[0];
         return src || null;
       }
 
-      function syncFromHash() {
+      const syncFromHash = () => {
         const src = resolveFromHash() || "home.html";
         loadSrc(src);
       }

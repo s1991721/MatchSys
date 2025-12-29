@@ -176,34 +176,35 @@
   </div>
 
   <script>
-    (function () {
+    document.addEventListener("DOMContentLoaded", () => {
       const btn = document.getElementById("collapseBtn");
-      if (!btn) return;
-      const KEY = "chat_sidebar_collapsed";
-
       const nav = document.getElementById("nav");
       const frame = document.getElementById("mainFrame");
+      const topDate = document.getElementById("topDate");
+      const KEY = "chat_sidebar_collapsed";
 
       const setCollapsed = (collapsed) => {
         document.body.classList.toggle("sidebar-collapsed", collapsed);
-        btn.setAttribute("aria-expanded", String(!collapsed));
+        if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
         try { localStorage.setItem(KEY, collapsed ? "1" : "0"); } catch (e) {}
-      }
+      };
 
       const readCollapsed = () => {
         try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+      };
+
+      if (btn) {
+        setCollapsed(readCollapsed());
+        btn.addEventListener("click", () => {
+          setCollapsed(!document.body.classList.contains("sidebar-collapsed"));
+        });
       }
 
-      setCollapsed(readCollapsed());
-      const topDate = document.getElementById("topDate");
       if (topDate) {
         const d = new Date();
         const jp = ["日", "月", "火", "水", "木", "金", "土"];
         topDate.textContent = `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（${jp[d.getDay()]}）`;
       }
-      btn.addEventListener("click", () => {
-        setCollapsed(!document.body.classList.contains("sidebar-collapsed"));
-      });
 
       if (!nav || !frame) return;
 
@@ -213,50 +214,48 @@
         for (const a of links) {
           a.classList.toggle("active", (a.getAttribute("data-src") || "") === src);
         }
-      }
+      };
 
-      const loadSrc = (src) => {
+      const applyRoute = (src) => {
         if (!src) return;
         setActive(src);
-        frame.src = src;
-        frame.setAttribute("title", src);
-      }
+        if (frame.src !== src) {
+          frame.src = src;
+          frame.setAttribute("title", src);
+        }
+      };
 
       const resolveFromHash = () => {
         const raw = (location.hash || "").replace(/^#/, "").trim();
         if (!raw) return null;
         const src = raw.split("?")[0].split("#")[0];
         return src || null;
-      }
+      };
 
       const syncFromHash = () => {
         const src = resolveFromHash() || "home.html";
-        loadSrc(src);
-      }
+        applyRoute(src);
+      };
 
-      nav.addEventListener("click", (e) => {
-        const a = e.target && e.target.closest ? e.target.closest("a[data-src]") : null;
-        if (!a) return;
-        e.preventDefault();
-        const src = a.getAttribute("data-src");
+      const handleRouteClick = (event) => {
+        const target = event.target && event.target.closest ? event.target.closest("a[data-src]") : null;
+        if (!target) return;
+        if (!(nav.contains(target) || target.classList.contains("avatar"))) return;
+        event.preventDefault();
+        const src = target.getAttribute("data-src");
         if (!src) return;
-        if (location.hash !== "#" + src) location.hash = src;
-        loadSrc(src);
-      });
+        if (location.hash !== "#" + src) {
+          location.hash = src;
+        } else {
+          applyRoute(src);
+        }
+      };
 
-      document.addEventListener("click", (e) => {
-        const a = e.target && e.target.closest ? e.target.closest("a.avatar[data-src]") : null;
-        if (!a) return;
-        e.preventDefault();
-        const src = a.getAttribute("data-src");
-        if (!src) return;
-        if (location.hash !== "#" + src) location.hash = src;
-        loadSrc(src);
-      });
-
+      nav.addEventListener("click", handleRouteClick);
+      document.addEventListener("click", handleRouteClick);
       window.addEventListener("hashchange", syncFromHash);
       syncFromHash();
-    })();
+    });
   </script>
 </body>
 </html>

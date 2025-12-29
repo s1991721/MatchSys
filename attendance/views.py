@@ -14,6 +14,7 @@ from .models import AttendancePolicy, get_monthly_attendance_models
 
 @csrf_exempt
 @require_POST
+# 打卡
 def attendance_punch_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
@@ -24,14 +25,7 @@ def attendance_punch_api(request):
         return error
 
     now = timezone.localtime()
-    punch_time_raw = (payload.get("punch_time") or "").strip()
-    if punch_time_raw:
-        try:
-            punch_time_value = datetime.strptime(punch_time_raw, "%H:%M:%S").time()
-        except ValueError:
-            return api_error("Invalid punch_time")
-    else:
-        punch_time_value = now.time().replace(microsecond=0)
+    punch_time_value = now.time().replace(microsecond=0)
 
     work_start = time(2, 0, 0)
     work_end = time(14, 0, 0)
@@ -67,28 +61,27 @@ def attendance_punch_api(request):
     return api_success(data=payload)
 
 
+# 创建打卡记录
 def _create_attendance_punch(
-        model, employee, now, punch_time_value, punch_type, payload, punch_date=None, remark=""
+        model, employee, now, punch_time_value, punch_type, payload, remark=""
 ):
     return model.objects.create(
-        employee=employee,
-        punch_date=punch_date or now.date(),
+        employee_id=employee.id,
+        punch_date=now.date(),
         punch_time=punch_time_value,
         punch_type=punch_type,
         latitude=payload.get("latitude"),
         longitude=payload.get("longitude"),
         location_text=(payload.get("location_text") or "")[:255],
         remark=remark or "",
-        created_by=employee,
-        created_at=now,
-        updated_by=employee,
-        updated_at=now,
+        created_by=employee.id
     )
 
 
-def _sync_attendance_record(punch_model, record_model, employee, now, punch_type):
+# 同步考勤记录
+def _sync_attendance_record(punch_model, record_model, employee, now):
     punch_queryset = punch_model.objects.filter(
-        employee=employee,
+        employee_id=employee.id,
         punch_date=now.date(),
         deleted_at__isnull=True,
     )
@@ -98,7 +91,7 @@ def _sync_attendance_record(punch_model, record_model, employee, now, punch_type
         return None
 
     record = record_model.objects.filter(
-        employee=employee,
+        employee_id=employee.id,
         punch_date=now.date(),
         deleted_at__isnull=True,
     ).first()
@@ -115,21 +108,18 @@ def _sync_attendance_record(punch_model, record_model, employee, now, punch_type
             record.end_time = end_time
             update_fields.append("end_time")
         if update_fields:
-            record.updated_by = employee
+            record.updated_by = employee.id
             record.updated_at = now
             update_fields.extend(["updated_by", "updated_at"])
             record.save(update_fields=update_fields)
         return record
 
     record = record_model.objects.create(
-        employee=employee,
+        employee_id=employee.id,
         punch_date=now.date(),
         start_time=start_time,
         end_time=end_time,
-        created_by=employee,
-        created_at=now,
-        updated_by=employee,
-        updated_at=now,
+        created_by=employee.id
     )
     return record
 

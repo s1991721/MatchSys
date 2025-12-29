@@ -126,13 +126,11 @@ def _sync_attendance_record(punch_model, record_model, employee, now):
 
 @csrf_exempt
 @require_POST
+# 修改考勤
 def attendance_record_edit_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+        return api_error("Unauthorized", status=401)
 
     payload, error = parse_json_body(request)
     if error:
@@ -141,89 +139,52 @@ def attendance_record_edit_api(request):
     date_raw = (payload.get("date") or "").strip()
     remark = (payload.get("remark") or "").strip()
     if not date_raw:
-        return api_error(
-            "Missing date"
-        )
+        return api_error("Missing date")
     if not remark:
-        return api_error(
-            "Missing remark"
-        )
+        return api_error("Missing remark")
 
     try:
         target_date = datetime.strptime(date_raw, "%Y-%m-%d").date()
     except ValueError:
-        return api_error(
-            "Invalid date"
-        )
+        return api_error("Invalid date")
 
     start_time_value, error = parse_time_value(payload.get("start_time"))
     if error:
         return error
+
     end_time_value, error = parse_time_value(payload.get("end_time"))
     if error:
         return error
+
     original_start, error = parse_time_value(payload.get("original_start_time"))
     if error:
         return error
+
     original_end, error = parse_time_value(payload.get("original_end_time"))
     if error:
         return error
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error(
-            "Employee not found",
-            status=404,
-        )
+        return api_error("Employee not found", status=404)
 
-    now = timezone.localtime()
     punch_model, record_model = get_monthly_attendance_models(target_date)
 
     final_start = start_time_value if start_time_value is not None else original_start
     final_end = end_time_value if end_time_value is not None else original_end
 
     if final_start is None or final_end is None:
-        return api_error(
-            "Missing start_time or end_time",
-        )
-
-    start_changed = final_start != original_start
-    end_changed = final_end != original_end
-
-    if start_changed:
-        _create_attendance_punch(
-            punch_model,
-            employee,
-            now,
-            final_start,
-            1,
-            {},
-            punch_date=target_date,
-            remark=remark,
-        )
-    if end_changed:
-        _create_attendance_punch(
-            punch_model,
-            employee,
-            now,
-            final_end,
-            2,
-            {},
-            punch_date=target_date,
-            remark=remark,
-        )
+        return api_error( "Missing start_time or end_time" )
 
     defaults = {
         "start_time": final_start,
         "end_time": final_end,
         "remark": remark,
-        "created_by": employee,
-        "created_at": now,
-        "updated_by": employee,
-        "updated_at": now,
+        "created_by": employee.id,
+        "updated_by": employee.id,
     }
     record, created = record_model.objects.get_or_create(
-        employee=employee,
+        employee_id=employee.id,
         punch_date=target_date,
         defaults=defaults,
     )
@@ -231,17 +192,8 @@ def attendance_record_edit_api(request):
         record.start_time = final_start
         record.end_time = final_end
         record.remark = remark
-        record.updated_by = employee
-        record.updated_at = now
-        record.save(
-            update_fields=[
-                "start_time",
-                "end_time",
-                "remark",
-                "updated_by",
-                "updated_at",
-            ]
-        )
+        record.updated_by = employee.id
+        record.save()
 
     payload = {
         "record": {
@@ -255,13 +207,11 @@ def attendance_record_edit_api(request):
 
 
 @require_GET
+# 获取今天的考勤记录
 def attendance_record_today_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+        return api_error("Unauthorized", status=401)
 
     today = timezone.localdate()
     record_model = get_monthly_attendance_models(today)[1]
@@ -281,32 +231,6 @@ def attendance_record_today_api(request):
         else "",
     }
     return api_success(data=payload)
-
-
-def _resolve_attendance_month(request):
-    value = (request.GET.get("month") or request.GET.get("date") or "").strip()
-    today = timezone.localdate()
-    if not value or value.lower() in {"current", "this", "now"}:
-        return today
-    if value.lower() in {"previous", "prev", "last"}:
-        return shift_month(today, -1)
-    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-        try:
-            return datetime.strptime(value, "%Y-%m-%d").date()
-        except ValueError:
-            return today
-    if re.fullmatch(r"\d{4}-\d{2}", value):
-        year, month = value.split("-")
-        try:
-            return date(int(year), int(month), 1)
-        except ValueError:
-            return today
-    if re.fullmatch(r"\d{6}", value):
-        try:
-            return date(int(value[:4]), int(value[4:6]), 1)
-        except ValueError:
-            return today
-    return today
 
 
 @require_GET
@@ -361,15 +285,14 @@ def my_attendance_summary_api(request):
 
 
 @require_GET
+# 获取某月所有天的考勤详情
 def my_attendance_detail_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+        return api_error( "Unauthorized", status=401)
 
-    target_date = _resolve_attendance_month(request)
+    target_date = request.GET.get("date")
+    target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
         employee_id=employee_id,
@@ -384,8 +307,7 @@ def my_attendance_detail_api(request):
                 "display_date": f"{record.punch_date.month}月{record.punch_date.day}日",
                 "start_time": record.start_time.strftime("%H:%M") if record.start_time else "",
                 "end_time": record.end_time.strftime("%H:%M") if record.end_time else "",
-                "remark": record.remark or "",
-                "has_missing": not (record.start_time and record.end_time),
+                "remark": record.remark or ""
             }
         )
 

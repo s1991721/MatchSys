@@ -480,7 +480,7 @@
         }
         const query = url.includes("?") ? "&" : "?";
         try {
-            const payload = await requestJson(`${url}${query}month=${month}&date=${dateParam}`, {method: "GET"});
+            const payload = await requestJson(`${url}${query}date=${dateParam}`, {method: "GET"});
             const result = payload.data || {};
             const rendererName = details.dataset.renderer;
             const renderer = rendererName ? {renderAttendanceSummary, renderAttendanceDetail}[rendererName] : null;

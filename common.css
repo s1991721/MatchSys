@@ -662,7 +662,7 @@ body.sidebar-collapsed .handle-icon {
 body.sidebar-collapsed:is(.sidebar, .nav) {
   overflow: visible;
 }
-body.sidebar-collapsed:is(.brand h1, .brand small, .brand-text, .nav-label, .sidebar .footer) {
+body.sidebar-collapsed :is(.brand h1, .brand small, .brand-text, .nav-label) {
   display: none;
 }
 body.sidebar-collapsed .brand {
@@ -675,6 +675,7 @@ body.sidebar-collapsed .brand-left {
 }
 body.sidebar-collapsed .nav-item a {
   justify-content: center;
+  width: 100%;
   padding: 12px 0;
   border: none;
   background: transparent;
@@ -689,6 +690,9 @@ body.sidebar-collapsed .nav-item a:hover {
 body.sidebar-collapsed .nav-item a.active {
   background: rgba(59, 130, 246, 0.14);
   border-color: transparent;
+}
+body.sidebar-collapsed .nav-item a.active::before {
+  content: none;
 }
 body.sidebar-collapsed .nav-item a::after {
   z-index: 9999;
@@ -722,6 +726,12 @@ body.sidebar-collapsed .nav-item a:hover::after {
   font-size: 12px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
+}
+body.sidebar-collapsed .sidebar .footer {
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
   align-items: center;
 }
 .main {

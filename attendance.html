@@ -65,6 +65,32 @@
     const resetBtn = document.getElementById("filter-reset");
     const filters = { name: "", month: "" };
 
+    const createParams = (entries = []) => {
+        const params = new URLSearchParams();
+        entries.forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value);
+            }
+        });
+        return params;
+    };
+
+    const buildUrl = (base, params) => {
+        const query = params.toString();
+        return query ? `${base}?${query}` : base;
+    };
+
+    const setDetailContent = (wrapper, title, content) => {
+        wrapper.innerHTML = `
+            <div class="c-panel-title">${title}</div>
+            ${content}
+        `;
+    };
+
+    const setDetailMessage = (wrapper, title, message) => {
+        setDetailContent(wrapper, title, `<div class="c-empty">${message}</div>`);
+    };
+
     const renderSummary = () => {
         summaryBody.innerHTML = "";
 
@@ -75,11 +101,11 @@
 
         hideNoData();
 
-        attendanceData.forEach((person, index) => {
+        attendanceData.forEach((person) => {
             const summaryRow = document.createElement("tr");
             summaryRow.className = "summary-row";
-            summaryRow.dataset.index = index;
             summaryRow.dataset.employeeId = person.employee_id;
+            summaryRow.dataset.name = person.name;
             summaryRow.innerHTML = `
                 <td>${person.name}</td>
                 <td>${person.month}</td>
@@ -147,7 +173,6 @@
 
     const handleRowToggle = async (event) => {
         const row = event.currentTarget;
-        const index = row.dataset.index;
         const detailRow = row.nextElementSibling;
 
         const isActive = row.classList.contains("active");
@@ -157,54 +182,37 @@
         if (!isActive) {
             row.classList.add("active");
             detailRow.style.display = "table-row";
-            await loadDetail(row.dataset.employeeId, detailRow, index);
+            await loadDetail(row.dataset.employeeId, detailRow);
         }
     }
 
-    const loadDetail = async (employeeId, detailRow, index) => {
-        const params = new URLSearchParams();
-        if (filters.month) {
-            params.set("month", filters.month);
-        }
-
-        const url = params.toString()
-            ? `/api/attendance/${employeeId}/detail?${params.toString()}`
-            : `/api/attendance/${employeeId}/detail`;
-
+    const loadDetail = async (employeeId, detailRow) => {
+        const params = createParams([
+            ["month", filters.month]
+        ]);
+        const url = buildUrl(`/api/attendance/${employeeId}/detail`, params);
         const wrapper = detailRow.querySelector("[data-detail-wrapper]");
         if (!wrapper) {
             return;
         }
 
-        wrapper.innerHTML = `
-            <div class="c-panel-title">加载中...</div>
-            <div class="c-empty">正在获取考勤明细</div>
-        `;
+        setDetailMessage(wrapper, "加载中...", "正在获取考勤明细");
 
         try {
-            const response = await fetch(url, { credentials: "same-origin" });
+            const response = await fetchWithAuth(url, { method: "GET" });
             const data = await response.json();
             const payload = normalizeApiResponse(data);
             if (!response.ok || !payload.success) {
-                wrapper.innerHTML = `
-                    <div class="c-panel-title">明细加载失败</div>
-                    <div class="c-empty">${payload.message || "请稍后重试"}</div>
-                `;
+                setDetailMessage(wrapper, "明细加载失败", payload.message || "请稍后重试");
                 return;
             }
 
             const result = payload.data || {};
-            const name = result.employee?.name || attendanceData[index]?.name || "";
+            const name = result.employee?.name || detailRow.previousElementSibling?.dataset.name || "";
             const details = result.details || [];
-            wrapper.innerHTML = `
-                <div class="c-panel-title">${name} 的每日考勤</div>
-                ${renderDetailTable(details)}
-            `;
+            setDetailContent(wrapper, `${name} 的每日考勤`, renderDetailTable(details));
         } catch (error) {
-            wrapper.innerHTML = `
-                <div class="c-panel-title">明细加载失败</div>
-                <div class="c-empty">请稍后重试</div>
-            `;
+            setDetailMessage(wrapper, "明细加载失败", "请稍后重试");
         }
     }
 
@@ -244,23 +252,16 @@
     }
 
     const loadAttendance = async () => {
-        const params = new URLSearchParams();
-        if (filters.name) {
-            params.set("name", filters.name);
-        }
-        if (filters.month) {
-            params.set("month", filters.month);
-        }
-
-        const url = params.toString()
-            ? `/api/attendance/summary?${params.toString()}`
-            : "/api/attendance/summary";
-
+        const params = createParams([
+            ["name", filters.name],
+            ["month", filters.month]
+        ]);
+        const url = buildUrl("/api/attendance/summary", params);
         summaryBody.innerHTML = "";
         setNoData("正在加载考勤数据...");
 
         try {
-            const response = await fetch(url, { credentials: "same-origin" });
+            const response = await fetchWithAuth(url, { method: "GET" });
             const data = await response.json();
             const payload = normalizeApiResponse(data);
             if (!response.ok || !payload.success) {

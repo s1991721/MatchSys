@@ -1,5 +1,4 @@
-import json
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time
 import calendar
 import re
 
@@ -7,9 +6,9 @@ from project.api import api_error, api_success
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
-from django.db.models import Q
 
 from employee.models import Employee
+from project.common_tools import parse_json_body
 from .models import AttendancePolicy, get_monthly_attendance_models
 
 
@@ -21,10 +20,9 @@ def attendance_punch_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
-    payload, error = _parse_json_body(request)
+    payload, error = parse_json_body(request)
     if error:
         return error
 
@@ -36,8 +34,6 @@ def attendance_punch_api(request):
         except ValueError:
             return api_error(
                 "Invalid punch_time",
-                status=400,
-                legacy={"error": "Invalid punch_time"},
             )
     else:
         punch_time_value = now.time().replace(microsecond=0)
@@ -51,7 +47,6 @@ def attendance_punch_api(request):
         return api_error(
             "Employee not found",
             status=404,
-            legacy={"error": "Employee not found"},
         )
 
     punch_model, record_model = get_monthly_attendance_models(now.date())
@@ -81,19 +76,7 @@ def attendance_punch_api(request):
             ),
         },
     }
-    return api_success(data=payload, legacy={"status": "ok", **payload})
-
-
-def _parse_json_body(request):
-    try:
-        raw = request.body.decode("utf-8") if request.body else "{}"
-        return json.loads(raw or "{}"), None
-    except json.JSONDecodeError:
-        return None, api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
-        )
+    return api_success(data=payload)
 
 
 def _parse_time_value(value, field_name):
@@ -105,16 +88,11 @@ def _parse_time_value(value, field_name):
             return datetime.strptime(value, fmt).time(), None
         except ValueError:
             continue
-    return None, api_error(
-        f"Invalid {field_name}",
-        status=400,
-        legacy={"error": f"Invalid {field_name}"},
-    )
-
+    return None, api_error(f"Invalid {field_name}")
 
 
 def _create_attendance_punch(
-    model, employee, now, punch_time_value, punch_type, payload, punch_date=None, remark=""
+        model, employee, now, punch_time_value, punch_type, payload, punch_date=None, remark=""
 ):
     return model.objects.create(
         employee=employee,
@@ -188,10 +166,9 @@ def attendance_record_edit_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
-    payload, error = _parse_json_body(request)
+    payload, error = parse_json_body(request)
     if error:
         return error
 
@@ -199,24 +176,18 @@ def attendance_record_edit_api(request):
     remark = (payload.get("remark") or "").strip()
     if not date_raw:
         return api_error(
-            "Missing date",
-            status=400,
-            legacy={"error": "Missing date"},
+            "Missing date"
         )
     if not remark:
         return api_error(
-            "Missing remark",
-            status=400,
-            legacy={"error": "Missing remark"},
+            "Missing remark"
         )
 
     try:
         target_date = datetime.strptime(date_raw, "%Y-%m-%d").date()
     except ValueError:
         return api_error(
-            "Invalid date",
-            status=400,
-            legacy={"error": "Invalid date"},
+            "Invalid date"
         )
 
     start_time_value, error = _parse_time_value(payload.get("start_time"), "start_time")
@@ -241,7 +212,6 @@ def attendance_record_edit_api(request):
         return api_error(
             "Employee not found",
             status=404,
-            legacy={"error": "Employee not found"},
         )
 
     now = timezone.localtime()
@@ -253,8 +223,6 @@ def attendance_record_edit_api(request):
     if final_start is None or final_end is None:
         return api_error(
             "Missing start_time or end_time",
-            status=400,
-            legacy={"error": "Missing start_time or end_time"},
         )
 
     start_changed = final_start != original_start
@@ -321,8 +289,7 @@ def attendance_record_edit_api(request):
             "remark": remark,
         },
     }
-    return api_success(data=payload, legacy={"status": "ok", **payload})
-
+    return api_success(data=payload)
 
 
 @require_GET
@@ -332,7 +299,6 @@ def attendance_record_today_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
     today = timezone.localdate()
@@ -352,7 +318,7 @@ def attendance_record_today_api(request):
         if record and record.end_time
         else "",
     }
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)
 
 
 def _shift_month(value, offset):
@@ -407,7 +373,6 @@ def my_attendance_summary_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
     target_date = _resolve_attendance_month(request)
@@ -449,7 +414,7 @@ def my_attendance_summary_api(request):
             "absent_days": absent_days,
         },
     }
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload, )
 
 
 @require_GET
@@ -459,7 +424,6 @@ def my_attendance_detail_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
     target_date = _resolve_attendance_month(request)
@@ -486,7 +450,7 @@ def my_attendance_detail_api(request):
         "month": target_date.strftime("%Y-%m"),
         "records": payload,
     }
-    return api_success(data=response_payload, legacy=response_payload)
+    return api_success(data=response_payload, )
 
 
 def _weekday_label(value):
@@ -501,7 +465,6 @@ def attendance_summary_api(request):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
     target_date = _resolve_attendance_month(request)
@@ -517,7 +480,7 @@ def attendance_summary_api(request):
             "month": target_date.strftime("%Y-%m"),
             "employees": [],
         }
-        return api_success(data=response_payload, legacy=response_payload)
+        return api_success(data=response_payload, )
 
     employee_ids = [emp.id for emp in employees]
     record_model = get_monthly_attendance_models(target_date)[1]
@@ -593,7 +556,7 @@ def attendance_summary_api(request):
         )
 
     response_payload = {"month": month_label, "employees": payload}
-    return api_success(data=response_payload, legacy=response_payload)
+    return api_success(data=response_payload, )
 
 
 @require_GET
@@ -603,7 +566,6 @@ def attendance_detail_api(request, employee_id):
         return api_error(
             "Unauthorized",
             status=401,
-            legacy={"error": "Unauthorized"},
         )
 
     target_date = _resolve_attendance_month(request)
@@ -612,7 +574,6 @@ def attendance_detail_api(request, employee_id):
         return api_error(
             "Employee not found",
             status=404,
-            legacy={"error": "Employee not found"},
         )
 
     record_model = get_monthly_attendance_models(target_date)[1]
@@ -666,4 +627,4 @@ def attendance_detail_api(request, employee_id):
         },
         "details": details,
     }
-    return api_success(data=response_payload, legacy=response_payload)
+    return api_success(data=response_payload)

@@ -4,105 +4,33 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title>考勤管理</title>
-    <style>
-* {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .hint {
-            margin: 0 0 18px;
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-tbody tr.summary-row {
-            cursor: pointer;
-        }
-
-        tbody tr.summary-row:hover {
-            background: var(--accent);
-        }
-
-        tbody tr.summary-row.active {
-            background: rgba(36, 107, 253, 0.12);
-        }
-
-        .status-badge {
-            display: inline-flex;
-            min-width: 62px;
-            justify-content: center;
-            font-size: 12px;
-            border-radius: 999px;
-            padding: 2px 10px;
-            color: #fff;
-        }
-
-        .status-normal {
-            background: #00c48c;
-        }
-
-        .status-alert {
-            background: #ff9f43;
-        }
-
-        .status-warning {
-            background: #ff5f5f;
-        }
-
-        .detail-row {
-            background: #f9faff;
-        }
-
-        .detail-wrapper {
-            padding: 8px 0 16px 0;
-        }
-
-        .detail-header {
-            font-weight: 600;
-            margin: 6px 0 12px;
-        }
-
-        .detail-
-.detail-table
-.detail-table
-.no-data {
-            color: var(--muted);
-            font-size: 14px;
-            text-align: center;
-            padding: 20px;
-        }
-  </style>
+    <link rel="stylesheet" href="components.css">
+    <title>考勤管理</title>
 </head>
-<body>
-<div class="page page-wide">
-    <div class="c-card c-card-pad">
-        <h3 class="title c-title-bar c-title-bar-lg">考勤管理</h3>
-        <p class="hint">单击人员行展示其每日打卡明细。</p>
-        <div class="filters c-filter-row">
-            <div class="filter-field c-filter-field">
-                <label for="name-filter">姓名</label>
-                <input type="text" id="name-filter" placeholder="输入姓名" />
+<body class="c-form-page">
+<div class="page">
+    <section class="c-card">
+        <div class="filters c-filter-panel">
+            <div class="filter-grid c-filter-grid-wide">
+                <label>
+                    姓名
+                    <input type="search" id="name-filter" placeholder="输入姓名" />
+                </label>
+                <label>
+                    月份
+                    <input type="month" id="month-filter" />
+                </label>
             </div>
-            <div class="filter-field c-filter-field">
-                <label for="month-filter">月份</label>
-                <input type="month" id="month-filter" />
-            </div>
-            <div class="filter-actions c-filter-actions">
-                <button class="c-btn c-btn-primary" id="filter-apply" type="button">筛选</button>
-                <button class="c-btn c-btn-ghost" id="filter-reset" type="button">重置</button>
+            <div class="filter-actions c-filter-actions-bar">
+                <div class="filter-actions-left c-filter-actions-left"></div>
+                <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
+                    <button class="c-btn c-btn-primary" id="filter-apply" type="button">搜索</button>
+                    <button class="c-btn c-btn-warn" id="filter-reset" type="button">重置</button>
+                </div>
             </div>
         </div>
         <div class="table-wrapper c-table-wrapper">
-            <table class="c-table">
+            <table class="c-table c-table-hover">
                 <thead>
                 <tr>
                     <th>姓名</th>
@@ -116,18 +44,18 @@ tbody tr.summary-row {
                 <tbody id="summary-body">
                 </tbody>
             </table>
-            <div id="no-data" class="no-data" style="display: none;">暂无考勤数据</div>
+            <div id="no-data" class="c-empty hidden">暂无考勤数据</div>
         </div>
-    </div>
+    </section>
 </div>
 <script src="common.js"></script>
 <script>
     let attendanceData = [];
 
     const statusMap = {
-        normal: { label: "正常", className: "status-normal" },
-        alert: { label: "关注", className: "status-alert" },
-        warning: { label: "异常", className: "status-warning" }
+        normal: { label: "正常", className: "c-pill c-pill-success" },
+        alert: { label: "关注", className: "c-pill c-pill-warn" },
+        warning: { label: "异常", className: "c-pill c-pill-danger" }
     };
     const summaryBody = document.getElementById("summary-body");
     const noData = document.getElementById("no-data");
@@ -141,11 +69,11 @@ tbody tr.summary-row {
         summaryBody.innerHTML = "";
 
         if (!attendanceData.length) {
-            noData.style.display = "block";
+            setNoData("暂无考勤数据");
             return;
         }
 
-        noData.style.display = "none";
+        hideNoData();
 
         attendanceData.forEach((person, index) => {
             const summaryRow = document.createElement("tr");
@@ -159,7 +87,7 @@ tbody tr.summary-row {
                 <td>${person.absence_days}</td>
                 <td>${person.annual_leave}</td>
                 <td>
-                    <span class="status-badge ${statusMap[person.status]?.className ||""}">
+                    <span class="${statusMap[person.status]?.className || "c-pill"}">
                         ${statusMap[person.status]?.label || "未知"}
                     </span>
                 </td>
@@ -170,8 +98,8 @@ tbody tr.summary-row {
             detailRow.style.display = "none";
             detailRow.innerHTML = `
                 <td colspan="6">
-                    <div class="detail-wrapper">
-                        <div class="detail-header">${person.name} 的每日考勤</div>
+                    <div class="c-card-compact" data-detail-wrapper>
+                        <div class="c-panel-title">${person.name} 的每日考勤</div>
                         ${renderDetailTable([])}
                     </div>
                 </td>
@@ -186,7 +114,7 @@ tbody tr.summary-row {
 
     const renderDetailTable = (details = []) => {
         if (!details.length) {
-            return `<div class="no-data">暂未录入该员工的考勤明细</div>`;
+            return `<div class="c-empty">暂未录入该员工的考勤明细</div>`;
         }
 
         const rows = details.map(
@@ -202,7 +130,7 @@ tbody tr.summary-row {
         ).join("");
 
         return `
-            <table class="detail-table c-table">
+            <table class="c-table c-table-compact">
                 <thead>
                     <tr>
                         <th>日期</th>
@@ -243,14 +171,14 @@ tbody tr.summary-row {
             ? `/api/attendance/${employeeId}/detail?${params.toString()}`
             : `/api/attendance/${employeeId}/detail`;
 
-        const wrapper = detailRow.querySelector(".detail-wrapper");
+        const wrapper = detailRow.querySelector("[data-detail-wrapper]");
         if (!wrapper) {
             return;
         }
 
         wrapper.innerHTML = `
-            <div class="detail-header">加载中...</div>
-            <div class="no-data">正在获取考勤明细</div>
+            <div class="c-panel-title">加载中...</div>
+            <div class="c-empty">正在获取考勤明细</div>
         `;
 
         try {
@@ -259,8 +187,8 @@ tbody tr.summary-row {
             const payload = normalizeApiResponse(data);
             if (!response.ok || !payload.success) {
                 wrapper.innerHTML = `
-                    <div class="detail-header">明细加载失败</div>
-                    <div class="no-data">${payload.message || "请稍后重试"}</div>
+                    <div class="c-panel-title">明细加载失败</div>
+                    <div class="c-empty">${payload.message || "请稍后重试"}</div>
                 `;
                 return;
             }
@@ -269,13 +197,13 @@ tbody tr.summary-row {
             const name = result.employee?.name || attendanceData[index]?.name || "";
             const details = result.details || [];
             wrapper.innerHTML = `
-                <div class="detail-header">${name} 的每日考勤</div>
+                <div class="c-panel-title">${name} 的每日考勤</div>
                 ${renderDetailTable(details)}
             `;
         } catch (error) {
             wrapper.innerHTML = `
-                <div class="detail-header">明细加载失败</div>
-                <div class="no-data">请稍后重试</div>
+                <div class="c-panel-title">明细加载失败</div>
+                <div class="c-empty">请稍后重试</div>
             `;
         }
     }
@@ -308,7 +236,11 @@ tbody tr.summary-row {
 
     const setNoData = (message) => {
         noData.textContent = message || "暂无考勤数据";
-        noData.style.display = "block";
+        noData.classList.remove("hidden");
+    }
+
+    const hideNoData = () => {
+        noData.classList.add("hidden");
     }
 
     const loadAttendance = async () => {

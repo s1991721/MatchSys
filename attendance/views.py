@@ -1,5 +1,4 @@
-import re
-from datetime import date, datetime, time
+from datetime import datetime, time
 
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -7,8 +6,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 from employee.models import Employee
 from project.api import api_error, api_success
-from project.common_tools import parse_json_body, parse_time_value, weekday_label, is_workday, count_workdays, \
-    shift_month
+from project.common_tools import parse_json_body, parse_time_value, weekday_label, is_workday, count_workdays
 from .models import AttendancePolicy, get_monthly_attendance_models
 
 
@@ -174,7 +172,7 @@ def attendance_record_edit_api(request):
     final_end = end_time_value if end_time_value is not None else original_end
 
     if final_start is None or final_end is None:
-        return api_error( "Missing start_time or end_time" )
+        return api_error("Missing start_time or end_time")
 
     defaults = {
         "start_time": final_start,
@@ -289,7 +287,7 @@ def my_attendance_summary_api(request):
 def my_attendance_detail_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error( "Unauthorized", status=401)
+        return api_error("Unauthorized", status=401)
 
     target_date = request.GET.get("date")
     target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -315,19 +313,17 @@ def my_attendance_detail_api(request):
         "month": target_date.strftime("%Y-%m"),
         "records": payload,
     }
-    return api_success(data=response_payload, )
+    return api_success(data=response_payload)
 
 
 @require_GET
 def attendance_summary_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+        return api_error("Unauthorized", status=401 )
 
-    target_date = _resolve_attendance_month(request)
+    target_date = request.GET.get("date")
+    target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
     name_filter = (request.GET.get("name") or "").strip()
 
     employees_qs = Employee.objects.filter(deleted_at__isnull=True).order_by("id")
@@ -340,7 +336,7 @@ def attendance_summary_api(request):
             "month": target_date.strftime("%Y-%m"),
             "employees": [],
         }
-        return api_success(data=response_payload, )
+        return api_success(data=response_payload )
 
     employee_ids = [emp.id for emp in employees]
     record_model = get_monthly_attendance_models(target_date)[1]

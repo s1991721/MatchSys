@@ -11,7 +11,7 @@
 <div class="page">
     <div class="c-card">
         <div class="filters c-filter-panel">
-            <div class="filter-grid c-filter-grid-auto">
+            <div class="filter-grid c-filter-grid-wide">
                 <label>
                     姓名/昵称
                     <input type="text" id="filterKeyword" placeholder="输入姓名或昵称" />
@@ -43,8 +43,15 @@
                     </select>
                 </label>
                 <label>
-                    现场契约截止
-                    <input type="date" id="filterSiteContract" />
+                    营业状态
+                    <select id="filterBusinessStatus">
+                        <option value="">全部</option>
+                        <option value="0">营业中</option>
+                        <option value="1">营业中1/2等待</option>
+                        <option value="2">营业中结果等待</option>
+                        <option value="3">现场中</option>
+                        <option value="4">现场已确定</option>
+                    </select>
                 </label>
             </div>
             <div class="filter-actions c-filter-actions-bar c-filter-actions-stack">
@@ -66,6 +73,7 @@
                     <th>单价（万/月）</th>
                     <th>介绍文</th>
                     <th>契约状况</th>
+                    <th>营业状态</th>
                     <th>现场契约</th>
                     <th>备注</th>
                     <th>SS 文件</th>
@@ -74,7 +82,7 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td colspan="11" class="empty c-empty">暂无人员数据</td>
+                    <td colspan="12" class="empty c-empty">暂无人员数据</td>
                 </tr>
                 </tbody>
             </table>
@@ -97,7 +105,7 @@
     </div>
     <form id="personForm">
         <div class="dialog-body c-dialog-body">
-            <div class="form-grid form-grid-single form-grid-spaced">
+            <div class="form-grid form-grid-spaced">
                 <input type="hidden" name="employee_id" />
                 <label>
                     姓名
@@ -138,6 +146,17 @@
                     <input type="date" name="siteContract" required />
                 </label>
                 <label>
+                    营业状态
+                    <select name="businessStatus" required>
+                        <option value="">请选择</option>
+                        <option value="0">营业中</option>
+                        <option value="1">营业中1/2等待</option>
+                        <option value="2">营业中结果等待</option>
+                        <option value="3">现场中</option>
+                        <option value="4">现场已确定</option>
+                    </select>
+                </label>
+                <label>
                     介绍文
                     <textarea name="intro" rows="3" placeholder="输入人员的介绍或履历亮点"></textarea>
                 </label>
@@ -175,7 +194,7 @@
     const filterNationality = document.getElementById('filterNationality');
     const filterPriceMax = document.getElementById('filterPriceMax');
     const filterContract = document.getElementById('filterContract');
-    const filterSiteContract = document.getElementById('filterSiteContract');
+    const filterBusinessStatus = document.getElementById('filterBusinessStatus');
     const applyFilterBtn = document.getElementById('applyFilterBtn');
     const filterResetBtn = document.getElementById('filterResetBtn');
     const ssFileInput = personForm.querySelector('input[type="file"][name="ssFile"]');
@@ -208,7 +227,7 @@
         priceMax: null,
         nationality: '',
         contractType: null,
-        siteContract: ''
+        businessStatus: null
     };
 
     const contractLabelToType = (label) => {
@@ -234,6 +253,28 @@
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return '';
         return date.toISOString().slice(0, 10);
+    };
+
+    const businessStatusLabel = (value) => {
+        const mapping = {
+            0: '营业中',
+            1: '营业中1/2等待',
+            2: '营业中结果等待',
+            3: '现场中',
+            4: '现场已确定'
+        };
+        return mapping[value] ?? '-';
+    };
+
+    const businessStatusClass = (value) => {
+        const mapping = {
+            0: 'c-pill c-pill-success',
+            1: 'c-pill c-pill-warn',
+            2: 'c-pill c-pill-info',
+            3: 'c-pill c-pill-primary',
+            4: 'c-pill c-pill-danger'
+        };
+        return mapping[value] ?? 'c-pill';
     };
 
     const calcAge = (birthday) => {
@@ -289,7 +330,7 @@
 
     const renderPeople = (list) => {
         if (!list.length) {
-            peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty c-empty">未检索到符合条件的记录</td></tr>';
+            peopleTableBody.innerHTML = '<tr><td colspan="12" class="empty c-empty">未检索到符合条件的记录</td></tr>';
             return;
         }
 
@@ -298,6 +339,8 @@
                 : person.contract === 'フリーランス' ? 'c-pill c-pill-danger'
                     : 'c-pill';
             const siteContractClass = person.siteContract ? 'c-pill c-pill-success' : 'c-pill';
+            const businessLabel = businessStatusLabel(person.businessStatus);
+            const businessClass = businessStatusClass(person.businessStatus);
 
             return `
                 <tr>
@@ -308,6 +351,7 @@
                     <td data-label="单价">${person.price} 万/月</td>
                     <td data-label="介绍文"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
                     <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
+                    <td data-label="营业状态"><span class="${businessClass}">${businessLabel}</span></td>
                     <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
                     <td data-label="备注">${person.note || '-'}</td>
                     <td data-label="SS 文件">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
@@ -348,6 +392,7 @@
             price: Number(formData.get('price')),
             contract: formData.get('contract'),
             siteContract: normalizeDateInput(formData.get('siteContract')),
+            businessStatus: formData.get('businessStatus') === '' ? null : Number(formData.get('businessStatus')),
             intro: (formData.get('intro') || '').trim(),
             note: (formData.get('note') || '').trim()
         };
@@ -362,6 +407,7 @@
         personForm.price.value = person.price;
         personForm.contract.value = person.contract;
         personForm.siteContract.value = person.siteContract || '';
+        personForm.businessStatus.value = person.businessStatus ?? '';
         personForm.intro.value = person.intro || '';
         personForm.note.value = person.note || '';
     };
@@ -446,10 +492,12 @@
             params.set('page_size', String(pageSize));
             if (currentFilters.keyword) params.set('keyword', currentFilters.keyword);
             if (currentFilters.ageMax !== null) params.set('age_max', String(currentFilters.ageMax));
-            if (currentFilters.priceMax !== null) params.set('price_max', String(currentFilters.priceMax));
             if (currentFilters.nationality) params.set('nationality', currentFilters.nationality);
+            if (currentFilters.priceMax !== null) params.set('price_max', String(currentFilters.priceMax));
             if (currentFilters.contractType !== null) params.set('contract_type', String(currentFilters.contractType));
-            if (currentFilters.siteContract) params.set('site_contract', currentFilters.siteContract);
+            if (currentFilters.businessStatus !== null) {
+                params.set('business_status', String(currentFilters.businessStatus));
+            }
 
             const res = await fetchWithAuth(`/api/technicians?${params.toString()}`, { method: 'GET' });
             const data = await res.json();
@@ -472,6 +520,7 @@
                     price: item.price ? Number(item.price) : 0,
                     contract: contractTypeToLabel(item.contract_type),
                     siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
+                    businessStatus: item.business_status ?? 0,
                     intro: item.introduction || '',
                     note: remarkText || '',
                     ssPath: item.ss || '',
@@ -494,7 +543,7 @@
                 }
             }
         } catch (error) {
-            peopleTableBody.innerHTML = '<tr><td colspan="11" class="empty c-empty">加载失败</td></tr>';
+            peopleTableBody.innerHTML = '<tr><td colspan="12" class="empty c-empty">加载失败</td></tr>';
             summaryText.textContent = '共 0 人 · 当前显示 0 人';
             people = [];
             totalCount = 0;
@@ -561,14 +610,14 @@
         const priceMax = getNumberValue(filterPriceMax.value);
         const nationalityValue = filterNationality.value;
         const contractValue = filterContract.value;
-        const siteContractValue = normalizeDateInput(filterSiteContract.value);
+        const businessStatusValue = filterBusinessStatus.value;
         currentFilters = {
             keyword: keywordValue,
             ageMax,
             priceMax,
             nationality: nationalityValue,
             contractType: contractValue ? contractLabelToType(contractValue) : null,
-            siteContract: siteContractValue
+            businessStatus: businessStatusValue === '' ? null : Number(businessStatusValue)
         };
         currentPage = 1;
         fetchPeople();
@@ -614,7 +663,7 @@
             introduction: formValue.intro || '',
             contract_type: contractLabelToType(formValue.contract),
             spot_contract_deadline: formValue.siteContract || null,
-            business_status: 0,
+                    business_status: Number.isFinite(formValue.businessStatus) ? formValue.businessStatus : 0,
             ss: ssPath || null,
             remark: formValue.note
         };
@@ -685,7 +734,7 @@
         filterKeyword.value = '';
         filterNationality.value = '';
         filterContract.value = '';
-        filterSiteContract.value = '';
+        filterBusinessStatus.value = '';
         applyFilters();
     });
     if (pagination) {

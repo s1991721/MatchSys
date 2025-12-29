@@ -990,6 +990,18 @@ body.sidebar-collapsed .nav-item a:hover::after {
   background: rgba(16, 185, 129, 0.18);
   color: var(--success);
 }
+.c-pill-warn {
+  background: rgba(245, 158, 11, 0.18);
+  color: var(--warning);
+}
+.c-pill-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #2563eb;
+}
+.c-pill-primary {
+  background: rgba(28, 123, 255, 0.18);
+  color: var(--primary);
+}
 .c-pill-danger {
   background: rgba(255, 95, 95, 0.18);
   color: var(--danger);

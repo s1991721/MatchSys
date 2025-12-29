@@ -100,8 +100,10 @@ class Technician(models.Model):
 
     BUSINESS_STATUS_CHOICES = (
         (0, "营业中"),
-        (1, "现场中"),
-        (2, "现场已确定"),
+        (1, "营业中1/2等待"),
+        (2, "营业中结果等待"),
+        (3, "现场中"),
+        (4, "现场已确定"),
     )
 
     employee_id = models.BigIntegerField(unique=True, verbose_name="员工ID")

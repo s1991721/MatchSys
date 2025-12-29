@@ -75,7 +75,7 @@ CREATE TABLE technician
 
     spot_contract_deadline DATE           NULL COMMENT '现场合同截止日',
 
-    business_status        TINYINT        NOT NULL DEFAULT 0 COMMENT '业务状态：0-营业中 1-现场中 2-现场已确定 ',
+    business_status        TINYINT        NOT NULL DEFAULT 0 COMMENT '营业状态：(0, "营业中"),(1, "营业中1/2等待"),(2, "营业中结果等待"),(3, "现场中"),(4, "现场已确定"), ',
 
     ss                     VARCHAR(100)   NULL COMMENT 'ss文件路径',
 

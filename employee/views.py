@@ -324,6 +324,7 @@ def employees_api(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
+# 新增技术者、获取技术者列表
 def technicians_api(request):
     if request.method == "POST":
         login_id = request.session.get("employee_id")

@@ -17,10 +17,7 @@ from .models import AttendancePolicy, get_monthly_attendance_models
 def attendance_punch_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+        return api_error("Unauthorized", status=401)
 
     payload, error = parse_json_body(request)
     if error:
@@ -32,9 +29,7 @@ def attendance_punch_api(request):
         try:
             punch_time_value = datetime.strptime(punch_time_raw, "%H:%M:%S").time()
         except ValueError:
-            return api_error(
-                "Invalid punch_time",
-            )
+            return api_error("Invalid punch_time")
     else:
         punch_time_value = now.time().replace(microsecond=0)
 
@@ -44,18 +39,11 @@ def attendance_punch_api(request):
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error(
-            "Employee not found",
-            status=404,
-        )
+        return api_error("Employee not found", status=404)
 
     punch_model, record_model = get_monthly_attendance_models(now.date())
-    punch = _create_attendance_punch(
-        punch_model, employee, now, punch_time_value, punch_type, payload
-    )
-    record = _sync_attendance_record(
-        punch_model, record_model, employee, now, punch_type
-    )
+    punch = _create_attendance_punch(punch_model, employee, now, punch_time_value, punch_type, payload)
+    record = _sync_attendance_record(punch_model, record_model, employee, now, punch_type)
 
     payload = {
         "punch": {

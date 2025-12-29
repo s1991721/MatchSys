@@ -51,17 +51,10 @@ class Employee(models.Model):
     status = models.SmallIntegerField(default=1)  # 1在职/0离职/2停用...
 
     # 审计字段（谁创建/更新）
-    created_by = models.BigIntegerField(
-        unique=True,
-        verbose_name="员工ID"
-    )
-
+    created_by = models.BigIntegerField(unique=True, verbose_name="员工ID")
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
 
-    updated_by = models.BigIntegerField(
-        unique=True,
-        verbose_name="员工ID"
-    )
+    updated_by = models.BigIntegerField(unique=True, verbose_name="员工ID")
     updated_at = models.DateTimeField(auto_now=True, db_column='updated_at')
 
     deleted_at = models.DateTimeField(null=True, blank=True)

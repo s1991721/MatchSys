@@ -9,7 +9,8 @@
 </head>
 
 <body>
-  <div class="page page-mid c-stack">
+  <div class="page">
+    <div class="page-mid c-stack">
 
     <!-- 打卡位置 -->
     <section class="c-card c-card-pad">
@@ -174,7 +175,7 @@
               <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
             </svg>
           </span>
-          考勤明细 <span class="c-month-label" data-month-label>(当月)</span>
+          考勤明细
         </div>
         <div class="c-accordion-summary">
           点击展开
@@ -188,17 +189,21 @@
           <button class="c-toggle" type="button" data-month="previous">上月</button>
         </div>
         <div class="c-lazy">等待展开加载数据</div>
-        <div class="c-data-table" data-template hidden>
-          <div class="c-data-head">
-            <div>日期</div>
-            <div class="c-cell-center">上班</div>
-            <div class="c-cell-center">备注</div>
-            <div class="c-cell-right">操作</div>
-          </div>
-        </div>
+        <table class="c-table c-table-center" data-template hidden>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>上班</th>
+              <th>备注</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
     </details>
 
+    </div>
   </div>
 
   <!-- 修改考勤弹窗 -->
@@ -359,49 +364,51 @@
       setStatValue(stats.querySelectorAll(".c-stat-value")[2], summary.absent_days ?? 0);
 
       setTemplatesVisible(details, true);
-      if (placeholder) placeholder.textContent = "";
+      if (placeholder) {
+        placeholder.textContent = "";
+        placeholder.classList.add("hidden");
+      }
     }
 
     const renderAttendanceDetail = (data, details, monthKey) => {
-      const table = details.querySelector(".c-data-table[data-template]");
+      const table = details.querySelector("table.c-table[data-template]");
       const placeholder = details.querySelector(".c-lazy");
       if (!table) return;
 
-      table.querySelectorAll(".c-data-row").forEach((row) => row.remove());
+      const tableBody = table.querySelector("tbody");
+      if (!tableBody) return;
+      tableBody.querySelectorAll(".js-attendance-row").forEach((row) => row.remove());
       const records = Array.isArray(data && data.records) ? data.records : [];
       if (!records.length) {
         setTemplatesVisible(details, false);
-        if (placeholder) placeholder.textContent = "暂无记录";
+        if (placeholder) {
+          placeholder.textContent = "暂无记录";
+          placeholder.classList.remove("hidden");
+        }
       } else {
         records.forEach((record) => {
-          const row = document.createElement("div");
-          row.className = "c-data-row";
+          const row = document.createElement("tr");
+          row.className = "js-attendance-row";
           const startTime = record.start_time || "--:--";
           const endTime = record.end_time || "--:--";
           const displayDate = record.display_date || formatDisplayDate(record.date);
           const remarkText = record.remark || "";
 
-          const dateEl = document.createElement("div");
-          dateEl.className = "c-data-date";
+          const dateEl = document.createElement("td");
           dateEl.textContent = displayDate;
 
-          const timeEl = document.createElement("div");
-          timeEl.className = "c-data-center";
+          const timeEl = document.createElement("td");
           const startSpan = document.createElement("span");
-          startSpan.className = "c-time-item";
           startSpan.textContent = startTime;
           const sepSpan = document.createElement("span");
-          sepSpan.className = "c-time-sep";
-          sepSpan.textContent = "•";
+          sepSpan.textContent = "～";
           const endSpan = document.createElement("span");
-          endSpan.className = "c-time-item";
           endSpan.textContent = endTime;
           timeEl.appendChild(startSpan);
           timeEl.appendChild(sepSpan);
           timeEl.appendChild(endSpan);
 
-          const remarkEl = document.createElement("div");
-          remarkEl.className = "c-data-remark";
+          const remarkEl = document.createElement("td");
           remarkEl.textContent = remarkText || "-";
 
           const button = document.createElement("button");
@@ -416,14 +423,20 @@
           button.dataset.originalStart = startTime;
           button.dataset.originalEnd = endTime;
 
+          const actionCell = document.createElement("td");
+          actionCell.appendChild(button);
+
           row.appendChild(dateEl);
           row.appendChild(timeEl);
           row.appendChild(remarkEl);
-          row.appendChild(button);
-          table.appendChild(row);
+          row.appendChild(actionCell);
+          tableBody.appendChild(row);
         });
         setTemplatesVisible(details, true);
-        if (placeholder) placeholder.textContent = "";
+        if (placeholder) {
+          placeholder.textContent = "";
+          placeholder.classList.add("hidden");
+        }
       }
 
       const monthLabel = details.querySelector("[data-month-label]");
@@ -442,34 +455,48 @@
       const dateParam = resolveMonthDateParam(month);
 
       if (!url) {
-        if (placeholder) placeholder.textContent = "未配置接口";
+        if (placeholder) {
+          placeholder.textContent = "未配置接口";
+          placeholder.classList.remove("hidden");
+        }
         return;
       }
 
       if (details.dataset.loadedMonth === month) {
+        if (placeholder) {
+          placeholder.textContent = "";
+          placeholder.classList.add("hidden");
+        }
         return;
       }
 
       setTemplatesVisible(details, false);
-      if (placeholder) placeholder.textContent = "加载中...";
+      if (placeholder) {
+        placeholder.textContent = "加载中...";
+        placeholder.classList.remove("hidden");
+      }
       const query = url.includes("?") ? "&" : "?";
       try {
         const payload = await requestJson(`${url}${query}month=${month}&date=${dateParam}`, { method: "GET" });
         const result = payload.data || {};
         const rendererName = details.dataset.renderer;
-        if (rendererName && typeof window[rendererName] === "function") {
-          window[rendererName](result, details, month);
-          if (placeholder) placeholder.textContent = "";
+        const renderer = rendererName ? { renderAttendanceSummary, renderAttendanceDetail }[rendererName] : null;
+        if (renderer) {
+          renderer(result, details, month);
         } else {
           setTemplatesVisible(details, true);
           if (placeholder) {
-            placeholder.textContent = month === "current" ? "已加载当月（示例数据）" : "已加载上月（示例数据）";
+            placeholder.textContent = "";
+            placeholder.classList.add("hidden");
           }
         }
         details.dataset.loadedMonth = month;
       } catch (error) {
         setTemplatesVisible(details, false);
-        if (placeholder) placeholder.textContent = "加载失败，请稍后重试";
+        if (placeholder) {
+          placeholder.textContent = "加载失败，请稍后重试";
+          placeholder.classList.remove("hidden");
+        }
       }
     }
 
@@ -584,7 +611,7 @@
     }
 
     document.addEventListener("click", (event) => {
-      const editButton = event.target.closest(".c-data-row .c-btn");
+      const editButton = event.target.closest(".js-attendance-row .c-btn");
       if (!editButton) return;
       const payload = {
         date: editButton.dataset.date || "",
@@ -595,7 +622,7 @@
         originalStart: editButton.dataset.originalStart || editButton.dataset.start || "",
         originalEnd: editButton.dataset.originalEnd || editButton.dataset.end || "",
       };
-      currentEditRow = editButton.closest(".c-data-row");
+      currentEditRow = editButton.closest(".js-attendance-row");
       openEditDialog(payload);
     });
 
@@ -650,7 +677,7 @@
           const times = currentEditRow.querySelectorAll(".c-time-item");
           if (times[0]) times[0].textContent = record.start_time || "--:--";
           if (times[1]) times[1].textContent = record.end_time || "--:--";
-          const remarkCell = currentEditRow.querySelector("div:nth-child(3)");
+          const remarkCell = currentEditRow.querySelector("td:nth-child(3)");
           if (remarkCell) {
             remarkCell.textContent = record.remark ? record.remark : "-";
             remarkCell.style.color = record.remark ? "#0f172a" : "#64748b";

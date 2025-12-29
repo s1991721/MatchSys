@@ -1,14 +1,14 @@
-from datetime import date, datetime, time
-import calendar
 import re
+from datetime import date, datetime, time
 
-from project.api import api_error, api_success
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
 from employee.models import Employee
-from project.common_tools import parse_json_body
+from project.api import api_error, api_success
+from project.common_tools import parse_json_body, parse_time_value, weekday_label, is_workday, count_workdays, \
+    shift_month
 from .models import AttendancePolicy, get_monthly_attendance_models
 
 
@@ -77,18 +77,6 @@ def attendance_punch_api(request):
         },
     }
     return api_success(data=payload)
-
-
-def _parse_time_value(value, field_name):
-    value = (value or "").strip()
-    if not value or value in {"--:--", "未打卡"}:
-        return None, None
-    for fmt in ("%H:%M:%S", "%H:%M"):
-        try:
-            return datetime.strptime(value, fmt).time(), None
-        except ValueError:
-            continue
-    return None, api_error(f"Invalid {field_name}")
 
 
 def _create_attendance_punch(
@@ -190,20 +178,16 @@ def attendance_record_edit_api(request):
             "Invalid date"
         )
 
-    start_time_value, error = _parse_time_value(payload.get("start_time"), "start_time")
+    start_time_value, error = parse_time_value(payload.get("start_time"))
     if error:
         return error
-    end_time_value, error = _parse_time_value(payload.get("end_time"), "end_time")
+    end_time_value, error = parse_time_value(payload.get("end_time"))
     if error:
         return error
-    original_start, error = _parse_time_value(
-        payload.get("original_start_time"), "original_start_time"
-    )
+    original_start, error = parse_time_value(payload.get("original_start_time"))
     if error:
         return error
-    original_end, error = _parse_time_value(
-        payload.get("original_end_time"), "original_end_time"
-    )
+    original_end, error = parse_time_value(payload.get("original_end_time"))
     if error:
         return error
 
@@ -321,32 +305,13 @@ def attendance_record_today_api(request):
     return api_success(data=payload)
 
 
-def _shift_month(value, offset):
-    year = value.year + (value.month - 1 + offset) // 12
-    month = (value.month - 1 + offset) % 12 + 1
-    return date(year, month, 1)
-
-
-def _is_workday(value):
-    return value.weekday() < 5
-
-
-def _count_workdays(value):
-    _, days_in_month = calendar.monthrange(value.year, value.month)
-    return sum(
-        1
-        for day in range(1, days_in_month + 1)
-        if _is_workday(date(value.year, value.month, day))
-    )
-
-
 def _resolve_attendance_month(request):
     value = (request.GET.get("month") or request.GET.get("date") or "").strip()
     today = timezone.localdate()
     if not value or value.lower() in {"current", "this", "now"}:
         return today
     if value.lower() in {"previous", "prev", "last"}:
-        return _shift_month(today, -1)
+        return shift_month(today, -1)
     if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
         try:
             return datetime.strptime(value, "%Y-%m-%d").date()
@@ -382,11 +347,11 @@ def my_attendance_summary_api(request):
         deleted_at__isnull=True,
     )
 
-    workdays = _count_workdays(target_date)
+    workdays = count_workdays(target_date)
     attendance_days = sum(
         1
         for record in records
-        if _is_workday(record.punch_date)
+        if is_workday(record.punch_date)
         and (record.start_time is not None or record.end_time is not None)
     )
 
@@ -453,11 +418,6 @@ def my_attendance_detail_api(request):
     return api_success(data=response_payload, )
 
 
-def _weekday_label(value):
-    labels = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
-    return labels[value.weekday()]
-
-
 @require_GET
 def attendance_summary_api(request):
     employee_id = request.session.get("employee_id")
@@ -503,7 +463,7 @@ def attendance_summary_api(request):
         emp_id: {"attendance_days": 0, "late_days": 0}
         for emp_id in employee_ids
     }
-    workdays = _count_workdays(target_date)
+    workdays = count_workdays(target_date)
 
     for record in records:
         policy = policy_map.get(record.employee_id) or default_policy
@@ -512,16 +472,16 @@ def attendance_summary_api(request):
         has_start = start_time is not None
         has_end = end_time is not None
         has_any = has_start or has_end
-        is_workday = _is_workday(record.punch_date)
+        workday = is_workday(record.punch_date)
         is_missing = not (has_start and has_end)
         is_late = bool(
             policy and policy.work_start_time and has_start and start_time > policy.work_start_time
         )
 
         summary = summary_map[record.employee_id]
-        if has_any and is_workday:
+        if has_any and workday:
             summary["attendance_days"] += 1
-        if is_late and is_workday:
+        if is_late and workday:
             summary["late_days"] += 1
 
         note = "正常"
@@ -612,7 +572,7 @@ def attendance_detail_api(request, employee_id):
         details.append(
             {
                 "date": record.punch_date.isoformat(),
-                "day": _weekday_label(record.punch_date),
+                "day": weekday_label(record.punch_date),
                 "clock_in": start_time.strftime("%H:%M") if has_start else "未打卡",
                 "clock_out": end_time.strftime("%H:%M") if has_end else "未打卡",
                 "note": note,

@@ -1,735 +1,738 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title>考勤打卡</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title>考勤打卡</title>
 </head>
 
 <body>
-  <div class="page">
+<div class="page">
     <div class="page-mid c-stack">
 
-    <!-- 打卡位置 -->
-    <section class="c-card c-card-pad">
-      <div class="c-card-head">
-        <div class="title c-title-bar c-title-bar-lg">
+        <!-- 打卡位置 -->
+        <section class="c-card c-card-pad">
+            <div class="c-card-head">
+                <div class="title c-title-bar c-title-bar-lg">
           <span class="c-ico" aria-hidden="true">
             <!-- location pin -->
             <svg viewBox="0 0 24 24">
               <path d="M12 22s7-6.2 7-12.2A7 7 0 0 0 5 9.8C5 15.8 12 22 12 22Zm0-9.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/>
             </svg>
           </span>
-          打卡位置
-        </div>
-        <span class="c-title-spacer"></span>
-      </div>
-
-      <div class="c-map-wrap">
-        <div class="c-map">
-          <div id="map" class="c-map-canvas" aria-label="地图预览"></div>
-          <div class="c-status-pill">
-            <div class="c-status-tick" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="14" height="14">
-                <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
-              </svg>
+                    打卡位置
+                </div>
+                <span class="c-title-spacer"></span>
             </div>
-            <div class="c-status-text">
-              <div class="c-status-title" id="map-status">正在获取位置 <span class="c-chevron">›</span></div>
-              <div class="c-status-detail" id="map-detail">等待定位权限</div>
+
+            <div class="c-map-wrap">
+                <div class="c-map">
+                    <div id="map" class="c-map-canvas" aria-label="地图预览"></div>
+                    <div class="c-status-pill">
+                        <div class="c-status-tick" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" width="14" height="14">
+                                <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
+                            </svg>
+                        </div>
+                        <div class="c-status-text">
+                            <div class="c-status-title" id="map-status">正在获取位置 <span class="c-chevron">›</span>
+                            </div>
+                            <div class="c-status-detail" id="map-detail">等待定位权限</div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-          </div>
+        </section>
 
-        </div>
-      </div>
-    </section>
-
-    <!-- 今日考勤 -->
-    <section class="c-card c-card-pad">
-      <div class="c-card-head">
-        <div class="title c-title-bar c-title-bar-lg c-title-bar-xl">
+        <!-- 今日考勤 -->
+        <section class="c-card c-card-pad">
+            <div class="c-card-head">
+                <div class="title c-title-bar c-title-bar-lg c-title-bar-xl">
           <span class="c-ico" aria-hidden="true">
             <!-- calendar check -->
             <svg viewBox="0 0 24 24">
               <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Zm-4.2 2.5 1.4 1.4-6 6-3-3 1.4-1.4 1.6 1.6 4.6-4.6Z"/>
             </svg>
           </span>
-          今日考勤
-        </div>
-        <span class="c-title-spacer"></span>
-      </div>
+                    今日考勤
+                </div>
+                <span class="c-title-spacer"></span>
+            </div>
 
-      <div class="c-attendance-today c-attendance-today-strong">
+            <div class="c-attendance-today c-attendance-today-strong">
 
-        <div class="c-attendance-top">
-          <div class="c-date-chip">
+                <div class="c-attendance-top">
+                    <div class="c-date-chip">
             <span class="c-date-chip-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
                 <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
               </svg>
             </span>
-            <span id="today-date">--月--日</span>
-          </div>
-        </div>
+                        <span id="today-date">--月--日</span>
+                    </div>
+                </div>
 
-        <!-- 这个区域就是你红框的“底条 + 中间按钮覆盖” -->
-        <div class="c-attendance-stage">
+                <!-- 这个区域就是你红框的“底条 + 中间按钮覆盖” -->
+                <div class="c-attendance-stage">
 
-          <!-- 底部大条 -->
-          <div class="c-attendance-bar">
-            <div class="c-attendance-col">
-              <div class="c-info-label">上班</div>
-              <div class="c-info-time" id="start-time">--:--</div>
+                    <!-- 底部大条 -->
+                    <div class="c-attendance-bar">
+                        <div class="c-attendance-col">
+                            <div class="c-info-label">上班</div>
+                            <div class="c-info-time" id="start-time">--:--</div>
+                        </div>
+
+                        <div class="c-attendance-col">
+                            <div class="c-info-label">下班</div>
+                            <div class="c-info-sub" id="end-time">未打卡</div>
+                        </div>
+                    </div>
+
+                    <!-- 中间悬浮按钮（覆盖在 c-attendance-bar 上方） -->
+                    <button class="c-punch-btn" type="button">
+                        <span class="c-punch-title">打卡</span>
+                        <span class="c-punch-time"><span id="punch-time">--:--:--</span></span>
+                    </button>
+
+                </div>
             </div>
 
-            <div class="c-attendance-col">
-              <div class="c-info-label">下班</div>
-              <div class="c-info-sub" id="end-time">未打卡</div>
-            </div>
-          </div>
 
-          <!-- 中间悬浮按钮（覆盖在 c-attendance-bar 上方） -->
-          <button class="c-punch-btn" type="button">
-            <span class="c-punch-title">打卡</span>
-            <span class="c-punch-time"><span id="punch-time">--:--:--</span></span>
-          </button>
+        </section>
 
-        </div>
-      </div>
-
-
-    </section>
-
-    <!-- 我的考勤（折叠） -->
-    <details class="c-accordion c-card c-card-pad" data-url="/api/my-attendance-summary" data-renderer="renderAttendanceSummary">
-      <summary>
-        <div class="title c-title-bar c-title-bar-lg">
+        <!-- 我的考勤（折叠） -->
+        <details class="c-accordion c-card c-card-pad" data-url="/api/my-attendance-summary"
+                 data-renderer="renderAttendanceSummary">
+            <summary>
+                <div class="title c-title-bar c-title-bar-lg">
           <span class="c-ico c-ico-success" aria-hidden="true">
             <!-- user -->
             <svg viewBox="0 0 24 24">
               <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z"/>
             </svg>
           </span>
-          我的考勤
-        </div>
-        <div class="c-accordion-summary">
-          点击展开
-          <span class="c-chevron">›</span>
-        </div>
-      </summary>
-      <div class="c-accordion-body" data-content="summary">
-        <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择">
-          <button class="c-toggle is-active" type="button" data-month="current">当月</button>
-          <button class="c-toggle" type="button" data-month="previous">上月</button>
-        </div>
-        <div class="c-lazy">等待展开加载数据</div>
-        <div class="c-stat-grid" data-template hidden>
-          <div class="c-stat-card is-green">
-            <div class="c-stat-head">
-              <div class="c-stat-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18">
-                  <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
-                </svg>
-              </div>
-              出勤
-            </div>
-            <div class="c-stat-value">20<span class="c-stat-unit">天</span></div>
-          </div>
+                    我的考勤
+                </div>
+                <div class="c-accordion-summary">
+                    点击展开
+                    <span class="c-chevron">›</span>
+                </div>
+            </summary>
+            <div class="c-accordion-body" data-content="summary">
+                <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择">
+                    <button class="c-toggle is-active" type="button" data-month="current">当月</button>
+                    <button class="c-toggle" type="button" data-month="previous">上月</button>
+                </div>
+                <div class="c-lazy">等待展开加载数据</div>
+                <div class="c-stat-grid" data-template hidden>
+                    <div class="c-stat-card is-green">
+                        <div class="c-stat-head">
+                            <div class="c-stat-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
+                                </svg>
+                            </div>
+                            出勤
+                        </div>
+                        <div class="c-stat-value">20<span class="c-stat-unit">天</span></div>
+                    </div>
 
-          <div class="c-stat-card is-orange">
-            <div class="c-stat-head">
-              <div class="c-stat-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v5l4 2-1 1.8-5-2.8V7Z"/>
-                </svg>
-              </div>
-              迟到
-            </div>
-            <div class="c-stat-value">3<span class="c-stat-unit">天</span></div>
-          </div>
+                    <div class="c-stat-card is-orange">
+                        <div class="c-stat-head">
+                            <div class="c-stat-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v5l4 2-1 1.8-5-2.8V7Z"/>
+                                </svg>
+                            </div>
+                            迟到
+                        </div>
+                        <div class="c-stat-value">3<span class="c-stat-unit">天</span></div>
+                    </div>
 
-          <div class="c-stat-card is-red">
-            <div class="c-stat-head">
-              <div class="c-stat-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.2 6.2 1.6 1.6L13.6 12l4.2 4.2-1.6 1.6L12 13.6l-4.2 4.2-1.6-1.6L10.4 12 6.2 7.8l1.6-1.6L12 10.4Z"/>
-                </svg>
-              </div>
-              旷勤
+                    <div class="c-stat-card is-red">
+                        <div class="c-stat-head">
+                            <div class="c-stat-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.2 6.2 1.6 1.6L13.6 12l4.2 4.2-1.6 1.6L12 13.6l-4.2 4.2-1.6-1.6L10.4 12 6.2 7.8l1.6-1.6L12 10.4Z"/>
+                                </svg>
+                            </div>
+                            旷勤
+                        </div>
+                        <div class="c-stat-value">0<span class="c-stat-unit">天</span></div>
+                    </div>
+                </div>
             </div>
-            <div class="c-stat-value">0<span class="c-stat-unit">天</span></div>
-          </div>
-        </div>
-      </div>
-    </details>
+        </details>
 
-    <!-- 考勤明细（折叠） -->
-    <details class="c-accordion c-card c-card-pad" data-url="/api/my-attendance-detail" data-renderer="renderAttendanceDetail">
-      <summary>
-        <div class="title c-title-bar c-title-bar-lg">
+        <!-- 考勤明细（折叠） -->
+        <details class="c-accordion c-card c-card-pad" data-url="/api/my-attendance-detail"
+                 data-renderer="renderAttendanceDetail">
+            <summary>
+                <div class="title c-title-bar c-title-bar-lg">
           <span class="c-ico" aria-hidden="true">
             <!-- calendar -->
             <svg viewBox="0 0 24 24">
               <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
             </svg>
           </span>
-          考勤明细
-        </div>
-        <div class="c-accordion-summary">
-          点击展开
-          <span class="c-chevron">›</span>
-        </div>
-      </summary>
+                    考勤明细
+                </div>
+                <div class="c-accordion-summary">
+                    点击展开
+                    <span class="c-chevron">›</span>
+                </div>
+            </summary>
 
-      <div class="c-accordion-body" data-content="detail">
-        <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择">
-          <button class="c-toggle is-active" type="button" data-month="current">当月</button>
-          <button class="c-toggle" type="button" data-month="previous">上月</button>
-        </div>
-        <div class="c-lazy">等待展开加载数据</div>
-        <table class="c-table c-table-center" data-template hidden>
-          <thead>
-            <tr>
-              <th>日期</th>
-              <th>上班</th>
-              <th>备注</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </details>
+            <div class="c-accordion-body" data-content="detail">
+                <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择">
+                    <button class="c-toggle is-active" type="button" data-month="current">当月</button>
+                    <button class="c-toggle" type="button" data-month="previous">上月</button>
+                </div>
+                <div class="c-lazy">等待展开加载数据</div>
+                <table class="c-table c-table-center" data-template hidden>
+                    <thead>
+                    <tr>
+                        <th>日期</th>
+                        <th>上班</th>
+                        <th>备注</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </details>
 
     </div>
-  </div>
+</div>
 
-  <!-- 修改考勤弹窗 -->
-  <div class="c-modal-backdrop" id="edit-dialog" aria-hidden="true">
+<!-- 修改考勤弹窗 -->
+<div class="c-modal-backdrop" id="edit-dialog" aria-hidden="true">
     <div class="c-modal" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
-      <div class="c-modal-head">
-        <div class="c-modal-title" id="edit-dialog-title">修改考勤</div>
-        <button class="c-modal-close" type="button" id="edit-dialog-close">×</button>
-      </div>
-      <div class="c-modal-body">
-        <div class="c-modal-error" id="edit-dialog-error" hidden>备注必填</div>
-        <div class="c-modal-field">
-          <label for="edit-date">日期</label>
-          <input id="edit-date" type="text" readonly />
+        <div class="c-modal-head">
+            <div class="c-modal-title" id="edit-dialog-title">修改考勤</div>
+            <button class="c-modal-close" type="button" id="edit-dialog-close">×</button>
         </div>
-        <div class="c-modal-field">
-          <label for="edit-start">上班时间</label>
-          <input id="edit-start" type="time" />
+        <div class="c-modal-body">
+            <div class="c-modal-error" id="edit-dialog-error" hidden>备注必填</div>
+            <div class="c-modal-field">
+                <label for="edit-date">日期</label>
+                <input id="edit-date" type="text" readonly/>
+            </div>
+            <div class="c-modal-field">
+                <label for="edit-start">上班时间</label>
+                <input id="edit-start" type="time"/>
+            </div>
+            <div class="c-modal-field">
+                <label for="edit-end">下班时间</label>
+                <input id="edit-end" type="time"/>
+            </div>
+            <div class="c-modal-field">
+                <label for="edit-remark">备注</label>
+                <textarea id="edit-remark" placeholder="填写备注"></textarea>
+            </div>
         </div>
-        <div class="c-modal-field">
-          <label for="edit-end">下班时间</label>
-          <input id="edit-end" type="time" />
+        <div class="c-modal-actions">
+            <button class="c-btn c-btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
+            <button class="c-btn c-btn-primary" type="button" id="edit-dialog-save">保存</button>
         </div>
-        <div class="c-modal-field">
-          <label for="edit-remark">备注</label>
-          <textarea id="edit-remark" placeholder="填写备注"></textarea>
-        </div>
-      </div>
-      <div class="c-modal-actions">
-        <button class="c-btn c-btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
-        <button class="c-btn c-btn-primary" type="button" id="edit-dialog-save">保存</button>
-      </div>
     </div>
-  </div>
+</div>
 
-  <div class="c-toast" id="toast"></div>
+<div class="c-toast" id="toast"></div>
 
-  <script src="common.js"></script>
+<script src="common.js"></script>
 <script>
-    const MAP_FALLBACK = { lat: 35.6852, lng: 139.7528 };
+    const MAP_FALLBACK = {lat: 35.6852, lng: 139.7528};
     const MAP_ZOOM_DEFAULT = 17;
     const MAP_ZOOM_FOLLOW = 18;
     let mapInstance;
     let userMarker;
-    let lastCoords = { lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng };
+    let lastCoords = {lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng};
     const requestJson = async (url, options = {}) => {
-      const response = await fetchWithAuth(url, options);
-      const data = await response.json();
-      const payload = normalizeApiResponse(data);
-      if (!payload.success) {
-        throw new Error(payload.message || "请求失败");
-      }
-      return payload;
+        const response = await fetchWithAuth(url, options);
+        const data = await response.json();
+        const payload = normalizeApiResponse(data);
+        if (!payload.success) {
+            throw new Error(payload.message || "请求失败");
+        }
+        return payload;
     };
 
     const setStatus = (title, detail) => {
-      const titleEl = document.getElementById("map-status");
-      const detailEl = document.getElementById("map-detail");
-      if (titleEl) titleEl.textContent = title;
-      if (detailEl) detailEl.textContent = detail;
+        const titleEl = document.getElementById("map-status");
+        const detailEl = document.getElementById("map-detail");
+        if (titleEl) titleEl.textContent = title;
+        if (detailEl) detailEl.textContent = detail;
     }
 
     const initMap = () => {
-      mapInstance = L.map("map", {
-        zoomControl: false,
-        attributionControl: false,
-      }).setView([MAP_FALLBACK.lat, MAP_FALLBACK.lng], MAP_ZOOM_DEFAULT);
+        mapInstance = L.map("map", {
+            zoomControl: false,
+            attributionControl: false,
+        }).setView([MAP_FALLBACK.lat, MAP_FALLBACK.lng], MAP_ZOOM_DEFAULT);
 
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-      }).addTo(mapInstance);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+        }).addTo(mapInstance);
 
-      userMarker = L.circleMarker([MAP_FALLBACK.lat, MAP_FALLBACK.lng], {
-        radius: 8,
-        fillColor: "#1c7bff",
-        fillOpacity: 1,
-        color: "#ffffff",
-        weight: 3,
-      }).addTo(mapInstance);
+        userMarker = L.circleMarker([MAP_FALLBACK.lat, MAP_FALLBACK.lng], {
+            radius: 8,
+            fillColor: "#1c7bff",
+            fillOpacity: 1,
+            color: "#ffffff",
+            weight: 3,
+        }).addTo(mapInstance);
 
-      if (!navigator.geolocation) {
-        setStatus("无法获取位置", "浏览器不支持定位");
-        return;
-      }
-
-      navigator.geolocation.watchPosition(
-        (pos) => {
-          const coords = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-          lastCoords = coords;
-          mapInstance.setView([coords.lat, coords.lng], MAP_ZOOM_FOLLOW);
-          userMarker.setLatLng([coords.lat, coords.lng]);
-          setStatus("已获取当前位置", "位置已实时更新");
-        },
-        (err) => {
-          if (err && err.code === err.PERMISSION_DENIED) {
-            setStatus("定位失败", "请允许位置权限");
+        if (!navigator.geolocation) {
+            setStatus("无法获取位置", "浏览器不支持定位");
             return;
-          }
-          setStatus("定位失败", "请开启定位或稍后重试");
-        },
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-      );
+        }
+
+        navigator.geolocation.watchPosition(
+            (pos) => {
+                const coords = {
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                };
+                lastCoords = coords;
+                mapInstance.setView([coords.lat, coords.lng], MAP_ZOOM_FOLLOW);
+                userMarker.setLatLng([coords.lat, coords.lng]);
+                setStatus("已获取当前位置", "位置已实时更新");
+            },
+            (err) => {
+                if (err && err.code === err.PERMISSION_DENIED) {
+                    setStatus("定位失败", "请允许位置权限");
+                    return;
+                }
+                setStatus("定位失败", "请开启定位或稍后重试");
+            },
+            {enableHighAccuracy: true, timeout: 8000, maximumAge: 0}
+        );
     }
 
     const setTemplatesVisible = (details, visible) => {
-      const templates = details.querySelectorAll("[data-template]");
-      templates.forEach((el) => {
-        el.hidden = !visible;
-        el.style.display = visible ? "" : "none";
-      });
+        const templates = details.querySelectorAll("[data-template]");
+        templates.forEach((el) => {
+            el.hidden = !visible;
+            el.style.display = visible ? "" : "none";
+        });
     }
 
     const setStatValue = (element, value) => {
-      if (!element) return;
-      const unit = element.querySelector("span");
-      const unitClone = unit ? unit.cloneNode(true) : null;
-      element.textContent = value;
-      if (unitClone) {
-        element.appendChild(unitClone);
-      }
+        if (!element) return;
+        const unit = element.querySelector("span");
+        const unitClone = unit ? unit.cloneNode(true) : null;
+        element.textContent = value;
+        if (unitClone) {
+            element.appendChild(unitClone);
+        }
     }
 
     const formatMonthLabel = (monthKey, monthValue) => {
-      if (monthKey === "previous") return "(上月)";
-      if (monthKey === "current") return "(当月)";
-      if (monthValue) return `(${monthValue})`;
-      return "(当月)";
+        if (monthKey === "previous") return "(上月)";
+        if (monthKey === "current") return "(当月)";
+        if (monthValue) return `(${monthValue})`;
+        return "(当月)";
     }
 
     const resolveMonthDateParam = (monthKey) => {
-      const now = new Date();
-      const year = now.getFullYear();
-      const monthIndex = monthKey === "previous" ? now.getMonth() - 1 : now.getMonth();
-      const target = new Date(year, monthIndex, 1);
-      return `${target.getFullYear()}-${pad2(target.getMonth() + 1)}-${pad2(target.getDate())}`;
+        const now = new Date();
+        const year = now.getFullYear();
+        const monthIndex = monthKey === "previous" ? now.getMonth() - 1 : now.getMonth();
+        const target = new Date(year, monthIndex, 1);
+        return `${target.getFullYear()}-${pad2(target.getMonth() + 1)}-${pad2(target.getDate())}`;
     }
 
     const formatDisplayDate = (value) => {
-      if (!value) return "--";
-      const dateValue = new Date(value);
-      if (!Number.isNaN(dateValue.getTime())) {
-        return `${dateValue.getMonth() + 1}月${dateValue.getDate()}日`;
-      }
-      return value;
+        if (!value) return "--";
+        const dateValue = new Date(value);
+        if (!Number.isNaN(dateValue.getTime())) {
+            return `${dateValue.getMonth() + 1}月${dateValue.getDate()}日`;
+        }
+        return value;
     }
 
     const renderAttendanceSummary = (data, details, monthKey) => {
-      const stats = details.querySelector(".c-stat-grid[data-template]");
-      const placeholder = details.querySelector(".c-lazy");
-      if (!stats) return;
+        const stats = details.querySelector(".c-stat-grid[data-template]");
+        const placeholder = details.querySelector(".c-lazy");
+        if (!stats) return;
 
-      const summary = data && data.summary ? data.summary : {};
-      setStatValue(stats.querySelectorAll(".c-stat-value")[0], summary.attendance_days ?? 0);
-      setStatValue(stats.querySelectorAll(".c-stat-value")[1], summary.late_days ?? 0);
-      setStatValue(stats.querySelectorAll(".c-stat-value")[2], summary.absent_days ?? 0);
+        const summary = data && data.summary ? data.summary : {};
+        setStatValue(stats.querySelectorAll(".c-stat-value")[0], summary.attendance_days ?? 0);
+        setStatValue(stats.querySelectorAll(".c-stat-value")[1], summary.late_days ?? 0);
+        setStatValue(stats.querySelectorAll(".c-stat-value")[2], summary.absent_days ?? 0);
 
-      setTemplatesVisible(details, true);
-      if (placeholder) {
-        placeholder.textContent = "";
-        placeholder.classList.add("hidden");
-      }
+        setTemplatesVisible(details, true);
+        if (placeholder) {
+            placeholder.textContent = "";
+            placeholder.classList.add("hidden");
+        }
     }
 
     const renderAttendanceDetail = (data, details, monthKey) => {
-      const table = details.querySelector("table.c-table[data-template]");
-      const placeholder = details.querySelector(".c-lazy");
-      if (!table) return;
+        const table = details.querySelector("table.c-table[data-template]");
+        const placeholder = details.querySelector(".c-lazy");
+        if (!table) return;
 
-      const tableBody = table.querySelector("tbody");
-      if (!tableBody) return;
-      tableBody.querySelectorAll(".js-attendance-row").forEach((row) => row.remove());
-      const records = Array.isArray(data && data.records) ? data.records : [];
-      if (!records.length) {
-        setTemplatesVisible(details, false);
-        if (placeholder) {
-          placeholder.textContent = "暂无记录";
-          placeholder.classList.remove("hidden");
+        const tableBody = table.querySelector("tbody");
+        if (!tableBody) return;
+        tableBody.querySelectorAll(".js-attendance-row").forEach((row) => row.remove());
+        const records = Array.isArray(data && data.records) ? data.records : [];
+        if (!records.length) {
+            setTemplatesVisible(details, false);
+            if (placeholder) {
+                placeholder.textContent = "暂无记录";
+                placeholder.classList.remove("hidden");
+            }
+        } else {
+            records.forEach((record) => {
+                const row = document.createElement("tr");
+                row.className = "js-attendance-row";
+                const startTime = record.start_time || "--:--";
+                const endTime = record.end_time || "--:--";
+                const displayDate = record.display_date || formatDisplayDate(record.date);
+                const remarkText = record.remark || "";
+
+                const dateEl = document.createElement("td");
+                dateEl.textContent = displayDate;
+
+                const timeEl = document.createElement("td");
+                const startSpan = document.createElement("span");
+                startSpan.textContent = startTime;
+                const sepSpan = document.createElement("span");
+                sepSpan.textContent = "～";
+                const endSpan = document.createElement("span");
+                endSpan.textContent = endTime;
+                timeEl.appendChild(startSpan);
+                timeEl.appendChild(sepSpan);
+                timeEl.appendChild(endSpan);
+
+                const remarkEl = document.createElement("td");
+                remarkEl.textContent = remarkText || "-";
+
+                const button = document.createElement("button");
+                button.className = "c-btn c-btn-secondary c-btn-sm";
+                button.type = "button";
+                button.textContent = "修改";
+                button.dataset.iso = record.date || "";
+                button.dataset.date = displayDate;
+                button.dataset.start = startTime;
+                button.dataset.end = endTime;
+                button.dataset.remark = remarkText;
+                button.dataset.originalStart = startTime;
+                button.dataset.originalEnd = endTime;
+
+                const actionCell = document.createElement("td");
+                actionCell.appendChild(button);
+
+                row.appendChild(dateEl);
+                row.appendChild(timeEl);
+                row.appendChild(remarkEl);
+                row.appendChild(actionCell);
+                tableBody.appendChild(row);
+            });
+            setTemplatesVisible(details, true);
+            if (placeholder) {
+                placeholder.textContent = "";
+                placeholder.classList.add("hidden");
+            }
         }
-      } else {
-        records.forEach((record) => {
-          const row = document.createElement("tr");
-          row.className = "js-attendance-row";
-          const startTime = record.start_time || "--:--";
-          const endTime = record.end_time || "--:--";
-          const displayDate = record.display_date || formatDisplayDate(record.date);
-          const remarkText = record.remark || "";
 
-          const dateEl = document.createElement("td");
-          dateEl.textContent = displayDate;
-
-          const timeEl = document.createElement("td");
-          const startSpan = document.createElement("span");
-          startSpan.textContent = startTime;
-          const sepSpan = document.createElement("span");
-          sepSpan.textContent = "～";
-          const endSpan = document.createElement("span");
-          endSpan.textContent = endTime;
-          timeEl.appendChild(startSpan);
-          timeEl.appendChild(sepSpan);
-          timeEl.appendChild(endSpan);
-
-          const remarkEl = document.createElement("td");
-          remarkEl.textContent = remarkText || "-";
-
-          const button = document.createElement("button");
-          button.className = "c-btn c-btn-secondary c-btn-sm";
-          button.type = "button";
-          button.textContent = "修改";
-          button.dataset.iso = record.date || "";
-          button.dataset.date = displayDate;
-          button.dataset.start = startTime;
-          button.dataset.end = endTime;
-          button.dataset.remark = remarkText;
-          button.dataset.originalStart = startTime;
-          button.dataset.originalEnd = endTime;
-
-          const actionCell = document.createElement("td");
-          actionCell.appendChild(button);
-
-          row.appendChild(dateEl);
-          row.appendChild(timeEl);
-          row.appendChild(remarkEl);
-          row.appendChild(actionCell);
-          tableBody.appendChild(row);
-        });
-        setTemplatesVisible(details, true);
-        if (placeholder) {
-          placeholder.textContent = "";
-          placeholder.classList.add("hidden");
+        const monthLabel = details.querySelector("[data-month-label]");
+        if (monthLabel) {
+            monthLabel.textContent = formatMonthLabel(monthKey, data ? data.month : "");
         }
-      }
-
-      const monthLabel = details.querySelector("[data-month-label]");
-      if (monthLabel) {
-        monthLabel.textContent = formatMonthLabel(monthKey, data ? data.month : "");
-      }
     }
 
     const loadAccordion = async (details) => {
-      if (!details) {
-        return;
-      }
-      const url = details.dataset.url;
-      const placeholder = details.querySelector(".c-lazy");
-      const month = details.dataset.month || "current";
-      const dateParam = resolveMonthDateParam(month);
-
-      if (!url) {
-        if (placeholder) {
-          placeholder.textContent = "未配置接口";
-          placeholder.classList.remove("hidden");
+        if (!details) {
+            return;
         }
-        return;
-      }
+        const url = details.dataset.url;
+        const placeholder = details.querySelector(".c-lazy");
+        const month = details.dataset.month || "current";
+        const dateParam = resolveMonthDateParam(month);
 
-      if (details.dataset.loadedMonth === month) {
-        if (placeholder) {
-          placeholder.textContent = "";
-          placeholder.classList.add("hidden");
+        if (!url) {
+            if (placeholder) {
+                placeholder.textContent = "未配置接口";
+                placeholder.classList.remove("hidden");
+            }
+            return;
         }
-        return;
-      }
 
-      setTemplatesVisible(details, false);
-      if (placeholder) {
-        placeholder.textContent = "加载中...";
-        placeholder.classList.remove("hidden");
-      }
-      const query = url.includes("?") ? "&" : "?";
-      try {
-        const payload = await requestJson(`${url}${query}month=${month}&date=${dateParam}`, { method: "GET" });
-        const result = payload.data || {};
-        const rendererName = details.dataset.renderer;
-        const renderer = rendererName ? { renderAttendanceSummary, renderAttendanceDetail }[rendererName] : null;
-        if (renderer) {
-          renderer(result, details, month);
-        } else {
-          setTemplatesVisible(details, true);
-          if (placeholder) {
-            placeholder.textContent = "";
-            placeholder.classList.add("hidden");
-          }
+        if (details.dataset.loadedMonth === month) {
+            if (placeholder) {
+                placeholder.textContent = "";
+                placeholder.classList.add("hidden");
+            }
+            return;
         }
-        details.dataset.loadedMonth = month;
-      } catch (error) {
+
         setTemplatesVisible(details, false);
         if (placeholder) {
-          placeholder.textContent = "加载失败，请稍后重试";
-          placeholder.classList.remove("hidden");
+            placeholder.textContent = "加载中...";
+            placeholder.classList.remove("hidden");
         }
-      }
+        const query = url.includes("?") ? "&" : "?";
+        try {
+            const payload = await requestJson(`${url}${query}month=${month}&date=${dateParam}`, {method: "GET"});
+            const result = payload.data || {};
+            const rendererName = details.dataset.renderer;
+            const renderer = rendererName ? {renderAttendanceSummary, renderAttendanceDetail}[rendererName] : null;
+            if (renderer) {
+                renderer(result, details, month);
+            } else {
+                setTemplatesVisible(details, true);
+                if (placeholder) {
+                    placeholder.textContent = "";
+                    placeholder.classList.add("hidden");
+                }
+            }
+            details.dataset.loadedMonth = month;
+        } catch (error) {
+            setTemplatesVisible(details, false);
+            if (placeholder) {
+                placeholder.textContent = "加载失败，请稍后重试";
+                placeholder.classList.remove("hidden");
+            }
+        }
     }
 
     document.addEventListener(
-      "toggle",
-      (event) => {
-        const details = event.target;
-        if (details.tagName === "DETAILS" && details.open) {
-          loadAccordion(details);
-        }
-      },
-      true
+        "toggle",
+        (event) => {
+            const details = event.target;
+            if (details.tagName === "DETAILS" && details.open) {
+                loadAccordion(details);
+            }
+        },
+        true
     );
 
     document.addEventListener("click", (event) => {
-      const button = event.target.closest(".c-toggle[data-month]");
-      if (!button) return;
-      const details = button.closest("details");
-      if (!details) return;
-      details.dataset.month = button.dataset.month;
-      details.querySelectorAll(".c-toggle[data-month]").forEach((btn) => {
-        btn.classList.toggle("is-active", btn === button);
-      });
-      if (details.open) {
-        loadAccordion(details);
-      }
+        const button = event.target.closest(".c-toggle[data-month]");
+        if (!button) return;
+        const details = button.closest("details");
+        if (!details) return;
+        details.dataset.month = button.dataset.month;
+        details.querySelectorAll(".c-toggle[data-month]").forEach((btn) => {
+            btn.classList.toggle("is-active", btn === button);
+        });
+        if (details.open) {
+            loadAccordion(details);
+        }
     });
 
     const updateTodayRecord = async () => {
-      try {
-        const payload = await requestJson("/api/attendance/record/today", { method: "GET" });
-        const result = payload.data || {};
-        const startEl = document.getElementById("start-time");
-        const endEl = document.getElementById("end-time");
-        if (startEl) startEl.textContent = result.start_time ? result.start_time.slice(0, 5) : "--:--";
-        if (endEl) endEl.textContent = result.end_time ? result.end_time.slice(0, 5) : "未打卡";
-      } catch (error) {
-        const startEl = document.getElementById("start-time");
-        const endEl = document.getElementById("end-time");
-        if (startEl) startEl.textContent = "--:--";
-        if (endEl) endEl.textContent = "未打卡";
-      }
+        try {
+            const payload = await requestJson("/api/attendance/record/today", {method: "GET"});
+            const result = payload.data || {};
+            const startEl = document.getElementById("start-time");
+            const endEl = document.getElementById("end-time");
+            if (startEl) startEl.textContent = result.start_time ? result.start_time.slice(0, 5) : "--:--";
+            if (endEl) endEl.textContent = result.end_time ? result.end_time.slice(0, 5) : "未打卡";
+        } catch (error) {
+            const startEl = document.getElementById("start-time");
+            const endEl = document.getElementById("end-time");
+            if (startEl) startEl.textContent = "--:--";
+            if (endEl) endEl.textContent = "未打卡";
+        }
     }
 
     document.addEventListener("click", async (event) => {
-      const punchButton = event.target.closest(".c-punch-btn");
-      if (!punchButton) return;
-      punchButton.disabled = true;
-      const detailText = document.getElementById("map-detail");
-      const locationText = detailText ? detailText.textContent.trim() : "";
+        const punchButton = event.target.closest(".c-punch-btn");
+        if (!punchButton) return;
+        punchButton.disabled = true;
+        const detailText = document.getElementById("map-detail");
+        const locationText = detailText ? detailText.textContent.trim() : "";
 
-      const punchTimeText = document.getElementById("punch-time");
-      const punchTimeValue = punchTimeText ? punchTimeText.textContent.trim() : "";
+        const punchTimeText = document.getElementById("punch-time");
+        const punchTimeValue = punchTimeText ? punchTimeText.textContent.trim() : "";
 
-      try {
-        await requestJson("/api/attendance/punch", {
-          body: JSON.stringify({
-            punch_time: punchTimeValue,
-            latitude: lastCoords.lat,
-            longitude: lastCoords.lng,
-            location_text: locationText,
-          }),
-        });
-        setStatus("打卡成功", "已记录本次打卡");
-        updateTodayRecord();
-      } catch (error) {
-        setStatus("打卡失败", "请稍后重试");
-      } finally {
-        punchButton.disabled = false;
-      }
+        try {
+            await requestJson("/api/attendance/punch", {
+                body: JSON.stringify({
+                    punch_time: punchTimeValue,
+                    latitude: lastCoords.lat,
+                    longitude: lastCoords.lng,
+                    location_text: locationText,
+                }),
+            });
+            setStatus("打卡成功", "已记录本次打卡");
+            updateTodayRecord();
+        } catch (error) {
+            setStatus("打卡失败", "请稍后重试");
+        } finally {
+            punchButton.disabled = false;
+        }
     });
 
     let currentEditRow = null;
     let toastTimer = null;
 
     const showToast = (message) => {
-      const toast = document.getElementById("toast");
-      if (!toast) return;
-      toast.textContent = message;
-      toast.classList.add("show");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-      }, 1600);
+        const toast = document.getElementById("toast");
+        if (!toast) return;
+        toast.textContent = message;
+        toast.classList.add("show");
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 1600);
     }
 
     const openEditDialog = (payload) => {
-      const dialog = document.getElementById("edit-dialog");
-      if (!dialog) return;
-      const errorEl = document.getElementById("edit-dialog-error");
-      const dateInput = document.getElementById("edit-date");
-      const startInput = document.getElementById("edit-start");
-      const endInput = document.getElementById("edit-end");
-      const remarkInput = document.getElementById("edit-remark");
-      if (dateInput) dateInput.value = payload.date || "";
-      if (startInput) startInput.value = payload.start || "";
-      if (endInput) endInput.value = payload.end || "";
-      if (remarkInput) remarkInput.value = payload.remark || "";
-      dialog.dataset.dateIso = payload.dateIso || "";
-      dialog.dataset.originalStart = payload.originalStart || "";
-      dialog.dataset.originalEnd = payload.originalEnd || "";
-      if (errorEl) errorEl.hidden = true;
-      dialog.classList.add("show");
-      dialog.setAttribute("aria-hidden", "false");
+        const dialog = document.getElementById("edit-dialog");
+        if (!dialog) return;
+        const errorEl = document.getElementById("edit-dialog-error");
+        const dateInput = document.getElementById("edit-date");
+        const startInput = document.getElementById("edit-start");
+        const endInput = document.getElementById("edit-end");
+        const remarkInput = document.getElementById("edit-remark");
+        if (dateInput) dateInput.value = payload.date || "";
+        if (startInput) startInput.value = payload.start || "";
+        if (endInput) endInput.value = payload.end || "";
+        if (remarkInput) remarkInput.value = payload.remark || "";
+        dialog.dataset.dateIso = payload.dateIso || "";
+        dialog.dataset.originalStart = payload.originalStart || "";
+        dialog.dataset.originalEnd = payload.originalEnd || "";
+        if (errorEl) errorEl.hidden = true;
+        dialog.classList.add("show");
+        dialog.setAttribute("aria-hidden", "false");
     }
 
     const closeEditDialog = () => {
-      const dialog = document.getElementById("edit-dialog");
-      if (!dialog) return;
-      dialog.classList.remove("show");
-      dialog.setAttribute("aria-hidden", "true");
+        const dialog = document.getElementById("edit-dialog");
+        if (!dialog) return;
+        dialog.classList.remove("show");
+        dialog.setAttribute("aria-hidden", "true");
     }
 
     document.addEventListener("click", (event) => {
-      const editButton = event.target.closest(".js-attendance-row .c-btn");
-      if (!editButton) return;
-      const payload = {
-        date: editButton.dataset.date || "",
-        dateIso: editButton.dataset.iso || "",
-        start: editButton.dataset.start || "",
-        end: editButton.dataset.end || "",
-        remark: editButton.dataset.remark || "",
-        originalStart: editButton.dataset.originalStart || editButton.dataset.start || "",
-        originalEnd: editButton.dataset.originalEnd || editButton.dataset.end || "",
-      };
-      currentEditRow = editButton.closest(".js-attendance-row");
-      openEditDialog(payload);
+        const editButton = event.target.closest(".js-attendance-row .c-btn");
+        if (!editButton) return;
+        const payload = {
+            date: editButton.dataset.date || "",
+            dateIso: editButton.dataset.iso || "",
+            start: editButton.dataset.start || "",
+            end: editButton.dataset.end || "",
+            remark: editButton.dataset.remark || "",
+            originalStart: editButton.dataset.originalStart || editButton.dataset.start || "",
+            originalEnd: editButton.dataset.originalEnd || editButton.dataset.end || "",
+        };
+        currentEditRow = editButton.closest(".js-attendance-row");
+        openEditDialog(payload);
     });
 
     document.addEventListener("click", (event) => {
-      if (event.target.id === "edit-dialog" || event.target.id === "edit-dialog-close" || event.target.id === "edit-dialog-cancel") {
-        closeEditDialog();
-      }
+        if (event.target.id === "edit-dialog" || event.target.id === "edit-dialog-close" || event.target.id === "edit-dialog-cancel") {
+            closeEditDialog();
+        }
     });
 
     document.getElementById("edit-dialog-save")?.addEventListener("click", async () => {
-      const dialog = document.getElementById("edit-dialog");
-      const errorEl = document.getElementById("edit-dialog-error");
-      const dateIso = dialog?.dataset.dateIso || "";
-      const originalStart = dialog?.dataset.originalStart || "";
-      const originalEnd = dialog?.dataset.originalEnd || "";
-      const startInput = document.getElementById("edit-start");
-      const endInput = document.getElementById("edit-end");
-      const remarkInput = document.getElementById("edit-remark");
-      const remarkValue = remarkInput ? remarkInput.value.trim() : "";
+        const dialog = document.getElementById("edit-dialog");
+        const errorEl = document.getElementById("edit-dialog-error");
+        const dateIso = dialog?.dataset.dateIso || "";
+        const originalStart = dialog?.dataset.originalStart || "";
+        const originalEnd = dialog?.dataset.originalEnd || "";
+        const startInput = document.getElementById("edit-start");
+        const endInput = document.getElementById("edit-end");
+        const remarkInput = document.getElementById("edit-remark");
+        const remarkValue = remarkInput ? remarkInput.value.trim() : "";
 
-      if (!remarkValue) {
-        if (errorEl) {
-          errorEl.textContent = "备注必填";
-          errorEl.hidden = false;
+        if (!remarkValue) {
+            if (errorEl) {
+                errorEl.textContent = "备注必填";
+                errorEl.hidden = false;
+            }
+            return;
         }
-        return;
-      }
-      if (!dateIso) {
-        if (errorEl) {
-          errorEl.textContent = "缺少日期，无法保存";
-          errorEl.hidden = false;
+        if (!dateIso) {
+            if (errorEl) {
+                errorEl.textContent = "缺少日期，无法保存";
+                errorEl.hidden = false;
+            }
+            return;
         }
-        return;
-      }
 
-      if (errorEl) errorEl.hidden = true;
+        if (errorEl) errorEl.hidden = true;
 
-      try {
-        const payload = await requestJson("/api/attendance/record/edit", {
-          body: JSON.stringify({
-            date: dateIso,
-            start_time: startInput ? startInput.value : "",
-            end_time: endInput ? endInput.value : "",
-            original_start_time: originalStart,
-            original_end_time: originalEnd,
-            remark: remarkValue,
-          }),
-        });
-        const result = payload.data || {};
-        if (currentEditRow && result.record) {
-          const record = result.record;
-          const times = currentEditRow.querySelectorAll(".c-time-item");
-          if (times[0]) times[0].textContent = record.start_time || "--:--";
-          if (times[1]) times[1].textContent = record.end_time || "--:--";
-          const remarkCell = currentEditRow.querySelector("td:nth-child(3)");
-          if (remarkCell) {
-            remarkCell.textContent = record.remark ? record.remark : "-";
-            remarkCell.style.color = record.remark ? "#0f172a" : "#64748b";
-          }
-          const editBtn = currentEditRow.querySelector(".c-btn");
-          if (editBtn) {
-            editBtn.dataset.iso = record.date || dateIso;
-            editBtn.dataset.start = record.start_time || "";
-            editBtn.dataset.end = record.end_time || "";
-            editBtn.dataset.remark = record.remark || "";
-            editBtn.dataset.originalStart = record.start_time || "";
-            editBtn.dataset.originalEnd = record.end_time || "";
-          }
+        try {
+            const payload = await requestJson("/api/attendance/record/edit", {
+                body: JSON.stringify({
+                    date: dateIso,
+                    start_time: startInput ? startInput.value : "",
+                    end_time: endInput ? endInput.value : "",
+                    original_start_time: originalStart,
+                    original_end_time: originalEnd,
+                    remark: remarkValue,
+                }),
+            });
+            const result = payload.data || {};
+            if (currentEditRow && result.record) {
+                const record = result.record;
+                const times = currentEditRow.querySelectorAll(".c-time-item");
+                if (times[0]) times[0].textContent = record.start_time || "--:--";
+                if (times[1]) times[1].textContent = record.end_time || "--:--";
+                const remarkCell = currentEditRow.querySelector("td:nth-child(3)");
+                if (remarkCell) {
+                    remarkCell.textContent = record.remark ? record.remark : "-";
+                    remarkCell.style.color = record.remark ? "#0f172a" : "#64748b";
+                }
+                const editBtn = currentEditRow.querySelector(".c-btn");
+                if (editBtn) {
+                    editBtn.dataset.iso = record.date || dateIso;
+                    editBtn.dataset.start = record.start_time || "";
+                    editBtn.dataset.end = record.end_time || "";
+                    editBtn.dataset.remark = record.remark || "";
+                    editBtn.dataset.originalStart = record.start_time || "";
+                    editBtn.dataset.originalEnd = record.end_time || "";
+                }
+            }
+            showToast("保存成功");
+            closeEditDialog();
+        } catch (err) {
+            if (errorEl) {
+                errorEl.textContent = err.message || "保存失败";
+                errorEl.hidden = false;
+            }
+            showToast("保存失败");
         }
-        showToast("保存成功");
-        closeEditDialog();
-      } catch (err) {
-        if (errorEl) {
-          errorEl.textContent = err.message || "保存失败";
-          errorEl.hidden = false;
-        }
-        showToast("保存失败");
-      }
     });
 
     const pad2 = (value) => {
-      return String(value).padStart(2, "0");
+        return String(value).padStart(2, "0");
     }
 
     const updatePunchTime = () => {
-      const now = new Date();
-      const timeText = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
-      const el = document.getElementById("punch-time");
-      if (el) el.textContent = timeText;
+        const now = new Date();
+        const timeText = `${pad2(now.getHours())}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+        const el = document.getElementById("punch-time");
+        if (el) el.textContent = timeText;
     }
 
     const updateTodayDate = () => {
-      const now = new Date();
-      const dateText = `${now.getMonth() + 1}月${now.getDate()}日`;
-      const el = document.getElementById("today-date");
-      if (el) el.textContent = dateText;
+        const now = new Date();
+        const dateText = `${now.getMonth() + 1}月${now.getDate()}日`;
+        const el = document.getElementById("today-date");
+        if (el) el.textContent = dateText;
     }
 
     updatePunchTime();
     updateTodayDate();
     setInterval(updatePunchTime, 1000);
     updateTodayRecord();
-  </script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script>
+</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
     initMap();
-  </script>
+</script>
 </body>
 </html>

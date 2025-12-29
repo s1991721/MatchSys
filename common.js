@@ -55,7 +55,7 @@
     return age;
   };
 
-    // 根据契约类型返回字符串
+  // 根据契约类型返回字符串
   window.contractTypeToLabel = function (value){
     const mapping = {
         1: '正社员',
@@ -63,5 +63,85 @@
         3: 'フリーランス'
     };
     return mapping[value] || '未定';
+  };
+
+  // 分页页码构建
+  window.buildPageItems = function (totalPages, activePage) {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = [1];
+    const start = Math.max(2, activePage - 1);
+    const end = Math.min(totalPages - 1, activePage + 1);
+    if (start > 2) pages.push("…");
+    for (let i = start; i <= end; i += 1) pages.push(i);
+    if (end < totalPages - 1) pages.push("…");
+    pages.push(totalPages);
+    return pages;
+  };
+
+  // 渲染分页
+  window.renderPagination = function (paginationEl, pagesEl, currentPage, totalPages) {
+    if (!paginationEl) return;
+    const safeTotalPages = Math.max(1, totalPages || 1);
+    const safeCurrentPage = Math.min(Math.max(1, currentPage || 1), safeTotalPages);
+    if (!pagesEl) {
+      pagesEl = paginationEl.querySelector(".pagination-pages");
+    }
+    const summaryEl = paginationEl.querySelector(".pagination-summary");
+    paginationEl.innerHTML = "";
+    if (summaryEl) {
+      paginationEl.appendChild(summaryEl);
+    }
+
+    const prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "c-btn c-btn-ghost c-btn-sm";
+    prevBtn.dataset.page = "prev";
+    prevBtn.textContent = "上一页";
+    prevBtn.disabled = safeCurrentPage <= 1;
+    paginationEl.appendChild(prevBtn);
+
+    if (!pagesEl) {
+      pagesEl = document.createElement("div");
+      pagesEl.className = "pagination-pages";
+    }
+    pagesEl.innerHTML = "";
+    const pageItems = window.buildPageItems(safeTotalPages, safeCurrentPage);
+    pagesEl.append(...pageItems.map((page) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "c-btn c-btn-ghost c-btn-sm";
+      btn.textContent = String(page);
+      if (page === "…") {
+        btn.disabled = true;
+        btn.classList.add("is-ellipsis");
+        return btn;
+      }
+      btn.dataset.page = String(page);
+      if (page === safeCurrentPage) {
+        btn.classList.add("is-active");
+      }
+      return btn;
+    }));
+    paginationEl.appendChild(pagesEl);
+
+    const nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "c-btn c-btn-ghost c-btn-sm";
+    nextBtn.dataset.page = "next";
+    nextBtn.textContent = "下一页";
+    nextBtn.disabled = safeCurrentPage >= safeTotalPages;
+    paginationEl.appendChild(nextBtn);
+  };
+
+  // 分页点击绑定（通过钩子处理具体逻辑）
+  window.bindPagination = function (paginationEl, onPageChange) {
+    if (!paginationEl || typeof onPageChange !== "function") return;
+    paginationEl.addEventListener("click", (event) => {
+      const btn = event.target.closest("button[data-page]");
+      if (!btn) return;
+      onPageChange(btn.dataset.page || "");
+    });
   };
 })();

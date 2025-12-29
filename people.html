@@ -91,9 +91,7 @@
             <div class="pagination-summary">
                 <span id="summaryText">共 0 人</span>
             </div>
-            <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="prev">上一页</button>
             <div class="pagination-pages" id="paginationPages"></div>
-            <button type="button" class="c-btn c-btn-ghost c-btn-sm" data-page="next">下一页</button>
         </div>
     </div>
 </div>
@@ -270,42 +268,8 @@
         return mapping[value] ?? 'c-pill';
     };
 
-    const buildPageItems = (totalPageCount, activePage) => {
-        if (totalPageCount <= 7) {
-            return Array.from({length: totalPageCount}, (_, i) => i + 1);
-        }
-        const pages = [1];
-        const start = Math.max(2, activePage - 1);
-        const end = Math.min(totalPageCount - 1, activePage + 1);
-        if (start > 2) pages.push('…');
-        for (let i = start; i <= end; i += 1) pages.push(i);
-        if (end < totalPageCount - 1) pages.push('…');
-        pages.push(totalPageCount);
-        return pages;
-    };
-
     const renderPagination = () => {
-        if (!pagination || !paginationPages) return;
-        const safeTotalPages = Math.max(1, totalPages);
-        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
-        paginationPages.innerHTML = '';
-        const pageItems = buildPageItems(safeTotalPages, currentPage);
-        paginationPages.append(...pageItems.map((page) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'c-btn c-btn-ghost c-btn-sm';
-            btn.textContent = String(page);
-            if (page === '…') {
-                btn.disabled = true;
-                btn.classList.add('is-ellipsis');
-                return btn;
-            }
-            btn.dataset.page = String(page);
-            if (page === currentPage) {
-                btn.classList.add('is-active');
-            }
-            return btn;
-        }));
+        window.renderPagination(pagination, paginationPages, currentPage, totalPages);
     };
 
     const renderPeople = (list) => {
@@ -715,23 +679,18 @@
         filterBusinessStatus.value = '';
         applyFilters();
     });
-    if (pagination) {
-        pagination.addEventListener('click', (event) => {
-            const btn = event.target.closest('button[data-page]');
-            if (!btn) return;
-            const value = btn.dataset.page;
-            const safeTotalPages = Math.max(1, totalPages);
-            if (value === 'prev') {
-                currentPage = Math.max(1, currentPage - 1);
-            } else if (value === 'next') {
-                currentPage = Math.min(safeTotalPages, currentPage + 1);
-            } else {
-                const targetPage = Number(value);
-                if (!Number.isNaN(targetPage)) currentPage = targetPage;
-            }
-            fetchPeople();
-        });
-    }
+    window.bindPagination(pagination, (value) => {
+        const safeTotalPages = Math.max(1, totalPages);
+        if (value === 'prev') {
+            currentPage = Math.max(1, currentPage - 1);
+        } else if (value === 'next') {
+            currentPage = Math.min(safeTotalPages, currentPage + 1);
+        } else {
+            const targetPage = Number(value);
+            if (!Number.isNaN(targetPage)) currentPage = targetPage;
+        }
+        fetchPeople();
+    });
 
     fetchPeople();
 </script>

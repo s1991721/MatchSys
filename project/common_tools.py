@@ -34,3 +34,10 @@ def years_ago(today, years):
         return today.replace(year=today.year - years)
     except ValueError:
         return today.replace(year=today.year - years, month=2, day=28)
+
+import os
+from django.conf import settings
+
+# ss存储路径
+def ss_storage_dir():
+    return os.path.join(settings.BASE_DIR, "ss")

@@ -2,7 +2,6 @@ import mimetypes
 import os
 from decimal import Decimal
 
-from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse
@@ -11,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_date, parse_json_body,years_ago
+from project.common_tools import parse_date, parse_json_body,years_ago,ss_storage_dir
 from .models import Employee, Technician, UserLogin
 
 
@@ -205,10 +204,6 @@ def employee_departments_api(request):
     )
     dept_list = list(departments)
     return api_success(data={"departments": dept_list})
-
-
-def _ss_storage_dir():
-    return os.path.join(settings.BASE_DIR, "ss")
 
 
 @csrf_exempt
@@ -548,7 +543,7 @@ def technician_ss_upload(request, employee_id):
             status=404
         )
 
-    base_dir = _ss_storage_dir()
+    base_dir = ss_storage_dir()
     os.makedirs(base_dir, exist_ok=True)
 
     _, ext = os.path.splitext(upload.name or "")
@@ -584,7 +579,7 @@ def technician_ss_download(request, path):
             status=401
         )
 
-    base_dir = os.path.realpath(_ss_storage_dir())
+    base_dir = os.path.realpath(ss_storage_dir())
     safe_path = os.path.realpath(os.path.join(base_dir, path))
     if not safe_path.startswith(base_dir + os.sep):
         return api_error(

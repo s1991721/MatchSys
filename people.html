@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title>人员管理</title>
+    <link rel="stylesheet" href="components.css">
+    <title>人员管理</title>
 </head>
 <body class="c-form-page">
 <div class="page">
@@ -14,11 +14,11 @@
             <div class="filter-grid c-filter-grid-wide">
                 <label>
                     姓名/昵称
-                    <input type="text" id="filterKeyword" placeholder="输入姓名或昵称" />
+                    <input type="text" id="filterKeyword" placeholder="输入姓名或昵称"/>
                 </label>
                 <label>
                     最大年龄
-                    <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" />
+                    <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数"/>
                 </label>
                 <label>
                     国籍
@@ -31,7 +31,7 @@
                 </label>
                 <label>
                     最高单价（万/月）
-                    <input type="number" id="filterPriceMax" min="0" step="0.1" placeholder="最高单价" />
+                    <input type="number" id="filterPriceMax" min="0" step="0.1" placeholder="最高单价"/>
                 </label>
                 <label>
                     契约状况
@@ -101,23 +101,25 @@
 <dialog id="personDialog" class="c-dialog">
     <div class="dialog-header c-dialog-header">
         <h3 id="dialogTitle">新增人员</h3>
-        <button type="button" class="dialog-close c-dialog-close" id="closeDialogBtn" data-close-dialog aria-label="关闭">&times;</button>
+        <button type="button" class="dialog-close c-dialog-close" id="closeDialogBtn" data-close-dialog
+                aria-label="关闭">&times;
+        </button>
     </div>
     <form id="personForm">
         <div class="dialog-body c-dialog-body">
             <div class="form-grid form-grid-spaced">
-                <input type="hidden" name="employee_id" />
+                <input type="hidden" name="employee_id"/>
                 <label>
                     姓名
-                    <input type="text" name="name" placeholder="请输入姓名" required />
+                    <input type="text" name="name" placeholder="请输入姓名" required/>
                 </label>
                 <label>
                     昵称
-                    <input type="text" name="nickname" placeholder="请输入昵称" />
+                    <input type="text" name="nickname" placeholder="请输入昵称"/>
                 </label>
                 <label>
                     生日
-                    <input type="date" name="birthday" required />
+                    <input type="date" name="birthday" required/>
                 </label>
                 <label>
                     国籍
@@ -130,7 +132,7 @@
                 </label>
                 <label>
                     单价（万/月）
-                    <input type="number" name="price" min="0" step="0.1" placeholder="例如 2.5" required />
+                    <input type="number" name="price" min="0" step="0.1" placeholder="例如 2.5" required/>
                 </label>
                 <label>
                     契约状况
@@ -143,7 +145,7 @@
                 </label>
                 <label>
                     现场契约
-                    <input type="date" name="siteContract" required />
+                    <input type="date" name="siteContract" required/>
                 </label>
                 <label>
                     营业状态
@@ -162,7 +164,7 @@
                 </label>
                 <label>
                     SS 文件
-                    <input type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx" />
+                    <input type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
                 </label>
                 <label>
                     备注
@@ -239,15 +241,6 @@
         return mapping[label] ?? 0;
     };
 
-    const contractTypeToLabel = (value) => {
-        const mapping = {
-            1: '正社员',
-            2: '契约社员',
-            3: 'フリーランス'
-        };
-        return mapping[value] || '未定';
-    };
-
     const normalizeDateInput = (value) => {
         if (!value) return '';
         const date = new Date(value);
@@ -277,22 +270,9 @@
         return mapping[value] ?? 'c-pill';
     };
 
-    const calcAge = (birthday) => {
-        if (!birthday) return null;
-        const date = new Date(birthday);
-        if (Number.isNaN(date.getTime())) return null;
-        const today = new Date();
-        let age = today.getFullYear() - date.getFullYear();
-        const m = today.getMonth() - date.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
-            age -= 1;
-        }
-        return age;
-    };
-
     const buildPageItems = (totalPageCount, activePage) => {
         if (totalPageCount <= 7) {
-            return Array.from({ length: totalPageCount }, (_, i) => i + 1);
+            return Array.from({length: totalPageCount}, (_, i) => i + 1);
         }
         const pages = [1];
         const start = Math.max(2, activePage - 1);
@@ -470,15 +450,14 @@
 
     const getNumberValue = (value) => value === '' ? null : Number(value);
 
+    {#员工页跳转编辑时，获取员工信息#}
     const getAutoEditId = () => {
         try {
-            try {
-                const cached = localStorage.getItem("tech_edit_employee_id") || "";
-                if (cached) {
-                    localStorage.removeItem("tech_edit_employee_id");
-                    return cached;
-                }
-            } catch (err) {}
+            const cached = localStorage.getItem("tech_edit_employee_id") || "";
+            if (cached) {
+                localStorage.removeItem("tech_edit_employee_id");
+                return cached;
+            }
             return '';
         } catch (error) {
             return '';
@@ -495,11 +474,10 @@
             if (currentFilters.nationality) params.set('nationality', currentFilters.nationality);
             if (currentFilters.priceMax !== null) params.set('price_max', String(currentFilters.priceMax));
             if (currentFilters.contractType !== null) params.set('contract_type', String(currentFilters.contractType));
-            if (currentFilters.businessStatus !== null) {
-                params.set('business_status', String(currentFilters.businessStatus));
-            }
+            if (currentFilters.businessStatus !== null) params.set('business_status', String(currentFilters.businessStatus));
 
-            const res = await fetchWithAuth(`/api/technicians?${params.toString()}`, { method: 'GET' });
+
+            const res = await fetchWithAuth(`/api/technicians?${params.toString()}`, {method: 'GET'});
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!payload.success) {
@@ -509,7 +487,6 @@
             const meta = payload.meta || {};
             const items = Array.isArray(result.items) ? result.items : [];
             people = items.map(item => {
-                const remarkText = item.remark ? String(item.remark) : '';
                 return {
                     id: item.employee_id,
                     name: item.name || '',
@@ -522,7 +499,7 @@
                     siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
                     businessStatus: item.business_status ?? 0,
                     intro: item.introduction || '',
-                    note: remarkText || '',
+                    note: item.remark || '',
                     ssPath: item.ss || '',
                     ssUrl: item.ss_url || ''
                 };
@@ -556,7 +533,7 @@
     const prefillFromEmployee = async (employeeId) => {
         if (!employeeId) return;
         try {
-            const res = await fetchWithAuth(`/api/employees/${employeeId}`, { method: 'GET' });
+            const res = await fetchWithAuth(`/api/employees/${employeeId}`, {method: 'GET'});
             if (!res.ok) return;
             const data = await res.json();
             const payload = normalizeApiResponse(data);
@@ -569,7 +546,8 @@
             personForm.birthday.value = emp.birthday || '';
             personForm.nickname.value = personForm.nickname.value || '';
             personForm.nationality.value = personForm.nationality.value || '';
-        } catch (error) {}
+        } catch (error) {
+        }
     };
 
     const savePerson = async (payload) => {
@@ -577,7 +555,7 @@
         const url = editingId ? `/api/technicians/${editingId}` : '/api/technicians';
         const res = await fetchWithAuth(url, {
             method,
-            headers: { 'Content-Type': 'application/json' },
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -663,7 +641,7 @@
             introduction: formValue.intro || '',
             contract_type: contractLabelToType(formValue.contract),
             spot_contract_deadline: formValue.siteContract || null,
-                    business_status: Number.isFinite(formValue.businessStatus) ? formValue.businessStatus : 0,
+            business_status: Number.isFinite(formValue.businessStatus) ? formValue.businessStatus : 0,
             ss: ssPath || null,
             remark: formValue.note
         };
@@ -711,9 +689,9 @@
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);
             if (target && confirm(`确定删除 ${target.name} 吗？`)) {
-                fetchWithAuth(`/api/technicians/${deleteId}`, { method: 'DELETE' })
-                    .then(res => res.json().then(data => ({ res, data })))
-                    .then(({ res, data }) => {
+                fetchWithAuth(`/api/technicians/${deleteId}`, {method: 'DELETE'})
+                    .then(res => res.json().then(data => ({res, data})))
+                    .then(({res, data}) => {
                         const responsePayload = normalizeApiResponse(data);
                         if (!res.ok || !responsePayload.success) {
                             throw new Error(responsePayload.message || '删除失败');

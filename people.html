@@ -534,7 +534,6 @@
         const url = editingId ? `/api/technicians/${editingId}` : '/api/technicians';
         const res = await fetchWithAuth(url, {
             method,
-            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload)
         });
         const data = await res.json();

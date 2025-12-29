@@ -451,7 +451,7 @@ def technicians_api(request):
 
 @csrf_exempt
 @require_http_methods(["PUT", "PATCH", "DELETE"])
-# 删除技术者、
+# 删除技术者、更新技术者
 def technician_detail_api(request, employee_id):
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
@@ -477,24 +477,24 @@ def technician_detail_api(request, employee_id):
     if "nationality" in payload:
         tech.nationality = (payload.get("nationality") or "").strip() or None
     if "price" in payload:
-        value = payload.get("price")
-
-        tech.price = value
+        tech.price = payload.get("price")
     if "introduction" in payload:
         tech.introduction = (payload.get("introduction") or "").strip() or None
+
     if "contract_type" in payload:
         value = payload.get("contract_type")
-
         tech.contract_type = value if value is not None else 0
+
     if "spot_contract_deadline" in payload:
         value, error = parse_date(payload.get("spot_contract_deadline"))
         if error:
             return error
         tech.spot_contract_deadline = value
+
     if "business_status" in payload:
         value = payload.get("business_status")
-
         tech.business_status = value if value is not None else 0
+
     if "ss" in payload:
         tech.ss = (payload.get("ss") or "").strip() or None
     if "remark" in payload:
@@ -503,19 +503,17 @@ def technician_detail_api(request, employee_id):
     # Do not allow employee_id updates for existing technicians.
 
     if not tech.name_mask:
-        return api_error(
-            "Missing field: name_mask",
-            status=400,
-        )
+        return api_error("Missing field: name_mask")
     if not tech.name:
-        return api_error(
-            "Missing field: name",
-            status=400
-        )
+        return api_error("Missing field: name")
 
-    tech.save()
-    item = Technician.serialize(tech)
-    return api_success(data={"item": item})
+    login_id = request.session.get("employee_id")
+    if login_id:
+        tech.updated_by = login_id
+        tech.save()
+        item = Technician.serialize(tech)
+        return api_success(data={"item": item})
+    return api_error(status=401, message="请先登录")
 
 
 @csrf_exempt
@@ -557,24 +555,17 @@ def technician_ss_upload(request, employee_id):
 
 
 @require_http_methods(["GET"])
+# 下载ss
 def technician_ss_download(request, path):
     if not request.session.get("employee_id"):
-        return api_error(
-            "Unauthorized",
-            status=401
-        )
+        return api_error("Unauthorized", status=401)
 
     base_dir = os.path.realpath(ss_storage_dir())
     safe_path = os.path.realpath(os.path.join(base_dir, path))
     if not safe_path.startswith(base_dir + os.sep):
-        return api_error(
-            "Invalid path"
-        )
+        return api_error("Invalid path")
     if not os.path.exists(safe_path):
-        return api_error(
-            "File not found",
-            status=404
-        )
+        return api_error("File not found", status=404)
 
     content_type, _ = mimetypes.guess_type(safe_path)
     response = FileResponse(open(safe_path, "rb"), content_type=content_type or "application/octet-stream")

@@ -260,7 +260,7 @@ body > .page {
   flex-direction: column;
   gap: 6px;
 }
-:is(.form-field, .c-field, .c-form-page):is(input, textarea, select) {
+:is(.form-field, .c-field, .c-form-page) :is(input, textarea, select) {
   border: 1px solid #d8dfec;
   border-radius: 10px;
   padding: 10px 12px;
@@ -277,11 +277,11 @@ body > .page {
   min-height: 72px;
   resize: vertical;
 }
-:is(.form-field, .c-field, .c-form-page):is(input, textarea, select):focus {
+:is(.form-field, .c-field, .c-form-page) :is(input, textarea, select):focus {
   border-color: rgba(28, 123, 255, 0.5);
   box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.12);
 }
-:is(.form-field, .c-field, .c-form-page):is(input, textarea)[readonly] {
+:is(.form-field, .c-field, .c-form-page) :is(input, textarea)[readonly] {
   background: #f2f4f8;
   color: #7a8597;
   border-color: #e1e6ef;

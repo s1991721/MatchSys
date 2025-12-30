@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>权限管理</title>
+  <title data-i18n="permission.title">权限管理</title>
     <style>
 * {
             box-sizing: border-box;
@@ -33,9 +33,16 @@
 <body>
 <div class="page">
     <div class="c-card">
-        <h3 class="title c-title-bar c-title-bar-sm">权限管理</h3>
-        <p class="hint">该功能页面尚未接入（占位页）。你提供实际页面文件名后，我可以把这里替换为真实功能页面。</p>
+        <h3 class="title c-title-bar c-title-bar-sm" data-i18n="permission.title">权限管理</h3>
+        <p class="hint" data-i18n="permission.hint">该功能页面尚未接入（占位页）。你提供实际页面文件名后，我可以把这里替换为真实功能页面。</p>
     </div>
 </div>
+<script src="i18n.js"></script>
+<script>
+  if (window.I18N) {
+    window.I18N.init();
+    window.I18N.apply();
+  }
+</script>
 </body>
 </html>

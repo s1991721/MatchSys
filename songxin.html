@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>送信页</title>
+  <title data-i18n="songxin.title">送信页</title>
     <style>
 * {
             box-sizing: border-box;
@@ -246,55 +246,58 @@
         <div class="loading-box">
             <div class="loading-main">
                 <div class="spinner" aria-hidden="true"></div>
-                <div id="loading-text">正在等待 AI 响应…</div>
+                <div id="loading-text" data-i18n="songxin.loading.wait_title">正在等待 AI 响应…</div>
             </div>
-            <div id="loading-sub" class="loading-sub">请稍候，正在处理中…</div>
+            <div id="loading-sub" class="loading-sub" data-i18n="songxin.loading.wait_sub">请稍候，正在处理中…</div>
         </div>
     </div>
     <div class="page">
         <header class="page-header c-page-header">
             <div>
-                <div class="title c-page-title-soft">送信页</div>
-                <div class="subtitle c-page-subtitle-soft">整页编辑模式，直接书写并发送邮件内容</div>
+                <div class="title c-page-title-soft" data-i18n="songxin.title">送信页</div>
+                <div class="subtitle c-page-subtitle-soft" data-i18n="songxin.subtitle">整页编辑模式，直接书写并发送邮件内容</div>
             </div>
-            <div class="subtitle c-page-subtitle-soft">状态：草稿</div>
+            <div class="subtitle c-page-subtitle-soft">
+                <span data-i18n="songxin.status.label">状态</span>：
+                <span data-i18n="songxin.status.draft">草稿</span>
+            </div>
         </header>
 
         <section class="grid">
             <div class="editor-card c-card c-card-pad">
-                <div class="c-card-title">内容编辑</div>
-                <textarea id="editor" class="editor" placeholder="在此编写您要发送的内容，例如项目进度、补充说明或会议纪要等。" aria-label="内容编辑文本域"></textarea>
+                <div class="c-card-title" data-i18n="songxin.section.editor">内容编辑</div>
+                <textarea id="editor" class="editor" placeholder="在此编写您要发送的内容，例如项目进度、补充说明或会议纪要等。" aria-label="内容编辑文本域" data-i18n-placeholder="songxin.editor.placeholder" data-i18n-aria="songxin.editor.aria"></textarea>
             </div>
 
             <div class="c-card">
-                <div class="c-card-title">收件与附件</div>
+                <div class="c-card-title" data-i18n="songxin.section.recipient">收件与附件</div>
                 <div class="field">
-                    <label for="email">收件人邮箱</label>
+                    <label for="email" data-i18n="songxin.field.to">收件人邮箱</label>
                     <input id="email" type="email" class="input" placeholder="name@example.com">
                 </div>
                 <div class="field">
-                    <label for="subject">邮件标题</label>
-                    <textarea id="subject" class="input subject-area" rows="2" placeholder="请输入邮件标题（未填将使用正文首行）"></textarea>
+                    <label for="subject" data-i18n="songxin.field.subject">邮件标题</label>
+                    <textarea id="subject" class="input subject-area" rows="2" placeholder="请输入邮件标题（未填将使用正文首行）" data-i18n-placeholder="songxin.field.subject_placeholder"></textarea>
                 </div>
                 <div class="field">
-                    <label for="cc">抄送 (可选)</label>
+                    <label for="cc" data-i18n="songxin.field.cc">抄送 (可选)</label>
                     <input id="cc" type="email" class="input" placeholder="cc@example.com">
                 </div>
                 <div class="field">
-                    <label for="file-input">上传附件</label>
+                    <label for="file-input" data-i18n="songxin.field.attach">上传附件</label>
                     <div class="upload-bar">
                         <input id="file-input" class="file-input" type="file" multiple>
-                        <button id="btn-upload" class="c-btn c-btn-ghost" type="button">选择文件</button>
-                        <span class="upload-hint">支持多文件，建议单个不超过10MB</span>
+                        <button id="btn-upload" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.select_file">选择文件</button>
+                        <span class="upload-hint" data-i18n="songxin.attach.hint">支持多文件，建议单个不超过10MB</span>
                     </div>
                     <div id="attachment-list" class="attachment-list">
-                        <div class="empty-tip">暂无附件</div>
+                        <div class="empty-tip" data-i18n="songxin.attach.empty">暂无附件</div>
                     </div>
                 </div>
                 <div class="send-actions">
-                    <button id="btn-clear" class="c-btn c-btn-ghost" type="button">清空内容</button>
-                    <button id="btn-send" class="c-btn c-btn-primary" type="button" aria-label="发送">
-                        <span>发送</span>
+                    <button id="btn-clear" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.clear">清空内容</button>
+                    <button id="btn-send" class="c-btn c-btn-primary" type="button" aria-label="发送" data-i18n-aria="songxin.action.send">
+                        <span data-i18n="songxin.action.send">发送</span>
                         <span aria-hidden="true">➤</span>
                     </button>
                 </div>
@@ -303,26 +306,30 @@
 
         <section class="grid">
             <div class="c-card">
-                <div class="c-card-title">预览</div>
+                <div class="c-card-title" data-i18n="songxin.section.preview">预览</div>
                 <div id="preview" class="detail">
                     这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。ABCDEFG1234567890不想超出屏幕会自动换行。
                 </div>
             </div>
             <div class="c-card">
-                <div class="c-card-title">提醒</div>
+                <div class="c-card-title" data-i18n="songxin.section.tips">提醒</div>
                 <div class="muted-block">
-                    · 请确认邮箱地址无误再发送。<br>
-                    · 已支持在页面右侧上传附件，发送前请核对文件列表。<br>
-                    · 内容较长时建议分段，保持易读性。<br>
-                    · 发送后可在历史记录中查看送信状态。
+                    · <span data-i18n="songxin.tip.1">请确认邮箱地址无误再发送。</span><br>
+                    · <span data-i18n="songxin.tip.2">已支持在页面右侧上传附件，发送前请核对文件列表。</span><br>
+                    · <span data-i18n="songxin.tip.3">内容较长时建议分段，保持易读性。</span><br>
+                    · <span data-i18n="songxin.tip.4">发送后可在历史记录中查看送信状态。</span>
                 </div>
             </div>
         </section>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="common.js"></script>
 <script>
         (function () {
+            const i18n = window.I18N;
+            const t = (key) => (i18n ? i18n.t(key) : key);
+            const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
             const editor = document.getElementById('editor');
             const email = document.getElementById('email');
             const subjectInput = document.getElementById('subject');
@@ -337,6 +344,10 @@
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
             const API_BASE = '';
+            if (i18n) {
+                i18n.init();
+                i18n.apply();
+            }
             const fetchWithAuth = async (url, options = {}) => {
                 const res = await fetch(url, options);
                 if (res.status === 401) {
@@ -382,19 +393,19 @@
                 const person = data.person || {};
 
                 const jobLines = [
-                    '【求人信息】',
-                    job.title ? `标题：${job.title}` : null,
-                    job.desc ? `描述：${job.desc}` : null,
-                    job.time ? `时间：${job.time}` : null,
-                    job.detail ? `详情：\n${job.detail}` : null
+                    t('songxin.job_info'),
+                    job.title ? `${t('songxin.label.title')}：${job.title}` : null,
+                    job.desc ? `${t('songxin.label.desc')}：${job.desc}` : null,
+                    job.time ? `${t('songxin.label.time')}：${job.time}` : null,
+                    job.detail ? `${t('songxin.label.detail')}：\n${job.detail}` : null
                 ].filter(Boolean).join('\n');
 
                 const personLines = [
-                    '【人员信息】',
-                    person.name ? `姓名：${person.name}` : null,
-                    person.belong ? `所属：${person.belong}` : null,
-                    person.time ? `时间：${person.time}` : null,
-                    person.detail ? `详情：\n${person.detail}` : null
+                    t('songxin.person_info'),
+                    person.name ? `${t('songxin.label.name')}：${person.name}` : null,
+                    person.belong ? `${t('songxin.label.belong')}：${person.belong}` : null,
+                    person.time ? `${t('songxin.label.time')}：${person.time}` : null,
+                    person.detail ? `${t('songxin.label.detail')}：\n${person.detail}` : null
                 ].filter(Boolean).join('\n');
 
                 const combined = [jobLines, personLines].filter(Boolean).join('\n\n');
@@ -423,9 +434,9 @@
             };
 
             const setLoading = (isLoading, options = {}) => {
-                const { title = '正在处理…', subtitle = '请稍候，正在处理中…' } =
+                const { title = t('songxin.loading.processing'), subtitle = t('songxin.loading.wait_sub') } =
                     typeof options === 'string'
-                        ? { title: options, subtitle: '请稍候，正在处理中…' }
+                        ? { title: options, subtitle: t('songxin.loading.wait_sub') }
                         : options;
 
                 if (isLoading) {
@@ -449,7 +460,7 @@
 
             const analyzeQiuren = async (jobText) => {
                 if (!jobText) return;
-                setLoading(true, { title: '正在生成邮件内容…', subtitle: 'AI 正在解析信息并准备正文，请稍候。' });
+                setLoading(true, { title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub') });
                 try {
                     const res = await fetchWithAuth(`${API_BASE}/extract-qiuren-detail`, {
                         method: 'POST',
@@ -478,11 +489,11 @@
                         }
                     }
                     const normalized = normalizeMultiline(formatted);
-                    editor.value = normalized || '解析结果暂不可用';
+                    editor.value = normalized || t('songxin.preview.unavailable');
                     renderPreview();
                 } catch (err) {
                     console.error('调用 extract_qiuren_detail 失败', err);
-                    alert('AI 解析暂时不可用，请稍后重试。');
+                    alert(t('songxin.alert.ai_unavailable'));
                 } finally {
                     setLoading(false);
                 }
@@ -503,7 +514,7 @@
                         : result;
                     resolve(base64);
                 };
-                reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
+                reader.onerror = () => reject(reader.error || new Error(t('songxin.loading.file_failed')));
                 reader.readAsDataURL(file);
             });
 
@@ -522,13 +533,13 @@
 
             const deriveSubject = (text) => {
                 const firstLine = (text || '').split('\n').map(t => t.trim()).find(Boolean);
-                if (!firstLine) return '送信页邮件';
+                if (!firstLine) return t('songxin.subject.default');
                 return firstLine.slice(0, 60);
             };
 
             const renderAttachments = () => {
                 if (!attachments.length) {
-                    attachmentList.innerHTML = '<div class="empty-tip">暂无附件</div>';
+                    attachmentList.innerHTML = `<div class="empty-tip">${t('songxin.attach.empty')}</div>`;
                     return;
                 }
 
@@ -537,7 +548,7 @@
                         <div class="attachment-name">${file.name}</div>
                         <div class="attachment-meta">
                             <span>${file.sizeLabel}</span>
-                            <span class="remove-link" data-remove="${idx}">移除</span>
+                            <span class="remove-link" data-remove="${idx}">${t('songxin.attach.remove')}</span>
                         </div>
                     </div>
                 `).join('');
@@ -547,7 +558,7 @@
                 const content = editor.value.trim();
 
                 if (!content) {
-                    preview.textContent = '这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。';
+                    preview.textContent = t('songxin.preview.empty');
                     return;
                 }
 
@@ -592,13 +603,13 @@
             sendBtn.addEventListener('click', async () => {
                 const target = email.value.trim();
                 if (!target) {
-                    alert('请先填写收件人邮箱。');
+                    alert(t('songxin.alert.email_required'));
                     email.focus();
                     return;
                 }
                 const content = editor.value.trim();
                 if (!content) {
-                    alert('请输入邮件正文后再发送。');
+                    alert(t('songxin.alert.content_required'));
                     editor.focus();
                     return;
                 }
@@ -606,7 +617,7 @@
                 const selection = currentSelection || readSelection();
                 const personMeta = selection?.person || null;
 
-                setLoading(true, { title: '正在发送邮件…', subtitle: '正在上传附件并发送，请稍候。' });
+                setLoading(true, { title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub') });
                 try {
                     const attachmentsPayload = await Promise.all(
                         attachments.map(async (att) => ({
@@ -655,11 +666,11 @@
                         throw new Error(responsePayload.message || '发送失败');
                     }
 
-                    alert('发送成功！即将跳转到历史记录。');
+                    alert(t('songxin.alert.sent'));
                     window.location.href = 'songxinhistory.html';
                 } catch (err) {
                     console.error('发送邮件失败', err);
-                    alert(`发送失败：${err.message || err}`);
+                    alert(format('songxin.alert.send_failed', { error: err.message || err }));
                 } finally {
                     setLoading(false);
                 }
@@ -669,6 +680,15 @@
             renderAttachments();
             renderPreview();
             analyzeQiuren(jobText);
+            if (window && window.addEventListener) {
+                window.addEventListener("i18n:change", () => {
+                    if (i18n) {
+                        i18n.apply();
+                    }
+                    renderAttachments();
+                    renderPreview();
+                });
+            }
         })();
     </script>
 </body>

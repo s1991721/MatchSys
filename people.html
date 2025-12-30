@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>人员管理</title>
+    <title data-i18n="people.title">人员管理</title>
 </head>
 <body class="c-form-page">
 <div class="page">
@@ -14,52 +14,52 @@
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-wide">
                 <label>
-                    姓名/昵称
-                    <input type="text" id="filterKeyword" placeholder="输入姓名或昵称"/>
+                    <span data-i18n="people.filter.keyword">姓名/昵称</span>
+                    <input type="text" id="filterKeyword" placeholder="输入姓名或昵称" data-i18n-placeholder="people.filter.keyword_placeholder"/>
                 </label>
                 <label>
-                    最大年龄
-                    <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数"/>
+                    <span data-i18n="people.filter.age_max">最大年龄</span>
+                    <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" data-i18n-placeholder="people.filter.age_max_placeholder"/>
                 </label>
                 <label>
-                    国籍
+                    <span data-i18n="people.filter.nationality">国籍</span>
                     <select id="filterNationality">
-                        <option value="">全部</option>
-                        <option value="日本">日本</option>
-                        <option value="中国">中国</option>
-                        <option value="其他">其他</option>
+                        <option value="" data-i18n="common.all">全部</option>
+                        <option value="日本" data-i18n="people.nationality.jp">日本</option>
+                        <option value="中国" data-i18n="people.nationality.cn">中国</option>
+                        <option value="其他" data-i18n="people.nationality.other">其他</option>
                     </select>
                 </label>
                 <label>
-                    最高单价（万/月）
-                    <input type="number" id="filterPriceMax" min="0" step="0.1" placeholder="最高单价"/>
+                    <span data-i18n="people.filter.price_max">最高单价（万/月）</span>
+                    <input type="number" id="filterPriceMax" min="0" step="0.1" placeholder="最高单价" data-i18n-placeholder="people.filter.price_max_placeholder"/>
                 </label>
                 <label>
-                    契约状况
+                    <span data-i18n="people.filter.contract">契约状况</span>
                     <select id="filterContract">
-                        <option value="">全部</option>
-                        <option value="正社员">正社员</option>
-                        <option value="契约社员">契约社员</option>
-                        <option value="フリーランス">フリーランス</option>
+                        <option value="" data-i18n="common.all">全部</option>
+                        <option value="正社员" data-i18n="people.contract.regular">正社员</option>
+                        <option value="契约社员" data-i18n="people.contract.contract">契约社员</option>
+                        <option value="フリーランス" data-i18n="people.contract.freelance">フリーランス</option>
                     </select>
                 </label>
                 <label>
-                    营业状态
+                    <span data-i18n="people.filter.business_status">营业状态</span>
                     <select id="filterBusinessStatus">
-                        <option value="">全部</option>
-                        <option value="0">营业中</option>
-                        <option value="1">营业中1/2等待</option>
-                        <option value="2">营业中结果等待</option>
-                        <option value="3">现场中</option>
-                        <option value="4">现场已确定</option>
+                        <option value="" data-i18n="common.all">全部</option>
+                        <option value="0" data-i18n="people.business_status.0">营业中</option>
+                        <option value="1" data-i18n="people.business_status.1">营业中1/2等待</option>
+                        <option value="2" data-i18n="people.business_status.2">营业中结果等待</option>
+                        <option value="3" data-i18n="people.business_status.3">现场中</option>
+                        <option value="4" data-i18n="people.business_status.4">现场已确定</option>
                     </select>
                 </label>
             </div>
             <div class="filter-actions c-filter-actions-bar c-filter-actions-stack">
                 <div class="filter-actions-left c-filter-actions-left"></div>
                 <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
-                    <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn">搜索</button>
-                    <button type="button" class="c-btn c-btn-warn" id="filterResetBtn">重置</button>
+                    <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn" data-i18n="common.search">搜索</button>
+                    <button type="button" class="c-btn c-btn-warn" id="filterResetBtn" data-i18n="common.reset">重置</button>
                 </div>
             </div>
         </div>
@@ -67,23 +67,23 @@
             <table class="c-table c-table-center c-table-stack c-table-compact-last" id="peopleTable">
                 <thead>
                 <tr>
-                    <th>姓名</th>
-                    <th>昵称</th>
-                    <th>年龄</th>
-                    <th>国籍</th>
-                    <th>单价（万/月）</th>
-                    <th>介绍文</th>
-                    <th>契约状况</th>
-                    <th>营业状态</th>
-                    <th>现场契约</th>
-                    <th>备注</th>
-                    <th>SS 文件</th>
-                    <th class="c-actions-col">操作</th>
+                    <th data-i18n="people.table.name">姓名</th>
+                    <th data-i18n="people.table.nickname">昵称</th>
+                    <th data-i18n="people.table.age">年龄</th>
+                    <th data-i18n="people.table.nationality">国籍</th>
+                    <th data-i18n="people.table.price">单价（万/月）</th>
+                    <th data-i18n="people.table.intro">介绍文</th>
+                    <th data-i18n="people.table.contract">契约状况</th>
+                    <th data-i18n="people.table.business_status">营业状态</th>
+                    <th data-i18n="people.table.site_contract">现场契约</th>
+                    <th data-i18n="people.table.note">备注</th>
+                    <th data-i18n="people.table.ss_file">SS 文件</th>
+                    <th class="c-actions-col" data-i18n="people.table.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <td colspan="12" class="empty c-empty">暂无人员数据</td>
+                    <td colspan="12" class="empty c-empty" data-i18n="people.empty">暂无人员数据</td>
                 </tr>
                 </tbody>
             </table>
@@ -101,7 +101,7 @@
     <div class="dialog-header c-dialog-header">
         <h3 id="dialogTitle">新增人员</h3>
         <button type="button" class="dialog-close c-dialog-close" id="closeDialogBtn" data-close-dialog
-                aria-label="关闭">&times;
+                aria-label="关闭" data-i18n-aria="common.close">&times;
         </button>
     </div>
     <form id="personForm">
@@ -109,78 +109,86 @@
             <div class="form-grid form-grid-spaced">
                 <input type="hidden" name="employee_id"/>
                 <label>
-                    姓名
-                    <input type="text" name="name" placeholder="请输入姓名" required/>
+                    <span data-i18n="people.field.name">姓名</span>
+                    <input type="text" name="name" placeholder="请输入姓名" data-i18n-placeholder="people.placeholder.name" required/>
                 </label>
                 <label>
-                    昵称
-                    <input type="text" name="nickname" placeholder="请输入昵称"/>
+                    <span data-i18n="people.field.nickname">昵称</span>
+                    <input type="text" name="nickname" placeholder="请输入昵称" data-i18n-placeholder="people.placeholder.nickname"/>
                 </label>
                 <label>
-                    生日
+                    <span data-i18n="people.field.birthday">生日</span>
                     <input type="date" name="birthday" required/>
                 </label>
                 <label>
-                    国籍
+                    <span data-i18n="people.field.nationality">国籍</span>
                     <select name="nationality" required>
-                        <option value="">请选择</option>
-                        <option value="日本">日本</option>
-                        <option value="中国">中国</option>
-                        <option value="其他">其他</option>
+                        <option value="" data-i18n="people.option.select">请选择</option>
+                        <option value="日本" data-i18n="people.nationality.jp">日本</option>
+                        <option value="中国" data-i18n="people.nationality.cn">中国</option>
+                        <option value="其他" data-i18n="people.nationality.other">其他</option>
                     </select>
                 </label>
                 <label>
-                    单价（万/月）
-                    <input type="number" name="price" min="0" step="0.1" placeholder="例如 2.5" required/>
+                    <span data-i18n="people.field.price">单价（万/月）</span>
+                    <input type="number" name="price" min="0" step="0.1" placeholder="例如 2.5" data-i18n-placeholder="people.placeholder.price" required/>
                 </label>
                 <label>
-                    契约状况
+                    <span data-i18n="people.field.contract">契约状况</span>
                     <select name="contract" required>
-                        <option value="">请选择</option>
-                        <option value="正社员">正社员</option>
-                        <option value="契约社员">契约社员</option>
-                        <option value="フリーランス">フリーランス</option>
+                        <option value="" data-i18n="people.option.select">请选择</option>
+                        <option value="正社员" data-i18n="people.contract.regular">正社员</option>
+                        <option value="契约社员" data-i18n="people.contract.contract">契约社员</option>
+                        <option value="フリーランス" data-i18n="people.contract.freelance">フリーランス</option>
                     </select>
                 </label>
                 <label>
-                    现场契约
+                    <span data-i18n="people.field.site_contract">现场契约</span>
                     <input type="date" name="siteContract" required/>
                 </label>
                 <label>
-                    营业状态
+                    <span data-i18n="people.field.business_status">营业状态</span>
                     <select name="businessStatus" required>
-                        <option value="">请选择</option>
-                        <option value="0">营业中</option>
-                        <option value="1">营业中1/2等待</option>
-                        <option value="2">营业中结果等待</option>
-                        <option value="3">现场中</option>
-                        <option value="4">现场已确定</option>
+                        <option value="" data-i18n="people.option.select">请选择</option>
+                        <option value="0" data-i18n="people.business_status.0">营业中</option>
+                        <option value="1" data-i18n="people.business_status.1">营业中1/2等待</option>
+                        <option value="2" data-i18n="people.business_status.2">营业中结果等待</option>
+                        <option value="3" data-i18n="people.business_status.3">现场中</option>
+                        <option value="4" data-i18n="people.business_status.4">现场已确定</option>
                     </select>
                 </label>
                 <label>
-                    介绍文
-                    <textarea name="intro" rows="3" placeholder="输入人员的介绍或履历亮点"></textarea>
+                    <span data-i18n="people.field.intro">介绍文</span>
+                    <textarea name="intro" rows="3" placeholder="输入人员的介绍或履历亮点" data-i18n-placeholder="people.placeholder.intro"></textarea>
                 </label>
                 <label>
-                    SS 文件
+                    <span data-i18n="people.field.ss_file">SS 文件</span>
                     <input type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
                     <span class="ss-file-name" id="ssFileName"></span>
                 </label>
                 <label>
-                    备注
-                    <textarea name="note" rows="2" placeholder="可填写人员特长、证书等补充信息"></textarea>
+                    <span data-i18n="people.field.note">备注</span>
+                    <textarea name="note" rows="2" placeholder="可填写人员特长、证书等补充信息" data-i18n-placeholder="people.placeholder.note"></textarea>
                 </label>
             </div>
         </div>
         <div class="dialog-actions c-dialog-actions">
-            <button type="button" class="c-btn c-btn-secondary" id="cancelDialogBtn" data-close-dialog>取消</button>
-            <button type="submit" class="c-btn c-btn-primary" id="submitBtn">确认新增</button>
+            <button type="button" class="c-btn c-btn-secondary" id="cancelDialogBtn" data-close-dialog data-i18n="common.cancel">取消</button>
+            <button type="submit" class="c-btn c-btn-primary" id="submitBtn" data-i18n="people.action.create">确认新增</button>
         </div>
     </form>
 </dialog>
 
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
+    const i18n = window.I18N;
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
+    const t = (key) => (i18n ? i18n.t(key) : key);
+    const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
     const personForm = document.getElementById('personForm');
     const submitBtn = document.getElementById('submitBtn');
     const peopleTableBody = document.querySelector('#peopleTable tbody');
@@ -235,6 +243,9 @@
 
     const contractLabelToType = (label) => {
         const mapping = {
+            [t("people.contract.regular")]: 1,
+            [t("people.contract.contract")]: 2,
+            [t("people.contract.freelance")]: 3,
             '正社员': 1,
             '契约社员': 2,
             'フリーランス': 3
@@ -251,11 +262,11 @@
 
     const businessStatusLabel = (value) => {
         const mapping = {
-            0: '营业中',
-            1: '营业中1/2等待',
-            2: '营业中结果等待',
-            3: '现场中',
-            4: '现场已确定'
+            0: t("people.business_status.0"),
+            1: t("people.business_status.1"),
+            2: t("people.business_status.2"),
+            3: t("people.business_status.3"),
+            4: t("people.business_status.4")
         };
         return mapping[value] ?? '-';
     };
@@ -277,7 +288,7 @@
 
     const renderPeople = (list) => {
         if (!list.length) {
-            peopleTableBody.innerHTML = '<tr><td colspan="12" class="empty c-empty">未检索到符合条件的记录</td></tr>';
+            peopleTableBody.innerHTML = `<tr><td colspan="12" class="empty c-empty">${t("people.empty_filtered")}</td></tr>`;
             return;
         }
 
@@ -291,21 +302,21 @@
 
             return `
                 <tr>
-                    <td data-label="姓名">${person.name}</td>
-                    <td data-label="昵称">${person.nickname || '-'}</td>
-                    <td data-label="年龄">${person.age}</td>
-                    <td data-label="国籍">${person.nationality}</td>
-                    <td data-label="单价">${person.price} 万/月</td>
-                    <td data-label="介绍文"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
-                    <td data-label="契约状况"><span class="${chipClass}">${person.contract}</span></td>
-                    <td data-label="营业状态"><span class="${businessClass}">${businessLabel}</span></td>
-                    <td data-label="现场契约"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
-                    <td data-label="备注">${person.note || '-'}</td>
-                    <td data-label="SS 文件">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">预览</a>` : '-'}</td>
-                    <td data-label="操作">
+                    <td data-label="${t("people.table.name")}">${person.name}</td>
+                    <td data-label="${t("people.table.nickname")}">${person.nickname || '-'}</td>
+                    <td data-label="${t("people.table.age")}">${person.age}</td>
+                    <td data-label="${t("people.table.nationality")}">${person.nationality}</td>
+                    <td data-label="${t("people.table.price")}">${person.price} ${t("people.price_unit")}</td>
+                    <td data-label="${t("people.table.intro")}"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
+                    <td data-label="${t("people.table.contract")}"><span class="${chipClass}">${person.contract}</span></td>
+                    <td data-label="${t("people.table.business_status")}"><span class="${businessClass}">${businessLabel}</span></td>
+                    <td data-label="${t("people.table.site_contract")}"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
+                    <td data-label="${t("people.table.note")}">${person.note || '-'}</td>
+                    <td data-label="${t("people.table.ss_file")}">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">${t("people.action.preview")}</a>` : '-'}</td>
+                    <td data-label="${t("people.table.actions")}">
                         <div class="row-actions c-row-actions c-row-actions-nowrap">
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">编辑</button>
-                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">删除</button>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">${t("common.edit")}</button>
+                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">${t("common.delete")}</button>
                         </div>
                     </td>
                 </tr>
@@ -321,9 +332,13 @@
         renderPagination();
         if (summaryText) {
             if (totalCount === 0) {
-                summaryText.textContent = '共 0 人 · 当前显示 0 人';
+                summaryText.textContent = t("people.summary_empty");
             } else {
-                summaryText.textContent = `共 ${totalCount} 人 · 第 ${currentPage}/${safeTotalPages} 页`;
+                summaryText.textContent = format("people.summary", {
+                    count: totalCount,
+                    page: currentPage,
+                    total: safeTotalPages
+                });
             }
         }
     };
@@ -361,8 +376,8 @@
 
     const openCreateDialog = () => {
         editingId = null;
-        dialogTitle.textContent = '新增人员';
-        submitBtn.textContent = '确认新增';
+        dialogTitle.textContent = t("people.dialog.create");
+        submitBtn.textContent = t("people.action.create");
         personForm.reset();
         currentSsPath = '';
         updateSsFileName('', null);
@@ -378,8 +393,8 @@
 
     const openEditDialog = (person) => {
         editingId = person.id;
-        dialogTitle.textContent = '编辑人员';
-        submitBtn.textContent = '保存修改';
+        dialogTitle.textContent = t("people.dialog.edit");
+        submitBtn.textContent = t("people.action.save");
         setFormData(person);
         currentSsPath = person.ssPath || '';
         updateSsFileName(currentSsPath, null);
@@ -407,8 +422,8 @@
             }
             personForm.employee_id.value = '';
             editingId = null;
-            dialogTitle.textContent = '新增人员';
-            submitBtn.textContent = '确认新增';
+            dialogTitle.textContent = t("people.dialog.create");
+            submitBtn.textContent = t("people.action.create");
             currentSsPath = '';
             updateSsFileName('', null);
             personForm.name.removeAttribute('readonly');
@@ -423,11 +438,11 @@
     const updateSsFileName = (path, file) => {
         if (!ssFileName) return;
         if (file) {
-            ssFileName.textContent = `将上传文件：${file.name}`;
+            ssFileName.textContent = format("people.ss_uploading", { name: file.name });
             return;
         }
         const name = (path || '').split('/').pop();
-        ssFileName.textContent = name ? `已存在文件：${name}` : '';
+        ssFileName.textContent = name ? format("people.ss_exists", { name }) : '';
     };
 
     {#员工页跳转编辑时，获取员工信息#}
@@ -461,7 +476,7 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!payload.success) {
-                throw new Error(payload.message || '加载失败');
+                throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};
             const meta = payload.meta || {};
@@ -500,8 +515,8 @@
                 }
             }
         } catch (error) {
-            peopleTableBody.innerHTML = '<tr><td colspan="12" class="empty c-empty">加载失败</td></tr>';
-            summaryText.textContent = '共 0 人 · 当前显示 0 人';
+            peopleTableBody.innerHTML = `<tr><td colspan="12" class="empty c-empty">${t("common.load_failed")}</td></tr>`;
+            summaryText.textContent = t("people.summary_empty");
             people = [];
             totalCount = 0;
             totalPages = 1;
@@ -540,7 +555,7 @@
         const data = await res.json();
         const responsePayload = normalizeApiResponse(data);
         if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || '保存失败');
+            throw new Error(responsePayload.message || t("common.save_failed"));
         }
         return responsePayload.data || {};
     };
@@ -555,7 +570,7 @@
         const data = await res.json();
         const responsePayload = normalizeApiResponse(data);
         if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || '上传失败');
+            throw new Error(responsePayload.message || t("people.upload_failed"));
         }
         return responsePayload.data || {};
     };
@@ -584,24 +599,24 @@
         const formValue = getFormData();
 
         if (!formValue.name) {
-            alert('姓名为必填项');
+            alert(t("people.error.name_required"));
             return;
         }
         if (editingId === null && !forcedEmployeeId) {
-            alert('请从人员管理页进入技术者编辑');
+            alert(t("people.error.from_people"));
             return;
         }
 
         const effectiveId = editingId || forcedEmployeeId;
         if (!effectiveId) {
-            alert('缺少 employee_id');
+            alert(t("people.error.missing_employee_id"));
             return;
         }
 
         let ssPath = currentSsPath;
         if (ssFileInput && ssFileInput.files && ssFileInput.files.length) {
             if (currentSsPath) {
-                const confirmed = confirm('已存在 SS 文件，继续上传将覆盖原文件，是否继续？');
+                const confirmed = confirm(t("people.confirm.ss_overwrite"));
                 if (!confirmed) {
                     return;
                 }
@@ -610,7 +625,7 @@
                 const upload = await uploadSsFile(effectiveId, ssFileInput.files[0]);
                 ssPath = upload.path || '';
             } catch (error) {
-                alert(error.message || '上传失败');
+                alert(error.message || t("people.upload_failed"));
                 return;
             }
         }
@@ -635,7 +650,7 @@
             closeDialog();
             await fetchPeople();
         } catch (error) {
-            alert(error.message || '保存失败');
+            alert(error.message || t("common.save_failed"));
         }
     });
 
@@ -679,18 +694,18 @@
             }
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);
-            if (target && confirm(`确定删除 ${target.name} 吗？`)) {
+            if (target && confirm(format("people.confirm.delete", { name: target.name }))) {
                 fetchWithAuth(`/api/technicians/${deleteId}`, {method: 'DELETE'})
                     .then(res => res.json().then(data => ({res, data})))
                     .then(({res, data}) => {
                         const responsePayload = normalizeApiResponse(data);
                         if (!res.ok || !responsePayload.success) {
-                            throw new Error(responsePayload.message || '删除失败');
+                            throw new Error(responsePayload.message || t("people.error.delete_failed"));
                         }
                         return fetchPeople();
                     })
                     .catch((error) => {
-                        alert(error.message || '删除失败');
+                        alert(error.message || t("people.error.delete_failed"));
                     });
             }
         }
@@ -720,6 +735,20 @@
     });
 
     fetchPeople();
+    const refreshI18n = () => {
+        if (i18n) {
+            i18n.init();
+            i18n.apply();
+        }
+        if (personDialog && personDialog.open) {
+            dialogTitle.textContent = editingId ? t("people.dialog.edit") : t("people.dialog.create");
+            submitBtn.textContent = editingId ? t("people.action.save") : t("people.action.create");
+        }
+        fetchPeople();
+    };
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", refreshI18n);
+    }
 </script>
 </body>
 </html>

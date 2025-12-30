@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>通知管理</title>
+  <title data-i18n="notification.title">通知管理</title>
   <style>
 * {
       box-sizing: border-box;
@@ -149,142 +149,149 @@
   <div class="page">
     <div class="header">
       <div>
-        <h3 class="title c-title-bar c-title-bar-sm">通知管理</h3>
-        <p class="subtitle c-subtitle">统一管理系统内通知的创建、发布与阅读状态，支持分类筛选与批量操作。</p>
+        <h3 class="title c-title-bar c-title-bar-sm" data-i18n="notification.title">通知管理</h3>
+        <p class="subtitle c-subtitle" data-i18n="notification.subtitle">统一管理系统内通知的创建、发布与阅读状态，支持分类筛选与批量操作。</p>
       </div>
       <div class="action-row">
-        <button class="c-btn c-btn-secondary">导入模板</button>
-        <button class="c-btn c-btn-secondary">批量设为已读</button>
-        <button class="c-btn c-btn-primary">新建通知</button>
+        <button class="c-btn c-btn-secondary" data-i18n="notification.action.import">导入模板</button>
+        <button class="c-btn c-btn-secondary" data-i18n="notification.action.mark_read">批量设为已读</button>
+        <button class="c-btn c-btn-primary" data-i18n="notification.action.create">新建通知</button>
       </div>
     </div>
 
     <div class="grid stats">
       <div class="c-card">
-        <div class="stat-label">待处理通知</div>
+        <div class="stat-label" data-i18n="notification.stat.pending">待处理通知</div>
         <div class="stat-value">18</div>
-        <div class="stat-label">24小时内新增 6</div>
+        <div class="stat-label" data-i18n="notification.stat.new_24h">24小时内新增 6</div>
       </div>
       <div class="c-card">
-        <div class="stat-label">高优先级</div>
+        <div class="stat-label" data-i18n="notification.stat.high_priority">高优先级</div>
         <div class="stat-value">5</div>
-        <div class="stat-label">需确认回执 2</div>
+        <div class="stat-label" data-i18n="notification.stat.need_receipt">需确认回执 2</div>
       </div>
       <div class="c-card">
-        <div class="stat-label">已发布</div>
+        <div class="stat-label" data-i18n="notification.stat.published">已发布</div>
         <div class="stat-value">126</div>
-        <div class="stat-label">本月完成率 92%</div>
+        <div class="stat-label" data-i18n="notification.stat.monthly_rate">本月完成率 92%</div>
       </div>
       <div class="c-card">
-        <div class="stat-label">草稿箱</div>
+        <div class="stat-label" data-i18n="notification.stat.drafts">草稿箱</div>
         <div class="stat-value">7</div>
-        <div class="stat-label">待审批 3</div>
+        <div class="stat-label" data-i18n="notification.stat.pending_approval">待审批 3</div>
       </div>
     </div>
 
     <div class="c-card" style="margin-top: 12px;">
       <div class="filters">
         <label class="field c-field">
-          关键词
-          <input type="text" placeholder="标题/发送人/标签" />
+          <span data-i18n="notification.filter.keyword">关键词</span>
+          <input type="text" placeholder="标题/发送人/标签" data-i18n-placeholder="notification.filter.keyword_placeholder" />
         </label>
         <label class="field c-field">
-          分类
+          <span data-i18n="notification.filter.category">分类</span>
           <select>
-            <option>全部</option>
-            <option>系统通知</option>
-            <option>人事通知</option>
-            <option>项目通知</option>
-            <option>运维通知</option>
+            <option data-i18n="notification.option.all">全部</option>
+            <option data-i18n="notification.option.system">系统通知</option>
+            <option data-i18n="notification.option.hr">人事通知</option>
+            <option data-i18n="notification.option.project">项目通知</option>
+            <option data-i18n="notification.option.ops">运维通知</option>
           </select>
         </label>
         <label class="field c-field">
-          状态
+          <span data-i18n="notification.filter.status">状态</span>
           <select>
-            <option>全部</option>
-            <option>已发布</option>
-            <option>草稿</option>
-            <option>已归档</option>
+            <option data-i18n="notification.option.all">全部</option>
+            <option data-i18n="notification.option.published">已发布</option>
+            <option data-i18n="notification.option.draft">草稿</option>
+            <option data-i18n="notification.option.archived">已归档</option>
           </select>
         </label>
         <label class="field c-field">
-          时间范围
+          <span data-i18n="notification.filter.time_range">时间范围</span>
           <select>
-            <option>最近7天</option>
-            <option>最近30天</option>
-            <option>本季度</option>
+            <option data-i18n="notification.option.last7">最近7天</option>
+            <option data-i18n="notification.option.last30">最近30天</option>
+            <option data-i18n="notification.option.quarter">本季度</option>
           </select>
         </label>
       </div>
 
-      <table c-table class="table c-table" aria-label="通知列表">
+      <table c-table class="table c-table" aria-label="通知列表" data-i18n-aria="notification.table.aria">
         <thead>
           <tr>
-            <th>标题</th>
-            <th>分类</th>
-            <th>优先级</th>
-            <th>状态</th>
-            <th>发布时间</th>
-            <th>操作</th>
+            <th data-i18n="notification.table.title">标题</th>
+            <th data-i18n="notification.table.category">分类</th>
+            <th data-i18n="notification.table.priority">优先级</th>
+            <th data-i18n="notification.table.status">状态</th>
+            <th data-i18n="notification.table.time">发布时间</th>
+            <th data-i18n="notification.table.actions">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>系统维护窗口公告</td>
-            <td><span class="badge info">系统通知</span></td>
-            <td><span class="badge warn">高</span></td>
-            <td><span class="badge success">已发布</span></td>
+            <td><span class="badge info" data-i18n="notification.option.system">系统通知</span></td>
+            <td><span class="badge warn" data-i18n="notification.priority.high">高</span></td>
+            <td><span class="badge success" data-i18n="notification.option.published">已发布</span></td>
             <td>2024-03-21 09:30</td>
             <td>
               <div class="row-actions">
-                <button class="c-btn c-btn-sm c-btn-secondary">查看</button>
-                <button class="c-btn c-btn-sm c-btn-secondary">编辑</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.view">查看</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.edit">编辑</button>
               </div>
             </td>
           </tr>
           <tr>
             <td>人事调休流程更新</td>
-            <td><span class="badge info">人事通知</span></td>
-            <td><span class="badge info">中</span></td>
-            <td><span class="badge success">已发布</span></td>
+            <td><span class="badge info" data-i18n="notification.option.hr">人事通知</span></td>
+            <td><span class="badge info" data-i18n="notification.priority.medium">中</span></td>
+            <td><span class="badge success" data-i18n="notification.option.published">已发布</span></td>
             <td>2024-03-19 16:20</td>
             <td>
               <div class="row-actions">
-                <button class="c-btn c-btn-sm c-btn-secondary">查看</button>
-                <button class="c-btn c-btn-sm c-btn-secondary">推送</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.view">查看</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.push">推送</button>
               </div>
             </td>
           </tr>
           <tr>
             <td>项目阶段里程碑提醒</td>
-            <td><span class="badge info">项目通知</span></td>
-            <td><span class="badge info">中</span></td>
-            <td><span class="badge warn">草稿</span></td>
+            <td><span class="badge info" data-i18n="notification.option.project">项目通知</span></td>
+            <td><span class="badge info" data-i18n="notification.priority.medium">中</span></td>
+            <td><span class="badge warn" data-i18n="notification.option.draft">草稿</span></td>
             <td>2024-03-18 11:05</td>
             <td>
               <div class="row-actions">
-                <button class="c-btn c-btn-sm c-btn-secondary">编辑</button>
-                <button class="c-btn c-btn-sm c-btn-secondary">提交审批</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.edit">编辑</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.submit">提交审批</button>
               </div>
             </td>
           </tr>
           <tr>
             <td>薪资系统停机提醒</td>
-            <td><span class="badge info">运维通知</span></td>
-            <td><span class="badge danger">紧急</span></td>
-            <td><span class="badge success">已发布</span></td>
+            <td><span class="badge info" data-i18n="notification.option.ops">运维通知</span></td>
+            <td><span class="badge danger" data-i18n="notification.priority.urgent">紧急</span></td>
+            <td><span class="badge success" data-i18n="notification.option.published">已发布</span></td>
             <td>2024-03-15 22:00</td>
             <td>
               <div class="row-actions">
-                <button class="c-btn c-btn-sm c-btn-secondary">查看</button>
-                <button class="c-btn c-btn-sm c-btn-secondary">复盘</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.view">查看</button>
+                <button class="c-btn c-btn-sm c-btn-secondary" data-i18n="notification.action.review">复盘</button>
               </div>
             </td>
           </tr>
         </tbody>
       </table>
-      <div class="empty">当前显示 4 条通知记录</div>
+      <div class="empty" data-i18n="notification.empty">当前显示 4 条通知记录</div>
     </div>
   </div>
+  <script src="i18n.js"></script>
+  <script>
+    if (window.I18N) {
+      window.I18N.init();
+      window.I18N.apply();
+    }
+  </script>
 </body>
 </html>

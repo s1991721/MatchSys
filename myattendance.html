@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>考勤打卡</title>
+    <title data-i18n="myattendance.title">考勤打卡</title>
 </head>
 
 <body>
@@ -23,14 +23,14 @@
               <path d="M12 22s7-6.2 7-12.2A7 7 0 0 0 5 9.8C5 15.8 12 22 12 22Zm0-9.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/>
             </svg>
           </span>
-                    打卡位置
+                    <span data-i18n="myattendance.section.location">打卡位置</span>
                 </div>
                 <span class="c-title-spacer"></span>
             </div>
 
             <div class="c-map-wrap">
                 <div class="c-map">
-                    <div id="map" class="c-map-canvas" aria-label="地图预览"></div>
+                    <div id="map" class="c-map-canvas" aria-label="地图预览" data-i18n-aria="myattendance.map.preview"></div>
                     <div class="c-status-pill">
                         <div class="c-status-tick" aria-hidden="true">
                             <svg viewBox="0 0 24 24" width="14" height="14">
@@ -38,8 +38,10 @@
                             </svg>
                         </div>
                         <div class="c-status-text">
-                            <div class="c-status-title" id="map-status">正在获取位置 <span class="c-chevron">›</span>
-                            </div>
+                        <div class="c-status-title">
+                            <span id="map-status">正在获取位置</span>
+                            <span class="c-chevron">›</span>
+                        </div>
                             <div class="c-status-detail" id="map-detail">等待定位权限</div>
                         </div>
                     </div>
@@ -58,7 +60,7 @@
               <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Zm-4.2 2.5 1.4 1.4-6 6-3-3 1.4-1.4 1.6 1.6 4.6-4.6Z"/>
             </svg>
           </span>
-                    今日考勤
+                    <span data-i18n="myattendance.section.today">今日考勤</span>
                 </div>
                 <span class="c-title-spacer"></span>
             </div>
@@ -82,19 +84,19 @@
                     <!-- 底部大条 -->
                     <div class="c-attendance-bar">
                         <div class="c-attendance-col">
-                            <div class="c-info-label">上班</div>
+                            <div class="c-info-label" data-i18n="myattendance.punch.on">上班</div>
                             <div class="c-info-time" id="start-time">--:--</div>
                         </div>
 
                         <div class="c-attendance-col">
-                            <div class="c-info-label">下班</div>
-                            <div class="c-info-sub" id="end-time">未打卡</div>
+                            <div class="c-info-label" data-i18n="myattendance.punch.off">下班</div>
+                            <div class="c-info-sub" id="end-time" data-i18n="myattendance.punch.none">未打卡</div>
                         </div>
                     </div>
 
                     <!-- 中间悬浮按钮（覆盖在 c-attendance-bar 上方） -->
                     <button class="c-punch-btn" type="button">
-                        <span class="c-punch-title">打卡</span>
+                        <span class="c-punch-title" data-i18n="myattendance.punch.action">打卡</span>
                         <span class="c-punch-time"><span id="punch-time">--:--:--</span></span>
                     </button>
 
@@ -115,19 +117,19 @@
               <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V22h18v-2.5C21 16.5 17 14 12 14Z"/>
             </svg>
           </span>
-                    我的考勤
+                    <span data-i18n="myattendance.section.summary">我的考勤</span>
                 </div>
                 <div class="c-accordion-summary">
-                    点击展开
+                    <span data-i18n="myattendance.accordion.expand">点击展开</span>
                     <span class="c-chevron">›</span>
                 </div>
             </summary>
             <div class="c-accordion-body" data-content="summary">
-                <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择">
-                    <button class="c-toggle is-active" type="button" data-month="current">当月</button>
-                    <button class="c-toggle" type="button" data-month="previous">上月</button>
+                <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择" data-i18n-aria="myattendance.month.aria">
+                    <button class="c-toggle is-active" type="button" data-month="current" data-i18n="myattendance.month.current">当月</button>
+                    <button class="c-toggle" type="button" data-month="previous" data-i18n="myattendance.month.previous">上月</button>
                 </div>
-                <div class="c-lazy">等待展开加载数据</div>
+                <div class="c-lazy" data-i18n="myattendance.placeholder.lazy">等待展开加载数据</div>
                 <div class="c-stat-grid" data-template hidden>
                     <div class="c-stat-card is-green">
                         <div class="c-stat-head">
@@ -136,9 +138,9 @@
                                     <path d="M9.2 16.6 4.8 12.2l1.4-1.4 3 3 8.6-8.6 1.4 1.4-10 10Z"/>
                                 </svg>
                             </div>
-                            出勤
+                            <span data-i18n="myattendance.stats.attendance">出勤</span>
                         </div>
-                        <div class="c-stat-value">20<span class="c-stat-unit">天</span></div>
+                        <div class="c-stat-value">20<span class="c-stat-unit" data-i18n="myattendance.unit.day">天</span></div>
                     </div>
 
                     <div class="c-stat-card is-orange">
@@ -148,9 +150,9 @@
                                     <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5v5l4 2-1 1.8-5-2.8V7Z"/>
                                 </svg>
                             </div>
-                            迟到
+                            <span data-i18n="myattendance.stats.late">迟到</span>
                         </div>
-                        <div class="c-stat-value">3<span class="c-stat-unit">天</span></div>
+                        <div class="c-stat-value">3<span class="c-stat-unit" data-i18n="myattendance.unit.day">天</span></div>
                     </div>
 
                     <div class="c-stat-card is-red">
@@ -160,9 +162,9 @@
                                     <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.2 6.2 1.6 1.6L13.6 12l4.2 4.2-1.6 1.6L12 13.6l-4.2 4.2-1.6-1.6L10.4 12 6.2 7.8l1.6-1.6L12 10.4Z"/>
                                 </svg>
                             </div>
-                            缺勤
+                            <span data-i18n="myattendance.stats.absent">缺勤</span>
                         </div>
-                        <div class="c-stat-value">0<span class="c-stat-unit">天</span></div>
+                        <div class="c-stat-value">0<span class="c-stat-unit" data-i18n="myattendance.unit.day">天</span></div>
                     </div>
                 </div>
             </div>
@@ -179,27 +181,27 @@
               <path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2V2Zm14 8H3v10h18V10Z"/>
             </svg>
           </span>
-                    考勤明细
+                    <span data-i18n="myattendance.section.detail">考勤明细</span>
                 </div>
                 <div class="c-accordion-summary">
-                    点击展开
+                    <span data-i18n="myattendance.accordion.expand">点击展开</span>
                     <span class="c-chevron">›</span>
                 </div>
             </summary>
 
             <div class="c-accordion-body" data-content="detail">
-                <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择">
-                    <button class="c-toggle is-active" type="button" data-month="current">当月</button>
-                    <button class="c-toggle" type="button" data-month="previous">上月</button>
+                <div class="c-month-toggle" role="tablist" aria-label="考勤月份选择" data-i18n-aria="myattendance.month.aria">
+                    <button class="c-toggle is-active" type="button" data-month="current" data-i18n="myattendance.month.current">当月</button>
+                    <button class="c-toggle" type="button" data-month="previous" data-i18n="myattendance.month.previous">上月</button>
                 </div>
-                <div class="c-lazy">等待展开加载数据</div>
+                <div class="c-lazy" data-i18n="myattendance.placeholder.lazy">等待展开加载数据</div>
                 <table class="c-table c-table-center" data-template hidden>
                     <thead>
                     <tr>
-                        <th>日期</th>
-                        <th>上班</th>
-                        <th>备注</th>
-                        <th>操作</th>
+                        <th data-i18n="myattendance.table.date">日期</th>
+                        <th data-i18n="myattendance.table.time">上班</th>
+                        <th data-i18n="myattendance.table.remark">备注</th>
+                        <th data-i18n="myattendance.table.action">操作</th>
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -214,60 +216,74 @@
 <div class="c-modal-backdrop" id="edit-dialog" aria-hidden="true">
     <div class="c-modal" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
         <div class="c-modal-head">
-            <div class="c-modal-title" id="edit-dialog-title">修改考勤</div>
+            <div class="c-modal-title" id="edit-dialog-title" data-i18n="myattendance.dialog.title">修改考勤</div>
             <button class="c-modal-close" type="button" id="edit-dialog-close">×</button>
         </div>
         <div class="c-modal-body">
-            <div class="c-modal-error" id="edit-dialog-error" hidden>备注必填</div>
+            <div class="c-modal-error" id="edit-dialog-error" hidden data-i18n="myattendance.dialog.error.required">备注必填</div>
             <div class="c-modal-field">
-                <label for="edit-date">日期</label>
+                <label for="edit-date" data-i18n="myattendance.dialog.field.date">日期</label>
                 <input id="edit-date" type="text" readonly/>
             </div>
             <div class="c-modal-field">
-                <label for="edit-start">上班时间</label>
+                <label for="edit-start" data-i18n="myattendance.dialog.field.start">上班时间</label>
                 <input id="edit-start" type="time"/>
             </div>
             <div class="c-modal-field">
-                <label for="edit-end">下班时间</label>
+                <label for="edit-end" data-i18n="myattendance.dialog.field.end">下班时间</label>
                 <input id="edit-end" type="time"/>
             </div>
             <div class="c-modal-field">
-                <label for="edit-remark">备注</label>
-                <textarea id="edit-remark" placeholder="填写备注"></textarea>
+                <label for="edit-remark" data-i18n="myattendance.dialog.field.remark">备注</label>
+                <textarea id="edit-remark" placeholder="填写备注" data-i18n-placeholder="myattendance.dialog.placeholder.remark"></textarea>
             </div>
         </div>
         <div class="c-modal-actions">
-            <button class="c-btn c-btn-ghost" type="button" id="edit-dialog-cancel">取消</button>
-            <button class="c-btn c-btn-primary" type="button" id="edit-dialog-save">保存</button>
+            <button class="c-btn c-btn-ghost" type="button" id="edit-dialog-cancel" data-i18n="common.cancel">取消</button>
+            <button class="c-btn c-btn-primary" type="button" id="edit-dialog-save" data-i18n="common.save">保存</button>
         </div>
     </div>
 </div>
 
 <div class="c-toast" id="toast"></div>
 
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
+    const i18n = window.I18N;
+    const t = (key) => (i18n ? i18n.t(key) : key);
+    const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
     const MAP_FALLBACK = {lat: 35.6852, lng: 139.7528};
     const MAP_ZOOM_DEFAULT = 17;
     const MAP_ZOOM_FOLLOW = 18;
     let mapInstance;
     let userMarker;
     let lastCoords = {lat: MAP_FALLBACK.lat, lng: MAP_FALLBACK.lng};
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
     const requestJson = async (url, options = {}) => {
         const response = await fetchWithAuth(url, options);
         const data = await response.json();
         const payload = normalizeApiResponse(data);
         if (!payload.success) {
-            throw new Error(payload.message || "请求失败");
+            throw new Error(payload.message || t("common.load_failed"));
         }
         return payload;
     };
 
-    const setStatus = (title, detail) => {
+    let lastStatus = {
+        titleKey: "myattendance.map.fetching",
+        detailKey: "myattendance.map.wait_permission",
+    };
+
+    const setStatus = (titleKey, detailKey) => {
         const titleEl = document.getElementById("map-status");
         const detailEl = document.getElementById("map-detail");
-        if (titleEl) titleEl.textContent = title;
-        if (detailEl) detailEl.textContent = detail;
+        lastStatus = { titleKey, detailKey };
+        if (titleEl) titleEl.textContent = t(titleKey);
+        if (detailEl) detailEl.textContent = t(detailKey);
     }
 
     const initMap = () => {
@@ -289,7 +305,7 @@
         }).addTo(mapInstance);
 
         if (!navigator.geolocation) {
-            setStatus("无法获取位置", "浏览器不支持定位");
+            setStatus("myattendance.map.unavailable", "myattendance.map.not_supported");
             return;
         }
 
@@ -302,14 +318,14 @@
                 lastCoords = coords;
                 mapInstance.setView([coords.lat, coords.lng], MAP_ZOOM_FOLLOW);
                 userMarker.setLatLng([coords.lat, coords.lng]);
-                setStatus("已获取当前位置", "位置已实时更新");
+                setStatus("myattendance.map.got_location", "myattendance.map.live_update");
             },
             (err) => {
                 if (err && err.code === err.PERMISSION_DENIED) {
-                    setStatus("定位失败", "请允许位置权限");
+                    setStatus("myattendance.map.failed", "myattendance.map.permission_denied");
                     return;
                 }
-                setStatus("定位失败", "请开启定位或稍后重试");
+                setStatus("myattendance.map.failed", "myattendance.map.retry");
             },
             {enableHighAccuracy: true, timeout: 8000, maximumAge: 0}
         );
@@ -334,10 +350,10 @@
     }
 
     const formatMonthLabel = (monthKey, monthValue) => {
-        if (monthKey === "previous") return "(上月)";
-        if (monthKey === "current") return "(当月)";
+        if (monthKey === "previous") return t("myattendance.month.label.previous");
+        if (monthKey === "current") return t("myattendance.month.label.current");
         if (monthValue) return `(${monthValue})`;
-        return "(当月)";
+        return t("myattendance.month.label.current");
     }
 
     const resolveMonthDateParam = (monthKey) => {
@@ -386,7 +402,7 @@
         if (!records.length) {
             setTemplatesVisible(details, false);
             if (placeholder) {
-                placeholder.textContent = "暂无记录";
+                placeholder.textContent = t("myattendance.placeholder.empty");
                 placeholder.classList.remove("hidden");
             }
         } else {
@@ -418,7 +434,7 @@
                 const button = document.createElement("button");
                 button.className = "c-btn c-btn-secondary c-btn-sm";
                 button.type = "button";
-                button.textContent = "修改";
+                button.textContent = t("myattendance.table.edit");
                 button.dataset.iso = record.date || "";
                 button.dataset.date = displayDate;
                 button.dataset.start = startTime;
@@ -460,7 +476,7 @@
 
         if (!url) {
             if (placeholder) {
-                placeholder.textContent = "未配置接口";
+                placeholder.textContent = t("myattendance.placeholder.unconfigured");
                 placeholder.classList.remove("hidden");
             }
             return;
@@ -476,7 +492,7 @@
 
         setTemplatesVisible(details, false);
         if (placeholder) {
-            placeholder.textContent = "加载中...";
+            placeholder.textContent = t("myattendance.placeholder.loading");
             placeholder.classList.remove("hidden");
         }
         const query = url.includes("?") ? "&" : "?";
@@ -498,7 +514,7 @@
         } catch (error) {
             setTemplatesVisible(details, false);
             if (placeholder) {
-                placeholder.textContent = "加载失败，请稍后重试";
+                placeholder.textContent = t("myattendance.placeholder.failed");
                 placeholder.classList.remove("hidden");
             }
         }
@@ -536,12 +552,12 @@
             const startEl = document.getElementById("start-time");
             const endEl = document.getElementById("end-time");
             if (startEl) startEl.textContent = result.start_time ? result.start_time.slice(0, 5) : "--:--";
-            if (endEl) endEl.textContent = result.end_time ? result.end_time.slice(0, 5) : "未打卡";
+            if (endEl) endEl.textContent = result.end_time ? result.end_time.slice(0, 5) : t("myattendance.punch.none");
         } catch (error) {
             const startEl = document.getElementById("start-time");
             const endEl = document.getElementById("end-time");
             if (startEl) startEl.textContent = "--:--";
-            if (endEl) endEl.textContent = "未打卡";
+            if (endEl) endEl.textContent = t("myattendance.punch.none");
         }
     }
 
@@ -564,10 +580,10 @@
                     location_text: locationText,
                 }),
             });
-            setStatus("打卡成功", "已记录本次打卡");
+            setStatus("myattendance.punch.success", "myattendance.punch.success_detail");
             updateTodayRecord();
         } catch (error) {
-            setStatus("打卡失败", "请稍后重试");
+            setStatus("myattendance.punch.failed", "myattendance.punch.failed_retry");
         } finally {
             punchButton.disabled = false;
         }
@@ -649,14 +665,14 @@
 
         if (!remarkValue) {
             if (errorEl) {
-                errorEl.textContent = "备注必填";
+                errorEl.textContent = t("myattendance.dialog.error.required");
                 errorEl.hidden = false;
             }
             return;
         }
         if (!dateIso) {
             if (errorEl) {
-                errorEl.textContent = "缺少日期，无法保存";
+                errorEl.textContent = t("myattendance.dialog.error.missing_date");
                 errorEl.hidden = false;
             }
             return;
@@ -696,14 +712,14 @@
                     editBtn.dataset.originalEnd = record.end_time || "";
                 }
             }
-            showToast("保存成功");
+            showToast(t("myattendance.toast.saved"));
             closeEditDialog();
         } catch (err) {
             if (errorEl) {
-                errorEl.textContent = err.message || "保存失败";
+                errorEl.textContent = err.message || t("myattendance.toast.save_failed");
                 errorEl.hidden = false;
             }
-            showToast("保存失败");
+            showToast(t("myattendance.toast.save_failed"));
         }
     });
 
@@ -723,6 +739,19 @@
         const dateText = `${now.getMonth() + 1}月${now.getDate()}日`;
         const el = document.getElementById("today-date");
         if (el) el.textContent = dateText;
+    }
+
+    const refreshI18n = () => {
+        if (i18n) {
+            i18n.apply();
+        }
+        setStatus(lastStatus.titleKey, lastStatus.detailKey);
+        updateTodayRecord();
+        document.querySelectorAll("details[open]").forEach((details) => loadAccordion(details));
+    };
+
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", refreshI18n);
     }
 
     updatePunchTime();

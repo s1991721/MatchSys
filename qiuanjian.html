@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>求案件</title>
+  <title data-i18n="qiuanjian.title">求案件</title>
     <style>
 * {
             box-sizing: border-box;
@@ -158,20 +158,20 @@
     <div class="page page-wide c-split-grid">
         <section class="split-left">
             <div class="c-card c-card-pad">
-                <h2 class="title c-panel-title">求案件列表</h2>
+                <h2 class="title c-panel-title" data-i18n="qiuanjian.list.title">求案件列表</h2>
                 <div class="filters c-filter-grid">
                     <div class="filter-group c-filter-group">
-                        <span class="filter-label c-filter-label">时间</span>
+                        <span class="filter-label c-filter-label" data-i18n="qiuanjian.filter.time">时间</span>
                         <div class="chip-row c-chip-row">
-                            <button class="chip c-chip active" data-range="all" type="button">全部</button>
-                            <button class="chip c-chip" data-range="today" type="button">今天</button>
-                            <button class="chip c-chip" data-range="yesterday" type="button">昨天</button>
-                            <input id="date-picker" class="input c-input date-input" type="date" aria-label="选择日期">
+                            <button class="chip c-chip active" data-range="all" type="button" data-i18n="qiuanjian.range.all">全部</button>
+                            <button class="chip c-chip" data-range="today" type="button" data-i18n="qiuanjian.range.today">今天</button>
+                            <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="qiuanjian.range.yesterday">昨天</button>
+                            <input id="date-picker" class="input c-input date-input" type="date" aria-label="选择日期" data-i18n-aria="qiuanjian.date.label">
                         </div>
                     </div>
                     <div class="filter-group c-filter-group">
-                        <span class="filter-label c-filter-label">关键字</span>
-                        <input id="keyword-input" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节">
+                        <span class="filter-label c-filter-label" data-i18n="qiuanjian.filter.keyword">关键字</span>
+                        <input id="keyword-input" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节" data-i18n-placeholder="qiuanjian.keyword.placeholder">
                     </div>
                 </div>
                 <ul id="case-list" class="list c-list">
@@ -179,7 +179,7 @@
             </div>
 
             <div class="c-card c-card-pad">
-                <h2 class="title c-panel-title">求案件详情</h2>
+                <h2 class="title c-panel-title" data-i18n="qiuanjian.detail.title">求案件详情</h2>
                 <div id="case-detail" class="detail">
                     这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                 </div>
@@ -187,50 +187,53 @@
         </section>
 
         <section class="c-card c-card-pad">
-            <h2 class="title c-panel-title">内容编辑保存</h2>
+            <h2 class="title c-panel-title" data-i18n="qiuanjian.form.title">内容编辑保存</h2>
             <div class="form">
                 <div class="field">
-                    <label class="label" for="name">人员名称</label>
-                    <input id="name" class="input c-input" type="text" placeholder="请输入人员名称">
+                    <label class="label" for="name" data-i18n="qiuanjian.field.name">人员名称</label>
+                    <input id="name" class="input c-input" type="text" placeholder="请输入人员名称" data-i18n-placeholder="qiuanjian.placeholder.name">
                 </div>
                 <div class="form-row">
                     <div class="field">
-                        <label class="label" for="belong">所属</label>
-                        <input id="belong" class="input c-input" type="text" placeholder="请输入所属部门或公司">
+                        <label class="label" for="belong" data-i18n="qiuanjian.field.belong">所属</label>
+                        <input id="belong" class="input c-input" type="text" placeholder="请输入所属部门或公司" data-i18n-placeholder="qiuanjian.placeholder.belong">
                     </div>
                     <div class="field">
-                        <label class="label" for="nation">国籍</label>
+                        <label class="label" for="nation" data-i18n="qiuanjian.field.nation">国籍</label>
                         <select id="nation" class="input c-input">
-                            <option value="">请选择</option>
-                            <option value="中国">中国</option>
-                            <option value="日本">日本</option>
+                            <option value="" data-i18n="common.select">请选择</option>
+                            <option value="中国" data-i18n="qiuanjian.nation.cn">中国</option>
+                            <option value="日本" data-i18n="qiuanjian.nation.jp">日本</option>
                         </select>
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="field">
-                        <label class="label" for="age">年龄</label>
-                        <input id="age" class="input c-input" type="number" placeholder="例如：32">
+                        <label class="label" for="age" data-i18n="qiuanjian.field.age">年龄</label>
+                        <input id="age" class="input c-input" type="number" placeholder="例如：32" data-i18n-placeholder="qiuanjian.placeholder.age">
                     </div>
                     <div class="field">
-                        <label class="label" for="price">金额</label>
-                        <input id="price" class="input c-input" type="text" placeholder="例如：￥50,000">
+                        <label class="label" for="price" data-i18n="qiuanjian.field.price">金额</label>
+                        <input id="price" class="input c-input" type="text" placeholder="例如：￥50,000" data-i18n-placeholder="qiuanjian.placeholder.price">
                     </div>
                 </div>
                 <div class="field">
-                    <label class="label" for="intro">介绍文</label>
-                    <textarea id="intro" class="textarea c-input" placeholder="请输入人员介绍、技能或补充说明。"></textarea>
+                    <label class="label" for="intro" data-i18n="qiuanjian.field.intro">介绍文</label>
+                    <textarea id="intro" class="textarea c-input" placeholder="请输入人员介绍、技能或补充说明。" data-i18n-placeholder="qiuanjian.placeholder.intro"></textarea>
                 </div>
                 <div class="actions">
-                    <button id="btn-reset" class="c-btn c-btn-ghost" type="button">清空</button>
-                    <button id="btn-save" class="c-btn c-btn-primary" type="button">保存</button>
+                    <button id="btn-reset" class="c-btn c-btn-ghost" type="button" data-i18n="qiuanjian.action.clear">清空</button>
+                    <button id="btn-save" class="c-btn c-btn-primary" type="button" data-i18n="qiuanjian.action.save">保存</button>
                 </div>
             </div>
         </section>
     </div>
 
+    <script src="i18n.js"></script>
     <script>
         (function () {
+            const i18n = window.I18N;
+            const t = (key) => (i18n ? i18n.t(key) : key);
             const cases = [
                 {
                     id: 1,
@@ -290,9 +293,9 @@
                 if (!items.length) {
                     const empty = document.createElement('li');
                     empty.className = 'empty';
-                    empty.textContent = '暂无匹配的案件';
+                    empty.textContent = t('qiuanjian.empty.list');
                     list.appendChild(empty);
-                    detail.textContent = '暂无可显示的案件';
+                    detail.textContent = t('qiuanjian.empty.detail');
                     return;
                 }
 
@@ -403,10 +406,22 @@
             });
 
             saveBtn.addEventListener('click', () => {
-                alert('内容已保存。');
+                alert(t('qiuanjian.alert.saved'));
             });
 
+            if (i18n) {
+                i18n.init();
+                i18n.apply();
+            }
             renderList(cases);
+            if (window && window.addEventListener) {
+                window.addEventListener("i18n:change", () => {
+                    if (i18n) {
+                        i18n.apply();
+                    }
+                    applyFilters();
+                });
+            }
         })();
     </script>
 </body>

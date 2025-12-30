@@ -1,4 +1,6 @@
 (function () {
+    const i18n = window.I18N || null;
+    const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
     // 接口校验登录
     window.fetchWithAuth = async function (url, options = {}) {
         const mergedOptions = {
@@ -41,7 +43,7 @@
         return {
             success: false,
             code: "ERR_INVALID_RESPONSE",
-            message: "Invalid response",
+            message: t("common.invalid_response", "Invalid response"),
             data: null,
             meta: {},
         };
@@ -81,12 +83,14 @@
 
     // 根据契约类型返回字符串
     window.contractTypeToLabel = function (value) {
+        const i18n = window.I18N;
+        const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
         const mapping = {
-            1: '正社员',
-            2: '契约社员',
-            3: 'フリーランス'
+            1: t("people.contract.regular", "正社员"),
+            2: t("people.contract.contract", "契约社员"),
+            3: t("people.contract.freelance", "フリーランス")
         };
-        return mapping[value] || '未定';
+        return mapping[value] || t("people.contract.unknown", "未定");
     };
 
     // 分页页码构建
@@ -122,7 +126,7 @@
         prevBtn.type = "button";
         prevBtn.className = "c-btn c-btn-ghost c-btn-sm";
         prevBtn.dataset.page = "prev";
-        prevBtn.textContent = "上一页";
+        prevBtn.textContent = t("pagination.prev", "上一页");
         prevBtn.disabled = safeCurrentPage <= 1;
         paginationEl.appendChild(prevBtn);
 
@@ -154,7 +158,7 @@
         nextBtn.type = "button";
         nextBtn.className = "c-btn c-btn-ghost c-btn-sm";
         nextBtn.dataset.page = "next";
-        nextBtn.textContent = "下一页";
+        nextBtn.textContent = t("pagination.next", "下一页");
         nextBtn.disabled = safeCurrentPage >= safeTotalPages;
         paginationEl.appendChild(nextBtn);
     };

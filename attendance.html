@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>考勤管理</title>
+    <title data-i18n="attendance.title">考勤管理</title>
 </head>
 <body class="c-form-page">
 <div class="page">
@@ -14,19 +14,19 @@
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-wide">
                 <label>
-                    姓名
-                    <input type="search" id="name-filter" placeholder="输入姓名" />
+                    <span data-i18n="attendance.filter.name">姓名</span>
+                    <input type="search" id="name-filter" placeholder="输入姓名" data-i18n-placeholder="attendance.filter.name_placeholder" />
                 </label>
                 <label>
-                    月份
+                    <span data-i18n="attendance.filter.month">月份</span>
                     <input type="month" id="month-filter" />
                 </label>
             </div>
             <div class="filter-actions c-filter-actions-bar">
                 <div class="filter-actions-left c-filter-actions-left"></div>
                 <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
-                    <button class="c-btn c-btn-primary" id="filter-apply" type="button">搜索</button>
-                    <button class="c-btn c-btn-warn" id="filter-reset" type="button">重置</button>
+                    <button class="c-btn c-btn-primary" id="filter-apply" type="button" data-i18n="common.search">搜索</button>
+                    <button class="c-btn c-btn-warn" id="filter-reset" type="button" data-i18n="common.reset">重置</button>
                 </div>
             </div>
         </div>
@@ -34,18 +34,18 @@
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
-                    <th>姓名</th>
-                    <th>月份</th>
-                    <th>出勤日</th>
-                    <th>缺勤日</th>
-                    <th>剩余年休</th>
-                    <th>状态</th>
+                    <th data-i18n="attendance.table.name">姓名</th>
+                    <th data-i18n="attendance.table.month">月份</th>
+                    <th data-i18n="attendance.table.attendance_days">出勤日</th>
+                    <th data-i18n="attendance.table.absence_days">缺勤日</th>
+                    <th data-i18n="attendance.table.annual_leave">剩余年休</th>
+                    <th data-i18n="attendance.table.status">状态</th>
                 </tr>
                 </thead>
                 <tbody id="summary-body">
                 </tbody>
             </table>
-            <div id="no-data" class="c-empty hidden">暂无考勤数据</div>
+            <div id="no-data" class="c-empty hidden" data-i18n="attendance.empty">暂无考勤数据</div>
         </div>
         <div class="pagination c-pagination" id="attendance-pagination">
             <div class="pagination-summary">
@@ -55,8 +55,17 @@
         </div>
     </section>
 </div>
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
+    const i18n = window.I18N;
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
+    const t = (key) => (i18n ? i18n.t(key) : key);
+    const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
+
     let attendanceData = [];
     let currentPage = 1;
     let totalPages = 1;
@@ -64,9 +73,9 @@
     const pageSize = 10;
 
     const statusMap = {
-        normal: { label: "正常", className: "c-pill c-pill-success" },
-        alert: { label: "关注", className: "c-pill c-pill-warn" },
-        warning: { label: "异常", className: "c-pill c-pill-danger" }
+        normal: { label: t("attendance.status.normal"), className: "c-pill c-pill-success" },
+        alert: { label: t("attendance.status.alert"), className: "c-pill c-pill-warn" },
+        warning: { label: t("attendance.status.warning"), className: "c-pill c-pill-danger" }
     };
     const summaryBody = document.getElementById("summary-body");
     const noData = document.getElementById("no-data");
@@ -94,7 +103,7 @@
         summaryBody.innerHTML = "";
 
         if (!attendanceData.length) {
-            setNoData("暂无考勤数据");
+            setNoData(t("attendance.empty"));
             if (pagination) {
                 pagination.classList.add("hidden");
             }
@@ -119,7 +128,7 @@
                 <td>${person.annual_leave}</td>
                 <td>
                     <span class="${statusMap[person.status]?.className || "c-pill"}">
-                        ${statusMap[person.status]?.label || "未知"}
+                        ${statusMap[person.status]?.label || t("attendance.status.unknown")}
                     </span>
                 </td>
             `;
@@ -130,7 +139,7 @@
             detailRow.innerHTML = `
                 <td colspan="6">
                     <div class="c-card-compact" data-detail-wrapper>
-                        <div class="c-panel-title">${person.name} 的每日考勤</div>
+                        <div class="c-panel-title">${format("attendance.detail.title", { name: person.name })}</div>
                         ${renderDetailTable([])}
                     </div>
                 </td>
@@ -148,14 +157,18 @@
         totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
         currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
         if (pageSummary) {
-            pageSummary.textContent = `共 ${totalCount} 条 · 第 ${currentPage}/${totalPages} 页`;
+            pageSummary.textContent = format("attendance.page_summary", {
+                count: totalCount,
+                page: currentPage,
+                total: totalPages
+            });
         }
         window.renderPagination(pagination, paginationPages, currentPage, totalPages);
     };
 
     const renderDetailTable = (details = []) => {
         if (!details.length) {
-            return `<div class="c-empty">暂未录入该员工的考勤明细</div>`;
+            return `<div class="c-empty">${t("attendance.detail.empty")}</div>`;
         }
 
         const rows = details.map(
@@ -174,11 +187,11 @@
             <table class="c-table c-table-compact c-table-center">
                 <thead>
                     <tr>
-                        <th>日期</th>
-                        <th>星期</th>
-                        <th>上班打卡</th>
-                        <th>下班打卡</th>
-                        <th>备注</th>
+                        <th>${t("attendance.detail.date")}</th>
+                        <th>${t("attendance.detail.weekday")}</th>
+                        <th>${t("attendance.detail.clock_in")}</th>
+                        <th>${t("attendance.detail.clock_out")}</th>
+                        <th>${t("attendance.detail.note")}</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -211,23 +224,23 @@
             return;
         }
 
-        setDetailMessage(wrapper, "加载中...", "正在获取考勤明细");
+        setDetailMessage(wrapper, t("common.loading"), t("attendance.detail.loading"));
 
         try {
             const response = await fetchWithAuth(url, { method: "GET" });
             const data = await response.json();
             const payload = normalizeApiResponse(data);
             if (!response.ok || !payload.success) {
-                setDetailMessage(wrapper, "明细加载失败", payload.message || "请稍后重试");
+                setDetailMessage(wrapper, t("attendance.detail.failed"), payload.message || t("attendance.detail.retry"));
                 return;
             }
 
             const result = payload.data || {};
             const name = result.employee?.name || detailRow.previousElementSibling?.dataset.name || "";
             const details = result.details || [];
-            setDetailContent(wrapper, `${name} 的每日考勤`, renderDetailTable(details));
+            setDetailContent(wrapper, format("attendance.detail.title", { name }), renderDetailTable(details));
         } catch (error) {
-            setDetailMessage(wrapper, "明细加载失败", "请稍后重试");
+            setDetailMessage(wrapper, t("attendance.detail.failed"), t("attendance.detail.retry"));
         }
     }
 
@@ -254,7 +267,7 @@
     }
 
     const setNoData = (message) => {
-        noData.textContent = message || "暂无考勤数据";
+        noData.textContent = message || t("attendance.empty");
         noData.classList.remove("hidden");
     }
 
@@ -271,7 +284,7 @@
         ]);
         const url = buildUrl("/api/attendance/summary", params);
         summaryBody.innerHTML = "";
-        setNoData("正在加载考勤数据...");
+        setNoData(t("attendance.loading"));
         if (pagination) {
             pagination.classList.add("hidden");
         }
@@ -282,7 +295,7 @@
             const payload = normalizeApiResponse(data);
             if (!response.ok || !payload.success) {
                 attendanceData = [];
-                setNoData(payload.message || "加载考勤数据失败");
+                setNoData(payload.message || t("attendance.failed"));
                 return;
             }
 
@@ -296,7 +309,7 @@
             renderSummary();
         } catch (error) {
             attendanceData = [];
-            setNoData("加载考勤数据失败");
+            setNoData(t("attendance.failed"));
         }
     }
 

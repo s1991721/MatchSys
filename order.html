@@ -6,18 +6,18 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>注文书管理</title>
+    <title data-i18n="order.title">注文书管理</title>
 </head>
 <body>
 <div class="container page-wide c-stack">
     <div class="c-page-head-grid">
         <div class="c-page-head-spacer" aria-hidden="true"></div>
         <div class="c-switch-wrap">
-            <div class="c-switcher-group" role="tablist" aria-label="视角切换">
-                <button class="c-toggle is-active" type="button" data-view="issue" role="tab" aria-selected="true">
+            <div class="c-switcher-group" role="tablist" aria-label="视角切换" data-i18n-aria="order.filter.title">
+                <button class="c-toggle is-active" type="button" data-view="issue" role="tab" aria-selected="true" data-i18n="order.tabs.issue">
                     发注
                 </button>
-                <button class="c-toggle" type="button" data-view="accept" role="tab" aria-selected="false">受注</button>
+                <button class="c-toggle" type="button" data-view="accept" role="tab" aria-selected="false" data-i18n="order.tabs.accept">受注</button>
             </div>
         </div>
     </div>
@@ -26,26 +26,32 @@
         <div class="c-inline-filters">
             <div class="c-inline-filters-grid-3">
                 <div class="c-inline-field">
-                    <span>注文书号</span>
+                    <span data-i18n="order.filter.order_no">注文书号</span>
                     <input id="filter-order-no" type="text" placeholder="PO-XXXX"/>
                 </div>
                 <div class="c-inline-field">
-                    <span>案件名</span>
-                    <input id="filter-project" type="text" placeholder="SES 案件名"/>
+                    <span data-i18n="order.filter.project">案件名</span>
+                    <input id="filter-project" type="text" placeholder="SES 案件名" data-i18n-placeholder="order.placeholder.project_filter"/>
                 </div>
                 <div class="c-inline-field">
-                    <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
-                    <input id="filter-customer" type="text" placeholder="下请公司" data-issue-placeholder="下请公司"
-                           data-accept-placeholder="客户公司" list="filter-customer-list"/>
+                    <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）"
+                          data-i18n-issue="order.filter.customer_issue"
+                          data-i18n-accept="order.filter.customer_accept">取引先（下请公司）</span>
+                    <input id="filter-customer" type="text" placeholder="下请公司"
+                           data-issue-placeholder="下请公司"
+                           data-accept-placeholder="客户公司"
+                           data-i18n-issue-placeholder="order.filter.customer_issue_placeholder"
+                           data-i18n-accept-placeholder="order.filter.customer_accept_placeholder"
+                           list="filter-customer-list"/>
                     <input id="filter-customer-id" type="hidden"/>
                 </div>
                 <datalist id="filter-customer-list"></datalist>
                 <div class="c-inline-field">
-                    <span>技术者</span>
-                    <input id="filter-technician" type="text" placeholder="姓名"/>
+                    <span data-i18n="order.filter.technician">技术者</span>
+                    <input id="filter-technician" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name"/>
                 </div>
                 <div class="c-inline-field">
-                    <span>状态</span>
+                    <span data-i18n="order.filter.status">状态</span>
                     <select id="statusFilter"
                             data-issue-options="承认中,已受注,拒绝,已取消"
                             data-accept-options="已受注,拒绝,已取消"
@@ -54,7 +60,7 @@
                     </select>
                 </div>
                 <div class="c-inline-field">
-                    <span>创建期间</span>
+                    <span data-i18n="order.filter.period">创建期间</span>
                     <div class="c-inline-field-range">
                         <input id="filter-start" type="date"/>
                         <span>~</span>
@@ -65,18 +71,20 @@
             <div class="c-inline-filters-extra">
                 <label class="c-inline-filter-check" for="filter-only-self">
                     <input id="filter-only-self" type="checkbox"/>
-                    <span class="c-inline-filter-label">仅自己</span>
+                    <span class="c-inline-filter-label" data-i18n="order.filter.only_self">仅自己</span>
                 </label>
             </div>
             <div class="c-filter-actions-bar">
                 <div class="c-filter-actions-left">
                     <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createBtn" type="button"
-                            data-issue="新建注文书" data-accept="新建受注">＋ 新建注文书
+                            data-issue="新建注文书" data-accept="新建受注"
+                            data-i18n-issue="order.action.create_issue"
+                            data-i18n-accept="order.action.create_accept">＋ 新建注文书
                     </button>
                 </div>
                 <div class="c-filter-actions-right c-filter-actions-group">
-                    <button class="c-btn c-btn-primary" id="searchBtn" type="button">搜索</button>
-                    <button class="c-btn c-btn-warn" id="resetBtn" type="button">重置</button>
+                    <button class="c-btn c-btn-primary" id="searchBtn" type="button" data-i18n="common.search">搜索</button>
+                    <button class="c-btn c-btn-warn" id="resetBtn" type="button" data-i18n="common.reset">重置</button>
                 </div>
             </div>
         </div>
@@ -86,20 +94,22 @@
             <table class="c-table">
                 <thead>
                 <tr>
-                    <th>注文No</th>
-                    <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）">案件名 / 取引先（下请）
+                    <th data-i18n="order.table.order_no">注文No</th>
+                    <th data-issue="案件名 / 取引先（下请）" data-accept="案件名 / 取引先（客户）"
+                        data-i18n-issue="order.table.project_customer_issue"
+                        data-i18n-accept="order.table.project_customer_accept">案件名 / 取引先（下请）
                     </th>
-                    <th>技术者</th>
-                    <th>契约单价</th>
-                    <th>契约工时</th>
-                    <th>契约期间</th>
-                    <th>创建时间</th>
-                    <th>创建人</th>
-                    <th>负责人</th>
-                    <th>修改时间</th>
-                    <th>修改人</th>
-                    <th>状态</th>
-                    <th>操作</th>
+                    <th data-i18n="order.table.technician">技术者</th>
+                    <th data-i18n="order.table.price">契约单价</th>
+                    <th data-i18n="order.table.hours">契约工时</th>
+                    <th data-i18n="order.table.period">契约期间</th>
+                    <th data-i18n="order.table.created_at">创建时间</th>
+                    <th data-i18n="order.table.created_by">创建人</th>
+                    <th data-i18n="order.table.owner">负责人</th>
+                    <th data-i18n="order.table.updated_at">修改时间</th>
+                    <th data-i18n="order.table.updated_by">修改人</th>
+                    <th data-i18n="order.table.status">状态</th>
+                    <th data-i18n="order.table.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="order-body"></tbody>
@@ -112,9 +122,9 @@
                     <div class="pagination-pages" id="order-pagination-pages"></div>
                 </div>
                 <select id="page-size">
-                    <option value="10">10 条/页</option>
-                    <option value="20">20 条/页</option>
-                    <option value="50">50 条/页</option>
+                    <option value="10" data-i18n="order.page_size_10">10 条/页</option>
+                    <option value="20" data-i18n="order.page_size_20">20 条/页</option>
+                    <option value="50" data-i18n="order.page_size_50">50 条/页</option>
                 </select>
             </div>
         </div>
@@ -122,48 +132,50 @@
 </div>
 
 <dialog class="c-modal" id="createDialogIssue" aria-labelledby="createTitleIssue">
-    <h3 id="createTitleIssue">新建注文书</h3>
-    <p>请根据注文书字段填写基础信息。</p>
+    <h3 id="createTitleIssue" data-i18n="order.dialog.issue.title">新建注文书</h3>
+    <p data-i18n="order.dialog.issue.subtitle">请根据注文书字段填写基础信息。</p>
     <div class="c-modal-form">
         <div class="c-modal-grid">
             <label class="c-inline-field">
-                <span>注文No</span>
+                <span data-i18n="order.field.order_no">注文No</span>
                 <input id="issue-order-no" type="text" placeholder="PO-2024-XXX"/>
             </label>
             <label class="c-inline-field">
-                <span>案件名</span>
-                <input id="issue-project-name" type="text" placeholder="案件名称"/>
+                <span data-i18n="order.field.project">案件名</span>
+                <input id="issue-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
             </label>
             <label class="c-inline-field c-inline-field-full">
-                <span>取引先（下请公司）</span>
-                <input id="issue-customer-name" type="text" placeholder="下请公司" list="issue-customer-list"/>
+                <span data-i18n="order.field.customer">取引先（下请公司）</span>
+                <input id="issue-customer-name" type="text" placeholder="下请公司"
+                       data-i18n-placeholder="order.filter.customer_issue_placeholder"
+                       list="issue-customer-list"/>
             </label>
             <datalist id="issue-customer-list"></datalist>
             <input id="issue-customer-id" type="hidden"/>
             <label class="c-inline-field">
-                <span>技术者</span>
-                <input id="issue-technician-name" type="text" placeholder="姓名"/>
+                <span data-i18n="order.field.technician">技术者</span>
+                <input id="issue-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name"/>
             </label>
             <label class="c-inline-field">
-                <span>状态</span>
+                <span data-i18n="order.field.status">状态</span>
                 <select id="issue-status">
-                    <option>请选择状态</option>
-                    <option selected>承认中</option>
-                    <option>已受注</option>
-                    <option>拒绝</option>
-                    <option>已取消</option>
+                    <option value="请选择状态" data-i18n="order.filter.status_select">请选择状态</option>
+                    <option value="承认中" selected data-i18n="order.status.approving">承认中</option>
+                    <option value="已受注" data-i18n="order.status.accepted">已受注</option>
+                    <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
+                    <option value="已取消" data-i18n="order.status.canceled">已取消</option>
                 </select>
             </label>
             <label class="c-inline-field">
-                <span>契约单价</span>
+                <span data-i18n="order.field.price">契约单价</span>
                 <input id="issue-price" type="text" placeholder="¥ 0"/>
             </label>
             <label class="c-inline-field">
-                <span>契约工时</span>
+                <span data-i18n="order.field.hours">契约工时</span>
                 <input id="issue-hours" type="text" placeholder="160h"/>
             </label>
             <label class="c-inline-field c-inline-field-full">
-                <span>契约期间</span>
+                <span data-i18n="order.field.period">契约期间</span>
                 <div class="c-inline-field-range">
                     <input id="issue-start" type="date"/>
                     <span>~</span>
@@ -171,66 +183,68 @@
                 </div>
             </label>
             <label class="c-inline-field">
-                <span>负责人</span>
-                <input id="issue-owner" type="text" placeholder="姓名" list="issue-owner-list"/>
+                <span data-i18n="order.field.owner">负责人</span>
+                <input id="issue-owner" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="issue-owner-list"/>
             </label>
             <datalist id="issue-owner-list"></datalist>
         </div>
     </div>
     <div class="c-modal-actions">
-        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
-        <button class="c-btn c-btn-primary" type="button" id="issue-create-submit">开始创建</button>
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="issue-create-submit" data-i18n="common.create">开始创建</button>
     </div>
 </dialog>
 
 <dialog class="c-modal" id="createDialogAccept" aria-labelledby="createTitleAccept">
-    <h3 id="createTitleAccept">新建受注</h3>
-    <p>请根据受注字段填写基础信息。</p>
+    <h3 id="createTitleAccept" data-i18n="order.dialog.accept.title">新建受注</h3>
+    <p data-i18n="order.dialog.accept.subtitle">请根据受注字段填写基础信息。</p>
     <div class="c-modal-form">
         <div class="c-modal-grid">
             <label class="c-inline-field">
-                <span>注文No</span>
+                <span data-i18n="order.field.order_no">注文No</span>
                 <input id="accept-order-no" type="text" placeholder="PO-2024-XXX"/>
             </label>
             <label class="c-inline-field">
-                <span>案件名</span>
-                <input id="accept-project-name" type="text" placeholder="案件名称"/>
+                <span data-i18n="order.field.project">案件名</span>
+                <input id="accept-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
             </label>
             <label class="c-inline-field">
-                <span>对应发注ID</span>
-                <input id="accept-purchase-id" type="number" placeholder="发注ID"/>
+                <span data-i18n="order.field.purchase_id">对应发注ID</span>
+                <input id="accept-purchase-id" type="number" placeholder="发注ID" data-i18n-placeholder="order.placeholder.purchase_id"/>
             </label>
             <label class="c-inline-field c-inline-field-full">
-                <span>取引先（客户公司）</span>
-                <input id="accept-customer-name" type="text" placeholder="客户公司" list="accept-customer-list"/>
+                <span data-i18n="order.field.customer_accept">取引先（客户公司）</span>
+                <input id="accept-customer-name" type="text" placeholder="客户公司"
+                       data-i18n-placeholder="order.filter.customer_accept_placeholder"
+                       list="accept-customer-list"/>
             </label>
             <datalist id="accept-customer-list"></datalist>
             <input id="accept-customer-id" type="hidden"/>
             <label class="c-inline-field">
-                <span>技术者</span>
-                <input id="accept-technician-name" type="text" placeholder="姓名" list="accept-technician-list"/>
+                <span data-i18n="order.field.technician">技术者</span>
+                <input id="accept-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="accept-technician-list"/>
             </label>
             <datalist id="accept-technician-list"></datalist>
             <input id="accept-technician-id" type="hidden"/>
             <label class="c-inline-field">
-                <span>状态</span>
+                <span data-i18n="order.field.status">状态</span>
                 <select id="accept-status">
-                    <option>请选择状态</option>
-                    <option selected>已受注</option>
-                    <option>拒绝</option>
-                    <option>已取消</option>
+                    <option value="请选择状态" data-i18n="order.filter.status_select">请选择状态</option>
+                    <option value="已受注" selected data-i18n="order.status.accepted">已受注</option>
+                    <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
+                    <option value="已取消" data-i18n="order.status.canceled">已取消</option>
                 </select>
             </label>
             <label class="c-inline-field">
-                <span>契约单价</span>
+                <span data-i18n="order.field.price">契约单价</span>
                 <input id="accept-price" type="text" placeholder="¥ 0"/>
             </label>
             <label class="c-inline-field">
-                <span>契约工时</span>
+                <span data-i18n="order.field.hours">契约工时</span>
                 <input id="accept-hours" type="text" placeholder="160h"/>
             </label>
             <label class="c-inline-field c-inline-field-full">
-                <span>契约期间</span>
+                <span data-i18n="order.field.period">契约期间</span>
                 <div class="c-inline-field-range">
                     <input id="accept-start" type="date"/>
                     <span>~</span>
@@ -238,53 +252,55 @@
                 </div>
             </label>
             <label class="c-inline-field">
-                <span>负责人</span>
-                <input id="accept-owner" type="text" placeholder="姓名" list="accept-owner-list"/>
+                <span data-i18n="order.field.owner">负责人</span>
+                <input id="accept-owner" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="accept-owner-list"/>
             </label>
             <datalist id="accept-owner-list"></datalist>
         </div>
     </div>
     <div class="c-modal-actions">
-        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
-        <button class="c-btn c-btn-primary" type="button" id="accept-create-submit">开始创建</button>
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="accept-create-submit" data-i18n="common.create">开始创建</button>
     </div>
 </dialog>
 
 <dialog class="c-modal" id="detailDialog" aria-labelledby="detailTitle">
-    <h3 id="detailTitle">查看注文书</h3>
-    <p id="detailSubtitle">查看订单详情</p>
+    <h3 id="detailTitle" data-i18n="order.dialog.detail.title">查看注文书</h3>
+    <p id="detailSubtitle" data-i18n="order.dialog.detail.subtitle_view">查看订单详情</p>
     <div class="c-modal-form">
         <div class="c-modal-grid">
             <label class="c-inline-field">
-                <span>注文No</span>
+                <span data-i18n="order.field.order_no">注文No</span>
                 <input type="text" data-field="orderNo"/>
             </label>
             <label class="c-inline-field">
-                <span>案件名</span>
+                <span data-i18n="order.field.project">案件名</span>
                 <input type="text" data-field="project"/>
             </label>
             <label class="c-inline-field">
-                <span>客户ID</span>
+                <span data-i18n="order.field.customer_id">客户ID</span>
                 <input type="number" data-field="customerId"/>
             </label>
             <label class="c-inline-field" data-accept-only>
-                <span>对应发注ID</span>
+                <span data-i18n="order.field.purchase_id">对应发注ID</span>
                 <input type="number" data-field="purchaseId"/>
             </label>
             <label class="c-inline-field c-inline-field-full">
-                <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）">取引先（下请公司）</span>
+                <span data-issue="取引先（下请公司）" data-accept="取引先（客户公司）"
+                      data-i18n-issue="order.filter.customer_issue"
+                      data-i18n-accept="order.filter.customer_accept">取引先（下请公司）</span>
                 <input type="text" data-field="client"/>
             </label>
             <label class="c-inline-field">
-                <span>技术者</span>
+                <span data-i18n="order.field.technician">技术者</span>
                 <input type="text" data-field="engineer"/>
             </label>
             <label class="c-inline-field" data-accept-only>
-                <span>技术人员ID</span>
+                <span data-i18n="order.field.technician_id">技术人员ID</span>
                 <input type="number" data-field="technicianId"/>
             </label>
             <label class="c-inline-field">
-                <span>状态</span>
+                <span data-i18n="order.field.status">状态</span>
                 <select data-field="status"
                         data-issue-options="承认中,已受注,拒绝,已取消"
                         data-accept-options="已受注,拒绝,已取消"
@@ -292,15 +308,15 @@
                 </select>
             </label>
             <label class="c-inline-field">
-                <span>契约单价</span>
+                <span data-i18n="order.field.price">契约单价</span>
                 <input type="text" data-field="price"/>
             </label>
             <label class="c-inline-field">
-                <span>契约工时</span>
+                <span data-i18n="order.field.hours">契约工时</span>
                 <input type="text" data-field="hours"/>
             </label>
             <label class="c-inline-field c-inline-field-full">
-                <span>契约期间</span>
+                <span data-i18n="order.field.period">契约期间</span>
                 <div class="c-inline-field-range">
                     <input type="date" data-field="start"/>
                     <span>~</span>
@@ -308,35 +324,43 @@
                 </div>
             </label>
             <label class="c-inline-field">
-                <span>创建时间</span>
+                <span data-i18n="order.field.created_at">创建时间</span>
                 <input type="date" data-field="createdAt"/>
             </label>
             <label class="c-inline-field">
-                <span>创建人</span>
+                <span data-i18n="order.field.created_by">创建人</span>
                 <input type="text" data-field="creator"/>
             </label>
             <label class="c-inline-field">
-                <span>负责人</span>
+                <span data-i18n="order.field.owner">负责人</span>
                 <input type="text" data-field="owner"/>
             </label>
             <label class="c-inline-field">
-                <span>修改时间</span>
+                <span data-i18n="order.field.updated_at">修改时间</span>
                 <input type="date" data-field="updatedAt"/>
             </label>
             <label class="c-inline-field">
-                <span>修改人</span>
+                <span data-i18n="order.field.updated_by">修改人</span>
                 <input type="text" data-field="updater"/>
             </label>
         </div>
     </div>
     <div class="c-modal-actions">
-        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>关闭</button>
-        <button class="c-btn c-btn-primary" type="button" data-dialog-close id="detailSave">保存</button>
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.close">关闭</button>
+        <button class="c-btn c-btn-primary" type="button" data-dialog-close id="detailSave" data-i18n="common.save">保存</button>
     </div>
 </dialog>
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
     (function () {
+        const i18n = window.I18N;
+        if (i18n) {
+            i18n.init();
+            i18n.apply();
+        }
+        const t = (key) => (i18n ? i18n.t(key) : key);
+        const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
         const switches = Array.from(document.querySelectorAll(".c-switcher-group .c-toggle"));
         const swapNodes = Array.from(document.querySelectorAll("[data-issue][data-accept]"));
         const swapPlaceholders = Array.from(document.querySelectorAll("[data-issue-placeholder][data-accept-placeholder]"));
@@ -428,6 +452,13 @@
             updater: document.querySelector('[data-field="updater"]'),
         };
 
+        if (tableInfo) {
+            tableInfo.textContent = format("order.table.info", { count: 0, page: 1 });
+        }
+        if (pageSummary) {
+            pageSummary.textContent = format("order.table.summary", { count: 0, page: 1, total: 1 });
+        }
+
         const statusClass = {
             "草稿": "c-tag-neutral",
             "承认中": "c-tag-warn",
@@ -436,11 +467,21 @@
             "已取消": "c-tag-danger",
             "拒绝": "c-tag-danger"
         };
+        const statusLabelMap = {
+            "草稿": "order.status.draft",
+            "承认中": "order.status.approving",
+            "已送付": "order.status.sent",
+            "已受注": "order.status.accepted",
+            "已取消": "order.status.canceled",
+            "拒绝": "order.status.rejected"
+        };
 
         let currentView = "issue";
         let currentPage = 1;
         let pageSize = 10;
         let totalPages = 1;
+        let lastTotalCount = 0;
+        let lastTotalPages = 1;
         let currentItems = [];
         let currentDetailId = null;
         let detailMode = "view";
@@ -451,15 +492,17 @@
 
         const renderActions = (container) => {
             container.innerHTML = "";
-            ["编辑", "查看"].forEach((label) => {
+            [
+                { key: "order.action.edit", action: "edit", primary: false },
+                { key: "order.action.view", action: "view", primary: true }
+            ].forEach((item) => {
                 const btn = document.createElement("button");
-                const isPrimary = label === "查看";
-                btn.className = isPrimary
+                btn.className = item.primary
                     ? "c-btn c-btn-lite c-btn-sm"
                     : "c-btn c-btn-ghost c-btn-sm";
                 btn.type = "button";
-                btn.textContent = label;
-                btn.dataset.action = label === "编辑" ? "edit" : "view";
+                btn.textContent = t(item.key);
+                btn.dataset.action = item.action;
                 container.appendChild(btn);
             });
         }
@@ -471,17 +514,34 @@
                 : select.dataset.issueOptions) || "";
             const values = options.split(",").map((v) => v.trim()).filter(Boolean);
             const defaultOption = select.dataset.defaultOption || "";
-            select.innerHTML = defaultOption ? `<option>${defaultOption}</option>` : "";
+            select.innerHTML = "";
+            if (defaultOption) {
+                const opt = document.createElement("option");
+                opt.value = defaultOption;
+                if (defaultOption === "全部") {
+                    opt.textContent = t("order.filter.status_all");
+                    opt.dataset.i18n = "order.filter.status_all";
+                } else if (defaultOption === "请选择状态") {
+                    opt.textContent = t("order.filter.status_select");
+                    opt.dataset.i18n = "order.filter.status_select";
+                } else {
+                    opt.textContent = defaultOption;
+                }
+                select.appendChild(opt);
+            }
             values.forEach((value) => {
                 const opt = document.createElement("option");
-                opt.textContent = value;
+                opt.value = value;
+                const labelKey = statusLabelMap[value];
+                opt.textContent = t(labelKey || value);
+                if (labelKey) {
+                    opt.dataset.i18n = labelKey;
+                }
                 select.appendChild(opt);
             });
         }
 
-        const setView = (view) => {
-            currentView = view;
-            currentPage = 1;
+        const applyViewLabels = (view) => {
             switches.forEach((btn) => {
                 const active = btn.dataset.view === view;
                 btn.classList.toggle("is-active", active);
@@ -500,18 +560,29 @@
                 node.style.display = view === "accept" ? "" : "none";
             });
             if (createBtn) {
-                createBtn.textContent = view === "accept" ? createBtn.dataset.accept : createBtn.dataset.issue;
+                const label = view === "accept" ? createBtn.dataset.accept : createBtn.dataset.issue;
+                createBtn.textContent = `＋ ${label}`;
             }
             fillStatusOptions(statusFilter, view);
+        };
+
+        const setView = (view) => {
+            currentView = view;
+            currentPage = 1;
+            applyViewLabels(view);
             fetchOrders();
-        }
+        };
 
         const setDialogMode = (mode) => {
             const isView = mode === "view";
             detailMode = mode;
-            if (detailTitle) detailTitle.textContent = isView ? "查看订单" : "编辑订单";
+            if (detailTitle) {
+                detailTitle.textContent = isView ? t("order.dialog.detail.view") : t("order.dialog.detail.edit");
+            }
             if (detailSubtitle) {
-                detailSubtitle.textContent = isView ? "查看订单详情" : "修改订单信息";
+                detailSubtitle.textContent = isView
+                    ? t("order.dialog.detail.subtitle_view")
+                    : t("order.dialog.detail.subtitle_edit");
             }
             if (detailSave) detailSave.style.display = isView ? "none" : "";
             Object.values(detailFields).forEach((field) => {
@@ -545,18 +616,28 @@
         const renderRows = (items, totalCount, page, totalPageCount) => {
             const count = Number.isFinite(totalCount) ? totalCount : items.length;
             totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
+            lastTotalCount = count;
+            lastTotalPages = totalPages;
             currentPage = Number.isFinite(page) ? page : 1;
             window.renderPagination(pagination, paginationPages, currentPage, totalPages);
             if (pageSummary) {
-                pageSummary.textContent = `共 ${count} 条 · 第 ${currentPage}/${totalPages} 页`;
+                pageSummary.textContent = format("order.table.summary", {
+                    count,
+                    page: currentPage,
+                    total: totalPages
+                });
             }
             if (!items.length) {
-                tableBody.innerHTML = `<tr><td colspan="13" class="empty c-empty">暂无数据</td></tr>`;
-                tableInfo.textContent = `共 ${count} 条 当前显示第 ${currentPage} 页`;
+                tableBody.innerHTML = `<tr><td colspan="13" class="empty c-empty">${t("order.table.no_data")}</td></tr>`;
+                tableInfo.textContent = format("order.table.info", {
+                    count,
+                    page: currentPage
+                });
                 return;
             }
             tableBody.innerHTML = items.map((item) => {
                 const status = item.status || "草稿";
+                const statusLabel = t(statusLabelMap[status] || status);
                 const periodStart = item.period_start || "-";
                 const periodEnd = item.period_end || "-";
                 return `
@@ -578,12 +659,15 @@
               <td>${item.person_in_charge || "-"}</td>
               <td>${item.updated_at || "-"}</td>
               <td>${item.updated_by || "-"}</td>
-              <td><span class="c-tag ${statusClass[status] || "c-tag-neutral"}">${status}</span></td>
+              <td><span class="c-tag ${statusClass[status] || "c-tag-neutral"}">${statusLabel}</span></td>
               <td><div class="row-actions c-row-actions" data-row-actions></div></td>
             </tr>
           `;
             }).join("");
-            tableInfo.textContent = `共 ${count} 条 当前显示第 ${currentPage} 页`;
+            tableInfo.textContent = format("order.table.info", {
+                count,
+                page: currentPage
+            });
             Array.from(document.querySelectorAll("[data-row-actions]")).forEach(renderActions);
         }
 
@@ -696,7 +780,7 @@
                 .then((data) => {
                     const responsePayload = normalizeApiResponse(data);
                     if (!responsePayload.success) {
-                        alert(responsePayload.message || "创建失败");
+                        alert(responsePayload.message || t("order.action.create_failed"));
                         return;
                     }
                     if (view === "accept" && createDialogAccept) createDialogAccept.close();
@@ -704,7 +788,7 @@
                     fetchOrders();
                 })
                 .catch(() => {
-                    alert("创建失败，请稍后重试");
+                    alert(t("order.action.create_failed_retry"));
                 });
         }
 
@@ -723,14 +807,14 @@
                 .then((data) => {
                     const responsePayload = normalizeApiResponse(data);
                     if (!responsePayload.success) {
-                        alert(responsePayload.message || "保存失败");
+                        alert(responsePayload.message || t("order.action.save_failed"));
                         return;
                     }
                     if (detailDialog) detailDialog.close();
                     fetchOrders();
                 })
                 .catch(() => {
-                    alert("保存失败，请稍后重试");
+                    alert(t("order.action.save_failed_retry"));
                 });
         }
 
@@ -964,6 +1048,26 @@
         bindOwnerLookup(issueForm);
         bindOwnerLookup(acceptForm);
         bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap);
+
+        const refreshI18n = () => {
+            if (i18n) {
+                i18n.init();
+                i18n.apply();
+            }
+            applyViewLabels(currentView);
+            if (detailFields.status) {
+                fillStatusOptions(detailFields.status, currentView);
+            }
+            renderRows(currentItems, lastTotalCount, currentPage, lastTotalPages);
+        };
+
+        if (window && window.addEventListener) {
+            window.addEventListener("storage", (event) => {
+                if (!event || event.key !== "app_lang") return;
+                refreshI18n();
+            });
+            window.addEventListener("i18n:change", refreshI18n);
+        }
 
         setView("issue");
     })();

@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>主页</title>
+  <title data-i18n="home.title">主页</title>
   <style>
 *{ box-sizing:border-box; }
     body{
@@ -352,9 +352,9 @@
       <div class="c-card">
         <div class="stat">
           <div>
-            <div class="label">本周match数</div>
+            <div class="label" data-i18n="home.stats.week_match">本周match数</div>
             <div class="value">12,580</div>
-            <div class="delta up">▲ 8.5% <span class="pill">vs 上周</span></div>
+            <div class="delta up">▲ 8.5% <span class="pill" data-i18n="home.vs_last_week">vs 上周</span></div>
           </div>
         </div>
       </div>
@@ -362,9 +362,9 @@
       <div class="c-card">
         <div class="stat">
           <div>
-            <div class="label">今天match数</div>
+            <div class="label" data-i18n="home.stats.today_match">今天match数</div>
             <div class="value">324</div>
-            <div class="delta up">▲ 2.3% <span class="pill">vs 昨天</span></div>
+            <div class="delta up">▲ 2.3% <span class="pill" data-i18n="home.vs_yesterday">vs 昨天</span></div>
           </div>
         </div>
       </div>
@@ -372,9 +372,9 @@
       <div class="c-card">
         <div class="stat">
           <div>
-            <div class="label">本月入场人数</div>
+            <div class="label" data-i18n="home.stats.month_entry">本月入场人数</div>
             <div class="value">18</div>
-            <div class="delta down">▼ 1.2% <span class="pill">vs 上周</span></div>
+            <div class="delta down">▼ 1.2% <span class="pill" data-i18n="home.vs_last_week">vs 上周</span></div>
           </div>
         </div>
       </div>
@@ -382,9 +382,9 @@
       <div class="c-card">
         <div class="stat">
           <div>
-            <div class="label">两周内求案件人数</div>
+            <div class="label" data-i18n="home.stats.two_weeks">两周内求案件人数</div>
             <div class="value">¥52,780</div>
-            <div class="delta up">▲ 15.7% <span class="pill">MTD</span></div>
+            <div class="delta up">▲ 15.7% <span class="pill" data-i18n="home.mtd">MTD</span></div>
           </div>
         </div>
       </div>
@@ -397,18 +397,18 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot"></span>
-            <h2>趋势统计</h2>
+            <h2 data-i18n="home.trend">趋势统计</h2>
           </div>
           <div class="tools">
-            <button class="tool" title="下载">⤓</button>
-            <button class="tool" title="更多">⋯</button>
+            <button class="tool" title="下载" data-i18n-title="home.download">⤓</button>
+            <button class="tool" title="更多" data-i18n-title="home.more">⋯</button>
           </div>
         </div>
 
         <div class="chart">
           <div class="legend">
-            <div class="lg"><i class="b"></i> 入场人数</div>
-            <div class="lg"><i class="p"></i> 退场人数</div>
+            <div class="lg"><i class="b"></i> <span data-i18n="home.legend.entry">入场人数</span></div>
+            <div class="lg"><i class="p"></i> <span data-i18n="home.legend.exit">退场人数</span></div>
           </div>
 
           <!-- SVG 折线图（示意，便于直接预览） -->
@@ -486,12 +486,12 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot" style="background:var(--purple)"></span>
-            <h2>当月营业技术者（4名）</h2>
+            <h2 data-i18n="home.monthly_sales">当月营业技术者（4名）</h2>
           </div>
-          <select class="select" aria-label="筛选">
-            <option>营业概览</option>
-            <option>本周</option>
-            <option>本月</option>
+          <select class="select" aria-label="筛选" data-i18n-aria="home.filter.label">
+            <option data-i18n="home.filter.overview">营业概览</option>
+            <option data-i18n="home.filter.week">本周</option>
+            <option data-i18n="home.filter.month">本月</option>
           </select>
         </div>
 
@@ -504,7 +504,7 @@
                 <div class="sub">java</div>
               </div>
             </div>
-            <button class="c-btn c-btn-success c-btn-sm">通过 →</button>
+            <button class="c-btn c-btn-success c-btn-sm" data-i18n="home.action.approve">通过 →</button>
           </div>
 
           <div class="row">
@@ -526,7 +526,7 @@
                 <div class="sub">PHP</div>
               </div>
             </div>
-            <button class="c-btn c-btn-danger c-btn-sm">待机 →</button>
+            <button class="c-btn c-btn-danger c-btn-sm" data-i18n="home.action.standby">待机 →</button>
           </div>
 
           <div class="row">
@@ -537,7 +537,7 @@
                 <div class="sub">python</div>
               </div>
             </div>
-            <button class="c-btn c-btn-warn c-btn-sm">结果等待 →</button>
+            <button class="c-btn c-btn-warn c-btn-sm" data-i18n="home.action.wait">结果等待 →</button>
           </div>
         </div>
       </div>
@@ -550,11 +550,11 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot" style="background:var(--green)"></span>
-            <h2>当月入场</h2>
+            <h2 data-i18n="home.entry_month">当月入场</h2>
           </div>
           <div class="tools">
-            <button class="tool" title="统计">▦</button>
-            <button class="tool" title="更多">⋯</button>
+            <button class="tool" title="统计" data-i18n-title="home.stats">▦</button>
+            <button class="tool" title="更多" data-i18n-title="home.more">⋯</button>
           </div>
         </div>
 
@@ -614,7 +614,7 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot" style="background:var(--orange)"></span>
-            <h2>下月营业技术者（3名）</h2>
+            <h2 data-i18n="home.next_month_sales">下月营业技术者（3名）</h2>
           </div>
         </div>
 
@@ -627,7 +627,7 @@
                 <small>java</small>
               </div>
             </div>
-            <div class="time">1月退场</div>
+            <div class="time" data-i18n="home.exit_jan">1月退场</div>
           </div>
 
           <div class="a">
@@ -638,7 +638,7 @@
                 <small>aws</small>
               </div>
             </div>
-            <div class="time">待机</div>
+            <div class="time" data-i18n="home.standby">待机</div>
           </div>
 
           <div class="a">
@@ -649,15 +649,22 @@
                 <small>PM</small>
               </div>
             </div>
-            <div class="time">新人</div>
+            <div class="time" data-i18n="home.newcomer">新人</div>
           </div>
 
           <div style="display:flex; justify-content:flex-end; padding-top:4px;">
-            <button class="c-btn c-btn-primary c-btn-sm">查看更多 →</button>
+            <button class="c-btn c-btn-primary c-btn-sm" data-i18n="home.action.view_more">查看更多 →</button>
           </div>
         </div>
       </div>
     </section>
   </section>
+  <script src="i18n.js"></script>
+  <script>
+    if (window.I18N) {
+      window.I18N.init();
+      window.I18N.apply();
+    }
+  </script>
 </body>
 </html>

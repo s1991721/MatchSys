@@ -100,6 +100,7 @@ urlpatterns = [
     path("common.css", TemplateView.as_view(template_name="common.css", content_type="text/css")),
     path("components.css", TemplateView.as_view(template_name="components.css", content_type="text/css")),
     path("common.js", TemplateView.as_view(template_name="common.js", content_type="application/javascript")),
+    path("i18n.js", TemplateView.as_view(template_name="i18n.js", content_type="application/javascript")),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
     path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
-  <title>页面未找到</title>
+  <title data-i18n="notfound.title">页面未找到</title>
   <style>
     body { margin: 0; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #f6f7fb; color: #1f2937; }
     .wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
@@ -16,12 +16,19 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>页面未找到</h1>
-      <p>你访问的地址不存在或已被移除。请检查链接或返回首页。</p>
+      <h1 data-i18n="notfound.title">页面未找到</h1>
+      <p data-i18n="notfound.body">你访问的地址不存在或已被移除。请检查链接或返回首页。</p>
       <p style="margin-top: 16px;">
-        <a href="/index.html" style="color: #2563eb; text-decoration: none;">返回主页</a>
+        <a href="/index.html" style="color: #2563eb; text-decoration: none;" data-i18n="notfound.back">返回主页</a>
       </p>
     </div>
   </div>
+  <script src="i18n.js"></script>
+  <script>
+    if (window.I18N) {
+      window.I18N.init();
+      window.I18N.apply();
+    }
+  </script>
 </body>
 </html>

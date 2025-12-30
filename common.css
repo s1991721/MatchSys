@@ -489,6 +489,20 @@ body > .page {
   max-width: 92vw;
   padding: 26px 28px;
 }
+.login-lang {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.login-lang .c-switcher-group {
+  padding: 2px;
+}
+.login-lang .c-toggle {
+  padding: 6px 14px;
+  min-height: 28px;
+  font-size: 12px;
+  font-weight: 700;
+}
 .c-brand-title {
   font-size: 24px;
   font-weight: 800;
@@ -835,6 +849,15 @@ body.sidebar-collapsed .sidebar .footer {
   font-size: 11px;
   color: var(--muted);
   margin-top: 2px;
+}
+.top-actions .lang-switch {
+  margin-right: 12px;
+  flex: 0 0 auto;
+}
+.lang-switch .c-toggle {
+  min-width: 72px;
+  text-align: center;
+  white-space: nowrap;
 }
 .main-body {
   flex: 1 1 auto;

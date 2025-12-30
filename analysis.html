@@ -6,24 +6,24 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>数据分析</title>
+  <title data-i18n="analysis.title">数据分析</title>
 </head>
 <body>
   <div class="page">
     <div class="c-card-grid content-spaced">
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
-            <div class="c-panel-title">当前最挣钱的员工</div>
-            <span class="c-tag c-tag-info">本月</span>
+            <div class="c-panel-title" data-i18n="analysis.card.monthly">当前最挣钱的员工</div>
+            <span class="c-tag c-tag-info" data-i18n="analysis.tag.month">本月</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
               <thead>
                 <tr>
-                  <th>排名</th>
-                  <th>员工</th>
-                  <th>业务</th>
-                  <th>金额</th>
+                  <th data-i18n="analysis.table.rank">排名</th>
+                  <th data-i18n="analysis.table.employee">员工</th>
+                  <th data-i18n="analysis.table.business">业务</th>
+                  <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
               <tbody>
@@ -51,17 +51,17 @@
         </section>
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
-            <div class="c-panel-title">当年最挣钱的员工</div>
-            <span class="c-tag c-tag-neutral">年累计</span>
+            <div class="c-panel-title" data-i18n="analysis.card.yearly">当年最挣钱的员工</div>
+            <span class="c-tag c-tag-neutral" data-i18n="analysis.tag.year">年累计</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
               <thead>
                 <tr>
-                  <th>排名</th>
-                  <th>员工</th>
-                  <th>业务</th>
-                  <th>金额</th>
+                  <th data-i18n="analysis.table.rank">排名</th>
+                  <th data-i18n="analysis.table.employee">员工</th>
+                  <th data-i18n="analysis.table.business">业务</th>
+                  <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
               <tbody>
@@ -89,17 +89,17 @@
         </section>
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
-            <div class="c-panel-title">最挣钱的客户</div>
-            <span class="c-tag c-tag-success">近90天</span>
+            <div class="c-panel-title" data-i18n="analysis.card.customer_profit">最挣钱的客户</div>
+            <span class="c-tag c-tag-success" data-i18n="analysis.tag.days90">近90天</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
               <thead>
                 <tr>
-                  <th>排名</th>
-                  <th>客户</th>
-                  <th>合同数</th>
-                  <th>金额</th>
+                  <th data-i18n="analysis.table.rank">排名</th>
+                  <th data-i18n="analysis.table.customer">客户</th>
+                  <th data-i18n="analysis.table.contracts">合同数</th>
+                  <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,17 +127,17 @@
         </section>
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
-            <div class="c-panel-title">单最多的客户</div>
-            <span class="c-tag c-tag-warn">近90天</span>
+            <div class="c-panel-title" data-i18n="analysis.card.customer_volume">单最多的客户</div>
+            <span class="c-tag c-tag-warn" data-i18n="analysis.tag.days90">近90天</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
               <thead>
                 <tr>
-                  <th>排名</th>
-                  <th>客户</th>
-                  <th>订单数</th>
-                  <th>金额</th>
+                  <th data-i18n="analysis.table.rank">排名</th>
+                  <th data-i18n="analysis.table.customer">客户</th>
+                  <th data-i18n="analysis.table.orders">订单数</th>
+                  <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
               <tbody>
@@ -165,5 +165,12 @@
         </section>
     </div>
   </div>
+  <script src="i18n.js"></script>
+  <script>
+    if (window.I18N) {
+      window.I18N.init();
+      window.I18N.apply();
+    }
+  </script>
 </body>
 </html>

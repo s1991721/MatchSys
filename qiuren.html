@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-CN">
 <head>
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
 
     <meta charset="UTF-8">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>求人</title>
+  <title data-i18n="qiuren.title">求人</title>
     <style>
 * {
             box-sizing: border-box;
@@ -148,20 +148,20 @@
     <!-- 上半部分：列表 -->
     <div class="row c-split-grid">
         <div class="panel-left c-card c-card-pad">
-            <div class="panel-title c-panel-title">求人列表</div>
+            <div class="panel-title c-panel-title" data-i18n="qiuren.list.jobs">求人列表</div>
             <div class="filters c-filter-grid">
                 <div class="filter-group c-filter-group">
-                    <span class="filter-label c-filter-label">时间</span>
+                    <span class="filter-label c-filter-label" data-i18n="qiuren.filter.time">时间</span>
                     <div class="chip-row c-chip-row">
-                        <button class="chip c-chip active" data-range="all" type="button">全部</button>
-                        <button class="chip c-chip" data-range="today" type="button">今天</button>
-                        <button class="chip c-chip" data-range="yesterday" type="button">昨天</button>
-                        <input id="job-date" class="input c-input date-input" type="date" aria-label="选择日期">
+                        <button class="chip c-chip active" data-range="all" type="button" data-i18n="qiuren.range.all">全部</button>
+                        <button class="chip c-chip" data-range="today" type="button" data-i18n="qiuren.range.today">今天</button>
+                        <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="qiuren.range.yesterday">昨天</button>
+                        <input id="job-date" class="input c-input date-input" type="date" aria-label="选择日期" data-i18n-aria="qiuren.date.label">
                     </div>
                 </div>
                 <div class="filter-group c-filter-group">
-                    <span class="filter-label c-filter-label">关键字</span>
-                    <input id="job-keyword" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节">
+                    <span class="filter-label c-filter-label" data-i18n="qiuren.filter.keyword">关键字</span>
+                    <input id="job-keyword" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节" data-i18n-placeholder="qiuren.keyword.placeholder">
                 </div>
             </div>
             <ul class="list c-list c-list-spaced jobs" id="job-list">
@@ -169,7 +169,7 @@
         </div>
 
         <div class="panel-right c-card c-card-pad">
-            <div class="panel-title c-panel-title">人员列表</div>
+            <div class="panel-title c-panel-title" data-i18n="qiuren.list.people">人员列表</div>
             <ul class="list c-list c-list-spaced persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
                 <li class="item active"
@@ -263,14 +263,14 @@
     <!-- 下半部分：详情 -->
     <div class="row c-split-grid">
         <div class="panel-left detail c-card c-card-pad">
-            <div class="panel-title c-panel-title">求人详情</div>
+            <div class="panel-title c-panel-title" data-i18n="qiuren.detail.job">求人详情</div>
             <div class="detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
         </div>
 
         <div class="panel-right detail c-card c-card-pad">
-            <div class="panel-title c-panel-title">技术者详情</div>
+            <div class="panel-title c-panel-title" data-i18n="qiuren.detail.person">技术者详情</div>
             <div class="detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
@@ -278,7 +278,10 @@
     </div>
 </div>
 
+<script src="i18n.js"></script>
 <script>
+    const i18n = window.I18N;
+    const t = (key) => (i18n ? i18n.t(key) : key);
     const jobs = [
         { id: 1, title: '求人1标题', desc: '求人1的简单说明content', detail: '这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-12-01' },
         { id: 2, title: '求人2标题', desc: '求人2的简单说明content', detail: '这是求人2的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。', date: '2025-11-25' },
@@ -328,9 +331,9 @@
         if (!items.length) {
             const empty = document.createElement('li');
             empty.className = 'empty';
-            empty.textContent = '暂无匹配的求人';
+            empty.textContent = t('qiuren.empty.list');
             jobList.appendChild(empty);
-            jobDetail.textContent = '暂无可显示的求人';
+            jobDetail.textContent = t('qiuren.empty.detail');
             return;
         }
 
@@ -427,9 +430,21 @@
         applyFilters();
     });
 
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
     renderJobList(jobs);
     bindListClick('job-list', 'job-detail');
     bindListClick('person-list', 'person-detail');
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", () => {
+            if (i18n) {
+                i18n.apply();
+            }
+            applyFilters();
+        });
+    }
 </script>
 </body>
 </html>

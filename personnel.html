@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>社内人员管理</title>
+    <title data-i18n="personnel.title">社内人员管理</title>
     <style></style>
 </head>
 <body class="c-form-page personnel-page">
@@ -15,11 +15,11 @@
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-wide">
                 <label>
-                    搜索（姓名 / 邮箱 / 手机 / 部门 / 职位）
-                    <input id="searchInput" type="search" placeholder="输入关键字"/>
+                    <span data-i18n="personnel.filter.keyword">搜索（姓名 / 邮箱 / 手机 / 部门 / 职位）</span>
+                    <input id="searchInput" type="search" placeholder="输入关键字" data-i18n-placeholder="personnel.filter.keyword_placeholder"/>
                 </label>
                 <label>
-                    部门
+                    <span data-i18n="personnel.filter.department">部门</span>
                     <select id="deptSelect">
                         <option value="all">全部部门</option>
                     </select>
@@ -27,12 +27,12 @@
             </div>
             <div class="filter-actions c-filter-actions-bar">
                 <div class="filter-actions-left">
-                    <button type="button" class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="addBtn">＋ 新增人员
+                    <button type="button" class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="addBtn" data-i18n="personnel.action.add">＋ 新增人员
                     </button>
                 </div>
                 <div class="filter-actions-right c-filter-actions-group">
-                    <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn">搜索</button>
-                    <button type="button" class="c-btn c-btn-warn" id="resetBtn">重置</button>
+                    <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn" data-i18n="common.search">搜索</button>
+                    <button type="button" class="c-btn c-btn-warn" id="resetBtn" data-i18n="common.reset">重置</button>
                 </div>
             </div>
         </div>
@@ -44,18 +44,18 @@
             <table class="c-table c-table-center c-table-compact-last">
                 <thead>
                 <tr>
-                    <th>姓名</th>
-                    <th>部门</th>
-                    <th>职位</th>
-                    <th>手机</th>
-                    <th>邮箱</th>
-                    <th>入职日期</th>
-                    <th class="c-actions-col">操作</th>
+                    <th data-i18n="personnel.table.name">姓名</th>
+                    <th data-i18n="personnel.table.department">部门</th>
+                    <th data-i18n="personnel.table.position">职位</th>
+                    <th data-i18n="personnel.table.phone">手机</th>
+                    <th data-i18n="personnel.table.email">邮箱</th>
+                    <th data-i18n="personnel.table.hire_date">入职日期</th>
+                    <th class="c-actions-col" data-i18n="personnel.table.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="tableBody">
                 <tr>
-                    <td colspan="7" class="empty c-empty">加载中…</td>
+                    <td colspan="7" class="empty c-empty" data-i18n="common.loading">加载中…</td>
                 </tr>
                 </tbody>
             </table>
@@ -73,72 +73,72 @@
     <div class="modal-card c-card c-card-pad">
         <div class="modal-header">
             <h4 id="modalTitle">新增人员</h4>
-            <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+            <button class="modal-close" id="modalClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
         </div>
         <form id="employeeForm" class="modal-body">
             <div class="form-grid">
                 <label>
-                    <span>姓名 *</span>
+                    <span data-i18n="personnel.field.name">姓名 *</span>
                     <input id="fieldName" type="text" required/>
                 </label>
                 <label>
-                    <span>性别</span>
+                    <span data-i18n="personnel.field.gender">性别</span>
                     <select id="fieldGender">
-                        <option value="">未设置</option>
-                        <option value="1">男</option>
-                        <option value="2">女</option>
-                        <option value="0">未知</option>
+                        <option value="" data-i18n="personnel.gender.unset">未设置</option>
+                        <option value="1" data-i18n="personnel.gender.male">男</option>
+                        <option value="2" data-i18n="personnel.gender.female">女</option>
+                        <option value="0" data-i18n="personnel.gender.unknown">未知</option>
                     </select>
                 </label>
                 <label>
-                    <span>生日</span>
+                    <span data-i18n="personnel.field.birthday">生日</span>
                     <input id="fieldBirthday" type="date"/>
                 </label>
                 <label>
-                    <span>部门</span>
+                    <span data-i18n="personnel.field.department">部门</span>
                     <input id="fieldDepartment" type="text"/>
                 </label>
                 <label>
-                    <span>职位</span>
+                    <span data-i18n="personnel.field.position">职位</span>
                     <input id="fieldPosition" type="text"/>
                 </label>
                 <label>
-                    <span>手机</span>
+                    <span data-i18n="personnel.field.phone">手机</span>
                     <input id="fieldPhone" type="text"/>
                 </label>
                 <label>
-                    <span>邮箱</span>
+                    <span data-i18n="personnel.field.email">邮箱</span>
                     <input id="fieldEmail" type="email"/>
                 </label>
                 <label>
-                    <span>住址</span>
+                    <span data-i18n="personnel.field.address">住址</span>
                     <input id="fieldAddress" type="text"/>
                 </label>
                 <label>
-                    <span>紧急联系人姓名</span>
+                    <span data-i18n="personnel.field.emergency_name">紧急联系人姓名</span>
                     <input id="fieldEmergencyName" type="text"/>
                 </label>
                 <label>
-                    <span>紧急联系人电话</span>
+                    <span data-i18n="personnel.field.emergency_phone">紧急联系人电话</span>
                     <input id="fieldEmergencyPhone" type="text"/>
                 </label>
                 <label>
-                    <span>紧急联系人关系</span>
+                    <span data-i18n="personnel.field.emergency_relation">紧急联系人关系</span>
                     <input id="fieldEmergencyRelation" type="text"/>
                 </label>
                 <label>
-                    <span>入职日期</span>
+                    <span data-i18n="personnel.field.hire_date">入职日期</span>
                     <input id="fieldHireDate" type="date"/>
                 </label>
                 <label>
-                    <span>离职日期</span>
+                    <span data-i18n="personnel.field.leave_date">离职日期</span>
                     <input id="fieldLeaveDate" type="date"/>
                 </label>
             </div>
             <div class="modal-actions">
-                <button type="button" class="c-btn c-btn-secondary" id="cancelBtn">取消</button>
-                <button type="button" class="c-btn c-btn-danger" id="deleteBtn" hidden>删除人员</button>
-                <button type="submit" class="c-btn c-btn-primary" id="saveBtn">保存</button>
+                <button type="button" class="c-btn c-btn-secondary" id="cancelBtn" data-i18n="common.cancel">取消</button>
+                <button type="button" class="c-btn c-btn-danger" id="deleteBtn" hidden data-i18n="common.delete">删除人员</button>
+                <button type="submit" class="c-btn c-btn-primary" id="saveBtn" data-i18n="common.save">保存</button>
             </div>
         </form>
     </div>
@@ -147,11 +147,11 @@
 <div class="modal" id="permissionModal" aria-hidden="true">
     <div class="modal-card c-card c-card-pad">
         <div class="modal-header">
-            <h4>权限编辑</h4>
-            <button class="modal-close" id="permissionClose" aria-label="关闭">×</button>
+            <h4 data-i18n="personnel.permission.title">权限编辑</h4>
+            <button class="modal-close" id="permissionClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
         </div>
         <div class="modal-body">
-            <div class="c-empty">权限编辑功能待补充。</div>
+            <div class="c-empty" data-i18n="personnel.permission.pending">权限编辑功能待补充。</div>
         </div>
     </div>
 </div>
@@ -159,17 +159,25 @@
 <div class="modal" id="attendanceSettingModal" aria-hidden="true">
     <div class="modal-card c-card c-card-pad">
         <div class="modal-header">
-            <h4>考勤设定</h4>
-            <button class="modal-close" id="attendanceSettingClose" aria-label="关闭">×</button>
+            <h4 data-i18n="personnel.attendance.title">考勤设定</h4>
+            <button class="modal-close" id="attendanceSettingClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
         </div>
         <div class="modal-body">
-            <div class="c-empty">功能开发中</div>
+            <div class="c-empty" data-i18n="notice.body">功能开发中</div>
         </div>
     </div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
+    const i18n = window.I18N;
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
+    const t = (key) => (i18n ? i18n.t(key) : key);
+    const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
     const deptSelect = document.getElementById("deptSelect");
@@ -204,6 +212,7 @@
     const fieldLeaveDate = document.getElementById("fieldLeaveDate");
 
     let allEmployees = [];
+    let cachedDepartments = [];
     let editingId = null;
     let currentPage = 1;
     const pageSize = 10;
@@ -212,8 +221,9 @@
     let currentFilters = {keyword: "", department: "all"};
 
     const ensureDepartments = (departments) => {
-        deptSelect.innerHTML = `<option value="all">全部部门</option>`;
-        (departments || []).forEach(dep => {
+        cachedDepartments = Array.isArray(departments) ? departments : [];
+        deptSelect.innerHTML = `<option value="all">${t("personnel.department_all")}</option>`;
+        cachedDepartments.forEach(dep => {
             if (!dep) return;
             const opt = document.createElement("option");
             opt.value = dep;
@@ -224,23 +234,23 @@
 
     const renderTable = (list) => {
         if (!list.length) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">没有符合条件的人员</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("personnel.empty")}</td></tr>`;
             return;
         }
         tableBody.innerHTML = list.map(item => (
             `<tr>
-          <td data-label="姓名">${item.name}</td>
-          <td data-label="部门">${item.department_name}</td>
-          <td data-label="职位">${item.position_name}</td>
-          <td data-label="手机">${item.phone}</td>
-          <td data-label="邮箱">${item.email}</td>
-          <td data-label="入职日期">${formatDate(item.hire_date)}</td>
-          <td data-label="操作">
+          <td data-label="${t("personnel.table.name")}">${item.name}</td>
+          <td data-label="${t("personnel.table.department")}">${item.department_name}</td>
+          <td data-label="${t("personnel.table.position")}">${item.position_name}</td>
+          <td data-label="${t("personnel.table.phone")}">${item.phone}</td>
+          <td data-label="${t("personnel.table.email")}">${item.email}</td>
+          <td data-label="${t("personnel.table.hire_date")}">${formatDate(item.hire_date)}</td>
+          <td data-label="${t("personnel.table.actions")}">
             <div class="row-actions c-row-actions c-row-actions-nowrap">
-              <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">信息编辑</button>
-              <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">技术者编辑</button>
-              <button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">权限编辑</button>
-              <button class="c-btn c-btn-warn-lite c-btn-sm" data-action="attendance-setting" data-id="${item.id}">考勤设定</button>
+              <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">${t("personnel.action.edit")}</button>
+              <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">${t("personnel.action.tech_edit")}</button>
+              <button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">${t("personnel.action.permission")}</button>
+              <button class="c-btn c-btn-warn-lite c-btn-sm" data-action="attendance-setting" data-id="${item.id}">${t("personnel.action.attendance")}</button>
             </div>
           </td>
         </tr>`
@@ -256,7 +266,11 @@
         renderPagination();
         if (summaryText) {
             const safeTotalPages = Math.max(1, totalPages);
-            summaryText.textContent = `共 ${totalCount} 人 · 第 ${currentPage}/${safeTotalPages} 页`;
+            summaryText.textContent = format("personnel.summary", {
+                count: totalCount,
+                page: currentPage,
+                total: safeTotalPages
+            });
         }
     }
 
@@ -321,7 +335,7 @@
 
     const openModal = (mode, data) => {
         editingId = mode === "edit" ? data?.id : null;
-        modalTitle.textContent = mode === "edit" ? "编辑人员" : "新增人员";
+        modalTitle.textContent = mode === "edit" ? t("personnel.modal.edit") : t("personnel.modal.add");
         fieldName.value = data?.name || "";
         fieldGender.value = data?.gender ?? "";
         fieldBirthday.value = formatDate(data?.birthday || "");
@@ -387,7 +401,7 @@
         const data = await res.json();
         const responsePayload = normalizeApiResponse(data);
         if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || "新增失败");
+            throw new Error(responsePayload.message || t("personnel.error.create_failed"));
         }
         return responsePayload.data || {};
     }
@@ -400,7 +414,7 @@
         const data = await res.json();
         const responsePayload = normalizeApiResponse(data);
         if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || "更新失败");
+            throw new Error(responsePayload.message || t("personnel.error.update_failed"));
         }
         return responsePayload.data || {};
     }
@@ -411,16 +425,16 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!res.ok || !payload.success) {
-                throw new Error(payload.message || "删除失败");
+                throw new Error(payload.message || t("personnel.error.delete_failed"));
             }
             await fetchEmployees();
         } catch (err) {
-            alert(`删除失败：${err.message}`);
+            alert(`${t("personnel.error.delete_failed")}：${err.message}`);
         }
     }
 
     const fetchEmployees = async () => {
-        tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">加载中…</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.loading")}</td></tr>`;
         try {
             const params = new URLSearchParams();
             if (currentFilters.keyword) params.append("keyword", currentFilters.keyword);
@@ -435,7 +449,7 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!res.ok || !payload.success) {
-                throw new Error(payload.message || "加载失败");
+                throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};
             const meta = payload.meta || {};
@@ -445,9 +459,13 @@
             currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
             renderPage();
         } catch (err) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">加载失败：${err.message}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.load_failed")}：${err.message}</td></tr>`;
             if (summaryText) {
-                summaryText.textContent = "共 0 人";
+                summaryText.textContent = format("personnel.summary", {
+                    count: 0,
+                    page: 1,
+                    total: 1
+                });
             }
             totalCount = 0;
             totalPages = 1;
@@ -460,7 +478,7 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!res.ok || !payload.success) {
-                throw new Error(payload.message || "加载失败");
+                throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};
             ensureDepartments(result.departments || []);
@@ -471,6 +489,17 @@
 
     fetchDepartments();
     fetchEmployees();
+    const refreshI18n = () => {
+        if (i18n) {
+            i18n.init();
+            i18n.apply();
+        }
+        ensureDepartments(cachedDepartments);
+        renderPage();
+    };
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", refreshI18n);
+    }
     applyFilterBtn.addEventListener("click", applyFilter);
     deptSelect.addEventListener("change", applyFilter);
     resetBtn.addEventListener("click", resetFilters);
@@ -494,7 +523,7 @@
         if (!editingId) return;
         const target = allEmployees.find(item => String(item.id) === String(editingId));
         const name = target?.name || "";
-        if (!confirm(`确认删除 ${name}？`)) return;
+        if (!confirm(format("personnel.confirm.delete", { name }))) return;
         deleteEmployee(editingId);
         closeModal();
     });
@@ -513,7 +542,7 @@
         e.preventDefault();
         const payload = buildPayload();
         if (!payload.name) {
-            alert("姓名不能为空");
+            alert(t("personnel.error.name_required"));
             return;
         }
         try {
@@ -525,7 +554,7 @@
             closeModal();
             await fetchEmployees();
         } catch (err) {
-            alert(err.message || "保存失败");
+            alert(err.message || t("common.save_failed"));
         }
     });
 </script>

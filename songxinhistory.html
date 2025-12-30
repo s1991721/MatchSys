@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>送信历史</title>
+  <title data-i18n="songxinhistory.title">送信历史</title>
     <style>
 * {
             box-sizing: border-box;
@@ -323,85 +323,90 @@
     <div class="page page-wide">
         <header class="page-header c-page-header">
             <div>
-                <div class="title c-page-title-soft">送信历史</div>
-                <div class="subtitle c-page-subtitle-soft">查看已发送记录、状态与正文内容</div>
+                <div class="title c-page-title-soft" data-i18n="songxinhistory.title">送信历史</div>
+                <div class="subtitle c-page-subtitle-soft" data-i18n="songxinhistory.subtitle">查看已发送记录、状态与正文内容</div>
             </div>
             <div class="status-note">
                 <span class="status-dot"></span>
-                <span>最近更新：今天 10:20</span>
+                <span data-i18n="songxinhistory.status.recent">最近更新：</span>
+                <span id="last-update">今天 10:20</span>
             </div>
         </header>
 
         <section class="grid c-split-grid-wide">
             <div class="c-card c-card-pad">
-                <div class="c-card-title">历史列表</div>
+                <div class="c-card-title" data-i18n="songxinhistory.list.title">历史列表</div>
                 <div class="filter-row">
                     <div class="pill-group" id="status-group">
-                        <button class="pill active" data-status="all" type="button">全部</button>
-                        <button class="pill" data-status="sent" type="button">已发送</button>
-                        <button class="pill" data-status="pending" type="button">发送中</button>
-                        <button class="pill" data-status="failed" type="button">失败</button>
-                        <button class="pill" data-status="draft" type="button">草稿</button>
+                        <button class="pill active" data-status="all" type="button" data-i18n="songxinhistory.filter.all">全部</button>
+                        <button class="pill" data-status="sent" type="button" data-i18n="songxinhistory.filter.sent">已发送</button>
+                        <button class="pill" data-status="pending" type="button" data-i18n="songxinhistory.filter.pending">发送中</button>
+                        <button class="pill" data-status="failed" type="button" data-i18n="songxinhistory.filter.failed">失败</button>
+                        <button class="pill" data-status="draft" type="button" data-i18n="songxinhistory.filter.draft">草稿</button>
                     </div>
                     <div class="search">
-                        <input id="search" class="input" type="search" placeholder="搜索标题、收件人或抄送">
+                        <input id="search" class="input" type="search" placeholder="搜索标题、收件人或抄送" data-i18n-placeholder="songxinhistory.search.placeholder">
                     </div>
                 </div>
                 <ul id="history-list" class="history-list"></ul>
             </div>
 
             <div class="c-card c-card-pad">
-                <div class="c-card-title">送信详情</div>
+                <div class="c-card-title" data-i18n="songxinhistory.detail.title">送信详情</div>
                 <div class="detail-meta" id="detail-meta"></div>
-                <div class="section-title">正文</div>
+                <div class="section-title" data-i18n="songxinhistory.detail.body">正文</div>
                 <div id="history-detail" class="detail"></div>
-                <div class="section-title">附件</div>
+                <div class="section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
                 <div id="detail-attachments" class="attachment-list"></div>
             </div>
         </section>
 
         <section class="grid c-split-grid-wide">
             <div class="c-card c-card-pad">
-                <div class="c-card-title">统计概览</div>
+                <div class="c-card-title" data-i18n="songxinhistory.section.stats">统计概览</div>
                 <div class="stat-grid">
                     <div class="stat-card c-card c-card-compact">
-                        <div class="stat-label">本周已发送</div>
+                        <div class="stat-label" data-i18n="songxinhistory.stats.sent">本周已发送</div>
                         <div class="stat-value" id="stat-sent">0</div>
                     </div>
                     <div class="stat-card c-card c-card-compact">
-                        <div class="stat-label">待处理</div>
+                        <div class="stat-label" data-i18n="songxinhistory.stats.pending">待处理</div>
                         <div class="stat-value" id="stat-pending">0</div>
                     </div>
                     <div class="stat-card c-card c-card-compact">
-                        <div class="stat-label">失败重试</div>
+                        <div class="stat-label" data-i18n="songxinhistory.stats.failed">失败重试</div>
                         <div class="stat-value" id="stat-failed">0</div>
                     </div>
                 </div>
             </div>
 
             <div class="c-card c-card-pad">
-                <div class="c-card-title">提醒</div>
+                <div class="c-card-title" data-i18n="songxinhistory.section.tips">提醒</div>
                 <div class="tips">
                     <div class="tips-item">
                         <span class="tips-bullet"></span>
-                        <span>点击左侧记录可快速查看正文与附件列表，确认实际送达内容。</span>
+                        <span data-i18n="songxinhistory.tip.1">点击左侧记录可快速查看正文与附件列表，确认实际送达内容。</span>
                     </div>
                     <div class="tips-item">
                         <span class="tips-bullet"></span>
-                        <span>发送失败的邮件可在此处检查原因，必要时重新发送。</span>
+                        <span data-i18n="songxinhistory.tip.2">发送失败的邮件可在此处检查原因，必要时重新发送。</span>
                     </div>
                     <div class="tips-item">
                         <span class="tips-bullet"></span>
-                        <span>筛选支持按状态或关键字查找，便于对齐项目进展。</span>
+                        <span data-i18n="songxinhistory.tip.3">筛选支持按状态或关键字查找，便于对齐项目进展。</span>
                     </div>
                 </div>
             </div>
         </section>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="common.js"></script>
 <script>
         (function () {
+            const i18n = window.I18N;
+            const t = (key) => (i18n ? i18n.t(key) : key);
+            const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
             const listEl = document.getElementById('history-list');
             const detailEl = document.getElementById('history-detail');
             const metaEl = document.getElementById('detail-meta');
@@ -411,19 +416,24 @@
             const statSent = document.getElementById('stat-sent');
             const statPending = document.getElementById('stat-pending');
             const statFailed = document.getElementById('stat-failed');
+            if (i18n) {
+                i18n.init();
+                i18n.apply();
+            }
 
             let records = [];
-            let lastUpdateText = '无';
+            let lastUpdateText = t('songxinhistory.status.none');
 
             let activeStatus = 'all';
             let activeId = null;
 
-            const statusMap = {
-                sent: { text: '已发送', cls: 'success' },
-                pending: { text: '发送中', cls: 'warning' },
-                failed: { text: '失败', cls: 'danger' },
-                draft: { text: '草稿', cls: 'warning' }
-            };
+            const buildStatusMap = () => ({
+                sent: { text: t('songxinhistory.status.sent'), cls: 'success' },
+                pending: { text: t('songxinhistory.status.pending'), cls: 'warning' },
+                failed: { text: t('songxinhistory.status.failed'), cls: 'danger' },
+                draft: { text: t('songxinhistory.status.draft'), cls: 'warning' }
+            });
+            let statusMap = buildStatusMap();
 
             const renderStats = (items) => {
                 const sent = items.filter(i => i.status === 'sent').length;
@@ -436,7 +446,7 @@
 
             const renderAttachments = (files) => {
                 if (!files || !files.length) {
-                    attachEl.innerHTML = '<div class="empty-tip">暂无附件</div>';
+                    attachEl.innerHTML = `<div class="empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
                     return;
                 }
                 attachEl.innerHTML = files.map(f => `<span class="attachment">${f}</span>`).join('');
@@ -444,17 +454,17 @@
 
             const renderDetail = (record) => {
                 if (!record) {
-                    metaEl.innerHTML = '<span class="empty-tip">请选择左侧记录查看详情</span>';
+                    metaEl.innerHTML = `<span class="empty-tip">${t('songxinhistory.empty.detail')}</span>`;
                     detailEl.textContent = '';
                     renderAttachments([]);
                     return;
                 }
 
                 const meta = [
-                    `收件人：${record.to || '--'}`,
-                    `抄送：${record.cc || '无'}`,
-                    `时间：${record.time}`,
-                    `状态：${statusMap[record.status]?.text || '未知'}`
+                    format('songxinhistory.meta.to', { value: record.to || '--' }),
+                    format('songxinhistory.meta.cc', { value: record.cc || t('songxinhistory.status.none') }),
+                    format('songxinhistory.meta.time', { value: record.time }),
+                    format('songxinhistory.meta.status', { value: statusMap[record.status]?.text || t('songxinhistory.status.unknown') })
                 ];
                 metaEl.innerHTML = meta.map(m => `<span>${m}</span>`).join('');
                 detailEl.innerHTML = `
@@ -476,7 +486,7 @@
                 listEl.innerHTML = '';
 
                 if (!filtered.length) {
-                    listEl.innerHTML = '<li class="history-item"><div class="mail-title">暂无匹配记录</div></li>';
+                    listEl.innerHTML = `<li class="history-item"><div class="mail-title">${t('songxinhistory.empty.list')}</div></li>`;
                     renderDetail(null);
                     renderStats(filtered);
                     return;
@@ -490,14 +500,14 @@
                         <div>
                             <div class="mail-title">${item.title}</div>
                             <div class="mail-meta">
-                                <span class="meta-badge">收件人：${item.to}</span>
-                                ${item.cc ? `<span class="meta-badge">抄送：${item.cc}</span>` : ''}
+                                <span class="meta-badge">${format('songxinhistory.meta.to', { value: item.to })}</span>
+                                ${item.cc ? `<span class="meta-badge">${format('songxinhistory.meta.cc', { value: item.cc })}</span>` : ''}
                             </div>
                         </div>
                         <div class="time">
                             <div class="status ${statusMap[item.status]?.cls || ''}">
                                 <span class="dot"></span>
-                                ${statusMap[item.status]?.text || '未知'}
+                                ${statusMap[item.status]?.text || t('songxinhistory.status.unknown')}
                             </div>
                             <div>${item.time}</div>
                         </div>
@@ -523,15 +533,22 @@
             const loadRecords = async () => {
                 try {
                     const resp = await fetchWithAuth(`${API_BASE}/send-history`, { credentials: 'include' });
+                    if (!resp.ok) {
+                        throw new Error(t('songxinhistory.error.load_failed'));
+                    }
+                    const contentType = resp.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        throw new Error(t('songxinhistory.error.load_failed'));
+                    }
                     const data = await resp.json();
                     const payload = normalizeApiResponse(data);
                     if (!payload.success) {
-                        throw new Error(payload.message || '加载失败');
+                        throw new Error(payload.message || t('songxinhistory.error.load_failed'));
                     }
                     const result = payload.data || {};
                     records = (result.items || []).map(item => ({
                         id: item.id,
-                        title: item.title || '(无标题)',
+                        title: item.title || t('songxinhistory.placeholder.title'),
                         to: item.to || '',
                         cc: item.cc || '',
                         status: item.status || 'sent',
@@ -545,13 +562,13 @@
                 } catch (err) {
                     console.error('加载送信历史失败', err);
                     records = [];
-                    lastUpdateText = '加载失败';
+                    lastUpdateText = t('songxinhistory.error.load_history');
                 }
                 renderList();
                 renderStats(records);
-                const statusNote = document.querySelector('.status-note span:last-child');
+                const statusNote = document.getElementById('last-update');
                 if (statusNote) {
-                    statusNote.textContent = `最近更新：${lastUpdateText}`;
+                    statusNote.textContent = lastUpdateText;
                 }
             };
 
@@ -580,6 +597,21 @@
             });
 
             loadRecords();
+            if (window && window.addEventListener) {
+                window.addEventListener("i18n:change", () => {
+                    if (i18n) {
+                        i18n.apply();
+                    }
+                    statusMap = buildStatusMap();
+                    lastUpdateText = t('songxinhistory.status.none');
+                    renderList();
+                    renderStats(records);
+                    const statusNote = document.getElementById('last-update');
+                    if (statusNote) {
+                        statusNote.textContent = lastUpdateText;
+                    }
+                });
+            }
         })();
     </script>
 </body>

@@ -6,7 +6,7 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>个人信息</title>
+    <title data-i18n="profile.title">个人信息</title>
     <style></style>
 </head>
 <body>
@@ -29,102 +29,109 @@
             </div>
         </div>
         <div class="profile-actions">
-            <button class="c-btn c-btn-danger" type="button" id="logoutBtn">退出登录</button>
+            <button class="c-btn c-btn-danger" type="button" id="logoutBtn" data-i18n="profile.logout">退出登录</button>
         </div>
     </div>
     <div class="content-grid content-spaced content-spaced-compact">
         <section class="c-card">
-            <h3 class="section-title c-panel-title">修改员工信息</h3>
+            <h3 class="section-title c-panel-title" data-i18n="profile.section.profile">修改员工信息</h3>
             <form id="employeeForm" autocomplete="off">
                 <div class="form-grid">
                     <div class="form-field">
-                        <label for="empName">姓名</label>
+                        <label for="empName" data-i18n="profile.field.name">姓名</label>
                         <input id="empName" name="name" type="text" required/>
                     </div>
                     <div class="form-field">
-                        <label for="empGender">性别</label>
+                        <label for="empGender" data-i18n="profile.field.gender">性别</label>
                         <select id="empGender" name="gender">
-                            <option value="">未设置</option>
-                            <option value="1">男</option>
-                            <option value="2">女</option>
-                            <option value="0">未知</option>
+                            <option value="" data-i18n="personnel.gender.unset">未设置</option>
+                            <option value="1" data-i18n="personnel.gender.male">男</option>
+                            <option value="2" data-i18n="personnel.gender.female">女</option>
+                            <option value="0" data-i18n="personnel.gender.unknown">未知</option>
                         </select>
                     </div>
                     <div class="form-field">
-                        <label for="empBirthday">生日</label>
+                        <label for="empBirthday" data-i18n="profile.field.birthday">生日</label>
                         <input id="empBirthday" name="birthday" type="date"/>
                     </div>
                     <div class="form-field">
-                        <label for="empPhone">手机</label>
+                        <label for="empPhone" data-i18n="profile.field.phone">手机</label>
                         <input id="empPhone" name="phone" type="text"/>
                     </div>
                     <div class="form-field">
-                        <label for="empEmail">邮箱</label>
+                        <label for="empEmail" data-i18n="profile.field.email">邮箱</label>
                         <input id="empEmail" name="email" type="email"/>
                     </div>
                     <div class="form-field">
-                        <label for="empHireDate">入职日期</label>
+                        <label for="empHireDate" data-i18n="profile.field.hire_date">入职日期</label>
                         <input id="empHireDate" name="hire_date" type="date" readonly/>
                     </div>
                     <div class="form-field">
-                        <label for="empDepartment">部门</label>
+                        <label for="empDepartment" data-i18n="profile.field.department">部门</label>
                         <input id="empDepartment" name="department_name" type="text" readonly/>
                     </div>
                     <div class="form-field">
-                        <label for="empPosition">职位</label>
+                        <label for="empPosition" data-i18n="profile.field.position">职位</label>
                         <input id="empPosition" name="position_name" type="text" readonly/>
                     </div>
                     <div class="form-field full">
-                        <label for="empAddress">地址</label>
+                        <label for="empAddress" data-i18n="profile.field.address">地址</label>
                         <textarea id="empAddress" name="address"></textarea>
                     </div>
                     <div class="form-field">
-                        <label for="empEmergencyName">紧急联系人姓名</label>
+                        <label for="empEmergencyName" data-i18n="profile.field.emergency_name">紧急联系人姓名</label>
                         <input id="empEmergencyName" name="emergency_contact_name" type="text"/>
                     </div>
                     <div class="form-field">
-                        <label for="empEmergencyPhone">紧急联系人电话</label>
+                        <label for="empEmergencyPhone" data-i18n="profile.field.emergency_phone">紧急联系人电话</label>
                         <input id="empEmergencyPhone" name="emergency_contact_phone" type="text"/>
                     </div>
                     <div class="form-field">
-                        <label for="empEmergencyRelation">紧急联系人关系</label>
+                        <label for="empEmergencyRelation" data-i18n="profile.field.emergency_relation">紧急联系人关系</label>
                         <input id="empEmergencyRelation" name="emergency_contact_relationship" type="text"/>
                     </div>
                 </div>
                 <div class="form-actions">
-                    <button class="c-btn c-btn-primary" type="submit">保存信息</button>
+                    <button class="c-btn c-btn-primary" type="submit" data-i18n="profile.action.save_profile">保存信息</button>
                 </div>
             </form>
         </section>
 
         <section class="c-card">
-            <h3 class="section-title c-panel-title">修改密码</h3>
+            <h3 class="section-title c-panel-title" data-i18n="profile.section.password">修改密码</h3>
             <form id="passwordForm" autocomplete="off">
                 <div class="form-grid form-grid-single">
                     <div class="form-field">
-                        <label for="oldPassword">当前密码</label>
+                        <label for="oldPassword" data-i18n="profile.field.old_password">当前密码</label>
                         <input id="oldPassword" type="password" required/>
                     </div>
                     <div class="form-field">
-                        <label for="newPassword">新密码</label>
+                        <label for="newPassword" data-i18n="profile.field.new_password">新密码</label>
                         <input id="newPassword" type="password" required/>
                     </div>
                     <div class="form-field">
-                        <label for="confirmPassword">确认新密码</label>
+                        <label for="confirmPassword" data-i18n="profile.field.confirm_password">确认新密码</label>
                         <input id="confirmPassword" type="password" required/>
                     </div>
                 </div>
-                <div class="hint">密码修改后需要重新登录。</div>
+                <div class="hint" data-i18n="profile.password.hint">密码修改后需要重新登录。</div>
                 <div class="form-actions">
-                    <button class="c-btn c-btn-primary" type="submit">更新密码</button>
+                    <button class="c-btn c-btn-primary" type="submit" data-i18n="profile.action.update_password">更新密码</button>
                 </div>
             </form>
         </section>
     </div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
+    const i18n = window.I18N;
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
+    const t = (key) => (i18n ? i18n.t(key) : key);
     const API_BASE = "";
     const employeeId = "{{ request.session.employee_id }}";
 
@@ -155,7 +162,7 @@
 
     const loadEmployee = async () => {
         if (!employeeId) {
-            alert("未登录，无法加载个人信息。");
+            alert(t("profile.error.not_logged_in"));
             setDisabled(true);
             return;
         }
@@ -165,7 +172,7 @@
             });
             const data = await res.json();
             const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) throw new Error(payload.message || "加载失败");
+            if (!res.ok || !payload.success) throw new Error(payload.message || t("common.load_failed"));
             const result = payload.data || {};
             const item = result.item || {};
             document.getElementById("empName").value = item.name || "";
@@ -192,7 +199,7 @@
             document.getElementById("profileDepartment").textContent = item.department_name ||"";
             document.getElementById("profilePosition").textContent = item.position_name || "";
         } catch (err) {
-            showStatus(err.message || "加载失败", "error");
+            showStatus(err.message || t("common.load_failed"), "error");
         }
     }
 
@@ -219,9 +226,9 @@
             const data = await res.json();
             const responsePayload = normalizeApiResponse(data);
             if (!res.ok || !responsePayload.success) {
-                throw new Error(responsePayload.message || "保存失败");
+                throw new Error(responsePayload.message || t("common.save_failed"));
             }
-            alert("员工信息已更新。");
+            alert(t("profile.alert.profile_updated"));
             const result = responsePayload.data || {};
             if (result.item) {
                 const item = result.item;
@@ -242,7 +249,7 @@
                 setReadOnlyWhenFilled("empEmergencyRelation", payload.emergency_contact_relationship);
             }
         } catch (err) {
-            const message = err.message || "保存失败";
+            const message = err.message || t("common.save_failed");
             alert(message);
         }
     });
@@ -254,11 +261,11 @@
         const confirmPassword = document.getElementById("confirmPassword").value;
 
         if (!oldPassword || !newPassword) {
-            alert("请输入完整的密码信息。");
+            alert(t("profile.alert.password_incomplete"));
             return;
         }
         if (newPassword !== confirmPassword) {
-            alert("两次输入的新密码不一致。");
+            alert(t("profile.alert.password_mismatch"));
             return;
         }
 
@@ -272,12 +279,12 @@
             const data = await res.json();
             const responsePayload = normalizeApiResponse(data);
             if (!res.ok || !responsePayload.success) {
-                throw new Error(responsePayload.message || "修改失败");
+                throw new Error(responsePayload.message || t("profile.alert.password_failed"));
             }
-            alert("密码已更新，请重新登录。");
+            alert(t("profile.alert.password_updated"));
             passwordForm.reset();
         } catch (err) {
-            const message = err.message || "修改失败";
+            const message = err.message || t("profile.alert.password_failed");
             alert(message);
         }
     });
@@ -288,7 +295,7 @@
             const data = await res.json();
             const responsePayload = normalizeApiResponse(data);
             if (!res.ok || !responsePayload.success) {
-                throw new Error(responsePayload.message || "退出失败");
+                throw new Error(responsePayload.message || t("profile.alert.logout_failed"));
             }
             const target = "login.html".replace(/^\//, "");
             const nextUrl = new URL(target, window.location.href).toString();
@@ -298,7 +305,7 @@
                 window.location.href = nextUrl;
             }
         } catch (err) {
-            alert("退出失败，请重试。");
+            alert(t("profile.alert.logout_failed_retry"));
         }
     });
 

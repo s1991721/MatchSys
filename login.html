@@ -6,25 +6,30 @@
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title>系统登录 - IT营业管理系统</title>
-    <style></style>
+  <title data-i18n="login.title">系统登录 - IT营业管理系统</title>
 </head>
 <body class="c-form-page c-center-page">
 <div class="login-card c-card c-card-pad c-auth-card">
+    <div class="login-lang">
+        <div class="c-switcher-group lang-switch" role="group" aria-label="语言切换">
+            <button class="c-toggle" type="button" data-lang="zh-CN" aria-pressed="true">中文</button>
+            <button class="c-toggle" type="button" data-lang="ja" aria-pressed="false">日本語</button>
+        </div>
+    </div>
     <div>
-        <h1 class="brand-title c-brand-title">IT营业管理系统</h1>
-        <p class="brand-subtitle c-brand-subtitle">IT Business Management System</p>
+        <h1 class="brand-title c-brand-title" data-i18n="brand.title">IT营业管理系统</h1>
+        <p class="brand-subtitle c-brand-subtitle" data-i18n="brand.subtitle">IT Business Management System</p>
     </div>
 
     <form id="loginForm" method="post" action="javascript:void(0);">
         <div id="errorBox" class="error-box hidden"></div>
         <div class="form-grid form-grid-single">
             <div class="form-field">
-                <label>账号</label>
+                <label data-i18n="login.username">账号</label>
                 <input id="userName" type="text" name="user_name" placeholder="admin" required>
             </div>
             <div class="form-field">
-                <label>密码</label>
+                <label data-i18n="login.password">密码</label>
                 <input id="password" type="password" name="password" placeholder="••••••••" required>
             </div>
         </div>
@@ -35,20 +40,55 @@
         </div>
     </form>
 </div>
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
     const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
+    const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
+    const i18n = window.I18N;
+    const t = (key) => (i18n ? i18n.t(key) : key);
+
+    const applyLang = (lang) => {
+        const safeLang = i18n ? i18n.setLang(lang) : lang;
+        langButtons.forEach((button) => {
+            const isActive = button.dataset.lang === safeLang;
+            button.classList.toggle("is-active", isActive);
+            button.setAttribute("aria-pressed", String(isActive));
+        });
+        if (i18n && typeof i18n.apply === "function") {
+            i18n.apply();
+        }
+    };
+
+    const initLang = () => {
+        const current = i18n ? i18n.init() : "zh-CN";
+        applyLang(current);
+    };
+
+    langButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const lang = button.dataset.lang || "zh-CN";
+            try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+            applyLang(lang);
+        });
+    });
+
+    initLang();
 
     const form = document.getElementById("loginForm");
     const errorBox = document.getElementById("errorBox");
     const submitBtn = document.getElementById("submitBtn");
+    const updateSubmitText = (key) => {
+        if (!submitBtn) return;
+        submitBtn.textContent = t(key);
+    };
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
         errorBox.classList.add("hidden");
         errorBox.textContent = "";
         submitBtn.disabled = true;
-        submitBtn.textContent = "登录中...";
+        updateSubmitText("login.submitting");
 
         try {
             const res = await fetch(LOGIN_ENDPOINT, {
@@ -63,18 +103,19 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!res.ok || !payload.success) {
-                throw new Error(payload.message || "登录失败");
+                throw new Error(payload.message || t("login.failed"));
             }
             const target = "index.html".replace(/^\//, "");
             window.location.href = new URL(target, window.location.href).toString();
         } catch (err) {
-            errorBox.textContent = err.message || "登录失败";
+            errorBox.textContent = err.message || t("login.failed");
             errorBox.classList.remove("hidden");
         } finally {
             submitBtn.disabled = false;
-            submitBtn.textContent = "登 录";
+            updateSubmitText("login.submit");
         }
     });
+    updateSubmitText("login.submit");
 </script>
 </body>
 </html>

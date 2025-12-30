@@ -152,7 +152,7 @@
         </div>
 
         <div class="top-actions">
-          <button class="icon-btn c-btn c-btn-icon c-btn-ghost" aria-label="通知">
+          <button class="icon-btn c-btn c-btn-icon c-btn-ghost" id="noticeBtn" aria-label="通知">
             🔔
             <span class="badge">2</span>
           </button>
@@ -175,18 +175,47 @@
     </main>
   </div>
 
+  <dialog class="c-modal" id="noticeDialog" aria-labelledby="noticeTitle">
+    <h3 id="noticeTitle">通知</h3>
+    <p>功能开发中</p>
+    <div class="c-modal-actions">
+      <button class="c-btn c-btn-primary" type="button" id="noticeClose">知道了</button>
+    </div>
+  </dialog>
+
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const btn = document.getElementById("collapseBtn");
       const nav = document.getElementById("nav");
       const frame = document.getElementById("mainFrame");
       const topDate = document.getElementById("topDate");
+      const noticeBtn = document.getElementById("noticeBtn");
+      const noticeDialog = document.getElementById("noticeDialog");
+      const noticeClose = document.getElementById("noticeClose");
       const KEY = "chat_sidebar_collapsed";
 
       const setCollapsed = (collapsed) => {
         document.body.classList.toggle("sidebar-collapsed", collapsed);
         if (btn) btn.setAttribute("aria-expanded", String(!collapsed));
         try { localStorage.setItem(KEY, collapsed ? "1" : "0"); } catch (e) {}
+      };
+
+      const openNoticeDialog = () => {
+        if (!noticeDialog) return;
+        if (typeof noticeDialog.showModal === "function") {
+          noticeDialog.showModal();
+        } else {
+          noticeDialog.setAttribute("open", "open");
+        }
+      };
+
+      const closeNoticeDialog = () => {
+        if (!noticeDialog) return;
+        if (typeof noticeDialog.close === "function") {
+          noticeDialog.close();
+        } else {
+          noticeDialog.removeAttribute("open");
+        }
       };
 
       const readCollapsed = () => {
@@ -197,6 +226,20 @@
         setCollapsed(readCollapsed());
         btn.addEventListener("click", () => {
           setCollapsed(!document.body.classList.contains("sidebar-collapsed"));
+        });
+      }
+
+      if (noticeBtn) {
+        noticeBtn.addEventListener("click", openNoticeDialog);
+      }
+      if (noticeClose) {
+        noticeClose.addEventListener("click", closeNoticeDialog);
+      }
+      if (noticeDialog) {
+        noticeDialog.addEventListener("click", (event) => {
+          if (event.target === noticeDialog) {
+            closeNoticeDialog();
+          }
         });
       }
 

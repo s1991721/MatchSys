@@ -16,6 +16,17 @@
         return res;
     };
 
+    // 构建GET请求params
+    window.createParams = function (entries = []) {
+        const params = new URLSearchParams();
+        entries.forEach(([key, value]) => {
+            if (value) {
+                params.set(key, value);
+            }
+        });
+        return params;
+    };
+
     // 构建GET请求URL
     window.buildUrl = function (base, params) {
         const query = params.toString();
@@ -34,6 +45,13 @@
             data: null,
             meta: {},
         };
+    };
+
+    //获取当前月
+    window.getCurrentMonth = function () {
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, "0");
+        return `${today.getFullYear()}-${month}`;
     };
 
     // 日期格式化

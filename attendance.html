@@ -78,16 +78,6 @@
     const pageSummary = document.getElementById("attendance-page-summary");
     const filters = { name: "", month: "" };
 
-    const createParams = (entries = []) => {
-        const params = new URLSearchParams();
-        entries.forEach(([key, value]) => {
-            if (value) {
-                params.set(key, value);
-            }
-        });
-        return params;
-    };
-
     const setDetailContent = (wrapper, title, content) => {
         wrapper.innerHTML = `
             <div class="c-panel-title">${title}</div>
@@ -260,12 +250,6 @@
         monthFilter.value = filters.month;
         currentPage = 1;
         loadAttendance();
-    }
-
-    const getCurrentMonth = () => {
-        const today = new Date();
-        const month = String(today.getMonth() + 1).padStart(2, "0");
-        return `${today.getFullYear()}-${month}`;
     }
 
     const setNoData = (message) => {

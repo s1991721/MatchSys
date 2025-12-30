@@ -31,7 +31,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#match.html" data-src="match.html" data-title="Match" title="Match">
+          <a href="#match.html" data-src="match.html" data-title="BP Match" title="BP Match">
             <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="currentColor" d="M7 4h10a2 2 0 0 1 2 2v3H5V6a2 2 0 0 1 2-2zm-2 7h14v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7zm4 2v2h6v-2H9z"/>
             </svg>
@@ -153,7 +153,7 @@
       <header class="topbar">
         <div class="title">
           Welcome back, {{ request.session.employee_name }}!
-          <span>· 主页概览</span>
+          <span id="pageSubtitle">· 主页</span>
         </div>
         <div class="topbar-mid" aria-label="日期">
           <span id="topDate"></span>
@@ -200,6 +200,7 @@
       const noticeBtn = document.getElementById("noticeBtn");
       const noticeDialog = document.getElementById("noticeDialog");
       const noticeClose = document.getElementById("noticeClose");
+      const pageSubtitle = document.getElementById("pageSubtitle");
       const KEY = "chat_sidebar_collapsed";
 
       const setCollapsed = (collapsed) => {
@@ -267,9 +268,19 @@
         }
       };
 
+      const setSubtitle = (src) => {
+        if (!pageSubtitle) return;
+        const match = links.find((a) => (a.getAttribute("data-src") || "") === src);
+        const label = match
+          ? (match.getAttribute("data-title") || match.getAttribute("title") || match.textContent).trim()
+          : "主页";
+        pageSubtitle.textContent = `· ${label}`;
+      };
+
       const applyRoute = (src) => {
         if (!src) return;
         setActive(src);
+        setSubtitle(src);
         if (frame.src !== src) {
           frame.src = src;
           frame.setAttribute("title", src);

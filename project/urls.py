@@ -15,9 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from django.conf import settings
 from django.urls import path
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
+from django.views.static import serve as static_serve
 
 from attendance.views import (
     attendance_punch_api,
@@ -98,6 +100,9 @@ urlpatterns = [
     path("common.css", TemplateView.as_view(template_name="common.css", content_type="text/css")),
     path("components.css", TemplateView.as_view(template_name="components.css", content_type="text/css")),
     path("common.js", TemplateView.as_view(template_name="common.js", content_type="application/javascript")),
+    path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
+    path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
+    path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),
 
     # ###################################-API-###################################
     # -------------------------------employee API-------------------------------

@@ -10,7 +10,7 @@
 </head>
 <body class="c-form-page">
 <div class="page">
-    <div class="c-card">
+    <section class="c-card">
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-wide">
                 <label>
@@ -55,7 +55,7 @@
                     </select>
                 </label>
             </div>
-            <div class="filter-actions c-filter-actions-bar c-filter-actions-stack">
+            <div class="filter-actions c-filter-actions-bar">
                 <div class="filter-actions-left c-filter-actions-left"></div>
                 <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
                     <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn" data-i18n="common.search">搜索</button>
@@ -63,8 +63,9 @@
                 </div>
             </div>
         </div>
+        <div class="table-actions c-table-actions"></div>
         <div class="table-wrapper c-table-wrapper">
-            <table class="c-table c-table-center c-table-stack c-table-compact-last" id="peopleTable">
+            <table class="c-table c-table-center" id="peopleTable">
                 <thead>
                 <tr>
                     <th data-i18n="people.table.name">姓名</th>
@@ -94,7 +95,7 @@
             </div>
             <div class="pagination-pages" id="paginationPages"></div>
         </div>
-    </div>
+    </section>
 </div>
 
 <dialog id="personDialog" class="c-dialog">

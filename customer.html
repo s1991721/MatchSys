@@ -11,27 +11,27 @@
 <body class="c-form-page">
 <div class="page page-wide">
     <section class="c-card">
-        <div class="c-filter-panel">
-            <div class="c-filter-grid-compact">
-                <label class="c-field">
+        <div class="filters c-filter-panel">
+            <div class="filter-grid c-filter-grid-wide">
+                <label>
                     <span data-i18n="customer.filter.company">公司名称</span>
                     <input id="filter-company" type="text" placeholder="请输入公司名称"
                            data-i18n-placeholder="customer.filter.company_placeholder"/>
                 </label>
-                <label class="c-field">
+                <label>
                     <span data-i18n="customer.filter.owner">负责人</span>
                     <input id="filter-owner" type="text" list="employee-names" placeholder="请输入负责人"
                            data-i18n-placeholder="customer.filter.owner_placeholder"/>
                 </label>
                 <datalist id="employee-names"></datalist>
             </div>
-            <div class="c-filter-actions-bar">
-                <div class="c-filter-actions-left">
-                    <button class="c-btn c-btn-primary" id="btn-add" type="button" data-i18n="customer.action.add">+
+            <div class="filter-actions c-filter-actions-bar">
+                <div class="filter-actions-left c-filter-actions-left">
+                    <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="btn-add" type="button" data-i18n="customer.action.add">+
                         新增客户
                     </button>
                 </div>
-                <div class="c-filter-actions-right c-filter-actions-group">
+                <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
                     <button class="c-btn c-btn-primary" id="btn-search" type="button">
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
                              stroke-width="2">
@@ -44,8 +44,8 @@
                 </div>
             </div>
         </div>
-        <div class="c-table-info" id="table-info">共 0 条 当前显示第 1 页</div>
-        <div class="c-table-wrapper">
+        <div class="table-actions c-table-actions"></div>
+        <div class="table-wrapper c-table-wrapper">
             <table class="c-table c-table-center">
                 <thead>
                 <tr>
@@ -58,23 +58,17 @@
                     <th data-i18n="customer.table.phone">电话</th>
                     <th data-i18n="customer.table.owner">负责人</th>
                     <th data-i18n="customer.table.created_at">创建时间</th>
-                    <th data-i18n="customer.table.actions">操作</th>
+                    <th class="c-actions-col" data-i18n="customer.table.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="customer-body"></tbody>
             </table>
-            <div class="c-pager">
-                <div class="pagination c-pagination" id="customer-pagination">
-                    <div class="pagination-summary">
-                        <span id="page-summary">共 0 条 当前显示第 1 页</span>
-                    </div>
-                    <div class="pagination-pages" id="customer-pagination-pages"></div>
-                </div>
-                <select id="page-size">
-                    <option value="10" data-i18n="order.page_size_10">10 条/页</option>
-                    <option value="20" data-i18n="order.page_size_20">20 条/页</option>
-                </select>
+        </div>
+        <div class="pagination c-pagination" id="customer-pagination">
+            <div class="pagination-summary">
+                <span id="page-summary">共 0 条 当前显示第 1 页</span>
             </div>
+            <div class="pagination-pages" id="customer-pagination-pages"></div>
         </div>
     </section>
 </div>
@@ -195,7 +189,6 @@
 
     const nameList = document.getElementById("employee-names");
     const tableBody = document.getElementById("customer-body");
-    const tableInfo = document.getElementById("table-info");
     const filterCompany = document.getElementById("filter-company");
     const filterOwner = document.getElementById("filter-owner");
     const addButton = document.getElementById("btn-add");
@@ -204,7 +197,6 @@
     const pagination = document.getElementById("customer-pagination");
     const paginationPages = document.getElementById("customer-pagination-pages");
     const pageSummary = document.getElementById("page-summary");
-    const pageSizeSelect = document.getElementById("page-size");
     const editDialog = document.getElementById("edit-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
@@ -251,9 +243,6 @@
         if (pageSummary) {
             pageSummary.textContent = format("customer.summary", {count, page: currentPage});
         }
-        if (tableInfo) {
-            tableInfo.textContent = format("customer.summary", {count, page: currentPage});
-        }
         if (!items.length) {
             tableBody.innerHTML = `<tr><td colspan="10" class="c-empty">${t("common.no_data")}</td></tr>`;
             return;
@@ -273,8 +262,8 @@
               <td>${item.person_in_charge || "-"}</td>
               <td>${item.created_at || "-"}</td>
               <td>
-                <div class="c-row-actions">
-                  <button class="edit-btn c-btn c-btn-secondary" type="button" data-id="${item.id}">${t("common.edit")}</button>
+                <div class="row-actions c-row-actions c-row-actions-nowrap">
+                  <button class="edit-btn c-btn c-btn-secondary c-btn-sm" type="button" data-id="${item.id}">${t("common.edit")}</button>
                 </div>
               </td>
             </tr>
@@ -303,11 +292,12 @@
                     renderRows([], 0, 1, 1);
                     return;
                 }
-                const result = payload.data || {};
-                cachedItems = Array.isArray(result.items) ? result.items : [];
-                const total = result.total ?? 0;
-                const page = result.page ?? 1;
-                const totalPages = result.total_pages ?? 1;
+          const result = payload.data || {};
+          const meta = payload.meta || {};
+          cachedItems = Array.isArray(result.items) ? result.items : [];
+          const total = meta.total ?? result.total ?? cachedItems.length;
+          const page = meta.page ?? result.page ?? 1;
+          const totalPages = meta.total_pages ?? result.total_pages ?? 1;
                 renderRows(cachedItems, total, page, totalPages);
             })
             .catch(() => {
@@ -400,12 +390,6 @@
         });
     }
 
-    pageSizeSelect.addEventListener("change", () => {
-        const value = parseInt(pageSizeSelect.value, 10);
-        pageSize = Number.isFinite(value) ? value : 10;
-        currentPage = 1;
-        fetchCustomers();
-    });
 
     editFields.contract.addEventListener("change", () => {
         const file = editFields.contract.files[0];

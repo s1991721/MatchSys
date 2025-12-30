@@ -27,7 +27,8 @@
             </div>
             <div class="filter-actions c-filter-actions-bar">
                 <div class="filter-actions-left c-filter-actions-left">
-                    <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="btn-add" type="button" data-i18n="customer.action.add">+
+                    <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="btn-add" type="button"
+                            data-i18n="customer.action.add">+
                         新增客户
                     </button>
                 </div>
@@ -289,12 +290,12 @@
                     renderRows([], 0, 1, 1);
                     return;
                 }
-          const result = payload.data || {};
-          const meta = payload.meta || {};
-          cachedItems = Array.isArray(result.items) ? result.items : [];
-          const total = meta.total ?? result.total ?? cachedItems.length;
-          const page = meta.page ?? result.page ?? 1;
-          const totalPages = meta.total_pages ?? result.total_pages ?? 1;
+                const result = payload.data || {};
+                const meta = payload.meta || {};
+                cachedItems = Array.isArray(result.items) ? result.items : [];
+                const total = meta.total
+                const page = meta.page
+                const totalPages = meta.total_pages
                 renderRows(cachedItems, total, page, totalPages);
             })
             .catch(() => {
@@ -409,7 +410,6 @@
         const formData = new FormData();
         formData.append("file", file);
         return fetchWithAuth(`/api/customers/${customerId}/contract`, {
-            method: "POST",
             headers: {},
             body: formData,
         })
@@ -455,7 +455,6 @@
         const method = currentEditId ? "PUT" : "POST";
         fetchWithAuth(url, {
             method,
-            headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload),
         })
             .then((response) => response.json())

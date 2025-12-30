@@ -1,6 +1,5 @@
 import os
 
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
@@ -10,28 +9,8 @@ from project.api import api_error, api_paginated, api_success
 from project.common_tools import contract_storage_dir, parse_json_body
 
 
-def _apply_customer_payload(customer, payload):
-    customer.company_name = (payload.get("company_name") or "").strip()
-    customer.company_address = (payload.get("company_address") or "").strip()
-    customer.remark = (payload.get("remark") or "").strip()
-    customer.contact1_name = (payload.get("contact1_name") or "").strip()
-    customer.contact1_position = (payload.get("contact1_position") or "").strip()
-    customer.contact1_email = (payload.get("contact1_email") or "").strip()
-    customer.contact1_phone = (payload.get("contact1_phone") or "").strip()
-    customer.contact2_name = (payload.get("contact2_name") or "").strip()
-    customer.contact2_position = (payload.get("contact2_position") or "").strip()
-    customer.contact2_email = (payload.get("contact2_email") or "").strip()
-    customer.contact2_phone = (payload.get("contact2_phone") or "").strip()
-    customer.contact3_name = (payload.get("contact3_name") or "").strip()
-    customer.contact3_position = (payload.get("contact3_position") or "").strip()
-    customer.contact3_email = (payload.get("contact3_email") or "").strip()
-    customer.contact3_phone = (payload.get("contact3_phone") or "").strip()
-    customer.person_in_charge = (payload.get("person_in_charge") or "").strip()
-    if "contract" in payload:
-        customer.contract = (payload.get("contract") or "").strip()
-
-
 @require_GET
+# 一次性获取全部员工姓名，前端自己过滤
 def employee_names_api(request):
     employee_names = (
         Employee.objects.filter(deleted_at__isnull=True)
@@ -45,12 +24,15 @@ def employee_names_api(request):
 
 @csrf_exempt
 @require_POST
+# 上传与客户公司的契约
 def customer_contract_upload(request, customer_id):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error(status=401, message="employee id is required")
+
     upload = request.FILES.get("file")
     if not upload:
-        return api_error(
-            "Missing file"
-        )
+        return api_error("Missing file")
 
     customer = Customer.objects.filter(pk=customer_id, deleted_at__isnull=True).first()
     if not customer:
@@ -68,15 +50,20 @@ def customer_contract_upload(request, customer_id):
             handle.write(chunk)
 
     customer.contract = filename
-    customer.updated_at = timezone.now()
-    customer.save(update_fields=["contract", "updated_at"])
+    customer.updated_by = login_id
+    customer.save()
 
     return api_success(data={"path": filename})
 
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
+# 获取客户公司列表、添加客户公司
 def customers_api(request):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error(status=401, message="employee id is required")
+
     if request.method == "GET":
         company_name = (request.GET.get("company_name") or "").strip()
         person_in_charge = (request.GET.get("person_in_charge") or "").strip()
@@ -119,11 +106,10 @@ def customers_api(request):
             return error
         if not (payload.get("company_name") or "").strip():
             return api_error("Missing field: company_name")
+
         customer = Customer()
-        _apply_customer_payload(customer, payload)
-        now = timezone.now()
-        customer.created_at = now
-        customer.updated_at = now
+        Customer.get_customer_by_payload(customer, payload)
+        customer.created_by = login_id
         customer.save()
         item = Customer.serialize(customer)
         return api_success(data={"item": item})
@@ -132,8 +118,13 @@ def customers_api(request):
 
 
 @csrf_exempt
-@require_http_methods(["GET", "PUT"])
+@require_http_methods(["PUT", "GET"])
+# 更新客户公司信息、获取客户公司信息
 def customer_detail_api(request, customer_id):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error(status=401, message="employee id is required")
+
     try:
         customer = Customer.objects.get(pk=customer_id, deleted_at__isnull=True)
     except Customer.DoesNotExist:
@@ -145,8 +136,8 @@ def customer_detail_api(request, customer_id):
             return error
         if not (payload.get("company_name") or "").strip():
             return api_error("Missing field: company_name")
-        _apply_customer_payload(customer, payload)
-        customer.updated_at = timezone.now()
+        Customer.get_customer_by_payload(customer, payload)
+        customer.updated_by = login_id
         customer.save()
         item = Customer.serialize(customer)
         return api_success(data={"item": item})

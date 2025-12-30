@@ -59,3 +59,25 @@ class Customer(models.Model):
             if customer.created_at
             else "",
         }
+
+    def get_customer_by_payload(customer,payload):
+        customer.company_name = (payload.get("company_name") or "").strip()
+        customer.company_address = (payload.get("company_address") or "").strip()
+        customer.remark = (payload.get("remark") or "").strip()
+        customer.contact1_name = (payload.get("contact1_name") or "").strip()
+        customer.contact1_position = (payload.get("contact1_position") or "").strip()
+        customer.contact1_email = (payload.get("contact1_email") or "").strip()
+        customer.contact1_phone = (payload.get("contact1_phone") or "").strip()
+        customer.contact2_name = (payload.get("contact2_name") or "").strip()
+        customer.contact2_position = (payload.get("contact2_position") or "").strip()
+        customer.contact2_email = (payload.get("contact2_email") or "").strip()
+        customer.contact2_phone = (payload.get("contact2_phone") or "").strip()
+        customer.contact3_name = (payload.get("contact3_name") or "").strip()
+        customer.contact3_position = (payload.get("contact3_position") or "").strip()
+        customer.contact3_email = (payload.get("contact3_email") or "").strip()
+        customer.contact3_phone = (payload.get("contact3_phone") or "").strip()
+        customer.person_in_charge = (payload.get("person_in_charge") or "").strip()
+        if "contract" in payload:
+            customer.contract = (payload.get("contract") or "").strip()
+
+        return customer

@@ -1,418 +1,232 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
-  <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title data-i18n="customer.title">客户管理</title>
-  <style>
-* { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
-      color: var(--text);
-      background: var(--bg);
-    }
-    .page {
-      max-width: 100%;
-      margin: 18px auto 50px;
-      padding: 0 12px;
-    }
-    .filters {
-      margin: 14px 18px 0;
-      border-radius: 18px;
-      border: 1px solid #e2e8f5;
-    }
-    .filter-actions-left:empty {
-      display: none;
-    }
-    .filter-actions-left:empty + .filter-actions-right {
-      justify-content: flex-end;
-      width: 100%;
-    }
-    .filter-actions-left,
-    .filter-actions-right {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    #btn-search svg {
-      width: 16px;
-      height: 16px;
-    }
-    .table-area {
-      margin-top: 22px;
-      border-top: 1px solid var(--line);
-      padding: 12px 18px 18px;
-    }
-    .table-info {
-      display: flex;
-      justify-content: flex-end;
-      font-size: 13px;
-      color: var(--muted);
-      padding: 4px 6px 14px;
-    }
-.empty {
-      text-align: center;
-      padding: 28px 0;
-      color: var(--muted);
-    }
-    .row-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .row-actions button {
-      padding: 6px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      border: none;
-      cursor: pointer;
-    }
-dialog {
-      border: none;
-      border-radius: 16px;
-      padding: 0;
-      width: min(720px, 95%);
-      box-shadow: 0 30px 50px rgba(15, 23, 42, 0.2);
-    }
-    dialog::backdrop {
-      background: rgba(15, 23, 42, 0.45);
-    }
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 20px 0;
-    }
-    .dialog-header h3 {
-      margin: 0;
-      font-size: 18px;
-    }
-    .dialog-close {
-      background: transparent;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      color: var(--muted);
-      cursor: pointer;
-      font-size: 18px;
-      line-height: 1;
-    }
-    .dialog-body {
-      padding: 0 24px 10px;
-    }
-    .dialog-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px 16px;
-    }
-    .dialog-group {
-      grid-column: 1 / -1;
-      border: 1px solid #eef2fa;
-      border-radius: 12px;
-      padding: 12px;
-      background: #fbfcff;
-    }
-    .dialog-group-title {
-      font-size: 13px;
-      color: #4b5a72;
-      font-weight: 600;
-      margin: 0 0 10px;
-    }
-    .dialog-group .group-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px 16px;
-    }
-    .dialog-grid label {
-      display: flex;
-      flex-direction: column;
-      font-size: 13px;
-      color: var(--muted);
-      gap: 6px;
-    }
-    .dialog-grid input,
-    .dialog-grid textarea {
-      font: inherit;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: #f9fafc;
-    }
-    .dialog-grid textarea {
-      min-height: 80px;
-      resize: vertical;
-    }
-    .file-hint {
-      font-size: 12px;
-      color: var(--muted);
-    }
-    .dialog-actions {
-      padding: 12px 24px 22px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      border-top: 1px solid var(--line);
-      background: #f8f9fb;
-      border-bottom-left-radius: 16px;
-      border-bottom-right-radius: 16px;
-    }
-    .dialog-actions button {
-      min-width: 120px;
-      padding: 10px 18px;
-      border-radius: 12px;
-    }
-    .pager {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 12px;
-      padding: 14px 16px;
-      background: #fbfcff;
-    }
-    .pager .page-num {
-      font-weight: 600;
-      color: #44526d;
-    }
-    .pager select {
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid #dfe7f5;
-      padding: 0 10px;
-      background: #fff;
-      color: #5c6b83;
-    }
-    @media (max-width: 980px) {
-      .filter-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-    @media (max-width: 640px) {
-      .filter-grid {
-        grid-template-columns: 1fr;
-      }
-}
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="customer.title">客户管理</title>
 </head>
 <body class="c-form-page">
-  <div class="page">
+<div class="page page-wide">
     <section class="c-card">
-      <div class="filters c-filter-panel">
-        <div class="filter-grid c-filter-grid-compact">
-          <div class="field">
-            <label>
-              <span data-i18n="customer.filter.company">公司名称</span>
-              <input id="filter-company" type="text" placeholder="请输入公司名称" data-i18n-placeholder="customer.filter.company_placeholder" />
-            </label>
-          </div>
-          <div class="field">
-            <label>
-              <span data-i18n="customer.filter.owner">负责人</span>
-              <input id="filter-owner" type="text" list="employee-names" placeholder="请输入负责人" data-i18n-placeholder="customer.filter.owner_placeholder" />
-            </label>
-            <datalist id="employee-names"></datalist>
-          </div>
+        <div class="c-filter-panel">
+            <div class="c-filter-grid-compact">
+                <label class="c-field">
+                    <span data-i18n="customer.filter.company">公司名称</span>
+                    <input id="filter-company" type="text" placeholder="请输入公司名称"
+                           data-i18n-placeholder="customer.filter.company_placeholder"/>
+                </label>
+                <label class="c-field">
+                    <span data-i18n="customer.filter.owner">负责人</span>
+                    <input id="filter-owner" type="text" list="employee-names" placeholder="请输入负责人"
+                           data-i18n-placeholder="customer.filter.owner_placeholder"/>
+                </label>
+                <datalist id="employee-names"></datalist>
+            </div>
+            <div class="c-filter-actions-bar">
+                <div class="c-filter-actions-left">
+                    <button class="c-btn c-btn-primary" id="btn-add" type="button" data-i18n="customer.action.add">+
+                        新增客户
+                    </button>
+                </div>
+                <div class="c-filter-actions-right c-filter-actions-group">
+                    <button class="c-btn c-btn-primary" id="btn-search" type="button">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
+                             stroke-width="2">
+                            <circle cx="11" cy="11" r="7"></circle>
+                            <path d="M20 20l-3.5-3.5"></path>
+                        </svg>
+                        <span data-i18n="common.search">搜索</span>
+                    </button>
+                    <button class="c-btn c-btn-warn" id="btn-reset" type="button" data-i18n="common.reset">重置</button>
+                </div>
+            </div>
         </div>
-        <div class="filter-actions c-filter-actions-bar">
-          <div class="filter-actions-left">
-            <button class="c-btn c-btn-primary" id="btn-add" type="button" data-i18n="customer.action.add">+ 新增客户</button>
-          </div>
-          <div class="filter-actions-right c-filter-actions-group">
-            <button class="c-btn c-btn-primary" id="btn-search" type="button">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="7"></circle>
-                <path d="M20 20l-3.5-3.5"></path>
-              </svg>
-              <span data-i18n="common.search">搜索</span>
-            </button>
-            <button class="c-btn c-btn-warn" id="btn-reset" type="button" data-i18n="common.reset">重置</button>
-          </div>
+        <div class="c-table-info" id="table-info">共 0 条 当前显示第 1 页</div>
+        <div class="c-table-wrapper">
+            <table class="c-table c-table-center">
+                <thead>
+                <tr>
+                    <th data-i18n="customer.table.company">公司名称</th>
+                    <th data-i18n="customer.table.address">公司地址</th>
+                    <th data-i18n="customer.table.remark">备注</th>
+                    <th data-i18n="customer.table.contact">联系人</th>
+                    <th data-i18n="customer.table.position">职位</th>
+                    <th data-i18n="customer.table.email">邮箱</th>
+                    <th data-i18n="customer.table.phone">电话</th>
+                    <th data-i18n="customer.table.owner">负责人</th>
+                    <th data-i18n="customer.table.created_at">创建时间</th>
+                    <th data-i18n="customer.table.actions">操作</th>
+                </tr>
+                </thead>
+                <tbody id="customer-body"></tbody>
+            </table>
+            <div class="c-pager">
+                <div class="pagination c-pagination" id="customer-pagination">
+                    <div class="pagination-summary">
+                        <span id="page-summary">共 0 条 当前显示第 1 页</span>
+                    </div>
+                    <div class="pagination-pages" id="customer-pagination-pages"></div>
+                </div>
+                <select id="page-size">
+                    <option value="10" data-i18n="order.page_size_10">10 条/页</option>
+                    <option value="20" data-i18n="order.page_size_20">20 条/页</option>
+                </select>
+            </div>
         </div>
-      </div>
-      <div class="table-area">
-        <div class="table-info">共 0 条 当前显示第 1 页</div>
-        <div class="c-card">
-          <table class="c-table c-table-center">
-            <thead>
-              <tr>
-                <th data-i18n="customer.table.company">公司名称</th>
-                <th data-i18n="customer.table.address">公司地址</th>
-                <th data-i18n="customer.table.remark">备注</th>
-                <th data-i18n="customer.table.contact">联系人</th>
-                <th data-i18n="customer.table.position">职位</th>
-                <th data-i18n="customer.table.email">邮箱</th>
-                <th data-i18n="customer.table.phone">电话</th>
-                <th data-i18n="customer.table.owner">负责人</th>
-                <th data-i18n="customer.table.created_at">创建时间</th>
-                <th data-i18n="customer.table.actions">操作</th>
-              </tr>
-            </thead>
-            <tbody id="customer-body"></tbody>
-          </table>
-          <div class="pager">
-            <button class="c-btn c-btn-sm c-btn-secondary" id="page-prev">‹</button>
-            <span class="page-num" id="page-current">1</span>
-            <span class="page-num" id="page-total">/ 1</span>
-            <button class="c-btn c-btn-sm c-btn-secondary" id="page-next">›</button>
-            <select id="page-size">
-              <option value="10" data-i18n="order.page_size_10">10 条/页</option>
-              <option value="20" data-i18n="order.page_size_20">20 条/页</option>
-            </select>
-          </div>
-        </div>
-      </div>
     </section>
-  </div>
-  <dialog id="edit-dialog">
-    <div class="dialog-header">
-      <h3 id="dialog-title">编辑客户</h3>
-      <button class="dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close">×</button>
+</div>
+<dialog class="c-dialog" id="edit-dialog">
+    <div class="c-dialog-header">
+        <h3 id="dialog-title">编辑客户</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close">×</button>
     </div>
-    <div class="dialog-body">
-      <div class="dialog-grid">
-        <label>
-          <span data-i18n="customer.table.company">公司名称</span>
-          <input id="edit-company" type="text" />
-        </label>
-        <label>
-          <span data-i18n="customer.table.address">公司地址</span>
-          <input id="edit-address" type="text" />
-        </label>
-        <label>
-          <span data-i18n="customer.field.contract">契约</span>
-          <input id="edit-contract" type="file" />
-          <span class="file-hint" id="contract-hint" data-i18n="customer.contract.empty">未上传</span>
-        </label>
-        <label>
-          <span data-i18n="customer.table.remark">备注</span>
-          <textarea id="edit-remark"></textarea>
-        </label>
-        <label>
-          <span data-i18n="customer.table.owner">负责人</span>
-          <input id="edit-owner" type="text" list="employee-names" />
-        </label>
-        <div class="dialog-group">
-          <p class="dialog-group-title" data-i18n="customer.contact.group1">联系人1</p>
-          <div class="group-grid">
-            <label>
-              <span data-i18n="customer.contact.name1">联系人1姓名</span>
-              <input id="edit-contact1-name" type="text" />
+    <div class="c-dialog-body">
+        <div class="form-grid">
+            <label class="c-field">
+                <span data-i18n="customer.table.company">公司名称</span>
+                <input id="edit-company" type="text"/>
             </label>
-            <label>
-              <span data-i18n="customer.contact.position1">联系人1职位</span>
-              <input id="edit-contact1-position" type="text" />
+            <label class="c-field">
+                <span data-i18n="customer.table.address">公司地址</span>
+                <input id="edit-address" type="text"/>
             </label>
-            <label>
-              <span data-i18n="customer.contact.phone1">联系人1电话</span>
-              <input id="edit-contact1-phone" type="text" />
+            <label class="c-field">
+                <span data-i18n="customer.field.contract">契约</span>
+                <input id="edit-contract" type="file"/>
+                <span class="hint" id="contract-hint" data-i18n="customer.contract.empty">未上传</span>
             </label>
-            <label>
-              <span data-i18n="customer.contact.email1">联系人1邮箱</span>
-              <input id="edit-contact1-email" type="email" />
+            <label class="c-field">
+                <span data-i18n="customer.table.remark">备注</span>
+                <textarea id="edit-remark"></textarea>
             </label>
-          </div>
+            <label class="c-field">
+                <span data-i18n="customer.table.owner">负责人</span>
+                <input id="edit-owner" type="text" list="employee-names"/>
+            </label>
+            <div class="form-field full">
+                <div class="c-card c-card-compact">
+                    <p class="c-panel-title" data-i18n="customer.contact.group1">联系人1</p>
+                    <div class="form-grid">
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.name1">联系人1姓名</span>
+                            <input id="edit-contact1-name" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.position1">联系人1职位</span>
+                            <input id="edit-contact1-position" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.phone1">联系人1电话</span>
+                            <input id="edit-contact1-phone" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.email1">联系人1邮箱</span>
+                            <input id="edit-contact1-email" type="email"/>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-field full">
+                <div class="c-card c-card-compact">
+                    <p class="c-panel-title" data-i18n="customer.contact.group2">联系人2</p>
+                    <div class="form-grid">
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.name2">联系人2姓名</span>
+                            <input id="edit-contact2-name" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.position2">联系人2职位</span>
+                            <input id="edit-contact2-position" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.phone2">联系人2电话</span>
+                            <input id="edit-contact2-phone" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.email2">联系人2邮箱</span>
+                            <input id="edit-contact2-email" type="email"/>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-field full">
+                <div class="c-card c-card-compact">
+                    <p class="c-panel-title" data-i18n="customer.contact.group3">联系人3</p>
+                    <div class="form-grid">
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.name3">联系人3姓名</span>
+                            <input id="edit-contact3-name" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.position3">联系人3职位</span>
+                            <input id="edit-contact3-position" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.phone3">联系人3电话</span>
+                            <input id="edit-contact3-phone" type="text"/>
+                        </label>
+                        <label class="c-field">
+                            <span data-i18n="customer.contact.email3">联系人3邮箱</span>
+                            <input id="edit-contact3-email" type="email"/>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="dialog-group">
-          <p class="dialog-group-title" data-i18n="customer.contact.group2">联系人2</p>
-          <div class="group-grid">
-            <label>
-              <span data-i18n="customer.contact.name2">联系人2姓名</span>
-              <input id="edit-contact2-name" type="text" />
-            </label>
-            <label>
-              <span data-i18n="customer.contact.position2">联系人2职位</span>
-              <input id="edit-contact2-position" type="text" />
-            </label>
-            <label>
-              <span data-i18n="customer.contact.phone2">联系人2电话</span>
-              <input id="edit-contact2-phone" type="text" />
-            </label>
-            <label>
-              <span data-i18n="customer.contact.email2">联系人2邮箱</span>
-              <input id="edit-contact2-email" type="email" />
-            </label>
-          </div>
-        </div>
-        <div class="dialog-group">
-          <p class="dialog-group-title" data-i18n="customer.contact.group3">联系人3</p>
-          <div class="group-grid">
-            <label>
-              <span data-i18n="customer.contact.name3">联系人3姓名</span>
-              <input id="edit-contact3-name" type="text" />
-            </label>
-            <label>
-              <span data-i18n="customer.contact.position3">联系人3职位</span>
-              <input id="edit-contact3-position" type="text" />
-            </label>
-            <label>
-              <span data-i18n="customer.contact.phone3">联系人3电话</span>
-              <input id="edit-contact3-phone" type="text" />
-            </label>
-            <label>
-              <span data-i18n="customer.contact.email3">联系人3邮箱</span>
-              <input id="edit-contact3-email" type="email" />
-            </label>
-          </div>
-        </div>
-      </div>
     </div>
-    <div class="dialog-actions">
-      <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
-      <button class="c-btn c-btn-primary" id="dialog-save" type="button" data-i18n="common.save">保存</button>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary" id="dialog-save" type="button" data-i18n="common.save">保存</button>
     </div>
-  </dialog>
-  <script src="i18n.js"></script>
-  <script src="common.js"></script>
+</dialog>
+<script src="i18n.js"></script>
+<script src="common.js"></script>
 <script>
     const i18n = window.I18N;
     if (i18n) {
-      i18n.init();
-      i18n.apply();
+        i18n.init();
+        i18n.apply();
     }
     const t = (key) => (i18n ? i18n.t(key) : key);
     const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
 
     const nameList = document.getElementById("employee-names");
     const tableBody = document.getElementById("customer-body");
-    const summaryText = document.querySelector(".table-info");
+    const tableInfo = document.getElementById("table-info");
     const filterCompany = document.getElementById("filter-company");
     const filterOwner = document.getElementById("filter-owner");
     const addButton = document.getElementById("btn-add");
     const searchButton = document.getElementById("btn-search");
     const resetButton = document.getElementById("btn-reset");
-    const pagePrev = document.getElementById("page-prev");
-    const pageNext = document.getElementById("page-next");
-    const pageCurrent = document.getElementById("page-current");
-    const pageTotal = document.getElementById("page-total");
+    const pagination = document.getElementById("customer-pagination");
+    const paginationPages = document.getElementById("customer-pagination-pages");
+    const pageSummary = document.getElementById("page-summary");
     const pageSizeSelect = document.getElementById("page-size");
     const editDialog = document.getElementById("edit-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
     const contractHint = document.getElementById("contract-hint");
     const editFields = {
-      company: document.getElementById("edit-company"),
-      address: document.getElementById("edit-address"),
-      contract: document.getElementById("edit-contract"),
-      remark: document.getElementById("edit-remark"),
-      owner: document.getElementById("edit-owner"),
-      contact1Name: document.getElementById("edit-contact1-name"),
-      contact1Position: document.getElementById("edit-contact1-position"),
-      contact1Phone: document.getElementById("edit-contact1-phone"),
-      contact1Email: document.getElementById("edit-contact1-email"),
-      contact2Name: document.getElementById("edit-contact2-name"),
-      contact2Position: document.getElementById("edit-contact2-position"),
-      contact2Phone: document.getElementById("edit-contact2-phone"),
-      contact2Email: document.getElementById("edit-contact2-email"),
-      contact3Name: document.getElementById("edit-contact3-name"),
-      contact3Position: document.getElementById("edit-contact3-position"),
-      contact3Phone: document.getElementById("edit-contact3-phone"),
-      contact3Email: document.getElementById("edit-contact3-email"),
+        company: document.getElementById("edit-company"),
+        address: document.getElementById("edit-address"),
+        contract: document.getElementById("edit-contract"),
+        remark: document.getElementById("edit-remark"),
+        owner: document.getElementById("edit-owner"),
+        contact1Name: document.getElementById("edit-contact1-name"),
+        contact1Position: document.getElementById("edit-contact1-position"),
+        contact1Phone: document.getElementById("edit-contact1-phone"),
+        contact1Email: document.getElementById("edit-contact1-email"),
+        contact2Name: document.getElementById("edit-contact2-name"),
+        contact2Position: document.getElementById("edit-contact2-position"),
+        contact2Phone: document.getElementById("edit-contact2-phone"),
+        contact2Email: document.getElementById("edit-contact2-email"),
+        contact3Name: document.getElementById("edit-contact3-name"),
+        contact3Position: document.getElementById("edit-contact3-position"),
+        contact3Phone: document.getElementById("edit-contact3-phone"),
+        contact3Email: document.getElementById("edit-contact3-email"),
     };
     let currentEditId = null;
     let cachedItems = [];
@@ -422,28 +236,32 @@ dialog {
     let totalPages = 1;
 
     const renderNames = (names) => {
-      nameList.innerHTML = names
-        .map((name) => `<option value="${name}"></option>`)
-        .join("");
+        nameList.innerHTML = names
+            .map((name) => `<option value="${name}"></option>`)
+            .join("");
     };
 
     const renderRows = (items, totalCount, page, totalPageCount) => {
-      const count = Number.isFinite(totalCount) ? totalCount : items.length;
-      totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
-      currentPage = Number.isFinite(page) ? page : 1;
-      pageCurrent.textContent = String(currentPage);
-      pageTotal.textContent = `/ ${totalPages}`;
-      pagePrev.disabled = currentPage <= 1;
-      pageNext.disabled = currentPage >= totalPages;
-      if (!items.length) {
-        tableBody.innerHTML = `<tr><td colspan="10" class="empty">${t("common.no_data")}</td></tr>`;
-        summaryText.textContent = format("customer.summary", { count, page: 1 });
-        return;
-      }
+        const count = Number.isFinite(totalCount) ? totalCount : items.length;
+        totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
+        currentPage = Number.isFinite(page) ? page : 1;
+        if (window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+        }
+        if (pageSummary) {
+            pageSummary.textContent = format("customer.summary", {count, page: currentPage});
+        }
+        if (tableInfo) {
+            tableInfo.textContent = format("customer.summary", {count, page: currentPage});
+        }
+        if (!items.length) {
+            tableBody.innerHTML = `<tr><td colspan="10" class="c-empty">${t("common.no_data")}</td></tr>`;
+            return;
+        }
 
-      tableBody.innerHTML = items
-        .map(
-          (item) => `
+        tableBody.innerHTML = items
+            .map(
+                (item) => `
             <tr>
               <td>${item.company_name || "-"}</td>
               <td>${item.company_address || "-"}</td>
@@ -455,238 +273,236 @@ dialog {
               <td>${item.person_in_charge || "-"}</td>
               <td>${item.created_at || "-"}</td>
               <td>
-                <div class="row-actions">
+                <div class="c-row-actions">
                   <button class="edit-btn c-btn c-btn-secondary" type="button" data-id="${item.id}">${t("common.edit")}</button>
                 </div>
               </td>
             </tr>
           `
-        )
-        .join("");
-
-      summaryText.textContent = format("customer.summary", { count, page: currentPage });
+            )
+            .join("");
     };
 
     const fetchCustomers = () => {
-      const params = new URLSearchParams();
-      if (filterCompany.value.trim()) {
-        params.append("company_name", filterCompany.value.trim());
-      }
-      if (filterOwner.value.trim()) {
-        params.append("person_in_charge", filterOwner.value.trim());
-      }
-      params.append("page", String(currentPage));
-      params.append("page_size", String(pageSize));
-      const url = `/api/customers${params.toString() ? `?${params.toString()}` : ""}`;
-      fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-          const payload = normalizeApiResponse(data);
-          if (!payload.success) {
-            cachedItems = [];
-            renderRows([], 0, 1, 1);
-            return;
-          }
-          const result = payload.data || {};
-          cachedItems = Array.isArray(result.items) ? result.items : [];
-          const total = result.total ?? 0;
-          const page = result.page ?? 1;
-          const totalPages = result.total_pages ?? 1;
-          renderRows(cachedItems, total, page, totalPages);
-        })
-        .catch(() => {
-          cachedItems = [];
-          renderRows([], 0, 1, 1);
-        });
+        const params = new URLSearchParams();
+        if (filterCompany.value.trim()) {
+            params.append("company_name", filterCompany.value.trim());
+        }
+        if (filterOwner.value.trim()) {
+            params.append("person_in_charge", filterOwner.value.trim());
+        }
+        params.append("page", String(currentPage));
+        params.append("page_size", String(pageSize));
+        const url = `/api/customers${params.toString() ? `?${params.toString()}` : ""}`;
+        fetch(url)
+            .then((response) => response.json())
+            .then((data) => {
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    cachedItems = [];
+                    renderRows([], 0, 1, 1);
+                    return;
+                }
+                const result = payload.data || {};
+                cachedItems = Array.isArray(result.items) ? result.items : [];
+                const total = result.total ?? 0;
+                const page = result.page ?? 1;
+                const totalPages = result.total_pages ?? 1;
+                renderRows(cachedItems, total, page, totalPages);
+            })
+            .catch(() => {
+                cachedItems = [];
+                renderRows([], 0, 1, 1);
+            });
     };
 
     const openEditDialog = (item) => {
-      currentEditId = item ? item.id : null;
-      dialogTitle.textContent = item ? t("customer.dialog.edit") : t("customer.dialog.create");
-      editFields.company.value = item?.company_name || "";
-      editFields.address.value = item?.company_address || "";
-      editFields.contract.value = "";
-      currentContract = item?.contract || "";
-      contractHint.textContent = currentContract
-        ? format("customer.contract.uploaded", { name: currentContract })
-        : t("customer.contract.empty");
-      editFields.remark.value = item?.remark || "";
-      editFields.owner.value = item?.person_in_charge || "";
-      editFields.contact1Name.value = item?.contact1_name || "";
-      editFields.contact1Position.value = item?.contact1_position || "";
-      editFields.contact1Phone.value = item?.contact1_phone || "";
-      editFields.contact1Email.value = item?.contact1_email || "";
-      editFields.contact2Name.value = item?.contact2_name || "";
-      editFields.contact2Position.value = item?.contact2_position || "";
-      editFields.contact2Phone.value = item?.contact2_phone || "";
-      editFields.contact2Email.value = item?.contact2_email || "";
-      editFields.contact3Name.value = item?.contact3_name || "";
-      editFields.contact3Position.value = item?.contact3_position || "";
-      editFields.contact3Phone.value = item?.contact3_phone || "";
-      editFields.contact3Email.value = item?.contact3_email || "";
+        currentEditId = item ? item.id : null;
+        dialogTitle.textContent = item ? t("customer.dialog.edit") : t("customer.dialog.create");
+        editFields.company.value = item?.company_name || "";
+        editFields.address.value = item?.company_address || "";
+        editFields.contract.value = "";
+        currentContract = item?.contract || "";
+        contractHint.textContent = currentContract
+            ? format("customer.contract.uploaded", {name: currentContract})
+            : t("customer.contract.empty");
+        editFields.remark.value = item?.remark || "";
+        editFields.owner.value = item?.person_in_charge || "";
+        editFields.contact1Name.value = item?.contact1_name || "";
+        editFields.contact1Position.value = item?.contact1_position || "";
+        editFields.contact1Phone.value = item?.contact1_phone || "";
+        editFields.contact1Email.value = item?.contact1_email || "";
+        editFields.contact2Name.value = item?.contact2_name || "";
+        editFields.contact2Position.value = item?.contact2_position || "";
+        editFields.contact2Phone.value = item?.contact2_phone || "";
+        editFields.contact2Email.value = item?.contact2_email || "";
+        editFields.contact3Name.value = item?.contact3_name || "";
+        editFields.contact3Position.value = item?.contact3_position || "";
+        editFields.contact3Phone.value = item?.contact3_phone || "";
+        editFields.contact3Email.value = item?.contact3_email || "";
 
-      if (typeof editDialog.showModal === "function") {
-        editDialog.showModal();
-      } else {
-        editDialog.setAttribute("open", "true");
-      }
+        if (typeof editDialog.showModal === "function") {
+            editDialog.showModal();
+        } else {
+            editDialog.setAttribute("open", "true");
+        }
     };
 
     fetch("/api/employees/names")
-      .then((response) => response.json())
-      .then((data) => {
-        const payload = normalizeApiResponse(data);
-        if (payload.success && Array.isArray(payload.data?.names)) {
-          renderNames(payload.data?.names);
-        }
-      })
-      .catch(() => {
-        renderNames([]);
-      });
+        .then((response) => response.json())
+        .then((data) => {
+            const payload = normalizeApiResponse(data);
+            if (payload.success && Array.isArray(payload.data?.names)) {
+                renderNames(payload.data?.names);
+            }
+        })
+        .catch(() => {
+            renderNames([]);
+        });
 
     tableBody.addEventListener("click", (event) => {
-      const target = event.target.closest(".edit-btn");
-      if (!target) return;
-      const id = target.dataset.id;
-      const item = cachedItems.find((entry) => String(entry.id) === String(id));
-      if (item) {
-        openEditDialog(item);
-      }
+        const target = event.target.closest(".edit-btn");
+        if (!target) return;
+        const id = target.dataset.id;
+        const item = cachedItems.find((entry) => String(entry.id) === String(id));
+        if (item) {
+            openEditDialog(item);
+        }
     });
 
     addButton.addEventListener("click", () => {
-      openEditDialog(null);
+        openEditDialog(null);
     });
 
     searchButton.addEventListener("click", () => {
-      currentPage = 1;
-      fetchCustomers();
+        currentPage = 1;
+        fetchCustomers();
     });
 
     resetButton.addEventListener("click", () => {
-      filterCompany.value = "";
-      filterOwner.value = "";
-      currentPage = 1;
-      fetchCustomers();
+        filterCompany.value = "";
+        filterOwner.value = "";
+        currentPage = 1;
+        fetchCustomers();
     });
 
-    pagePrev.addEventListener("click", () => {
-      if (currentPage > 1) {
-        currentPage -= 1;
-        fetchCustomers();
-      }
-    });
-
-    pageNext.addEventListener("click", () => {
-      if (currentPage < totalPages) {
-        currentPage += 1;
-        fetchCustomers();
-      }
-    });
+    if (window.bindPagination) {
+        window.bindPagination(pagination, (value) => {
+            if (value === "prev") {
+                currentPage = Math.max(1, currentPage - 1);
+            } else if (value === "next") {
+                currentPage = Math.min(totalPages, currentPage + 1);
+            } else {
+                const targetPage = Number(value);
+                if (!Number.isNaN(targetPage)) currentPage = targetPage;
+            }
+            fetchCustomers();
+        });
+    }
 
     pageSizeSelect.addEventListener("change", () => {
-      const value = parseInt(pageSizeSelect.value, 10);
-      pageSize = Number.isFinite(value) ? value : 10;
-      currentPage = 1;
-      fetchCustomers();
+        const value = parseInt(pageSizeSelect.value, 10);
+        pageSize = Number.isFinite(value) ? value : 10;
+        currentPage = 1;
+        fetchCustomers();
     });
 
     editFields.contract.addEventListener("change", () => {
-      const file = editFields.contract.files[0];
-      contractHint.textContent = file
-        ? format("customer.contract.pending", { name: file.name })
-        : (currentContract ? format("customer.contract.uploaded", { name: currentContract }) : t("customer.contract.empty"));
+        const file = editFields.contract.files[0];
+        contractHint.textContent = file
+            ? format("customer.contract.pending", {name: file.name})
+            : (currentContract ? format("customer.contract.uploaded", {name: currentContract}) : t("customer.contract.empty"));
     });
 
     editDialog.addEventListener("click", (event) => {
-      if (event.target === editDialog) {
-        editDialog.close();
-      }
+        if (event.target === editDialog) {
+            editDialog.close();
+        }
     });
 
     document.querySelectorAll("[data-dialog-close]").forEach((button) => {
-      button.addEventListener("click", () => editDialog.close());
+        button.addEventListener("click", () => editDialog.close());
     });
 
     const closeBtn = editDialog.querySelector(".dialog-close");
     if (closeBtn) {
-      closeBtn.addEventListener("click", () => editDialog.close());
+        closeBtn.addEventListener("click", () => editDialog.close());
     }
 
     const uploadContract = (customerId, file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      return fetch(`/api/customers/${customerId}/contract`, {
-        method: "POST",
-        body: formData,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          const payload = normalizeApiResponse(data);
-          if (!payload.success) {
-            throw new Error(payload.message || t("customer.contract.failed"));
-          }
-          currentContract = payload.data?.path || file.name;
-          contractHint.textContent = format("customer.contract.uploaded", { name: currentContract });
-          return data;
-        });
+        const formData = new FormData();
+        formData.append("file", file);
+        return fetch(`/api/customers/${customerId}/contract`, {
+            method: "POST",
+            body: formData,
+        })
+            .then((response) => response.json())
+            .then((data) => {
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    throw new Error(payload.message || t("customer.contract.failed"));
+                }
+                currentContract = payload.data?.path || file.name;
+                contractHint.textContent = format("customer.contract.uploaded", {name: currentContract});
+                return data;
+            });
     };
 
     dialogSave.addEventListener("click", () => {
-      const contractFile = editFields.contract.files[0];
-      const payload = {
-        company_name: editFields.company.value.trim(),
-        company_address: editFields.address.value.trim(),
-        remark: editFields.remark.value.trim(),
-        contact1_name: editFields.contact1Name.value.trim(),
-        contact1_position: editFields.contact1Position.value.trim(),
-        contact1_email: editFields.contact1Email.value.trim(),
-        contact1_phone: editFields.contact1Phone.value.trim(),
-        contact2_name: editFields.contact2Name.value.trim(),
-        contact2_position: editFields.contact2Position.value.trim(),
-        contact2_email: editFields.contact2Email.value.trim(),
-        contact2_phone: editFields.contact2Phone.value.trim(),
-        contact3_name: editFields.contact3Name.value.trim(),
-        contact3_position: editFields.contact3Position.value.trim(),
-        contact3_email: editFields.contact3Email.value.trim(),
-        contact3_phone: editFields.contact3Phone.value.trim(),
-        person_in_charge: editFields.owner.value.trim(),
-      };
+        const contractFile = editFields.contract.files[0];
+        const payload = {
+            company_name: editFields.company.value.trim(),
+            company_address: editFields.address.value.trim(),
+            remark: editFields.remark.value.trim(),
+            contact1_name: editFields.contact1Name.value.trim(),
+            contact1_position: editFields.contact1Position.value.trim(),
+            contact1_email: editFields.contact1Email.value.trim(),
+            contact1_phone: editFields.contact1Phone.value.trim(),
+            contact2_name: editFields.contact2Name.value.trim(),
+            contact2_position: editFields.contact2Position.value.trim(),
+            contact2_email: editFields.contact2Email.value.trim(),
+            contact2_phone: editFields.contact2Phone.value.trim(),
+            contact3_name: editFields.contact3Name.value.trim(),
+            contact3_position: editFields.contact3Position.value.trim(),
+            contact3_email: editFields.contact3Email.value.trim(),
+            contact3_phone: editFields.contact3Phone.value.trim(),
+            person_in_charge: editFields.owner.value.trim(),
+        };
 
-      if (!payload.company_name) {
-        alert(t("customer.alert.company_required"));
-        return;
-      }
+        if (!payload.company_name) {
+            alert(t("customer.alert.company_required"));
+            return;
+        }
 
-      const url = currentEditId ? `/api/customers/${currentEditId}` : "/api/customers";
-      const method = currentEditId ? "PUT" : "POST";
-      fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          const payload = normalizeApiResponse(data);
-          if (!payload.success) {
-            throw new Error(payload.message || t("common.save_failed"));
-          }
-          const savedId = currentEditId || payload.data?.item?.id;
-          if (contractFile && savedId) {
-            return uploadContract(savedId, contractFile);
-          }
-          return null;
+        const url = currentEditId ? `/api/customers/${currentEditId}` : "/api/customers";
+        const method = currentEditId ? "PUT" : "POST";
+        fetch(url, {
+            method,
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(payload),
         })
-        .then(() => {
-          editDialog.close();
-          fetchCustomers();
-        })
-        .catch((error) => {
-          alert(error.message || t("common.save_failed_retry"));
-        });
+            .then((response) => response.json())
+            .then((data) => {
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    throw new Error(payload.message || t("common.save_failed"));
+                }
+                const savedId = currentEditId || payload.data?.item?.id;
+                if (contractFile && savedId) {
+                    return uploadContract(savedId, contractFile);
+                }
+                return null;
+            })
+            .then(() => {
+                editDialog.close();
+                fetchCustomers();
+            })
+            .catch((error) => {
+                alert(error.message || t("common.save_failed_retry"));
+            });
     });
 
     fetchCustomers();
-  </script>
+</script>
 </body>
 </html>

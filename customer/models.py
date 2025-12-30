@@ -34,3 +34,28 @@ class Customer(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id}:{self.company_name}"
+
+    def serialize(customer):
+        return {
+            "id": customer.id,
+            "company_name": customer.company_name or "",
+            "company_address": customer.company_address or "",
+            "contract": customer.contract or "",
+            "remark": customer.remark or "",
+            "contact1_name": customer.contact1_name or "",
+            "contact1_position": customer.contact1_position or "",
+            "contact1_email": customer.contact1_email or "",
+            "contact1_phone": customer.contact1_phone or "",
+            "contact2_name": customer.contact2_name or "",
+            "contact2_position": customer.contact2_position or "",
+            "contact2_email": customer.contact2_email or "",
+            "contact2_phone": customer.contact2_phone or "",
+            "contact3_name": customer.contact3_name or "",
+            "contact3_position": customer.contact3_position or "",
+            "contact3_email": customer.contact3_email or "",
+            "contact3_phone": customer.contact3_phone or "",
+            "person_in_charge": customer.person_in_charge or "",
+            "created_at": customer.created_at.strftime("%Y-%m-%d %H:%M")
+            if customer.created_at
+            else "",
+        }

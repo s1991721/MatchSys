@@ -84,3 +84,6 @@ from django.conf import settings
 # ss存储路径
 def ss_storage_dir():
     return os.path.join(settings.BASE_DIR, "ss")
+
+def contract_storage_dir():
+    return os.path.join(settings.BASE_DIR, "customer_contract")

@@ -1,52 +1,13 @@
-import json
 import os
 
-from project.api import api_error, api_paginated, api_success
-from django.conf import settings
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from customer.models import Customer
 from employee.models import Employee
-
-
-def _parse_json_body(request):
-    try:
-        raw = request.body.decode("utf-8") if request.body else "{}"
-        return json.loads(raw or "{}"), None
-    except json.JSONDecodeError:
-        return None, api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
-        )
-
-
-def _serialize_customer(customer):
-    return {
-        "id": customer.id,
-        "company_name": customer.company_name or "",
-        "company_address": customer.company_address or "",
-        "contract": customer.contract or "",
-        "remark": customer.remark or "",
-        "contact1_name": customer.contact1_name or "",
-        "contact1_position": customer.contact1_position or "",
-        "contact1_email": customer.contact1_email or "",
-        "contact1_phone": customer.contact1_phone or "",
-        "contact2_name": customer.contact2_name or "",
-        "contact2_position": customer.contact2_position or "",
-        "contact2_email": customer.contact2_email or "",
-        "contact2_phone": customer.contact2_phone or "",
-        "contact3_name": customer.contact3_name or "",
-        "contact3_position": customer.contact3_position or "",
-        "contact3_email": customer.contact3_email or "",
-        "contact3_phone": customer.contact3_phone or "",
-        "person_in_charge": customer.person_in_charge or "",
-        "created_at": customer.created_at.strftime("%Y-%m-%d %H:%M")
-        if customer.created_at
-        else "",
-    }
+from project.api import api_error, api_paginated, api_success
+from project.common_tools import contract_storage_dir, parse_json_body
 
 
 def _apply_customer_payload(customer, payload):
@@ -78,11 +39,7 @@ def employee_names_api(request):
         .distinct()
     )
     names = list(employee_names)
-    return api_success(data={"names": names}, legacy={"names": names})
-
-
-def _contract_storage_dir():
-    return os.path.join(settings.BASE_DIR, "customer_contract")
+    return api_success(data={"names": names})
 
 
 @csrf_exempt
@@ -91,20 +48,14 @@ def customer_contract_upload(request, customer_id):
     upload = request.FILES.get("file")
     if not upload:
         return api_error(
-            "Missing file",
-            status=400,
-            legacy={"error": "Missing file"},
+            "Missing file"
         )
 
     customer = Customer.objects.filter(pk=customer_id, deleted_at__isnull=True).first()
     if not customer:
-        return api_error(
-            "Customer not found",
-            status=404,
-            legacy={"error": "Customer not found"},
-        )
+        return api_error("Customer not found", status=404)
 
-    base_dir = _contract_storage_dir()
+    base_dir = contract_storage_dir()
     os.makedirs(base_dir, exist_ok=True)
 
     _, ext = os.path.splitext(upload.name or "")
@@ -119,10 +70,7 @@ def customer_contract_upload(request, customer_id):
     customer.updated_at = timezone.now()
     customer.save(update_fields=["contract", "updated_at"])
 
-    return api_success(
-        data={"path": filename},
-        legacy={"status": "ok", "path": filename},
-    )
+    return api_success(data={"path": filename})
 
 
 @csrf_exempt
@@ -152,8 +100,8 @@ def customers_api(request):
             page = total_pages
         offset = (page - 1) * page_size
         items = [
-            _serialize_customer(customer)
-            for customer in queryset[offset : offset + page_size]
+            Customer.serialize(customer)
+            for customer in queryset[offset: offset + page_size]
         ]
         return api_paginated(
             items=items,
@@ -164,32 +112,21 @@ def customers_api(request):
         )
 
     if request.method == "POST":
-        payload, error = _parse_json_body(request)
+        payload, error = parse_json_body(request)
         if error:
             return error
         if not (payload.get("company_name") or "").strip():
-            return api_error(
-                "Missing field: company_name",
-                status=400,
-                legacy={"error": "Missing field: company_name"},
-            )
+            return api_error("Missing field: company_name")
         customer = Customer()
         _apply_customer_payload(customer, payload)
         now = timezone.now()
         customer.created_at = now
         customer.updated_at = now
         customer.save()
-        item = _serialize_customer(customer)
-        return api_success(
-            data={"item": item},
-            legacy={"status": "ok", "item": item},
-        )
+        item = Customer.serialize(customer)
+        return api_success(data={"item": item})
 
-    return api_error(
-        "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
-    )
+    return api_error("Method not allowed", status=405)
 
 
 @csrf_exempt
@@ -197,37 +134,22 @@ def customer_detail_api(request, customer_id):
     try:
         customer = Customer.objects.get(pk=customer_id, deleted_at__isnull=True)
     except Customer.DoesNotExist:
-        return api_error(
-            "Customer not found",
-            status=404,
-            legacy={"error": "Customer not found"},
-        )
+        return api_error("Customer not found", status=404)
 
     if request.method == "PUT":
-        payload, error = _parse_json_body(request)
+        payload, error = parse_json_body(request)
         if error:
             return error
         if not (payload.get("company_name") or "").strip():
-            return api_error(
-                "Missing field: company_name",
-                status=400,
-                legacy={"error": "Missing field: company_name"},
-            )
+            return api_error("Missing field: company_name")
         _apply_customer_payload(customer, payload)
         customer.updated_at = timezone.now()
         customer.save()
-        item = _serialize_customer(customer)
-        return api_success(
-            data={"item": item},
-            legacy={"status": "ok", "item": item},
-        )
+        item = Customer.serialize(customer)
+        return api_success(data={"item": item})
 
     if request.method == "GET":
-        item = _serialize_customer(customer)
-        return api_success(data={"item": item}, legacy={"item": item})
+        item = Customer.serialize(customer)
+        return api_success(data={"item": item})
 
-    return api_error(
-        "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
-    )
+    return api_error("Method not allowed", status=405)

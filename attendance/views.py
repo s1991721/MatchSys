@@ -240,7 +240,8 @@ def my_attendance_summary_api(request):
             status=401,
         )
 
-    target_date = _resolve_attendance_month(request)
+    target_date = request.GET.get("date")
+    target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
         employee_id=employee_id,
@@ -322,8 +323,8 @@ def attendance_summary_api(request):
     if not employee_id:
         return api_error("Unauthorized", status=401 )
 
-    target_date = request.GET.get("date")
-    target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+    target_date = request.GET.get("month")
+    target_date = datetime.strptime(target_date, "%Y-%m").date()
     name_filter = (request.GET.get("name") or "").strip()
 
     employees_qs = Employee.objects.filter(deleted_at__isnull=True).order_by("id")
@@ -424,7 +425,8 @@ def attendance_detail_api(request, employee_id):
             status=401,
         )
 
-    target_date = _resolve_attendance_month(request)
+    target_date = request.GET.get("month")
+    target_date = datetime.strptime(target_date, "%Y-%m").date()
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
         return api_error(

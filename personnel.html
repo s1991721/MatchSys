@@ -155,6 +155,18 @@
     </div>
 </div>
 
+<div class="modal" id="attendanceSettingModal" aria-hidden="true">
+    <div class="modal-card c-card c-card-pad">
+        <div class="modal-header">
+            <h4>考勤设定</h4>
+            <button class="modal-close" id="attendanceSettingClose" aria-label="关闭">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="c-empty">功能开发中</div>
+        </div>
+    </div>
+</div>
+
 <script src="common.js"></script>
 <script>
     const tableBody = document.getElementById("tableBody");
@@ -168,11 +180,13 @@
     const paginationPages = document.getElementById("paginationPages");
     const employeeModal = document.getElementById("employeeModal");
     const permissionModal = document.getElementById("permissionModal");
+    const attendanceSettingModal = document.getElementById("attendanceSettingModal");
     const modalTitle = document.getElementById("modalTitle");
     const modalClose = document.getElementById("modalClose");
     const cancelBtn = document.getElementById("cancelBtn");
     const deleteBtn = document.getElementById("deleteBtn");
     const permissionClose = document.getElementById("permissionClose");
+    const attendanceSettingClose = document.getElementById("attendanceSettingClose");
     const employeeForm = document.getElementById("employeeForm");
     const fieldName = document.getElementById("fieldName");
     const fieldGender = document.getElementById("fieldGender");
@@ -225,6 +239,7 @@
               <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">信息编辑</button>
               <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">技术者编辑</button>
               <button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">权限编辑</button>
+              <button class="c-btn c-btn-warn-lite c-btn-sm" data-action="attendance-setting" data-id="${item.id}">考勤设定</button>
             </div>
           </td>
         </tr>`
@@ -298,6 +313,8 @@
             window.location.href = "people.html";
         } else if (action === "permission") {
             openPermissionModal(id);
+        } else if (action === "attendance-setting") {
+            openAttendanceSettingModal(id);
         }
     }
 
@@ -346,6 +363,20 @@
     const closePermissionModal = () => {
         permissionModal.classList.remove("show");
         permissionModal.setAttribute("aria-hidden", "true");
+    }
+
+    const openAttendanceSettingModal = (id) => {
+        try {
+            attendanceSettingModal?.setAttribute("data-employee-id", id ? String(id) : "");
+        } catch (err) {
+        }
+        attendanceSettingModal.classList.add("show");
+        attendanceSettingModal.setAttribute("aria-hidden", "false");
+    }
+
+    const closeAttendanceSettingModal = () => {
+        attendanceSettingModal.classList.remove("show");
+        attendanceSettingModal.setAttribute("aria-hidden", "true");
     }
 
     const createEmployee = async (payload) => {
@@ -469,6 +500,10 @@
     permissionClose.addEventListener("click", closePermissionModal);
     permissionModal.addEventListener("click", (e) => {
         if (e.target === permissionModal) closePermissionModal();
+    });
+    attendanceSettingClose.addEventListener("click", closeAttendanceSettingModal);
+    attendanceSettingModal.addEventListener("click", (e) => {
+        if (e.target === attendanceSettingModal) closeAttendanceSettingModal();
     });
     employeeModal.addEventListener("click", (e) => {
         if (e.target === employeeModal) closeModal();

@@ -1,147 +1,153 @@
 (function () {
-  // 接口校验登录
-  window.fetchWithAuth = async function (url, options = {}) {
-    const mergedOptions = {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      ...options,
+    // 接口校验登录
+    window.fetchWithAuth = async function (url, options = {}) {
+        const mergedOptions = {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            credentials: "include",
+            ...options,
+        };
+        const res = await fetch(url, mergedOptions);
+        if (res.status === 401) {
+            window.location.href = "/login.html";
+            throw new Error("Unauthorized");
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res;
     };
-    const res = await fetch(url, mergedOptions);
-    if (res.status === 401) {
-      window.location.href = "/login.html";
-      throw new Error("Unauthorized");
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res;
-  };
 
-  // 接口返回处理
-  window.normalizeApiResponse = function (raw) {
-    if (raw && typeof raw === "object" && "success" in raw) {
-      return raw;
-    }
-    return {
-      success: false,
-      code: "ERR_INVALID_RESPONSE",
-      message: "Invalid response",
-      data: null,
-      meta: {},
+    // 构建GET请求URL
+    window.buildUrl = function (base, params) {
+        const query = params.toString();
+        return query ? `${base}?${query}` : base;
     };
-  };
 
-  // 日期格式化
-  window.formatDate = function (raw) {
-    if (!raw) return "";
-    const d = new Date(raw);
-    if (Number.isNaN(d.getTime())) return raw;
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  };
-
-  // 根据生日计算年龄
-  window.calcAge = function (birthday){
-    if (!birthday) return null;
-    const date = new Date(birthday);
-    if (Number.isNaN(date.getTime())) return null;
-    const today = new Date();
-    let age = today.getFullYear() - date.getFullYear();
-    const m = today.getMonth() - date.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
-        age -= 1;
-    }
-    return age;
-  };
-
-  // 根据契约类型返回字符串
-  window.contractTypeToLabel = function (value){
-    const mapping = {
-        1: '正社员',
-        2: '契约社员',
-        3: 'フリーランス'
+    // 接口返回处理
+    window.normalizeApiResponse = function (raw) {
+        if (raw && typeof raw === "object" && "success" in raw) {
+            return raw;
+        }
+        return {
+            success: false,
+            code: "ERR_INVALID_RESPONSE",
+            message: "Invalid response",
+            data: null,
+            meta: {},
+        };
     };
-    return mapping[value] || '未定';
-  };
 
-  // 分页页码构建
-  window.buildPageItems = function (totalPages, activePage) {
-    if (totalPages <= 7) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    const pages = [1];
-    const start = Math.max(2, activePage - 1);
-    const end = Math.min(totalPages - 1, activePage + 1);
-    if (start > 2) pages.push("…");
-    for (let i = start; i <= end; i += 1) pages.push(i);
-    if (end < totalPages - 1) pages.push("…");
-    pages.push(totalPages);
-    return pages;
-  };
+    // 日期格式化
+    window.formatDate = function (raw) {
+        if (!raw) return "";
+        const d = new Date(raw);
+        if (Number.isNaN(d.getTime())) return raw;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+    };
 
-  // 渲染分页
-  window.renderPagination = function (paginationEl, pagesEl, currentPage, totalPages) {
-    if (!paginationEl) return;
-    const safeTotalPages = Math.max(1, totalPages || 1);
-    const safeCurrentPage = Math.min(Math.max(1, currentPage || 1), safeTotalPages);
-    if (!pagesEl) {
-      pagesEl = paginationEl.querySelector(".pagination-pages");
-    }
-    const summaryEl = paginationEl.querySelector(".pagination-summary");
-    paginationEl.innerHTML = "";
-    if (summaryEl) {
-      paginationEl.appendChild(summaryEl);
-    }
+    // 根据生日计算年龄
+    window.calcAge = function (birthday) {
+        if (!birthday) return null;
+        const date = new Date(birthday);
+        if (Number.isNaN(date.getTime())) return null;
+        const today = new Date();
+        let age = today.getFullYear() - date.getFullYear();
+        const m = today.getMonth() - date.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {
+            age -= 1;
+        }
+        return age;
+    };
 
-    const prevBtn = document.createElement("button");
-    prevBtn.type = "button";
-    prevBtn.className = "c-btn c-btn-ghost c-btn-sm";
-    prevBtn.dataset.page = "prev";
-    prevBtn.textContent = "上一页";
-    prevBtn.disabled = safeCurrentPage <= 1;
-    paginationEl.appendChild(prevBtn);
+    // 根据契约类型返回字符串
+    window.contractTypeToLabel = function (value) {
+        const mapping = {
+            1: '正社员',
+            2: '契约社员',
+            3: 'フリーランス'
+        };
+        return mapping[value] || '未定';
+    };
 
-    if (!pagesEl) {
-      pagesEl = document.createElement("div");
-      pagesEl.className = "pagination-pages";
-    }
-    pagesEl.innerHTML = "";
-    const pageItems = window.buildPageItems(safeTotalPages, safeCurrentPage);
-    pagesEl.append(...pageItems.map((page) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "c-btn c-btn-ghost c-btn-sm";
-      btn.textContent = String(page);
-      if (page === "…") {
-        btn.disabled = true;
-        btn.classList.add("is-ellipsis");
-        return btn;
-      }
-      btn.dataset.page = String(page);
-      if (page === safeCurrentPage) {
-        btn.classList.add("is-active");
-      }
-      return btn;
-    }));
-    paginationEl.appendChild(pagesEl);
+    // 分页页码构建
+    window.buildPageItems = function (totalPages, activePage) {
+        if (totalPages <= 7) {
+            return Array.from({length: totalPages}, (_, i) => i + 1);
+        }
+        const pages = [1];
+        const start = Math.max(2, activePage - 1);
+        const end = Math.min(totalPages - 1, activePage + 1);
+        if (start > 2) pages.push("…");
+        for (let i = start; i <= end; i += 1) pages.push(i);
+        if (end < totalPages - 1) pages.push("…");
+        pages.push(totalPages);
+        return pages;
+    };
 
-    const nextBtn = document.createElement("button");
-    nextBtn.type = "button";
-    nextBtn.className = "c-btn c-btn-ghost c-btn-sm";
-    nextBtn.dataset.page = "next";
-    nextBtn.textContent = "下一页";
-    nextBtn.disabled = safeCurrentPage >= safeTotalPages;
-    paginationEl.appendChild(nextBtn);
-  };
+    // 渲染分页
+    window.renderPagination = function (paginationEl, pagesEl, currentPage, totalPages) {
+        if (!paginationEl) return;
+        const safeTotalPages = Math.max(1, totalPages || 1);
+        const safeCurrentPage = Math.min(Math.max(1, currentPage || 1), safeTotalPages);
+        if (!pagesEl) {
+            pagesEl = paginationEl.querySelector(".pagination-pages");
+        }
+        const summaryEl = paginationEl.querySelector(".pagination-summary");
+        paginationEl.innerHTML = "";
+        if (summaryEl) {
+            paginationEl.appendChild(summaryEl);
+        }
 
-  // 分页点击绑定（通过钩子处理具体逻辑）
-  window.bindPagination = function (paginationEl, onPageChange) {
-    if (!paginationEl || typeof onPageChange !== "function") return;
-    paginationEl.addEventListener("click", (event) => {
-      const btn = event.target.closest("button[data-page]");
-      if (!btn) return;
-      onPageChange(btn.dataset.page || "");
-    });
-  };
+        const prevBtn = document.createElement("button");
+        prevBtn.type = "button";
+        prevBtn.className = "c-btn c-btn-ghost c-btn-sm";
+        prevBtn.dataset.page = "prev";
+        prevBtn.textContent = "上一页";
+        prevBtn.disabled = safeCurrentPage <= 1;
+        paginationEl.appendChild(prevBtn);
+
+        if (!pagesEl) {
+            pagesEl = document.createElement("div");
+            pagesEl.className = "pagination-pages";
+        }
+        pagesEl.innerHTML = "";
+        const pageItems = window.buildPageItems(safeTotalPages, safeCurrentPage);
+        pagesEl.append(...pageItems.map((page) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "c-btn c-btn-ghost c-btn-sm";
+            btn.textContent = String(page);
+            if (page === "…") {
+                btn.disabled = true;
+                btn.classList.add("is-ellipsis");
+                return btn;
+            }
+            btn.dataset.page = String(page);
+            if (page === safeCurrentPage) {
+                btn.classList.add("is-active");
+            }
+            return btn;
+        }));
+        paginationEl.appendChild(pagesEl);
+
+        const nextBtn = document.createElement("button");
+        nextBtn.type = "button";
+        nextBtn.className = "c-btn c-btn-ghost c-btn-sm";
+        nextBtn.dataset.page = "next";
+        nextBtn.textContent = "下一页";
+        nextBtn.disabled = safeCurrentPage >= safeTotalPages;
+        paginationEl.appendChild(nextBtn);
+    };
+
+    // 分页点击绑定（通过钩子处理具体逻辑）
+    window.bindPagination = function (paginationEl, onPageChange) {
+        if (!paginationEl || typeof onPageChange !== "function") return;
+        paginationEl.addEventListener("click", (event) => {
+            const btn = event.target.closest("button[data-page]");
+            if (!btn) return;
+            onPageChange(btn.dataset.page || "");
+        });
+    };
 })();

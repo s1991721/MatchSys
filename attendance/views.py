@@ -318,8 +318,8 @@ def my_attendance_detail_api(request):
 @require_GET
 # 全体人员，每月考勤汇总列表
 def attendance_summary_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
+    login_id = request.session.get("employee_id")
+    if not login_id:
         return api_error("Unauthorized", status=401)
 
     target_date = request.GET.get("month")
@@ -369,7 +369,6 @@ def attendance_summary_api(request):
         has_end = end_time is not None
         has_any = has_start or has_end
         workday = is_workday(record.punch_date)
-        is_missing = not (has_start and has_end)
         is_late = bool(
             policy and policy.work_start_time and has_start and start_time > policy.work_start_time
         )
@@ -387,6 +386,8 @@ def attendance_summary_api(request):
         attendance_days = summary.get("attendance_days", 0)
         absent_days = max(workdays - attendance_days, 0)
         late_days = summary.get("late_days", 0)
+        policy = policy_map.get(emp.id) or default_policy
+        annual_leave = policy.annual_leave
         status = "normal"
         if absent_days:
             status = "warning"
@@ -400,7 +401,7 @@ def attendance_summary_api(request):
                 "month": month_label,
                 "attendance_days": attendance_days,
                 "absence_days": absent_days,
-                "annual_leave": 0,
+                "annual_leave": annual_leave,
                 "status": status,
             }
         )

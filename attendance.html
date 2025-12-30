@@ -75,11 +75,6 @@
         return params;
     };
 
-    const buildUrl = (base, params) => {
-        const query = params.toString();
-        return query ? `${base}?${query}` : base;
-    };
-
     const setDetailContent = (wrapper, title, content) => {
         wrapper.innerHTML = `
             <div class="c-panel-title">${title}</div>

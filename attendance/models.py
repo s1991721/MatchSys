@@ -70,6 +70,7 @@ class AttendanceRecord(AttendanceRecordBase):
 class AttendancePolicy(models.Model):
     id = models.BigIntegerField(primary_key=True, unique=True, verbose_name="ID")
     employee_id = models.BigIntegerField(unique=True, verbose_name="员工ID")
+    annual_leave = models.IntegerField()
     work_start_time = models.TimeField(db_column="work_start_time")
     work_end_time = models.TimeField(db_column="work_end_time")
     latitude = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)

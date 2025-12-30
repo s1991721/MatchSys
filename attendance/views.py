@@ -35,7 +35,7 @@ def attendance_punch_api(request):
 
     punch_model, record_model = get_monthly_attendance_models(now.date())
     punch = _create_attendance_punch(punch_model, employee, now, punch_time_value, punch_type, payload)
-    record = _sync_attendance_record(punch_model, record_model, employee, now, punch_type)
+    record = _sync_attendance_record(punch_model, record_model, employee, now)
 
     payload = {
         "punch": {
@@ -232,13 +232,11 @@ def attendance_record_today_api(request):
 
 
 @require_GET
+# 每月汇总 出勤-迟到-缺勤
 def my_attendance_summary_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+        return api_error("Unauthorized", status=401)
 
     target_date = request.GET.get("date")
     target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -280,7 +278,7 @@ def my_attendance_summary_api(request):
             "absent_days": absent_days,
         },
     }
-    return api_success(data=payload, )
+    return api_success(data=payload)
 
 
 @require_GET
@@ -318,10 +316,11 @@ def my_attendance_detail_api(request):
 
 
 @require_GET
+# 全体人员，每月考勤汇总列表
 def attendance_summary_api(request):
     employee_id = request.session.get("employee_id")
     if not employee_id:
-        return api_error("Unauthorized", status=401 )
+        return api_error("Unauthorized", status=401)
 
     target_date = request.GET.get("month")
     target_date = datetime.strptime(target_date, "%Y-%m").date()
@@ -337,7 +336,7 @@ def attendance_summary_api(request):
             "month": target_date.strftime("%Y-%m"),
             "employees": [],
         }
-        return api_success(data=response_payload )
+        return api_success(data=response_payload)
 
     employee_ids = [emp.id for emp in employees]
     record_model = get_monthly_attendance_models(target_date)[1]
@@ -381,12 +380,6 @@ def attendance_summary_api(request):
         if is_late and workday:
             summary["late_days"] += 1
 
-        note = "正常"
-        if is_missing:
-            note = "缺卡"
-        elif is_late:
-            note = "晚到"
-
     payload = []
     month_label = target_date.strftime("%Y-%m")
     for emp in employees:
@@ -413,26 +406,21 @@ def attendance_summary_api(request):
         )
 
     response_payload = {"month": month_label, "employees": payload}
-    return api_success(data=response_payload, )
+    return api_success(data=response_payload)
 
 
 @require_GET
+# employee_id员工在month月的考勤详情
 def attendance_detail_api(request, employee_id):
-    requester_id = request.session.get("employee_id")
-    if not requester_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error("Unauthorized", status=401)
 
     target_date = request.GET.get("month")
     target_date = datetime.strptime(target_date, "%Y-%m").date()
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error(
-            "Employee not found",
-            status=404,
-        )
+        return api_error("Employee not found", status=404)
 
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
@@ -465,7 +453,7 @@ def attendance_detail_api(request, employee_id):
         if is_missing:
             note = "缺卡"
         elif is_late:
-            note = "晚到"
+            note = "迟到"
 
         details.append(
             {

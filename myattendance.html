@@ -356,6 +356,7 @@
         return t("myattendance.month.label.current");
     }
 
+    {#获取月份的1号#}
     const resolveMonthDateParam = (monthKey) => {
         const now = new Date();
         const year = now.getFullYear();
@@ -723,6 +724,7 @@
         }
     });
 
+    {#补足2位，不满补0#}
     const pad2 = (value) => {
         return String(value).padStart(2, "0");
     }

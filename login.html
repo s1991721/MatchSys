@@ -40,82 +40,117 @@
         </div>
     </form>
 </div>
-<script src="i18n.js"></script>
-<script src="common.js"></script>
+<script src="/i18n.js"></script>
+<script src="/common.js"></script>
 <script>
     const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
-    const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
-    const i18n = window.I18N;
-    const t = (key) => (i18n ? i18n.t(key) : key);
+    const LANG_KEY = "app_lang";
 
-    const applyLang = (lang) => {
-        const safeLang = i18n ? i18n.setLang(lang) : lang;
-        langButtons.forEach((button) => {
-            const isActive = button.dataset.lang === safeLang;
-            button.classList.toggle("is-active", isActive);
-            button.setAttribute("aria-pressed", String(isActive));
-        });
-        if (i18n && typeof i18n.apply === "function") {
-            i18n.apply();
-        }
+    const getI18n = () => window.I18N || null;
+    const t = (key) => {
+        const i18n = getI18n();
+        return i18n ? i18n.t(key) : key;
     };
 
-    const initLang = () => {
-        const current = i18n ? i18n.init() : "zh-CN";
-        applyLang(current);
-    };
+    const start = () => {
+        const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
+        const form = document.getElementById("loginForm");
+        const errorBox = document.getElementById("errorBox");
+        const submitBtn = document.getElementById("submitBtn");
 
-    langButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-            const lang = button.dataset.lang || "zh-CN";
+        const storeLang = (lang) => {
             try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
-            applyLang(lang);
-        });
-    });
+        };
 
-    initLang();
-
-    const form = document.getElementById("loginForm");
-    const errorBox = document.getElementById("errorBox");
-    const submitBtn = document.getElementById("submitBtn");
-    const updateSubmitText = (key) => {
-        if (!submitBtn) return;
-        submitBtn.textContent = t(key);
-    };
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        errorBox.classList.add("hidden");
-        errorBox.textContent = "";
-        submitBtn.disabled = true;
-        updateSubmitText("login.submitting");
-
-        try {
-            const res = await fetch(LOGIN_ENDPOINT, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                    user_name: document.getElementById("userName").value.trim(),
-                    password: document.getElementById("password").value,
-                }),
+        const applyLang = (lang) => {
+            const i18n = getI18n();
+            const safeLang = i18n ? i18n.setLang(lang) : lang;
+            storeLang(safeLang);
+            langButtons.forEach((button) => {
+                const isActive = button.dataset.lang === safeLang;
+                button.classList.toggle("is-active", isActive);
+                button.setAttribute("aria-pressed", String(isActive));
             });
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
-                throw new Error(payload.message || t("login.failed"));
+            if (i18n && typeof i18n.apply === "function") {
+                i18n.apply();
             }
-            const target = "index.html".replace(/^\//, "");
-            window.location.href = new URL(target, window.location.href).toString();
-        } catch (err) {
-            errorBox.textContent = err.message || t("login.failed");
-            errorBox.classList.remove("hidden");
-        } finally {
-            submitBtn.disabled = false;
-            updateSubmitText("login.submit");
+        };
+
+        const initLang = () => {
+            const i18n = getI18n();
+            const current = i18n ? i18n.init() : "zh-CN";
+            applyLang(current);
+        };
+
+        langButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                const lang = button.dataset.lang || "zh-CN";
+                applyLang(lang);
+            });
+        });
+
+        const updateSubmitText = (key) => {
+            if (!submitBtn) return;
+            submitBtn.textContent = t(key);
+        };
+
+        if (form) {
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (errorBox) {
+                    errorBox.classList.add("hidden");
+                    errorBox.textContent = "";
+                }
+                if (submitBtn) submitBtn.disabled = true;
+                updateSubmitText("login.submitting");
+
+                try {
+                    const res = await fetch(LOGIN_ENDPOINT, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({
+                            user_name: document.getElementById("userName").value.trim(),
+                            password: document.getElementById("password").value,
+                        }),
+                    });
+                    const data = await res.json();
+                    const payload = normalizeApiResponse(data);
+                    if (!res.ok || !payload.success) {
+                        throw new Error(payload.message || t("login.failed"));
+                    }
+                    const target = "index.html".replace(/^\//, "");
+                    const next = new URL(target, window.location.href);
+                    let currentLang = "zh-CN";
+                    try {
+                        currentLang = localStorage.getItem(LANG_KEY) || currentLang;
+                    } catch (e) {}
+                    const i18n = getI18n();
+                    if (i18n && i18n.getLang) {
+                        currentLang = i18n.getLang() || currentLang;
+                    }
+                    if (currentLang) {
+                        next.searchParams.set("lang", currentLang);
+                    }
+                    window.location.href = next.toString();
+                } catch (err) {
+                    if (errorBox) {
+                        errorBox.textContent = err.message || t("login.failed");
+                        errorBox.classList.remove("hidden");
+                    }
+                } finally {
+                    if (submitBtn) submitBtn.disabled = false;
+                    updateSubmitText("login.submit");
+                }
+            });
         }
-    });
-    updateSubmitText("login.submit");
+
+        initLang();
+        updateSubmitText("login.submit");
+    };
+
+    start();
 </script>
 </body>
 </html>

@@ -22,9 +22,11 @@ class SessionLoginRequiredMiddleware:
             "/login.html",
             "/favicon.ico",
             "/favicon.png",
+            "/favicon-32.png",
             "/common.css",
             "/components.css",
             "/common.js",
+            "/i18n.js",
         }:
             return True
         if path.startswith(("/api/", "/admin/", "/static/")):

@@ -261,7 +261,16 @@
       };
 
       const initLang = () => {
+        const urlParams = new URLSearchParams(window.location.search || "");
+        const urlLang = urlParams.get("lang");
         const current = i18n ? i18n.init() : "zh-CN";
+        if (urlLang) {
+          applyLang(urlLang);
+          urlParams.delete("lang");
+          const cleanUrl = `${window.location.pathname}${urlParams.toString() ? `?${urlParams}` : ""}${window.location.hash || ""}`;
+          window.history.replaceState(null, "", cleanUrl);
+          return;
+        }
         applyLang(current);
       };
 

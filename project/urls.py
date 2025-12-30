@@ -19,14 +19,6 @@ from django.urls import path
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 
-from bpmatch.views import (
-    messages,
-    persons,
-    log_job_click,
-    extract_qiuren_detail,
-    send_mail,
-    send_history,
-)
 from attendance.views import (
     attendance_punch_api,
     attendance_record_edit_api,
@@ -35,6 +27,20 @@ from attendance.views import (
     attendance_summary_api,
     my_attendance_summary_api,
     my_attendance_detail_api,
+)
+from bpmatch.views import (
+    messages,
+    persons,
+    log_job_click,
+    extract_qiuren_detail,
+    send_mail,
+    send_history,
+)
+from customer.views import (
+    employee_names_api,
+    customers_api,
+    customer_detail_api,
+    customer_contract_upload,
 )
 from employee.views import (
     change_password_api,
@@ -48,18 +54,15 @@ from employee.views import (
     technician_ss_upload,
     technicians_api,
 )
-from customer.views import (
-    employee_names_api,
-    customers_api,
-    customer_detail_api,
-    customer_contract_upload,
-)
 from order.views import (
     purchase_orders_api,
     purchase_order_detail_api,
     sales_orders_api,
     sales_order_detail_api,
 )
+
+custom_404 = TemplateView.as_view(template_name="404.html")
+handler404 = "project.urls.custom_404"
 
 urlpatterns = [
     # ###################################-Front End-###################################
@@ -90,6 +93,7 @@ urlpatterns = [
     path("permission.html", TemplateView.as_view(template_name="permission.html")),
     # -------------------------------notification UI-------------------------------
     path("notification.html", TemplateView.as_view(template_name="notification.html")),
+    path("analysis.html", TemplateView.as_view(template_name="analysis.html")),
     # -------------------------------common-------------------------------
     path("common.css", TemplateView.as_view(template_name="common.css", content_type="text/css")),
     path("components.css", TemplateView.as_view(template_name="components.css", content_type="text/css")),

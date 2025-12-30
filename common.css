@@ -392,6 +392,16 @@ body > .page {
 .content-spaced > .c-card {
   padding: 16px 18px 18px;
 }
+.c-card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+.c-card-fixed {
+  width: 360px;
+  height: 320px;
+}
 .content-spaced .form-grid {
   gap: 14px;
 }

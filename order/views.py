@@ -83,6 +83,12 @@ def _parse_int(value, field):
         )
 
 
+def _is_truthy(value):
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def _serialize_purchase(order):
     created_at = timezone.localtime(order.created_at) if order.created_at else None
     updated_at = timezone.localtime(order.updated_at) if order.updated_at else None
@@ -266,6 +272,7 @@ def _apply_filters(queryset, request):
     status = (request.GET.get("status") or "").strip()
     created_start = request.GET.get("created_start")
     created_end = request.GET.get("created_end")
+    only_self = request.GET.get("only_self")
 
     if order_no:
         queryset = queryset.filter(order_no__icontains=order_no)
@@ -284,6 +291,9 @@ def _apply_filters(queryset, request):
         queryset = queryset.filter(technician_name__icontains=technician_name)
     if status:
         queryset = queryset.filter(status=status)
+    if _is_truthy(only_self):
+        current_user = request.session.get("employee_id")
+        queryset = queryset.filter(created_by=current_user, updated_by=current_user)
 
     if created_start:
         start_date, error = _parse_date(created_start, "created_start")

@@ -371,15 +371,19 @@
 }
 .c-switcher-group {
   display: inline-flex;
-  gap: 6px;
-  padding: 6px;
+  gap: 8px;
+  padding: 4px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.5);
   background: rgba(248, 250, 252, 0.95);
-  box-shadow: 0 10px 20px rgba(30, 41, 59, 0.08);
+  box-shadow: 0 8px 16px rgba(30, 41, 59, 0.08);
 }
 .c-switcher-group .c-toggle {
   border: 0;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  min-height: 36px;
 }
 .c-inline-filters {
   padding: 0;

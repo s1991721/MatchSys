@@ -46,11 +46,21 @@
             </table>
             <div id="no-data" class="c-empty hidden">暂无考勤数据</div>
         </div>
+        <div class="pagination c-pagination" id="attendance-pagination">
+            <div class="pagination-summary">
+                <span id="attendance-page-summary">共 0 条 · 第 1/1 页</span>
+            </div>
+            <div class="pagination-pages" id="attendance-pagination-pages"></div>
+        </div>
     </section>
 </div>
 <script src="common.js"></script>
 <script>
     let attendanceData = [];
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalCount = 0;
+    const pageSize = 10;
 
     const statusMap = {
         normal: { label: "正常", className: "c-pill c-pill-success" },
@@ -63,6 +73,9 @@
     const monthFilter = document.getElementById("month-filter");
     const applyBtn = document.getElementById("filter-apply");
     const resetBtn = document.getElementById("filter-reset");
+    const pagination = document.getElementById("attendance-pagination");
+    const paginationPages = document.getElementById("attendance-pagination-pages");
+    const pageSummary = document.getElementById("attendance-page-summary");
     const filters = { name: "", month: "" };
 
     const createParams = (entries = []) => {
@@ -91,10 +104,16 @@
 
         if (!attendanceData.length) {
             setNoData("暂无考勤数据");
+            if (pagination) {
+                pagination.classList.add("hidden");
+            }
             return;
         }
 
         hideNoData();
+        if (pagination) {
+            pagination.classList.remove("hidden");
+        }
 
         attendanceData.forEach((person) => {
             const summaryRow = document.createElement("tr");
@@ -132,6 +151,16 @@
 
         attachRowEvents();
     }
+
+    const updatePagination = (meta = {}) => {
+        totalCount = Number.isFinite(meta.total) ? meta.total : attendanceData.length;
+        totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+        currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+        if (pageSummary) {
+            pageSummary.textContent = `共 ${totalCount} 条 · 第 ${currentPage}/${totalPages} 页`;
+        }
+        window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+    };
 
     const renderDetailTable = (details = []) => {
         if (!details.length) {
@@ -220,6 +249,7 @@
     const handleFilterApply = () => {
         filters.name = nameFilter.value;
         filters.month = monthFilter.value;
+        currentPage = 1;
         loadAttendance();
     }
 
@@ -228,6 +258,7 @@
         filters.month = getCurrentMonth();
         nameFilter.value = "";
         monthFilter.value = filters.month;
+        currentPage = 1;
         loadAttendance();
     }
 
@@ -249,11 +280,16 @@
     const loadAttendance = async () => {
         const params = createParams([
             ["name", filters.name],
-            ["month", filters.month]
+            ["month", filters.month],
+            ["page", String(currentPage)],
+            ["page_size", String(pageSize)]
         ]);
         const url = buildUrl("/api/attendance/summary", params);
         summaryBody.innerHTML = "";
         setNoData("正在加载考勤数据...");
+        if (pagination) {
+            pagination.classList.add("hidden");
+        }
 
         try {
             const response = await fetchWithAuth(url, { method: "GET" });
@@ -271,6 +307,7 @@
             if (!filters.month && resolvedMonth) {
                 monthFilter.value = resolvedMonth;
             }
+            updatePagination(result);
             renderSummary();
         } catch (error) {
             attendanceData = [];
@@ -284,6 +321,26 @@
 
     applyBtn.addEventListener("click", handleFilterApply);
     resetBtn.addEventListener("click", resetFilters);
+
+    window.bindPagination(pagination, (value) => {
+        if (!value) return;
+        let nextPage = currentPage;
+        if (value === "prev") {
+            nextPage = Math.max(1, currentPage - 1);
+        } else if (value === "next") {
+            nextPage = Math.min(totalPages, currentPage + 1);
+        } else {
+            const parsed = parseInt(value, 10);
+            if (Number.isFinite(parsed)) {
+                nextPage = parsed;
+            }
+        }
+        if (nextPage === currentPage) {
+            return;
+        }
+        currentPage = nextPage;
+        loadAttendance();
+    });
 </script>
 </body>
 </html>

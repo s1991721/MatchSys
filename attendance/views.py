@@ -325,16 +325,35 @@ def attendance_summary_api(request):
     target_date = request.GET.get("month")
     target_date = datetime.strptime(target_date, "%Y-%m").date()
     name_filter = (request.GET.get("name") or "").strip()
+    try:
+        page = int(request.GET.get("page", 1))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(request.GET.get("page_size", 10))
+    except (TypeError, ValueError):
+        page_size = 10
+    page = max(page, 1)
+    page_size = max(min(page_size, 100), 1)
 
     employees_qs = Employee.objects.filter(deleted_at__isnull=True).order_by("id")
     if name_filter:
         employees_qs = employees_qs.filter(name__icontains=name_filter)
 
-    employees = list(employees_qs)
+    total = employees_qs.count()
+    total_pages = max((total + page_size - 1) // page_size, 1)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+    employees = list(employees_qs[offset: offset + page_size])
     if not employees:
         response_payload = {
             "month": target_date.strftime("%Y-%m"),
             "employees": [],
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": total_pages,
         }
         return api_success(data=response_payload)
 
@@ -406,7 +425,14 @@ def attendance_summary_api(request):
             }
         )
 
-    response_payload = {"month": month_label, "employees": payload}
+    response_payload = {
+        "month": month_label,
+        "employees": payload,
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": total_pages,
+    }
     return api_success(data=response_payload)
 
 

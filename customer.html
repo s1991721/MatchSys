@@ -273,17 +273,14 @@
     };
 
     const fetchCustomers = () => {
-        const params = new URLSearchParams();
-        if (filterCompany.value.trim()) {
-            params.append("company_name", filterCompany.value.trim());
-        }
-        if (filterOwner.value.trim()) {
-            params.append("person_in_charge", filterOwner.value.trim());
-        }
-        params.append("page", String(currentPage));
-        params.append("page_size", String(pageSize));
-        const url = `/api/customers${params.toString() ? `?${params.toString()}` : ""}`;
-        fetch(url)
+        const params = window.createParams([
+            ["company_name", filterCompany.value.trim()],
+            ["person_in_charge", filterOwner.value.trim()],
+            ["page", String(currentPage)],
+            ["page_size", String(pageSize)],
+        ]);
+        const url = window.buildUrl("/api/customers", params);
+        fetchWithAuth(url, {method: "GET"})
             .then((response) => response.json())
             .then((data) => {
                 const payload = normalizeApiResponse(data);
@@ -338,7 +335,7 @@
         }
     };
 
-    fetch("/api/employees/names")
+    fetchWithAuth("/api/employees/names", {method: "GET"})
         .then((response) => response.json())
         .then((data) => {
             const payload = normalizeApiResponse(data);
@@ -408,16 +405,12 @@
         button.addEventListener("click", () => editDialog.close());
     });
 
-    const closeBtn = editDialog.querySelector(".dialog-close");
-    if (closeBtn) {
-        closeBtn.addEventListener("click", () => editDialog.close());
-    }
-
     const uploadContract = (customerId, file) => {
         const formData = new FormData();
         formData.append("file", file);
-        return fetch(`/api/customers/${customerId}/contract`, {
+        return fetchWithAuth(`/api/customers/${customerId}/contract`, {
             method: "POST",
+            headers: {},
             body: formData,
         })
             .then((response) => response.json())
@@ -460,7 +453,7 @@
 
         const url = currentEditId ? `/api/customers/${currentEditId}` : "/api/customers";
         const method = currentEditId ? "PUT" : "POST";
-        fetch(url, {
+        fetchWithAuth(url, {
             method,
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(payload),

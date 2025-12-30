@@ -2,7 +2,7 @@ import os
 
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from customer.models import Customer
 from employee.models import Employee
@@ -31,6 +31,7 @@ def _apply_customer_payload(customer, payload):
         customer.contract = (payload.get("contract") or "").strip()
 
 
+@require_GET
 def employee_names_api(request):
     employee_names = (
         Employee.objects.filter(deleted_at__isnull=True)
@@ -74,6 +75,7 @@ def customer_contract_upload(request, customer_id):
 
 
 @csrf_exempt
+@require_http_methods(["GET", "POST"])
 def customers_api(request):
     if request.method == "GET":
         company_name = (request.GET.get("company_name") or "").strip()
@@ -130,6 +132,7 @@ def customers_api(request):
 
 
 @csrf_exempt
+@require_http_methods(["GET", "PUT"])
 def customer_detail_api(request, customer_id):
     try:
         customer = Customer.objects.get(pk=customer_id, deleted_at__isnull=True)

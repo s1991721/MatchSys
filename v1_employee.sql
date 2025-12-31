@@ -24,7 +24,7 @@ CREATE TABLE user_login
 INSERT INTO user_login (employee_id, employee_name, user_name, password, role_id, menu_list, created_by, created_at,
                         updated_by, updated_at, deleted_at)
 VALUES (1, '系统管理员', 'admin', 'admin',
-        1, '["dashboard","user_manage","role_manage","menu_manage","system_config"]', NULL, NOW(), NULL, NOW(), NULL);
+        999, '["*"]', NULL, NOW(), NULL, NOW(), NULL);
 
 
 CREATE TABLE employee

@@ -20,6 +20,17 @@
             color: var(--text);
         }
 
+        .c-split-grid-wide {
+            align-items: stretch;
+            min-height: calc(100vh - 140px);
+        }
+
+        .c-split-grid-wide > .c-card {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
         .status-note {
             display: inline-flex;
             align-items: center;
@@ -107,7 +118,9 @@
             border: 1px solid var(--line);
             border-radius: 12px;
             overflow: hidden;
-            max-height: 520px;
+            max-height: none;
+            flex: 1;
+            overflow: auto;
         }
 
         .history-item {
@@ -206,6 +219,9 @@
             border-radius: 12px;
             padding: 14px 16px;
             min-height: 220px;
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
             color: #414d63;
             line-height: 1.7;
             margin-top: 10px;
@@ -313,6 +329,14 @@
         }
 
         @media (max-width: 1060px) {
+            .c-split-grid-wide {
+                min-height: 0;
+            }
+
+            .c-split-grid-wide > .c-card {
+                min-height: auto;
+            }
+
             .history-list {
                 max-height: none;
             }
@@ -321,28 +345,16 @@
 </head>
 <body>
     <div class="page page-wide">
-        <header class="page-header c-page-header">
-            <div>
-                <div class="title c-page-title-soft" data-i18n="songxinhistory.title">送信历史</div>
-                <div class="subtitle c-page-subtitle-soft" data-i18n="songxinhistory.subtitle">查看已发送记录、状态与正文内容</div>
-            </div>
-            <div class="status-note">
-                <span class="status-dot"></span>
-                <span data-i18n="songxinhistory.status.recent">最近更新：</span>
-                <span id="last-update">今天 10:20</span>
-            </div>
-        </header>
-
         <section class="grid c-split-grid-wide">
             <div class="c-card c-card-pad">
                 <div class="c-card-title" data-i18n="songxinhistory.list.title">历史列表</div>
                 <div class="filter-row">
                     <div class="pill-group" id="status-group">
-                        <button class="pill active" data-status="all" type="button" data-i18n="songxinhistory.filter.all">全部</button>
-                        <button class="pill" data-status="sent" type="button" data-i18n="songxinhistory.filter.sent">已发送</button>
-                        <button class="pill" data-status="pending" type="button" data-i18n="songxinhistory.filter.pending">发送中</button>
-                        <button class="pill" data-status="failed" type="button" data-i18n="songxinhistory.filter.failed">失败</button>
-                        <button class="pill" data-status="draft" type="button" data-i18n="songxinhistory.filter.draft">草稿</button>
+                        <button class="pill active" data-status="all" type="button" >全部</button>
+                        <button class="pill" data-status="sent" type="button" >BP</button>
+                        <button class="pill" data-status="pending" type="button" >有人</button>
+                        <button class="pill" data-status="failed" type="button" >有案件</button>
+                        <button class="pill" data-status="draft" type="button" >失败</button>
                     </div>
                     <div class="search">
                         <input id="search" class="input" type="search" placeholder="搜索标题、收件人或抄送" data-i18n-placeholder="songxinhistory.search.placeholder">
@@ -358,44 +370,6 @@
                 <div id="history-detail" class="detail"></div>
                 <div class="section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
                 <div id="detail-attachments" class="attachment-list"></div>
-            </div>
-        </section>
-
-        <section class="grid c-split-grid-wide">
-            <div class="c-card c-card-pad">
-                <div class="c-card-title" data-i18n="songxinhistory.section.stats">统计概览</div>
-                <div class="stat-grid">
-                    <div class="stat-card c-card c-card-compact">
-                        <div class="stat-label" data-i18n="songxinhistory.stats.sent">本周已发送</div>
-                        <div class="stat-value" id="stat-sent">0</div>
-                    </div>
-                    <div class="stat-card c-card c-card-compact">
-                        <div class="stat-label" data-i18n="songxinhistory.stats.pending">待处理</div>
-                        <div class="stat-value" id="stat-pending">0</div>
-                    </div>
-                    <div class="stat-card c-card c-card-compact">
-                        <div class="stat-label" data-i18n="songxinhistory.stats.failed">失败重试</div>
-                        <div class="stat-value" id="stat-failed">0</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="c-card c-card-pad">
-                <div class="c-card-title" data-i18n="songxinhistory.section.tips">提醒</div>
-                <div class="tips">
-                    <div class="tips-item">
-                        <span class="tips-bullet"></span>
-                        <span data-i18n="songxinhistory.tip.1">点击左侧记录可快速查看正文与附件列表，确认实际送达内容。</span>
-                    </div>
-                    <div class="tips-item">
-                        <span class="tips-bullet"></span>
-                        <span data-i18n="songxinhistory.tip.2">发送失败的邮件可在此处检查原因，必要时重新发送。</span>
-                    </div>
-                    <div class="tips-item">
-                        <span class="tips-bullet"></span>
-                        <span data-i18n="songxinhistory.tip.3">筛选支持按状态或关键字查找，便于对齐项目进展。</span>
-                    </div>
-                </div>
             </div>
         </section>
     </div>

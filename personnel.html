@@ -7,7 +7,151 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="personnel.title">社内人员管理</title>
-    <style></style>
+    <style>
+        .permission-editor {
+            display: grid;
+            grid-template-columns: minmax(200px, 0.9fr) minmax(320px, 1.6fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .permission-editor {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .permission-section {
+            border: 1px solid #e4e9f4;
+            border-radius: 18px;
+            padding: 16px;
+            background: #f6f8ff;
+        }
+
+        .permission-section-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .permission-section-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .permission-section-note {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .permission-role-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .permission-role-option {
+            position: relative;
+            border-radius: 16px;
+            border: 1px solid #dfe6f5;
+            background: #fff;
+            padding: 22px 16px 16px;
+            cursor: pointer;
+        }
+
+        .permission-role-option input {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .permission-role-meta strong {
+            display: block;
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .permission-role-meta span {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .permission-section .c-dialog-count {
+            display: inline-flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px;
+            white-space: nowrap;
+            line-height: 1;
+            flex-wrap: nowrap;
+        }
+
+        .permission-section .c-dialog-count span,
+        .permission-section .c-dialog-count strong {
+            display: inline-flex;
+        }
+
+        .permission-count-inline {
+            display: inline-flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            gap: 8px;
+        }
+
+        .permission-section .c-dialog-count input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .permission-section .c-card-compact {
+            background: #fff;
+        }
+
+        .permission-section .role-menu-checklist {
+            gap: 10px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .permission-section .role-menu-check {
+            display: grid;
+            grid-template-columns: 18px 1fr;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 12px;
+            min-height: 44px;
+        }
+
+        .permission-section .role-menu-text {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .permission-section .role-menu-text strong {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .permission-section .role-menu-text span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+    </style>
 </head>
 <body class="c-form-page personnel-page">
 <div class="page">
@@ -151,7 +295,36 @@
             <button class="modal-close" id="permissionClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
         </div>
         <div class="modal-body">
-            <div class="c-empty" data-i18n="personnel.permission.pending">权限编辑功能待补充。</div>
+            <div class="permission-editor">
+                <section class="permission-section">
+                    <div class="permission-section-head">
+                        <h5 class="permission-section-title">角色</h5>
+                        <span class="permission-section-note">选择角色后自动勾选菜单，可继续手动调整。</span>
+                    </div>
+                    <div class="permission-role-list" id="permissionRoleList"></div>
+                </section>
+                <section class="permission-section">
+                    <div class="permission-section-head">
+                        <h5 class="permission-section-title">菜单权限</h5>
+                        <span class="permission-section-note">系统全部菜单</span>
+                    </div>
+                    <div class="c-dialog-toolbar">
+                        <label class="c-dialog-count permission-count-inline">
+                            <input type="checkbox" id="permissionMenuMasterCheck" aria-label="全选">
+                            <span>已选</span>
+                            <strong id="permissionMenuSelectedCount">0</strong>
+                            <span>项</span>
+                        </label>
+                    </div>
+                    <div class="c-card c-card-compact">
+                        <div class="role-menu-checklist" id="permissionMenuList"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="c-btn c-btn-secondary" id="permissionCancelBtn" data-i18n="common.cancel">取消</button>
+            <button type="button" class="c-btn c-btn-primary" id="permissionSaveBtn" data-i18n="common.save">保存</button>
         </div>
     </div>
 </div>
@@ -195,6 +368,12 @@
     const cancelBtn = document.getElementById("cancelBtn");
     const deleteBtn = document.getElementById("deleteBtn");
     const permissionClose = document.getElementById("permissionClose");
+    const permissionRoleList = document.getElementById("permissionRoleList");
+    const permissionMenuList = document.getElementById("permissionMenuList");
+    const permissionMenuMasterCheck = document.getElementById("permissionMenuMasterCheck");
+    const permissionMenuSelectedCount = document.getElementById("permissionMenuSelectedCount");
+    const permissionCancelBtn = document.getElementById("permissionCancelBtn");
+    const permissionSaveBtn = document.getElementById("permissionSaveBtn");
     const attendanceSettingClose = document.getElementById("attendanceSettingClose");
     const employeeForm = document.getElementById("employeeForm");
     const fieldName = document.getElementById("fieldName");
@@ -210,6 +389,8 @@
     const fieldEmergencyRelation = document.getElementById("fieldEmergencyRelation");
     const fieldHireDate = document.getElementById("fieldHireDate");
     const fieldLeaveDate = document.getElementById("fieldLeaveDate");
+    const ROLE_KEY = "app_role_id";
+    const sessionRoleId = "{{ request.session.role_id|default:'' }}";
 
     let allEmployees = [];
     let cachedDepartments = [];
@@ -219,6 +400,23 @@
     let totalPages = 1;
     let totalCount = 0;
     let currentFilters = {keyword: "", department: "all"};
+    let cachedRoles = [];
+    let cachedMenus = [];
+    let selectedRoleId = null;
+    let selectedMenuSet = new Set();
+    const readRoleId = () => {
+        try {
+            const stored = localStorage.getItem(ROLE_KEY);
+            if (stored) return stored;
+        } catch (err) {
+        }
+        if (sessionRoleId) {
+            try { localStorage.setItem(ROLE_KEY, String(sessionRoleId)); } catch (err) {}
+            return String(sessionRoleId);
+        }
+        return "";
+    };
+    const isAdminRole = () => String(readRoleId()) === "999";
 
     const ensureDepartments = (departments) => {
         cachedDepartments = Array.isArray(departments) ? departments : [];
@@ -237,6 +435,7 @@
             tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("personnel.empty")}</td></tr>`;
             return;
         }
+        const showPermission = isAdminRole();
         tableBody.innerHTML = list.map(item => (
             `<tr>
           <td data-label="${t("personnel.table.name")}">${item.name}</td>
@@ -249,7 +448,7 @@
             <div class="row-actions c-row-actions c-row-actions-nowrap">
               <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">${t("personnel.action.edit")}</button>
               <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">${t("personnel.action.tech_edit")}</button>
-              <button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">${t("personnel.action.permission")}</button>
+              ${showPermission ? `<button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">${t("personnel.action.permission")}</button>` : ""}
               <button class="c-btn c-btn-warn-lite c-btn-sm" data-action="attendance-setting" data-id="${item.id}">${t("personnel.action.attendance")}</button>
             </div>
           </td>
@@ -373,12 +572,176 @@
         }
         permissionModal.classList.add("show");
         permissionModal.setAttribute("aria-hidden", "false");
+        initPermissionEditor(id);
     }
 
     const closePermissionModal = () => {
         permissionModal.classList.remove("show");
         permissionModal.setAttribute("aria-hidden", "true");
     }
+
+    const permissionStorageKey = (employeeId) => `personnel_permission_${employeeId || "unknown"}`;
+
+    const requestPermissionJson = async (url, options = {}) => {
+        const response = await fetchWithAuth(url, options);
+        const data = await response.json();
+        return normalizeApiResponse(data);
+    };
+
+    const fetchPermissionRoles = async () => {
+        const res = await requestPermissionJson("/api/roles", {method: "GET"});
+        if (res.success) {
+            cachedRoles = Array.isArray(res.data?.items) ? res.data.items : [];
+        } else {
+            cachedRoles = [];
+        }
+    };
+
+    const fetchPermissionMenus = async () => {
+        const res = await requestPermissionJson("/api/menus", {method: "GET"});
+        if (res.success) {
+            cachedMenus = Array.isArray(res.data?.items) ? res.data.items : [];
+        } else {
+            cachedMenus = [];
+        }
+    };
+
+    const getAllMenuHtmls = () => cachedMenus.map(item => item.menu_html).filter(Boolean);
+
+    const normalizeRoleMenuList = (menuList) => {
+        if (menuList === "*") return "*";
+        if (Array.isArray(menuList)) return menuList;
+        if (typeof menuList === "string") {
+            try {
+                const parsed = JSON.parse(menuList);
+                if (Array.isArray(parsed)) return parsed;
+            } catch (err) {
+            }
+        }
+        return [];
+    };
+
+    const renderPermissionRoles = () => {
+        if (!permissionRoleList) return;
+        if (!cachedRoles.length) {
+            permissionRoleList.innerHTML = `<div class="c-empty">暂无数据</div>`;
+            return;
+        }
+        permissionRoleList.innerHTML = cachedRoles.map(role => {
+            const roleId = role.id ?? "";
+            const checked = String(selectedRoleId) === String(roleId);
+            return `
+                <label class="permission-role-option">
+                    <input type="radio" name="permission-role" value="${roleId}" ${checked ? "checked" : ""}>
+                    <span class="permission-role-meta">
+                        <strong>${role.role_name || ""}</strong>
+                        <span>${role.description || ""}</span>
+                    </span>
+                </label>
+            `;
+        }).join("");
+    };
+
+    const renderPermissionMenus = () => {
+        if (!permissionMenuList) return;
+        if (!cachedMenus.length) {
+            permissionMenuList.innerHTML = `<div class="c-empty">暂无数据</div>`;
+            updatePermissionSelectedCount();
+            return;
+        }
+        permissionMenuList.innerHTML = cachedMenus.map(menu => {
+            const value = menu.menu_html || "";
+            const checked = selectedMenuSet.has(value);
+            return `
+                <label class="role-menu-check">
+                    <input type="checkbox" value="${value}" ${checked ? "checked" : ""}>
+                    <span class="role-menu-text">
+                        <strong>${menu.menu_name || ""}</strong>
+                        <span>${value}</span>
+                    </span>
+                </label>
+            `;
+        }).join("");
+        updatePermissionSelectedCount();
+    };
+
+    const syncPermissionMenuChecks = () => {
+        if (!permissionMenuList) return;
+        permissionMenuList.querySelectorAll("input[type=\"checkbox\"]").forEach(input => {
+            input.checked = selectedMenuSet.has(input.value);
+        });
+        updatePermissionSelectedCount();
+    };
+
+    const updatePermissionSelectedCount = () => {
+        if (!permissionMenuList) return;
+        const total = permissionMenuList.querySelectorAll("input[type=\"checkbox\"]").length;
+        const count = permissionMenuList.querySelectorAll("input[type=\"checkbox\"]:checked").length;
+        if (permissionMenuSelectedCount) {
+            permissionMenuSelectedCount.textContent = String(count);
+        }
+        if (permissionMenuMasterCheck) {
+            if (total > 0 && count === total) {
+                permissionMenuMasterCheck.indeterminate = false;
+                permissionMenuMasterCheck.checked = true;
+            } else if (count === 0) {
+                permissionMenuMasterCheck.indeterminate = false;
+                permissionMenuMasterCheck.checked = false;
+            } else {
+                permissionMenuMasterCheck.checked = false;
+                permissionMenuMasterCheck.indeterminate = true;
+            }
+        }
+    };
+
+    const applyRoleMenus = (roleId) => {
+        const role = cachedRoles.find(item => String(item.id) === String(roleId));
+        if (!role) {
+            selectedMenuSet = new Set();
+            syncPermissionMenuChecks();
+            return;
+        }
+        const menuList = normalizeRoleMenuList(role.menu_list);
+        if (menuList === "*") {
+            selectedMenuSet = new Set(getAllMenuHtmls());
+        } else {
+            selectedMenuSet = new Set(menuList);
+        }
+        syncPermissionMenuChecks();
+    };
+
+    const loadSavedPermission = (employeeId) => {
+        try {
+            const raw = localStorage.getItem(permissionStorageKey(employeeId));
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== "object") return null;
+            return parsed;
+        } catch (err) {
+            return null;
+        }
+    };
+
+    const savePermissionSelection = (employeeId) => {
+        if (!employeeId) return;
+        const payload = {
+            roleId: selectedRoleId,
+            menuList: Array.from(selectedMenuSet)
+        };
+        try {
+            localStorage.setItem(permissionStorageKey(employeeId), JSON.stringify(payload));
+        } catch (err) {
+        }
+    };
+
+    const initPermissionEditor = async (employeeId) => {
+        await Promise.all([fetchPermissionRoles(), fetchPermissionMenus()]);
+        const saved = loadSavedPermission(employeeId);
+        selectedRoleId = saved?.roleId ?? null;
+        selectedMenuSet = new Set(Array.isArray(saved?.menuList) ? saved.menuList : []);
+        renderPermissionRoles();
+        renderPermissionMenus();
+    };
 
     const openAttendanceSettingModal = (id) => {
         try {
@@ -529,6 +892,42 @@
     permissionClose.addEventListener("click", closePermissionModal);
     permissionModal.addEventListener("click", (e) => {
         if (e.target === permissionModal) closePermissionModal();
+    });
+    permissionRoleList.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!target || target.type !== "radio") return;
+        selectedRoleId = target.value;
+        applyRoleMenus(selectedRoleId);
+    });
+    permissionMenuList.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!target || target.type !== "checkbox") return;
+        if (target.checked) {
+            selectedMenuSet.add(target.value);
+        } else {
+            selectedMenuSet.delete(target.value);
+        }
+        updatePermissionSelectedCount();
+    });
+    if (permissionMenuMasterCheck) {
+        permissionMenuMasterCheck.addEventListener("click", () => {
+            if (!permissionMenuList) return;
+            const allChecks = Array.from(permissionMenuList.querySelectorAll("input[type=\"checkbox\"]"));
+            const total = allChecks.length;
+            const checkedCount = allChecks.filter(input => input.checked).length;
+            const shouldCheckAll = total > 0 && checkedCount !== total;
+            selectedMenuSet = new Set(shouldCheckAll ? allChecks.map(input => input.value) : []);
+            allChecks.forEach(input => {
+                input.checked = shouldCheckAll;
+            });
+            updatePermissionSelectedCount();
+        });
+    }
+    permissionCancelBtn.addEventListener("click", closePermissionModal);
+    permissionSaveBtn.addEventListener("click", () => {
+        const employeeId = permissionModal?.getAttribute("data-employee-id") || "";
+        savePermissionSelection(employeeId);
+        closePermissionModal();
     });
     attendanceSettingClose.addEventListener("click", closeAttendanceSettingModal);
     attendanceSettingModal.addEventListener("click", (e) => {

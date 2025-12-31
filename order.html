@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="components.css">
     <title data-i18n="order.title">注文书管理</title>
 </head>
-<body>
-<div class="container page-wide c-stack">
+<body class="order-page">
+<div class="page">
+    <div class="c-stack">
     <div class="c-page-head-grid">
         <div class="c-page-head-spacer" aria-hidden="true"></div>
         <div class="c-switch-wrap">
@@ -91,7 +92,7 @@
 
         <div class="c-table-info" id="table-info">共 0 条 当前显示第 1 页</div>
         <div class="table-wrap c-table-wrapper">
-            <table class="c-table">
+            <table class="c-table c-table-hover">
                 <thead>
                 <tr>
                     <th data-i18n="order.table.order_no">注文No</th>
@@ -114,21 +115,15 @@
                 </thead>
                 <tbody id="order-body"></tbody>
             </table>
-            <div class="c-pager">
-                <div class="pagination c-pagination" id="order-pagination">
-                    <div class="pagination-summary">
-                        <span id="page-summary">共 0 条 · 第 1/1 页</span>
-                    </div>
-                    <div class="pagination-pages" id="order-pagination-pages"></div>
-                </div>
-                <select id="page-size">
-                    <option value="10" data-i18n="order.page_size_10">10 条/页</option>
-                    <option value="20" data-i18n="order.page_size_20">20 条/页</option>
-                    <option value="50" data-i18n="order.page_size_50">50 条/页</option>
-                </select>
+        </div>
+        <div class="pagination c-pagination" id="order-pagination">
+            <div class="pagination-summary">
+                <span id="page-summary">共 0 条 · 第 1/1 页</span>
             </div>
+            <div class="pagination-pages" id="order-pagination-pages"></div>
         </div>
     </section>
+    </div>
 </div>
 
 <dialog class="c-modal" id="createDialogIssue" aria-labelledby="createTitleIssue">
@@ -383,7 +378,6 @@
         const pagination = document.getElementById("order-pagination");
         const paginationPages = document.getElementById("order-pagination-pages");
         const pageSummary = document.getElementById("page-summary");
-        const pageSizeSelect = document.getElementById("page-size");
         const filters = {
             orderNo: document.getElementById("filter-order-no"),
             project: document.getElementById("filter-project"),
@@ -684,7 +678,7 @@
             params.append("page", String(currentPage));
             params.append("page_size", String(pageSize));
             const baseUrl = currentView === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            fetch(`${baseUrl}?${params.toString()}`)
+            fetchWithAuth(`${baseUrl}?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
                     const payload = normalizeApiResponse(data);
@@ -694,13 +688,18 @@
                         return;
                     }
                     const result = payload.data || {};
+                    const meta = payload.meta || {};
                     currentItems = Array.isArray(result.items) ? result.items : [];
-                    renderRows(
-                        currentItems,
-                        result.total ?? 0,
-                        result.page ?? 1,
-                        result.total_pages ?? 1
-                    );
+                    const totalCount = Number.isFinite(meta.total)
+                        ? meta.total
+                        : (Number.isFinite(result.total) ? result.total : currentItems.length);
+                    const page = Number.isFinite(meta.page)
+                        ? meta.page
+                        : (Number.isFinite(result.page) ? result.page : 1);
+                    const totalPages = Number.isFinite(meta.total_pages)
+                        ? meta.total_pages
+                        : (Number.isFinite(result.total_pages) ? result.total_pages : 1);
+                    renderRows(currentItems, totalCount, page, totalPages);
                 })
                 .catch(() => {
                     currentItems = [];
@@ -771,9 +770,8 @@
         const submitCreate = (view) => {
             const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
             const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            fetch(url, {
+            fetchWithAuth(url, {
                 method: "POST",
-                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),
             })
                 .then((response) => response.json())
@@ -798,9 +796,8 @@
             const url = currentView === "accept"
                 ? `/api/sales-orders/${currentDetailId}`
                 : `/api/purchase-orders/${currentDetailId}`;
-            fetch(url, {
+            fetchWithAuth(url, {
                 method: "PUT",
-                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify(payload),
             })
                 .then((response) => response.json())
@@ -841,7 +838,7 @@
             params.append("company_name", keyword);
             params.append("page", "1");
             params.append("page_size", "10");
-            fetch(`/api/customers?${params.toString()}`)
+            fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
                     const payload = normalizeApiResponse(data);
@@ -875,7 +872,7 @@
             }
             const params = new URLSearchParams();
             params.append("keyword", keyword);
-            fetch(`/api/employees?${params.toString()}`)
+            fetchWithAuth(`/api/employees?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
                     const payload = normalizeApiResponse(data);
@@ -922,7 +919,7 @@
             }
             const params = new URLSearchParams();
             params.append("keyword", keyword);
-            fetch(`/api/technicians?${params.toString()}`)
+            fetchWithAuth(`/api/technicians?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
                     const payload = normalizeApiResponse(data);
@@ -1005,15 +1002,6 @@
             }
             fetchOrders();
         });
-        if (pageSizeSelect) {
-            pageSizeSelect.addEventListener("change", () => {
-                const value = parseInt(pageSizeSelect.value, 10);
-                pageSize = Number.isFinite(value) ? value : 10;
-                currentPage = 1;
-                fetchOrders();
-            });
-        }
-
         if (tableBody) {
             tableBody.addEventListener("click", (event) => {
                 const btn = event.target.closest("button[data-action]");

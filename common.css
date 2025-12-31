@@ -72,6 +72,18 @@ body > .page {
   margin: 0 auto;
   padding: 24px;
 }
+.order-page .c-switcher-group {
+  padding: 6px;
+  gap: 10px;
+}
+.order-page .c-switcher-group .c-toggle {
+  padding: 12px 30px;
+  font-size: 15px;
+  min-height: 40px;
+}
+.order-page .c-page-head-grid {
+  margin-bottom: 0;
+}
 .c-split-grid {
   display: grid;
   grid-template-columns: 7fr 5fr;

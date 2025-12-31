@@ -3,46 +3,471 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title data-i18n="permission.title">权限管理</title>
+    <link rel="stylesheet" href="components.css">
+    <title>权限管理</title>
     <style>
-* {
-            box-sizing: border-box;
-        }
-
         body {
-            margin: 0;
-            font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
             background: transparent;
-            color: var(--text);
         }
 
-        .page {
-            padding: 4px 4px 12px;
+        .permission-grid {
+            display: grid;
+            grid-template-columns: minmax(280px, 0.9fr) minmax(520px, 1.6fr);
+            gap: 16px;
+            align-items: start;
         }
-        .hint {
-            margin: 0;
+
+        @media (max-width: 1100px) {
+            .permission-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .permission-subtitle {
+            margin: 6px 0 0;
             color: var(--muted);
-            line-height: 1.7;
-            font-size: 14px;
+            font-size: 13px;
         }
-  </style>
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .menu-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .role-menu-checklist {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .role-menu-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid #e6ecf6;
+        }
+
+        .role-menu-check span {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .role-menu-check input {
+            accent-color: var(--primary);
+        }
+
+    </style>
 </head>
 <body>
-<div class="page">
-    <div class="c-card">
-        <h3 class="title c-title-bar c-title-bar-sm" data-i18n="permission.title">权限管理</h3>
-        <p class="hint" data-i18n="permission.hint">该功能页面尚未接入（占位页）。你提供实际页面文件名后，我可以把这里替换为真实功能页面。</p>
+<div class="page page-wide permission-page">
+    <div class="permission-grid">
+        <section class="c-card">
+            <div class="c-card-header c-card-header-gradient">
+                <div>
+                    <h3 class="c-panel-title">角色管理</h3>
+                    <p class="permission-subtitle">当前系统内置角色，仅展示，不支持新建与编辑。</p>
+                </div>
+                <span class="c-tag c-tag-neutral">只读</span>
+            </div>
+            <div class="c-table-wrapper">
+                <table class="c-table c-table-hover c-table-center">
+                    <thead>
+                    <tr>
+                        <th>角色</th>
+                        <th>角色描述</th>
+                        <th class="c-actions-col">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="role-badge">
+                            <span class="c-pill c-pill-primary">技术者</span>
+                        </td>
+                        <td>可查看匹配、履历、送信历史等内容</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-role="技术者">详情</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role-badge">
+                            <span class="c-pill c-pill-info">营业</span>
+                        </td>
+                        <td>可管理客户、订单、请求书等业务模块</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-role="营业">详情</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="role-badge">
+                            <span class="c-pill c-pill-warn">管理员</span>
+                        </td>
+                        <td>拥有菜单、权限与系统配置的最高管理权</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-role="管理员">详情</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="c-card">
+            <div class="c-card-header c-card-header-gradient">
+                <div>
+                    <h3 class="c-panel-title">菜单管理</h3>
+                    <p class="permission-subtitle">index.html 中所有功能列表由此维护。</p>
+                </div>
+                <button class="c-btn c-btn-primary c-btn-strong" id="menu-add" type="button">+ 新增菜单</button>
+            </div>
+            <div class="c-table-wrapper">
+                <table class="c-table c-table-hover c-table-center">
+                    <thead>
+                    <tr>
+                        <th>菜单名</th>
+                        <th>页面文件</th>
+                        <th>排序</th>
+                        <th class="c-actions-col">操作</th>
+                    </tr>
+                    </thead>
+                    <tbody id="menu-body">
+                    <tr data-name="主页" data-page="home.html" data-sort="1">
+                        <td>主页</td>
+                        <td>home.html</td>
+                        <td>1</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="BP Match" data-page="match.html" data-sort="2">
+                        <td>BP Match</td>
+                        <td>match.html</td>
+                        <td>2</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="社内 Match" data-page="qiuanjian.html" data-sort="3">
+                        <td>社内 Match</td>
+                        <td>qiuanjian.html</td>
+                        <td>3</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="送信历史" data-page="songxinhistory.html" data-sort="4">
+                        <td>送信历史</td>
+                        <td>songxinhistory.html</td>
+                        <td>4</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="技术者管理" data-page="people.html" data-sort="5">
+                        <td>技术者管理</td>
+                        <td>people.html</td>
+                        <td>5</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="社内人员管理" data-page="personnel.html" data-sort="6">
+                        <td>社内人员管理</td>
+                        <td>personnel.html</td>
+                        <td>6</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="考勤管理" data-page="attendance.html" data-sort="7">
+                        <td>考勤管理</td>
+                        <td>attendance.html</td>
+                        <td>7</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="我的考勤" data-page="myattendance.html" data-sort="8">
+                        <td>我的考勤</td>
+                        <td>myattendance.html</td>
+                        <td>8</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="通知管理" data-page="notification.html" data-sort="9">
+                        <td>通知管理</td>
+                        <td>notification.html</td>
+                        <td>9</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="注文书管理" data-page="order.html" data-sort="10">
+                        <td>注文书管理</td>
+                        <td>order.html</td>
+                        <td>10</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="请求书管理" data-page="pay_request.html" data-sort="11">
+                        <td>请求书管理</td>
+                        <td>pay_request.html</td>
+                        <td>11</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="权限管理" data-page="permission.html" data-sort="12">
+                        <td>权限管理</td>
+                        <td>permission.html</td>
+                        <td>12</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="客户管理" data-page="customer.html" data-sort="13">
+                        <td>客户管理</td>
+                        <td>customer.html</td>
+                        <td>13</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    <tr data-name="数据分析" data-page="analysis.html" data-sort="14">
+                        <td>数据分析</td>
+                        <td>analysis.html</td>
+                        <td>14</td>
+                        <td class="menu-actions">
+                            <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+                            <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 </div>
-<script src="i18n.js"></script>
+
+<dialog class="c-dialog" id="menu-dialog">
+    <div class="c-dialog-header">
+        <h3 id="menu-dialog-title">新增菜单</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <form id="menu-form" class="form-grid">
+            <label class="c-field">
+                <span>菜单名</span>
+                <input id="menu-name" type="text" required>
+            </label>
+            <label class="c-field">
+                <span>页面文件</span>
+                <input id="menu-page" type="text" placeholder="例如：customer.html" required>
+            </label>
+            <label class="c-field">
+                <span>排序</span>
+                <input id="menu-sort" type="number" min="1" step="1" placeholder="例如：10" required>
+            </label>
+        </form>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+        <button class="c-btn c-btn-primary" id="menu-save" type="button">保存</button>
+    </div>
+</dialog>
+
+<dialog class="c-dialog" id="role-dialog">
+    <div class="c-dialog-header">
+        <h3 id="role-dialog-title">角色详情</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <div id="role-dialog-body" class="c-card c-card-compact"></div>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-primary" type="button" data-dialog-close>知道了</button>
+    </div>
+</dialog>
+
 <script>
-  if (window.I18N) {
-    window.I18N.init();
-    window.I18N.apply();
-  }
+  const menuDialog = document.getElementById("menu-dialog");
+  const menuDialogTitle = document.getElementById("menu-dialog-title");
+  const menuForm = document.getElementById("menu-form");
+  const menuName = document.getElementById("menu-name");
+  const menuPage = document.getElementById("menu-page");
+  const menuSort = document.getElementById("menu-sort");
+  const menuBody = document.getElementById("menu-body");
+  const addBtn = document.getElementById("menu-add");
+  const saveBtn = document.getElementById("menu-save");
+  const roleDialog = document.getElementById("role-dialog");
+  const roleDialogTitle = document.getElementById("role-dialog-title");
+  const roleDialogBody = document.getElementById("role-dialog-body");
+
+  const roleMenus = {
+    "技术者": [
+      { name: "BP Match", page: "match.html" },
+      { name: "社内 Match", page: "qiuanjian.html" },
+      { name: "送信历史", page: "songxinhistory.html" },
+      { name: "技术者管理", page: "people.html" },
+      { name: "我的考勤", page: "myattendance.html" }
+    ],
+    "营业": [
+      { name: "客户管理", page: "customer.html" },
+      { name: "注文书管理", page: "order.html" },
+      { name: "请求书管理", page: "pay_request.html" },
+      { name: "通知管理", page: "notification.html" },
+      { name: "数据分析", page: "analysis.html" }
+    ],
+    "管理员": [
+      { name: "主页", page: "home.html" },
+      { name: "社内人员管理", page: "personnel.html" },
+      { name: "考勤管理", page: "attendance.html" },
+      { name: "权限管理", page: "permission.html" },
+      { name: "通知管理", page: "notification.html" }
+    ]
+  };
+
+  const getAllMenus = () => {
+    return Array.from(menuBody.rows).map((row) => ({
+      name: row.dataset.name || row.cells[0]?.textContent?.trim() || "",
+      page: row.dataset.page || row.cells[1]?.textContent?.trim() || "",
+      sort: Number(row.dataset.sort || row.cells[2]?.textContent?.trim() || 0)
+    })).filter((item) => item.name && item.page)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+  };
+
+  const openMenuDialog = (mode, row) => {
+    menuDialog.dataset.editing = "";
+    if (mode === "edit" && row) {
+      menuDialog.dataset.editing = "1";
+      menuDialog.dataset.rowIndex = row.rowIndex;
+      menuDialogTitle.textContent = "编辑菜单";
+      menuName.value = row.dataset.name || "";
+      menuPage.value = row.dataset.page || "";
+      menuSort.value = row.dataset.sort || "";
+    } else {
+      menuDialogTitle.textContent = "新增菜单";
+      menuForm.reset();
+      menuSort.value = "";
+    }
+    menuDialog.showModal();
+  };
+
+  const updateRow = (row, name, page, sort) => {
+    row.dataset.name = name;
+    row.dataset.page = page;
+    row.dataset.sort = sort;
+    row.children[0].textContent = name;
+    row.children[1].textContent = page;
+    row.children[2].textContent = sort;
+  };
+
+  addBtn.addEventListener("click", () => openMenuDialog("add"));
+
+  menuBody.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-action]");
+    if (!btn) return;
+    const row = btn.closest("tr");
+    if (!row) return;
+    if (btn.dataset.action === "edit") {
+      openMenuDialog("edit", row);
+      return;
+    }
+    if (btn.dataset.action === "delete") {
+      if (confirm(`确定删除菜单「${row.dataset.name || "未命名"}」吗？`)) {
+        row.remove();
+      }
+    }
+  });
+
+  saveBtn.addEventListener("click", () => {
+    if (!menuForm.reportValidity()) return;
+    const name = menuName.value.trim();
+    const page = menuPage.value.trim();
+    const sort = menuSort.value.trim();
+    if (menuDialog.dataset.editing) {
+      const rowIndex = Number(menuDialog.dataset.rowIndex || 0);
+      const row = menuBody.rows[rowIndex - 1];
+      if (row) updateRow(row, name, page, sort);
+    } else {
+      const row = document.createElement("tr");
+      row.dataset.name = name;
+      row.dataset.page = page;
+      row.dataset.sort = sort;
+      row.innerHTML = `
+        <td>${name}</td>
+        <td>${page}</td>
+        <td>${sort}</td>
+        <td class="menu-actions">
+          <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
+          <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+        </td>
+      `;
+      menuBody.appendChild(row);
+    }
+    menuDialog.close();
+  });
+
+  document.querySelectorAll("[data-role]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const roleName = btn.dataset.role;
+      const menus = roleMenus[roleName] || [];
+      const menuSet = new Set(menus.map((item) => item.page));
+      const allMenus = getAllMenus();
+      roleDialogTitle.textContent = `${roleName} - 角色详情`;
+      roleDialogBody.innerHTML = allMenus.length
+        ? `<div class="role-menu-checklist">${allMenus.map(item => `
+            <label class="role-menu-check">
+              <input type="checkbox" ${menuSet.has(item.page) ? "checked" : ""} disabled>
+              <strong>${item.name}</strong>
+              <span>${item.page}</span>
+            </label>
+          `).join("")}</div>`
+        : "<p class=\"permission-subtitle\">暂无菜单</p>";
+      roleDialog.showModal();
+    });
+  });
+
+  menuDialog.addEventListener("click", (event) => {
+    if (event.target.matches("[data-dialog-close]")) {
+      menuDialog.close();
+    }
+  });
+
+  roleDialog.addEventListener("click", (event) => {
+    if (event.target.matches("[data-dialog-close]")) {
+      roleDialog.close();
+    }
+  });
+
 </script>
 </body>
 </html>

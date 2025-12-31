@@ -171,6 +171,9 @@
   padding: 14px 16px;
   border-bottom: 1px solid var(--border);
 }
+.c-card-header-gradient {
+  background: radial-gradient(circle at top, rgba(28, 123, 255, 0.08), transparent 70%);
+}
 
 .c-card-title {
   display: flex;

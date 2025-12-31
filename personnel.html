@@ -549,7 +549,9 @@
         fieldHireDate.value = formatDate(data?.hire_date || "");
         fieldLeaveDate.value = formatDate(data?.leave_date || "");
         if (deleteBtn) {
-            deleteBtn.hidden = mode !== "edit";
+            const shouldShow = mode === "edit";
+            deleteBtn.hidden = !shouldShow;
+            deleteBtn.style.display = shouldShow ? "" : "none";
         }
         employeeModal.classList.add("show");
         employeeModal.setAttribute("aria-hidden", "false");
@@ -562,6 +564,7 @@
         editingId = null;
         if (deleteBtn) {
             deleteBtn.hidden = true;
+            deleteBtn.style.display = "none";
         }
     }
 

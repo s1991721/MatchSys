@@ -49,12 +49,18 @@ def login_api(request):
     request.session.cycle_key()
     request.session["employee_id"] = user_login.employee_id
     request.session["employee_name"] = user_login.employee_name
+    raw_menu_list = user_login.menu_list or ""
+    normalized_menu_list = raw_menu_list
+    if raw_menu_list == "*":
+        normalized_menu_list = '["*"]'
+    elif isinstance(raw_menu_list, list):
+        normalized_menu_list = '["*"]' if "*" in raw_menu_list else raw_menu_list
     request.session["role_id"] = user_login.role_id
-    request.session["menu_list"] = user_login.menu_list or ""
+    request.session["menu_list"] = normalized_menu_list
 
     return api_success(data={
         "role_id": user_login.role_id,
-        "menu_list": user_login.menu_list or "",
+        "menu_list": normalized_menu_list,
     })
 
 

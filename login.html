@@ -124,7 +124,23 @@
                     }
                     const loginData = payload.data || {};
                     const roleId = loginData.role_id ?? loginData.roleId ?? "";
-                    const menuList = loginData.menu_list ?? loginData.menuList ?? "";
+                    let menuList = loginData.menu_list ?? loginData.menuList ?? "";
+                    if (menuList === "*") {
+                        menuList = ["*"];
+                    } else if (Array.isArray(menuList)) {
+                        if (menuList.includes("*")) {
+                            menuList = ["*"];
+                        }
+                    } else if (typeof menuList === "string") {
+                        try {
+                            const parsed = JSON.parse(menuList);
+                            if (parsed === "*") {
+                                menuList = ["*"];
+                            } else if (Array.isArray(parsed)) {
+                                menuList = parsed.includes("*") ? ["*"] : parsed;
+                            }
+                        } catch (e) {}
+                    }
                     try {
                         if (roleId !== "" && roleId !== null && roleId !== undefined) {
                             localStorage.setItem(ROLE_KEY, String(roleId));

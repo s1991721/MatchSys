@@ -212,6 +212,7 @@
       const KEY = "chat_sidebar_collapsed";
       const LANG_KEY = "app_lang";
       const MENU_KEY = "app_menu_list";
+      const sessionMenuList = "{{ request.session.menu_list|default:'' }}";
       const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
       const i18n = window.I18N;
 
@@ -339,6 +340,10 @@
         } catch (e) {
           raw = "";
         }
+        if (!raw && sessionMenuList) {
+          try { localStorage.setItem(MENU_KEY, String(sessionMenuList)); } catch (e) {}
+          raw = String(sessionMenuList);
+        }
         if (!raw) return null;
         if (raw === "*") return "*";
         try {
@@ -369,6 +374,7 @@
       const buildAllowedMenuSet = () => {
         const menuList = readMenuList();
         if (!menuList || menuList === "*") return null;
+        if (Array.isArray(menuList) && menuList.includes("*")) return null;
         return new Set(menuList.map(normalizeMenuItem).filter(Boolean));
       };
       const allowedMenuSet = buildAllowedMenuSet();

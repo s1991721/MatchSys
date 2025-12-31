@@ -6,6 +6,9 @@ CREATE TABLE user_login
     user_name     VARCHAR(100) NOT NULL COMMENT '登录用户名',
     password      VARCHAR(255) NOT NULL COMMENT '密码（建议存 hash）',
 
+    role_id       BIGINT       NULL COMMENT '角色id',
+    menu_list     TEXT         NULL COMMENT '拥有的菜单',
+
     created_by    BIGINT       NULL COMMENT '创建人 employee.id',
     created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
@@ -18,6 +21,10 @@ CREATE TABLE user_login
   DEFAULT CHARSET = utf8mb4
     COMMENT ='用户登录表';
 
+INSERT INTO user_login (employee_id, employee_name, user_name, password, role_id, menu_list, created_by, created_at,
+                        updated_by, updated_at, deleted_at)
+VALUES (1, '系统管理员', 'admin', 'admin',
+        1, '["dashboard","user_manage","role_manage","menu_manage","system_config"]', NULL, NOW(), NULL, NOW(), NULL);
 
 
 CREATE TABLE employee

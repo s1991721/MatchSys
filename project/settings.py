@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "attendance",
     "customer",
     "order",
+    "permission"
 ]
 
 MIDDLEWARE = [

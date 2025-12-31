@@ -62,6 +62,12 @@ from order.views import (
     sales_orders_api,
     sales_order_detail_api,
 )
+from permission.views import (
+    menus_api,
+    menu_detail_api,
+    roles_api,
+    role_detail_api,
+)
 
 custom_404 = TemplateView.as_view(template_name="404.html")
 handler404 = "project.urls.custom_404"
@@ -146,4 +152,9 @@ urlpatterns = [
 
     # -------------------------------notification UI-------------------------------
 
+    # -------------------------------permission API-------------------------------
+    path("api/menus", menus_api, name="menu-list"),
+    path("api/menus/<int:menu_id>", menu_detail_api, name="menu-detail"),
+    path("api/roles", roles_api, name="role-list"),
+    path("api/roles/<int:role_id>", role_detail_api, name="role-detail"),
 ]

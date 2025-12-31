@@ -102,6 +102,7 @@ urlpatterns = [
     # -------------------------------notification UI-------------------------------
     path("notification.html", TemplateView.as_view(template_name="notification.html")),
     path("analysis.html", TemplateView.as_view(template_name="analysis.html")),
+    path("system_settings.html", TemplateView.as_view(template_name="system_settings.html")),
     # -------------------------------common-------------------------------
     path("common.css", TemplateView.as_view(template_name="common.css", content_type="text/css")),
     path("components.css", TemplateView.as_view(template_name="components.css", content_type="text/css")),

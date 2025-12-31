@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
+  <title data-i18n="nav.system_settings">系统设置</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: transparent;
+      color: var(--text);
+    }
+
+    .page {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .title {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      background: #fff;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .tile {
+      border-radius: 14px;
+      border: 1px dashed var(--border);
+      padding: 14px;
+      background: #f8faff;
+    }
+
+    .tile h3 {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .tile p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="title">
+        <h1 data-i18n="nav.system_settings">系统设置</h1>
+        <p data-i18n="notice.body">功能开发中</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid">
+        <div class="tile">
+          <h3 data-i18n="nav.permission">权限管理</h3>
+          <p data-i18n="notice.body">功能开发中</p>
+        </div>
+        <div class="tile">
+          <h3 data-i18n="nav.notification">通知管理</h3>
+          <p data-i18n="notice.body">功能开发中</p>
+        </div>
+        <div class="tile">
+          <h3 data-i18n="nav.customer">客户管理</h3>
+          <p data-i18n="notice.body">功能开发中</p>
+        </div>
+        <div class="tile">
+          <h3 data-i18n="nav.analysis">数据分析</h3>
+          <p data-i18n="notice.body">功能开发中</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script>
+    if (window.I18N) {
+      window.I18N.apply();
+    }
+  </script>
+</body>
+</html>

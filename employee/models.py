@@ -101,7 +101,7 @@ class Technician(models.Model):
         (4, "现场已确定"),
     )
 
-    employee_id = models.BigIntegerField(unique=True, verbose_name="员工ID")
+    employee_id = models.BigIntegerField(primary_key=True, unique=True, verbose_name="员工ID")
 
     name = models.CharField(max_length=100, verbose_name="姓名")
 

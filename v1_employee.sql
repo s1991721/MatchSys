@@ -50,6 +50,8 @@ CREATE TABLE employee
     department_name                VARCHAR(100) NULL COMMENT '部门名称',
     position_name                  VARCHAR(100) NULL COMMENT '职位名称',
 
+    status                         SMALLINT     NULL COMMENT '1在职/0离职/2停用...',
+
     created_by                     BIGINT       NULL COMMENT '创建人 employee.id',
     created_at                     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 

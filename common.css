@@ -339,6 +339,56 @@ body > .page {
   font-size: 13px;
   line-height: 1.6;
 }
+.c-inline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.c-row-actions-center {
+  justify-content: center;
+}
+.c-checklist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.c-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e6ecf6;
+}
+.c-check-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.c-check-item input {
+  accent-color: var(--primary);
+}
+.c-dialog-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 6px 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+.c-dialog-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.c-dialog-count input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
 .c-filter-row {
   flex-wrap: wrap;
   gap: 12px;

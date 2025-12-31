@@ -87,7 +87,7 @@ urlpatterns = [
     path("attendance.html", TemplateView.as_view(template_name="attendance.html")),
     path("myattendance.html", TemplateView.as_view(template_name="myattendance.html")),
     # -------------------------------bpmatch UI-------------------------------
-    path("match.html", TemplateView.as_view(template_name="match.html")),
+    path("bpmatch.html", TemplateView.as_view(template_name="bpmatch.html")),
     path("qiuanjian.html", TemplateView.as_view(template_name="qiuanjian.html")),
     path("qiuren.html", TemplateView.as_view(template_name="qiuren.html")),
     path("songxin.html", TemplateView.as_view(template_name="songxin.html")),

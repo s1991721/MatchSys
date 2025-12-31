@@ -219,7 +219,7 @@ def employee_departments_api(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
-# 获取员工列表
+# 获取员工列表、创建员工
 def employees_api(request):
     if request.method == "POST":
         login_id = request.session.get("employee_id")

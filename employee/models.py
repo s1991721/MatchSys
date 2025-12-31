@@ -11,11 +11,11 @@ class UserLogin(models.Model):
     role_id = models.BigIntegerField(null=True, blank=True, verbose_name="角色ID")
     menu_list = models.TextField(blank=True, verbose_name="菜单列表")
 
-    created_by = models.CharField(max_length=100)
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_by = models.CharField(max_length=100)
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")
 
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)

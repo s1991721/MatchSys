@@ -972,6 +972,31 @@ body.sidebar-collapsed .sidebar .footer {
   cursor: default;
   opacity: 0.6;
 }
+.role-menu-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.role-menu-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 14px;
+  border: 1px solid #dfe6f5;
+  background: #fff;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.role-menu-check:hover {
+  border-color: rgba(28, 123, 255, 0.35);
+  box-shadow: 0 8px 18px rgba(31, 53, 90, 0.08);
+  background: #f8faff;
+}
+.role-menu-check input[type="checkbox"] {
+  margin-top: 2px;
+  accent-color: var(--primary);
+}
 .personnel-page .modal {
   position: fixed;
   inset: 0;

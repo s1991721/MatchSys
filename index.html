@@ -211,6 +211,7 @@
       const pageSubtitle = document.getElementById("pageSubtitle");
       const KEY = "chat_sidebar_collapsed";
       const LANG_KEY = "app_lang";
+      const MENU_KEY = "app_menu_list";
       const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
       const i18n = window.I18N;
 
@@ -327,6 +328,69 @@
       }
 
       const links = nav ? Array.from(nav.querySelectorAll("a[data-src]")) : [];
+      const normalizeMenuItem = (value) => (value || "")
+        .replace(/^#/, "")
+        .replace(/^\//, "")
+        .trim();
+      const readMenuList = () => {
+        let raw = "";
+        try {
+          raw = localStorage.getItem(MENU_KEY) || "";
+        } catch (e) {
+          raw = "";
+        }
+        if (!raw) return null;
+        if (raw === "*") return "*";
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed === "*") return "*";
+          if (Array.isArray(parsed)) return parsed;
+          if (typeof parsed === "string") {
+            const nested = parsed.trim();
+            if (nested === "*") return "*";
+            if (nested.startsWith("[") && nested.endsWith("]")) {
+              try {
+                const nestedParsed = JSON.parse(nested);
+                if (Array.isArray(nestedParsed)) return nestedParsed;
+              } catch (e) {}
+            }
+            return nested ? [nested] : [];
+          }
+        } catch (e) {}
+        const trimmed = raw.trim();
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed;
+          } catch (e) {}
+        }
+        return trimmed ? [trimmed] : [];
+      };
+      const buildAllowedMenuSet = () => {
+        const menuList = readMenuList();
+        if (!menuList || menuList === "*") return null;
+        return new Set(menuList.map(normalizeMenuItem).filter(Boolean));
+      };
+      const allowedMenuSet = buildAllowedMenuSet();
+      const isAllowedRoute = (src) => {
+        if (!allowedMenuSet) return true;
+        const normalized = normalizeMenuItem(src);
+        if (normalized === "home.html") return true;
+        return allowedMenuSet.has(normalized);
+      };
+      const applyMenuFilter = () => {
+        if (!allowedMenuSet) return;
+        links.forEach((link) => {
+          const src = normalizeMenuItem(link.getAttribute("data-src"));
+          const isHome = src === "home.html";
+          const allowed = isHome || allowedMenuSet.has(src);
+          const item = link.closest("li");
+          if (item) {
+            item.style.display = allowed ? "" : "none";
+          }
+          link.setAttribute("aria-hidden", String(!allowed));
+        });
+      };
 
       const setActive = (src) => {
         for (const a of links) {
@@ -367,7 +431,14 @@
       };
 
       const syncFromHash = () => {
-        const src = resolveFromHash() || "home.html";
+        let src = resolveFromHash() || "home.html";
+        if (!isAllowedRoute(src)) {
+          src = "home.html";
+          if (location.hash !== "#" + src) {
+            location.hash = src;
+            return;
+          }
+        }
         applyRoute(src);
       };
 
@@ -387,6 +458,7 @@
       };
 
       initLang();
+      applyMenuFilter();
 
       if (nav) {
         nav.addEventListener("click", handleRouteClick);

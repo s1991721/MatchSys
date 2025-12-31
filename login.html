@@ -46,6 +46,8 @@
     const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
     const LANG_KEY = "app_lang";
+    const ROLE_KEY = "app_role_id";
+    const MENU_KEY = "app_menu_list";
 
     const getI18n = () => window.I18N || null;
     const t = (key) => {
@@ -120,6 +122,25 @@
                     if (!res.ok || !payload.success) {
                         throw new Error(payload.message || t("login.failed"));
                     }
+                    const loginData = payload.data || {};
+                    const roleId = loginData.role_id ?? loginData.roleId ?? "";
+                    const menuList = loginData.menu_list ?? loginData.menuList ?? "";
+                    try {
+                        if (roleId !== "" && roleId !== null && roleId !== undefined) {
+                            localStorage.setItem(ROLE_KEY, String(roleId));
+                        } else {
+                            localStorage.removeItem(ROLE_KEY);
+                        }
+                        if (menuList !== "" && menuList !== null && menuList !== undefined) {
+                            if (Array.isArray(menuList)) {
+                                localStorage.setItem(MENU_KEY, JSON.stringify(menuList));
+                            } else {
+                                localStorage.setItem(MENU_KEY, String(menuList));
+                            }
+                        } else {
+                            localStorage.removeItem(MENU_KEY);
+                        }
+                    } catch (e) {}
                     const target = "index.html".replace(/^\//, "");
                     const next = new URL(target, window.location.href);
                     let currentLang = "zh-CN";

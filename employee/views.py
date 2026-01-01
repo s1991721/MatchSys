@@ -1,3 +1,4 @@
+import json
 import mimetypes
 import os
 from decimal import Decimal
@@ -149,6 +150,72 @@ def employee_detail_api(request, employee_id):
         request.session["employee_position_name"] = employee.position_name
     item = Employee.serialize(employee)
     return api_success(data=item)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "PUT"])
+def employee_permission_api(request, employee_id):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error(status=401, message="employee id is required")
+
+    user_login = UserLogin.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).first()
+    if not user_login:
+        return api_error("User login not found", status=404)
+
+    if request.method == "GET":
+        menu_list = user_login.menu_list or ""
+        payload_menu = []
+        if menu_list == "*":
+            payload_menu = "*"
+        elif isinstance(menu_list, list):
+            payload_menu = menu_list
+        elif isinstance(menu_list, str):
+            try:
+                parsed = json.loads(menu_list)
+                if isinstance(parsed, list):
+                    payload_menu = parsed
+            except json.JSONDecodeError:
+                payload_menu = []
+        return api_success(data={
+            "role_id": user_login.role_id,
+            "menu_list": payload_menu,
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    role_id = payload.get("role_id")
+    if role_id in ("", None):
+        role_id_value = None
+    else:
+        try:
+            role_id_value = int(role_id)
+        except (TypeError, ValueError):
+            return api_error("Invalid role_id", status=400)
+
+    menu_list = payload.get("menu_list")
+    if menu_list == "*":
+        menu_value = "*"
+    elif isinstance(menu_list, list):
+        menu_value = json.dumps(menu_list, ensure_ascii=False)
+    elif isinstance(menu_list, str):
+        menu_value = menu_list
+    else:
+        menu_value = ""
+
+    user_login.role_id = role_id_value
+    user_login.menu_list = menu_value
+    user_login.updated_by = login_id
+    user_login.save(update_fields=["role_id", "menu_list", "updated_by", "updated_at"])
+    return api_success(data={
+        "role_id": user_login.role_id,
+        "menu_list": menu_list,
+    })
 
 
 @csrf_exempt

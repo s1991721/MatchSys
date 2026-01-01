@@ -725,23 +725,51 @@
         }
     };
 
-    const savePermissionSelection = (employeeId) => {
+    const fetchEmployeePermission = async (employeeId) => {
+        if (!employeeId) return null;
+        try {
+            const res = await requestPermissionJson(`/api/employees/${employeeId}/permission`, {method: "GET"});
+            if (!res.success) return null;
+            return res.data || null;
+        } catch (err) {
+            return null;
+        }
+    };
+
+    const savePermissionSelection = async (employeeId) => {
         if (!employeeId) return;
         const payload = {
-            roleId: selectedRoleId,
-            menuList: Array.from(selectedMenuSet)
+            role_id: selectedRoleId ? Number(selectedRoleId) : null,
+            menu_list: Array.from(selectedMenuSet)
         };
+        const res = await requestPermissionJson(`/api/employees/${employeeId}/permission`, {
+            method: "PUT",
+            body: JSON.stringify(payload)
+        });
+        if (!res.success) {
+            throw new Error(res.message || t("personnel.error.update_failed"));
+        }
         try {
-            localStorage.setItem(permissionStorageKey(employeeId), JSON.stringify(payload));
+            localStorage.setItem(permissionStorageKey(employeeId), JSON.stringify({
+                roleId: payload.role_id,
+                menuList: payload.menu_list
+            }));
         } catch (err) {
         }
     };
 
     const initPermissionEditor = async (employeeId) => {
         await Promise.all([fetchPermissionRoles(), fetchPermissionMenus()]);
+        const serverPermission = await fetchEmployeePermission(employeeId);
         const saved = loadSavedPermission(employeeId);
-        selectedRoleId = saved?.roleId ?? null;
-        selectedMenuSet = new Set(Array.isArray(saved?.menuList) ? saved.menuList : []);
+        const source = serverPermission || saved || {};
+        selectedRoleId = source?.role_id ?? source?.roleId ?? null;
+        const menuList = source?.menu_list ?? source?.menuList ?? [];
+        if (menuList === "*") {
+            selectedMenuSet = new Set(getAllMenuHtmls());
+        } else {
+            selectedMenuSet = new Set(Array.isArray(menuList) ? menuList : []);
+        }
         renderPermissionRoles();
         renderPermissionMenus();
     };
@@ -927,10 +955,14 @@
         });
     }
     permissionCancelBtn.addEventListener("click", closePermissionModal);
-    permissionSaveBtn.addEventListener("click", () => {
+    permissionSaveBtn.addEventListener("click", async () => {
         const employeeId = permissionModal?.getAttribute("data-employee-id") || "";
-        savePermissionSelection(employeeId);
-        closePermissionModal();
+        try {
+            await savePermissionSelection(employeeId);
+            closePermissionModal();
+        } catch (err) {
+            alert(`${t("personnel.error.update_failed")}：${err.message}`);
+        }
     });
     attendanceSettingClose.addEventListener("click", closeAttendanceSettingModal);
     attendanceSettingModal.addEventListener("click", (e) => {

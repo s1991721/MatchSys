@@ -48,6 +48,7 @@ from employee.views import (
     change_password_api,
     employee_detail_api,
     employee_departments_api,
+    employee_permission_api,
     employees_api,
     login_api,
     logout_api,
@@ -116,6 +117,7 @@ urlpatterns = [
     # -------------------------------employee API-------------------------------
     path("api/login", login_api, name="employee-login"),
     path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
+    path("api/employees/<int:employee_id>/permission", employee_permission_api, name="employee-permission"),
     path("api/logout", logout_api, name="employee-logout"),
     path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),

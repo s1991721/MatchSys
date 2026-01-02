@@ -40,7 +40,7 @@ def fetch_recent_two_weeks_emails(
 
     # todo 记得正式生产环境改回true
     while page < 2:
-        messages, has_next = gmail_tool.fetch_messages(
+        messages, has_next, _ = gmail_tool.fetch_messages(
             query=query,
             page=page,
             page_size=page_size,
@@ -96,6 +96,7 @@ def _normalize_skills(skills_raw) -> List[str]:
 
 def fetch_page_emails(
     keyword: str = "",
+    sender: str = "",
     date_str: str = "",
     start_date_str: str = "",
     end_date_str: str = "",
@@ -104,10 +105,11 @@ def fetch_page_emails(
     limit_str: str = "",
 ) -> Dict:
     """
-    Fetch a single page of emails with optional keyword/date filters.
+    Fetch a single page of emails with optional subject/sender/date filters.
     """
 
     keyword = _normalize_str(keyword)
+    sender = _normalize_str(sender)
     date_str = _normalize_str(date_str)
     start_date_str = _normalize_str(start_date_str)
     end_date_str = _normalize_str(end_date_str)
@@ -134,15 +136,31 @@ def fetch_page_emails(
         start_date = _parse_date(start_date_str)
         end_date = _parse_date(end_date_str)
 
-    query = keyword or ""
+    def _quote_query_value(value: str) -> str:
+        escaped = value.replace('"', '\\"')
+        if " " in escaped or ":" in escaped:
+            return f"\"{escaped}\""
+        return escaped
 
-    messages, has_next = gmail_tool.fetch_messages(
+    query_parts = []
+    if keyword:
+        query_parts.append(f"subject:{_quote_query_value(keyword)}")
+    if sender:
+        query_parts.append(f"from:{_quote_query_value(sender)}")
+    query = " ".join(query_parts)
+
+    messages, has_next, total_count = gmail_tool.fetch_messages(
         query=query,
         page=page,
         page_size=page_size,
         start_date=start_date,
         end_date=end_date,
     )
+
+    if total_count:
+        total_pages = (total_count + page_size - 1) // page_size
+    else:
+        total_pages = page + (1 if has_next else 0)
 
     items = []
     for m in messages:
@@ -166,6 +184,8 @@ def fetch_page_emails(
         "page": page,
         "page_size": page_size,
         "has_next": has_next,
+        "total_count": total_count,
+        "total_pages": total_pages,
     }
 
 

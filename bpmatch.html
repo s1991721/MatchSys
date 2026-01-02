@@ -66,16 +66,6 @@
             max-height: 620px;
         }
 
-        .date-input {
-            max-width: 160px;
-            padding-left: 10px;
-        }
-
-        .date-input.active {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-        }
-
         .search-input {
             width: 100%;
         }
@@ -209,15 +199,6 @@
         }
 
 
-        .pagination {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 10px 0 0;
-        }
-
-
         .loading-row {
             display: flex;
             align-items: center;
@@ -238,11 +219,6 @@
             to {
                 transform: rotate(360deg);
             }
-        }
-
-        .page-info {
-            font-size: 13px;
-            color: var(--muted);
         }
 
         @media (max-width: 1100px) {
@@ -275,32 +251,26 @@
                         <button class="chip c-chip active" data-range="all" type="button" data-i18n="match.range.all">全部</button>
                         <button class="chip c-chip" data-range="today" type="button" data-i18n="match.range.today">今天</button>
                         <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
-                        <input id="job-date" class="input c-input date-input" type="date" aria-label="选择日期" data-i18n-aria="match.date_label">
                     </div>
                 </div>
                 <div class="filter-group c-filter-group">
-                    <span class="filter-label c-filter-label" data-i18n="match.keyword">关键字</span>
-                    <input id="job-keyword" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节" data-i18n-placeholder="match.keyword_placeholder">
+                    <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
+                    <input id="job-sender" class="input c-input search-input" type="search" placeholder="搜索发件人" data-i18n-placeholder="match.sender_placeholder">
                 </div>
             </div>
             <ul class="list c-list c-list-spaced jobs" id="job-list">
             </ul>
-            <div class="pagination" id="job-pagination">
-                <button class="c-btn c-btn-sm c-btn-secondary" id="prev-page" type="button" data-i18n="match.prev">上一页</button>
-                <div class="page-info" id="page-info">第 1 页</div>
-                <button class="c-btn c-btn-sm c-btn-secondary" id="next-page" type="button" data-i18n="match.next">下一页</button>
+            <div class="pagination c-pagination" id="job-pagination">
+                <div class="pagination-summary">
+                    <span id="page-summary">第 1 页</span>
+                </div>
+                <div class="pagination-pages" id="job-pagination-pages"></div>
             </div>
         </div>
 
         <div class="panel-right c-card c-card-pad">
             <div class="panel-title c-panel-title">
                 <span data-i18n="match.people">人员列表</span>
-                <span class="panel-refresh" aria-label="刷新时间" data-i18n-aria="match.refresh_time">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 2.5a1 1 0 0 1 1 1v2.836l1.768-1.768a1 1 0 1 1 1.414 1.414l-3.535 3.536a1 1 0 0 1-1.414 0L7.698 5.982A1 1 0 0 1 9.112 4.568L10.5 5.957V3.5a1 1 0 0 1 1-1Zm-7 11a7 7 0 0 1 12.195-4.949 1 1 0 1 0 1.41-1.418A9 9 0 1 0 12 21.5a9.01 9.01 0 0 0 8.352-5.512 1 1 0 1 0-1.85-.77A7 7 0 0 1 5 13.5Z"/>
-                    </svg>
-                    <span class="panel-refresh-time">10:24 刷新</span>
-                </span>
             </div>
             <ul class="list c-list c-list-spaced persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
@@ -454,12 +424,11 @@
     const personList = document.getElementById('person-list');
     const personRefresh = document.querySelector('.panel-refresh');
     const personRefreshTime = document.querySelector('.panel-refresh-time');
-    const jobKeyword = document.getElementById('job-keyword');
-    const jobDate = document.getElementById('job-date');
+    const jobSender = document.getElementById('job-sender');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-    const pageInfo = document.getElementById('page-info');
+    const pagination = document.getElementById('job-pagination');
+    const paginationPages = document.getElementById('job-pagination-pages');
+    const pageSummary = document.getElementById('page-summary');
     const sendBtn = document.getElementById('send-btn');
 
     let activeJobDetail = '';
@@ -468,10 +437,11 @@
     const PAGE_SIZE = 50;
     let currentPage = 1;
     let hasNextPage = false;
+    let totalPages = 1;
+    let totalCount = 0;
 
     const filters = {
-        range: 'all',
-        customDate: ''
+        range: 'all'
     };
 
     // 公共函数：给列表加点击事件
@@ -534,9 +504,9 @@
             return;
         }
 
-        items.forEach((item, index) => {
+        items.forEach((item) => {
             const li = document.createElement('li');
-            li.className = 'item' + (index === 0 ? ' active' : '');
+            li.className = 'item';
             const detail = item.detail || '';
             const id = item.id || '';
             li.dataset.detail = detail;
@@ -565,11 +535,8 @@
             jobList.appendChild(li);
         });
 
-        const first = jobList.querySelector('.item');
-        if (first) {
-            activeJobDetail = first.dataset.detail || '';
-            renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
-        }
+        activeJobDetail = '';
+        renderDetail(jobDetail, t("match.empty_job_detail"));
     }
 
     const renderPersonList = (items) => {
@@ -660,20 +627,19 @@
             ? today
             : filters.range === 'yesterday'
                 ? yesterday
-                : filters.range === 'custom'
-                    ? filters.customDate
-                    : '';
+                : '';
     }
 
     const updatePaginationUI = () => {
-        if (pageInfo) {
-            pageInfo.textContent = format("match.page", { page: currentPage });
+        if (pageSummary) {
+            pageSummary.textContent = format("match.page_summary", {
+                count: totalCount,
+                page: currentPage,
+                total: totalPages
+            });
         }
-        if (prevPageBtn) {
-            prevPageBtn.disabled = currentPage <= 1;
-        }
-        if (nextPageBtn) {
-            nextPageBtn.disabled = !hasNextPage;
+        if (pagination && window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
         }
     }
 
@@ -690,10 +656,10 @@
     const fetchJobs = async (page = 1) => {
         currentPage = page;
         const params = new URLSearchParams();
-        const keyword = jobKeyword.value.trim();
+        const sender = jobSender ? jobSender.value.trim() : '';
         const targetDate = currentFilterDate();
 
-        if (keyword) params.set('keyword', keyword);
+        if (sender) params.set('sender', sender);
         if (targetDate) params.set('date', targetDate);
         params.set('page', String(currentPage));
         params.set('page_size', String(PAGE_SIZE));
@@ -714,6 +680,8 @@
             const result = payload.data || {};
             currentPage = result.page || currentPage;
             hasNextPage = Boolean(result.has_next);
+            totalCount = Number.isFinite(result.total_count) ? result.total_count : totalCount;
+            totalPages = Number.isFinite(result.total_pages) ? result.total_pages : (hasNextPage ? currentPage + 1 : currentPage);
             renderJobList(result.items || []);
             updatePaginationUI();
         } catch (err) {
@@ -724,6 +692,7 @@
             jobList.appendChild(errorLi);
             jobDetail.textContent = t("match.empty_job_detail");
             hasNextPage = false;
+            totalPages = currentPage;
             updatePaginationUI();
         }
     }
@@ -776,46 +745,29 @@
             dateButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             filters.range = btn.dataset.range;
-            filters.customDate = '';
-            jobDate.value = '';
-            jobDate.classList.remove('active');
             fetchJobs(1);
         });
     });
 
-    jobDate.addEventListener('change', () => {
-        if (jobDate.value) {
-            filters.range = 'custom';
-            filters.customDate = jobDate.value;
-            dateButtons.forEach(b => b.classList.remove('active'));
-            jobDate.classList.add('active');
-        } else {
-            filters.range = 'all';
-            filters.customDate = '';
-            dateButtons.forEach(b => {
-                b.classList.toggle('active', b.dataset.range === 'all');
-            });
-            jobDate.classList.remove('active');
-        }
-        fetchJobs(1);
-    });
-
-    jobKeyword.addEventListener('input', () => {
-        fetchJobs(1);
-    });
-
-    if (prevPageBtn) {
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                fetchJobs(currentPage - 1);
-            }
+    if (jobSender) {
+        jobSender.addEventListener('input', () => {
+            fetchJobs(1);
         });
     }
 
-    if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', () => {
-            if (hasNextPage) {
-                fetchJobs(currentPage + 1);
+    if (pagination && window.bindPagination) {
+        window.bindPagination(pagination, (value) => {
+            if (value === 'prev') {
+                if (currentPage > 1) fetchJobs(currentPage - 1);
+                return;
+            }
+            if (value === 'next') {
+                if (hasNextPage) fetchJobs(currentPage + 1);
+                return;
+            }
+            const page = Number(value);
+            if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
+                fetchJobs(page);
             }
         });
     }

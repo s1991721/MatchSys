@@ -65,7 +65,7 @@ class GmailTool:
         mark_seen: bool = False,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> Tuple[List[dict], bool]:
+    ) -> Tuple[List[dict], bool, int]:
         """
         从 Gmail 获取邮件列表（按时间倒序）。分页返回指定页的数据以及是否存在下一页。
         """
@@ -95,22 +95,23 @@ class GmailTool:
                 break
 
         if not resp:
-            return [], False
+            return [], False, 0
 
         ids = self._extract_ids(resp)
         if not ids:
-            return [], False
+            return [], False, int(resp.get("resultSizeEstimate") or 0)
 
         # 批量拉取目标页邮件详情
         details = self._fetch_details(service, ids)
         page_messages = [self._parse_message(msg) for msg in details]
         has_next = resp.get("nextPageToken") is not None
+        total_count = int(resp.get("resultSizeEstimate") or 0)
 
         # 如需标记已读，批量移除 UNREAD 标签
         if mark_seen and page_messages:
             self._mark_seen(service, page_messages)
 
-        return page_messages, has_next
+        return page_messages, has_next, total_count
 
     def _compose_query(
         self, query: str, start_date: Optional[date], end_date: Optional[date]

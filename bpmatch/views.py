@@ -16,6 +16,7 @@ def messages(request):
     try:
         payload = bpmatch.fetch_page_emails(
             keyword=request.GET.get("keyword", ""),
+            sender=request.GET.get("sender", ""),
             date_str=request.GET.get("date", ""),
             start_date_str=request.GET.get("start_date", ""),
             end_date_str=request.GET.get("end_date", ""),

@@ -163,6 +163,7 @@ CREATE TABLE IF NOT EXISTS attendance_policy
 (
     id              BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
     employee_id     BIGINT         NOT NULL COMMENT '员工ID',
+    annual_leave    INT            NULL COMMENT '剩余年假',
 
     work_start_time TIME           NOT NULL COMMENT '上班时间',
     work_end_time   TIME           NOT NULL COMMENT '下班时间',

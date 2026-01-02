@@ -386,10 +386,11 @@
         return new Set(menuList.map(normalizeMenuItem).filter(Boolean));
       };
       const allowedMenuSet = buildAllowedMenuSet();
+      const fallbackRoute = "profile.html";
       const isAllowedRoute = (src) => {
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
-        if (normalized === "home.html") return true;
+        if (normalized === fallbackRoute) return true;
         return allowedMenuSet.has(normalized);
       };
       const applyMenuFilter = () => {
@@ -445,9 +446,9 @@
       };
 
       const syncFromHash = () => {
-        let src = resolveFromHash() || "home.html";
+        let src = resolveFromHash() || fallbackRoute;
         if (!isAllowedRoute(src)) {
-          src = "home.html";
+          src = fallbackRoute;
           if (location.hash !== "#" + src) {
             location.hash = src;
             return;

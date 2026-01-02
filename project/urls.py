@@ -32,6 +32,7 @@ from attendance.views import (
 )
 from bpmatch.views import (
     mail_projects_api,
+    mail_project_match_api,
     persons,
     log_job_click,
     extract_qiuren_detail,
@@ -138,6 +139,7 @@ urlpatterns = [
     path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),
     # -------------------------------bpmatch API-------------------------------
     path("api/mail-projects", mail_projects_api, name="mail-projects"),
+    path("api/mail-projects/match", mail_project_match_api, name="mail-projects-match"),
     path("api/time-to-save", time_to_save, name="time_to_save"),
     path("persons", persons),
     path("job-click", log_job_click),

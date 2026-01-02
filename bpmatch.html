@@ -458,7 +458,7 @@
         }
         return res;
     };
-    const JOB_CLICK_ENDPOINT = `${API_BASE}/job-click`;
+    const JOB_MATCH_ENDPOINT = `${API_BASE}/api/mail-projects/match`;
     const JOB_LIST_ENDPOINT = `${API_BASE}/api/mail-projects`;
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
@@ -636,9 +636,9 @@
 
         const first = personList.querySelector('.item');
         if (first) {
+            const firstDetail = first.dataset.detail || '';
             const initialHighlights = readMatchedSkills(first);
             activeMatchedSkills = initialHighlights;
-            const firstDetail = first.dataset.detail || '';
             renderDetail(personDetail, firstDetail, initialHighlights);
             renderDetail(jobDetail, activeJobDetail, initialHighlights);
         }
@@ -871,21 +871,21 @@
             personRefreshTime.textContent = t("match.loading_match");
         }
         try {
-            const res = await fetchWithAuth(JOB_CLICK_ENDPOINT, {
+            const res = await fetchWithAuth(JOB_MATCH_ENDPOINT, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 credentials: 'include',
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ id: payload?.id || payload?.project_id || '' }),
             });
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);
             }
             const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) {
-                throw new Error(payload.message || t("match.match_failed"));
+            const responsePayload = normalizeApiResponse(data);
+            if (!responsePayload.success) {
+                throw new Error(responsePayload.message || t("match.match_failed"));
             }
-            const result = payload.data || {};
+            const result = responsePayload.data || {};
             const rawMatches =
                 (result && result.matches) ||
                 (result && result.match && result.match.matches) ||

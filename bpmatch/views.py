@@ -19,6 +19,36 @@ from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, SavedMail
 TIME_SAVE_DAYS = 14
 
 
+def _normalize_skills(value):
+    if not value:
+        return []
+    if isinstance(value, list):
+        raw_list = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return []
+        if text.startswith("[") and text.endswith("]"):
+            try:
+                parsed = json.loads(text)
+                raw_list = parsed if isinstance(parsed, list) else [text]
+            except Exception:
+                raw_list = text.split(",")
+        else:
+            raw_list = text.split(",")
+    else:
+        raw_list = [value]
+
+    cleaned = []
+    for item in raw_list:
+        if item is None:
+            continue
+        item_str = str(item).strip()
+        if item_str:
+            cleaned.append(item_str)
+    return cleaned
+
+
 @csrf_exempt
 @require_GET
 def messages(request):
@@ -98,6 +128,93 @@ def mail_projects_api(request):
         total=total,
         total_pages=total_pages,
     )
+
+
+@csrf_exempt
+def mail_project_match_api(request):
+    if request.method not in ("GET", "POST"):
+        return api_error(
+            "Only GET or POST is allowed",
+            status=405
+        )
+
+    if request.method == "GET":
+        project_id = (request.GET.get("id") or "").strip()
+    else:
+        try:
+            raw_body = request.body.decode("utf-8") if request.body else "{}"
+            payload = json.loads(raw_body or "{}")
+        except json.JSONDecodeError:
+            return api_error(
+                "Invalid JSON body"
+            )
+        project_id = str(payload.get("id") or payload.get("project_id") or "").strip()
+
+    if not project_id:
+        return api_error(
+            "Missing field: id"
+        )
+
+    try:
+        project = MailProjectInfo.objects.get(id=project_id)
+    except MailProjectInfo.DoesNotExist:
+        return api_error(
+            "MailProjectInfo not found",
+            status=404
+        )
+
+    project_skills = _normalize_skills(project.skills)
+    project_skill_set = {skill.lower() for skill in project_skills}
+    tech_queryset = MailTechnicianInfo.objects.filter(country=project.country)
+
+    scored_items = []
+    for tech in tech_queryset:
+        tech_skills = _normalize_skills(tech.skills)
+        matched = []
+        seen = set()
+        for skill in tech_skills:
+            key = skill.lower()
+            if key in project_skill_set and key not in seen:
+                matched.append(skill)
+                seen.add(key)
+        score = len(matched)
+        if score == 0:
+            continue
+        scored_items.append(
+            (
+                score,
+                {
+                    "id": tech.id,
+                    "subject": tech.title or "",
+                    "title": tech.title or "",
+                    "name": tech.title or "",
+                    "belong": tech.address or "",
+                    "from": tech.address or "",
+                    "detail": tech.body or "",
+                    "body": tech.body or "",
+                    "date": tech.date.isoformat() if tech.date else "",
+                    "country": tech.country or "",
+                    "skills": tech_skills,
+                    "price": float(tech.price) if tech.price is not None else None,
+                    "matched_skills": matched,
+                    "match_score": score,
+                },
+            )
+        )
+
+    scored_items.sort(key=lambda item: item[0], reverse=True)
+    matches = [item for _, item in scored_items]
+    payload = {
+        "project": {
+            "id": project.id,
+            "country": project.country or "",
+            "skills": project_skills,
+            "price": float(project.price) if project.price is not None else None,
+        },
+        "matches": matches,
+        "items": matches,
+    }
+    return api_success(data=payload)
 
 
 @csrf_exempt

@@ -30,6 +30,21 @@
             margin-top: 16px;
         }
 
+.filters {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .filter-group {
+            flex: 0 0 auto;
+            justify-content: center;
+        }
+
+        .filter-group.sender-group {
+            flex: 1 1 0;
+        }
+
 .panel-left {
             flex: 1.2;
             min-width: 0;
@@ -68,6 +83,16 @@
 
         .search-input {
             width: 100%;
+        }
+
+        .search-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-row .search-input {
+            flex: 1 1 0;
         }
 
         .item {
@@ -198,6 +223,11 @@
             margin-top: 12px;
         }
 
+        .detail-actions-left {
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 12px;
+        }
 
         .loading-row {
             display: flex;
@@ -235,6 +265,11 @@
                 grid-template-columns: 1fr;
             }
 
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
         }
   </style>
 </head>
@@ -243,19 +278,22 @@
     <!-- 上半部分：列表 -->
     <div class="row">
         <div class="panel-left c-card c-card-pad">
-            <div class="panel-title c-panel-title" data-i18n="match.jobs">求人列表</div>
+            <div class="panel-title c-panel-title" data-i18n="match.jobs">案件列表</div>
             <div class="filters c-filter-grid">
                 <div class="filter-group c-filter-group">
                     <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
                     <div class="chip-row c-chip-row">
-                        <button class="chip c-chip active" data-range="all" type="button" data-i18n="match.range.all">全部</button>
-                        <button class="chip c-chip" data-range="today" type="button" data-i18n="match.range.today">今天</button>
+                        <button class="chip c-chip" data-range="all" type="button" data-i18n="match.range.all">全部</button>
                         <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
+                        <button class="chip c-chip active" data-range="today" type="button" data-i18n="match.range.today">今天</button>
                     </div>
                 </div>
-                <div class="filter-group c-filter-group">
+                <div class="filter-group c-filter-group sender-group">
                     <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
-                    <input id="job-sender" class="input c-input search-input" type="search" placeholder="搜索发件人" data-i18n-placeholder="match.sender_placeholder">
+                    <div class="search-row">
+                        <input id="job-sender" class="input c-input search-input" type="search" placeholder="搜索发件人" data-i18n-placeholder="match.sender_placeholder">
+                        <button class="c-btn c-btn-primary" type="button" id="job-search-btn" data-i18n="common.search">搜索</button>
+                    </div>
                 </div>
             </div>
             <ul class="list c-list c-list-spaced jobs" id="job-list">
@@ -270,7 +308,7 @@
 
         <div class="panel-right c-card c-card-pad">
             <div class="panel-title c-panel-title">
-                <span data-i18n="match.people">人员列表</span>
+                <span data-i18n="match.people">技术者列表</span>
             </div>
             <ul class="list c-list c-list-spaced persons" id="person-list">
                 <!-- 使用 data-detail 存放技术者详细信息 -->
@@ -325,6 +363,9 @@
             <div class="panel-title" data-i18n="match.job_detail">求人详情</div>
             <div class="detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
+            </div>
+            <div class="detail-actions-left">
+                <button class="c-btn c-btn-secondary" type="button" id="time-save-btn">测试</button>
             </div>
         </div>
 
@@ -418,6 +459,7 @@
         return res;
     };
     const JOB_CLICK_ENDPOINT = `${API_BASE}/job-click`;
+    const JOB_LIST_ENDPOINT = `${API_BASE}/api/mail-projects`;
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
@@ -425,6 +467,8 @@
     const personRefresh = document.querySelector('.panel-refresh');
     const personRefreshTime = document.querySelector('.panel-refresh-time');
     const jobSender = document.getElementById('job-sender');
+    const jobSearchBtn = document.getElementById('job-search-btn');
+    const timeSaveBtn = document.getElementById('time-save-btn');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
     const pagination = document.getElementById('job-pagination');
     const paginationPages = document.getElementById('job-pagination-pages');
@@ -441,7 +485,7 @@
     let totalCount = 0;
 
     const filters = {
-        range: 'all'
+        range: 'today'
     };
 
     // 公共函数：给列表加点击事件
@@ -664,7 +708,7 @@
         params.set('page', String(currentPage));
         params.set('page_size', String(PAGE_SIZE));
 
-        const url = `${API_BASE}/messages${params.toString() ? `?${params}` : ''}`;
+        const url = `${JOB_LIST_ENDPOINT}${params.toString() ? `?${params}` : ''}`;
         showLoading(t("match.loading_jobs"));
 
         try {
@@ -678,10 +722,11 @@
                 throw new Error(payload.message || t("match.failed"));
             }
             const result = payload.data || {};
-            currentPage = result.page || currentPage;
-            hasNextPage = Boolean(result.has_next);
-            totalCount = Number.isFinite(result.total_count) ? result.total_count : totalCount;
-            totalPages = Number.isFinite(result.total_pages) ? result.total_pages : (hasNextPage ? currentPage + 1 : currentPage);
+            const meta = payload.meta || {};
+            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+            totalCount = Number.isFinite(meta.total) ? meta.total : totalCount;
+            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : totalPages;
+            hasNextPage = currentPage < totalPages;
             renderJobList(result.items || []);
             updatePaginationUI();
         } catch (err) {
@@ -749,9 +794,17 @@
         });
     });
 
-    if (jobSender) {
-        jobSender.addEventListener('input', () => {
+    if (jobSearchBtn) {
+        jobSearchBtn.addEventListener('click', () => {
             fetchJobs(1);
+        });
+    }
+
+    if (jobSender) {
+        jobSender.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                fetchJobs(1);
+            }
         });
     }
 
@@ -775,6 +828,25 @@
     if (personRefresh) {
         personRefresh.addEventListener('click', () => {
             fetchPersons(true);
+        });
+    }
+
+    if (timeSaveBtn) {
+        timeSaveBtn.addEventListener('click', async () => {
+            try {
+                const res = await fetchWithAuth(`${API_BASE}/api/time-to-save`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    throw new Error(payload.message || t("match.failed"));
+                }
+                alert('已触发');
+            } catch (err) {
+                alert(`${t("match.failed")}：${err.message}`);
+            }
         });
     }
 

@@ -31,12 +31,13 @@ from attendance.views import (
     my_attendance_detail_api,
 )
 from bpmatch.views import (
-    messages,
+    mail_projects_api,
     persons,
     log_job_click,
     extract_qiuren_detail,
     send_mail,
     send_history,
+    time_to_save,
 )
 from customer.views import (
     employee_names_api,
@@ -136,7 +137,8 @@ urlpatterns = [
     path("api/my-attendance-summary", my_attendance_summary_api, name="my-attendance-summary"),
     path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),
     # -------------------------------bpmatch API-------------------------------
-    path("messages", messages),
+    path("api/mail-projects", mail_projects_api, name="mail-projects"),
+    path("api/time-to-save", time_to_save, name="time_to_save"),
     path("persons", persons),
     path("job-click", log_job_click),
     path("extract-qiuren-detail", extract_qiuren_detail),

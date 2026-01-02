@@ -30,6 +30,7 @@ CREATE TABLE mail_technician_info
 
 CREATE TABLE saved_mail_info
 (
-    id VARCHAR(255) PRIMARY KEY
+    id   VARCHAR(255) PRIMARY KEY,
+    date DATETIME COMMENT '日期'
 
 ) COMMENT ='系统中存储的邮件列表';

@@ -26,6 +26,7 @@ class SentEmailLog(models.Model):
 
 
 class MailProjectInfo(models.Model):
+    id = models.CharField(primary_key=True, unique=True, max_length=255, verbose_name="messageId")
     title = models.CharField("邮件标题", max_length=255)
     address = models.CharField("发件人", max_length=255)
     body = models.TextField("正文内容", blank=True, default="")
@@ -40,7 +41,9 @@ class MailProjectInfo(models.Model):
         db_table = "mail_project_info"
         verbose_name = "案件邮件"
 
+
 class MailTechnicianInfo(models.Model):
+    id = models.CharField(primary_key=True, unique=True, max_length=255, verbose_name="messageId")
     title = models.CharField("邮件标题", max_length=255)
     address = models.CharField("发件人", max_length=255)
     body = models.TextField("正文内容", blank=True, default="")
@@ -55,7 +58,10 @@ class MailTechnicianInfo(models.Model):
         db_table = "mail_technician_info"
         verbose_name = "技术者邮件"
 
+
 class SavedMailInfo(models.Model):
+    id = models.CharField(primary_key=True, unique=True, max_length=255, verbose_name="messageId")
+    date = models.DateTimeField("日期", null=True, blank=True)
 
     class Meta:
         db_table = "saved_mail_info"

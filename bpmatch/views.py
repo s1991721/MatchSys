@@ -1,11 +1,10 @@
 import json
-import re
+
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
 
 from project.api import api_error, api_success
-from django.views.decorators.http import require_GET
-from django.views.decorators.csrf import csrf_exempt
-from django.utils import timezone
-
 from . import bpmatch, llmsTool
 from .gmailTool import GmailTool
 from .models import SentEmailLog
@@ -25,13 +24,9 @@ def messages(request):
             limit_str=request.GET.get("limit", ""),
         )
     except Exception as exc:
-        return api_error(
-            str(exc),
-            status=500,
-            legacy={"error": str(exc)},
-        )
+        return api_error(str(exc), status=500)
 
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)
 
 
 @csrf_exempt
@@ -47,8 +42,7 @@ def persons(request):
     except Exception as exc:
         return api_error(
             str(exc),
-            status=500,
-            legacy={"error": str(exc)},
+            status=500
         )
 
     items = []
@@ -70,7 +64,7 @@ def persons(request):
         "items": items,
         "update_time": refreshed_at.isoformat() if refreshed_at else "",
     }
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)
 
 
 @csrf_exempt
@@ -81,8 +75,7 @@ def log_job_click(request):
     if request.method != "POST":
         return api_error(
             "Only POST is allowed",
-            status=405,
-            legacy={"error": "Only POST is allowed"},
+            status=405
         )
 
     try:
@@ -90,9 +83,7 @@ def log_job_click(request):
         payload = json.loads(raw_body or "{}")
     except json.JSONDecodeError:
         return api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
+            "Invalid JSON body"
         )
 
     print(f"[job_click] 收到求人点击: {json.dumps(payload, ensure_ascii=False)}")
@@ -103,7 +94,6 @@ def log_job_click(request):
         return api_error(
             str(exc),
             status=500,
-            legacy={"error": str(exc)},
         )
 
     # 标准化匹配结果，方便前端直接渲染人员列表
@@ -138,7 +128,7 @@ def log_job_click(request):
         )
 
     response_payload = {"match": match_result, "matches": items}
-    return api_success(data=response_payload, legacy={"status": "ok", **response_payload})
+    return api_success(data=response_payload, )
 
 
 @csrf_exempt
@@ -149,8 +139,7 @@ def extract_qiuren_detail(request):
     if request.method != "POST":
         return api_error(
             "Only POST is allowed",
-            status=405,
-            legacy={"error": "Only POST is allowed"},
+            status=405
         )
 
     try:
@@ -158,17 +147,13 @@ def extract_qiuren_detail(request):
         payload = json.loads(raw_body or "{}")
     except json.JSONDecodeError:
         return api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
+            "Invalid JSON body"
         )
 
     text = payload.get("text") or payload.get("body") or ""
     if not text.strip():
         return api_error(
-            "Missing field: text",
-            status=400,
-            legacy={"error": "Missing field: text"},
+            "Missing field: text"
         )
 
     try:
@@ -176,8 +161,7 @@ def extract_qiuren_detail(request):
     except Exception as exc:
         return api_error(
             str(exc),
-            status=500,
-            legacy={"error": str(exc)},
+            status=500
         )
 
     # extract_qiuren_detail 返回的是 JSON 字符串，这里尝试解析以便前端直接使用
@@ -267,7 +251,7 @@ def extract_qiuren_detail(request):
     formatted_message = template.format(**fields)
 
     response_payload = {"data": formatted_message, "raw": llm_result}
-    return api_success(data=response_payload, legacy={"status": "ok", **response_payload})
+    return api_success(data=response_payload)
 
 
 @csrf_exempt
@@ -278,8 +262,7 @@ def send_mail(request):
     if request.method != "POST":
         return api_error(
             "Only POST is allowed",
-            status=405,
-            legacy={"error": "Only POST is allowed"},
+            status=405
         )
 
     try:
@@ -287,9 +270,7 @@ def send_mail(request):
         payload = json.loads(raw_body or "{}")
     except json.JSONDecodeError:
         return api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
+            "Invalid JSON body"
         )
 
     to_addr = (payload.get("to") or "").strip()
@@ -300,22 +281,18 @@ def send_mail(request):
     thread_id = (payload.get("thread_id") or "").strip()
     in_reply_to = (payload.get("in_reply_to") or "").strip()
     references = (
-        payload.get("references")
-        or payload.get("references_header")
-        or ""
+            payload.get("references")
+            or payload.get("references_header")
+            or ""
     ).strip()
 
     if not to_addr:
         return api_error(
-            "Missing field: to",
-            status=400,
-            legacy={"error": "Missing field: to"},
+            "Missing field: to"
         )
     if not body.strip():
         return api_error(
-            "Missing field: body",
-            status=400,
-            legacy={"error": "Missing field: body"},
+            "Missing field: body"
         )
 
     # 标准化附件结构
@@ -347,18 +324,16 @@ def send_mail(request):
         message = f"OAuth credentials missing: {exc}"
         return api_error(
             message,
-            status=500,
-            legacy={"error": message},
+            status=500
         )
     except Exception as exc:
         return api_error(
             str(exc),
-            status=500,
-            legacy={"error": str(exc)},
+            status=500
         )
 
     payload = {"message_id": message_id}
-    return api_success(data=payload, legacy={"status": "ok", **payload})
+    return api_success(data=payload)
 
 
 @csrf_exempt
@@ -394,4 +369,4 @@ def send_history(request):
         )
 
     payload = {"items": items, "count": len(items)}
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)

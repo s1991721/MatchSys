@@ -1,13 +1,17 @@
 import json
+from datetime import timedelta
 
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 from project.api import api_error, api_success
 from . import bpmatch, llmsTool
 from .gmailTool import GmailTool
-from .models import SentEmailLog
+from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
+
+TIME_SAVE_DAYS = 14
 
 
 @csrf_exempt
@@ -335,6 +339,116 @@ def send_mail(request):
 
     payload = {"message_id": message_id}
     return api_success(data=payload)
+
+
+@csrf_exempt
+def time_save(request):
+    end_date = timezone.now().date()
+    start_date = end_date - timedelta(days=TIME_SAVE_DAYS)
+    gmail = GmailTool()
+
+    page = 1
+    page_size = 100
+    mail_list = []
+
+    while True:
+        messages, has_next, _ = gmail.fetch_new_messages(
+            page=page,
+            page_size=page_size,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        mail_list.extend(messages)
+        if not has_next:
+            break
+        page += 1
+
+    project_list = []
+    technician_list = []
+    for mail in mail_list:
+        title = mail.get("subject") or ""
+        label = llmsTool.title_analysis(title)
+        label_str = str(label).strip()
+        if label_str == "0":
+            project_list.append(mail)
+        elif label_str == "1":
+            technician_list.append(mail)
+
+    def _parse_datetime(value: str):
+        if not value:
+            return None
+        parsed = parse_datetime(value)
+        if not parsed:
+            return None
+        if timezone.is_naive(parsed):
+            return timezone.make_aware(parsed, timezone.utc)
+        return parsed
+
+    def _parse_detail(value: str):
+        try:
+            detail = json.loads(value) if value else {}
+        except Exception:
+            detail = {}
+        country = detail.get("country")
+        skills = detail.get("skills") or []
+        price = detail.get("price")
+
+        if isinstance(skills, list):
+            skills_text = ",".join(
+                [str(skill).strip() for skill in skills if str(skill).strip()]
+            )
+        elif isinstance(skills, str):
+            skills_text = skills
+        else:
+            skills_text = ""
+
+        if price in (None, ""):
+            price_value = None
+        else:
+            try:
+                price_value = float(price)
+            except Exception:
+                price_value = None
+
+        return ("" if country is None else str(country), skills_text, price_value)
+
+    for mail in project_list:
+        detail_json = llmsTool.qiuren_detail_analysis(mail.get("body") or "")
+        country, skills, price = _parse_detail(detail_json)
+        MailProjectInfo.objects.create(
+            title=mail.get("subject") or "",
+            address=mail.get("from") or "",
+            body=mail.get("body") or "",
+            files="",
+            date=_parse_datetime(mail.get("date") or ""),
+            remark="",
+            country=country,
+            skills=skills,
+            price=price,
+        )
+
+    for mail in technician_list:
+        detail_json = llmsTool.qiuanjian_detail_analysis(mail.get("body") or "")
+        country, skills, price = _parse_detail(detail_json)
+        MailTechnicianInfo.objects.create(
+            title=mail.get("subject") or "",
+            address=mail.get("from") or "",
+            body=mail.get("body") or "",
+            files="",
+            date=_parse_datetime(mail.get("date") or ""),
+            remark="",
+            country=country,
+            skills=skills,
+            price=price,
+        )
+
+    return api_success(
+        data={
+            "total": len(mail_list),
+            "projects": len(project_list),
+            "technicians": len(technician_list),
+        }
+    )
 
 
 @csrf_exempt

@@ -51,26 +51,6 @@ def _normalize_skills(value):
 
 @csrf_exempt
 @require_GET
-def messages(request):
-    try:
-        payload = bpmatch.fetch_page_emails(
-            keyword=request.GET.get("keyword", ""),
-            sender=request.GET.get("sender", ""),
-            date_str=request.GET.get("date", ""),
-            start_date_str=request.GET.get("start_date", ""),
-            end_date_str=request.GET.get("end_date", ""),
-            page_str=request.GET.get("page", "1"),
-            page_size_str=request.GET.get("page_size", ""),
-            limit_str=request.GET.get("limit", ""),
-        )
-    except Exception as exc:
-        return api_error(str(exc), status=500)
-
-    return api_success(data=payload)
-
-
-@csrf_exempt
-@require_GET
 def mail_projects_api(request):
     sender = request.GET.get("sender", "").strip()
     date_str = request.GET.get("date", "").strip()
@@ -211,8 +191,7 @@ def mail_project_match_api(request):
             "skills": project_skills,
             "price": float(project.price) if project.price is not None else None,
         },
-        "matches": matches,
-        "items": matches,
+        "matches": matches
     }
     return api_success(data=payload)
 
@@ -253,70 +232,6 @@ def persons(request):
         "update_time": refreshed_at.isoformat() if refreshed_at else "",
     }
     return api_success(data=payload)
-
-
-@csrf_exempt
-def log_job_click(request):
-    """
-    Receive a job click event from the frontend and log the payload for debugging.
-    """
-    if request.method != "POST":
-        return api_error(
-            "Only POST is allowed",
-            status=405
-        )
-
-    try:
-        raw_body = request.body.decode("utf-8") if request.body else "{}"
-        payload = json.loads(raw_body or "{}")
-    except json.JSONDecodeError:
-        return api_error(
-            "Invalid JSON body"
-        )
-
-    print(f"[job_click] 收到求人点击: {json.dumps(payload, ensure_ascii=False)}")
-    try:
-        match_result = bpmatch.match(payload)
-    except Exception as exc:
-        print(f"[job_click] 调用 match 失败: {exc}")
-        return api_error(
-            str(exc),
-            status=500,
-        )
-
-    # 标准化匹配结果，方便前端直接渲染人员列表
-    matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
-
-    def _match_len(item):
-        if isinstance(item, dict):
-            skills = item.get("matched_skills")
-            if isinstance(skills, list):
-                return len(skills)
-        return 0
-
-    sorted_matches = sorted(matches_raw or [], key=_match_len, reverse=True)
-    items = []
-    for idx, match in enumerate(sorted_matches):
-        matched_skills = match.get("matched_skills") if isinstance(match, dict) else []
-        items.append(
-            {
-                "id": match.get("id") or f"match-{idx}",
-                "subject": match.get("subject") or match.get("title") or "",
-                "name": match.get("subject") or match.get("title") or "(无标题)",
-                "belong": match.get("from") or "",
-                "detail": match.get("body") or match.get("detail") or "",
-                "date": match.get("date") or "",
-                "thread_id": match.get("thread_id") or "",
-                "message_id_header": match.get("message_id_header") or "",
-                "references_header": match.get("references_header") or "",
-                "matched_skills": (
-                    matched_skills if isinstance(matched_skills, list) else []
-                ),
-            }
-        )
-
-    response_payload = {"match": match_result, "matches": items}
-    return api_success(data=response_payload, )
 
 
 @csrf_exempt

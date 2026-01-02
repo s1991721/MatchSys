@@ -55,24 +55,6 @@
             min-width: 0;
         }
 
-        .panel-refresh {
-            margin-left: auto;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #5a6c86;
-            font-size: 12px;
-            white-space: nowrap;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .panel-refresh svg {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-        }
-
         .list.jobs {
             max-height: 420px;
         }
@@ -311,48 +293,6 @@
                 <span data-i18n="match.people">技术者列表</span>
             </div>
             <ul class="list c-list c-list-spaced persons" id="person-list">
-                <!-- 使用 data-detail 存放技术者详细信息 -->
-                <li class="item active"
-                    data-detail="这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者A</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属1</span>
-                            <span class="person-time">12月9日 09:04:36</span>
-                        </div>
-                    </div>
-                </li>
-                <li class="item"
-                    data-detail="这是技术者B的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者B</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属2</span>
-                            <span class="person-time"></span>
-                        </div>
-                    </div>
-                </li>
-                <li class="item"
-                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者C</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属3</span>
-                            <span class="person-time"></span>
-                        </div>
-                    </div>
-                </li>
-                <li class="item"
-                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者C</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属3</span>
-                            <span class="person-time"></span>
-                        </div>
-                    </div>
-                </li>
-                <!-- 其余列表项由接口填充 -->
             </ul>
         </div>
     </div>
@@ -403,15 +343,6 @@
             .replace(/'/g, '&#39;');
 
     const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    const SENSITIVE_WORDS = ['OrientalKingdomGroup', 'Oriental', 'Kingdom', 'Group', '邱'];
-    const maskSensitive = (text = '') => {
-        if (!text) return '';
-        const patterns = SENSITIVE_WORDS.map(escapeRegExp);
-        if (!patterns.length) return text;
-        const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
-        return text.replace(regex, '***');
-    };
 
     const stripCssNoise = (text = '') => {
         if (!text) return '';
@@ -464,8 +395,6 @@
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
     const personList = document.getElementById('person-list');
-    const personRefresh = document.querySelector('.panel-refresh');
-    const personRefreshTime = document.querySelector('.panel-refresh-time');
     const jobSender = document.getElementById('job-sender');
     const jobSearchBtn = document.getElementById('job-search-btn');
     const timeSaveBtn = document.getElementById('time-save-btn');
@@ -651,16 +580,6 @@
         return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
-    const formatRefreshTime = (raw) => {
-        const d = raw ? new Date(raw) : null;
-        if (!d || Number.isNaN(d.getTime())) return t("match.refreshing");
-        const pad = (n) => String(n).padStart(2, '0');
-        if (i18n && i18n.getLang() === "ja") {
-            return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} 更新`;
-        }
-        return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} 刷新`;
-    }
-
     const currentFilterDate = () => {
         const today = formatDate(new Date());
         const yesterdayDate = new Date();
@@ -752,9 +671,6 @@
     }
 
     const fetchPersons = async (refresh = false) => {
-        if (personRefreshTime) {
-            personRefreshTime.textContent = t("match.refreshing");
-        }
         setPersonLoading(t("match.loading_people"));
 
         try {
@@ -768,9 +684,6 @@
             }
             const result = payload.data || {};
             renderPersonList(result.items || []);
-            if (personRefreshTime) {
-                personRefreshTime.textContent = formatRefreshTime(result.update_time);
-            }
         } catch (err) {
             if (personList) {
                 personList.innerHTML = '';
@@ -778,9 +691,6 @@
                 errorLi.className = 'empty';
                 errorLi.textContent = `${t("match.failed")}：${err.message}`;
                 personList.appendChild(errorLi);
-            }
-            if (personRefreshTime) {
-                personRefreshTime.textContent = t("match.failed");
             }
         }
     }
@@ -825,12 +735,6 @@
         });
     }
 
-    if (personRefresh) {
-        personRefresh.addEventListener('click', () => {
-            fetchPersons(true);
-        });
-    }
-
     if (timeSaveBtn) {
         timeSaveBtn.addEventListener('click', async () => {
             try {
@@ -867,9 +771,6 @@
             payload = {};
         }
         setPersonLoading(t("match.loading_match"));
-        if (personRefreshTime) {
-            personRefreshTime.textContent = t("match.loading_match");
-        }
         try {
             const res = await fetchWithAuth(JOB_MATCH_ENDPOINT, {
                 method: 'POST',
@@ -896,9 +797,6 @@
                     ? Object.values(rawMatches)
                     : [];
 
-            if (personRefreshTime) {
-                personRefreshTime.textContent = t("match.refreshed");
-            }
             renderPersonList(matchItems);
         } catch (err) {
             console.error('上报点击事件失败', err);
@@ -909,9 +807,6 @@
                 errorLi.textContent = `${t("match.match_failed")}：${err.message}`;
                 personList.appendChild(errorLi);
                 renderDetail(personDetail, t("match.empty_person_detail"));
-            }
-            if (personRefreshTime) {
-                personRefreshTime.textContent = t("match.match_failed");
             }
         }
     });

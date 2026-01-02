@@ -172,4 +172,21 @@
             onPageChange(btn.dataset.page || "");
         });
     };
+
+    const notifyParentRoute = () => {
+        if (!window.top || window.top === window) return;
+        const path = window.location.pathname || "";
+        const parts = path.split("/").filter(Boolean);
+        const filename = parts.length ? parts[parts.length - 1] : "";
+        if (!filename || !filename.endsWith(".html")) return;
+        try {
+            window.top.postMessage({ type: "route:change", src: filename }, "*");
+        } catch (e) {}
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", notifyParentRoute);
+    } else {
+        notifyParentRoute();
+    }
 })();

@@ -496,11 +496,11 @@
         }
         setPersonLoading(t("match.loading_match"));
         try {
-            const res = await fetchWithAuth('/api/mail-projects/match', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+            const projectId = payload?.id || payload?.project_id || '';
+            const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
+            const res = await fetchWithAuth(url, {
+                method: 'GET',
                 credentials: 'include',
-                body: JSON.stringify({ id: payload?.id || payload?.project_id || '' }),
             });
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);

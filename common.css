@@ -2008,6 +2008,124 @@ svg {
   gap: 8px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+.songxinhistory-page .c-split-grid-wide {
+  align-items: stretch;
+  min-height: calc(100vh - 140px);
+}
+.songxinhistory-page .c-split-grid-wide > .c-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.songxinhistory-page .c-filter-grid {
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.songxinhistory-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.songxinhistory-search-row .c-input {
+  flex: 1 1 0;
+}
+.songxinhistory-list {
+  margin-top: 6px;
+  flex: 1;
+  max-height: none;
+  overflow: auto;
+}
+.songxinhistory-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+.songxinhistory-item:last-child {
+  border-bottom: none;
+}
+.songxinhistory-item:hover {
+  background: #f4f7ff;
+}
+.songxinhistory-item.is-active {
+  background: #e6efff;
+  box-shadow: inset 0 0 0 1px rgba(28, 123, 255, 0.35);
+}
+.songxinhistory-item-empty {
+  cursor: default;
+}
+.songxinhistory-item-empty:hover {
+  background: #ffffff;
+  box-shadow: none;
+}
+.songxinhistory-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1f2a3d;
+  margin-bottom: 4px;
+}
+.songxinhistory-meta {
+  gap: 8px 12px;
+}
+.songxinhistory-time {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+.songxinhistory-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px 12px;
+  margin-bottom: 10px;
+}
+.songxinhistory-detail-meta span {
+  font-size: 13px;
+  color: #4a5568;
+}
+.songxinhistory-section-title {
+  margin-top: 14px;
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+.songxinhistory-detail {
+  min-height: 220px;
+  flex: 1;
+  overflow: auto;
+  color: #414d63;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+.songxinhistory-detail h4 {
+  margin: 0 0 8px;
+  font-size: 15px;
+}
+.songxinhistory-detail p {
+  margin: 0 0 10px;
+  white-space: pre-line;
+}
+.songxinhistory-attachments {
+  margin-top: 6px;
+}
+@media (max-width: 1060px) {
+  .songxinhistory-page .c-split-grid-wide {
+    min-height: 0;
+  }
+  .songxinhistory-page .c-split-grid-wide > .c-card {
+    min-height: auto;
+  }
+  .songxinhistory-list {
+    max-height: none;
+  }
+}
 .songxin-loading-main {
   display: flex;
   align-items: center;

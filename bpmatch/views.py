@@ -325,6 +325,7 @@ def send_mail(request):
 
 @csrf_exempt
 @require_GET
+# 送信历史
 def send_history(request):
     login_id = request.session.get("employee_id")
     if not login_id:
@@ -369,13 +370,11 @@ def send_history(request):
             attachments = []
         items.append(
             {
-                "id": log.id,
-                "message_id": log.message_id,
+                "id": log.message_id,
                 "title": log.subject or "(无标题)",
                 "to": log.to or "",
                 "cc": log.cc or "",
                 "mail_type": log.mail_type,
-                "sent_at": timezone.localtime(log.sent_at, current_tz).isoformat(),
                 "time": timezone.localtime(log.sent_at, current_tz).strftime(
                     "%Y-%m-%d %H:%M"
                 ),

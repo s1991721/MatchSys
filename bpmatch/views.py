@@ -280,6 +280,13 @@ def send_mail(request):
     subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
     body = payload.get("body") or ""
     attachments = payload.get("attachments") or []
+    raw_mail_type = payload.get("mail_type")
+    mail_type = None
+    if raw_mail_type not in (None, ""):
+        try:
+            mail_type = int(raw_mail_type)
+        except (TypeError, ValueError):
+            return api_error("Invalid field: mail_type")
 
     if not to_addr:
         return api_error("Missing field: to")
@@ -307,6 +314,7 @@ def send_mail(request):
             subject=subject,
             body=body,
             attachments=normalized_atts,
+            mail_type=mail_type,
         )
     except FileNotFoundError as exc:
         message = f"OAuth credentials missing: {exc}"
@@ -321,7 +329,11 @@ def send_mail(request):
 @csrf_exempt
 @require_GET
 def send_history(request):
-    status = (request.GET.get("status") or "").strip()
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error("employee id is required", status=401)
+
+    mail_type = (request.GET.get("mail_type") or "").strip()
     keyword = (request.GET.get("keyword") or "").strip()
     try:
         page = int(request.GET.get("page", 1))
@@ -334,15 +346,15 @@ def send_history(request):
     page = max(page, 1)
     page_size = max(min(page_size, 100), 1)
 
-    queryset = SentEmailLog.objects.all()
-    if status:
-        queryset = queryset.filter(status=status)
+    queryset = SentEmailLog.objects.filter(created_by=login_id)
+    if mail_type != "":
+        try:
+            mail_type_value = int(mail_type)
+        except (TypeError, ValueError):
+            return api_error("Invalid mail_type")
+        queryset = queryset.filter(mail_type=mail_type_value)
     if keyword:
-        queryset = queryset.filter(
-            Q(subject__icontains=keyword)
-            | Q(to__icontains=keyword)
-            | Q(cc__icontains=keyword)
-        )
+        queryset = queryset.filter(to__icontains=keyword)
     queryset = queryset.order_by("-sent_at")
     total = queryset.count()
     total_pages = max((total + page_size - 1) // page_size, 1)
@@ -365,7 +377,7 @@ def send_history(request):
                 "title": log.subject or "(无标题)",
                 "to": log.to or "",
                 "cc": log.cc or "",
-                "status": log.status or "sent",
+                "mail_type": log.mail_type,
                 "sent_at": timezone.localtime(log.sent_at, current_tz).isoformat(),
                 "time": timezone.localtime(log.sent_at, current_tz).strftime(
                     "%Y-%m-%d %H:%M"

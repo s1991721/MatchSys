@@ -348,6 +348,8 @@
             };
             const attachments = [];
             const selectionKey = 'matchSelection';
+            const matchMailType = 2;
+            const isMatchFlow = new URLSearchParams(window.location.search).get('from') === 'match';
             let loadingTimer = null;
             let currentSelection = null;
 
@@ -613,6 +615,10 @@
 
                 const selection = currentSelection || readSelection();
                 const personMeta = selection?.person || null;
+                const rawMailType = selection?.mail_type;
+                const mailType = Number.isFinite(Number(rawMailType))
+                    ? Number(rawMailType)
+                    : (isMatchFlow ? matchMailType : null);
 
                 setLoading(true, { title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub') });
                 try {
@@ -633,6 +639,9 @@
                         body: content,
                         attachments: attachmentsPayload
                     };
+                    if (mailType !== null) {
+                        payload.mail_type = mailType;
+                    }
                     if (personMeta) {
                         if (personMeta.thread_id) {
                             payload.thread_id = personMeta.thread_id;

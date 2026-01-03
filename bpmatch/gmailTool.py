@@ -343,6 +343,7 @@ class GmailTool:
         thread_id: Optional[str] = None,
         in_reply_to: Optional[str] = None,
         references: Optional[str] = None,
+        mail_type: Optional[int] = None,
     ):
         """
         通过 Gmail API 发送邮件，支持抄送、附件和回复现有线程。
@@ -400,6 +401,7 @@ class GmailTool:
             subject=subject,
             body=body,
             attachments=attachments,
+            mail_type=mail_type,
         )
 
         return message_id
@@ -426,6 +428,7 @@ class GmailTool:
         subject: Optional[str],
         body: Optional[str],
         attachments: Optional[List[dict]],
+        mail_type: Optional[int],
     ):
         """
         将发送结果写入数据库；若 ORM 不可用或写入失败，不影响主流程。
@@ -447,17 +450,20 @@ class GmailTool:
                 if fname:
                     filenames.append(str(fname))
 
+            defaults = {
+                "sent_at": sent_at,
+                "to": to or "",
+                "cc": cc or "",
+                "subject": subject or "",
+                "body": body or "",
+                "attachments": json.dumps(filenames, ensure_ascii=False),
+            }
+            if mail_type is not None:
+                defaults["mail_type"] = mail_type
+
             SentEmailLog.objects.update_or_create(
                 message_id=message_id,
-                defaults={
-                    "sent_at": sent_at,
-                    "to": to or "",
-                    "cc": cc or "",
-                    "subject": subject or "",
-                    "body": body or "",
-                    "attachments": json.dumps(filenames, ensure_ascii=False),
-                    "status": "sent",
-                },
+                defaults=defaults,
             )
         except Exception as exc:
             print(f"[gmail] 保存发送记录失败: {exc}")

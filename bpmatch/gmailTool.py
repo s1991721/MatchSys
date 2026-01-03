@@ -33,8 +33,8 @@ class GmailTool:
         creds = None
         # Use absolute paths so Django working dir changes won't break token/credentials lookup.
         base_dir = Path(__file__).resolve().parent.parent
-        token_path = base_dir / "token.json"
-        credentials_path = base_dir / "credentials.json"
+        token_path = base_dir / "credentials" / "gmail_token.json"
+        credentials_path = base_dir / "credentials" / "gmail_credentials.json"
 
         if token_path.exists():
             creds = Credentials.from_authorized_user_file(token_path, self.SCOPES)

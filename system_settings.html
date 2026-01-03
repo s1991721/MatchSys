@@ -64,6 +64,12 @@
       gap: 16px;
     }
 
+    .settings-left {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
     .settings-card {
       box-shadow: var(--shadowSoft);
     }
@@ -76,6 +82,49 @@
       margin: 0 0 16px;
       color: var(--muted);
       font-size: 13px;
+    }
+
+    .match-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .match-head .c-card-title,
+    .match-head .settings-desc {
+      margin: 0;
+    }
+
+    .match-form {
+      display: block;
+    }
+
+    .match-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .match-row .form-field {
+      flex: 0 0 auto;
+      min-width: 0;
+    }
+
+    .match-field {
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .match-field input {
+      width: 140px;
+    }
+
+    .match-row .form-actions {
+      margin-top: 0;
     }
 
     .inline-status {
@@ -237,26 +286,58 @@
         margin: 0;
       }
     }
+
+    @media (max-width: 720px) {
+      .match-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .match-field input {
+        width: 100%;
+      }
+      .match-row .form-actions {
+        justify-content: flex-start;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="page">
     <div class="settings-stack">
-      <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title">营业邮箱配置</h2>
-        <p class="settings-desc">上传 Gmail 认证文件并维护发件人信息，保存后用于系统邮件通知。</p>
-        <form class="form-grid form-grid-spaced">
-          <div class="form-field full">
-            <label for="gmail-auth">Gmail 认证文件</label>
-            <input id="gmail-auth" type="file" accept=".json" />
-            <div class="file-note">支持上传 Google OAuth 凭据 JSON 文件。</div>
+      <div class="settings-left">
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title">营业邮箱配置</h2>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field full">
+              <label for="gmail-auth">Gmail 认证文件</label>
+              <input id="gmail-auth" type="file" accept=".json" />
+              <div class="file-note">仅支持上传 Google OAuth 凭据 JSON 文件。</div>
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-secondary" type="button">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button">保存配置</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <div class="match-head">
+            <h2 class="c-card-title">Match 配置</h2>
+            <p class="settings-desc">周期配置的长短会影响Match的效率和成功率，建议不超过两周</p>
           </div>
-          <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button">保存配置</button>
-          </div>
-        </form>
-      </section>
+          <form class="form-grid form-grid-spaced match-form">
+            <div class="match-row">
+              <div class="form-field match-field">
+                <label for="match-cycle">周期（天）</label>
+                <input id="match-cycle" type="number" inputmode="numeric" step="1" min="1" placeholder="例如：14" />
+              </div>
+              <div class="form-actions">
+                <button class="c-btn c-btn-primary" type="button">保存配置</button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </div>
 
       <section class="c-card c-card-pad settings-card">
         <h2 class="c-card-title">AI 设置</h2>

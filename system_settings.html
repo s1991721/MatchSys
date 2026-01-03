@@ -246,14 +246,6 @@
         <h2 class="c-card-title">营业邮箱配置</h2>
         <p class="settings-desc">上传 Gmail 认证文件并维护发件人信息，保存后用于系统邮件通知。</p>
         <form class="form-grid form-grid-spaced">
-          <div class="form-field">
-            <label for="email-address">发件邮箱</label>
-            <input id="email-address" type="email" placeholder="example@gmail.com" />
-          </div>
-          <div class="form-field">
-            <label for="email-sender">显示名称</label>
-            <input id="email-sender" type="text" placeholder="MatchSys 系统通知" />
-          </div>
           <div class="form-field full">
             <label for="gmail-auth">Gmail 认证文件</label>
             <input id="gmail-auth" type="file" accept=".json" />
@@ -291,7 +283,6 @@
             </div>
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
             <button class="c-btn c-btn-primary" type="button">保存配置</button>
           </div>
         </form>

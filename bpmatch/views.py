@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db import close_old_connections, transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime, parse_date
 from django.views.decorators.csrf import csrf_exempt
@@ -319,10 +320,36 @@ def send_mail(request):
 
 @csrf_exempt
 @require_GET
-# 获取送信历史
 def send_history(request):
+    status = (request.GET.get("status") or "").strip()
+    keyword = (request.GET.get("keyword") or "").strip()
+    try:
+        page = int(request.GET.get("page", 1))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(request.GET.get("page_size", 10))
+    except (TypeError, ValueError):
+        page_size = 10
+    page = max(page, 1)
+    page_size = max(min(page_size, 100), 1)
 
-    logs = SentEmailLog.objects.order_by("-sent_at")[:300]
+    queryset = SentEmailLog.objects.all()
+    if status:
+        queryset = queryset.filter(status=status)
+    if keyword:
+        queryset = queryset.filter(
+            Q(subject__icontains=keyword)
+            | Q(to__icontains=keyword)
+            | Q(cc__icontains=keyword)
+        )
+    queryset = queryset.order_by("-sent_at")
+    total = queryset.count()
+    total_pages = max((total + page_size - 1) // page_size, 1)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+    logs = queryset[offset: offset + page_size]
     items = []
     current_tz = timezone.get_current_timezone()
 
@@ -348,8 +375,13 @@ def send_history(request):
             }
         )
 
-    payload = {"items": items, "count": len(items)}
-    return api_success(data=payload)
+    return api_paginated(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
 
 
 # -------------------------------------定时任务

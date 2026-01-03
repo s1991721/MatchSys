@@ -174,13 +174,21 @@
     };
 
     const notifyParentRoute = () => {
+        if (window.__routeNotified) return;
         if (!window.top || window.top === window) return;
         const path = window.location.pathname || "";
         const parts = path.split("/").filter(Boolean);
         const filename = parts.length ? parts[parts.length - 1] : "";
         if (!filename || !filename.endsWith(".html")) return;
         try {
+            const topHash = (window.top.location && window.top.location.hash) || "";
+            const normalizedTop = topHash.replace(/^#/, "").split("?")[0].split("#")[0];
+            if (normalizedTop === filename) {
+                window.__routeNotified = true;
+                return;
+            }
             window.top.postMessage({ type: "route:change", src: filename }, "*");
+            window.__routeNotified = true;
         } catch (e) {}
     };
 

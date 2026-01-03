@@ -361,6 +361,12 @@
                     </div>
                 </div>
                 <ul id="history-list" class="history-list"></ul>
+                <div class="pagination c-pagination" id="history-pagination">
+                    <div class="pagination-summary">
+                        <span id="history-page-summary">共 0 条 · 第 1/1 页</span>
+                    </div>
+                    <div class="pagination-pages" id="history-pagination-pages"></div>
+                </div>
             </div>
 
             <div class="c-card c-card-pad">
@@ -387,6 +393,9 @@
             const attachEl = document.getElementById('detail-attachments');
             const searchInput = document.getElementById('search');
             const statusGroup = document.getElementById('status-group');
+            const pagination = document.getElementById('history-pagination');
+            const paginationPages = document.getElementById('history-pagination-pages');
+            const pageSummary = document.getElementById('history-page-summary');
             const statSent = document.getElementById('stat-sent');
             const statPending = document.getElementById('stat-pending');
             const statFailed = document.getElementById('stat-failed');
@@ -397,6 +406,13 @@
 
             let records = [];
             let lastUpdateText = t('songxinhistory.status.none');
+            let currentPage = 1;
+            let totalPages = 1;
+            let totalCount = 0;
+            const PAGE_SIZE = 10;
+            let searchTimer = null;
+            let isLoading = false;
+            let lastQueryKey = '';
 
             let activeStatus = 'all';
             let activeId = null;
@@ -410,6 +426,9 @@
             let statusMap = buildStatusMap();
 
             const renderStats = (items) => {
+                if (!statSent || !statPending || !statFailed) {
+                    return;
+                }
                 const sent = items.filter(i => i.status === 'sent').length;
                 const pending = items.filter(i => i.status === 'pending').length;
                 const failed = items.filter(i => i.status === 'failed').length;
@@ -449,24 +468,23 @@
             };
 
             const renderList = () => {
-                const keyword = searchInput.value.trim().toLowerCase();
-                const filtered = records.filter(r => {
-                    const matchStatus = activeStatus === 'all' || r.status === activeStatus;
-                    const text = `${r.title} ${r.to} ${r.cc}`.toLowerCase();
-                    const matchKeyword = !keyword || text.includes(keyword);
-                    return matchStatus && matchKeyword;
-                });
-
                 listEl.innerHTML = '';
 
-                if (!filtered.length) {
+                if (!records.length) {
                     listEl.innerHTML = `<li class="history-item"><div class="mail-title">${t('songxinhistory.empty.list')}</div></li>`;
                     renderDetail(null);
-                    renderStats(filtered);
+                    renderStats(records);
+                    if (pagination) {
+                        pagination.classList.add('hidden');
+                    }
                     return;
                 }
 
-                filtered.forEach((item, idx) => {
+                if (pagination) {
+                    pagination.classList.remove('hidden');
+                }
+
+                records.forEach((item, idx) => {
                     const li = document.createElement('li');
                     li.className = 'history-item' + (idx === 0 ? ' active' : '');
                     li.dataset.id = item.id;
@@ -489,9 +507,22 @@
                     listEl.appendChild(li);
                 });
 
-                activeId = filtered[0].id;
-                renderDetail(filtered[0]);
-                renderStats(filtered);
+                activeId = records[0].id;
+                renderDetail(records[0]);
+                renderStats(records);
+            };
+
+            const updatePaginationUI = () => {
+                if (pageSummary) {
+                    pageSummary.textContent = format('songxinhistory.page_summary', {
+                        count: totalCount,
+                        page: currentPage,
+                        total: totalPages
+                    });
+                }
+                if (pagination && window.renderPagination) {
+                    window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+                }
             };
 
             const API_BASE = '';
@@ -504,9 +535,26 @@
                 return res;
             };
 
-            const loadRecords = async () => {
+            const loadRecords = async (page = 1) => {
+                currentPage = page;
+                const keyword = searchInput.value.trim();
+                const params = new URLSearchParams();
+                params.set('page', String(currentPage));
+                params.set('page_size', String(PAGE_SIZE));
+                if (activeStatus && activeStatus !== 'all') {
+                    params.set('status', activeStatus);
+                }
+                if (keyword) {
+                    params.set('keyword', keyword);
+                }
+                const queryKey = params.toString();
+                if (isLoading && queryKey === lastQueryKey) {
+                    return;
+                }
+                isLoading = true;
+                lastQueryKey = queryKey;
                 try {
-                    const resp = await fetchWithAuth(`${API_BASE}/send-history`, { credentials: 'include' });
+                    const resp = await fetchWithAuth(`${API_BASE}/api/send-history?${queryKey}`, { credentials: 'include' });
                     if (!resp.ok) {
                         throw new Error(t('songxinhistory.error.load_failed'));
                     }
@@ -520,6 +568,7 @@
                         throw new Error(payload.message || t('songxinhistory.error.load_failed'));
                     }
                     const result = payload.data || {};
+                    const meta = payload.meta || {};
                     records = (result.items || []).map(item => ({
                         id: item.id,
                         title: item.title || t('songxinhistory.placeholder.title'),
@@ -530,16 +579,25 @@
                         content: item.content || '',
                         attachments: item.attachments || [],
                     }));
-                    if (records.length && records[0].time) {
+                    totalCount = Number.isFinite(meta.total) ? meta.total : records.length;
+                    totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+                    currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+                    if (currentPage === 1 && records.length && records[0].time) {
                         lastUpdateText = records[0].time;
                     }
                 } catch (err) {
                     console.error('加载送信历史失败', err);
                     records = [];
                     lastUpdateText = t('songxinhistory.error.load_history');
+                    totalCount = 0;
+                    totalPages = 1;
+                    currentPage = 1;
+                } finally {
+                    isLoading = false;
                 }
                 renderList();
                 renderStats(records);
+                updatePaginationUI();
                 const statusNote = document.getElementById('last-update');
                 if (statusNote) {
                     statusNote.textContent = lastUpdateText;
@@ -563,14 +621,38 @@
                 statusGroup.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 activeStatus = btn.dataset.status || 'all';
-                renderList();
+                loadRecords(1);
             });
 
             searchInput.addEventListener('input', () => {
-                renderList();
+                if (searchTimer) {
+                    window.clearTimeout(searchTimer);
+                }
+                searchTimer = window.setTimeout(() => {
+                    loadRecords(1);
+                }, 300);
             });
 
-            loadRecords();
+            if (pagination && window.bindPagination) {
+                window.bindPagination(pagination, (value) => {
+                    let nextPage = currentPage;
+                    if (value === 'prev') {
+                        nextPage = Math.max(1, currentPage - 1);
+                    } else if (value === 'next') {
+                        nextPage = Math.min(totalPages, currentPage + 1);
+                    } else {
+                        const parsed = Number(value);
+                        if (Number.isFinite(parsed) && parsed >= 1) {
+                            nextPage = parsed;
+                        }
+                    }
+                    if (nextPage !== currentPage) {
+                        loadRecords(nextPage);
+                    }
+                });
+            }
+
+            loadRecords(1);
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
                     if (i18n) {
@@ -580,6 +662,7 @@
                     lastUpdateText = t('songxinhistory.status.none');
                     renderList();
                     renderStats(records);
+                    updatePaginationUI();
                     const statusNote = document.getElementById('last-update');
                     if (statusNote) {
                         statusNote.textContent = lastUpdateText;

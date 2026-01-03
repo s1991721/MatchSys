@@ -62,16 +62,19 @@
         .pill-group {
             display: inline-flex;
             gap: 8px;
-            flex-wrap: nowrap;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
         .pill {
+            flex: 0 0 auto;
             padding: 8px 12px;
             border: 1px solid #d8dfec;
             border-radius: 999px;
             background: #f7f9fd;
             color: #3b4f77;
             font-size: 13px;
+            white-space: nowrap;
             cursor: pointer;
             transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
         }

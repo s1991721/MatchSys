@@ -7,312 +7,19 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="nav.system_settings">系统设置</title>
-  <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background: transparent;
-      color: var(--text);
-    }
-
-    .page {
-      padding: 20px;
-      width: 100%;
-      max-width: none;
-      margin: 0;
-    }
-
-    .card {
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      background: #fff;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .tile {
-      border-radius: 14px;
-      border: 1px dashed var(--border);
-      padding: 14px;
-      background: #f8faff;
-    }
-
-    .tile h3 {
-      margin: 0 0 6px 0;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    .tile p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.5;
-    }
-
-    .settings-stack {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .settings-left {
-      display: grid;
-      gap: 16px;
-      align-content: start;
-    }
-
-    .settings-card {
-      box-shadow: var(--shadowSoft);
-    }
-
-    .settings-card .c-card-title {
-      margin-bottom: 6px;
-    }
-
-    .settings-desc {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .match-head {
-      display: flex;
-      align-items: baseline;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .match-head .c-card-title,
-    .match-head .settings-desc {
-      margin: 0;
-    }
-
-    .match-form {
-      display: block;
-    }
-
-    .match-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .match-row .form-field {
-      flex: 0 0 auto;
-      min-width: 0;
-    }
-
-    .match-field {
-      flex-direction: row;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .match-field input {
-      width: 140px;
-    }
-
-    .match-row .form-actions {
-      margin-top: 0;
-    }
-
-    .inline-status {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .inline-status.success {
-      color: var(--success);
-    }
-
-    .file-note {
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .ai-toggle {
-      display: inline-flex;
-      gap: 8px;
-      padding: 4px;
-      border-radius: 999px;
-      background: #f1f4fb;
-      border: 1px solid var(--border);
-    }
-
-    .ai-toggle button {
-      border: 0;
-      background: transparent;
-      padding: 8px 16px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #5b6b86;
-      cursor: pointer;
-    }
-
-    .ai-toggle button.is-active {
-      background: #1c7bff;
-      color: #fff;
-      box-shadow: 0 6px 14px rgba(28, 123, 255, 0.18);
-    }
-
-    .ai-fields {
-      display: none;
-    }
-
-    .ai-fields.is-active {
-      display: contents;
-    }
-
-    .task-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 12px;
-    }
-
-    .task-item {
-      border: 1px dashed var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      background: #f9fbff;
-    }
-
-    .task-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .task-title {
-      font-weight: 700;
-      font-size: 13px;
-      color: #516079;
-    }
-
-    .span-2 {
-      grid-column: 1 / -1;
-    }
-
-    .config-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 12px;
-    }
-
-    .config-item {
-      border: 1px dashed var(--border);
-      border-radius: 14px;
-      padding: 14px;
-      background: #f9fbff;
-    }
-
-    .config-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .config-title {
-      font-weight: 700;
-      font-size: 13px;
-      color: #516079;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-
-    .modal-backdrop.is-active {
-      display: flex;
-    }
-
-    .modal {
-      background: #fff;
-      border-radius: 16px;
-      padding: 18px;
-      width: min(92vw, 360px);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-    }
-
-    .modal h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-
-    .modal p {
-      margin: 0 0 16px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .modal-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
-    }
-
-    @media (max-width: 980px) {
-      .settings-stack {
-        grid-template-columns: 1fr;
-      }
-      .page {
-        margin: 0;
-      }
-    }
-
-    @media (max-width: 720px) {
-      .match-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .match-field input {
-        width: 100%;
-      }
-      .match-row .form-actions {
-        justify-content: flex-start;
-      }
-    }
-  </style>
 </head>
-<body>
+<body class="system-settings">
   <div class="page">
-    <div class="settings-stack">
-      <div class="settings-left">
+    <div class="content-grid settings-stack">
+      <div class="settings-left c-stack">
         <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title">营业邮箱配置</h2>
           <form class="form-grid form-grid-spaced">
             <div class="form-field full">
               <label for="gmail-auth">Gmail 认证文件</label>
               <input id="gmail-auth" type="file" accept=".json" />
-              <div class="file-note">仅支持上传 Google OAuth 凭据 JSON 文件。</div>
-              <div class="file-note" id="gmail-auth-current"></div>
+              <div class="hint">仅支持上传 Google OAuth 凭据 JSON 文件，将替换 credentials/gmail_credentials.json。</div>
+              <div class="hint" id="gmail-auth-current"></div>
             </div>
             <div class="form-actions">
               <button class="c-btn c-btn-secondary" type="button" id="gmail-test">连接测试</button>
@@ -324,7 +31,7 @@
         <section class="c-card c-card-pad settings-card">
           <div class="match-head">
             <h2 class="c-card-title">Match 配置</h2>
-            <p class="settings-desc">周期配置的长短会影响Match的效率和成功率，建议不超过两周</p>
+            <p class="c-card-subtitle settings-desc">周期配置的长短会影响Match的效率和成功率，建议不超过两周</p>
           </div>
           <form class="form-grid form-grid-spaced match-form">
             <div class="match-row">
@@ -342,10 +49,10 @@
 
       <section class="c-card c-card-pad settings-card">
         <h2 class="c-card-title">AI 设置</h2>
-        <p class="settings-desc">选择本地或云端模式，并填写对应模型配置。</p>
-        <div class="ai-toggle" role="tablist" aria-label="AI 模式切换">
-          <button type="button" class="is-active" data-ai-mode="local">本地</button>
-          <button type="button" data-ai-mode="cloud">云端</button>
+        <p class="c-card-subtitle settings-desc">选择本地或云端模式，并填写对应模型配置。</p>
+        <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换">
+          <button type="button" class="c-toggle is-active" data-ai-mode="local">本地</button>
+          <button type="button" class="c-toggle" data-ai-mode="cloud">云端</button>
         </div>
         <form class="form-grid form-grid-spaced">
           <div class="ai-fields is-active" data-ai-fields="local">
@@ -372,7 +79,7 @@
 
       <section class="c-card c-card-pad settings-card span-2">
         <h2 class="c-card-title">数据备份</h2>
-        <p class="settings-desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
+        <p class="c-card-subtitle settings-desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
         <form class="form-grid form-grid-spaced">
           <div class="form-field">
             <label for="backup-host">备用数据库地址</label>
@@ -415,7 +122,7 @@
 
       <section class="c-card c-card-pad settings-card">
         <h2 class="c-card-title">送信配置</h2>
-        <p class="settings-desc">配置常用邮箱登录信息，并指定使用人。</p>
+        <p class="c-card-subtitle settings-desc">配置常用邮箱登录信息，并指定使用人。</p>
         <ul class="config-list" id="sendmsg-list"></ul>
         <div class="form-actions">
           <button class="c-btn c-btn-secondary" type="button" id="add-sendmsg">新增配置</button>
@@ -424,18 +131,18 @@
 
       <section class="c-card c-card-pad settings-card">
         <h2 class="c-card-title">定时任务</h2>
-        <p class="settings-desc">支持配置多个任务，每个任务可单独执行与保存。</p>
+        <p class="c-card-subtitle settings-desc">支持配置多个任务，每个任务可单独执行与保存。</p>
         <ul class="task-list" id="task-list"></ul>
         <div class="form-actions">
           <button class="c-btn c-btn-secondary" type="button" id="add-task">新增任务</button>
         </div>
       </section>
     </div>
-    <div class="modal-backdrop" id="delete-modal" aria-hidden="true">
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <div class="c-modal-backdrop" id="delete-modal" aria-hidden="true">
+      <div class="c-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
         <h3 id="delete-title">确认删除</h3>
         <p id="delete-message">确定删除该项配置吗？</p>
-        <div class="modal-actions">
+        <div class="c-modal-actions">
           <button class="c-btn c-btn-ghost" type="button" id="cancel-delete">取消</button>
           <button class="c-btn c-btn-danger" type="button" id="confirm-delete">确认删除</button>
         </div>
@@ -477,7 +184,8 @@
     let pendingDelete = null;
     let systemTasks = [];
     let sendmsgConfigs = [];
-    let businessEmailConfig = { auth_filename: "", auth_json: "" };
+    let businessEmailConfig = { auth_filename: "", auth_path: "" };
+    let businessEmailFile = null;
 
     const notifyError = (message) => {
       window.alert(message || "请求失败，请稍后再试。");
@@ -508,9 +216,35 @@
         return payload;
       });
 
+    const requestFormData = (url, formData) =>
+      fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        body: formData,
+      }).then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.success) {
+          const message = payload.message || "请求失败";
+          throw new Error(message);
+        }
+        return payload;
+      });
+
+    const resolveAuthName = (config) => {
+      if (!config) return "";
+      if (config.auth_filename) return config.auth_filename;
+      if (config.auth_path) {
+        const parts = String(config.auth_path).split("/");
+        return parts[parts.length - 1];
+      }
+      return "";
+    };
+
     const fetchSettings = async (section, fallback) => {
       try {
-        const payload = await requestJson(`${apiBase}/${section}`, { method: "GET" });
+        const payload = await requestJson(`${apiBase}/${section}`, {
+          method: "GET",
+        });
         return payload.data && payload.data.settings !== undefined
           ? payload.data.settings
           : fallback;
@@ -522,7 +256,7 @@
 
     const saveSettings = async (section, settings) => {
       const payload = await requestJson(`${apiBase}/${section}`, {
-        method: "PUT",
+        method: "POST",
         body: JSON.stringify({ settings }),
       });
       return payload.data && payload.data.settings !== undefined
@@ -591,13 +325,13 @@
       if (!deleteModal || !deleteMessage) return;
       pendingDelete = onConfirm;
       deleteMessage.textContent = message;
-      deleteModal.classList.add("is-active");
+      deleteModal.classList.add("show");
       deleteModal.setAttribute("aria-hidden", "false");
     };
 
     const closeDeleteModal = () => {
       if (!deleteModal) return;
-      deleteModal.classList.remove("is-active");
+      deleteModal.classList.remove("show");
       deleteModal.setAttribute("aria-hidden", "true");
       pendingDelete = null;
     };
@@ -618,7 +352,7 @@
     if (deleteModal) {
       deleteModal.addEventListener("click", (event) => {
         const target = event.target;
-        if (target instanceof HTMLElement && target.classList.contains("modal-backdrop")) {
+        if (target instanceof HTMLElement && target.classList.contains("c-modal-backdrop")) {
           closeDeleteModal();
         }
       });
@@ -735,11 +469,11 @@
         const file = event.target.files ? event.target.files[0] : null;
         if (!file) return;
         try {
-          const content = await file.text();
           businessEmailConfig = {
             auth_filename: file.name || "",
-            auth_json: content,
+            auth_path: "",
           };
+          businessEmailFile = file;
           if (gmailAuthCurrent) {
             gmailAuthCurrent.textContent = businessEmailConfig.auth_filename
               ? `已选择：${businessEmailConfig.auth_filename}`
@@ -753,12 +487,25 @@
 
     if (gmailSaveButton) {
       gmailSaveButton.addEventListener("click", async () => {
-        if (!businessEmailConfig.auth_json) {
+        if (!businessEmailFile) {
           notifyError("请先选择 Gmail 认证文件。");
           return;
         }
         try {
-          businessEmailConfig = await saveSettings(sections.businessEmail, businessEmailConfig);
+          const formData = new FormData();
+          formData.append("auth_file", businessEmailFile);
+          const payload = await requestFormData(
+            `${apiBase}/${sections.businessEmail}`,
+            formData
+          );
+          businessEmailConfig = payload.data && payload.data.settings
+            ? payload.data.settings
+            : businessEmailConfig;
+          businessEmailFile = null;
+          if (gmailAuthCurrent) {
+            const filename = resolveAuthName(businessEmailConfig);
+            gmailAuthCurrent.textContent = filename ? `已保存：${filename}` : "已保存凭据";
+          }
           flashButton(gmailSaveButton, "已保存");
         } catch (error) {
           notifyError(error.message);
@@ -767,8 +514,19 @@
     }
 
     if (gmailTestButton) {
-      gmailTestButton.addEventListener("click", () => {
-        notifyError("连接测试暂未实现，请先保存配置。");
+      gmailTestButton.addEventListener("click", async () => {
+        try {
+          const payload = await requestJson(`${apiBase}/business-email/test`, {
+            method: "POST",
+            body: JSON.stringify({}),
+          });
+          const message = payload.data && payload.data.message ? payload.data.message : "连接成功";
+          const email = payload.data && payload.data.email_address ? payload.data.email_address : "";
+          window.alert(email ? `${message}\n邮箱：${email}` : message);
+          flashButton(gmailTestButton, "成功");
+        } catch (error) {
+          notifyError(error.message);
+        }
       });
     }
 
@@ -930,11 +688,8 @@
     const loadSettings = async () => {
       businessEmailConfig = await fetchSettings(sections.businessEmail, businessEmailConfig);
       if (gmailAuthCurrent) {
-        gmailAuthCurrent.textContent = businessEmailConfig.auth_filename
-          ? `已保存：${businessEmailConfig.auth_filename}`
-          : businessEmailConfig.auth_json
-            ? "已保存凭据"
-            : "";
+        const filename = resolveAuthName(businessEmailConfig);
+        gmailAuthCurrent.textContent = filename ? `已保存：${filename}` : "";
       }
 
       const matchSettings = await fetchSettings(sections.match, { cycle_days: 14 });

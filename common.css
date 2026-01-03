@@ -1765,3 +1765,102 @@ svg {
     grid-template-columns: 1fr;
   }
 }
+
+.system-settings .settings-card {
+  box-shadow: var(--shadowSoft);
+}
+.system-settings .settings-card .c-card-title {
+  margin-bottom: 6px;
+}
+.system-settings .settings-desc {
+  margin: 0 0 16px;
+}
+.system-settings .match-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.system-settings .match-head .c-card-title,
+.system-settings .match-head .settings-desc {
+  margin: 0;
+}
+.system-settings .match-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.system-settings .match-row .form-field {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.system-settings .match-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.system-settings .match-field input {
+  width: 140px;
+}
+.system-settings .match-row .form-actions {
+  margin-top: 0;
+}
+.system-settings .inline-status {
+  font-size: 12px;
+  color: var(--muted);
+}
+.system-settings .inline-status.success {
+  color: var(--success);
+}
+.system-settings .ai-fields {
+  display: none;
+}
+.system-settings .ai-fields.is-active {
+  display: contents;
+}
+.system-settings .task-list,
+.system-settings .config-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.system-settings .task-item,
+.system-settings .config-item {
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--card-soft);
+}
+.system-settings .task-head,
+.system-settings .config-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.system-settings .task-title,
+.system-settings .config-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #516079;
+}
+.system-settings .span-2 {
+  grid-column: 1 / -1;
+}
+@media (max-width: 720px) {
+  .system-settings .match-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .system-settings .match-field input {
+    width: 100%;
+  }
+  .system-settings .match-row .form-actions {
+    justify-content: flex-start;
+  }
+}

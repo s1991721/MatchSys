@@ -419,31 +419,6 @@
         personList.appendChild(loading);
     }
 
-    const fetchPersons = async (refresh = false) => {
-        setPersonLoading(t("match.loading_people"));
-
-        try {
-            const url = `/persons${refresh ? '?refresh=1' : ''}`;
-            const res = await fetchWithAuth(url, { credentials: 'include' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) {
-                throw new Error(payload.message || t("match.failed"));
-            }
-            const result = payload.data || {};
-            renderPersonList(result.items || []);
-        } catch (err) {
-            if (personList) {
-                personList.innerHTML = '';
-                const errorLi = document.createElement('li');
-                errorLi.className = 'empty';
-                errorLi.textContent = `${t("match.failed")}：${err.message}`;
-                personList.appendChild(errorLi);
-            }
-        }
-    }
-
     dateButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             dateButtons.forEach(b => b.classList.remove('active'));
@@ -563,7 +538,6 @@
         activeMatchedSkills = highlights || [];
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
     });
-    fetchPersons(false);
 
     // 将当前选中的求人与人员信息存入本地并跳转到送信页
     if (sendBtn) {

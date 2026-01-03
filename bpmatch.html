@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
-  <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title data-i18n="match.title">Match</title>
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="match.title">Match</title>
 </head>
 <body>
 <div class="page page-wide c-stack match-page">
@@ -17,16 +17,24 @@
                 <div class="filter-group c-filter-group">
                     <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
                     <div class="chip-row c-chip-row">
-                        <button class="chip c-chip" data-range="all" type="button" data-i18n="match.range.all">全部</button>
-                        <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
-                        <button class="chip c-chip active" data-range="today" type="button" data-i18n="match.range.today">今天</button>
+                        <button class="chip c-chip" data-range="all" type="button" data-i18n="match.range.all">全部
+                        </button>
+                        <button class="chip c-chip" data-range="yesterday" type="button"
+                                data-i18n="match.range.yesterday">昨天
+                        </button>
+                        <button class="chip c-chip active" data-range="today" type="button"
+                                data-i18n="match.range.today">今天
+                        </button>
                     </div>
                 </div>
                 <div class="filter-group c-filter-group sender-group">
                     <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
                     <div class="search-row">
-                        <input id="job-sender" class="input c-input search-input" type="search" placeholder="搜索发件人" data-i18n-placeholder="match.sender_placeholder">
-                        <button class="c-btn c-btn-primary" type="button" id="job-search-btn" data-i18n="common.search">搜索</button>
+                        <input id="job-sender" class="input c-input search-input" type="search" placeholder="搜索发件人"
+                               data-i18n-placeholder="match.sender_placeholder">
+                        <button class="c-btn c-btn-primary" type="button" id="job-search-btn" data-i18n="common.search">
+                            搜索
+                        </button>
                     </div>
                 </div>
             </div>
@@ -132,14 +140,6 @@
         target.innerHTML = html || `<p style="color:#9aa4b5">${t("match.empty")}</p>`;
     }
 
-    const fetchWithAuth = async (url, options = {}) => {
-        const res = await fetch(url, options);
-        if (res.status === 401) {
-            window.location.href = '/login.html';
-            throw new Error('Unauthorized');
-        }
-        return res;
-    };
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
@@ -156,7 +156,6 @@
     let activeJobDetail = '';
     let activeMatchedSkills = [];
 
-    const PAGE_SIZE = 50;
     let currentPage = 1;
     let hasNextPage = false;
     let totalPages = 1;
@@ -205,13 +204,6 @@
         }
     };
 
-    const formatDate = (date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    };
-
     const renderJobList = (items) => {
         jobList.innerHTML = '';
         activeMatchedSkills = [];
@@ -233,7 +225,7 @@
             const id = item.id || '';
             li.dataset.detail = detail;
             li.dataset.id = id;
-            li.dataset.item = JSON.stringify({ ...item, detail, id });
+            li.dataset.item = JSON.stringify({...item, detail, id});
 
             const main = document.createElement('div');
             main.className = 'item-main';
@@ -279,18 +271,18 @@
         items.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'item' + (index === 0 ? ' active' : '');
-            const detail = item.detail || item.body || item.desc || '';
+            const detail = item.detail || '';
             li.dataset.detail = detail;
             li.dataset.id = item.id || '';
             li.dataset.matchedSkills = JSON.stringify(item.matched_skills || []);
-            li.dataset.item = JSON.stringify({ ...item, detail });
+            li.dataset.item = JSON.stringify({...item, detail});
 
             const header = document.createElement('div');
             header.className = 'person-header';
 
             const name = document.createElement('span');
             name.className = 'person-name';
-            name.textContent = item.name || item.title || item.subject || t("match.untitled");
+            name.textContent = item.title || t("match.untitled");
 
             const meta = document.createElement('div');
             meta.className = 'person-meta';
@@ -374,13 +366,13 @@
         if (sender) params.set('sender', sender);
         if (targetDate) params.set('date', targetDate);
         params.set('page', String(currentPage));
-        params.set('page_size', String(PAGE_SIZE));
+        params.set('page_size', String(50));
 
         const url = `/api/mail-projects${params.toString() ? `?${params}` : ''}`;
         showLoading(t("match.loading_jobs"));
 
         try {
-            const res = await fetchWithAuth(url, { credentials: 'include' });
+            const res = await fetchWithAuth(url, {method: 'GET'});
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);
             }
@@ -428,55 +420,41 @@
         });
     });
 
-    if (jobSearchBtn) {
-        jobSearchBtn.addEventListener('click', () => {
-            fetchJobs(1);
-        });
-    }
+    jobSearchBtn.addEventListener('click', () => {
+        fetchJobs(1);
+    });
 
-    if (jobSender) {
-        jobSender.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                fetchJobs(1);
-            }
-        });
-    }
 
-    if (pagination && window.bindPagination) {
-        window.bindPagination(pagination, (value) => {
-            if (value === 'prev') {
-                if (currentPage > 1) fetchJobs(currentPage - 1);
-                return;
-            }
-            if (value === 'next') {
-                if (hasNextPage) fetchJobs(currentPage + 1);
-                return;
-            }
-            const page = Number(value);
-            if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
-                fetchJobs(page);
-            }
-        });
-    }
+    window.bindPagination(pagination, (value) => {
+        if (value === 'prev') {
+            if (currentPage > 1) fetchJobs(currentPage - 1);
+            return;
+        }
+        if (value === 'next') {
+            if (hasNextPage) fetchJobs(currentPage + 1);
+            return;
+        }
+        const page = Number(value);
+        if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
+            fetchJobs(page);
+        }
+    });
 
-    if (timeSaveBtn) {
-        timeSaveBtn.addEventListener('click', async () => {
-            try {
-                const res = await fetchWithAuth('/api/time-to-save', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                const payload = normalizeApiResponse(data);
-                if (!payload.success) {
-                    throw new Error(payload.message || t("match.failed"));
-                }
-                alert('已触发');
-            } catch (err) {
-                alert(`${t("match.failed")}：${err.message}`);
+
+    timeSaveBtn.addEventListener('click', async () => {
+        try {
+            const res = await fetchWithAuth('/api/time-to-save');
+            const data = await res.json();
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) {
+                throw new Error(payload.message || t("match.failed"));
             }
-        });
-    }
+            alert('已触发');
+        } catch (err) {
+            alert(`${t("match.failed")}：${err.message}`);
+        }
+    });
+
 
     // 先把静态文案按新格式渲染，再绑定事件和拉取接口
     renderDetail(jobDetail, jobDetail.textContent.trim());
@@ -496,12 +474,9 @@
         }
         setPersonLoading(t("match.loading_match"));
         try {
-            const projectId = payload?.id || payload?.project_id || '';
+            const projectId = payload?.id || '';
             const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
-            const res = await fetchWithAuth(url, {
-                method: 'GET',
-                credentials: 'include',
-            });
+            const res = await fetchWithAuth(url, {method: 'GET'});
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);
             }
@@ -511,10 +486,7 @@
                 throw new Error(responsePayload.message || t("match.match_failed"));
             }
             const result = responsePayload.data || {};
-            const rawMatches =
-                (result && result.matches) ||
-                (result && result.match && result.match.matches) ||
-                [];
+            const rawMatches = (result && result.matches) || [];
             const matchItems = Array.isArray(rawMatches)
                 ? rawMatches
                 : typeof rawMatches === 'object' && rawMatches !== null
@@ -540,68 +512,62 @@
     });
 
     // 将当前选中的求人与人员信息存入本地并跳转到送信页
-    if (sendBtn) {
-        sendBtn.addEventListener('click', () => {
-            const activeJob = jobList?.querySelector('.item.active');
-            const activePerson = personList?.querySelector('.item.active');
 
-            if (!activeJob || !activePerson) {
-                alert(t("match.send_tip"));
-                return;
-            }
+    sendBtn.addEventListener('click', () => {
+        const activeJob = jobList?.querySelector('.item.active');
+        const activePerson = personList?.querySelector('.item.active');
 
-            const parseDatasetJSON = (el, key) => {
-                if (!el || !el.dataset) return null;
-                const raw = el.dataset[key];
-                if (!raw) return null;
-                try {
-                    return JSON.parse(raw);
-                } catch {
-                    return null;
-                }
-            };
+        if (!activeJob || !activePerson) {
+            alert(t("match.send_tip"));
+            return;
+        }
 
-            const jobData = parseDatasetJSON(activeJob, 'item') || {};
-            const personData = parseDatasetJSON(activePerson, 'item') || {};
-
-            const jobPayload = {
-                id: jobData.id || activeJob.dataset.id || '',
-                title: jobData.title || jobData.subject || activeJob.querySelector('.item-title')?.textContent.trim() || '',
-                desc: jobData.desc || jobData.from || activeJob.querySelector('.item-desc')?.textContent.trim() || '',
-                detail: jobData.detail || jobData.body || activeJob.dataset.detail || '',
-                time: jobData.date || jobData.time || activeJob.querySelector('.item-time')?.textContent.trim() || '',
-                thread_id: jobData.thread_id || '',
-                message_id_header: jobData.message_id_header || '',
-                references_header: jobData.references_header || ''
-            };
-
-            const personPayload = {
-                id: personData.id || activePerson.dataset.id || '',
-                name: personData.name || personData.title || activePerson.querySelector('.person-name')?.textContent.trim() || '',
-                belong: personData.belong || personData.from || activePerson.querySelector('.person-belong')?.textContent.trim() || '',
-                detail: personData.detail || personData.body || activePerson.dataset.detail || '',
-                time: personData.date || personData.time || activePerson.querySelector('.person-time')?.textContent.trim() || '',
-                thread_id: personData.thread_id || '',
-                message_id_header: personData.message_id_header || '',
-                references_header: personData.references_header || ''
-            };
-
-            const payload = {
-                job: jobPayload,
-                person: personPayload,
-                mail_type: 2,
-                updatedAt: Date.now()
-            };
-
+        const parseDatasetJSON = (el, key) => {
+            if (!el || !el.dataset) return null;
+            const raw = el.dataset[key];
+            if (!raw) return null;
             try {
-                localStorage.setItem('matchSelection', JSON.stringify(payload));
-            } catch (err) {
-                console.error(t("match.cache_failed"), err);
+                return JSON.parse(raw);
+            } catch {
+                return null;
             }
+        };
 
-            window.location.href = 'songxin.html?from=match';
-        });
-    }
+        const jobData = parseDatasetJSON(activeJob, 'item') || {};
+        const personData = parseDatasetJSON(activePerson, 'item') || {};
+
+        const jobPayload = {
+            id: jobData.id || activeJob.dataset.id || '',
+            title: jobData.title || activeJob.querySelector('.item-title')?.textContent.trim() || '',
+            desc: jobData.desc || activeJob.querySelector('.item-desc')?.textContent.trim() || '',
+            detail: jobData.detail || activeJob.dataset.detail || '',
+            time: jobData.date || activeJob.querySelector('.item-time')?.textContent.trim() || ''
+        };
+
+        const personPayload = {
+            id: personData.id || activePerson.dataset.id || '',
+            name: personData.title || activePerson.querySelector('.person-name')?.textContent.trim() || '',
+            belong: personData.from || activePerson.querySelector('.person-belong')?.textContent.trim() || '',
+            detail: personData.body || activePerson.dataset.detail || '',
+            time: personData.date || activePerson.querySelector('.person-time')?.textContent.trim() || ''
+        };
+
+        const payload = {
+            job: jobPayload,
+            person: personPayload,
+            mail_type: 0,
+            updatedAt: Date.now()
+        };
+
+        try {
+            localStorage.setItem('matchSelection', JSON.stringify(payload));
+        } catch (err) {
+            console.error(t("match.cache_failed"), err);
+        }
+
+        window.location.href = 'songxin.html?from=match';
+    });
+
 </script>
 </body>
 </html>

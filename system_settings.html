@@ -19,34 +19,9 @@
 
     .page {
       padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .title {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .title h1 {
+      width: 100%;
+      max-width: none;
       margin: 0;
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .title p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 13px;
     }
 
     .card {
@@ -82,34 +57,314 @@
       font-size: 12px;
       line-height: 1.5;
     }
+
+    .settings-stack {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .settings-card {
+      box-shadow: var(--shadowSoft);
+    }
+
+    .settings-card .c-card-title {
+      margin-bottom: 6px;
+    }
+
+    .settings-desc {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .inline-status {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .inline-status.success {
+      color: var(--success);
+    }
+
+    .file-note {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ai-toggle {
+      display: inline-flex;
+      gap: 8px;
+      padding: 4px;
+      border-radius: 999px;
+      background: #f1f4fb;
+      border: 1px solid var(--border);
+    }
+
+    .ai-toggle button {
+      border: 0;
+      background: transparent;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #5b6b86;
+      cursor: pointer;
+    }
+
+    .ai-toggle button.is-active {
+      background: #1c7bff;
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(28, 123, 255, 0.18);
+    }
+
+    .ai-fields {
+      display: none;
+    }
+
+    .ai-fields.is-active {
+      display: contents;
+    }
+
+    .task-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .task-item {
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: #f9fbff;
+    }
+
+    .task-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .task-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #516079;
+    }
+
+    .span-2 {
+      grid-column: 1 / -1;
+    }
+
+    .config-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+
+    .config-item {
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      background: #f9fbff;
+    }
+
+    .config-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .config-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #516079;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal-backdrop.is-active {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px;
+      width: min(92vw, 360px);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+
+    .modal p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .settings-stack {
+        grid-template-columns: 1fr;
+      }
+      .page {
+        margin: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="header">
-      <div class="title">
-        <h1 data-i18n="nav.system_settings">系统设置</h1>
-        <p data-i18n="notice.body">功能开发中</p>
-      </div>
-    </div>
+    <div class="settings-stack">
+      <section class="c-card c-card-pad settings-card">
+        <h2 class="c-card-title">营业邮箱配置</h2>
+        <p class="settings-desc">上传 Gmail 认证文件并维护发件人信息，保存后用于系统邮件通知。</p>
+        <form class="form-grid form-grid-spaced">
+          <div class="form-field">
+            <label for="email-address">发件邮箱</label>
+            <input id="email-address" type="email" placeholder="example@gmail.com" />
+          </div>
+          <div class="form-field">
+            <label for="email-sender">显示名称</label>
+            <input id="email-sender" type="text" placeholder="MatchSys 系统通知" />
+          </div>
+          <div class="form-field full">
+            <label for="gmail-auth">Gmail 认证文件</label>
+            <input id="gmail-auth" type="file" accept=".json" />
+            <div class="file-note">支持上传 Google OAuth 凭据 JSON 文件。</div>
+          </div>
+          <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
+            <button class="c-btn c-btn-primary" type="button">保存配置</button>
+          </div>
+        </form>
+      </section>
 
-    <div class="card">
-      <div class="grid">
-        <div class="tile">
-          <h3 data-i18n="nav.permission">权限管理</h3>
-          <p data-i18n="notice.body">功能开发中</p>
+      <section class="c-card c-card-pad settings-card">
+        <h2 class="c-card-title">AI 设置</h2>
+        <p class="settings-desc">选择本地或云端模式，并填写对应模型配置。</p>
+        <div class="ai-toggle" role="tablist" aria-label="AI 模式切换">
+          <button type="button" class="is-active" data-ai-mode="local">本地</button>
+          <button type="button" data-ai-mode="cloud">云端</button>
         </div>
-        <div class="tile">
-          <h3 data-i18n="nav.notification">通知管理</h3>
-          <p data-i18n="notice.body">功能开发中</p>
+        <form class="form-grid form-grid-spaced">
+          <div class="ai-fields is-active" data-ai-fields="local">
+            <div class="form-field full">
+              <label for="ai-model-local">模型名</label>
+              <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" />
+            </div>
+          </div>
+          <div class="ai-fields" data-ai-fields="cloud">
+            <div class="form-field full">
+              <label for="ai-model-cloud">模型名</label>
+              <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" />
+            </div>
+            <div class="form-field full">
+              <label for="ai-api-key">API Key</label>
+              <input id="ai-api-key" type="password" placeholder="sk-xxxxxxxxxxxxxxxx" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
+            <button class="c-btn c-btn-primary" type="button">保存配置</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="c-card c-card-pad settings-card span-2">
+        <h2 class="c-card-title">数据备份</h2>
+        <p class="settings-desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
+        <form class="form-grid form-grid-spaced">
+          <div class="form-field">
+            <label for="backup-host">备用数据库地址</label>
+            <input id="backup-host" type="text" placeholder="db-backup.internal" />
+          </div>
+          <div class="form-field">
+            <label for="backup-port">端口</label>
+            <input id="backup-port" type="number" placeholder="5432" />
+          </div>
+          <div class="form-field">
+            <label for="backup-db">数据库名称</label>
+            <input id="backup-db" type="text" placeholder="matchsys_backup" />
+          </div>
+          <div class="form-field">
+            <label for="backup-user">用户名</label>
+            <input id="backup-user" type="text" placeholder="backup_admin" />
+          </div>
+          <div class="form-field">
+            <label for="backup-password">密码</label>
+            <input id="backup-password" type="password" placeholder="••••••••" />
+          </div>
+          <div class="form-field">
+            <label for="backup-ssl">SSL 模式</label>
+            <select id="backup-ssl">
+              <option>require</option>
+              <option>prefer</option>
+              <option>disable</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label for="backup-note">备注</label>
+            <textarea id="backup-note" placeholder="例如：与主库保持实时同步"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
+            <button class="c-btn c-btn-primary" type="button">保存备份配置</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="c-card c-card-pad settings-card">
+        <h2 class="c-card-title">送信配置</h2>
+        <p class="settings-desc">配置常用邮箱登录信息，并指定使用人。</p>
+        <ul class="config-list" id="sendin-list"></ul>
+        <div class="form-actions">
+          <button class="c-btn c-btn-secondary" type="button" id="add-sendin">新增配置</button>
         </div>
-        <div class="tile">
-          <h3 data-i18n="nav.customer">客户管理</h3>
-          <p data-i18n="notice.body">功能开发中</p>
+      </section>
+
+      <section class="c-card c-card-pad settings-card">
+        <h2 class="c-card-title">定时任务</h2>
+        <p class="settings-desc">支持配置多个任务，每个任务可单独执行与保存。</p>
+        <ul class="task-list" id="task-list"></ul>
+        <div class="form-actions">
+          <button class="c-btn c-btn-secondary" type="button" id="add-task">新增任务</button>
         </div>
-        <div class="tile">
-          <h3 data-i18n="nav.analysis">数据分析</h3>
-          <p data-i18n="notice.body">功能开发中</p>
+      </section>
+    </div>
+    <div class="modal-backdrop" id="delete-modal" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+        <h3 id="delete-title">确认删除</h3>
+        <p id="delete-message">确定删除该项配置吗？</p>
+        <div class="modal-actions">
+          <button class="c-btn c-btn-ghost" type="button" id="cancel-delete">取消</button>
+          <button class="c-btn c-btn-danger" type="button" id="confirm-delete">确认删除</button>
         </div>
       </div>
     </div>
@@ -120,6 +375,259 @@
     if (window.I18N) {
       window.I18N.apply();
     }
+    const taskList = document.getElementById("task-list");
+    const addTaskButton = document.getElementById("add-task");
+    const sendinList = document.getElementById("sendin-list");
+    const addSendinButton = document.getElementById("add-sendin");
+    const deleteModal = document.getElementById("delete-modal");
+    const deleteMessage = document.getElementById("delete-message");
+    const confirmDeleteButton = document.getElementById("confirm-delete");
+    const cancelDeleteButton = document.getElementById("cancel-delete");
+    let pendingDelete = null;
+    const systemTasks = [
+      {
+        name: "每日同步客户",
+        time: "09:00",
+        frequency: "每天",
+        method: "POST",
+        api: "https://api.example.com/sync",
+        body: '{"range":"today"}',
+      },
+      {
+        name: "每周汇总报表",
+        time: "20:00",
+        frequency: "每周",
+        method: "POST",
+        api: "https://api.example.com/report",
+        body: '{"week":"current"}',
+      },
+    ];
+    const sendinConfigs = [
+      {
+        email: "staff@company.com",
+        smtp: "smtp.gmail.com",
+        port: "587",
+        user: "张三",
+      },
+    ];
+
+    const taskFormHtml = (index, task) => `
+      <li class="task-item">
+        <div class="task-head">
+          <span class="task-title">任务 ${String(index + 1).padStart(2, "0")}</span>
+          <span class="inline-status" id="task-status-${index}">未执行</span>
+        </div>
+        <form class="form-grid">
+          <div class="form-field">
+            <label for="task-name-${index}">任务名称</label>
+            <input id="task-name-${index}" type="text" placeholder="每日同步客户" value="${task.name || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="task-time-${index}">执行时间</label>
+            <input id="task-time-${index}" type="time" value="${task.time || "09:00"}" />
+          </div>
+          <div class="form-field">
+            <label for="task-frequency-${index}">执行频率</label>
+            <select id="task-frequency-${index}">
+              <option ${task.frequency === "每天" ? "selected" : ""}>每天</option>
+              <option ${task.frequency === "每周" ? "selected" : ""}>每周</option>
+              <option ${task.frequency === "每月" ? "selected" : ""}>每月</option>
+              <option ${task.frequency === "自定义 Cron" ? "selected" : ""}>自定义 Cron</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="task-method-${index}">请求方式</label>
+            <select id="task-method-${index}">
+              <option ${task.method === "POST" ? "selected" : ""}>POST</option>
+              <option ${task.method === "GET" ? "selected" : ""}>GET</option>
+              <option ${task.method === "PUT" ? "selected" : ""}>PUT</option>
+              <option ${task.method === "DELETE" ? "selected" : ""}>DELETE</option>
+            </select>
+          </div>
+          <div class="form-field full">
+            <label for="task-api-${index}">API 地址</label>
+            <input id="task-api-${index}" type="text" placeholder="https://api.example.com/sync" value="${task.api || ""}" />
+          </div>
+          <div class="form-field full">
+            <label for="task-body-${index}">请求参数 / Body</label>
+            <textarea id="task-body-${index}" placeholder='{"range":"today"}'>${task.body || ""}</textarea>
+          </div>
+          <div class="form-actions">
+            <button class="c-btn c-btn-success" type="button" data-run-now="${index}">立即执行</button>
+            <button class="c-btn c-btn-primary" type="button">保存任务</button>
+            <button class="c-btn c-btn-danger" type="button" data-delete-task="${index}">删除</button>
+          </div>
+        </form>
+      </li>
+    `;
+
+    const renderTasks = (tasks) => {
+      if (!taskList) return;
+      taskList.innerHTML = "";
+      const items = tasks.length ? tasks : [{}];
+      taskList.innerHTML = items.map((task, index) => taskFormHtml(index, task)).join("");
+    };
+
+    const openDeleteModal = (message, onConfirm) => {
+      if (!deleteModal || !deleteMessage) return;
+      pendingDelete = onConfirm;
+      deleteMessage.textContent = message;
+      deleteModal.classList.add("is-active");
+      deleteModal.setAttribute("aria-hidden", "false");
+    };
+
+    const closeDeleteModal = () => {
+      if (!deleteModal) return;
+      deleteModal.classList.remove("is-active");
+      deleteModal.setAttribute("aria-hidden", "true");
+      pendingDelete = null;
+    };
+
+    if (confirmDeleteButton) {
+      confirmDeleteButton.addEventListener("click", () => {
+        if (typeof pendingDelete === "function") {
+          pendingDelete();
+        }
+        closeDeleteModal();
+      });
+    }
+
+    if (cancelDeleteButton) {
+      cancelDeleteButton.addEventListener("click", closeDeleteModal);
+    }
+
+    if (deleteModal) {
+      deleteModal.addEventListener("click", (event) => {
+        const target = event.target;
+        if (target instanceof HTMLElement && target.classList.contains("modal-backdrop")) {
+          closeDeleteModal();
+        }
+      });
+    }
+
+    if (taskList) {
+      renderTasks(systemTasks);
+      taskList.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const runButton = target.closest("[data-run-now]");
+        const deleteButton = target.closest("[data-delete-task]");
+        if (deleteButton) {
+          const index = Number(deleteButton.getAttribute("data-delete-task"));
+          if (Number.isNaN(index)) return;
+          openDeleteModal("确定删除该定时任务吗？", () => {
+            systemTasks.splice(index, 1);
+            renderTasks(systemTasks);
+          });
+          return;
+        }
+        if (!runButton) return;
+        const index = runButton.getAttribute("data-run-now");
+        const statusEl = document.getElementById(`task-status-${index}`);
+        if (!statusEl) return;
+        const now = new Date();
+        statusEl.textContent = `已触发：${now.toLocaleString("zh-CN", {
+          hour12: false,
+        })}`;
+        statusEl.classList.add("success");
+      });
+    }
+
+    if (addTaskButton) {
+      addTaskButton.addEventListener("click", () => {
+        systemTasks.push({});
+        renderTasks(systemTasks);
+      });
+    }
+
+    const sendinFormHtml = (index, config) => `
+      <li class="config-item">
+        <div class="config-head">
+          <span class="config-title">配置 ${String(index + 1).padStart(2, "0")}</span>
+        </div>
+        <form class="form-grid">
+          <div class="form-field">
+            <label for="sendin-email-${index}">邮箱账号</label>
+            <input id="sendin-email-${index}" type="email" placeholder="staff@company.com" value="${config.email || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendin-password-${index}">密码 / 授权码</label>
+            <input id="sendin-password-${index}" type="password" placeholder="••••••••" value="${config.password || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendin-smtp-${index}">SMTP 服务器</label>
+            <input id="sendin-smtp-${index}" type="text" placeholder="smtp.gmail.com" value="${config.smtp || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendin-port-${index}">端口</label>
+            <input id="sendin-port-${index}" type="number" placeholder="587" value="${config.port || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendin-user-${index}">使用人</label>
+            <select id="sendin-user-${index}">
+              <option ${!config.user ? "selected" : ""}>请选择使用人</option>
+              <option ${config.user === "张三" ? "selected" : ""}>张三</option>
+              <option ${config.user === "李四" ? "selected" : ""}>李四</option>
+              <option ${config.user === "王五" ? "selected" : ""}>王五</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
+            <button class="c-btn c-btn-primary" type="button">保存配置</button>
+            <button class="c-btn c-btn-danger" type="button" data-delete-sendin="${index}">删除</button>
+          </div>
+        </form>
+      </li>
+    `;
+
+    const renderSendinConfigs = (configs) => {
+      if (!sendinList) return;
+      sendinList.innerHTML = "";
+      const items = configs.length ? configs : [{}];
+      sendinList.innerHTML = items
+        .map((config, index) => sendinFormHtml(index, config))
+        .join("");
+    };
+
+    if (sendinList) {
+      renderSendinConfigs(sendinConfigs);
+      sendinList.addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const deleteButton = target.closest("[data-delete-sendin]");
+        if (!deleteButton) return;
+        const index = Number(deleteButton.getAttribute("data-delete-sendin"));
+        if (Number.isNaN(index)) return;
+        openDeleteModal("确定删除该送信配置吗？", () => {
+          sendinConfigs.splice(index, 1);
+          renderSendinConfigs(sendinConfigs);
+        });
+      });
+    }
+
+    if (addSendinButton) {
+      addSendinButton.addEventListener("click", () => {
+        sendinConfigs.push({});
+        renderSendinConfigs(sendinConfigs);
+      });
+    }
+
+    const aiToggleButtons = document.querySelectorAll(".ai-toggle button");
+    const aiFields = document.querySelectorAll("[data-ai-fields]");
+
+    aiToggleButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        aiToggleButtons.forEach((btn) => btn.classList.remove("is-active"));
+        button.classList.add("is-active");
+        const mode = button.getAttribute("data-ai-mode");
+        aiFields.forEach((block) => {
+          block.classList.toggle(
+            "is-active",
+            block.getAttribute("data-ai-fields") === mode
+          );
+        });
+      });
+    });
   </script>
 </body>
 </html>

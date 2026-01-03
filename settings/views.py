@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from django.conf import settings as django_settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -69,7 +70,7 @@ def _handle_business_email_upload(auth_file, login_id):
     except (UnicodeDecodeError, json.JSONDecodeError):
         return api_error("Invalid Gmail auth JSON file")
 
-    base_dir = Path(__file__).resolve().parent.parent
+    base_dir = Path(django_settings.BASE_DIR)
     credentials_dir = base_dir / "credentials"
     credentials_dir.mkdir(parents=True, exist_ok=True)
     target_path = credentials_dir / "gmail_credentials.json"

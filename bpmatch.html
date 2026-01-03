@@ -271,7 +271,7 @@
         items.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'item' + (index === 0 ? ' active' : '');
-            const detail = item.detail || '';
+            const detail = item.body || '';
             li.dataset.detail = detail;
             li.dataset.id = item.id || '';
             li.dataset.matchedSkills = JSON.stringify(item.matched_skills || []);

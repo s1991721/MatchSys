@@ -1791,6 +1791,7 @@ svg {
   justify-content: space-between;
   gap: 12px;
   font-size: 13px;
+  flex: 1;
 }
 .match-page .person-name {
   font-weight: 600;
@@ -1801,10 +1802,11 @@ svg {
 .match-page .person-meta {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: 2px;
   white-space: nowrap;
-  text-align: center;
+  text-align: right;
+  margin-left: auto;
 }
 .match-page .person-belong {
   font-size: 12px;

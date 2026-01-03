@@ -1871,3 +1871,172 @@ svg {
     max-height: 320px;
   }
 }
+
+/* songxin page */
+.songxin-page {
+  margin: 18px auto 32px;
+  padding: 0 24px 24px;
+}
+.songxin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.85fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.songxin-grid-half {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.songxin-grid + .songxin-grid {
+  margin-top: 16px;
+}
+.songxin-editor-card,
+.songxin-original-card {
+  min-height: 620px;
+}
+.songxin-editor {
+  width: 100%;
+  min-height: 500px;
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #ffffff;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  color: var(--text);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.songxin-editor:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.14);
+}
+.songxin-editor-readonly {
+  background: #f9fbff;
+  color: #455164;
+  resize: none;
+  overflow: auto;
+}
+.songxin-form .form-field {
+  margin-bottom: 14px;
+}
+.songxin-send-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.songxin-preview {
+  font-size: 14px;
+  color: #435065;
+  line-height: 1.7;
+  min-height: 140px;
+  white-space: pre-line;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fafbfe;
+  overflow: auto;
+}
+.songxin-upload-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.songxin-upload-hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+.songxin-file-input {
+  display: none;
+}
+.songxin-attachment-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.songxin-attachment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid #e0e7f3;
+  border-radius: 10px;
+  background: #f9fbff;
+}
+.songxin-attachment-name {
+  font-size: 13px;
+  color: #2f3b4d;
+}
+.songxin-attachment-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6b7686;
+  font-size: 12px;
+}
+.songxin-remove-link {
+  color: #e35d5d;
+  cursor: pointer;
+  font-weight: 600;
+}
+.songxin-empty-tip {
+  color: var(--muted);
+  font-size: 13px;
+}
+.songxin-loading-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 36, 66, 0.14);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+.songxin-loading-box {
+  background: #0c1d36;
+  color: #e9f2ff;
+  padding: 18px 22px;
+  border-radius: 14px;
+  box-shadow: 0 16px 32px rgba(12, 29, 54, 0.35);
+  min-width: 280px;
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.songxin-loading-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+.songxin-spinner {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #68a8ff;
+  animation: spin 0.9s linear infinite;
+}
+.songxin-loading-sub {
+  color: #9db7dd;
+  font-size: 13px;
+}
+@media (max-width: 980px) {
+  .songxin-grid {
+    grid-template-columns: 1fr;
+  }
+  .songxin-editor {
+    height: 280px;
+    min-height: 280px;
+  }
+  .songxin-editor-card,
+  .songxin-original-card {
+    min-height: auto;
+  }
+}

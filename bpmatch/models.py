@@ -12,10 +12,17 @@ class SentEmailLog(models.Model):
     subject = models.CharField(max_length=512, blank=True, default="")
     body = models.TextField(blank=True, default="")
     attachments = models.TextField(blank=True, default="")  # JSON 序列化的附件名列表
-    status = models.CharField(max_length=20, default="sent", db_index=True)
+    mail_type = models.IntegerField()  # 邮件类型 0:bp 1:技术者送信 2:案件送信
     sent_at = models.DateTimeField()
+
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")
+
     created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")
+
     updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         db_table = "sent_email_logs"

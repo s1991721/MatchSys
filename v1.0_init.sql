@@ -353,7 +353,7 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
     body        TEXT         NOT NULL COMMENT '邮件正文',
     attachments TEXT         NOT NULL COMMENT '附件列表(JSON字符串)',
 
-    status      VARCHAR(20)  NOT NULL DEFAULT 'sent' COMMENT '发送状态',
+    mail_type   INT          NOT NULL COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信',
     sent_at     DATETIME     NOT NULL COMMENT '邮件发送时间',
 
     created_by  VARCHAR(100) NOT NULL COMMENT '创建人',

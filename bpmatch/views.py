@@ -1,195 +1,189 @@
 import json
-import re
+import logging
+import os
+import threading
+from datetime import timedelta
 
-from project.api import api_error, api_success
-from django.views.decorators.http import require_GET
-from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from django.db import close_old_connections, transaction
+from django.db.models import Q
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime, parse_date
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 
-from . import bpmatch, llmsTool
+from project.api import api_error, api_paginated, api_success
+from project.common_tools import parse_json_body
+from . import llmsTool
 from .gmailTool import GmailTool
-from .models import SentEmailLog
+from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, SavedMailInfo
+
+TIME_SAVE_DAYS = 14
 
 
-@csrf_exempt
-@require_GET
-def messages(request):
-    try:
-        payload = bpmatch.fetch_page_emails(
-            keyword=request.GET.get("keyword", ""),
-            date_str=request.GET.get("date", ""),
-            start_date_str=request.GET.get("start_date", ""),
-            end_date_str=request.GET.get("end_date", ""),
-            page_str=request.GET.get("page", "1"),
-            page_size_str=request.GET.get("page_size", ""),
-            limit_str=request.GET.get("limit", ""),
-        )
-    except Exception as exc:
-        return api_error(
-            str(exc),
-            status=500,
-            legacy={"error": str(exc)},
-        )
-
-    return api_success(data=payload, legacy=payload)
-
-
-@csrf_exempt
-@require_GET
-def persons(request):
-    refresh = request.GET.get("refresh", "").strip() == "1"
-    try:
-        if refresh:
-            msgs = bpmatch.fetch_recent_two_weeks_emails()
+def _normalize_skills(value):
+    if not value:
+        return []
+    if isinstance(value, list):
+        raw_list = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return []
+        if text.startswith("[") and text.endswith("]"):
+            try:
+                parsed = json.loads(text)
+                raw_list = parsed if isinstance(parsed, list) else [text]
+            except Exception:
+                raw_list = text.split(",")
         else:
-            msgs = bpmatch.qiuanjian_message or []
-        refreshed_at = bpmatch.update_time
-    except Exception as exc:
-        return api_error(
-            str(exc),
-            status=500,
-            legacy={"error": str(exc)},
-        )
+            raw_list = text.split(",")
+    else:
+        raw_list = [value]
+
+    cleaned = []
+    for item in raw_list:
+        if item is None:
+            continue
+        item_str = str(item).strip()
+        if item_str:
+            cleaned.append(item_str)
+    return cleaned
+
+
+@csrf_exempt
+@require_GET
+# 获取案件列表
+def mail_projects_api(request):
+    sender = request.GET.get("sender", "").strip()
+    date_str = request.GET.get("date", "").strip()
+    page_str = request.GET.get("page", "1").strip()
+    page_size_str = request.GET.get("page_size", "50").strip()
+
+    page = int(page_str)
+    page_size = int(page_size_str)
+
+    queryset = MailProjectInfo.objects.all()
+
+    if sender:
+        queryset = queryset.filter(address__icontains=sender)
+
+    if date_str:
+        target_date = parse_date(date_str)
+        if target_date:
+            queryset = queryset.filter(date__date=target_date)
+
+    queryset = queryset.order_by("-date", "-id")
+
+    total = queryset.count()
+    total_pages = (total + page_size - 1) // page_size if total else 1
+    start = (page - 1) * page_size
+    end = start + page_size
 
     items = []
-    for m in msgs or []:
+    for row in queryset[start:end]:
         items.append(
             {
-                "id": m.get("id") or "",
-                "name": m.get("subject") or "(无标题)",
-                "belong": m.get("from") or "",
-                "detail": m.get("body") or "",
-                "date": m.get("date") or "",
-                "thread_id": m.get("thread_id") or "",
-                "message_id_header": m.get("message_id_header") or "",
-                "references_header": m.get("references_header") or "",
+                "id": row.id,
+                "title": row.title or "(无标题)",
+                "desc": row.address or "",
+                "detail": row.body or "",
+                "date": row.date.isoformat() if row.date else "",
             }
         )
 
+    return api_paginated(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
+
+
+@csrf_exempt
+@require_GET
+# 获取案件匹配的技术者
+def mail_project_match_api(request):
+    project_id = (request.GET.get("id") or "").strip()
+
+    if not project_id:
+        return api_error("Missing field: id")
+
+    try:
+        project = MailProjectInfo.objects.get(id=project_id)
+    except MailProjectInfo.DoesNotExist:
+        return api_error("MailProjectInfo not found", status=404)
+
+    project_skills = _normalize_skills(project.skills)
+    project_skill_set = {skill.lower() for skill in project_skills}
+    tech_queryset = MailTechnicianInfo.objects.filter(country=project.country)
+
+    scored_items = []
+    for tech in tech_queryset:
+        tech_skills = _normalize_skills(tech.skills)
+        matched = []
+        seen = set()
+        for skill in tech_skills:
+            key = skill.lower()
+            if key in project_skill_set and key not in seen:
+                matched.append(skill)
+                seen.add(key)
+        score = len(matched)
+        if score == 0:
+            continue
+        scored_items.append(
+            (
+                score,
+                {
+                    "id": tech.id,
+                    "subject": tech.title or "",
+                    "title": tech.title or "",
+                    "from": tech.address or "",
+                    "body": tech.body or "",
+                    "date": tech.date.isoformat() if tech.date else "",
+                    "country": tech.country or "",
+                    "skills": tech_skills,
+                    "price": float(tech.price) if tech.price is not None else None,
+                    "matched_skills": matched,
+                    "match_score": score,
+                },
+            )
+        )
+
+    scored_items.sort(key=lambda item: item[0], reverse=True)
+    matches = [item for _, item in scored_items]
     payload = {
-        "items": items,
-        "update_time": refreshed_at.isoformat() if refreshed_at else "",
+        "project": {
+            "id": project.id,
+            "country": project.country or "",
+            "skills": project_skills,
+            "price": float(project.price) if project.price is not None else None,
+        },
+        "matches": matches
     }
-    return api_success(data=payload, legacy=payload)
+    return api_success(data=payload)
 
 
 @csrf_exempt
-def log_job_click(request):
-    """
-    Receive a job click event from the frontend and log the payload for debugging.
-    """
-    if request.method != "POST":
-        return api_error(
-            "Only POST is allowed",
-            status=405,
-            legacy={"error": "Only POST is allowed"},
-        )
+@require_POST
+# 抽取案件信息，生成送信模板
+def extract_project_detail(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
 
-    try:
-        raw_body = request.body.decode("utf-8") if request.body else "{}"
-        payload = json.loads(raw_body or "{}")
-    except json.JSONDecodeError:
-        return api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
-        )
-
-    print(f"[job_click] 收到求人点击: {json.dumps(payload, ensure_ascii=False)}")
-    try:
-        match_result = bpmatch.match(payload)
-    except Exception as exc:
-        print(f"[job_click] 调用 match 失败: {exc}")
-        return api_error(
-            str(exc),
-            status=500,
-            legacy={"error": str(exc)},
-        )
-
-    # 标准化匹配结果，方便前端直接渲染人员列表
-    matches_raw = match_result.get("matches") if isinstance(match_result, dict) else []
-
-    def _match_len(item):
-        if isinstance(item, dict):
-            skills = item.get("matched_skills")
-            if isinstance(skills, list):
-                return len(skills)
-        return 0
-
-    sorted_matches = sorted(matches_raw or [], key=_match_len, reverse=True)
-    items = []
-    for idx, match in enumerate(sorted_matches):
-        matched_skills = match.get("matched_skills") if isinstance(match, dict) else []
-        items.append(
-            {
-                "id": match.get("id") or f"match-{idx}",
-                "subject": match.get("subject") or match.get("title") or "",
-                "name": match.get("subject") or match.get("title") or "(无标题)",
-                "belong": match.get("from") or "",
-                "detail": match.get("body") or match.get("detail") or "",
-                "date": match.get("date") or "",
-                "thread_id": match.get("thread_id") or "",
-                "message_id_header": match.get("message_id_header") or "",
-                "references_header": match.get("references_header") or "",
-                "matched_skills": (
-                    matched_skills if isinstance(matched_skills, list) else []
-                ),
-            }
-        )
-
-    response_payload = {"match": match_result, "matches": items}
-    return api_success(data=response_payload, legacy={"status": "ok", **response_payload})
-
-
-@csrf_exempt
-def extract_qiuren_detail(request):
-    """
-    对外暴露 extract_qiuren_detail，输入邮件正文文本，返回结构化信息。
-    """
-    if request.method != "POST":
-        return api_error(
-            "Only POST is allowed",
-            status=405,
-            legacy={"error": "Only POST is allowed"},
-        )
-
-    try:
-        raw_body = request.body.decode("utf-8") if request.body else "{}"
-        payload = json.loads(raw_body or "{}")
-    except json.JSONDecodeError:
-        return api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
-        )
-
-    text = payload.get("text") or payload.get("body") or ""
+    text = payload.get("body") or ""
     if not text.strip():
-        return api_error(
-            "Missing field: text",
-            status=400,
-            legacy={"error": "Missing field: text"},
-        )
+        return api_error("Missing field: body")
 
     try:
         llm_result = llmsTool.extract_qiuren_detail(text)
     except Exception as exc:
-        return api_error(
-            str(exc),
-            status=500,
-            legacy={"error": str(exc)},
-        )
-
-    # extract_qiuren_detail 返回的是 JSON 字符串，这里尝试解析以便前端直接使用
-    def clean_llm_json(s: str) -> str:
-        s = s.strip()
-        if s.startswith("```"):
-            s = s.removeprefix("```json").removeprefix("```").strip()
-            s = s.removesuffix("```").strip()
-        return s
+        return api_error(str(exc), status=500)
 
     try:
-        parsed = json.loads(clean_llm_json(llm_result))
+        parsed = json.loads(llm_result)
     except Exception as exc:
         print(f"[extract_qiuren_detail] 解析 LLM JSON 失败: {exc}")
         parsed = {}
@@ -267,56 +261,34 @@ def extract_qiuren_detail(request):
     formatted_message = template.format(**fields)
 
     response_payload = {"data": formatted_message, "raw": llm_result}
-    return api_success(data=response_payload, legacy={"status": "ok", **response_payload})
+    return api_success(data=response_payload)
 
 
 @csrf_exempt
+@require_POST
+# 送信
 def send_mail(request):
-    """
-    发送邮件到指定收件人，支持抄送和附件（base64）。
-    """
-    if request.method != "POST":
-        return api_error(
-            "Only POST is allowed",
-            status=405,
-            legacy={"error": "Only POST is allowed"},
-        )
-
-    try:
-        raw_body = request.body.decode("utf-8") if request.body else "{}"
-        payload = json.loads(raw_body or "{}")
-    except json.JSONDecodeError:
-        return api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
-        )
+    payload, error = parse_json_body(request)
+    if error:
+        return error
 
     to_addr = (payload.get("to") or "").strip()
     cc_addr = (payload.get("cc") or "").strip()
     subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
     body = payload.get("body") or ""
     attachments = payload.get("attachments") or []
-    thread_id = (payload.get("thread_id") or "").strip()
-    in_reply_to = (payload.get("in_reply_to") or "").strip()
-    references = (
-        payload.get("references")
-        or payload.get("references_header")
-        or ""
-    ).strip()
+    raw_mail_type = payload.get("mail_type")
+    mail_type = None
+    if raw_mail_type not in (None, ""):
+        try:
+            mail_type = int(raw_mail_type)
+        except (TypeError, ValueError):
+            return api_error("Invalid field: mail_type")
 
     if not to_addr:
-        return api_error(
-            "Missing field: to",
-            status=400,
-            legacy={"error": "Missing field: to"},
-        )
+        return api_error("Missing field: to")
     if not body.strip():
-        return api_error(
-            "Missing field: body",
-            status=400,
-            legacy={"error": "Missing field: body"},
-        )
+        return api_error("Missing field: body")
 
     # 标准化附件结构
     normalized_atts = []
@@ -339,35 +311,55 @@ def send_mail(request):
             subject=subject,
             body=body,
             attachments=normalized_atts,
-            thread_id=thread_id or None,
-            in_reply_to=in_reply_to or None,
-            references=references or None,
+            mail_type=mail_type,
         )
     except FileNotFoundError as exc:
         message = f"OAuth credentials missing: {exc}"
-        return api_error(
-            message,
-            status=500,
-            legacy={"error": message},
-        )
+        return api_error(message, status=500)
     except Exception as exc:
-        return api_error(
-            str(exc),
-            status=500,
-            legacy={"error": str(exc)},
-        )
+        return api_error(str(exc), status=500)
 
     payload = {"message_id": message_id}
-    return api_success(data=payload, legacy={"status": "ok", **payload})
+    return api_success(data=payload)
 
 
 @csrf_exempt
 @require_GET
+# 送信历史
 def send_history(request):
-    """
-    返回发送历史记录，数据来源 sent_email_logs。
-    """
-    logs = SentEmailLog.objects.order_by("-sent_at")[:300]
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error("employee id is required", status=401)
+
+    mail_type = (request.GET.get("mail_type") or "").strip()
+    keyword = (request.GET.get("keyword") or "").strip()
+    try:
+        page = int(request.GET.get("page", 1))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(request.GET.get("page_size", 10))
+    except (TypeError, ValueError):
+        page_size = 10
+    page = max(page, 1)
+    page_size = max(min(page_size, 100), 1)
+
+    queryset = SentEmailLog.objects.filter(created_by=login_id)
+    if mail_type != "":
+        try:
+            mail_type_value = int(mail_type)
+        except (TypeError, ValueError):
+            return api_error("Invalid mail_type")
+        queryset = queryset.filter(mail_type=mail_type_value)
+    if keyword:
+        queryset = queryset.filter(to__icontains=keyword)
+    queryset = queryset.order_by("-sent_at")
+    total = queryset.count()
+    total_pages = max((total + page_size - 1) // page_size, 1)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+    logs = queryset[offset: offset + page_size]
     items = []
     current_tz = timezone.get_current_timezone()
 
@@ -378,13 +370,11 @@ def send_history(request):
             attachments = []
         items.append(
             {
-                "id": log.id,
-                "message_id": log.message_id,
+                "id": log.message_id,
                 "title": log.subject or "(无标题)",
                 "to": log.to or "",
                 "cc": log.cc or "",
-                "status": log.status or "sent",
-                "sent_at": timezone.localtime(log.sent_at, current_tz).isoformat(),
+                "mail_type": log.mail_type,
                 "time": timezone.localtime(log.sent_at, current_tz).strftime(
                     "%Y-%m-%d %H:%M"
                 ),
@@ -393,5 +383,204 @@ def send_history(request):
             }
         )
 
-    payload = {"items": items, "count": len(items)}
-    return api_success(data=payload, legacy=payload)
+    return api_paginated(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
+
+
+# -------------------------------------定时任务
+
+@csrf_exempt
+@require_POST
+# 定时刷新数据库中的案件及技术者信息
+def time_to_save(request):
+    thread = threading.Thread(
+        target=_run_time_to_save,
+        name="time_to_save",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+@csrf_exempt
+@require_POST
+# 定时清理过期的案件及技术者信息
+def time_to_clean():
+    thread = threading.Thread(
+        target=_run_time_to_clean,
+        name="time_to_clean",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+logger = logging.getLogger("bpmatch.time_to_save")
+
+
+def _ensure_time_to_save_logger(date_tag: str):
+    logs_dir = os.path.join(settings.BASE_DIR, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_path = os.path.join(logs_dir, f"time_to_save_{date_tag}.log")
+
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler) and handler.baseFilename == log_path:
+            return
+
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        fmt="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+
+def _run_time_to_save():
+    date_tag = timezone.now().strftime("%Y-%m-%d")
+    _ensure_time_to_save_logger(date_tag)
+    close_old_connections()
+    started_at = timezone.now()
+    logger.info("time_to_save started at %s", started_at.isoformat())
+    try:
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=TIME_SAVE_DAYS)
+        gmail = GmailTool()
+
+        page = 1
+        page_size = 100
+        mail_list = []
+
+        while True:
+            messages, has_next, _ = gmail.fetch_new_messages(
+                page=page,
+                page_size=page_size,
+                start_date=start_date,
+                end_date=end_date,
+            )
+            mail_list.extend(messages)
+            logger.info("time_to_save fetched page=%s count=%s", page, len(messages))
+            if not has_next:
+                break
+            page += 1
+
+        project_list = []
+        technician_list = []
+        for mail in mail_list:
+            title = mail.get("subject") or ""
+            label = llmsTool.title_analysis(title)
+            label_str = str(label).strip()
+            if label_str == "0":
+                project_list.append(mail)
+            elif label_str == "1":
+                technician_list.append(mail)
+
+        logger.info(
+            "time_to_save classified total=%s projects=%s technicians=%s",
+            len(mail_list),
+            len(project_list),
+            len(technician_list),
+        )
+
+        def _parse_datetime(value: str):
+            if not value:
+                return None
+            parsed = parse_datetime(value)
+            if not parsed:
+                return None
+            if timezone.is_naive(parsed):
+                return timezone.make_aware(parsed, timezone.utc)
+            return parsed
+
+        def _parse_detail(value: str):
+            try:
+                detail = json.loads(value) if value else {}
+            except Exception:
+                detail = {}
+            country = detail.get("country")
+            skills = detail.get("skills") or []
+            price = detail.get("price")
+
+            if isinstance(skills, list):
+                skills_text = ",".join(
+                    [str(skill).strip() for skill in skills if str(skill).strip()]
+                )
+            elif isinstance(skills, str):
+                skills_text = skills
+            else:
+                skills_text = ""
+
+            if price in (None, ""):
+                price_value = None
+            else:
+                try:
+                    price_value = float(price)
+                except Exception:
+                    price_value = None
+
+            return ("" if country is None else str(country), skills_text, price_value)
+
+        for mail in project_list:
+            with transaction.atomic():
+                detail_json = llmsTool.qiuren_detail_analysis(mail.get("body") or "")
+                country, skills, price = _parse_detail(detail_json)
+                MailProjectInfo.objects.create(
+                    id=mail.get("message_id_header"),
+                    title=mail.get("subject") or "",
+                    address=mail.get("from") or "",
+                    body=mail.get("body") or "",
+                    files="",
+                    date=_parse_datetime(mail.get("date") or ""),
+                    remark="",
+                    country=country,
+                    skills=skills,
+                    price=price,
+                )
+                SavedMailInfo.objects.create(
+                    id=mail.get("message_id_header"),
+                    date=mail.get("date"),
+                )
+
+        for mail in technician_list:
+            with transaction.atomic():
+                detail_json = llmsTool.qiuanjian_detail_analysis(mail.get("body") or "")
+                country, skills, price = _parse_detail(detail_json)
+                MailTechnicianInfo.objects.create(
+                    id=mail.get("message_id_header"),
+                    title=mail.get("subject") or "",
+                    address=mail.get("from") or "",
+                    body=mail.get("body") or "",
+                    files="",
+                    date=_parse_datetime(mail.get("date") or ""),
+                    remark="",
+                    country=country,
+                    skills=skills,
+                    price=price,
+                )
+                SavedMailInfo.objects.create(
+                    id=mail.get("message_id_header"),
+                    date=mail.get("date"),
+                )
+
+        logger.info(
+            "time_to_save finished total=%s projects=%s technicians=%s duration_s=%.2f",
+            len(mail_list),
+            len(project_list),
+            len(technician_list),
+            (timezone.now() - started_at).total_seconds(),
+        )
+    except Exception:
+        logger.exception("time_to_save failed")
+    finally:
+        close_old_connections()
+
+def _run_time_to_clean():
+    return

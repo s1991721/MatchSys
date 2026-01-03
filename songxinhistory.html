@@ -7,369 +7,46 @@
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="songxinhistory.title">送信历史</title>
-    <style>
-* {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .c-split-grid-wide {
-            align-items: stretch;
-            min-height: calc(100vh - 140px);
-        }
-
-        .c-split-grid-wide > .c-card {
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-        }
-
-        .status-note {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #eef3ff;
-            color: #3b4f77;
-            border: 1px solid #d8e2f5;
-            border-radius: 999px;
-            padding: 8px 12px;
-            font-size: 12px;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--success);
-            box-shadow: 0 0 0 4px rgba(43, 183, 117, 0.18);
-        }
-
-        .grid + .grid {
-            margin-top: 16px;
-        }
-        .filter-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
-
-        .pill-group {
-            display: inline-flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .pill {
-            padding: 8px 12px;
-            border: 1px solid #d8dfec;
-            border-radius: 999px;
-            background: #f7f9fd;
-            color: #3b4f77;
-            font-size: 13px;
-            cursor: pointer;
-            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .pill.active {
-            background: rgba(28, 123, 255, 0.12);
-            border-color: #5e90ff;
-            color: #1f60d8;
-            box-shadow: 0 0 0 6px rgba(28, 123, 255, 0.12);
-        }
-
-        .search {
-            margin-left: auto;
-            min-width: 200px;
-            flex: 1;
-        }
-
-        .input {
-            width: 100%;
-            border-radius: 10px;
-            border: 1px solid #d8dfec;
-            padding: 11px 12px;
-            font-size: 14px;
-            outline: none;
-            background: #fdfdff;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-            background: #ffffff;
-        }
-
-        ul {
-            list-style: none;
-        }
-
-        .history-list {
-            margin-top: 6px;
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            overflow: hidden;
-            max-height: none;
-            flex: 1;
-            overflow: auto;
-        }
-
-        .history-item {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 12px;
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--line);
-            background: #ffffff;
-            cursor: pointer;
-            transition: background 0.12s ease, box-shadow 0.12s ease;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-item:hover {
-            background: #f4f7ff;
-        }
-
-        .history-item.active {
-            background: #e6efff;
-            box-shadow: inset 0 0 0 1px rgba(28, 123, 255, 0.35);
-        }
-
-        .mail-title {
-            font-weight: 700;
-            font-size: 14px;
-            color: #1f2a3d;
-            margin-bottom: 4px;
-        }
-
-        .mail-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px 12px;
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .meta-badge {
-            padding: 6px 10px;
-            border-radius: 10px;
-            background: #f8faff;
-            border: 1px solid #e1e7f2;
-            color: #4a5c7a;
-            font-size: 12px;
-        }
-
-        .time {
-            color: var(--muted);
-            font-size: 12px;
-            white-space: nowrap;
-            align-self: center;
-        }
-
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-weight: 600;
-            font-size: 12px;
-        }
-
-        .status.success {
-            background: rgba(43, 183, 117, 0.12);
-            color: #1b8a58;
-            border: 1px solid rgba(43, 183, 117, 0.26);
-        }
-
-        .status.warning {
-            background: rgba(240, 164, 0, 0.14);
-            color: #a26c00;
-            border: 1px solid rgba(240, 164, 0, 0.26);
-        }
-
-        .status.danger {
-            background: rgba(255, 107, 107, 0.14);
-            color: #c94343;
-            border: 1px solid rgba(255, 107, 107, 0.28);
-        }
-
-        .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .detail {
-            background: #f8faff;
-            border: 1px solid #dfe6f3;
-            border-radius: 12px;
-            padding: 14px 16px;
-            min-height: 220px;
-            flex: 1;
-            overflow: auto;
-            min-height: 0;
-            color: #414d63;
-            line-height: 1.7;
-            margin-top: 10px;
-        }
-
-        .detail h4 {
-            margin: 0 0 8px;
-            font-size: 15px;
-        }
-
-        .detail p {
-            margin: 0 0 10px;
-            white-space: pre-line;
-        }
-
-        .detail-meta {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 8px 12px;
-            margin-bottom: 10px;
-        }
-
-        .detail-meta span {
-            font-size: 13px;
-            color: #4a5568;
-        }
-
-        .section-title {
-            margin-top: 14px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: var(--muted);
-            letter-spacing: 0.2px;
-        }
-
-        .attachment-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .attachment {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 10px;
-            background: #eef3ff;
-            border-radius: 10px;
-            border: 1px solid #d7e1f4;
-            font-size: 12px;
-            color: #3b4f77;
-        }
-
-        .empty-tip {
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-        }
-
-        .stat-card {
-            background: linear-gradient(145deg, #f5f8ff, #eef3ff);
-            border-radius: 12px;
-            padding: 14px;
-            border: 1px solid #dfe6f5;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        }
-
-        .stat-label {
-            color: #5b6780;
-            font-size: 12px;
-            margin-bottom: 6px;
-        }
-
-        .stat-value {
-            font-size: 20px;
-            font-weight: 800;
-            color: #21467a;
-        }
-
-        .tips {
-            font-size: 13px;
-            color: #4f5c74;
-            line-height: 1.7;
-        }
-
-        .tips-item {
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
-        }
-
-        .tips-bullet {
-            width: 6px;
-            height: 6px;
-            margin-top: 8px;
-            border-radius: 50%;
-            background: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-            flex-shrink: 0;
-        }
-
-        @media (max-width: 1060px) {
-            .c-split-grid-wide {
-                min-height: 0;
-            }
-
-            .c-split-grid-wide > .c-card {
-                min-height: auto;
-            }
-
-            .history-list {
-                max-height: none;
-            }
-        }
-  </style>
 </head>
 <body>
-    <div class="page page-wide">
-        <section class="grid c-split-grid-wide">
+    <div class="page page-wide songxinhistory-page">
+        <section class="c-split-grid-wide">
             <div class="c-card c-card-pad">
                 <div class="c-card-title" data-i18n="songxinhistory.list.title">历史列表</div>
-                <div class="filter-row">
-                    <div class="pill-group" id="status-group">
-                        <button class="pill active" data-status="all" type="button" >全部</button>
-                        <button class="pill" data-status="sent" type="button" >BP</button>
-                        <button class="pill" data-status="pending" type="button" >有人</button>
-                        <button class="pill" data-status="failed" type="button" >有案件</button>
-                        <button class="pill" data-status="draft" type="button" >失败</button>
+                <div class="c-filter-grid">
+                    <div class="c-filter-group">
+                        <span class="c-filter-label" data-i18n="songxinhistory.filter.type">类型</span>
+                        <div class="c-chip-row" id="status-group">
+                            <button class="c-chip active" data-type="all" type="button">全部</button>
+                            <button class="c-chip" data-type="0" type="button">BP</button>
+                            <button class="c-chip" data-type="1" type="button">技术者送信</button>
+                            <button class="c-chip" data-type="2" type="button">案件送信</button>
+                        </div>
                     </div>
-                    <div class="search">
-                        <input id="search" class="input" type="search" placeholder="搜索标题、收件人或抄送" data-i18n-placeholder="songxinhistory.search.placeholder">
+                    <div class="c-filter-group">
+                        <span class="c-filter-label" data-i18n="songxinhistory.search.label">收件人</span>
+                        <div class="songxinhistory-search-row">
+                            <input id="search" class="c-input" type="search" placeholder="搜索收件人" data-i18n-placeholder="songxinhistory.search.placeholder">
+                            <button id="search-btn" class="c-btn c-btn-primary" type="button" data-i18n="songxinhistory.search.button">搜索</button>
+                        </div>
                     </div>
                 </div>
-                <ul id="history-list" class="history-list"></ul>
+                <ul id="history-list" class="c-list c-list-spaced songxinhistory-list"></ul>
+                <div class="pagination c-pagination" id="history-pagination">
+                    <div class="pagination-summary">
+                        <span id="history-page-summary">共 0 条 · 第 1/1 页</span>
+                    </div>
+                    <div class="pagination-pages" id="history-pagination-pages"></div>
+                </div>
             </div>
 
             <div class="c-card c-card-pad">
                 <div class="c-card-title" data-i18n="songxinhistory.detail.title">送信详情</div>
-                <div class="detail-meta" id="detail-meta"></div>
-                <div class="section-title" data-i18n="songxinhistory.detail.body">正文</div>
-                <div id="history-detail" class="detail"></div>
-                <div class="section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
-                <div id="detail-attachments" class="attachment-list"></div>
+                <div class="songxinhistory-detail-meta" id="detail-meta"></div>
+                <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.body">正文</div>
+                <div id="history-detail" class="songxin-preview songxinhistory-detail"></div>
+                <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
+                <div id="detail-attachments" class="c-chip-row songxinhistory-attachments"></div>
             </div>
         </section>
     </div>
@@ -386,49 +63,43 @@
             const metaEl = document.getElementById('detail-meta');
             const attachEl = document.getElementById('detail-attachments');
             const searchInput = document.getElementById('search');
+            const searchButton = document.getElementById('search-btn');
             const statusGroup = document.getElementById('status-group');
-            const statSent = document.getElementById('stat-sent');
-            const statPending = document.getElementById('stat-pending');
-            const statFailed = document.getElementById('stat-failed');
+            const pagination = document.getElementById('history-pagination');
+            const paginationPages = document.getElementById('history-pagination-pages');
+            const pageSummary = document.getElementById('history-page-summary');
             if (i18n) {
                 i18n.init();
                 i18n.apply();
             }
 
             let records = [];
-            let lastUpdateText = t('songxinhistory.status.none');
+            let currentPage = 1;
+            let totalPages = 1;
+            let totalCount = 0;
+            const PAGE_SIZE = 10;
+            let isLoading = false;
+            let lastQueryKey = '';
 
-            let activeStatus = 'all';
-            let activeId = null;
-
-            const buildStatusMap = () => ({
-                sent: { text: t('songxinhistory.status.sent'), cls: 'success' },
-                pending: { text: t('songxinhistory.status.pending'), cls: 'warning' },
-                failed: { text: t('songxinhistory.status.failed'), cls: 'danger' },
-                draft: { text: t('songxinhistory.status.draft'), cls: 'warning' }
+            let activeType = 'all';
+            const buildTypeMap = () => ({
+                0: { text: t('songxinhistory.type.bp'), cls: 'c-tag-success' },
+                1: { text: t('songxinhistory.type.tech'), cls: 'c-tag-warn' },
+                2: { text: t('songxinhistory.type.project'), cls: 'c-tag-danger' }
             });
-            let statusMap = buildStatusMap();
-
-            const renderStats = (items) => {
-                const sent = items.filter(i => i.status === 'sent').length;
-                const pending = items.filter(i => i.status === 'pending').length;
-                const failed = items.filter(i => i.status === 'failed').length;
-                statSent.textContent = sent;
-                statPending.textContent = pending;
-                statFailed.textContent = failed;
-            };
+            let typeMap = buildTypeMap();
 
             const renderAttachments = (files) => {
                 if (!files || !files.length) {
-                    attachEl.innerHTML = `<div class="empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+                    attachEl.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
                     return;
                 }
-                attachEl.innerHTML = files.map(f => `<span class="attachment">${f}</span>`).join('');
+                attachEl.innerHTML = files.map(f => `<span class="c-chip">${f}</span>`).join('');
             };
 
             const renderDetail = (record) => {
                 if (!record) {
-                    metaEl.innerHTML = `<span class="empty-tip">${t('songxinhistory.empty.detail')}</span>`;
+                    metaEl.innerHTML = `<span class="songxin-empty-tip">${t('songxinhistory.empty.detail')}</span>`;
                     detailEl.textContent = '';
                     renderAttachments([]);
                     return;
@@ -438,7 +109,10 @@
                     format('songxinhistory.meta.to', { value: record.to || '--' }),
                     format('songxinhistory.meta.cc', { value: record.cc || t('songxinhistory.status.none') }),
                     format('songxinhistory.meta.time', { value: record.time }),
-                    format('songxinhistory.meta.status', { value: statusMap[record.status]?.text || t('songxinhistory.status.unknown') })
+                    format(
+                        'songxinhistory.meta.status',
+                        { value: typeMap[record.mail_type]?.text || t('songxinhistory.type.unknown') }
+                    )
                 ];
                 metaEl.innerHTML = meta.map(m => `<span>${m}</span>`).join('');
                 detailEl.innerHTML = `
@@ -449,39 +123,40 @@
             };
 
             const renderList = () => {
-                const keyword = searchInput.value.trim().toLowerCase();
-                const filtered = records.filter(r => {
-                    const matchStatus = activeStatus === 'all' || r.status === activeStatus;
-                    const text = `${r.title} ${r.to} ${r.cc}`.toLowerCase();
-                    const matchKeyword = !keyword || text.includes(keyword);
-                    return matchStatus && matchKeyword;
-                });
-
                 listEl.innerHTML = '';
 
-                if (!filtered.length) {
-                    listEl.innerHTML = `<li class="history-item"><div class="mail-title">${t('songxinhistory.empty.list')}</div></li>`;
+                if (!records.length) {
+                    listEl.innerHTML = `
+                        <li class="songxinhistory-item songxinhistory-item-empty">
+                            <div class="songxinhistory-title c-empty">${t('songxinhistory.empty.list')}</div>
+                        </li>
+                    `;
                     renderDetail(null);
-                    renderStats(filtered);
+                    if (pagination) {
+                        pagination.classList.add('hidden');
+                    }
                     return;
                 }
 
-                filtered.forEach((item, idx) => {
+                if (pagination) {
+                    pagination.classList.remove('hidden');
+                }
+
+                records.forEach((item, idx) => {
                     const li = document.createElement('li');
-                    li.className = 'history-item' + (idx === 0 ? ' active' : '');
+                    li.className = 'songxinhistory-item' + (idx === 0 ? ' is-active' : '');
                     li.dataset.id = item.id;
                     li.innerHTML = `
                         <div>
-                            <div class="mail-title">${item.title}</div>
-                            <div class="mail-meta">
-                                <span class="meta-badge">${format('songxinhistory.meta.to', { value: item.to })}</span>
-                                ${item.cc ? `<span class="meta-badge">${format('songxinhistory.meta.cc', { value: item.cc })}</span>` : ''}
+                            <div class="songxinhistory-title">${item.title}</div>
+                            <div class="c-chip-row songxinhistory-meta">
+                                <span class="c-chip">${format('songxinhistory.meta.to', { value: item.to })}</span>
+                                ${item.cc ? `<span class="c-chip">${format('songxinhistory.meta.cc', { value: item.cc })}</span>` : ''}
                             </div>
                         </div>
-                        <div class="time">
-                            <div class="status ${statusMap[item.status]?.cls || ''}">
-                                <span class="dot"></span>
-                                ${statusMap[item.status]?.text || t('songxinhistory.status.unknown')}
+                        <div class="songxinhistory-time">
+                            <div class="c-tag ${typeMap[item.mail_type]?.cls || 'c-tag-neutral'}">
+                                ${typeMap[item.mail_type]?.text || t('songxinhistory.type.unknown')}
                             </div>
                             <div>${item.time}</div>
                         </div>
@@ -489,29 +164,40 @@
                     listEl.appendChild(li);
                 });
 
-                activeId = filtered[0].id;
-                renderDetail(filtered[0]);
-                renderStats(filtered);
+                renderDetail(records[0]);
             };
 
-            const API_BASE = '';
-            const fetchWithAuth = async (url, options = {}) => {
-                const res = await fetch(url, options);
-                if (res.status === 401) {
-                    window.location.href = '/login.html';
-                    throw new Error('Unauthorized');
+            const updatePaginationUI = () => {
+                if (pageSummary) {
+                    pageSummary.textContent = format('songxinhistory.page_summary', {
+                        count: totalCount,
+                        page: currentPage,
+                        total: totalPages
+                    });
                 }
-                return res;
+                if (pagination && window.renderPagination) {
+                    window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+                }
             };
 
-            const loadRecords = async () => {
+            const loadRecords = async (page = 1) => {
+                currentPage = page;
+                const keyword = searchInput.value.trim();
+                const params = window.createParams([
+                    ['page', String(currentPage)],
+                    ['page_size', String(PAGE_SIZE)],
+                    ['mail_type', activeType && activeType !== 'all' ? activeType : ''],
+                    ['keyword', keyword]
+                ]);
+                const queryKey = params.toString();
+                if (isLoading && queryKey === lastQueryKey) {
+                    return;
+                }
+                isLoading = true;
+                lastQueryKey = queryKey;
                 try {
-                    const resp = await fetchWithAuth(`${API_BASE}/send-history`, { credentials: 'include' });
+                    const resp = await fetchWithAuth(`/api/send-history?${queryKey}`);
                     if (!resp.ok) {
-                        throw new Error(t('songxinhistory.error.load_failed'));
-                    }
-                    const contentType = resp.headers.get('content-type') || '';
-                    if (!contentType.includes('application/json')) {
                         throw new Error(t('songxinhistory.error.load_failed'));
                     }
                     const data = await resp.json();
@@ -520,72 +206,87 @@
                         throw new Error(payload.message || t('songxinhistory.error.load_failed'));
                     }
                     const result = payload.data || {};
-                    records = (result.items || []).map(item => ({
+                    const meta = payload.meta || {};
+                    records = (result.items || []).map(item => {
+                        const mailType = Number(item.mail_type);
+                        return {
                         id: item.id,
                         title: item.title || t('songxinhistory.placeholder.title'),
                         to: item.to || '',
                         cc: item.cc || '',
-                        status: item.status || 'sent',
+                        mail_type: Number.isFinite(mailType) ? mailType : 0,
                         time: item.time || '',
                         content: item.content || '',
                         attachments: item.attachments || [],
-                    }));
-                    if (records.length && records[0].time) {
-                        lastUpdateText = records[0].time;
-                    }
+                        };
+                    });
+                    totalCount = Number.isFinite(meta.total) ? meta.total : records.length;
+                    totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+                    currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
                 } catch (err) {
                     console.error('加载送信历史失败', err);
                     records = [];
-                    lastUpdateText = t('songxinhistory.error.load_history');
+                    totalCount = 0;
+                    totalPages = 1;
+                    currentPage = 1;
+                } finally {
+                    isLoading = false;
                 }
                 renderList();
-                renderStats(records);
-                const statusNote = document.getElementById('last-update');
-                if (statusNote) {
-                    statusNote.textContent = lastUpdateText;
-                }
+                updatePaginationUI();
             };
 
             listEl.addEventListener('click', (e) => {
-                const item = e.target.closest('.history-item');
+                const item = e.target.closest('.songxinhistory-item');
                 if (!item) return;
                 const id = Number(item.dataset.id);
-                activeId = id;
-                listEl.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
-                item.classList.add('active');
+                listEl.querySelectorAll('.songxinhistory-item').forEach(el => el.classList.remove('is-active'));
+                item.classList.add('is-active');
                 const record = records.find(r => r.id === id);
                 renderDetail(record);
             });
 
             statusGroup.addEventListener('click', (e) => {
-                const btn = e.target.closest('.pill');
+                const btn = e.target.closest('.c-chip');
                 if (!btn) return;
-                statusGroup.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+                statusGroup.querySelectorAll('.c-chip').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                activeStatus = btn.dataset.status || 'all';
-                renderList();
+                activeType = btn.dataset.type || 'all';
+                loadRecords(1);
             });
 
-            searchInput.addEventListener('input', () => {
-                renderList();
-            });
+            searchButton.addEventListener('click', () => {
+                    loadRecords(1);
+                });
 
-            loadRecords();
-            if (window && window.addEventListener) {
-                window.addEventListener("i18n:change", () => {
-                    if (i18n) {
-                        i18n.apply();
+            window.bindPagination(pagination, (value) => {
+                    let nextPage = currentPage;
+                    if (value === 'prev') {
+                        nextPage = Math.max(1, currentPage - 1);
+                    } else if (value === 'next') {
+                        nextPage = Math.min(totalPages, currentPage + 1);
+                    } else {
+                        const parsed = Number(value);
+                        if (Number.isFinite(parsed) && parsed >= 1) {
+                            nextPage = parsed;
+                        }
                     }
-                    statusMap = buildStatusMap();
-                    lastUpdateText = t('songxinhistory.status.none');
-                    renderList();
-                    renderStats(records);
-                    const statusNote = document.getElementById('last-update');
-                    if (statusNote) {
-                        statusNote.textContent = lastUpdateText;
+                    if (nextPage !== currentPage) {
+                        loadRecords(nextPage);
                     }
                 });
-            }
+
+            loadRecords(1);
+
+            window.addEventListener("i18n:change", () => {
+                if (i18n) {
+                    i18n.apply();
+                }
+                typeMap = buildTypeMap();
+                renderList();
+                updatePaginationUI();
+            });
+
         })();
     </script>
 </body>

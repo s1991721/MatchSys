@@ -17,6 +17,7 @@ Including another URLconf
 
 from django.conf import settings
 from django.urls import path
+from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 from django.views.static import serve as static_serve
@@ -31,12 +32,12 @@ from attendance.views import (
     my_attendance_detail_api,
 )
 from bpmatch.views import (
-    messages,
-    persons,
-    log_job_click,
-    extract_qiuren_detail,
+    mail_projects_api,
+    mail_project_match_api,
+    extract_project_detail,
     send_mail,
     send_history,
+    time_to_save,
 )
 from customer.views import (
     employee_names_api,
@@ -74,6 +75,11 @@ from settings.views import sys_settings_gmail_test_api, sys_settings_section_api
 custom_404 = TemplateView.as_view(template_name="404.html")
 handler404 = "project.urls.custom_404"
 
+# Cache static-like templates only in production.
+cache_static_asset = (
+    cache_control(public=True, max_age=86400) if not settings.DEBUG else lambda view: view
+)
+
 urlpatterns = [
     # ###################################-Front End-###################################
     path("", RedirectView.as_view(url="/index.html", permanent=False)),
@@ -106,10 +112,24 @@ urlpatterns = [
     path("analysis.html", TemplateView.as_view(template_name="analysis.html")),
     path("system_settings.html", TemplateView.as_view(template_name="system_settings.html")),
     # -------------------------------common-------------------------------
-    path("common.css", TemplateView.as_view(template_name="common.css", content_type="text/css")),
-    path("components.css", TemplateView.as_view(template_name="components.css", content_type="text/css")),
-    path("common.js", TemplateView.as_view(template_name="common.js", content_type="application/javascript")),
-    path("i18n.js", TemplateView.as_view(template_name="i18n.js", content_type="application/javascript")),
+    path(
+        "common.css",
+        cache_static_asset(TemplateView.as_view(template_name="common.css", content_type="text/css")),
+    ),
+    path(
+        "components.css",
+        cache_static_asset(TemplateView.as_view(template_name="components.css", content_type="text/css")),
+    ),
+    path(
+        "common.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="common.js", content_type="application/javascript")
+        ),
+    ),
+    path(
+        "i18n.js",
+        cache_static_asset(TemplateView.as_view(template_name="i18n.js", content_type="application/javascript")),
+    ),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
     path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),
@@ -137,12 +157,12 @@ urlpatterns = [
     path("api/my-attendance-summary", my_attendance_summary_api, name="my-attendance-summary"),
     path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),
     # -------------------------------bpmatch API-------------------------------
-    path("messages", messages),
-    path("persons", persons),
-    path("job-click", log_job_click),
-    path("extract-qiuren-detail", extract_qiuren_detail),
-    path("send-mail", send_mail),
-    path("send-history", send_history),
+    path("api/mail-projects", mail_projects_api, name="mail-projects"),
+    path("api/mail-projects/match", mail_project_match_api, name="mail-projects-match"),
+    path("api/extract-project-detail", extract_project_detail, name="extract_project_detail"),
+    path("api/send-mail", send_mail, name="send_mail"),
+    path("api/send-history", send_history, name="send_history"),
+    path("api/time-to-save", time_to_save, name="time_to_save"),
     # -------------------------------customer API-------------------------------
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),

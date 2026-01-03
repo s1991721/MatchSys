@@ -2,365 +2,76 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-  <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title data-i18n="match.title">Match</title>
-    <style>
-* {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .row {
-            display: flex;
-            gap: 16px;
-            width: 100%;
-            min-width: 0;
-        }
-
-        .row + .row {
-            margin-top: 16px;
-        }
-
-.panel-left {
-            flex: 1.2;
-            min-width: 0;
-        }
-
-        .panel-right {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .panel-refresh {
-            margin-left: auto;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: #5a6c86;
-            font-size: 12px;
-            white-space: nowrap;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .panel-refresh svg {
-            width: 14px;
-            height: 14px;
-            fill: currentColor;
-        }
-
-        .list.jobs {
-            max-height: 420px;
-        }
-
-        .list.persons {
-            max-height: 620px;
-        }
-
-        .date-input {
-            max-width: 160px;
-            padding-left: 10px;
-        }
-
-        .date-input.active {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-        }
-
-        .search-input {
-            width: 100%;
-        }
-
-        .item {
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid var(--line);
-            cursor: pointer;
-            transition: background 0.12s ease;
-        }
-
-        .item:last-child {
-            border-bottom: none;
-        }
-
-        .item:hover {
-            background: #edf3ff;
-        }
-
-        .item.active {
-            background: #dbe7ff;
-        }
-
-        .item-main {
-            flex: 1;
-        }
-
-        .empty {
-            padding: 16px 12px;
-            color: var(--muted);
-            font-size: 13px;
-            text-align: center;
-        }
-
-        .item-title {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 2px;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .item-desc {
-            font-size: 13px;
-            color: var(--muted);
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .item-time {
-            color: var(--muted);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .person-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 13px;
-        }
-
-        .person-name {
-            font-weight: 600;
-            flex: 1;
-            min-width: 0;
-            font-size: 14px;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .person-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            white-space: nowrap;
-            text-align: center;
-        }
-
-        .person-belong {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .person-time {
-            color: var(--muted);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .detail-text {
-            margin-top: 4px;
-            font-size: 14px;
-            line-height: 1.75;
-            word-break: break-word;
-            white-space: pre-line;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 14px 16px;
-            background: #fafbfe;
-            min-height: 180px;
-            color: #435065;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        }
-
-        .skill-highlight {
-            background: #ffe59e;
-            color: #8a4b00;
-            padding: 0 4px;
-            border-radius: 6px;
-            box-shadow: 0 0 0 1px #f3c763 inset;
-        }
-
-        .detail-text p {
-            margin: 0 0 10px;
-        }
-
-        .detail-text p:last-child {
-            margin-bottom: 0;
-        }
-
-        .detail-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 12px;
-        }
-
-
-        .pagination {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 10px 0 0;
-        }
-
-
-        .loading-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 2px solid #c9d5ea;
-            border-top-color: var(--primary);
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .page-info {
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        @media (max-width: 1100px) {
-            .row {
-                flex-direction: column;
-            }
-
-            .list.jobs,
-            .list.persons {
-                max-height: 320px;
-            }
-
-            .c-filter-grid {
-                grid-template-columns: 1fr;
-            }
-
-        }
-  </style>
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="match.title">Match</title>
 </head>
 <body>
-<div class="page page-wide">
+<div class="page page-wide c-stack match-page">
     <!-- 上半部分：列表 -->
-    <div class="row">
+    <div class="c-split-grid-wide">
         <div class="panel-left c-card c-card-pad">
-            <div class="panel-title c-panel-title" data-i18n="match.jobs">求人列表</div>
+            <div class="panel-title c-panel-title" data-i18n="match.jobs">案件列表</div>
             <div class="filters c-filter-grid">
                 <div class="filter-group c-filter-group">
                     <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
                     <div class="chip-row c-chip-row">
-                        <button class="chip c-chip active" data-range="all" type="button" data-i18n="match.range.all">全部</button>
-                        <button class="chip c-chip" data-range="today" type="button" data-i18n="match.range.today">今天</button>
-                        <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
-                        <input id="job-date" class="input c-input date-input" type="date" aria-label="选择日期" data-i18n-aria="match.date_label">
+                        <button class="chip c-chip" data-range="all" type="button" data-i18n="match.range.all">全部
+                        </button>
+                        <button class="chip c-chip" data-range="yesterday" type="button"
+                                data-i18n="match.range.yesterday">昨天
+                        </button>
+                        <button class="chip c-chip active" data-range="today" type="button"
+                                data-i18n="match.range.today">今天
+                        </button>
                     </div>
                 </div>
-                <div class="filter-group c-filter-group">
-                    <span class="filter-label c-filter-label" data-i18n="match.keyword">关键字</span>
-                    <input id="job-keyword" class="input c-input search-input" type="search" placeholder="搜索案件标题、描述或细节" data-i18n-placeholder="match.keyword_placeholder">
+                <div class="filter-group c-filter-group sender-group">
+                    <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
+                    <div class="search-row">
+                        <input id="job-sender" class="input c-input search-input" type="search" placeholder="搜索发件人"
+                               data-i18n-placeholder="match.sender_placeholder">
+                        <button class="c-btn c-btn-primary" type="button" id="job-search-btn" data-i18n="common.search">
+                            搜索
+                        </button>
+                    </div>
                 </div>
             </div>
-            <ul class="list c-list c-list-spaced jobs" id="job-list">
+            <ul class="list c-list c-list-spaced match-list jobs" id="job-list">
             </ul>
-            <div class="pagination" id="job-pagination">
-                <button class="c-btn c-btn-sm c-btn-secondary" id="prev-page" type="button" data-i18n="match.prev">上一页</button>
-                <div class="page-info" id="page-info">第 1 页</div>
-                <button class="c-btn c-btn-sm c-btn-secondary" id="next-page" type="button" data-i18n="match.next">下一页</button>
+            <div class="pagination c-pagination" id="job-pagination">
+                <div class="pagination-summary">
+                    <span id="page-summary">第 1 页</span>
+                </div>
+                <div class="pagination-pages" id="job-pagination-pages"></div>
             </div>
         </div>
 
         <div class="panel-right c-card c-card-pad">
             <div class="panel-title c-panel-title">
-                <span data-i18n="match.people">人员列表</span>
-                <span class="panel-refresh" aria-label="刷新时间" data-i18n-aria="match.refresh_time">
-                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 2.5a1 1 0 0 1 1 1v2.836l1.768-1.768a1 1 0 1 1 1.414 1.414l-3.535 3.536a1 1 0 0 1-1.414 0L7.698 5.982A1 1 0 0 1 9.112 4.568L10.5 5.957V3.5a1 1 0 0 1 1-1Zm-7 11a7 7 0 0 1 12.195-4.949 1 1 0 1 0 1.41-1.418A9 9 0 1 0 12 21.5a9.01 9.01 0 0 0 8.352-5.512 1 1 0 1 0-1.85-.77A7 7 0 0 1 5 13.5Z"/>
-                    </svg>
-                    <span class="panel-refresh-time">10:24 刷新</span>
-                </span>
+                <span data-i18n="match.people">技术者列表</span>
             </div>
-            <ul class="list c-list c-list-spaced persons" id="person-list">
-                <!-- 使用 data-detail 存放技术者详细信息 -->
-                <li class="item active"
-                    data-detail="这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者A</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属1</span>
-                            <span class="person-time">12月9日 09:04:36</span>
-                        </div>
-                    </div>
-                </li>
-                <li class="item"
-                    data-detail="这是技术者B的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者B</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属2</span>
-                            <span class="person-time"></span>
-                        </div>
-                    </div>
-                </li>
-                <li class="item"
-                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者C</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属3</span>
-                            <span class="person-time"></span>
-                        </div>
-                    </div>
-                </li>
-                <li class="item"
-                    data-detail="这是技术者C的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。">
-                    <div class="person-header">
-                        <span class="person-name">技术者C</span>
-                        <div class="person-meta">
-                            <span class="person-belong">所属3</span>
-                            <span class="person-time"></span>
-                        </div>
-                    </div>
-                </li>
-                <!-- 其余列表项由接口填充 -->
+            <ul class="list c-list c-list-spaced match-list persons" id="person-list">
             </ul>
         </div>
     </div>
 
     <!-- 下半部分：详情 -->
-    <div class="row">
-        <div class="panel-left detail c-card c-card-pad">
+    <div class="c-split-grid-wide">
+        <div class="panel-left c-card c-card-pad">
             <div class="panel-title" data-i18n="match.job_detail">求人详情</div>
-            <div class="detail-text" id="job-detail">
+            <div class="detail detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
+            </div>
+            <div class="detail-actions-left">
+                <button class="c-btn c-btn-secondary" type="button" id="time-save-btn">测试</button>
             </div>
         </div>
 
-        <div class="panel-right detail c-card c-card-pad">
+        <div class="panel-right c-card c-card-pad">
             <div class="panel-title" data-i18n="match.person_detail">技术者详情</div>
-            <div class="detail-text" id="person-detail">
+            <div class="detail detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
             <div class="detail-actions">
@@ -392,15 +103,6 @@
             .replace(/'/g, '&#39;');
 
     const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-    const SENSITIVE_WORDS = ['OrientalKingdomGroup', 'Oriental', 'Kingdom', 'Group', '邱'];
-    const maskSensitive = (text = '') => {
-        if (!text) return '';
-        const patterns = SENSITIVE_WORDS.map(escapeRegExp);
-        if (!patterns.length) return text;
-        const regex = new RegExp(`(${patterns.join('|')})`, 'gi');
-        return text.replace(regex, '***');
-    };
 
     const stripCssNoise = (text = '') => {
         if (!text) return '';
@@ -438,40 +140,29 @@
         target.innerHTML = html || `<p style="color:#9aa4b5">${t("match.empty")}</p>`;
     }
 
-    const API_BASE = '';
-    const fetchWithAuth = async (url, options = {}) => {
-        const res = await fetch(url, options);
-        if (res.status === 401) {
-            window.location.href = '/login.html';
-            throw new Error('Unauthorized');
-        }
-        return res;
-    };
-    const JOB_CLICK_ENDPOINT = `${API_BASE}/job-click`;
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
     const personList = document.getElementById('person-list');
-    const personRefresh = document.querySelector('.panel-refresh');
-    const personRefreshTime = document.querySelector('.panel-refresh-time');
-    const jobKeyword = document.getElementById('job-keyword');
-    const jobDate = document.getElementById('job-date');
+    const jobSender = document.getElementById('job-sender');
+    const jobSearchBtn = document.getElementById('job-search-btn');
+    const timeSaveBtn = document.getElementById('time-save-btn');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
-    const prevPageBtn = document.getElementById('prev-page');
-    const nextPageBtn = document.getElementById('next-page');
-    const pageInfo = document.getElementById('page-info');
+    const pagination = document.getElementById('job-pagination');
+    const paginationPages = document.getElementById('job-pagination-pages');
+    const pageSummary = document.getElementById('page-summary');
     const sendBtn = document.getElementById('send-btn');
 
     let activeJobDetail = '';
     let activeMatchedSkills = [];
 
-    const PAGE_SIZE = 50;
     let currentPage = 1;
     let hasNextPage = false;
+    let totalPages = 1;
+    let totalCount = 0;
 
     const filters = {
-        range: 'all',
-        customDate: ''
+        range: 'today'
     };
 
     // 公共函数：给列表加点击事件
@@ -513,13 +204,6 @@
         }
     };
 
-    const formatDate = (date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    };
-
     const renderJobList = (items) => {
         jobList.innerHTML = '';
         activeMatchedSkills = [];
@@ -534,14 +218,14 @@
             return;
         }
 
-        items.forEach((item, index) => {
+        items.forEach((item) => {
             const li = document.createElement('li');
-            li.className = 'item' + (index === 0 ? ' active' : '');
+            li.className = 'item';
             const detail = item.detail || '';
             const id = item.id || '';
             li.dataset.detail = detail;
             li.dataset.id = id;
-            li.dataset.item = JSON.stringify({ ...item, detail, id });
+            li.dataset.item = JSON.stringify({...item, detail, id});
 
             const main = document.createElement('div');
             main.className = 'item-main';
@@ -565,11 +249,8 @@
             jobList.appendChild(li);
         });
 
-        const first = jobList.querySelector('.item');
-        if (first) {
-            activeJobDetail = first.dataset.detail || '';
-            renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
-        }
+        activeJobDetail = '';
+        renderDetail(jobDetail, t("match.empty_job_detail"));
     }
 
     const renderPersonList = (items) => {
@@ -590,18 +271,18 @@
         items.forEach((item, index) => {
             const li = document.createElement('li');
             li.className = 'item' + (index === 0 ? ' active' : '');
-            const detail = item.detail || item.body || item.desc || '';
+            const detail = item.body || '';
             li.dataset.detail = detail;
             li.dataset.id = item.id || '';
             li.dataset.matchedSkills = JSON.stringify(item.matched_skills || []);
-            li.dataset.item = JSON.stringify({ ...item, detail });
+            li.dataset.item = JSON.stringify({...item, detail});
 
             const header = document.createElement('div');
             header.className = 'person-header';
 
             const name = document.createElement('span');
             name.className = 'person-name';
-            name.textContent = item.name || item.title || item.subject || t("match.untitled");
+            name.textContent = item.title || t("match.untitled");
 
             const meta = document.createElement('div');
             meta.className = 'person-meta';
@@ -625,9 +306,9 @@
 
         const first = personList.querySelector('.item');
         if (first) {
+            const firstDetail = first.dataset.detail || '';
             const initialHighlights = readMatchedSkills(first);
             activeMatchedSkills = initialHighlights;
-            const firstDetail = first.dataset.detail || '';
             renderDetail(personDetail, firstDetail, initialHighlights);
             renderDetail(jobDetail, activeJobDetail, initialHighlights);
         }
@@ -640,16 +321,6 @@
         return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
-    const formatRefreshTime = (raw) => {
-        const d = raw ? new Date(raw) : null;
-        if (!d || Number.isNaN(d.getTime())) return t("match.refreshing");
-        const pad = (n) => String(n).padStart(2, '0');
-        if (i18n && i18n.getLang() === "ja") {
-            return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} 更新`;
-        }
-        return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} 刷新`;
-    }
-
     const currentFilterDate = () => {
         const today = formatDate(new Date());
         const yesterdayDate = new Date();
@@ -660,20 +331,19 @@
             ? today
             : filters.range === 'yesterday'
                 ? yesterday
-                : filters.range === 'custom'
-                    ? filters.customDate
-                    : '';
+                : '';
     }
 
     const updatePaginationUI = () => {
-        if (pageInfo) {
-            pageInfo.textContent = format("match.page", { page: currentPage });
+        if (pageSummary) {
+            pageSummary.textContent = format("match.page_summary", {
+                count: totalCount,
+                page: currentPage,
+                total: totalPages
+            });
         }
-        if (prevPageBtn) {
-            prevPageBtn.disabled = currentPage <= 1;
-        }
-        if (nextPageBtn) {
-            nextPageBtn.disabled = !hasNextPage;
+        if (pagination && window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
         }
     }
 
@@ -690,19 +360,19 @@
     const fetchJobs = async (page = 1) => {
         currentPage = page;
         const params = new URLSearchParams();
-        const keyword = jobKeyword.value.trim();
+        const sender = jobSender ? jobSender.value.trim() : '';
         const targetDate = currentFilterDate();
 
-        if (keyword) params.set('keyword', keyword);
+        if (sender) params.set('sender', sender);
         if (targetDate) params.set('date', targetDate);
         params.set('page', String(currentPage));
-        params.set('page_size', String(PAGE_SIZE));
+        params.set('page_size', String(50));
 
-        const url = `${API_BASE}/messages${params.toString() ? `?${params}` : ''}`;
+        const url = `/api/mail-projects${params.toString() ? `?${params}` : ''}`;
         showLoading(t("match.loading_jobs"));
 
         try {
-            const res = await fetchWithAuth(url, { credentials: 'include' });
+            const res = await fetchWithAuth(url, {method: 'GET'});
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);
             }
@@ -712,8 +382,11 @@
                 throw new Error(payload.message || t("match.failed"));
             }
             const result = payload.data || {};
-            currentPage = result.page || currentPage;
-            hasNextPage = Boolean(result.has_next);
+            const meta = payload.meta || {};
+            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+            totalCount = Number.isFinite(meta.total) ? meta.total : totalCount;
+            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : totalPages;
+            hasNextPage = currentPage < totalPages;
             renderJobList(result.items || []);
             updatePaginationUI();
         } catch (err) {
@@ -724,6 +397,7 @@
             jobList.appendChild(errorLi);
             jobDetail.textContent = t("match.empty_job_detail");
             hasNextPage = false;
+            totalPages = currentPage;
             updatePaginationUI();
         }
     }
@@ -737,94 +411,50 @@
         personList.appendChild(loading);
     }
 
-    const fetchPersons = async (refresh = false) => {
-        if (personRefreshTime) {
-            personRefreshTime.textContent = t("match.refreshing");
-        }
-        setPersonLoading(t("match.loading_people"));
-
-        try {
-            const url = `${API_BASE}/persons${refresh ? '?refresh=1' : ''}`;
-            const res = await fetchWithAuth(url, { credentials: 'include' });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) {
-                throw new Error(payload.message || t("match.failed"));
-            }
-            const result = payload.data || {};
-            renderPersonList(result.items || []);
-            if (personRefreshTime) {
-                personRefreshTime.textContent = formatRefreshTime(result.update_time);
-            }
-        } catch (err) {
-            if (personList) {
-                personList.innerHTML = '';
-                const errorLi = document.createElement('li');
-                errorLi.className = 'empty';
-                errorLi.textContent = `${t("match.failed")}：${err.message}`;
-                personList.appendChild(errorLi);
-            }
-            if (personRefreshTime) {
-                personRefreshTime.textContent = t("match.failed");
-            }
-        }
-    }
-
     dateButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             dateButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             filters.range = btn.dataset.range;
-            filters.customDate = '';
-            jobDate.value = '';
-            jobDate.classList.remove('active');
             fetchJobs(1);
         });
     });
 
-    jobDate.addEventListener('change', () => {
-        if (jobDate.value) {
-            filters.range = 'custom';
-            filters.customDate = jobDate.value;
-            dateButtons.forEach(b => b.classList.remove('active'));
-            jobDate.classList.add('active');
-        } else {
-            filters.range = 'all';
-            filters.customDate = '';
-            dateButtons.forEach(b => {
-                b.classList.toggle('active', b.dataset.range === 'all');
-            });
-            jobDate.classList.remove('active');
+    jobSearchBtn.addEventListener('click', () => {
+        fetchJobs(1);
+    });
+
+
+    window.bindPagination(pagination, (value) => {
+        if (value === 'prev') {
+            if (currentPage > 1) fetchJobs(currentPage - 1);
+            return;
         }
-        fetchJobs(1);
+        if (value === 'next') {
+            if (hasNextPage) fetchJobs(currentPage + 1);
+            return;
+        }
+        const page = Number(value);
+        if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
+            fetchJobs(page);
+        }
     });
 
-    jobKeyword.addEventListener('input', () => {
-        fetchJobs(1);
+
+    timeSaveBtn.addEventListener('click', async () => {
+        try {
+            const res = await fetchWithAuth('/api/time-to-save');
+            const data = await res.json();
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) {
+                throw new Error(payload.message || t("match.failed"));
+            }
+            alert('已触发');
+        } catch (err) {
+            alert(`${t("match.failed")}：${err.message}`);
+        }
     });
 
-    if (prevPageBtn) {
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                fetchJobs(currentPage - 1);
-            }
-        });
-    }
-
-    if (nextPageBtn) {
-        nextPageBtn.addEventListener('click', () => {
-            if (hasNextPage) {
-                fetchJobs(currentPage + 1);
-            }
-        });
-    }
-
-    if (personRefresh) {
-        personRefresh.addEventListener('click', () => {
-            fetchPersons(true);
-        });
-    }
 
     // 先把静态文案按新格式渲染，再绑定事件和拉取接口
     renderDetail(jobDetail, jobDetail.textContent.trim());
@@ -843,38 +473,26 @@
             payload = {};
         }
         setPersonLoading(t("match.loading_match"));
-        if (personRefreshTime) {
-            personRefreshTime.textContent = t("match.loading_match");
-        }
         try {
-            const res = await fetchWithAuth(JOB_CLICK_ENDPOINT, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-                body: JSON.stringify(payload),
-            });
+            const projectId = payload?.id || '';
+            const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
+            const res = await fetchWithAuth(url, {method: 'GET'});
             if (!res.ok) {
                 throw new Error(`HTTP ${res.status}`);
             }
             const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) {
-                throw new Error(payload.message || t("match.match_failed"));
+            const responsePayload = normalizeApiResponse(data);
+            if (!responsePayload.success) {
+                throw new Error(responsePayload.message || t("match.match_failed"));
             }
-            const result = payload.data || {};
-            const rawMatches =
-                (result && result.matches) ||
-                (result && result.match && result.match.matches) ||
-                [];
+            const result = responsePayload.data || {};
+            const rawMatches = (result && result.matches) || [];
             const matchItems = Array.isArray(rawMatches)
                 ? rawMatches
                 : typeof rawMatches === 'object' && rawMatches !== null
                     ? Object.values(rawMatches)
                     : [];
 
-            if (personRefreshTime) {
-                personRefreshTime.textContent = t("match.refreshed");
-            }
             renderPersonList(matchItems);
         } catch (err) {
             console.error('上报点击事件失败', err);
@@ -886,79 +504,70 @@
                 personList.appendChild(errorLi);
                 renderDetail(personDetail, t("match.empty_person_detail"));
             }
-            if (personRefreshTime) {
-                personRefreshTime.textContent = t("match.match_failed");
-            }
         }
     });
     bindListClick('person-list', 'person-detail', (item, highlights) => {
         activeMatchedSkills = highlights || [];
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
     });
-    fetchPersons(false);
 
     // 将当前选中的求人与人员信息存入本地并跳转到送信页
-    if (sendBtn) {
-        sendBtn.addEventListener('click', () => {
-            const activeJob = jobList?.querySelector('.item.active');
-            const activePerson = personList?.querySelector('.item.active');
 
-            if (!activeJob || !activePerson) {
-                alert(t("match.send_tip"));
-                return;
-            }
+    sendBtn.addEventListener('click', () => {
+        const activeJob = jobList?.querySelector('.item.active');
+        const activePerson = personList?.querySelector('.item.active');
 
-            const parseDatasetJSON = (el, key) => {
-                if (!el || !el.dataset) return null;
-                const raw = el.dataset[key];
-                if (!raw) return null;
-                try {
-                    return JSON.parse(raw);
-                } catch {
-                    return null;
-                }
-            };
+        if (!activeJob || !activePerson) {
+            alert(t("match.send_tip"));
+            return;
+        }
 
-            const jobData = parseDatasetJSON(activeJob, 'item') || {};
-            const personData = parseDatasetJSON(activePerson, 'item') || {};
-
-            const jobPayload = {
-                id: jobData.id || activeJob.dataset.id || '',
-                title: jobData.title || jobData.subject || activeJob.querySelector('.item-title')?.textContent.trim() || '',
-                desc: jobData.desc || jobData.from || activeJob.querySelector('.item-desc')?.textContent.trim() || '',
-                detail: jobData.detail || jobData.body || activeJob.dataset.detail || '',
-                time: jobData.date || jobData.time || activeJob.querySelector('.item-time')?.textContent.trim() || '',
-                thread_id: jobData.thread_id || '',
-                message_id_header: jobData.message_id_header || '',
-                references_header: jobData.references_header || ''
-            };
-
-            const personPayload = {
-                id: personData.id || activePerson.dataset.id || '',
-                name: personData.name || personData.title || activePerson.querySelector('.person-name')?.textContent.trim() || '',
-                belong: personData.belong || personData.from || activePerson.querySelector('.person-belong')?.textContent.trim() || '',
-                detail: personData.detail || personData.body || activePerson.dataset.detail || '',
-                time: personData.date || personData.time || activePerson.querySelector('.person-time')?.textContent.trim() || '',
-                thread_id: personData.thread_id || '',
-                message_id_header: personData.message_id_header || '',
-                references_header: personData.references_header || ''
-            };
-
-            const payload = {
-                job: jobPayload,
-                person: personPayload,
-                updatedAt: Date.now()
-            };
-
+        const parseDatasetJSON = (el, key) => {
+            if (!el || !el.dataset) return null;
+            const raw = el.dataset[key];
+            if (!raw) return null;
             try {
-                localStorage.setItem('matchSelection', JSON.stringify(payload));
-            } catch (err) {
-                console.error(t("match.cache_failed"), err);
+                return JSON.parse(raw);
+            } catch {
+                return null;
             }
+        };
 
-            window.location.href = 'songxin.html?from=match';
-        });
-    }
+        const jobData = parseDatasetJSON(activeJob, 'item') || {};
+        const personData = parseDatasetJSON(activePerson, 'item') || {};
+
+        const jobPayload = {
+            id: jobData.id || activeJob.dataset.id || '',
+            title: jobData.title || activeJob.querySelector('.item-title')?.textContent.trim() || '',
+            desc: jobData.desc || activeJob.querySelector('.item-desc')?.textContent.trim() || '',
+            detail: jobData.detail || activeJob.dataset.detail || '',
+            time: jobData.date || activeJob.querySelector('.item-time')?.textContent.trim() || ''
+        };
+
+        const personPayload = {
+            id: personData.id || activePerson.dataset.id || '',
+            name: personData.title || activePerson.querySelector('.person-name')?.textContent.trim() || '',
+            belong: personData.from || activePerson.querySelector('.person-belong')?.textContent.trim() || '',
+            detail: personData.body || activePerson.dataset.detail || '',
+            time: personData.date || activePerson.querySelector('.person-time')?.textContent.trim() || ''
+        };
+
+        const payload = {
+            job: jobPayload,
+            person: personPayload,
+            mail_type: 0,
+            updatedAt: Date.now()
+        };
+
+        try {
+            localStorage.setItem('matchSelection', JSON.stringify(payload));
+        } catch (err) {
+            console.error(t("match.cache_failed"), err);
+        }
+
+        window.location.href = 'songxin.html?from=match';
+    });
+
 </script>
 </body>
 </html>

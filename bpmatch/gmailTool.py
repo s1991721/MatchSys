@@ -65,7 +65,7 @@ class GmailTool:
         mark_seen: bool = False,
         start_date: Optional[date] = None,
         end_date: Optional[date] = None,
-    ) -> Tuple[List[dict], bool]:
+    ) -> Tuple[List[dict], bool, int]:
         """
         从 Gmail 获取邮件列表（按时间倒序）。分页返回指定页的数据以及是否存在下一页。
         """
@@ -95,22 +95,87 @@ class GmailTool:
                 break
 
         if not resp:
-            return [], False
+            return [], False, 0
 
         ids = self._extract_ids(resp)
         if not ids:
-            return [], False
+            return [], False, int(resp.get("resultSizeEstimate") or 0)
 
         # 批量拉取目标页邮件详情
         details = self._fetch_details(service, ids)
         page_messages = [self._parse_message(msg) for msg in details]
         has_next = resp.get("nextPageToken") is not None
+        total_count = int(resp.get("resultSizeEstimate") or 0)
 
         # 如需标记已读，批量移除 UNREAD 标签
         if mark_seen and page_messages:
             self._mark_seen(service, page_messages)
 
-        return page_messages, has_next
+        return page_messages, has_next, total_count
+
+    def fetch_new_messages(
+        self,
+        query: str = "",
+        page: int = 1,
+        page_size: int = 20,
+        mark_seen: bool = False,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None,
+    ) -> Tuple[List[dict], bool, int]:
+        """
+        从 Gmail 获取邮件列表（按时间倒序），仅返回 SavedMailInfo 中不存在的邮件。
+        """
+        service = self.service
+        final_query = self._compose_query(query, start_date, end_date)
+
+        current_token: Optional[str] = None
+        resp: Optional[dict] = None
+
+        for idx in range(page):
+            resp = (
+                service.users()
+                .messages()
+                .list(
+                    userId="me",
+                    q=final_query,
+                    maxResults=page_size,
+                    pageToken=current_token,
+                )
+                .execute()
+            )
+            current_token = resp.get("nextPageToken")
+            if current_token is None and idx < page - 1:
+                break
+
+        if not resp:
+            return [], False, 0
+
+        ids = self._extract_ids(resp)
+        total_count = int(resp.get("resultSizeEstimate") or 0)
+        if not ids:
+            return [], False, total_count
+
+        try:
+            from .models import SavedMailInfo
+
+            saved_ids = set(
+                SavedMailInfo.objects.filter(id__in=ids).values_list("id", flat=True)
+            )
+        except Exception:
+            saved_ids = set()
+
+        new_ids = [msg_id for msg_id in ids if msg_id not in saved_ids]
+        has_next = resp.get("nextPageToken") is not None
+        if not new_ids:
+            return [], has_next, total_count
+
+        details = self._fetch_details(service, new_ids)
+        page_messages = [self._parse_message(msg) for msg in details]
+
+        if mark_seen and page_messages:
+            self._mark_seen(service, page_messages)
+
+        return page_messages, has_next, total_count
 
     def _compose_query(
         self, query: str, start_date: Optional[date], end_date: Optional[date]
@@ -278,6 +343,7 @@ class GmailTool:
         thread_id: Optional[str] = None,
         in_reply_to: Optional[str] = None,
         references: Optional[str] = None,
+        mail_type: Optional[int] = None,
     ):
         """
         通过 Gmail API 发送邮件，支持抄送、附件和回复现有线程。
@@ -335,6 +401,7 @@ class GmailTool:
             subject=subject,
             body=body,
             attachments=attachments,
+            mail_type=mail_type,
         )
 
         return message_id
@@ -361,6 +428,7 @@ class GmailTool:
         subject: Optional[str],
         body: Optional[str],
         attachments: Optional[List[dict]],
+        mail_type: Optional[int],
     ):
         """
         将发送结果写入数据库；若 ORM 不可用或写入失败，不影响主流程。
@@ -382,17 +450,20 @@ class GmailTool:
                 if fname:
                     filenames.append(str(fname))
 
+            defaults = {
+                "sent_at": sent_at,
+                "to": to or "",
+                "cc": cc or "",
+                "subject": subject or "",
+                "body": body or "",
+                "attachments": json.dumps(filenames, ensure_ascii=False),
+            }
+            if mail_type is not None:
+                defaults["mail_type"] = mail_type
+
             SentEmailLog.objects.update_or_create(
                 message_id=message_id,
-                defaults={
-                    "sent_at": sent_at,
-                    "to": to or "",
-                    "cc": cc or "",
-                    "subject": subject or "",
-                    "body": body or "",
-                    "attachments": json.dumps(filenames, ensure_ascii=False),
-                    "status": "sent",
-                },
+                defaults=defaults,
             )
         except Exception as exc:
             print(f"[gmail] 保存发送记录失败: {exc}")

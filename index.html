@@ -479,6 +479,17 @@
         nav.addEventListener("click", handleRouteClick);
       }
       document.addEventListener("click", handleRouteClick);
+      window.addEventListener("message", (event) => {
+        const data = event.data || {};
+        if (data.type !== "route:change") return;
+        const src = (data.src || "").trim();
+        if (!src || !isAllowedRoute(src)) return;
+        if (location.hash !== "#" + src) {
+          location.hash = src;
+        } else {
+          applyRoute(src);
+        }
+      });
       window.addEventListener("hashchange", syncFromHash);
       if (frame) {
         syncFromHash();

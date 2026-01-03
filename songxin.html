@@ -7,317 +7,68 @@
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="songxin.title">送信页</title>
-    <style>
-* {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .page {
-            max-width: 1200px;
-            margin: 24px auto 32px;
-            padding: 0 20px 24px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 16px;
-            align-items: stretch;
-        }
-
-            .grid + .grid {
-                margin-top: 16px;
-            }
-/* 让内容编辑卡片填满可用高度 */
-        .editor-card {
-            min-height: 520px;
-        }
-
-        .editor {
-            width: 100%;
-            min-height: 420px;
-            flex: 1;
-            padding: 14px;
-            border-radius: 12px;
-            border: 1px solid #d8dfec;
-            background: linear-gradient(180deg, #fbfcff 0%, #f6f7fb 100%);
-            font-size: 15px;
-            line-height: 1.6;
-            resize: vertical;
-            outline: none;
-            color: var(--text);
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .editor:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.14);
-            background: #ffffff;
-        }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 14px;
-        }
-
-        .field label {
-            font-size: 13px;
-            color: var(--muted);
-        }
-
-        .input {
-            width: 100%;
-            border-radius: 10px;
-            border: 1px solid #d8dfec;
-            padding: 12px 12px;
-            font-size: 14px;
-            outline: none;
-            background: #fdfdff;
-            transition: border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-
-        .input:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.12);
-            background: #ffffff;
-        }
-
-        .subject-area {
-            min-height: 70px;
-            line-height: 1.5;
-            resize: vertical;
-        }
-
-        .send-actions {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 10px;
-            margin-top: 4px;
-        }
-
-        .detail {
-            font-size: 14px;
-            color: #455164;
-            line-height: 1.7;
-            min-height: 140px;
-            white-space: pre-line;
-        }
-
-        .muted-block {
-            background: #f8faff;
-            border: 1px dashed #d7e1f4;
-            border-radius: 10px;
-            padding: 12px 14px;
-            color: #556074;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .upload-bar {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .upload-hint {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .file-input {
-            display: none;
-        }
-
-            .attachment-list {
-                margin-top: 10px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-        .attachment-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 12px;
-            border: 1px solid #e0e7f3;
-            border-radius: 10px;
-            background: #f9fbff;
-        }
-
-        .attachment-name {
-            font-size: 13px;
-            color: #2f3b4d;
-        }
-
-        .attachment-meta {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #6b7686;
-            font-size: 12px;
-        }
-
-        .remove-link {
-            color: #e35d5d;
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .empty-tip {
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        @media (max-width: 980px) {
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .editor {
-                height: 280px;
-            }
-        }
-
-        .loading-mask {
-            position: fixed;
-            inset: 0;
-            background: rgba(18, 36, 66, 0.14);
-            backdrop-filter: blur(3px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 999;
-        }
-
-        .loading-box {
-            background: #0c1d36;
-            color: #e9f2ff;
-            padding: 18px 22px;
-            border-radius: 14px;
-            box-shadow: 0 16px 32px rgba(12, 29, 54, 0.35);
-            min-width: 280px;
-            display: grid;
-            gap: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .loading-main {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.18);
-            border-top-color: #68a8ff;
-            animation: spin 0.9s linear infinite;
-        }
-
-        .loading-sub {
-            color: #9db7dd;
-            font-size: 13px;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-  </style>
 </head>
 <body>
-    <div id="loading-mask" class="loading-mask" role="status" aria-live="assertive" aria-busy="true" hidden>
-        <div class="loading-box">
-            <div class="loading-main">
-                <div class="spinner" aria-hidden="true"></div>
+    <div id="loading-mask" class="songxin-loading-mask" role="status" aria-live="assertive" aria-busy="true" hidden>
+        <div class="songxin-loading-box">
+            <div class="songxin-loading-main">
+                <div class="songxin-spinner" aria-hidden="true"></div>
                 <div id="loading-text" data-i18n="songxin.loading.wait_title">正在等待 AI 响应…</div>
             </div>
-            <div id="loading-sub" class="loading-sub" data-i18n="songxin.loading.wait_sub">请稍候，正在处理中…</div>
+            <div id="loading-sub" class="songxin-loading-sub" data-i18n="songxin.loading.wait_sub">请稍候，正在处理中…</div>
         </div>
     </div>
-    <div class="page">
-        <header class="page-header c-page-header">
-            <div>
-                <div class="title c-page-title-soft" data-i18n="songxin.title">送信页</div>
-                <div class="subtitle c-page-subtitle-soft" data-i18n="songxin.subtitle">整页编辑模式，直接书写并发送邮件内容</div>
-            </div>
-            <div class="subtitle c-page-subtitle-soft">
-                <span data-i18n="songxin.status.label">状态</span>：
-                <span data-i18n="songxin.status.draft">草稿</span>
-            </div>
-        </header>
-
-        <section class="grid">
-            <div class="editor-card c-card c-card-pad">
+    <div class="page page-wide songxin-page">
+        <section class="songxin-grid songxin-grid-half">
+            <div class="songxin-editor-card c-card c-card-pad">
                 <div class="c-card-title" data-i18n="songxin.section.editor">内容编辑</div>
-                <textarea id="editor" class="editor" placeholder="在此编写您要发送的内容，例如项目进度、补充说明或会议纪要等。" aria-label="内容编辑文本域" data-i18n-placeholder="songxin.editor.placeholder" data-i18n-aria="songxin.editor.aria"></textarea>
+                <textarea id="editor" class="songxin-editor" placeholder="在此编写您要发送的内容，例如项目进度、补充说明或会议纪要等。" aria-label="内容编辑文本域" data-i18n-placeholder="songxin.editor.placeholder" data-i18n-aria="songxin.editor.aria"></textarea>
             </div>
 
-            <div class="c-card">
+            <div class="c-card c-card-pad songxin-original-card">
+                <div class="c-card-title">案件原文</div>
+                <textarea id="job-original" class="songxin-editor songxin-editor-readonly" readonly aria-label="案件原文"></textarea>
+            </div>
+        </section>
+
+        <section class="songxin-grid">
+            <div class="c-card c-card-pad">
+                <div class="c-card-title" data-i18n="songxin.section.preview">预览</div>
+                <div id="preview" class="songxin-preview">
+                    这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。ABCDEFG1234567890不想超出屏幕会自动换行。
+                </div>
+            </div>
+            <div class="c-card c-card-pad songxin-form">
                 <div class="c-card-title" data-i18n="songxin.section.recipient">收件与附件</div>
-                <div class="field">
+                <div class="form-field">
                     <label for="email" data-i18n="songxin.field.to">收件人邮箱</label>
-                    <input id="email" type="email" class="input" placeholder="name@example.com">
+                    <input id="email" type="email" placeholder="name@example.com">
                 </div>
-                <div class="field">
+                <div class="form-field">
                     <label for="subject" data-i18n="songxin.field.subject">邮件标题</label>
-                    <textarea id="subject" class="input subject-area" rows="2" placeholder="请输入邮件标题（未填将使用正文首行）" data-i18n-placeholder="songxin.field.subject_placeholder"></textarea>
+                    <textarea id="subject" rows="2" placeholder="请输入邮件标题（未填将使用正文首行）" data-i18n-placeholder="songxin.field.subject_placeholder"></textarea>
                 </div>
-                <div class="field">
+                <div class="form-field">
                     <label for="cc" data-i18n="songxin.field.cc">抄送 (可选)</label>
-                    <input id="cc" type="email" class="input" placeholder="cc@example.com">
+                    <input id="cc" type="email" placeholder="cc@example.com">
                 </div>
-                <div class="field">
+                <div class="form-field">
                     <label for="file-input" data-i18n="songxin.field.attach">上传附件</label>
-                    <div class="upload-bar">
-                        <input id="file-input" class="file-input" type="file" multiple>
+                    <div class="songxin-upload-bar">
+                        <input id="file-input" class="songxin-file-input" type="file" multiple>
                         <button id="btn-upload" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.select_file">选择文件</button>
-                        <span class="upload-hint" data-i18n="songxin.attach.hint">支持多文件，建议单个不超过10MB</span>
+                        <span class="songxin-upload-hint" data-i18n="songxin.attach.hint">支持多文件，建议单个不超过10MB</span>
                     </div>
-                    <div id="attachment-list" class="attachment-list">
-                        <div class="empty-tip" data-i18n="songxin.attach.empty">暂无附件</div>
+                    <div id="attachment-list" class="songxin-attachment-list">
+                        <div class="songxin-empty-tip" data-i18n="songxin.attach.empty">暂无附件</div>
                     </div>
                 </div>
-                <div class="send-actions">
+                <div class="songxin-send-actions">
                     <button id="btn-clear" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.clear">清空内容</button>
                     <button id="btn-send" class="c-btn c-btn-primary" type="button" aria-label="发送" data-i18n-aria="songxin.action.send">
                         <span data-i18n="songxin.action.send">发送</span>
                         <span aria-hidden="true">➤</span>
                     </button>
-                </div>
-            </div>
-        </section>
-
-        <section class="grid">
-            <div class="c-card">
-                <div class="c-card-title" data-i18n="songxin.section.preview">预览</div>
-                <div id="preview" class="detail">
-                    这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。ABCDEFG1234567890不想超出屏幕会自动换行。
-                </div>
-            </div>
-            <div class="c-card">
-                <div class="c-card-title" data-i18n="songxin.section.tips">提醒</div>
-                <div class="muted-block">
-                    · <span data-i18n="songxin.tip.1">请确认邮箱地址无误再发送。</span><br>
-                    · <span data-i18n="songxin.tip.2">已支持在页面右侧上传附件，发送前请核对文件列表。</span><br>
-                    · <span data-i18n="songxin.tip.3">内容较长时建议分段，保持易读性。</span><br>
-                    · <span data-i18n="songxin.tip.4">发送后可在历史记录中查看送信状态。</span>
                 </div>
             </div>
         </section>
@@ -340,6 +91,7 @@
             const uploadBtn = document.getElementById('btn-upload');
             const fileInput = document.getElementById('file-input');
             const attachmentList = document.getElementById('attachment-list');
+            const jobOriginal = document.getElementById('job-original');
             const loadingMask = document.getElementById('loading-mask');
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
@@ -358,6 +110,8 @@
             };
             const attachments = [];
             const selectionKey = 'matchSelection';
+            const matchMailType = 2;
+            const isMatchFlow = new URLSearchParams(window.location.search).get('from') === 'match';
             let loadingTimer = null;
             let currentSelection = null;
 
@@ -539,16 +293,16 @@
 
             const renderAttachments = () => {
                 if (!attachments.length) {
-                    attachmentList.innerHTML = `<div class="empty-tip">${t('songxin.attach.empty')}</div>`;
+                attachmentList.innerHTML = `<div class="songxin-empty-tip">${t('songxin.attach.empty')}</div>`;
                     return;
                 }
 
                 attachmentList.innerHTML = attachments.map((file, idx) => `
-                    <div class="attachment-item" data-idx="${idx}">
-                        <div class="attachment-name">${file.name}</div>
-                        <div class="attachment-meta">
+                    <div class="songxin-attachment-item" data-idx="${idx}">
+                        <div class="songxin-attachment-name">${file.name}</div>
+                        <div class="songxin-attachment-meta">
                             <span>${file.sizeLabel}</span>
-                            <span class="remove-link" data-remove="${idx}">${t('songxin.attach.remove')}</span>
+                            <span class="songxin-remove-link" data-remove="${idx}">${t('songxin.attach.remove')}</span>
                         </div>
                     </div>
                 `).join('');
@@ -566,6 +320,12 @@
                 preview.textContent = content;
             };
 
+            const renderOriginal = (text) => {
+                const content = (text || '').trim();
+                jobOriginal.value = content || '';
+                jobOriginal.scrollTop = 0;
+            };
+
             clearBtn.addEventListener('click', () => {
                 editor.value = '';
                 email.value = '';
@@ -574,6 +334,7 @@
                 attachments.length = 0;
                 renderAttachments();
                 renderPreview();
+                renderOriginal('');
                 editor.focus();
             });
 
@@ -616,6 +377,10 @@
 
                 const selection = currentSelection || readSelection();
                 const personMeta = selection?.person || null;
+                const rawMailType = selection?.mail_type;
+                const mailType = Number.isFinite(Number(rawMailType))
+                    ? Number(rawMailType)
+                    : (isMatchFlow ? matchMailType : null);
 
                 setLoading(true, { title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub') });
                 try {
@@ -636,6 +401,9 @@
                         body: content,
                         attachments: attachmentsPayload
                     };
+                    if (mailType !== null) {
+                        payload.mail_type = mailType;
+                    }
                     if (personMeta) {
                         if (personMeta.thread_id) {
                             payload.thread_id = personMeta.thread_id;
@@ -667,7 +435,11 @@
                     }
 
                     alert(t('songxin.alert.sent'));
-                    window.location.href = 'songxinhistory.html';
+                    if (window.top && window.top !== window) {
+                        window.top.location.hash = 'songxinhistory.html';
+                    } else {
+                        window.location.href = 'songxinhistory.html';
+                    }
                 } catch (err) {
                     console.error('发送邮件失败', err);
                     alert(format('songxin.alert.send_failed', { error: err.message || err }));
@@ -679,6 +451,7 @@
             const jobText = applySelectionFromMatch();
             renderAttachments();
             renderPreview();
+            renderOriginal(jobText);
             analyzeQiuren(jobText);
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
@@ -687,6 +460,7 @@
                     }
                     renderAttachments();
                     renderPreview();
+                    renderOriginal(jobText);
                 });
             }
         })();

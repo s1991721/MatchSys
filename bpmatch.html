@@ -3,262 +3,14 @@
 <head>
     <meta charset="UTF-8">
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
-    <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="match.title">Match</title>
-    <style>
-* {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
-
-        .row {
-            display: flex;
-            gap: 16px;
-            width: 100%;
-            min-width: 0;
-        }
-
-        .row + .row {
-            margin-top: 16px;
-        }
-
-.filters {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .filter-group {
-            flex: 0 0 auto;
-            justify-content: center;
-        }
-
-        .filter-group.sender-group {
-            flex: 1 1 0;
-        }
-
-.panel-left {
-            flex: 1.2;
-            min-width: 0;
-        }
-
-        .panel-right {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .list.jobs {
-            max-height: 420px;
-        }
-
-        .list.persons {
-            max-height: 620px;
-        }
-
-        .search-input {
-            width: 100%;
-        }
-
-        .search-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .search-row .search-input {
-            flex: 1 1 0;
-        }
-
-        .item {
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid var(--line);
-            cursor: pointer;
-            transition: background 0.12s ease;
-        }
-
-        .item:last-child {
-            border-bottom: none;
-        }
-
-        .item:hover {
-            background: #edf3ff;
-        }
-
-        .item.active {
-            background: #dbe7ff;
-        }
-
-        .item-main {
-            flex: 1;
-        }
-
-        .empty {
-            padding: 16px 12px;
-            color: var(--muted);
-            font-size: 13px;
-            text-align: center;
-        }
-
-        .item-title {
-            font-weight: 600;
-            font-size: 14px;
-            margin-bottom: 2px;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .item-desc {
-            font-size: 13px;
-            color: var(--muted);
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .item-time {
-            color: var(--muted);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .person-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            font-size: 13px;
-        }
-
-        .person-name {
-            font-weight: 600;
-            flex: 1;
-            min-width: 0;
-            font-size: 14px;
-            word-break: break-word;
-            overflow-wrap: anywhere;
-        }
-
-        .person-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            white-space: nowrap;
-            text-align: center;
-        }
-
-        .person-belong {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .person-time {
-            color: var(--muted);
-            font-size: 12px;
-            white-space: nowrap;
-        }
-
-        .detail-text {
-            margin-top: 4px;
-            font-size: 14px;
-            line-height: 1.75;
-            word-break: break-word;
-            white-space: pre-line;
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 14px 16px;
-            background: #fafbfe;
-            min-height: 180px;
-            color: #435065;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        }
-
-        .skill-highlight {
-            background: #ffe59e;
-            color: #8a4b00;
-            padding: 0 4px;
-            border-radius: 6px;
-            box-shadow: 0 0 0 1px #f3c763 inset;
-        }
-
-        .detail-text p {
-            margin: 0 0 10px;
-        }
-
-        .detail-text p:last-child {
-            margin-bottom: 0;
-        }
-
-        .detail-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 12px;
-        }
-
-        .detail-actions-left {
-            display: flex;
-            justify-content: flex-start;
-            margin-top: 12px;
-        }
-
-        .loading-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .spinner {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 2px solid #c9d5ea;
-            border-top-color: var(--primary);
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        @media (max-width: 1100px) {
-            .row {
-                flex-direction: column;
-            }
-
-            .list.jobs,
-            .list.persons {
-                max-height: 320px;
-            }
-
-            .c-filter-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .filters {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-        }
-  </style>
 </head>
 <body>
-<div class="page page-wide">
+<div class="page page-wide c-stack match-page">
     <!-- 上半部分：列表 -->
-    <div class="row">
+    <div class="c-split-grid-wide">
         <div class="panel-left c-card c-card-pad">
             <div class="panel-title c-panel-title" data-i18n="match.jobs">案件列表</div>
             <div class="filters c-filter-grid">
@@ -278,7 +30,7 @@
                     </div>
                 </div>
             </div>
-            <ul class="list c-list c-list-spaced jobs" id="job-list">
+            <ul class="list c-list c-list-spaced match-list jobs" id="job-list">
             </ul>
             <div class="pagination c-pagination" id="job-pagination">
                 <div class="pagination-summary">
@@ -292,16 +44,16 @@
             <div class="panel-title c-panel-title">
                 <span data-i18n="match.people">技术者列表</span>
             </div>
-            <ul class="list c-list c-list-spaced persons" id="person-list">
+            <ul class="list c-list c-list-spaced match-list persons" id="person-list">
             </ul>
         </div>
     </div>
 
     <!-- 下半部分：详情 -->
-    <div class="row">
-        <div class="panel-left detail c-card c-card-pad">
+    <div class="c-split-grid-wide">
+        <div class="panel-left c-card c-card-pad">
             <div class="panel-title" data-i18n="match.job_detail">求人详情</div>
-            <div class="detail-text" id="job-detail">
+            <div class="detail detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
             <div class="detail-actions-left">
@@ -309,9 +61,9 @@
             </div>
         </div>
 
-        <div class="panel-right detail c-card c-card-pad">
+        <div class="panel-right c-card c-card-pad">
             <div class="panel-title" data-i18n="match.person_detail">技术者详情</div>
-            <div class="detail-text" id="person-detail">
+            <div class="detail detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
             <div class="detail-actions">
@@ -380,7 +132,6 @@
         target.innerHTML = html || `<p style="color:#9aa4b5">${t("match.empty")}</p>`;
     }
 
-    const API_BASE = '';
     const fetchWithAuth = async (url, options = {}) => {
         const res = await fetch(url, options);
         if (res.status === 401) {
@@ -389,8 +140,6 @@
         }
         return res;
     };
-    const JOB_MATCH_ENDPOINT = `${API_BASE}/api/mail-projects/match`;
-    const JOB_LIST_ENDPOINT = `${API_BASE}/api/mail-projects`;
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
@@ -627,7 +376,7 @@
         params.set('page', String(currentPage));
         params.set('page_size', String(PAGE_SIZE));
 
-        const url = `${JOB_LIST_ENDPOINT}${params.toString() ? `?${params}` : ''}`;
+        const url = `/api/mail-projects${params.toString() ? `?${params}` : ''}`;
         showLoading(t("match.loading_jobs"));
 
         try {
@@ -674,7 +423,7 @@
         setPersonLoading(t("match.loading_people"));
 
         try {
-            const url = `${API_BASE}/persons${refresh ? '?refresh=1' : ''}`;
+            const url = `/persons${refresh ? '?refresh=1' : ''}`;
             const res = await fetchWithAuth(url, { credentials: 'include' });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
@@ -738,7 +487,7 @@
     if (timeSaveBtn) {
         timeSaveBtn.addEventListener('click', async () => {
             try {
-                const res = await fetchWithAuth(`${API_BASE}/api/time-to-save`, {
+                const res = await fetchWithAuth('/api/time-to-save', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -772,7 +521,7 @@
         }
         setPersonLoading(t("match.loading_match"));
         try {
-            const res = await fetchWithAuth(JOB_MATCH_ENDPOINT, {
+            const res = await fetchWithAuth('/api/mail-projects/match', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 credentials: 'include',

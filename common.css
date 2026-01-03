@@ -1745,7 +1745,8 @@ svg {
   font-size: 13px;
   color: var(--muted);
 }
-.match-page .item-time {
+.match-page .item-time,
+.match-page .person-time {
   color: var(--muted);
   font-size: 12px;
   white-space: nowrap;
@@ -1760,8 +1761,108 @@ svg {
   color: #435065;
   overflow: auto;
 }
+.match-page .match-list.jobs {
+  max-height: 420px;
+}
+.match-page .match-list.persons {
+  max-height: 620px;
+}
+.match-page .search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.match-page .search-row .search-input {
+  flex: 1 1 0;
+}
+.match-page .item-title,
+.match-page .item-desc,
+.match-page .person-name,
+.match-page .detail-text {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.match-page .person-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+}
+.match-page .person-name {
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+}
+.match-page .person-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+  text-align: center;
+}
+.match-page .person-belong {
+  font-size: 12px;
+  color: var(--muted);
+}
+.match-page .detail-text {
+  margin-top: 4px;
+  min-height: 180px;
+  white-space: pre-line;
+}
+.match-page .skill-highlight {
+  background: #ffe59e;
+  color: #8a4b00;
+  padding: 0 4px;
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px #f3c763 inset;
+}
+.match-page .detail-text p {
+  margin: 0 0 10px;
+}
+.match-page .detail-text p:last-child {
+  margin-bottom: 0;
+}
+.match-page .detail-actions,
+.match-page .detail-actions-left {
+  display: flex;
+  margin-top: 12px;
+}
+.match-page .detail-actions {
+  justify-content: flex-end;
+}
+.match-page .detail-actions-left {
+  justify-content: flex-start;
+}
+.match-page .loading-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.match-page .spinner {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #c9d5ea;
+  border-top-color: var(--primary);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 @media (max-width: 1080px) {
   .match-page .c-filter-grid {
     grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 1100px) {
+  .match-page .match-list.jobs,
+  .match-page .match-list.persons {
+    max-height: 320px;
   }
 }

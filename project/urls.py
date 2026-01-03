@@ -33,8 +33,7 @@ from attendance.views import (
 from bpmatch.views import (
     mail_projects_api,
     mail_project_match_api,
-    persons,
-    extract_qiuren_detail,
+    extract_project_detail,
     send_mail,
     send_history,
     time_to_save,
@@ -139,11 +138,10 @@ urlpatterns = [
     # -------------------------------bpmatch API-------------------------------
     path("api/mail-projects", mail_projects_api, name="mail-projects"),
     path("api/mail-projects/match", mail_project_match_api, name="mail-projects-match"),
+    path("api/extract-project-detail", extract_project_detail, name="extract_project_detail"),
+    path("api/send-mail", send_mail, name="send_mail"),
+    path("api/send-history", send_history, name="send_history"),
     path("api/time-to-save", time_to_save, name="time_to_save"),
-    path("persons", persons),
-    path("extract-qiuren-detail", extract_qiuren_detail),
-    path("send-mail", send_mail),
-    path("send-history", send_history),
     # -------------------------------customer API-------------------------------
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),

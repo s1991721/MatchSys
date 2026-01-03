@@ -1,14 +1,16 @@
 import json
+import threading
 from pathlib import Path
 
 from django.conf import settings as django_settings
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_POST
 
 from bpmatch.authorize_gmail import test_connection
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
 from settings.models import SysSettings
+from settings.timer_task import run_time_to_save,run_time_to_clean
 
 # 失败默认返回值
 SECTION_DEFAULTS = {
@@ -191,6 +193,8 @@ def sys_settings_section_api(request, section):
     return api_error("Unknown settings section", status=404)
 
 
+# ---------------------------------------------配置的执行项---------------------------------------------
+
 @csrf_exempt
 @require_http_methods(["POST"])
 # 测试gmail连接（也可当作获取token的方式）
@@ -211,3 +215,46 @@ def sys_settings_gmail_test_api(request):
             "profile": result,
         }
     )
+
+
+# -------------------------------------定时任务
+
+@csrf_exempt
+@require_POST
+# 定时刷新数据库中的案件及技术者信息
+def time_to_save(request):
+    thread = threading.Thread(
+        target=run_time_to_save,
+        name="time_to_save",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+@csrf_exempt
+@require_POST
+# 定时清理过期的案件及技术者信息
+def time_to_clean():
+    thread = threading.Thread(
+        target=run_time_to_clean,
+        name="time_to_clean",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+@csrf_exempt
+@require_POST
+# 定时备份数据
+def time_to_backup():
+    thread = threading.Thread(
+        target=run_time_to_clean,
+        name="time_to_clean",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+

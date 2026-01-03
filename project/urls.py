@@ -37,7 +37,6 @@ from bpmatch.views import (
     extract_project_detail,
     send_mail,
     send_history,
-    time_to_save,
 )
 from customer.views import (
     employee_names_api,
@@ -70,7 +69,13 @@ from permission.views import (
     roles_api,
     role_detail_api,
 )
-from settings.views import sys_settings_gmail_test_api, sys_settings_section_api
+from settings.views import (
+    sys_settings_gmail_test_api,
+    sys_settings_section_api,
+    time_to_save,
+    time_to_clean,
+    time_to_backup,
+)
 
 custom_404 = TemplateView.as_view(template_name="404.html")
 handler404 = "project.urls.custom_404"
@@ -162,7 +167,6 @@ urlpatterns = [
     path("api/extract-project-detail", extract_project_detail, name="extract_project_detail"),
     path("api/send-mail", send_mail, name="send_mail"),
     path("api/send-history", send_history, name="send_history"),
-    path("api/time-to-save", time_to_save, name="time_to_save"),
     # -------------------------------customer API-------------------------------
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),
@@ -184,4 +188,7 @@ urlpatterns = [
     # -------------------------------system settings API-------------------------------
     path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
     path("api/sys-settings/business-email/test", sys_settings_gmail_test_api, name="sys-settings-gmail-test"),
+    path("api/time-to-save", time_to_save, name="time_to_save"),
+    path("api/time-to-claen", time_to_clean, name="time_to_clean"),
+    path("api/time-to-backup", time_to_backup, name="time_to_backup"),
 ]

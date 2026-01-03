@@ -1772,6 +1772,9 @@ svg {
   align-items: center;
   gap: 10px;
 }
+.match-page .c-filter-grid {
+  align-items: start;
+}
 .match-page .search-row .search-input {
   flex: 1 1 0;
 }

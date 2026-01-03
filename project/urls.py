@@ -69,6 +69,7 @@ from permission.views import (
     roles_api,
     role_detail_api,
 )
+from settings.views import sys_settings_section_api
 
 custom_404 = TemplateView.as_view(template_name="404.html")
 handler404 = "project.urls.custom_404"
@@ -160,4 +161,6 @@ urlpatterns = [
     path("api/menus/<int:menu_id>", menu_detail_api, name="menu-detail"),
     path("api/roles", roles_api, name="role-list"),
     path("api/roles/<int:role_id>", role_detail_api, name="role-detail"),
+    # -------------------------------system settings API-------------------------------
+    path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
 ]

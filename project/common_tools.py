@@ -13,6 +13,13 @@ def parse_json_body(request):
         return None, api_error("Invalid JSON body")
 
 
+def require_login(request):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return None, api_error(status=401, message="employee id is required")
+    return login_id, None
+
+
 # 格式化日期
 def parse_date(value):
     if value in (None, ""):

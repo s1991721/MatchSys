@@ -312,10 +312,11 @@
               <label for="gmail-auth">Gmail 认证文件</label>
               <input id="gmail-auth" type="file" accept=".json" />
               <div class="file-note">仅支持上传 Google OAuth 凭据 JSON 文件。</div>
+              <div class="file-note" id="gmail-auth-current"></div>
             </div>
             <div class="form-actions">
-              <button class="c-btn c-btn-secondary" type="button">连接测试</button>
-              <button class="c-btn c-btn-primary" type="button">保存配置</button>
+              <button class="c-btn c-btn-secondary" type="button" id="gmail-test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="gmail-save">保存配置</button>
             </div>
           </form>
         </section>
@@ -332,7 +333,7 @@
                 <input id="match-cycle" type="number" inputmode="numeric" step="1" min="1" placeholder="例如：14" />
               </div>
               <div class="form-actions">
-                <button class="c-btn c-btn-primary" type="button">保存配置</button>
+                <button class="c-btn c-btn-primary" type="button" id="match-save">保存配置</button>
               </div>
             </div>
           </form>
@@ -364,7 +365,7 @@
             </div>
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-primary" type="button">保存配置</button>
+            <button class="c-btn c-btn-primary" type="button" id="ai-save">保存配置</button>
           </div>
         </form>
       </section>
@@ -406,8 +407,8 @@
             <textarea id="backup-note" placeholder="例如：与主库保持实时同步"></textarea>
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button">保存备份配置</button>
+            <button class="c-btn c-btn-secondary" type="button" id="backup-test">连接测试</button>
+            <button class="c-btn c-btn-primary" type="button" id="backup-save">保存备份配置</button>
           </div>
         </form>
       </section>
@@ -447,6 +448,16 @@
     if (window.I18N) {
       window.I18N.apply();
     }
+    const apiBase = "/api/sys-settings";
+    const sections = {
+      businessEmail: "business-email",
+      match: "match",
+      ai: "ai",
+      backup: "backup",
+      sendin: "sendin",
+      tasks: "tasks",
+    };
+
     const taskList = document.getElementById("task-list");
     const addTaskButton = document.getElementById("add-task");
     const sendinList = document.getElementById("sendin-list");
@@ -455,33 +466,69 @@
     const deleteMessage = document.getElementById("delete-message");
     const confirmDeleteButton = document.getElementById("confirm-delete");
     const cancelDeleteButton = document.getElementById("cancel-delete");
+    const gmailAuthInput = document.getElementById("gmail-auth");
+    const gmailAuthCurrent = document.getElementById("gmail-auth-current");
+    const gmailSaveButton = document.getElementById("gmail-save");
+    const gmailTestButton = document.getElementById("gmail-test");
+    const matchSaveButton = document.getElementById("match-save");
+    const aiSaveButton = document.getElementById("ai-save");
+    const backupSaveButton = document.getElementById("backup-save");
+    const backupTestButton = document.getElementById("backup-test");
     let pendingDelete = null;
-    const systemTasks = [
-      {
-        name: "每日同步客户",
-        time: "09:00",
-        frequency: "每天",
-        method: "POST",
-        api: "https://api.example.com/sync",
-        body: '{"range":"today"}',
-      },
-      {
-        name: "每周汇总报表",
-        time: "20:00",
-        frequency: "每周",
-        method: "POST",
-        api: "https://api.example.com/report",
-        body: '{"week":"current"}',
-      },
-    ];
-    const sendinConfigs = [
-      {
-        email: "staff@company.com",
-        smtp: "smtp.gmail.com",
-        port: "587",
-        user: "张三",
-      },
-    ];
+    let systemTasks = [];
+    let sendinConfigs = [];
+    let businessEmailConfig = { auth_filename: "", auth_json: "" };
+
+    const notifyError = (message) => {
+      window.alert(message || "请求失败，请稍后再试。");
+    };
+
+    const flashButton = (button, text) => {
+      if (!button) return;
+      const original = button.textContent;
+      button.textContent = text;
+      button.disabled = true;
+      setTimeout(() => {
+        button.textContent = original;
+        button.disabled = false;
+      }, 1400);
+    };
+
+    const requestJson = (url, options) =>
+      fetch(url, {
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        ...options,
+      }).then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.success) {
+          const message = payload.message || "请求失败";
+          throw new Error(message);
+        }
+        return payload;
+      });
+
+    const fetchSettings = async (section, fallback) => {
+      try {
+        const payload = await requestJson(`${apiBase}/${section}`, { method: "GET" });
+        return payload.data && payload.data.settings !== undefined
+          ? payload.data.settings
+          : fallback;
+      } catch (error) {
+        console.warn(error);
+        return fallback;
+      }
+    };
+
+    const saveSettings = async (section, settings) => {
+      const payload = await requestJson(`${apiBase}/${section}`, {
+        method: "PUT",
+        body: JSON.stringify({ settings }),
+      });
+      return payload.data && payload.data.settings !== undefined
+        ? payload.data.settings
+        : settings;
+    };
 
     const taskFormHtml = (index, task) => `
       <li class="task-item">
@@ -526,7 +573,7 @@
           </div>
           <div class="form-actions">
             <button class="c-btn c-btn-success" type="button" data-run-now="${index}">立即执行</button>
-            <button class="c-btn c-btn-primary" type="button">保存任务</button>
+            <button class="c-btn c-btn-primary" type="button" data-save-task="${index}">保存任务</button>
             <button class="c-btn c-btn-danger" type="button" data-delete-task="${index}">删除</button>
           </div>
         </form>
@@ -577,45 +624,12 @@
       });
     }
 
-    if (taskList) {
-      renderTasks(systemTasks);
-      taskList.addEventListener("click", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
-        const runButton = target.closest("[data-run-now]");
-        const deleteButton = target.closest("[data-delete-task]");
-        if (deleteButton) {
-          const index = Number(deleteButton.getAttribute("data-delete-task"));
-          if (Number.isNaN(index)) return;
-          openDeleteModal("确定删除该定时任务吗？", () => {
-            systemTasks.splice(index, 1);
-            renderTasks(systemTasks);
-          });
-          return;
-        }
-        if (!runButton) return;
-        const index = runButton.getAttribute("data-run-now");
-        const statusEl = document.getElementById(`task-status-${index}`);
-        if (!statusEl) return;
-        const now = new Date();
-        statusEl.textContent = `已触发：${now.toLocaleString("zh-CN", {
-          hour12: false,
-        })}`;
-        statusEl.classList.add("success");
-      });
-    }
-
-    if (addTaskButton) {
-      addTaskButton.addEventListener("click", () => {
-        systemTasks.push({});
-        renderTasks(systemTasks);
-      });
-    }
 
     const sendinFormHtml = (index, config) => `
       <li class="config-item">
         <div class="config-head">
           <span class="config-title">配置 ${String(index + 1).padStart(2, "0")}</span>
+          <span class="inline-status" id="sendin-status-${index}"></span>
         </div>
         <form class="form-grid">
           <div class="form-field">
@@ -645,7 +659,7 @@
           </div>
           <div class="form-actions">
             <button class="c-btn c-btn-secondary" type="button">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button">保存配置</button>
+            <button class="c-btn c-btn-primary" type="button" data-save-sendin="${index}">保存配置</button>
             <button class="c-btn c-btn-danger" type="button" data-delete-sendin="${index}">删除</button>
           </div>
         </form>
@@ -661,19 +675,248 @@
         .join("");
     };
 
+
+    const aiToggleButtons = document.querySelectorAll(".ai-toggle button");
+    const aiFields = document.querySelectorAll("[data-ai-fields]");
+
+    const setAiMode = (mode) => {
+      aiToggleButtons.forEach((btn) => btn.classList.toggle("is-active", btn.getAttribute("data-ai-mode") === mode));
+      aiFields.forEach((block) => {
+        block.classList.toggle(
+          "is-active",
+          block.getAttribute("data-ai-fields") === mode
+        );
+      });
+    };
+
+    aiToggleButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const mode = button.getAttribute("data-ai-mode");
+        setAiMode(mode);
+      });
+    });
+
+    const getValue = (id) => {
+      const el = document.getElementById(id);
+      return el ? el.value : "";
+    };
+
+    const setValue = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.value = value == null ? "" : value;
+    };
+
+    const setInlineStatus = (id, text, success) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = text;
+      el.classList.toggle("success", Boolean(success));
+    };
+
+    const collectSendinConfig = (index) => ({
+      email: getValue(`sendin-email-${index}`).trim(),
+      password: getValue(`sendin-password-${index}`),
+      smtp: getValue(`sendin-smtp-${index}`).trim(),
+      port: getValue(`sendin-port-${index}`),
+      user: getValue(`sendin-user-${index}`),
+    });
+
+    const collectTaskConfig = (index) => ({
+      name: getValue(`task-name-${index}`).trim(),
+      time: getValue(`task-time-${index}`),
+      frequency: getValue(`task-frequency-${index}`),
+      method: getValue(`task-method-${index}`),
+      api: getValue(`task-api-${index}`).trim(),
+      body: getValue(`task-body-${index}`),
+    });
+
+    if (gmailAuthInput) {
+      gmailAuthInput.addEventListener("change", async (event) => {
+        const file = event.target.files ? event.target.files[0] : null;
+        if (!file) return;
+        try {
+          const content = await file.text();
+          businessEmailConfig = {
+            auth_filename: file.name || "",
+            auth_json: content,
+          };
+          if (gmailAuthCurrent) {
+            gmailAuthCurrent.textContent = businessEmailConfig.auth_filename
+              ? `已选择：${businessEmailConfig.auth_filename}`
+              : "已选择凭据";
+          }
+        } catch (error) {
+          notifyError("读取文件失败，请重试。");
+        }
+      });
+    }
+
+    if (gmailSaveButton) {
+      gmailSaveButton.addEventListener("click", async () => {
+        if (!businessEmailConfig.auth_json) {
+          notifyError("请先选择 Gmail 认证文件。");
+          return;
+        }
+        try {
+          businessEmailConfig = await saveSettings(sections.businessEmail, businessEmailConfig);
+          flashButton(gmailSaveButton, "已保存");
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (gmailTestButton) {
+      gmailTestButton.addEventListener("click", () => {
+        notifyError("连接测试暂未实现，请先保存配置。");
+      });
+    }
+
+    if (matchSaveButton) {
+      matchSaveButton.addEventListener("click", async () => {
+        const cycleValue = Number(getValue("match-cycle"));
+        if (!cycleValue || cycleValue < 1) {
+          notifyError("周期（天）必须大于 0。");
+          return;
+        }
+        const settings = { cycle_days: cycleValue };
+        try {
+          await saveSettings(sections.match, settings);
+          flashButton(matchSaveButton, "已保存");
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (aiSaveButton) {
+      aiSaveButton.addEventListener("click", async () => {
+        const modeButton = document.querySelector(".ai-toggle button.is-active");
+        const mode = modeButton ? modeButton.getAttribute("data-ai-mode") : "local";
+        const settings = {
+          mode,
+          local_model: getValue("ai-model-local").trim(),
+          cloud_model: getValue("ai-model-cloud").trim(),
+          cloud_api_key: getValue("ai-api-key"),
+        };
+        try {
+          await saveSettings(sections.ai, settings);
+          flashButton(aiSaveButton, "已保存");
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (backupSaveButton) {
+      backupSaveButton.addEventListener("click", async () => {
+        const settings = {
+          host: getValue("backup-host").trim(),
+          port: getValue("backup-port").trim(),
+          database: getValue("backup-db").trim(),
+          user: getValue("backup-user").trim(),
+          password: getValue("backup-password"),
+          ssl_mode: getValue("backup-ssl"),
+          note: getValue("backup-note").trim(),
+        };
+        try {
+          await saveSettings(sections.backup, settings);
+          flashButton(backupSaveButton, "已保存");
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (backupTestButton) {
+      backupTestButton.addEventListener("click", () => {
+        notifyError("连接测试暂未实现，请先保存配置。");
+      });
+    }
+
+    if (taskList) {
+      taskList.addEventListener("click", async (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const runButton = target.closest("[data-run-now]");
+        const deleteButton = target.closest("[data-delete-task]");
+        const saveButton = target.closest("[data-save-task]");
+        if (deleteButton) {
+          const index = Number(deleteButton.getAttribute("data-delete-task"));
+          if (Number.isNaN(index)) return;
+          openDeleteModal("确定删除该定时任务吗？", async () => {
+            systemTasks.splice(index, 1);
+            renderTasks(systemTasks);
+            try {
+              await saveSettings(sections.tasks, systemTasks);
+            } catch (error) {
+              notifyError(error.message);
+            }
+          });
+          return;
+        }
+        if (saveButton) {
+          const index = Number(saveButton.getAttribute("data-save-task"));
+          if (Number.isNaN(index)) return;
+          systemTasks[index] = collectTaskConfig(index);
+          try {
+            await saveSettings(sections.tasks, systemTasks);
+            setInlineStatus(`task-status-${index}`, "已保存", true);
+          } catch (error) {
+            notifyError(error.message);
+          }
+          return;
+        }
+        if (!runButton) return;
+        const index = runButton.getAttribute("data-run-now");
+        const statusEl = document.getElementById(`task-status-${index}`);
+        if (!statusEl) return;
+        const now = new Date();
+        statusEl.textContent = `已触发：${now.toLocaleString("zh-CN", {
+          hour12: false,
+        })}`;
+        statusEl.classList.add("success");
+      });
+    }
+
+    if (addTaskButton) {
+      addTaskButton.addEventListener("click", () => {
+        systemTasks.push({});
+        renderTasks(systemTasks);
+      });
+    }
+
     if (sendinList) {
-      renderSendinConfigs(sendinConfigs);
-      sendinList.addEventListener("click", (event) => {
+      sendinList.addEventListener("click", async (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
         const deleteButton = target.closest("[data-delete-sendin]");
-        if (!deleteButton) return;
-        const index = Number(deleteButton.getAttribute("data-delete-sendin"));
-        if (Number.isNaN(index)) return;
-        openDeleteModal("确定删除该送信配置吗？", () => {
-          sendinConfigs.splice(index, 1);
-          renderSendinConfigs(sendinConfigs);
-        });
+        const saveButton = target.closest("[data-save-sendin]");
+        if (deleteButton) {
+          const index = Number(deleteButton.getAttribute("data-delete-sendin"));
+          if (Number.isNaN(index)) return;
+          openDeleteModal("确定删除该送信配置吗？", async () => {
+            sendinConfigs.splice(index, 1);
+            renderSendinConfigs(sendinConfigs);
+            try {
+              await saveSettings(sections.sendin, sendinConfigs);
+            } catch (error) {
+              notifyError(error.message);
+            }
+          });
+          return;
+        }
+        if (saveButton) {
+          const index = Number(saveButton.getAttribute("data-save-sendin"));
+          if (Number.isNaN(index)) return;
+          sendinConfigs[index] = collectSendinConfig(index);
+          try {
+            await saveSettings(sections.sendin, sendinConfigs);
+            setInlineStatus(`sendin-status-${index}`, "已保存", true);
+          } catch (error) {
+            notifyError(error.message);
+          }
+        }
       });
     }
 
@@ -684,22 +927,53 @@
       });
     }
 
-    const aiToggleButtons = document.querySelectorAll(".ai-toggle button");
-    const aiFields = document.querySelectorAll("[data-ai-fields]");
+    const loadSettings = async () => {
+      businessEmailConfig = await fetchSettings(sections.businessEmail, businessEmailConfig);
+      if (gmailAuthCurrent) {
+        gmailAuthCurrent.textContent = businessEmailConfig.auth_filename
+          ? `已保存：${businessEmailConfig.auth_filename}`
+          : businessEmailConfig.auth_json
+            ? "已保存凭据"
+            : "";
+      }
 
-    aiToggleButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        aiToggleButtons.forEach((btn) => btn.classList.remove("is-active"));
-        button.classList.add("is-active");
-        const mode = button.getAttribute("data-ai-mode");
-        aiFields.forEach((block) => {
-          block.classList.toggle(
-            "is-active",
-            block.getAttribute("data-ai-fields") === mode
-          );
-        });
+      const matchSettings = await fetchSettings(sections.match, { cycle_days: 14 });
+      setValue("match-cycle", matchSettings.cycle_days || "");
+
+      const aiSettings = await fetchSettings(sections.ai, {
+        mode: "local",
+        local_model: "",
+        cloud_model: "",
+        cloud_api_key: "",
       });
-    });
+      setAiMode(aiSettings.mode || "local");
+      setValue("ai-model-local", aiSettings.local_model || "");
+      setValue("ai-model-cloud", aiSettings.cloud_model || "");
+      setValue("ai-api-key", aiSettings.cloud_api_key || "");
+
+      const backupSettings = await fetchSettings(sections.backup, {});
+      setValue("backup-host", backupSettings.host || "");
+      setValue("backup-port", backupSettings.port || "");
+      setValue("backup-db", backupSettings.database || "");
+      setValue("backup-user", backupSettings.user || "");
+      setValue("backup-password", backupSettings.password || "");
+      setValue("backup-ssl", backupSettings.ssl_mode || "require");
+      setValue("backup-note", backupSettings.note || "");
+
+      sendinConfigs = await fetchSettings(sections.sendin, []);
+      if (!Array.isArray(sendinConfigs)) {
+        sendinConfigs = [];
+      }
+      renderSendinConfigs(sendinConfigs);
+
+      systemTasks = await fetchSettings(sections.tasks, []);
+      if (!Array.isArray(systemTasks)) {
+        systemTasks = [];
+      }
+      renderTasks(systemTasks);
+    };
+
+    loadSettings();
   </script>
 </body>
 </html>

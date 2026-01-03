@@ -416,9 +416,9 @@
       <section class="c-card c-card-pad settings-card">
         <h2 class="c-card-title">送信配置</h2>
         <p class="settings-desc">配置常用邮箱登录信息，并指定使用人。</p>
-        <ul class="config-list" id="sendin-list"></ul>
+        <ul class="config-list" id="sendmsg-list"></ul>
         <div class="form-actions">
-          <button class="c-btn c-btn-secondary" type="button" id="add-sendin">新增配置</button>
+          <button class="c-btn c-btn-secondary" type="button" id="add-sendmsg">新增配置</button>
         </div>
       </section>
 
@@ -454,14 +454,14 @@
       match: "match",
       ai: "ai",
       backup: "backup",
-      sendin: "sendin",
+      sendmsg: "sendmsg",
       tasks: "tasks",
     };
 
     const taskList = document.getElementById("task-list");
     const addTaskButton = document.getElementById("add-task");
-    const sendinList = document.getElementById("sendin-list");
-    const addSendinButton = document.getElementById("add-sendin");
+    const sendmsgList = document.getElementById("sendmsg-list");
+    const addSendmsgButton = document.getElementById("add-sendmsg");
     const deleteModal = document.getElementById("delete-modal");
     const deleteMessage = document.getElementById("delete-message");
     const confirmDeleteButton = document.getElementById("confirm-delete");
@@ -476,7 +476,7 @@
     const backupTestButton = document.getElementById("backup-test");
     let pendingDelete = null;
     let systemTasks = [];
-    let sendinConfigs = [];
+    let sendmsgConfigs = [];
     let businessEmailConfig = { auth_filename: "", auth_json: "" };
 
     const notifyError = (message) => {
@@ -625,32 +625,32 @@
     }
 
 
-    const sendinFormHtml = (index, config) => `
+    const sendmsgFormHtml = (index, config) => `
       <li class="config-item">
         <div class="config-head">
           <span class="config-title">配置 ${String(index + 1).padStart(2, "0")}</span>
-          <span class="inline-status" id="sendin-status-${index}"></span>
+          <span class="inline-status" id="sendmsg-status-${index}"></span>
         </div>
         <form class="form-grid">
           <div class="form-field">
-            <label for="sendin-email-${index}">邮箱账号</label>
-            <input id="sendin-email-${index}" type="email" placeholder="staff@company.com" value="${config.email || ""}" />
+            <label for="sendmsg-email-${index}">邮箱账号</label>
+            <input id="sendmsg-email-${index}" type="email" placeholder="staff@company.com" value="${config.email || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendin-password-${index}">密码 / 授权码</label>
-            <input id="sendin-password-${index}" type="password" placeholder="••••••••" value="${config.password || ""}" />
+            <label for="sendmsg-password-${index}">密码 / 授权码</label>
+            <input id="sendmsg-password-${index}" type="password" placeholder="••••••••" value="${config.password || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendin-smtp-${index}">SMTP 服务器</label>
-            <input id="sendin-smtp-${index}" type="text" placeholder="smtp.gmail.com" value="${config.smtp || ""}" />
+            <label for="sendmsg-smtp-${index}">SMTP 服务器</label>
+            <input id="sendmsg-smtp-${index}" type="text" placeholder="smtp.gmail.com" value="${config.smtp || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendin-port-${index}">端口</label>
-            <input id="sendin-port-${index}" type="number" placeholder="587" value="${config.port || ""}" />
+            <label for="sendmsg-port-${index}">端口</label>
+            <input id="sendmsg-port-${index}" type="number" placeholder="587" value="${config.port || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendin-user-${index}">使用人</label>
-            <select id="sendin-user-${index}">
+            <label for="sendmsg-user-${index}">使用人</label>
+            <select id="sendmsg-user-${index}">
               <option ${!config.user ? "selected" : ""}>请选择使用人</option>
               <option ${config.user === "张三" ? "selected" : ""}>张三</option>
               <option ${config.user === "李四" ? "selected" : ""}>李四</option>
@@ -659,19 +659,19 @@
           </div>
           <div class="form-actions">
             <button class="c-btn c-btn-secondary" type="button">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button" data-save-sendin="${index}">保存配置</button>
-            <button class="c-btn c-btn-danger" type="button" data-delete-sendin="${index}">删除</button>
+            <button class="c-btn c-btn-primary" type="button" data-save-sendmsg="${index}">保存配置</button>
+            <button class="c-btn c-btn-danger" type="button" data-delete-sendmsg="${index}">删除</button>
           </div>
         </form>
       </li>
     `;
 
-    const renderSendinConfigs = (configs) => {
-      if (!sendinList) return;
-      sendinList.innerHTML = "";
+    const renderSendmsgConfigs = (configs) => {
+      if (!sendmsgList) return;
+      sendmsgList.innerHTML = "";
       const items = configs.length ? configs : [{}];
-      sendinList.innerHTML = items
-        .map((config, index) => sendinFormHtml(index, config))
+      sendmsgList.innerHTML = items
+        .map((config, index) => sendmsgFormHtml(index, config))
         .join("");
     };
 
@@ -713,12 +713,12 @@
       el.classList.toggle("success", Boolean(success));
     };
 
-    const collectSendinConfig = (index) => ({
-      email: getValue(`sendin-email-${index}`).trim(),
-      password: getValue(`sendin-password-${index}`),
-      smtp: getValue(`sendin-smtp-${index}`).trim(),
-      port: getValue(`sendin-port-${index}`),
-      user: getValue(`sendin-user-${index}`),
+    const collectSendmsgConfig = (index) => ({
+      email: getValue(`sendmsg-email-${index}`).trim(),
+      password: getValue(`sendmsg-password-${index}`),
+      smtp: getValue(`sendmsg-smtp-${index}`).trim(),
+      port: getValue(`sendmsg-port-${index}`),
+      user: getValue(`sendmsg-user-${index}`),
     });
 
     const collectTaskConfig = (index) => ({
@@ -886,20 +886,20 @@
       });
     }
 
-    if (sendinList) {
-      sendinList.addEventListener("click", async (event) => {
+    if (sendmsgList) {
+      sendmsgList.addEventListener("click", async (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
-        const deleteButton = target.closest("[data-delete-sendin]");
-        const saveButton = target.closest("[data-save-sendin]");
+        const deleteButton = target.closest("[data-delete-sendmsg]");
+        const saveButton = target.closest("[data-save-sendmsg]");
         if (deleteButton) {
-          const index = Number(deleteButton.getAttribute("data-delete-sendin"));
+          const index = Number(deleteButton.getAttribute("data-delete-sendmsg"));
           if (Number.isNaN(index)) return;
           openDeleteModal("确定删除该送信配置吗？", async () => {
-            sendinConfigs.splice(index, 1);
-            renderSendinConfigs(sendinConfigs);
+            sendmsgConfigs.splice(index, 1);
+            renderSendmsgConfigs(sendmsgConfigs);
             try {
-              await saveSettings(sections.sendin, sendinConfigs);
+              await saveSettings(sections.sendmsg, sendmsgConfigs);
             } catch (error) {
               notifyError(error.message);
             }
@@ -907,12 +907,12 @@
           return;
         }
         if (saveButton) {
-          const index = Number(saveButton.getAttribute("data-save-sendin"));
+          const index = Number(saveButton.getAttribute("data-save-sendmsg"));
           if (Number.isNaN(index)) return;
-          sendinConfigs[index] = collectSendinConfig(index);
+          sendmsgConfigs[index] = collectSendmsgConfig(index);
           try {
-            await saveSettings(sections.sendin, sendinConfigs);
-            setInlineStatus(`sendin-status-${index}`, "已保存", true);
+            await saveSettings(sections.sendmsg, sendmsgConfigs);
+            setInlineStatus(`sendmsg-status-${index}`, "已保存", true);
           } catch (error) {
             notifyError(error.message);
           }
@@ -920,10 +920,10 @@
       });
     }
 
-    if (addSendinButton) {
-      addSendinButton.addEventListener("click", () => {
-        sendinConfigs.push({});
-        renderSendinConfigs(sendinConfigs);
+    if (addSendmsgButton) {
+      addSendmsgButton.addEventListener("click", () => {
+        sendmsgConfigs.push({});
+        renderSendmsgConfigs(sendmsgConfigs);
       });
     }
 
@@ -960,11 +960,11 @@
       setValue("backup-ssl", backupSettings.ssl_mode || "require");
       setValue("backup-note", backupSettings.note || "");
 
-      sendinConfigs = await fetchSettings(sections.sendin, []);
-      if (!Array.isArray(sendinConfigs)) {
-        sendinConfigs = [];
+      sendmsgConfigs = await fetchSettings(sections.sendmsg, []);
+      if (!Array.isArray(sendmsgConfigs)) {
+        sendmsgConfigs = [];
       }
-      renderSendinConfigs(sendinConfigs);
+      renderSendmsgConfigs(sendmsgConfigs);
 
       systemTasks = await fetchSettings(sections.tasks, []);
       if (!Array.isArray(systemTasks)) {

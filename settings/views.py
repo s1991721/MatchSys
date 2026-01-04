@@ -109,15 +109,17 @@ def _handle_ai(settings_payload, login_id):
     }
     return _save_setting("ai", settings_payload, login_id)
 
+
+# 保存Match 配置
 def _handle_match(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
-    try:
-        cycle_days = int(settings_payload.get("cycle_days", 0))
-    except (TypeError, ValueError):
-        cycle_days = 0
+
+    cycle_days = int(settings_payload.get("cycle_days", 0))
+
     if cycle_days < 1:
         return api_error("Invalid cycle_days")
+
     return _save_setting("match", {"cycle_days": cycle_days}, login_id)
 
 

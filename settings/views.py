@@ -3,6 +3,8 @@ import threading
 from pathlib import Path
 
 from django.conf import settings as django_settings
+from django.utils import timezone
+from django.utils.dateparse import parse_time
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -10,7 +12,7 @@ from bpmatch.authorize_gmail import test_connection
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
 from settings.llm_check import check_cloud_model, check_local_model
-from settings.models import SysSettings
+from settings.models import ScheduledTask, SysSettings
 from settings.timer_task import run_time_to_save, run_time_to_clean
 
 # 失败默认返回值
@@ -37,7 +39,6 @@ SECTION_DEFAULTS = {
         "note": "",
     },
     "sendmsg": [],
-    "tasks": [],
 }
 
 
@@ -151,7 +152,87 @@ def _handle_tasks(settings_payload, login_id):
         settings_payload = []
     if not isinstance(settings_payload, list):
         return api_error("Invalid settings payload")
-    return _save_setting("tasks", settings_payload, login_id)
+    existing_tasks = {
+        task.id: task
+        for task in ScheduledTask.objects.filter(deleted_at__isnull=True)
+    }
+    seen_task_ids = set()
+    saved_tasks = []
+
+    for item in settings_payload:
+        if not isinstance(item, dict):
+            return api_error("Invalid task payload")
+        raw_id = item.get("id")
+        task_id = None
+        if raw_id not in (None, ""):
+            try:
+                task_id = int(raw_id)
+            except (TypeError, ValueError):
+                return api_error("Invalid task id")
+
+        task = existing_tasks.get(task_id) if task_id else ScheduledTask()
+        task.name = str(item.get("name") or "").strip()
+
+        time_raw = str(item.get("time") or "").strip()
+        task_time = parse_time(time_raw) if time_raw else None
+        task.time = task_time
+
+        task.frequency = str(item.get("frequency") or "").strip()
+        task.cron_expr = str(item.get("cron_expr") or "").strip()
+
+        method = str(item.get("method") or "POST").strip().upper()
+        task.method = method
+
+        task.api = str(item.get("api") or "").strip()
+        task.body = str(item.get("body") or "")
+
+        enabled = item.get("enabled")
+        if enabled is None and task.id:
+            pass
+        else:
+            task.enabled = bool(enabled) if enabled is not None else True
+
+        if task.id:
+            task.updated_by = login_id
+        else:
+            task.created_by = login_id
+            task.updated_by = login_id
+
+        task.save()
+        saved_tasks.append(task)
+        seen_task_ids.add(task.id)
+
+    for task in existing_tasks.values():
+        if task.id not in seen_task_ids:
+            task.deleted_at = timezone.now()
+            task.save(update_fields=["deleted_at"])
+
+    return api_success(
+        data={"name": "tasks", "settings": [_serialize_task(task) for task in saved_tasks]}
+    )
+
+
+def _serialize_task(task: ScheduledTask):
+    return {
+        "id": task.id,
+        "name": task.name,
+        "time": task.time.strftime("%H:%M") if task.time else "",
+        "frequency": task.frequency,
+        "cron_expr": task.cron_expr,
+        "method": task.method,
+        "api": task.api,
+        "body": task.body,
+        "enabled": task.enabled,
+        "last_run_at": task.last_run_at.isoformat() if task.last_run_at else None,
+        "next_run_at": task.next_run_at.isoformat() if task.next_run_at else None,
+        "last_status": task.last_status,
+        "last_error": task.last_error,
+    }
+
+
+def _list_tasks():
+    tasks = ScheduledTask.objects.filter(deleted_at__isnull=True).order_by("id")
+    return [_serialize_task(task) for task in tasks]
 
 
 # 各个配置的处理方法
@@ -160,7 +241,6 @@ SECTION_HANDLERS = {
     "ai": _handle_ai,
     "backup": _handle_backup,
     "sendmsg": _handle_sendmsg,
-    "tasks": _handle_tasks,
 }
 
 
@@ -202,6 +282,24 @@ def sys_settings_section_api(request, section):
         return handler(settings_payload, login_id)
 
     return api_error("Unknown settings section", status=404)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def sys_tasks_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        return api_success(data={"tasks": _list_tasks()})
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if "tasks" not in payload:
+        return api_error("Missing field: tasks")
+    return _handle_tasks(payload.get("tasks"), login_id)
 
 
 # ---------------------------------------------配置的执行项---------------------------------------------

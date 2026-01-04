@@ -159,13 +159,13 @@
       window.I18N.apply();
     }
     const apiBase = "/api/sys-settings";
+    const tasksApi = "/api/sys-tasks";
     const sections = {
       businessEmail: "business-email",
       match: "match",
       ai: "ai",
       backup: "backup",
       sendmsg: "sendmsg",
-      tasks: "tasks",
     };
 
     const taskList = document.getElementById("task-list");
@@ -269,7 +269,86 @@
         : settings;
     };
 
-    const taskFormHtml = (index, task) => `
+    const fetchTasks = async () => {
+      try {
+        const payload = await requestJson(tasksApi, { method: "GET" });
+        return payload.data && Array.isArray(payload.data.tasks)
+          ? payload.data.tasks
+          : [];
+      } catch (error) {
+        console.warn(error);
+        return [];
+      }
+    };
+
+    const saveTasks = async (tasks) => {
+      const payload = await requestJson(tasksApi, {
+        method: "POST",
+        body: JSON.stringify({ tasks }),
+      });
+      return payload.data && payload.data.settings !== undefined
+        ? payload.data.settings
+        : tasks;
+    };
+
+    const parseCronParts = (cronExpr) => {
+      if (!cronExpr) return [];
+      const parts = cronExpr.trim().split(/\s+/);
+      return parts.length >= 5 ? parts : [];
+    };
+
+    const toIntInRange = (value, min, max) => {
+      const num = Number(value);
+      if (!Number.isInteger(num)) return "";
+      if (num < min || num > max) return "";
+      return String(num);
+    };
+
+    const normalizeWeekday = (value) => {
+      const numeric = toIntInRange(value, 0, 7);
+      if (!numeric) return "1";
+      return numeric === "0" ? "7" : numeric;
+    };
+
+    const resolveTaskDefaults = (task) => {
+      const frequency = task.frequency || "每天";
+      const cronParts = parseCronParts(task.cron_expr);
+      const weekday = cronParts.length ? normalizeWeekday(cronParts[4]) : "1";
+      const monthday = cronParts.length ? toIntInRange(cronParts[2], 1, 31) || "1" : "1";
+      const cronExpr = task.cron_expr || "";
+      return { frequency, weekday, monthday, cronExpr };
+    };
+
+    const renderWeekdayOptions = (selected) => {
+      const options = [
+        { value: "1", label: "周一" },
+        { value: "2", label: "周二" },
+        { value: "3", label: "周三" },
+        { value: "4", label: "周四" },
+        { value: "5", label: "周五" },
+        { value: "6", label: "周六" },
+        { value: "7", label: "周日" },
+      ];
+      return options
+        .map(
+          (option) =>
+            `<option value="${option.value}" ${option.value === selected ? "selected" : ""}>${option.label}</option>`
+        )
+        .join("");
+    };
+
+    const renderMonthdayOptions = (selected) => {
+      let options = "";
+      for (let day = 1; day <= 31; day += 1) {
+        const value = String(day);
+        options += `<option value="${value}" ${value === selected ? "selected" : ""}>${value} 日</option>`;
+      }
+      return options;
+    };
+
+    const taskFormHtml = (index, task) => {
+      const defaults = resolveTaskDefaults(task);
+      return `
       <li class="task-item">
         <div class="task-head">
           <span class="task-title">任务 ${String(index + 1).padStart(2, "0")}</span>
@@ -286,12 +365,28 @@
           </div>
           <div class="form-field">
             <label for="task-frequency-${index}">执行频率</label>
-            <select id="task-frequency-${index}">
-              <option ${task.frequency === "每天" ? "selected" : ""}>每天</option>
-              <option ${task.frequency === "每周" ? "selected" : ""}>每周</option>
-              <option ${task.frequency === "每月" ? "selected" : ""}>每月</option>
-              <option ${task.frequency === "自定义 Cron" ? "selected" : ""}>自定义 Cron</option>
+            <select id="task-frequency-${index}" data-task-frequency="${index}">
+              <option ${defaults.frequency === "每天" ? "selected" : ""}>每天</option>
+              <option ${defaults.frequency === "每周" ? "selected" : ""}>每周</option>
+              <option ${defaults.frequency === "每月" ? "selected" : ""}>每月</option>
+              <option ${defaults.frequency === "自定义 Cron" ? "selected" : ""}>自定义 Cron</option>
             </select>
+          </div>
+          <div class="form-field hidden" data-task-index="${index}" data-frequency-field="每周">
+            <label for="task-weekday-${index}">每周执行</label>
+            <select id="task-weekday-${index}">
+              ${renderWeekdayOptions(defaults.weekday)}
+            </select>
+          </div>
+          <div class="form-field hidden" data-task-index="${index}" data-frequency-field="每月">
+            <label for="task-monthday-${index}">每月执行</label>
+            <select id="task-monthday-${index}">
+              ${renderMonthdayOptions(defaults.monthday)}
+            </select>
+          </div>
+          <div class="form-field full hidden" data-task-index="${index}" data-frequency-field="自定义 Cron">
+            <label for="task-cron-${index}">Cron 表达式</label>
+            <input id="task-cron-${index}" type="text" placeholder="0 9 * * 1-5" value="${defaults.cronExpr}" />
           </div>
           <div class="form-field">
             <label for="task-method-${index}">请求方式</label>
@@ -318,12 +413,28 @@
         </form>
       </li>
     `;
+    };
+
+    const updateTaskFrequencyUI = (index, frequency) => {
+      const resolved = frequency || getValue(`task-frequency-${index}`) || "每天";
+      const fields = document.querySelectorAll(
+        `[data-task-index="${index}"][data-frequency-field]`
+      );
+      fields.forEach((field) => {
+        const match = field.getAttribute("data-frequency-field") === resolved;
+        field.classList.toggle("hidden", !match);
+      });
+    };
 
     const renderTasks = (tasks) => {
       if (!taskList) return;
       taskList.innerHTML = "";
       const items = tasks.length ? tasks : [{}];
       taskList.innerHTML = items.map((task, index) => taskFormHtml(index, task)).join("");
+      items.forEach((task, index) => {
+        const defaults = resolveTaskDefaults(task);
+        updateTaskFrequencyUI(index, defaults.frequency);
+      });
     };
 
     const openDeleteModal = (message, onConfirm) => {
@@ -472,14 +583,55 @@
       user: getValue(`sendmsg-user-${index}`),
     });
 
-    const collectTaskConfig = (index) => ({
-      name: getValue(`task-name-${index}`).trim(),
-      time: getValue(`task-time-${index}`),
-      frequency: getValue(`task-frequency-${index}`),
-      method: getValue(`task-method-${index}`),
-      api: getValue(`task-api-${index}`).trim(),
-      body: getValue(`task-body-${index}`),
-    });
+    const parseTimeParts = (timeValue) => {
+      if (!timeValue) return null;
+      const parts = timeValue.split(":");
+      if (parts.length !== 2) return null;
+      const hour = Number(parts[0]);
+      const minute = Number(parts[1]);
+      if (!Number.isInteger(hour) || !Number.isInteger(minute)) return null;
+      if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+      return { hour: String(hour), minute: String(minute) };
+    };
+
+    const buildCronExpr = (frequency, timeValue, weekdayValue, monthdayValue, customValue) => {
+      if (frequency === "自定义 Cron") return customValue.trim();
+      const timeParts = parseTimeParts(timeValue);
+      if (!timeParts) return "";
+      const minute = timeParts.minute;
+      const hour = timeParts.hour;
+      if (frequency === "每天") return `${minute} ${hour} * * *`;
+      if (frequency === "每周") {
+        const weekday = normalizeWeekday(weekdayValue);
+        return `${minute} ${hour} * * ${weekday}`;
+      }
+      if (frequency === "每月") {
+        const monthday = toIntInRange(monthdayValue, 1, 31) || "1";
+        return `${minute} ${hour} ${monthday} * *`;
+      }
+      return "";
+    };
+
+    const collectTaskConfig = (index) => {
+      const frequency = getValue(`task-frequency-${index}`);
+      const cronExpr = buildCronExpr(
+        frequency,
+        getValue(`task-time-${index}`),
+        getValue(`task-weekday-${index}`),
+        getValue(`task-monthday-${index}`),
+        getValue(`task-cron-${index}`)
+      );
+      return {
+        id: systemTasks[index] ? systemTasks[index].id : null,
+        name: getValue(`task-name-${index}`).trim(),
+        time: getValue(`task-time-${index}`),
+        frequency,
+        cron_expr: cronExpr,
+        method: getValue(`task-method-${index}`),
+        api: getValue(`task-api-${index}`).trim(),
+        body: getValue(`task-body-${index}`),
+      };
+    };
 
     const syncAiModelInputs = (sourceId, targetId) => {
       const source = document.getElementById(sourceId);
@@ -585,7 +737,7 @@
             ? getValue("ai-model-cloud").trim()
             : getValue("ai-model-local").trim();
         const settings = {
-          mode_type: mode,
+          model_type: mode,
           model_name: modelName,
           api_key: getValue("ai-api-key"),
         };
@@ -656,6 +808,15 @@
     }
 
     if (taskList) {
+      taskList.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (!target.matches("[data-task-frequency]")) return;
+        const index = Number(target.getAttribute("data-task-frequency"));
+        if (Number.isNaN(index)) return;
+        updateTaskFrequencyUI(index, target.value);
+      });
+
       taskList.addEventListener("click", async (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
@@ -669,7 +830,7 @@
             systemTasks.splice(index, 1);
             renderTasks(systemTasks);
             try {
-              await saveSettings(sections.tasks, systemTasks);
+              await saveTasks(systemTasks);
             } catch (error) {
               notifyError(error.message);
             }
@@ -681,8 +842,14 @@
           if (Number.isNaN(index)) return;
           systemTasks[index] = collectTaskConfig(index);
           try {
-            await saveSettings(sections.tasks, systemTasks);
+            const saved = await saveTasks(systemTasks);
+            if (Array.isArray(saved)) {
+              systemTasks = saved;
+              renderTasks(systemTasks);
+            }
             setInlineStatus(`task-status-${index}`, "已保存", true);
+            const freshSaveButton = document.querySelector(`[data-save-task="${index}"]`);
+            flashButton(freshSaveButton, "已保存");
           } catch (error) {
             notifyError(error.message);
           }
@@ -759,11 +926,11 @@
       setValue("match-cycle", matchSettings.cycle_days || "");
 
       const aiSettings = await fetchSettings(sections.ai, {
-        mode_type: "local",
+        model_type: "local",
         model_name: "",
         api_key: "",
       });
-      const aiMode = aiSettings.mode_type || aiSettings.mode || "local";
+      const aiMode = aiSettings.model_type || aiSettings.mode || "local";
       const aiModelName =
         aiSettings.model_name ||
         (aiMode === "cloud" ? aiSettings.cloud_model : aiSettings.local_model) ||
@@ -790,7 +957,7 @@
       }
       renderSendmsgConfigs(sendmsgConfigs);
 
-      systemTasks = await fetchSettings(sections.tasks, []);
+      systemTasks = await fetchTasks();
       if (!Array.isArray(systemTasks)) {
         systemTasks = [];
       }

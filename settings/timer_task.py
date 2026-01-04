@@ -10,6 +10,7 @@ from django.utils.dateparse import parse_datetime
 from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo
+from settings.models import SysSettings
 
 
 def _ensure_time_to_save_logger(date_tag: str, logger: logging.Logger):
@@ -36,7 +37,20 @@ def _ensure_time_to_save_logger(date_tag: str, logger: logging.Logger):
 # -------------------------------------分析邮件
 logger_save = logging.getLogger("bpmatch.time_to_save")
 
-TIME_SAVE_DAYS = 14
+# 默认周期天数
+DEFAULT_CYCLE_DAYS = 14
+
+# 获取Match 配置周期天数
+def _get_cycle_days():
+    record = SysSettings.objects.filter(name="match", deleted_at__isnull=True).first()
+    if not record or not isinstance(record.settings, dict):
+        return DEFAULT_CYCLE_DAYS
+    value = record.settings.get("cycle_days", DEFAULT_CYCLE_DAYS)
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return DEFAULT_CYCLE_DAYS
+    return value if value > 0 else DEFAULT_CYCLE_DAYS
 
 
 def run_time_to_save():
@@ -47,7 +61,7 @@ def run_time_to_save():
     logger_save.info("time_to_save started at %s", started_at.isoformat())
     try:
         end_date = timezone.now().date()
-        start_date = end_date - timedelta(days=TIME_SAVE_DAYS)
+        start_date = end_date - timedelta(days=_get_cycle_days())
         gmail = GmailTool()
 
         page = 1

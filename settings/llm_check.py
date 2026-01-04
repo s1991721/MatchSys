@@ -1,0 +1,63 @@
+import json
+import subprocess
+import urllib
+
+from project.api import api_error, api_success
+
+
+# 检测本地模型
+def check_local_model(model_name):
+    try:
+        list_result = subprocess.run(
+            ["ollama", "list"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except FileNotFoundError:
+        return api_error("Ollama 未安装或命令不可用")
+    except subprocess.CalledProcessError as exc:
+        message = (exc.stderr or exc.stdout or "Ollama 执行失败").strip()
+        return api_error(message)
+    models = set()
+    for line in (list_result.stdout or "").splitlines():
+        line = line.strip()
+        if not line or line.lower().startswith("name"):
+            continue
+        model = line.split()[0]
+        if model:
+            models.add(model)
+    if model_name not in models:
+        return api_error("模型不存在，请先下载。")
+
+    return api_success()
+
+
+# 检测云端模型
+def check_cloud_model(model_name, api_key):
+    try:
+        request_payload = json.dumps(
+            {
+                "model": model_name,
+                "messages": [{"role": "user", "content": "ping"}],
+                "max_tokens": 1,
+            }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            "https://api.openai.com/v1/chat/completions",
+            data=request_payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {api_key}",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            if resp.status != 200:
+                return api_error("OpenAI 接口返回失败")
+            _ = resp.read()
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", "ignore")
+        return api_error(detail or "OpenAI 接口返回失败")
+    except urllib.error.URLError as exc:
+        return api_error(str(exc.reason) or "OpenAI 接口请求失败")

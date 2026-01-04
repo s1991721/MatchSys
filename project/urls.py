@@ -70,6 +70,7 @@ from permission.views import (
     role_detail_api,
 )
 from settings.views import (
+    sys_settings_ai_test_api,
     sys_settings_gmail_test_api,
     sys_settings_section_api,
     time_to_save,
@@ -188,6 +189,7 @@ urlpatterns = [
     # -------------------------------system settings API-------------------------------
     path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
     path("api/sys-settings/business-email/test", sys_settings_gmail_test_api, name="sys-settings-gmail-test"),
+    path("api/sys-settings/ai/test", sys_settings_ai_test_api, name="sys-settings-ai-test"),
     path("api/time-to-save", time_to_save, name="time_to_save"),
     path("api/time-to-claen", time_to_clean, name="time_to_clean"),
     path("api/time-to-backup", time_to_backup, name="time_to_backup"),

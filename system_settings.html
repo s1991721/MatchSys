@@ -57,23 +57,26 @@
         <form class="form-grid form-grid-spaced">
           <div class="ai-fields is-active" data-ai-fields="local">
             <div class="form-field full">
-              <label for="ai-model-local">模型名</label>
+              <label for="ai-model-local">模型名称</label>
               <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" />
+              <div class="hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
             </div>
           </div>
           <div class="ai-fields" data-ai-fields="cloud">
             <div class="form-field full">
-              <label for="ai-model-cloud">模型名</label>
+              <label for="ai-model-cloud">模型名称</label>
               <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" />
             </div>
             <div class="form-field full">
               <label for="ai-api-key">API Key</label>
-              <input id="ai-api-key" type="password" placeholder="sk-xxxxxxxxxxxxxxxx" />
+              <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" />
             </div>
           </div>
           <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button" id="ai-test">连接测试</button>
             <button class="c-btn c-btn-primary" type="button" id="ai-save">保存配置</button>
           </div>
+          <div class="hint" id="ai-test-status"></div>
         </form>
       </section>
 
@@ -179,6 +182,8 @@
     const gmailTestButton = document.getElementById("gmail-test");
     const matchSaveButton = document.getElementById("match-save");
     const aiSaveButton = document.getElementById("ai-save");
+    const aiTestButton = document.getElementById("ai-test");
+    const aiTestStatus = document.getElementById("ai-test-status");
     const backupSaveButton = document.getElementById("backup-save");
     const backupTestButton = document.getElementById("backup-test");
     let pendingDelete = null;
@@ -447,6 +452,18 @@
       el.classList.toggle("success", Boolean(success));
     };
 
+    const setAiTestStatus = (data) => {
+      if (!aiTestStatus) return;
+      if (!data) {
+        aiTestStatus.textContent = "";
+        aiTestStatus.classList.remove("success");
+        return;
+      }
+      const message = data.message || "";
+      aiTestStatus.textContent = message;
+      aiTestStatus.classList.toggle("success", data.status === "ready");
+    };
+
     const collectSendmsgConfig = (index) => ({
       email: getValue(`sendmsg-email-${index}`).trim(),
       password: getValue(`sendmsg-password-${index}`),
@@ -463,6 +480,18 @@
       api: getValue(`task-api-${index}`).trim(),
       body: getValue(`task-body-${index}`),
     });
+
+    const syncAiModelInputs = (sourceId, targetId) => {
+      const source = document.getElementById(sourceId);
+      const target = document.getElementById(targetId);
+      if (!source || !target) return;
+      source.addEventListener("input", () => {
+        target.value = source.value;
+      });
+    };
+
+    syncAiModelInputs("ai-model-local", "ai-model-cloud");
+    syncAiModelInputs("ai-model-cloud", "ai-model-local");
 
     if (gmailAuthInput) {
       gmailAuthInput.addEventListener("change", async (event) => {
@@ -551,16 +580,50 @@
       aiSaveButton.addEventListener("click", async () => {
         const modeButton = document.querySelector(".ai-toggle button.is-active");
         const mode = modeButton ? modeButton.getAttribute("data-ai-mode") : "local";
+        const modelName =
+          mode === "cloud"
+            ? getValue("ai-model-cloud").trim()
+            : getValue("ai-model-local").trim();
         const settings = {
-          mode,
-          local_model: getValue("ai-model-local").trim(),
-          cloud_model: getValue("ai-model-cloud").trim(),
-          cloud_api_key: getValue("ai-api-key"),
+          mode_type: mode,
+          model_name: modelName,
+          api_key: getValue("ai-api-key"),
         };
         try {
           await saveSettings(sections.ai, settings);
           flashButton(aiSaveButton, "已保存");
         } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (aiTestButton) {
+      aiTestButton.addEventListener("click", async () => {
+        try {
+          setAiTestStatus({ message: "正在检查配置…", status: "checking" });
+          const modeButton = document.querySelector(".ai-toggle button.is-active");
+          const mode = modeButton ? modeButton.getAttribute("data-ai-mode") : "local";
+          const modelName =
+            mode === "cloud"
+              ? getValue("ai-model-cloud").trim()
+              : getValue("ai-model-local").trim();
+          const apiKey = getValue("ai-api-key");
+          const payload = await requestJson(`${apiBase}/ai/test`, {
+            method: "POST",
+            body: JSON.stringify({
+              model_type: mode,
+              model_name: modelName,
+              api_key: apiKey,
+            }),
+          });
+          const data = payload.data || {};
+          setAiTestStatus(data);
+          const message = data.message || "连接成功";
+          window.alert(message);
+          flashButton(aiTestButton, "成功");
+        } catch (error) {
+          setAiTestStatus({ message: error.message || "连接失败", status: "error" });
           notifyError(error.message);
         }
       });
@@ -696,15 +759,21 @@
       setValue("match-cycle", matchSettings.cycle_days || "");
 
       const aiSettings = await fetchSettings(sections.ai, {
-        mode: "local",
-        local_model: "",
-        cloud_model: "",
-        cloud_api_key: "",
+        mode_type: "local",
+        model_name: "",
+        api_key: "",
       });
-      setAiMode(aiSettings.mode || "local");
-      setValue("ai-model-local", aiSettings.local_model || "");
-      setValue("ai-model-cloud", aiSettings.cloud_model || "");
-      setValue("ai-api-key", aiSettings.cloud_api_key || "");
+      const aiMode = aiSettings.mode_type || aiSettings.mode || "local";
+      const aiModelName =
+        aiSettings.model_name ||
+        (aiMode === "cloud" ? aiSettings.cloud_model : aiSettings.local_model) ||
+        aiSettings.local_model ||
+        aiSettings.cloud_model ||
+        "";
+      setAiMode(aiMode);
+      setValue("ai-model-local", aiModelName);
+      setValue("ai-model-cloud", aiModelName);
+      setValue("ai-api-key", aiSettings.api_key || aiSettings.cloud_api_key || "");
 
       const backupSettings = await fetchSettings(sections.backup, {});
       setValue("backup-host", backupSettings.host || "");

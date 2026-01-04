@@ -9,8 +9,9 @@ from django.views.decorators.http import require_http_methods, require_POST
 from bpmatch.authorize_gmail import test_connection
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
+from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import SysSettings
-from settings.timer_task import run_time_to_save,run_time_to_clean
+from settings.timer_task import run_time_to_save, run_time_to_clean
 
 # 失败默认返回值
 SECTION_DEFAULTS = {
@@ -22,10 +23,9 @@ SECTION_DEFAULTS = {
         "cycle_days": 14,
     },
     "ai": {
-        "mode": "local",
-        "local_model": "",
-        "cloud_model": "",
-        "cloud_api_key": "",
+        "model_type": "local",
+        "model_name": "",
+        "api_key": "",
     },
     "backup": {
         "host": "",
@@ -85,6 +85,30 @@ def _handle_business_email_upload(auth_file, login_id):
     return _save_setting("business-email", settings_payload, login_id)
 
 
+# 保存AI配置
+def _handle_ai(settings_payload, login_id):
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+
+    model_type = settings_payload.get("model_type")
+    if model_type not in ("local", "cloud"):
+        return api_error("Invalid mode")
+
+    model_name = settings_payload.get("model_name")
+    if model_name is None:
+        return api_error("Invalid model name")
+
+    api_key = settings_payload.get("api_key")
+    if api_key is None:
+        return api_error("Invalid API key")
+
+    settings_payload = {
+        "model_type": model_type,
+        "model_name": str(model_name or "").strip(),
+        "api_key": settings_payload.get("api_key")
+    }
+    return _save_setting("ai", settings_payload, login_id)
+
 def _handle_match(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
@@ -95,21 +119,6 @@ def _handle_match(settings_payload, login_id):
     if cycle_days < 1:
         return api_error("Invalid cycle_days")
     return _save_setting("match", {"cycle_days": cycle_days}, login_id)
-
-
-def _handle_ai(settings_payload, login_id):
-    if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
-    mode = settings_payload.get("mode") or "local"
-    if mode not in ("local", "cloud"):
-        return api_error("Invalid mode")
-    settings_payload = {
-        "mode": mode,
-        "local_model": (settings_payload.get("local_model") or "").strip(),
-        "cloud_model": (settings_payload.get("cloud_model") or "").strip(),
-        "cloud_api_key": settings_payload.get("cloud_api_key") or "",
-    }
-    return _save_setting("ai", settings_payload, login_id)
 
 
 def _handle_backup(settings_payload, login_id):
@@ -217,6 +226,44 @@ def sys_settings_gmail_test_api(request):
     )
 
 
+@csrf_exempt
+@require_POST
+# 测试AI连接
+def sys_settings_ai_test_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        payload = {}
+
+    model_type = payload.get("model_type")
+    model_name = payload.get("model_name")
+    api_key = payload.get("api_key")
+
+    if model_type not in ("local", "cloud"):
+        return api_error("Invalid mode")
+    if not model_name:
+        return api_error("Missing model name")
+    if model_type == "cloud" and not api_key:
+        return api_error("Missing API key")
+
+    if model_type == "local":
+        return check_local_model(model_name)
+
+    if model_type == "cloud":
+        return check_cloud_model(model_name, api_key)
+
+    return api_success(
+        data={
+            "message": "配置有效，已可以使用。",
+            "model_name": model_name,
+            "model_type": model_type,
+        }
+    )
+
+
 # -------------------------------------定时任务
 
 @csrf_exempt
@@ -256,5 +303,3 @@ def time_to_backup():
     )
     thread.start()
     return api_success()
-
-

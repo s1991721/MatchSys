@@ -13,7 +13,7 @@ from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
-from settings.timer_task import run_time_to_save, run_time_to_clean
+from settings.timer_task import run_time_to_save, run_time_to_clean, run_time_to_hello
 
 # 失败默认返回值
 SECTION_DEFAULTS = {
@@ -399,6 +399,18 @@ def time_to_backup():
     thread = threading.Thread(
         target=run_time_to_clean,
         name="time_to_clean",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+@csrf_exempt
+@require_POST
+def time_to_hello(request):
+    thread = threading.Thread(
+        target=run_time_to_hello,
+        name="time_to_hello",
         daemon=True,
     )
     thread.start()

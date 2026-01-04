@@ -200,5 +200,9 @@ def run_time_to_clean():
     return
 
 
+def run_time_to_hello():
+    print("hello", flush=True)
+
+
 # -------------------------------------备份数据
 logger_backup = logging.getLogger("bpmatch.time_to_backup")

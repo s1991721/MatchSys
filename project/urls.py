@@ -77,6 +77,7 @@ from settings.views import (
     time_to_save,
     time_to_clean,
     time_to_backup,
+    time_to_hello,
 )
 
 custom_404 = TemplateView.as_view(template_name="404.html")
@@ -195,4 +196,5 @@ urlpatterns = [
     path("api/time-to-save", time_to_save, name="time_to_save"),
     path("api/time-to-claen", time_to_clean, name="time_to_clean"),
     path("api/time-to-backup", time_to_backup, name="time_to_backup"),
+    path("api/time-to-hello", time_to_hello, name="time_to_hello"),
 ]

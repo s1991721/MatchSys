@@ -6,3 +6,4 @@ langchain_ollama==1.0.1
 protobuf==6.33.2
 django-cors-headers==4.9.0
 mysqlclient==2.2.7
+APScheduler==3.10.4

@@ -348,6 +348,7 @@
 
     const taskFormHtml = (index, task) => {
       const defaults = resolveTaskDefaults(task);
+      const isEnabled = task.enabled !== false;
       return `
       <li class="task-item">
         <div class="task-head">
@@ -371,6 +372,13 @@
               <option ${defaults.frequency === "每月" ? "selected" : ""}>每月</option>
               <option ${defaults.frequency === "自定义 Cron" ? "selected" : ""}>自定义 Cron</option>
             </select>
+          </div>
+          <div class="form-field">
+            <label for="task-enabled-${index}">启用</label>
+            <div class="task-toggle">
+              <input id="task-enabled-${index}" type="checkbox" ${isEnabled ? "checked" : ""} />
+              <span>${isEnabled ? "已启用" : "已停用"}</span>
+            </div>
           </div>
           <div class="form-field hidden" data-task-index="${index}" data-frequency-field="每周">
             <label for="task-weekday-${index}">每周执行</label>
@@ -621,16 +629,59 @@
         getValue(`task-monthday-${index}`),
         getValue(`task-cron-${index}`)
       );
+      const enabledEl = document.getElementById(`task-enabled-${index}`);
+      const enabled = enabledEl ? Boolean(enabledEl.checked) : true;
       return {
         id: systemTasks[index] ? systemTasks[index].id : null,
         name: getValue(`task-name-${index}`).trim(),
         time: getValue(`task-time-${index}`),
         frequency,
         cron_expr: cronExpr,
+        enabled,
         method: getValue(`task-method-${index}`),
         api: getValue(`task-api-${index}`).trim(),
         body: getValue(`task-body-${index}`),
       };
+    };
+
+    const runTaskNow = async (task) => {
+      const api = (task.api || "").trim();
+      if (!api) throw new Error("请先填写 API 地址。");
+      const method = (task.method || "POST").trim().toUpperCase();
+      const hasBody = !["GET", "HEAD"].includes(method);
+      let body = undefined;
+      if (hasBody) {
+        const rawBody = (task.body || "").trim();
+        if (!rawBody) {
+          body = "{}";
+        } else {
+          try {
+            body = JSON.stringify(JSON.parse(rawBody));
+          } catch (error) {
+            throw new Error("请求参数必须是合法 JSON。");
+          }
+        }
+      }
+      const response = await fetch(api, {
+        method,
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body,
+      });
+      let payload = null;
+      try {
+        payload = await response.json();
+      } catch (error) {
+        payload = null;
+      }
+      if (!response.ok) {
+        const message = payload && payload.message ? payload.message : "请求失败";
+        throw new Error(message);
+      }
+      if (payload && payload.success === false) {
+        throw new Error(payload.message || "请求失败");
+      }
+      return payload;
     };
 
     const syncAiModelInputs = (sourceId, targetId) => {
@@ -811,10 +862,17 @@
       taskList.addEventListener("change", (event) => {
         const target = event.target;
         if (!(target instanceof HTMLElement)) return;
-        if (!target.matches("[data-task-frequency]")) return;
-        const index = Number(target.getAttribute("data-task-frequency"));
-        if (Number.isNaN(index)) return;
-        updateTaskFrequencyUI(index, target.value);
+        if (target.matches("[data-task-frequency]")) {
+          const index = Number(target.getAttribute("data-task-frequency"));
+          if (Number.isNaN(index)) return;
+          updateTaskFrequencyUI(index, target.value);
+          return;
+        }
+        if (target.matches("input[type=\"checkbox\"][id^=\"task-enabled-\"]")) {
+          const wrap = target.closest(".task-toggle");
+          const label = wrap ? wrap.querySelector("span") : null;
+          if (label) label.textContent = target.checked ? "已启用" : "已停用";
+        }
       });
 
       taskList.addEventListener("click", async (event) => {
@@ -859,11 +917,22 @@
         const index = runButton.getAttribute("data-run-now");
         const statusEl = document.getElementById(`task-status-${index}`);
         if (!statusEl) return;
-        const now = new Date();
-        statusEl.textContent = `已触发：${now.toLocaleString("zh-CN", {
-          hour12: false,
-        })}`;
-        statusEl.classList.add("success");
+        statusEl.textContent = "执行中...";
+        statusEl.classList.remove("success");
+        const taskConfig = collectTaskConfig(Number(index));
+        try {
+          await runTaskNow(taskConfig);
+          const now = new Date();
+          statusEl.textContent = `已触发：${now.toLocaleString("zh-CN", {
+            hour12: false,
+          })}`;
+          statusEl.classList.add("success");
+          flashButton(runButton, "已触发");
+        } catch (error) {
+          statusEl.textContent = "执行失败";
+          statusEl.classList.remove("success");
+          notifyError(error.message);
+        }
       });
     }
 

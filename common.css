@@ -302,10 +302,28 @@ body > .page {
 .form-field.full {
   grid-column: 1 / -1;
 }
+.task-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.task-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+}
 .form-actions {
   margin-top: 14px;
   gap: 10px;
   flex-wrap: wrap;
+}
+.c-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 .hint {
   color: var(--muted);

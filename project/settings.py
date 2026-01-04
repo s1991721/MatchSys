@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "customer",
     "order",
     "permission",
-    "settings"
+    "settings.apps.SettingsConfig",
 ]
 
 MIDDLEWARE = [
@@ -133,6 +133,9 @@ TIME_ZONE = "Asia/Tokyo"
 USE_I18N = True
 
 USE_TZ = True
+
+# Base URL for internal scheduled task calls.
+TASK_BASE_URL = "http://127.0.0.1:8000"
 
 
 # Static files (CSS, JavaScript, Images)

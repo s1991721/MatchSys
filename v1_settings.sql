@@ -10,3 +10,8 @@ CREATE TABLE sys_settings
     deleted_at DATETIME     NULL COMMENT '删除时间（软删）'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='系统设置表';
+
+INSERT INTO matchSys.sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at)
+VALUES ('match', '{"cycle_days": 14}', 1, '2026-01-03 17:08:42', 1, '2026-01-04 14:01:59', NULL),
+       ('ai', '{"api_key": "", "mode_type": "local", "model_name": "llama3.2:3b-instruct-q4_K_M"}', 1,
+        '2026-01-04 05:31:02', 1, '2026-01-04 05:42:31', NULL);

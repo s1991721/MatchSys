@@ -1,3 +1,12 @@
+/*!40101 SET NAMES utf8mb4 */;
+SET character_set_client = utf8mb4;
+SET character_set_connection = utf8mb4;
+SET character_set_results = utf8mb4;
+
+
+CREATE DATABASE IF NOT EXISTS matchSys DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE matchSys;
+
 # ----------------------------------------------- 登录及权限 -----------------------------------------------
 CREATE TABLE IF NOT EXISTS user_login
 (

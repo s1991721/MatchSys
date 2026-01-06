@@ -1,0 +1,22 @@
+----------------------------------------------打包流程
+
+--项目依赖
+pip freeze > requirements.txt
+
+
+--mysql 镜像
+Dockerfile
+```
+FROM mysql:8.0
+
+# 把初始化脚本拷贝进去（容器第一次初始化数据目录时会自动执行）
+COPY ./init/ /docker-entrypoint-initdb.d/
+```
+
+docker build -t <repo_name>/mysql-seed:1.0 .
+
+
+docker run --name mysql-seed-test \
+  -e MYSQL_ROOT_PASSWORD=RootPass123! \
+  -p 3307:3306 \
+  -d <repo_name>/mysql-seed:1.0

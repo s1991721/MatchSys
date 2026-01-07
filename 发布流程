@@ -1,10 +1,9 @@
-----------------------------------------------打包流程
 
 --项目依赖
 pip freeze > requirements.txt
 
 
---mysql 镜像
+------------------------------------------------ mysql 镜像
 Dockerfile
 ```
 FROM mysql:8.0
@@ -13,10 +12,37 @@ FROM mysql:8.0
 COPY ./init/ /docker-entrypoint-initdb.d/
 ```
 
-docker build -t <repo_name>/mysql-seed:1.0 .
+docker buildx build --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.0 --push .
 
 
-docker run --name mysql-seed-test \
-  -e MYSQL_ROOT_PASSWORD=RootPass123! \
-  -p 3307:3306 \
-  -d <repo_name>/mysql-seed:1.0
+docker run --name matchsys-mysql-test \
+  -e MYSQL_ROOT_PASSWORD=123456 \
+  -p 3306:3306 \
+  -d jef4267/matchsys-mysql:1.0
+
+------------------------------------------------ 连接网络
+
+docker network create matchsys-net
+docker network connect matchsys-net matchsys-mysql-test
+docker network connect matchsys-net matchsys-test
+
+
+------------------------------------------------ Django 镜像
+
+ Dockerfile
+.dockerignore
+
+docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys:1.0 --push .
+
+docker run --name matchsys-test \
+  -p 8000:8000 \
+  -d jef4267/matchsys:1.0
+
+
+
+------------------------------------------------ 发布 镜像
+docker push jef4267/matchsys-mysql:1.0
+docker push jef4267/matchsys:1.0
+
+
+

@@ -1,10 +1,11 @@
 import json
 import logging
 import os
-from datetime import timezone, timedelta
+from datetime import timedelta
 
 from django.conf import settings as django_settings
 from django.db import close_old_connections, transaction
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from bpmatch import llmsTool
@@ -40,6 +41,7 @@ logger_save = logging.getLogger("bpmatch.time_to_save")
 # 默认周期天数
 DEFAULT_CYCLE_DAYS = 14
 
+
 # 获取Match 配置周期天数
 def _get_cycle_days():
     record = SysSettings.objects.filter(name="match", deleted_at__isnull=True).first()
@@ -55,7 +57,7 @@ def _get_cycle_days():
 
 def run_time_to_save():
     date_tag = timezone.now().strftime("%Y-%m-%d")
-    _ensure_time_to_save_logger(date_tag)
+    _ensure_time_to_save_logger(date_tag, logger_save)
     close_old_connections()
     started_at = timezone.now()
     logger_save.info("time_to_save started at %s", started_at.isoformat())

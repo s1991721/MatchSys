@@ -653,6 +653,18 @@
   min-width: 120px;
   flex: 1 1 auto;
 }
+.c-inline-field textarea {
+  border: 0;
+  outline: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  background: transparent;
+  min-width: 120px;
+  flex: 1 1 auto;
+  resize: vertical;
+  min-height: 72px;
+}
 .c-inline-field > span {
   white-space: nowrap;
   flex: 0 0 auto;
@@ -664,6 +676,9 @@
 }
 .c-inline-field-full {
   grid-column: 1 / -1;
+}
+.c-inline-field-textarea {
+  align-items: flex-start;
 }
 .c-inline-filter-label {
   font-size: 13px;
@@ -748,6 +763,9 @@
 }
 .c-modal .c-inline-field input,
 .c-modal .c-inline-field select {
+  min-width: 0;
+}
+.c-modal .c-inline-field textarea {
   min-width: 0;
 }
 .c-modal input[readonly],

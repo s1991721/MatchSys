@@ -105,6 +105,7 @@ def _serialize_purchase(order):
         "working_hours": str(order.working_hours) if order.working_hours is not None else "",
         "period_start": order.period_start.isoformat() if order.period_start else "",
         "period_end": order.period_end.isoformat() if order.period_end else "",
+        "remark": order.remark or "",
         "created_by": order.created_by,
         "created_at": created_at.strftime("%Y-%m-%d %H:%M") if created_at else "",
         "updated_by": order.updated_by or "",
@@ -130,6 +131,7 @@ def _serialize_sales(order):
         "working_hours": str(order.working_hours) if order.working_hours is not None else "",
         "period_start": order.period_start.isoformat() if order.period_start else "",
         "period_end": order.period_end.isoformat() if order.period_end else "",
+        "remark": order.remark or "",
         "created_by": order.created_by,
         "created_at": created_at.strftime("%Y-%m-%d %H:%M") if created_at else "",
         "updated_by": order.updated_by or "",
@@ -155,6 +157,8 @@ def _apply_purchase_payload(order, payload):
         if error:
             return error
         order.customer_id = value or 0
+    if "remark" in payload:
+        order.remark = (payload.get("remark") or "").strip()
 
     if "price" in payload:
         value, error = _parse_decimal(payload.get("price"), "price")
@@ -203,6 +207,8 @@ def _apply_sales_payload(order, payload):
         if error:
             return error
         order.customer_id = value or 0
+    if "remark" in payload:
+        order.remark = (payload.get("remark") or "").strip()
 
     if "purchase_id" in payload:
         value, error = _parse_int(payload.get("purchase_id"), "purchase_id")

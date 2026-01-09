@@ -332,6 +332,7 @@ CREATE TABLE IF NOT EXISTS purchase_order
     working_hours    DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
     period_start     DATE           NOT NULL COMMENT '期间开始日',
     period_end       DATE           NOT NULL COMMENT '期间结束日',
+    remark           TEXT COMMENT '备注',
 
     created_by       VARCHAR(100)   NOT NULL COMMENT '创建人',
     created_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -358,6 +359,7 @@ CREATE TABLE IF NOT EXISTS sales_order
     working_hours    DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
     period_start     DATE           NOT NULL COMMENT '期间开始日',
     period_end       DATE           NOT NULL COMMENT '期间结束日',
+    remark           TEXT COMMENT '备注',
 
     created_by       VARCHAR(100)   NOT NULL COMMENT '创建人',
     created_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

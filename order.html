@@ -182,6 +182,10 @@
                 <input id="issue-owner" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="issue-owner-list"/>
             </label>
             <datalist id="issue-owner-list"></datalist>
+            <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
+                <span data-i18n="order.field.remark">备注</span>
+                <textarea id="issue-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
+            </label>
         </div>
     </div>
     <div class="c-modal-actions">
@@ -251,6 +255,10 @@
                 <input id="accept-owner" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="accept-owner-list"/>
             </label>
             <datalist id="accept-owner-list"></datalist>
+            <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
+                <span data-i18n="order.field.remark">备注</span>
+                <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
+            </label>
         </div>
     </div>
     <div class="c-modal-actions">
@@ -330,6 +338,10 @@
                 <span data-i18n="order.field.owner">负责人</span>
                 <input type="text" data-field="owner"/>
             </label>
+            <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
+                <span data-i18n="order.field.remark">备注</span>
+                <textarea data-field="remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
+            </label>
             <label class="c-inline-field">
                 <span data-i18n="order.field.updated_at">修改时间</span>
                 <input type="date" data-field="updatedAt"/>
@@ -405,6 +417,7 @@
             end: document.getElementById("issue-end"),
             owner: document.getElementById("issue-owner"),
             ownerList: document.getElementById("issue-owner-list"),
+            remark: document.getElementById("issue-remark"),
         };
 
         const acceptForm = {
@@ -424,6 +437,7 @@
             end: document.getElementById("accept-end"),
             owner: document.getElementById("accept-owner"),
             ownerList: document.getElementById("accept-owner-list"),
+            remark: document.getElementById("accept-remark"),
         };
 
         const detailFields = {
@@ -442,6 +456,7 @@
             createdAt: document.querySelector('[data-field="createdAt"]'),
             creator: document.querySelector('[data-field="creator"]'),
             owner: document.querySelector('[data-field="owner"]'),
+            remark: document.querySelector('[data-field="remark"]'),
             updatedAt: document.querySelector('[data-field="updatedAt"]'),
             updater: document.querySelector('[data-field="updater"]'),
         };
@@ -725,6 +740,7 @@
             if (detailFields.createdAt) detailFields.createdAt.value = item.created_at || "";
             if (detailFields.creator) detailFields.creator.value = item.created_by || "";
             if (detailFields.owner) detailFields.owner.value = item.person_in_charge || "";
+            if (detailFields.remark) detailFields.remark.value = item.remark || "";
             if (detailFields.updatedAt) detailFields.updatedAt.value = item.updated_at || "";
             if (detailFields.updater) detailFields.updater.value = item.updated_by || "";
 
@@ -746,6 +762,7 @@
                 period_start: fromDetail ? detailFields.start.value : issueForm.start.value,
                 period_end: fromDetail ? detailFields.end.value : issueForm.end.value,
                 person_in_charge: fromDetail ? detailFields.owner.value.trim() : issueForm.owner.value.trim(),
+                remark: fromDetail ? detailFields.remark.value.trim() : issueForm.remark.value.trim(),
             };
         }
 
@@ -764,6 +781,7 @@
                 period_start: fromDetail ? detailFields.start.value : acceptForm.start.value,
                 period_end: fromDetail ? detailFields.end.value : acceptForm.end.value,
                 person_in_charge: fromDetail ? detailFields.owner.value.trim() : acceptForm.owner.value.trim(),
+                remark: fromDetail ? detailFields.remark.value.trim() : acceptForm.remark.value.trim(),
             };
         }
 

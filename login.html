@@ -43,6 +43,9 @@
 <script src="/i18n.js"></script>
 <script src="/common.js"></script>
 <script>
+    if (window.top && window.top !== window) {
+        window.top.location.href = window.location.href;
+    }
     const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
     const LANG_KEY = "app_lang";

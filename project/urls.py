@@ -17,6 +17,7 @@ Including another URLconf
 
 from django.conf import settings
 from django.urls import path
+from django.views.decorators.clickjacking import xframe_options_deny
 from django.views.decorators.cache import cache_control
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
@@ -99,7 +100,7 @@ urlpatterns = [
     path("home.html", TemplateView.as_view(template_name="home.html")),
 
     # -------------------------------employee UI-------------------------------
-    path("login.html", TemplateView.as_view(template_name="login.html")),
+    path("login.html", xframe_options_deny(TemplateView.as_view(template_name="login.html"))),
     path("profile.html", TemplateView.as_view(template_name="profile.html")),
     path("personnel.html", TemplateView.as_view(template_name="personnel.html")),
     path("people.html", TemplateView.as_view(template_name="people.html")),

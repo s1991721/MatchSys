@@ -11,7 +11,12 @@
         };
         const res = await fetch(url, mergedOptions);
         if (res.status === 401) {
-            window.location.href = "/login.html";
+            const target = "/login.html";
+            if (window.top && window.top !== window) {
+                window.top.location.href = target;
+            } else {
+                window.location.href = target;
+            }
             throw new Error("Unauthorized");
         }
         if (!res.ok) {

@@ -23,10 +23,13 @@ class Customer(models.Model):
     contact3_phone = models.CharField(max_length=50, null=True, blank=True)
 
     person_in_charge = models.CharField(max_length=100, null=True, blank=True)
-    created_by = models.BigIntegerField(null=True, blank=True)
-    created_at = models.DateTimeField(null=True, blank=True)
-    updated_by = models.BigIntegerField(null=True, blank=True)
-    updated_at = models.DateTimeField(null=True, blank=True)
+
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")
+    updated_at = models.DateTimeField(auto_now=True)
+
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:

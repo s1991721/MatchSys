@@ -31,6 +31,9 @@
                             data-i18n="customer.action.add">+
                         新增客户
                     </button>
+                    <button class="c-btn c-btn-secondary c-btn-lg" id="btn-bulk-email" type="button"
+                            data-i18n="customer.action.bulk_email">群发邮件
+                    </button>
                 </div>
                 <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
                     <button class="c-btn c-btn-primary" id="btn-search" type="button">
@@ -50,6 +53,9 @@
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
+                    <th class="c-checkbox-col">
+                        <input id="select-all-customers" type="checkbox" aria-label="选择全部"/>
+                    </th>
                     <th data-i18n="customer.table.company">公司名称</th>
                     <th data-i18n="customer.table.address">公司地址</th>
                     <th data-i18n="customer.table.remark">备注</th>
@@ -177,6 +183,45 @@
         <button class="c-btn c-btn-primary" id="dialog-save" type="button" data-i18n="common.save">保存</button>
     </div>
 </dialog>
+<dialog class="c-dialog c-bulk-dialog" id="bulk-mail-dialog">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="群发邮件">
+        <div class="modal-header">
+            <div class="modal-title" data-i18n="customer.bulk.title">群发邮件</div>
+            <button class="modal-close" type="button" aria-label="关闭" data-i18n-aria="common.close"
+                    data-dialog-close>×
+            </button>
+        </div>
+        <div class="modal-body">
+            <section class="mail-editor">
+                <div class="form-item">
+                    <div class="form-label" data-i18n="customer.bulk.subject">邮件主题</div>
+                    <input class="input" id="bulk-mail-subject" type="text" placeholder="请输入邮件主题"
+                           data-i18n-placeholder="customer.bulk.subject_placeholder"/>
+                </div>
+                <div class="form-item">
+                    <div class="form-label" data-i18n="customer.bulk.body">邮件内容</div>
+                    <textarea class="textarea" id="bulk-mail-body" rows="10" placeholder="请输入邮件内容"
+                              data-i18n-placeholder="customer.bulk.body_placeholder"></textarea>
+                </div>
+            </section>
+            <div class="modal-divider" aria-hidden="true"></div>
+            <aside class="recipients">
+                <div class="recipients-header">
+                    <div class="recipients-title">
+                        <span class="recipients-title-bar" aria-hidden="true"></span>
+                        <span class="recipients-title-text" data-i18n="customer.bulk.recipients">收件人</span>
+                    </div>
+                    <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
+                </div>
+                <div class="recipients-list" id="bulk-mail-recipients"></div>
+            </aside>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+            <button class="btn btn-primary" id="bulk-mail-send" type="button" data-i18n="customer.bulk.send">发送</button>
+        </div>
+    </div>
+</dialog>
 <script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
@@ -195,13 +240,21 @@
     const addButton = document.getElementById("btn-add");
     const searchButton = document.getElementById("btn-search");
     const resetButton = document.getElementById("btn-reset");
+    const bulkEmailButton = document.getElementById("btn-bulk-email");
     const pagination = document.getElementById("customer-pagination");
     const paginationPages = document.getElementById("customer-pagination-pages");
     const pageSummary = document.getElementById("page-summary");
+    const selectAllCheckbox = document.getElementById("select-all-customers");
     const editDialog = document.getElementById("edit-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
     const contractHint = document.getElementById("contract-hint");
+    const bulkMailDialog = document.getElementById("bulk-mail-dialog");
+    const bulkMailSubject = document.getElementById("bulk-mail-subject");
+    const bulkMailBody = document.getElementById("bulk-mail-body");
+    const bulkMailRecipients = document.getElementById("bulk-mail-recipients");
+    const bulkMailSelected = document.getElementById("bulk-mail-selected");
+    const bulkMailSend = document.getElementById("bulk-mail-send");
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),
@@ -227,6 +280,26 @@
     let currentPage = 1;
     let pageSize = 10;
     let totalPages = 1;
+    let bulkRecipientMeta = [];
+    let selectedCustomerIds = new Set();
+
+    const openDialog = (dialog) => {
+        if (!dialog) return;
+        if (typeof dialog.showModal === "function") {
+            dialog.showModal();
+        } else {
+            dialog.setAttribute("open", "true");
+        }
+    };
+
+    const closeDialog = (dialog) => {
+        if (!dialog) return;
+        if (typeof dialog.close === "function") {
+            dialog.close();
+        } else {
+            dialog.removeAttribute("open");
+        }
+    };
 
     const renderNames = (names) => {
         nameList.innerHTML = names
@@ -244,8 +317,17 @@
         if (pageSummary) {
             pageSummary.textContent = format("customer.summary", {count, page: currentPage});
         }
+        const idsOnPage = new Set(items.map((item) => String(item.id)));
+        selectedCustomerIds = new Set(
+            Array.from(selectedCustomerIds).filter((id) => idsOnPage.has(id))
+        );
         if (!items.length) {
-            tableBody.innerHTML = `<tr><td colspan="10" class="c-empty">${t("common.no_data")}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="11" class="c-empty">${t("common.no_data")}</td></tr>`;
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+                selectAllCheckbox.indeterminate = false;
+            }
+            updateBulkButtonState();
             return;
         }
 
@@ -253,6 +335,9 @@
             .map(
                 (item) => `
             <tr>
+              <td>
+                <input class="row-select" type="checkbox" data-id="${item.id}" ${selectedCustomerIds.has(String(item.id)) ? "checked" : ""}/>
+              </td>
               <td>${item.company_name || "-"}</td>
               <td>${item.company_address || "-"}</td>
               <td>${item.remark || "-"}</td>
@@ -271,6 +356,8 @@
           `
             )
             .join("");
+        syncSelectAllState();
+        updateBulkButtonState();
     };
 
     const fetchCustomers = () => {
@@ -329,11 +416,113 @@
         editFields.contact3Phone.value = item?.contact3_phone || "";
         editFields.contact3Email.value = item?.contact3_email || "";
 
-        if (typeof editDialog.showModal === "function") {
-            editDialog.showModal();
-        } else {
-            editDialog.setAttribute("open", "true");
+        openDialog(editDialog);
+    };
+
+    const extractRecipients = (items) => {
+        const groups = [];
+        items.forEach((item) => {
+            const contacts = [];
+            const entries = [
+                {index: 1, name: item.contact1_name, email: item.contact1_email},
+                {index: 2, name: item.contact2_name, email: item.contact2_email},
+                {index: 3, name: item.contact3_name, email: item.contact3_email},
+            ];
+            entries.forEach((entry) => {
+                const email = (entry.email || "").trim();
+                if (!email) return;
+                const name = (entry.name || "").trim();
+                const label = name
+                    ? format("customer.bulk.contact", {index: entry.index, name})
+                    : format("customer.bulk.contact_fallback", {index: entry.index, email});
+                contacts.push({label, email});
+            });
+
+            if (!contacts.length) return;
+            groups.push({
+                id: String(item.id || ""),
+                company: item.company_name || t("customer.bulk.unnamed"),
+                contacts,
+            });
+        });
+        return groups;
+    };
+
+    const updateBulkSelected = () => {
+        const checked = Array.from(
+        bulkMailRecipients.querySelectorAll(".contact-check:checked")
+    );
+        const companyIds = new Set(checked.map((input) => input.dataset.company || ""));
+        bulkMailSelected.textContent = format("customer.bulk.selected", {count: companyIds.size});
+    };
+
+    const renderBulkRecipients = (items) => {
+        bulkRecipientMeta = extractRecipients(items);
+        if (!bulkRecipientMeta.length) {
+            bulkMailRecipients.innerHTML = `<div class="c-empty">${t("customer.bulk.empty")}</div>`;
+            bulkMailSelected.textContent = format("customer.bulk.selected", {count: 0});
+            return;
         }
+        bulkMailRecipients.innerHTML = bulkRecipientMeta
+            .map((group) => {
+                const contactsHtml = group.contacts
+                    .map(
+                        (contact) => `
+                        <label class="contact-row">
+                            <input class="contact-check" type="checkbox" data-email="${contact.email}" data-company="${group.id}">
+                            <div class="contact-info">
+                                <div class="contact-name">${contact.label}</div>
+                                <div class="contact-email">${contact.email}</div>
+                            </div>
+                        </label>
+                    `
+                    )
+                    .join("");
+                return `
+                    <div class="group-card">
+                        <div class="group-header">
+                            <button class="group-toggle" type="button" aria-label="折叠/展开">−</button>
+                            <div class="group-name">${group.company}</div>
+                            <button class="group-more" type="button" aria-label="更多">…</button>
+                        </div>
+                        <div class="group-body">
+                            ${contactsHtml}
+                        </div>
+                    </div>
+                `;
+            })
+            .join("");
+        updateBulkSelected();
+    };
+
+    const readSelectedEmails = () => {
+        return Array.from(
+        bulkMailRecipients.querySelectorAll(".contact-check:checked")
+    ).map((input) => input.dataset.email);
+    };
+
+    const openBulkMailDialog = () => {
+        bulkMailSubject.value = "";
+        bulkMailBody.value = "";
+        renderBulkRecipients(getSelectedCustomers());
+        openDialog(bulkMailDialog);
+    };
+
+    const getSelectedCustomers = () => {
+        return cachedItems.filter((item) => selectedCustomerIds.has(String(item.id)));
+    };
+
+    const syncSelectAllState = () => {
+        if (!selectAllCheckbox) return;
+        const rowCheckboxes = Array.from(tableBody.querySelectorAll(".row-select"));
+        const checkedCount = rowCheckboxes.filter((input) => input.checked).length;
+        selectAllCheckbox.checked = checkedCount > 0 && checkedCount === rowCheckboxes.length;
+        selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
+    };
+
+    const updateBulkButtonState = () => {
+        const enabled = selectedCustomerIds.size > 0;
+        bulkEmailButton.disabled = !enabled;
     };
 
     fetchWithAuth("/api/employees/names", {method: "GET"})
@@ -358,8 +547,45 @@
         }
     });
 
+    tableBody.addEventListener("change", (event) => {
+        const checkbox = event.target;
+        if (!checkbox.matches(".row-select")) return;
+        const id = checkbox.dataset.id;
+        if (!id) return;
+        if (checkbox.checked) {
+            selectedCustomerIds.add(String(id));
+        } else {
+            selectedCustomerIds.delete(String(id));
+        }
+        syncSelectAllState();
+        updateBulkButtonState();
+    });
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener("change", () => {
+            const rowCheckboxes = Array.from(tableBody.querySelectorAll(".row-select"));
+            rowCheckboxes.forEach((input) => {
+                input.checked = selectAllCheckbox.checked;
+                const id = input.dataset.id;
+                if (!id) return;
+                if (selectAllCheckbox.checked) {
+                    selectedCustomerIds.add(String(id));
+                } else {
+                    selectedCustomerIds.delete(String(id));
+                }
+            });
+            syncSelectAllState();
+            updateBulkButtonState();
+        });
+    }
+
     addButton.addEventListener("click", () => {
         openEditDialog(null);
+    });
+
+    bulkEmailButton.addEventListener("click", () => {
+        if (selectedCustomerIds.size === 0) return;
+        openBulkMailDialog();
     });
 
     searchButton.addEventListener("click", () => {
@@ -388,6 +614,8 @@
         });
     }
 
+    updateBulkButtonState();
+
 
     editFields.contract.addEventListener("change", () => {
         const file = editFields.contract.files[0];
@@ -398,12 +626,21 @@
 
     editDialog.addEventListener("click", (event) => {
         if (event.target === editDialog) {
-            editDialog.close();
+            closeDialog(editDialog);
+        }
+    });
+
+    bulkMailDialog.addEventListener("click", (event) => {
+        if (event.target === bulkMailDialog) {
+            closeDialog(bulkMailDialog);
         }
     });
 
     document.querySelectorAll("[data-dialog-close]").forEach((button) => {
-        button.addEventListener("click", () => editDialog.close());
+        button.addEventListener("click", () => {
+            const dialog = button.closest("dialog");
+            closeDialog(dialog);
+        });
     });
 
     const uploadContract = (customerId, file) => {
@@ -470,11 +707,61 @@
                 return null;
             })
             .then(() => {
-                editDialog.close();
+                closeDialog(editDialog);
                 fetchCustomers();
             })
             .catch((error) => {
                 alert(error.message || t("common.save_failed_retry"));
+            });
+    });
+
+    bulkMailRecipients.addEventListener("change", (event) => {
+        if (event.target.matches(".contact-check")) {
+            updateBulkSelected();
+        }
+    });
+
+    bulkMailSend.addEventListener("click", () => {
+        const recipients = readSelectedEmails();
+        const subject = bulkMailSubject.value.trim();
+        const body = bulkMailBody.value.trim();
+
+        if (!recipients.length) {
+            alert(t("customer.bulk.alert.recipient_required"));
+            return;
+        }
+        if (!subject) {
+            alert(t("customer.bulk.alert.subject_required"));
+            return;
+        }
+        if (!body) {
+            alert(t("customer.bulk.alert.body_required"));
+            return;
+        }
+
+        fetchWithAuth("/api/send-mail", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                to: recipients.join(","),
+                subject,
+                body,
+            }),
+        })
+            .then(async (response) => {
+                const data = await response.json().catch(() => ({}));
+                const payload = normalizeApiResponse(data);
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || t("customer.bulk.alert.send_failed"));
+                }
+                return payload;
+            })
+            .then(() => {
+                alert(t("customer.bulk.alert.sent"));
+                closeDialog(bulkMailDialog);
+            })
+            .catch((error) => {
+                alert(error.message || t("customer.bulk.alert.send_failed"));
             });
     });
 

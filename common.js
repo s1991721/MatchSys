@@ -14,7 +14,13 @@
             window.location.href = "/login.html";
             throw new Error("Unauthorized");
         }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            const payload = await res.json().catch(() => ({}));
+            const message = payload?.message || `HTTP ${res.status}`;
+            const error = new Error(message);
+            error.payload = payload;
+            throw error;
+        }
         return res;
     };
 

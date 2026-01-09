@@ -334,6 +334,219 @@
 .c-dialog-actions button {
   min-width: 120px;
 }
+.c-bulk-dialog {
+  width: min(980px, 96%);
+  max-width: 980px;
+}
+.c-bulk-dialog .modal {
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  background: #fff;
+  border-radius: 20px;
+}
+.c-bulk-dialog .modal-header,
+.c-bulk-dialog .modal-footer {
+  padding: 18px 24px;
+}
+.c-bulk-dialog .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.c-bulk-dialog .modal-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.c-bulk-dialog .modal-close {
+  background: transparent;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  color: var(--muted);
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 1;
+}
+.c-bulk-dialog .modal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) auto minmax(0, 0.9fr);
+  gap: 20px;
+  padding: 6px 24px 20px;
+  align-items: start;
+}
+.c-bulk-dialog .modal-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--line);
+}
+.c-bulk-dialog .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  background: #f8f9fb;
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+.c-bulk-dialog .btn {
+  min-width: 120px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+}
+.c-bulk-dialog .btn-secondary {
+  background: #eef4ff;
+  color: #3163e6;
+  border-color: #cfe0ff;
+}
+.c-bulk-dialog .btn-primary {
+  background: #2d6ff6;
+  color: #fff;
+}
+.c-bulk-dialog .mail-editor {
+  display: grid;
+  gap: 18px;
+}
+.c-bulk-dialog .form-item {
+  display: grid;
+  gap: 8px;
+}
+.c-bulk-dialog .form-label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.c-bulk-dialog .input,
+.c-bulk-dialog .textarea {
+  border: 1px solid #d8dfec;
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background: #fff;
+}
+.c-bulk-dialog .textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+.c-bulk-dialog .input:focus,
+.c-bulk-dialog .textarea:focus {
+  border-color: rgba(28, 123, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.12);
+}
+.c-bulk-dialog .recipients-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.c-bulk-dialog .recipients-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+.c-bulk-dialog .recipients-title-bar {
+  width: 6px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--primary);
+}
+.c-bulk-dialog .recipients-meta {
+  color: var(--muted);
+  font-weight: 600;
+}
+.c-bulk-dialog .recipients-list {
+  display: grid;
+  gap: 14px;
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.c-bulk-dialog .group-card {
+  border: 1px solid #dbe3f0;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+.c-bulk-dialog .group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e6ebf4;
+  font-weight: 700;
+}
+.c-bulk-dialog .group-toggle {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: #1d6ff2;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+}
+.c-bulk-dialog .group-more {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 18px;
+  cursor: pointer;
+}
+.c-bulk-dialog .group-body {
+  display: grid;
+}
+.c-bulk-dialog .contact-row {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+.c-bulk-dialog .contact-row + .contact-row {
+  border-top: 1px solid #eef2f8;
+}
+.c-bulk-dialog .contact-check {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+.c-bulk-dialog .contact-info {
+  display: grid;
+  gap: 4px;
+}
+.c-bulk-dialog .contact-name {
+  font-weight: 600;
+  color: #1f2a44;
+}
+.c-bulk-dialog .contact-email {
+  color: var(--muted);
+  font-size: 13px;
+}
+@media (max-width: 920px) {
+  .c-bulk-dialog .modal-body {
+    grid-template-columns: 1fr;
+  }
+  .c-bulk-dialog .modal-divider {
+    width: 100%;
+    height: 1px;
+  }
+}
 @keyframes fadeIn {
   from {
     opacity: 0;

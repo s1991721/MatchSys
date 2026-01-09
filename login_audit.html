@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="login_audit.title">登录日志</title>
+    <style>
+        .login-audit-table .ua-cell {
+            max-width: 360px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 900px) {
+            .login-audit-table .ua-cell {
+                max-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body class="c-form-page login-audit-page">
+<div class="page">
+    <section class="c-card">
+        <div class="filters c-filter-panel">
+            <div class="filter-grid c-filter-grid-wide">
+                <label>
+                    <span data-i18n="login_audit.filter.user_name">账号</span>
+                    <input id="userNameInput" type="search" placeholder="输入账号" data-i18n-placeholder="login_audit.placeholder.user_name"/>
+                </label>
+                <label>
+                    <span data-i18n="login_audit.filter.employee_id">员工ID</span>
+                    <input id="employeeIdInput" type="text" inputmode="numeric" placeholder="员工ID" data-i18n-placeholder="login_audit.placeholder.employee_id"/>
+                </label>
+                <label>
+                    <span data-i18n="login_audit.filter.success">结果</span>
+                    <select id="successSelect">
+                        <option value="" data-i18n="login_audit.filter.success.all">全部</option>
+                        <option value="1" data-i18n="login_audit.filter.success.success">成功</option>
+                        <option value="0" data-i18n="login_audit.filter.success.failed">失败</option>
+                    </select>
+                </label>
+                <label>
+                    <span data-i18n="login_audit.filter.start_date">开始日期</span>
+                    <input id="startDateInput" type="date"/>
+                </label>
+                <label>
+                    <span data-i18n="login_audit.filter.end_date">结束日期</span>
+                    <input id="endDateInput" type="date"/>
+                </label>
+            </div>
+            <div class="filter-actions c-filter-actions-bar">
+                <div class="filter-actions-left"></div>
+                <div class="filter-actions-right c-filter-actions-group">
+                    <button type="button" class="c-btn c-btn-primary" id="applyFilterBtn" data-i18n="common.search">搜索</button>
+                    <button type="button" class="c-btn c-btn-warn" id="resetBtn" data-i18n="common.reset">重置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-wrapper c-table-wrapper">
+            <table class="c-table c-table-hover c-table-center login-audit-table">
+                <thead>
+                <tr>
+                    <th data-i18n="login_audit.table.time">时间</th>
+                    <th data-i18n="login_audit.table.user_name">账号</th>
+                    <th data-i18n="login_audit.table.employee_id">员工ID</th>
+                    <th data-i18n="login_audit.table.result">结果</th>
+                    <th data-i18n="login_audit.table.reason">原因</th>
+                    <th data-i18n="login_audit.table.ip">IP</th>
+                    <th data-i18n="login_audit.table.user_agent">User-Agent</th>
+                </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination c-pagination" id="pagination">
+            <div class="pagination-summary">
+                <span id="pageSummary" data-i18n="login_audit.summary">共 0 条 · 第 1/1 页</span>
+            </div>
+            <div class="pagination-pages" id="paginationPages"></div>
+        </div>
+    </section>
+</div>
+
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script>
+    (function () {
+        const i18n = window.I18N;
+        const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : (fallback || key));
+        const format = (key, vars) => (i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : key);
+
+        const tableBody = document.getElementById("tableBody");
+        const pagination = document.getElementById("pagination");
+        const paginationPages = document.getElementById("paginationPages");
+        const pageSummary = document.getElementById("pageSummary");
+        const userNameInput = document.getElementById("userNameInput");
+        const employeeIdInput = document.getElementById("employeeIdInput");
+        const successSelect = document.getElementById("successSelect");
+        const startDateInput = document.getElementById("startDateInput");
+        const endDateInput = document.getElementById("endDateInput");
+        const applyFilterBtn = document.getElementById("applyFilterBtn");
+        const resetBtn = document.getElementById("resetBtn");
+
+        if (i18n) {
+            i18n.init();
+            i18n.apply();
+        }
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalCount = 0;
+        const pageSize = 20;
+        let currentItems = [];
+
+        const getStatusTag = (success) => {
+            const label = success ? t("login_audit.filter.success.success", "成功") : t("login_audit.filter.success.failed", "失败");
+            const cls = success ? "c-tag-success" : "c-tag-danger";
+            return `<span class="c-tag ${cls}">${label}</span>`;
+        };
+
+        const truncate = (value, limit) => {
+            const text = String(value || "");
+            if (text.length <= limit) return text;
+            return `${text.slice(0, limit)}…`;
+        };
+
+        const renderTable = (items) => {
+            if (!items.length) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("login_audit.empty", "暂无记录")}</td></tr>`;
+                return;
+            }
+            tableBody.innerHTML = items.map((row) => {
+                const reason = row.reason || "-";
+                const ua = row.user_agent || "-";
+                const uaText = truncate(ua, 80);
+                const timeText = row.created_at ? window.formatDate(row.created_at) + " " + new Date(row.created_at).toLocaleTimeString() : "";
+                return `
+                    <tr>
+                        <td>${timeText}</td>
+                        <td>${row.user_name || "-"}</td>
+                        <td>${row.employee_id || "-"}</td>
+                        <td>${getStatusTag(Boolean(row.success))}</td>
+                        <td>${reason}</td>
+                        <td>${row.ip_address || "-"}</td>
+                        <td class="ua-cell" title="${ua.replace(/"/g, "&quot;")}">${uaText}</td>
+                    </tr>
+                `;
+            }).join("");
+        };
+
+        const updatePagination = () => {
+            if (pageSummary) {
+                pageSummary.textContent = format("login_audit.summary", {
+                    count: totalCount,
+                    page: currentPage,
+                    total: totalPages
+                });
+            }
+            if (pagination && window.renderPagination) {
+                window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+            }
+        };
+
+        const collectFilters = () => ({
+            user_name: (userNameInput.value || "").trim(),
+            employee_id: (employeeIdInput.value || "").trim(),
+            success: (successSelect.value || "").trim(),
+            start_date: startDateInput.value || "",
+            end_date: endDateInput.value || "",
+        });
+
+        const fetchLogs = async (page = 1) => {
+            currentPage = page;
+            tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.loading", "加载中...")}</td></tr>`;
+            try {
+                const filters = collectFilters();
+                const params = window.createParams([
+                    ["page", String(currentPage)],
+                    ["page_size", String(pageSize)],
+                    ["user_name", filters.user_name],
+                    ["employee_id", filters.employee_id],
+                    ["success", filters.success],
+                    ["start_date", filters.start_date],
+                    ["end_date", filters.end_date],
+                ]);
+                const url = window.buildUrl("/api/login-audit", params);
+                const res = await fetchWithAuth(url, { method: "GET" });
+                const data = await res.json();
+                const payload = window.normalizeApiResponse(data);
+                if (!res.ok || !payload.success) {
+                    throw new Error(payload.message || t("common.load_failed", "加载失败"));
+                }
+                const result = payload.data || {};
+                const meta = payload.meta || {};
+                currentItems = Array.isArray(result.items) ? result.items : [];
+                totalCount = Number.isFinite(meta.total) ? meta.total : currentItems.length;
+                totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+                currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+                renderTable(currentItems);
+                updatePagination();
+            } catch (err) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.load_failed", "加载失败")}：${err.message}</td></tr>`;
+                totalCount = 0;
+                totalPages = 1;
+                updatePagination();
+            }
+        };
+
+        const resetFilters = () => {
+            userNameInput.value = "";
+            employeeIdInput.value = "";
+            successSelect.value = "";
+            startDateInput.value = "";
+            endDateInput.value = "";
+            fetchLogs(1);
+        };
+
+        const refreshI18n = () => {
+            if (i18n) {
+                i18n.apply();
+            }
+            renderTable(currentItems);
+            updatePagination();
+        };
+
+        if (window && window.addEventListener) {
+            window.addEventListener("i18n:change", refreshI18n);
+        }
+
+        applyFilterBtn.addEventListener("click", () => fetchLogs(1));
+        resetBtn.addEventListener("click", resetFilters);
+        window.bindPagination(pagination, (value) => {
+            const safeTotalPages = Math.max(1, totalPages);
+            if (value === "prev" && currentPage > 1) {
+                fetchLogs(currentPage - 1);
+                return;
+            }
+            if (value === "next" && currentPage < safeTotalPages) {
+                fetchLogs(currentPage + 1);
+                return;
+            }
+            const next = Number(value);
+            if (Number.isFinite(next)) {
+                fetchLogs(next);
+            }
+        });
+
+        fetchLogs(1);
+    })();
+</script>
+</body>
+</html>

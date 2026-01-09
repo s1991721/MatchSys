@@ -50,6 +50,7 @@ from employee.views import (
     employee_departments_api,
     employee_permission_api,
     employees_api,
+    login_audit_api,
     login_api,
     logout_api,
     technician_detail_api,
@@ -99,6 +100,7 @@ urlpatterns = [
     path("profile.html", TemplateView.as_view(template_name="profile.html")),
     path("personnel.html", TemplateView.as_view(template_name="personnel.html")),
     path("people.html", TemplateView.as_view(template_name="people.html")),
+    path("login_audit.html", TemplateView.as_view(template_name="login_audit.html")),
     # -------------------------------attendance UI-------------------------------
     path("attendance.html", TemplateView.as_view(template_name="attendance.html")),
     path("myattendance.html", TemplateView.as_view(template_name="myattendance.html")),
@@ -145,6 +147,7 @@ urlpatterns = [
     # ###################################-API-###################################
     # -------------------------------employee API-------------------------------
     path("api/login", login_api, name="employee-login"),
+    path("api/login-audit", login_audit_api, name="login-audit"),
     path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("api/employees/<int:employee_id>/permission", employee_permission_api, name="employee-permission"),
     path("api/logout", logout_api, name="employee-logout"),

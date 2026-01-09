@@ -26,6 +26,21 @@ class UserLogin(models.Model):
         verbose_name = "登录表"
 
 
+class LoginAudit(models.Model):
+    employee_id = models.BigIntegerField(null=True, blank=True, db_index=True, verbose_name="员工ID")
+    user_name = models.CharField(max_length=100, blank=True, default="", verbose_name="登录账号")
+    success = models.BooleanField(default=False, verbose_name="是否成功")
+    reason = models.CharField(max_length=255, blank=True, default="", verbose_name="失败原因")
+    ip_address = models.CharField(max_length=45, blank=True, default="", verbose_name="IP地址")
+    user_agent = models.CharField(max_length=512, blank=True, default="", verbose_name="User-Agent")
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name="创建时间")
+
+    class Meta:
+        db_table = "login_audit"
+        verbose_name = "登录日志"
+        verbose_name_plural = "登录日志"
+
+
 class Employee(models.Model):
     # 基本信息
     name = models.CharField(max_length=100)

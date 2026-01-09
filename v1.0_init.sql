@@ -38,6 +38,23 @@ VALUES (1, '系统管理员', 'admin', 'admin',
         999, '["*"]', NULL, NOW(), NULL, NOW(), NULL);
 
 
+CREATE TABLE IF NOT EXISTS login_audit
+(
+    id          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    employee_id BIGINT       NULL COMMENT '员工ID',
+    user_name   VARCHAR(100) NOT NULL DEFAULT '' COMMENT '登录账号',
+    success     TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '是否成功',
+    reason      VARCHAR(255) NULL COMMENT '失败原因',
+    ip_address  VARCHAR(45)  NULL COMMENT 'IP地址',
+    user_agent  VARCHAR(512) NULL COMMENT 'User-Agent',
+    created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    INDEX idx_login_audit_employee_id (employee_id),
+    INDEX idx_login_audit_created_at (created_at)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT ='登录日志';
+
+
 CREATE TABLE IF NOT EXISTS sys_menu
 (
     id         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
@@ -69,8 +86,9 @@ VALUES ('主页', 'home.html', 1),
        ('注文书管理', 'order.html', 10),
        ('请求书管理', 'pay_request.html', 11),
        ('权限管理', 'permission.html', 12),
-       ('客户管理', 'customer.html', 13),
-       ('数据分析', 'analysis.html', 14);
+       ('登录日志', 'login_audit.html', 13),
+       ('客户管理', 'customer.html', 14),
+       ('数据分析', 'analysis.html', 15);
 
 
 CREATE TABLE IF NOT EXISTS sys_role

@@ -1,6 +1,8 @@
 import json
+import logging
 import mimetypes
 import os
+from datetime import datetime, time
 from decimal import Decimal
 
 from django.db import transaction
@@ -11,8 +13,40 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_date, parse_json_body, years_ago, ss_storage_dir
-from .models import Employee, Technician, UserLogin
+from project.common_tools import parse_date, parse_json_body, require_login, years_ago, ss_storage_dir
+from .models import Employee, LoginAudit, Technician, UserLogin
+
+logger = logging.getLogger(__name__)
+
+
+def _get_client_ip(request):
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR") or ""
+
+
+def _log_login_attempt(request, user_name, success, reason="", employee_id=None):
+    try:
+        LoginAudit.objects.create(
+            employee_id=employee_id,
+            user_name=user_name or "",
+            success=success,
+            reason=reason or "",
+            ip_address=_get_client_ip(request),
+            user_agent=(request.META.get("HTTP_USER_AGENT") or "")[:512],
+        )
+    except Exception:
+        logger.exception("login audit failed")
+
+
+def _build_date_range(filters, field_name, start_value, end_value):
+    if start_value:
+        start_dt = timezone.make_aware(datetime.combine(start_value, time.min))
+        filters[f"{field_name}__gte"] = start_dt
+    if end_value:
+        end_dt = timezone.make_aware(datetime.combine(end_value, time.max))
+        filters[f"{field_name}__lte"] = end_dt
 
 
 @csrf_exempt
@@ -27,6 +61,7 @@ def login_api(request):
     password = payload.get("password") or ""
 
     if not user_name or not password:
+        _log_login_attempt(request, user_name, False, reason="missing_credentials")
         return api_error(
             "Missing user_name or password",
             status=400,
@@ -42,6 +77,7 @@ def login_api(request):
     )
 
     if not user_login:
+        _log_login_attempt(request, user_name, False, reason="invalid_credentials")
         return api_error(
             "Invalid credentials",
             status=401,
@@ -58,6 +94,13 @@ def login_api(request):
         normalized_menu_list = '["*"]' if "*" in raw_menu_list else raw_menu_list
     request.session["role_id"] = user_login.role_id
     request.session["menu_list"] = normalized_menu_list
+
+    _log_login_attempt(
+        request,
+        user_name,
+        True,
+        employee_id=user_login.employee_id,
+    )
 
     return api_success(data={
         "role_id": user_login.role_id,
@@ -282,6 +325,87 @@ def employee_departments_api(request):
     )
     dept_list = list(departments)
     return api_success(data={"departments": dept_list})
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+# 登录日志查询
+def login_audit_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    try:
+        page = int(request.GET.get("page") or 1)
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(request.GET.get("page_size") or 20)
+    except (TypeError, ValueError):
+        page_size = 20
+    if page < 1:
+        page = 1
+    if page_size < 1:
+        page_size = 20
+
+    filters = {}
+    employee_id = request.GET.get("employee_id")
+    if employee_id not in (None, ""):
+        try:
+            filters["employee_id"] = int(employee_id)
+        except (TypeError, ValueError):
+            return api_error("Invalid employee_id", status=400)
+
+    user_name = (request.GET.get("user_name") or "").strip()
+    if user_name:
+        filters["user_name__icontains"] = user_name
+
+    success_raw = (request.GET.get("success") or "").strip().lower()
+    if success_raw:
+        if success_raw in ("1", "true", "yes"):
+            filters["success"] = True
+        elif success_raw in ("0", "false", "no"):
+            filters["success"] = False
+        else:
+            return api_error("Invalid success", status=400)
+
+    start_date, error = parse_date(request.GET.get("start_date"))
+    if error:
+        return error
+    end_date, error = parse_date(request.GET.get("end_date"))
+    if error:
+        return error
+    _build_date_range(filters, "created_at", start_date, end_date)
+
+    qs = LoginAudit.objects.filter(**filters).order_by("-created_at")
+    total = qs.count()
+    total_pages = (total + page_size - 1) // page_size if page_size else 1
+    if total_pages < 1:
+        total_pages = 1
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+
+    items = []
+    for row in qs[offset:offset + page_size]:
+        items.append({
+            "id": row.id,
+            "employee_id": row.employee_id,
+            "user_name": row.user_name,
+            "success": row.success,
+            "reason": row.reason,
+            "ip_address": row.ip_address,
+            "user_agent": row.user_agent,
+            "created_at": row.created_at.isoformat() if row.created_at else "",
+        })
+
+    return api_paginated(
+        items=items,
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages
+    )
 
 
 @csrf_exempt

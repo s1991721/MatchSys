@@ -6,9 +6,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_json_body
+from project.common_tools import parse_json_body, require_login
+from employee.models import UserLogin
+from settings.models import SysSettings
 from . import llmsTool
-from .gmailTool import GmailTool
+from .smtp_sender import SmtpMailSender
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
 
 
@@ -259,6 +261,10 @@ def extract_project_detail(request):
 @require_POST
 # 送信
 def send_mail(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
     payload, error = parse_json_body(request)
     if error:
         return error
@@ -281,6 +287,49 @@ def send_mail(request):
     if not body.strip():
         return api_error("Missing field: body")
 
+    user_login = UserLogin.objects.filter(
+        employee_id=login_id,
+        deleted_at__isnull=True,
+    ).first()
+    if not user_login:
+        return api_error("User login not found", status=404)
+
+    send_settings = SysSettings.objects.filter(
+        name="sendmsg",
+        deleted_at__isnull=True,
+    ).first()
+    send_configs = send_settings.settings if send_settings else []
+    if not isinstance(send_configs, list):
+        send_configs = []
+    target_users = {
+        str(user_login.user_name or "").strip(),
+        str(user_login.employee_name or "").strip(),
+        str(login_id),
+    }
+    send_config = None
+    for item in send_configs:
+        if not isinstance(item, dict):
+            continue
+        item_user = str(item.get("user") or "").strip()
+        if item_user and item_user in target_users:
+            send_config = item
+            break
+
+    if not send_config:
+        return api_error("No send config for current user")
+
+    smtp_host = str(send_config.get("smtp") or "").strip()
+    smtp_port_raw = str(send_config.get("port") or "").strip()
+    smtp_user = str(send_config.get("email") or "").strip()
+    smtp_password = str(send_config.get("password") or "")
+
+    if not smtp_host or not smtp_port_raw or not smtp_user or not smtp_password:
+        return api_error("Send config is incomplete")
+    try:
+        smtp_port = int(smtp_port_raw)
+    except (TypeError, ValueError):
+        return api_error("Invalid SMTP port")
+
     # 标准化附件结构
     normalized_atts = []
     for att in attachments:
@@ -295,18 +344,24 @@ def send_mail(request):
         )
 
     try:
-        gmail = GmailTool()
-        message_id = gmail.send_message(
+        sender = SmtpMailSender(
+            host=smtp_host,
+            port=smtp_port,
+            username=smtp_user,
+            password=smtp_password,
+        )
+        message_id = sender.send_message(
             to=to_addr,
             cc=cc_addr or None,
             subject=subject,
             body=body,
+            sender=smtp_user,
             attachments=normalized_atts,
+            in_reply_to=payload.get("in_reply_to"),
+            references=payload.get("references"),
             mail_type=mail_type,
+            created_by=login_id,
         )
-    except FileNotFoundError as exc:
-        message = f"OAuth credentials missing: {exc}"
-        return api_error(message, status=500)
     except Exception as exc:
         return api_error(str(exc), status=500)
 

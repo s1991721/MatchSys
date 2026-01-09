@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bpmatch.authorize_gmail import test_connection
+from bpmatch.smtp_sender import test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
@@ -146,7 +147,20 @@ def _handle_sendmsg(settings_payload, login_id):
         settings_payload = []
     if not isinstance(settings_payload, list):
         return api_error("Invalid settings payload")
-    return _save_setting("sendmsg", settings_payload, login_id)
+    normalized = []
+    for item in settings_payload:
+        if not isinstance(item, dict):
+            continue
+        normalized.append(
+            {
+                "email": str(item.get("email") or "").strip(),
+                "password": str(item.get("password") or ""),
+                "smtp": str(item.get("smtp") or "").strip(),
+                "port": str(item.get("port") or "").strip(),
+                "user": str(item.get("user") or "").strip(),
+            }
+        )
+    return _save_setting("sendmsg", normalized, login_id)
 
 
 def _handle_tasks(settings_payload, login_id):
@@ -367,6 +381,43 @@ def sys_settings_gmail_test_api(request):
             "profile": result,
         }
     )
+
+
+@csrf_exempt
+@require_POST
+def sys_settings_sendmsg_test_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        return payload_error
+
+    email = str(payload.get("email") or "").strip()
+    password = str(payload.get("password") or "")
+    smtp_host = str(payload.get("smtp") or "").strip()
+    smtp_port_raw = str(payload.get("port") or "").strip()
+
+    if not email or not password or not smtp_host or not smtp_port_raw:
+        return api_error("Missing SMTP config")
+
+    try:
+        smtp_port = int(smtp_port_raw)
+    except (TypeError, ValueError):
+        return api_error("Invalid SMTP port")
+
+    try:
+        result = test_smtp_connection(
+            host=smtp_host,
+            port=smtp_port,
+            username=email,
+            password=password,
+        )
+    except Exception as exc:
+        return api_error(str(exc))
+
+    return api_success(data=result)
 
 
 @csrf_exempt

@@ -553,15 +553,16 @@
           </div>
           <div class="form-field">
             <label for="sendmsg-user-${index}">使用人</label>
-            <select id="sendmsg-user-${index}">
-              <option ${!config.user ? "selected" : ""}>请选择使用人</option>
-              <option ${config.user === "张三" ? "selected" : ""}>张三</option>
-              <option ${config.user === "李四" ? "selected" : ""}>李四</option>
-              <option ${config.user === "王五" ? "selected" : ""}>王五</option>
-            </select>
+            <input
+              id="sendmsg-user-${index}"
+              type="text"
+              list="user-login-suggestions"
+              placeholder="请输入登录账号"
+              value="${config.user || ""}"
+            />
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button">连接测试</button>
+            <button class="c-btn c-btn-secondary" type="button" data-test-sendmsg="${index}">连接测试</button>
             <button class="c-btn c-btn-primary" type="button" data-save-sendmsg="${index}">保存配置</button>
             <button class="c-btn c-btn-danger" type="button" data-delete-sendmsg="${index}">删除</button>
           </div>
@@ -1046,6 +1047,7 @@
         if (!(target instanceof HTMLElement)) return;
         const deleteButton = target.closest("[data-delete-sendmsg]");
         const saveButton = target.closest("[data-save-sendmsg]");
+        const testButton = target.closest("[data-test-sendmsg]");
         if (deleteButton) {
           const index = Number(deleteButton.getAttribute("data-delete-sendmsg"));
           if (Number.isNaN(index)) return;
@@ -1070,7 +1072,50 @@
           } catch (error) {
             notifyError(error.message);
           }
+          return;
         }
+        if (testButton) {
+          const index = Number(testButton.getAttribute("data-test-sendmsg"));
+          if (Number.isNaN(index)) return;
+          const settings = collectSendmsgConfig(index);
+          if (!settings.email || !settings.password || !settings.smtp || !settings.port) {
+            notifyError("请填写完整的 SMTP 配置。");
+            return;
+          }
+          try {
+            const payload = await requestJson(`${apiBase}/sendmsg/test`, {
+              method: "POST",
+              body: JSON.stringify(settings),
+            });
+            const message = payload.data && payload.data.message ? payload.data.message : "连接成功";
+            setInlineStatus(`sendmsg-status-${index}`, message, true);
+            window.alert(message);
+            flashButton(testButton, "成功");
+          } catch (error) {
+            setInlineStatus(`sendmsg-status-${index}`, error.message || "连接失败", false);
+            notifyError(error.message);
+          }
+        }
+      });
+
+      const handleSendmsgUserInput = debounce(async (event) => {
+        const value = event.target ? event.target.value : "";
+        const names = await fetchUserLoginNames(value);
+        renderUserLoginSuggestions(names);
+      }, 200);
+
+      sendmsgList.addEventListener("input", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (!target.id.startsWith("sendmsg-user-")) return;
+        handleSendmsgUserInput(event);
+      });
+
+      sendmsgList.addEventListener("focusin", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (!target.id.startsWith("sendmsg-user-")) return;
+        handleSendmsgUserInput(event);
       });
     }
 

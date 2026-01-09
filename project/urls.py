@@ -74,6 +74,7 @@ from permission.views import (
 from settings.views import (
     sys_settings_ai_test_api,
     sys_settings_gmail_test_api,
+    sys_settings_sendmsg_test_api,
     sys_password_reset_api,
     sys_settings_section_api,
     sys_tasks_api,
@@ -197,6 +198,7 @@ urlpatterns = [
     # -------------------------------system settings API-------------------------------
     path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
     path("api/sys-settings/business-email/test", sys_settings_gmail_test_api, name="sys-settings-gmail-test"),
+    path("api/sys-settings/sendmsg/test", sys_settings_sendmsg_test_api, name="sys-settings-sendmsg-test"),
     path("api/sys-settings/ai/test", sys_settings_ai_test_api, name="sys-settings-ai-test"),
     path("api/sys-password-reset", sys_password_reset_api, name="sys-password-reset"),
     path("api/sys-tasks", sys_tasks_api, name="sys-tasks"),

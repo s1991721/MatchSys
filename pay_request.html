@@ -118,6 +118,138 @@
       .stats{ grid-template-columns: repeat(2, 1fr); }
       .item{ grid-template-columns: 1fr; gap:6px; }
       .item.head{ display:none; }
+      .pay-total-field{
+        grid-column: 1 / -1;
+        justify-self: stretch;
+        width: 100%;
+        margin-left: 0;
+      }
+      .pay-upload-field,
+      .pay-account-field,
+      .pay-request-date-field{
+        grid-column: 1 / -1;
+      }
+      .pay-bottom-row{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .c-modal-wide{
+      width: min(1600px, 98vw);
+      max-width: min(1600px, 98vw);
+    }
+    .pay-detail-table-wrap{
+      padding: 8px 12px 12px;
+      overflow-x: auto;
+      background: #fff;
+    }
+    .pay-detail-table{
+      min-width: 1100px;
+      table-layout: auto;
+    }
+    .pay-detail-table th,
+    .pay-detail-table td{
+      padding: 12px 10px;
+      font-size: 13px;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .pay-detail-table th:last-child,
+    .pay-detail-table td:last-child{
+      width: 90px;
+    }
+    .pay-detail-table td .c-input{
+      min-width: 0;
+    }
+    .pay-customer-info{
+      padding: 12px 14px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      display: grid;
+      gap: 6px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .pay-customer-info span{
+      color: #64748b;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .pay-total-field{
+      width: min(420px, 100%);
+      justify-self: end;
+    }
+    .pay-upload-field{
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .pay-upload-field input[type="file"]{
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .pay-account-card{
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      padding: 12px 14px;
+      display: grid;
+      gap: 10px;
+      color: #0f172a;
+    }
+    .pay-account-title{
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 2px;
+      font-size: 16px;
+    }
+    .pay-account-subtitle{
+      text-align: center;
+      font-weight: 800;
+      color: #334155;
+    }
+    .pay-account-grid{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px 24px;
+      font-weight: 800;
+    }
+    .pay-account-label{
+      color: #334155;
+      letter-spacing: 1px;
+    }
+    .pay-account-value{
+      color: #0f172a;
+      text-align: left;
+    }
+    .pay-bottom-row{
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+    .pay-side-stack{
+      display: grid;
+      gap: 12px;
+    }
+    .pay-total-display{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .pay-column-group{
+      display: grid;
+      gap: 12px;
+    }
+    .pay-upload-field{
+      grid-column: 1 / -1;
     }
   </style>
 </head>
@@ -129,7 +261,7 @@
         <p class="c-page-subtitle" data-i18n="pay.subtitle">管理付款请求的提交、审批与执行进度</p>
       </div>
       <div class="actions">
-        <button class="c-btn c-btn-primary" type="button" data-i18n="pay.action.create">新增请求书</button>
+        <button class="c-btn c-btn-primary" id="createPayBtn" type="button" data-i18n="pay.action.create">新增请求书</button>
         <button class="c-btn c-btn-secondary" type="button" data-i18n="pay.action.batch_approve">批量审批</button>
         <button class="c-btn c-btn-secondary" type="button" data-i18n="pay.action.export">导出</button>
       </div>
@@ -234,11 +366,283 @@
       </div>
     </section>
   </div>
+
+  <dialog class="c-modal c-modal-wide" id="createPayDialog" aria-labelledby="createPayTitle">
+    <h3 id="createPayTitle" data-i18n="pay.dialog.create.title">新建请求书</h3>
+    <p data-i18n="pay.dialog.create.subtitle">请填写请求书基础信息。</p>
+    <div class="c-modal-form">
+      <div class="c-modal-grid">
+        <div class="pay-column-group">
+          <label class="c-inline-field">
+            <span data-i18n="pay.field.request_no">请求书编号</span>
+            <input type="text" placeholder="PR-2024-XXX"/>
+          </label>
+          <label class="c-inline-field">
+            <span data-i18n="pay.field.order_no">对应注文书编号</span>
+            <input type="text" placeholder="PO-2024-XXX"/>
+          </label>
+        </div>
+        <div class="pay-column-group">
+          <label class="c-inline-field">
+            <span data-i18n="pay.field.target">请求对象</span>
+            <input id="pay-customer-name" type="text" placeholder="客户名称" data-i18n-placeholder="pay.placeholder.customer" list="pay-customer-list"/>
+          </label>
+          <datalist id="pay-customer-list"></datalist>
+          <input id="pay-customer-id" type="hidden"/>
+          <div class="c-inline-field pay-customer-info" id="payCustomerInfo" hidden>
+            <div><span data-i18n="pay.customer.name">客户名称</span><strong id="payCustomerName">-</strong></div>
+            <div><span data-i18n="pay.customer.address">客户地址</span><strong id="payCustomerAddress">-</strong></div>
+          </div>
+        </div>
+        <div></div>
+        <div class="c-inline-field c-inline-field-full" style="flex-direction:column; align-items:stretch; gap:10px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <span data-i18n="pay.field.detail">明细</span>
+            <button class="c-btn c-btn-ghost c-btn-sm" type="button" id="detailAddBtn" data-i18n="pay.detail.add">新增明细</button>
+          </div>
+          <div class="c-table-wrapper pay-detail-table-wrap" style="border-radius:12px; border:1px solid var(--border);">
+            <table class="c-table c-table-hover pay-detail-table" id="detailTable">
+              <thead>
+              <tr>
+                <th data-i18n="pay.detail.item">项目</th>
+                <th data-i18n="pay.detail.qty">数量</th>
+                <th data-i18n="pay.detail.price">单价</th>
+                <th data-i18n="pay.detail.subtotal">小计</th>
+                <th data-i18n="pay.detail.note">备注</th>
+                <th data-i18n="pay.detail.action">操作</th>
+              </tr>
+              </thead>
+              <tbody id="detailTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="c-inline-field c-inline-field-full" style="flex-direction:column; align-items:stretch; gap:10px;">
+          <span data-i18n="pay.field.tax_breakdown">税相关</span>
+          <div class="c-table-wrapper pay-detail-table-wrap" style="border-radius:12px; border:1px solid var(--border);">
+            <table class="c-table c-table-hover pay-detail-table" id="taxTable">
+              <thead>
+              <tr>
+                <th data-i18n="pay.tax.category">区分</th>
+                <th data-i18n="pay.tax.amount_excl">対象額（税抜）</th>
+                <th data-i18n="pay.tax.value">消費税</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td data-i18n="pay.tax.rate_10">10%対象</td>
+                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+              </tr>
+              <tr>
+                <td data-i18n="pay.tax.rate_8">8%対象（※）</td>
+                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+              </tr>
+              <tr>
+                <td data-i18n="pay.tax.subtotal">小计</td>
+                <td><input class="c-input" type="text" placeholder="¥ 0" disabled/></td>
+                <td><input class="c-input" type="text" placeholder="¥ 0" disabled/></td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="pay-bottom-row">
+          
+            <div class="pay-account-card">
+              <div class="pay-account-title">振込先</div>
+              <div class="pay-account-subtitle">○○銀行○○支店</div>
+              <div class="pay-account-grid">
+                <div class="pay-account-label">□□口座種</div>
+                <div class="pay-account-value">普通口座</div>
+                <div class="pay-account-label">□□口座番号</div>
+                <div class="pay-account-value">1234567</div>
+                <div class="pay-account-label">□□口座名義</div>
+                <div class="pay-account-value">タナカ イチロウ</div>
+              </div>
+            </div>
+          
+          <div class="pay-side-stack">
+            <label class="c-inline-field pay-total-field">
+              <span data-i18n="pay.field.total">总价</span>
+              <span class="pay-total-display" aria-live="polite">¥ 0</span>
+            </label>
+            <label class="c-inline-field pay-request-date-field">
+              <span>最迟支付日</span>
+              <input type="date"/>
+            </label>
+            <label class="c-inline-field pay-upload-field">
+              <span>附件上传</span>
+              <input type="file" multiple />
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="c-modal-actions">
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+      <button class="c-btn c-btn-primary" type="button" data-i18n="common.create">开始创建</button>
+    </div>
+  </dialog>
+
   <script src="i18n.js"></script>
   <script>
-    if (window.I18N) {
-      window.I18N.init();
-      window.I18N.apply();
+    const i18n = window.I18N || null;
+    const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
+    if (i18n) {
+      i18n.init();
+      i18n.apply();
+    }
+    const createPayBtn = document.getElementById("createPayBtn");
+    const createPayDialog = document.getElementById("createPayDialog");
+    const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
+    const detailAddBtn = document.getElementById("detailAddBtn");
+    const detailTableBody = document.getElementById("detailTableBody");
+    const payCustomerNameInput = document.getElementById("pay-customer-name");
+    const payCustomerIdInput = document.getElementById("pay-customer-id");
+    const payCustomerList = document.getElementById("pay-customer-list");
+    const payCustomerInfo = document.getElementById("payCustomerInfo");
+    const payCustomerName = document.getElementById("payCustomerName");
+    const payCustomerAddress = document.getElementById("payCustomerAddress");
+
+    if (createPayBtn && createPayDialog) {
+      createPayBtn.addEventListener("click", () => {
+        createPayDialog.showModal();
+      });
+    }
+
+    dialogCloseButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const dialog = button.closest("dialog");
+        if (dialog) dialog.close();
+      });
+    });
+
+    const buildDetailRow = () => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td><input class="c-input" type="text" placeholder="服务/物料"/></td>
+        <td><input class="c-input" type="number" min="0" placeholder="1"/></td>
+        <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+        <td><input class="c-input" type="text" placeholder="¥ 0" disabled/></td>
+        <td><input class="c-input" type="text" placeholder="备注"/></td>
+        <td>
+          <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-action="save" data-i18n="pay.detail.save">${t("pay.detail.save", "保存")}</button>
+        </td>
+      `;
+      return row;
+    };
+
+    const setRowEditable = (row, editable) => {
+      row.querySelectorAll("input").forEach((input, index) => {
+        if (index === 3) return;
+        input.disabled = !editable;
+      });
+    };
+
+    const updateRowSubtotal = (row) => {
+      const qty = Number(row.querySelectorAll("input")[1].value || 0);
+      const priceRaw = row.querySelectorAll("input")[2].value || "";
+      const price = Number(String(priceRaw).replace(/[^\d.]/g, "")) || 0;
+      row.querySelectorAll("input")[3].value = `¥ ${qty * price}`;
+    };
+
+    if (detailTableBody) {
+      const initialRow = buildDetailRow();
+      setRowEditable(initialRow, true);
+      detailTableBody.appendChild(initialRow);
+    }
+
+    if (detailAddBtn && detailTableBody) {
+      detailAddBtn.addEventListener("click", () => {
+        const row = buildDetailRow();
+        setRowEditable(row, true);
+        detailTableBody.appendChild(row);
+      });
+    }
+
+    if (detailTableBody) {
+      detailTableBody.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-action]");
+        if (!btn) return;
+        const row = btn.closest("tr");
+        if (!row) return;
+        const isEditing = btn.dataset.action === "save";
+        setRowEditable(row, !isEditing);
+        btn.dataset.action = isEditing ? "edit" : "save";
+        btn.textContent = isEditing ? t("pay.detail.edit", "编辑") : t("pay.detail.save", "保存");
+      });
+      detailTableBody.addEventListener("input", (event) => {
+        const row = event.target.closest("tr");
+        if (!row) return;
+        updateRowSubtotal(row);
+      });
+    }
+
+    const payCustomerMap = new Map();
+    const renderPayCustomerOptions = (listEl, map, items) => {
+      map.clear();
+      listEl.innerHTML = "";
+      items.forEach((item) => {
+        if (!item || !item.company_name) return;
+        map.set(item.company_name, {
+          id: item.id,
+          address: item.company_address || ""
+        });
+        const opt = document.createElement("option");
+        opt.value = item.company_name;
+        listEl.appendChild(opt);
+      });
+    };
+
+    const fetchPayCustomerOptions = (inputEl, listEl, map) => {
+      const keyword = inputEl.value.trim();
+      if (!keyword) {
+        listEl.innerHTML = "";
+        map.clear();
+        return;
+      }
+      const params = new URLSearchParams();
+      params.append("company_name", keyword);
+      params.append("page", "1");
+      params.append("page_size", "10");
+      fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" })
+        .then((response) => response.json())
+        .then((data) => {
+          const payload = normalizeApiResponse(data);
+          const result = payload.data || {};
+          const items = Array.isArray(result.items) ? result.items : [];
+          renderPayCustomerOptions(listEl, map, items);
+        })
+        .catch(() => {
+          listEl.innerHTML = "";
+          map.clear();
+        });
+    };
+
+    const updatePayCustomerInfo = (name) => {
+      const info = payCustomerMap.get(name);
+      if (!info) {
+        if (payCustomerIdInput) payCustomerIdInput.value = "";
+        if (payCustomerInfo) payCustomerInfo.hidden = true;
+        if (payCustomerName) payCustomerName.textContent = "-";
+        if (payCustomerAddress) payCustomerAddress.textContent = "-";
+        return;
+      }
+      if (payCustomerIdInput) payCustomerIdInput.value = info.id ? String(info.id) : "";
+      if (payCustomerName) payCustomerName.textContent = name || "-";
+      if (payCustomerAddress) payCustomerAddress.textContent = info.address || "-";
+      if (payCustomerInfo) payCustomerInfo.hidden = false;
+    };
+
+    if (payCustomerNameInput && payCustomerList) {
+      payCustomerNameInput.addEventListener("input", () => {
+        fetchPayCustomerOptions(payCustomerNameInput, payCustomerList, payCustomerMap);
+        updatePayCustomerInfo("");
+      });
+      payCustomerNameInput.addEventListener("change", () => {
+        updatePayCustomerInfo(payCustomerNameInput.value.trim());
+      });
     }
   </script>
 </body>

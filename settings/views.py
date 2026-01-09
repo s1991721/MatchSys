@@ -41,6 +41,14 @@ SECTION_DEFAULTS = {
         "ssl_mode": "require",
         "note": "",
     },
+    "bank-account": {
+        "bank_name": "",
+        "branch_code": "",
+        "branch_name": "",
+        "account_type": "",
+        "account_number": "",
+        "account_holder": "",
+    },
     "sendmsg": [],
 }
 
@@ -163,6 +171,20 @@ def _handle_sendmsg(settings_payload, login_id):
     return _save_setting("sendmsg", normalized, login_id)
 
 
+def _handle_bank_account(settings_payload, login_id):
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+    normalized = {
+        "bank_name": str(settings_payload.get("bank_name") or "").strip(),
+        "branch_code": str(settings_payload.get("branch_code") or "").strip(),
+        "branch_name": str(settings_payload.get("branch_name") or "").strip(),
+        "account_type": str(settings_payload.get("account_type") or "").strip(),
+        "account_number": str(settings_payload.get("account_number") or "").strip(),
+        "account_holder": str(settings_payload.get("account_holder") or "").strip(),
+    }
+    return _save_setting("bank-account", normalized, login_id)
+
+
 def _handle_tasks(settings_payload, login_id):
     if settings_payload is None:
         settings_payload = []
@@ -256,6 +278,7 @@ SECTION_HANDLERS = {
     "match": _handle_match,
     "ai": _handle_ai,
     "backup": _handle_backup,
+    "bank-account": _handle_bank_account,
     "sendmsg": _handle_sendmsg,
 }
 

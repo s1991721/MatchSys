@@ -150,6 +150,40 @@
       </section>
 
       <section class="c-card c-card-pad settings-card">
+        <h2 class="c-card-title">口座信息</h2>
+        <p class="c-card-subtitle settings-desc">配置银行口座的基础信息。</p>
+        <form class="form-grid form-grid-spaced">
+          <div class="form-field">
+            <label for="account-bank-name">银行名</label>
+            <input id="account-bank-name" type="text" placeholder="例如：みずほ銀行" />
+          </div>
+          <div class="form-field">
+            <label for="account-branch-code">支点编号</label>
+            <input id="account-branch-code" type="text" placeholder="例如：123" />
+          </div>
+          <div class="form-field">
+            <label for="account-branch-name">支点名</label>
+            <input id="account-branch-name" type="text" placeholder="例如：新宿" />
+          </div>
+          <div class="form-field">
+            <label for="account-type">口座种类</label>
+            <input id="account-type" type="text" placeholder="例如：普通" />
+          </div>
+          <div class="form-field">
+            <label for="account-number">口座号</label>
+            <input id="account-number" type="text" placeholder="例如：1234567" />
+          </div>
+          <div class="form-field">
+            <label for="account-holder">口座名义</label>
+            <input id="account-holder" type="text" placeholder="例如：株式会社xxxx" />
+          </div>
+          <div class="form-actions">
+            <button class="c-btn c-btn-primary" type="button" id="account-save">保存配置</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="c-card c-card-pad settings-card">
         <h2 class="c-card-title">送信配置</h2>
         <p class="c-card-subtitle settings-desc">配置常用邮箱登录信息，并指定使用人。</p>
         <ul class="config-list" id="sendmsg-list"></ul>
@@ -191,6 +225,7 @@
       match: "match",
       ai: "ai",
       backup: "backup",
+      account: "bank-account",
       sendmsg: "sendmsg",
     };
 
@@ -212,6 +247,7 @@
     const aiTestStatus = document.getElementById("ai-test-status");
     const backupSaveButton = document.getElementById("backup-save");
     const backupTestButton = document.getElementById("backup-test");
+    const accountSaveButton = document.getElementById("account-save");
     const previewResetButton = document.getElementById("preview-reset");
     const previewResetStatus = document.getElementById("preview-reset-status");
     const userLoginSuggestions = document.getElementById("user-login-suggestions");
@@ -956,6 +992,25 @@
       });
     }
 
+    if (accountSaveButton) {
+      accountSaveButton.addEventListener("click", async () => {
+        const settings = {
+          bank_name: getValue("account-bank-name").trim(),
+          branch_code: getValue("account-branch-code").trim(),
+          branch_name: getValue("account-branch-name").trim(),
+          account_type: getValue("account-type").trim(),
+          account_number: getValue("account-number").trim(),
+          account_holder: getValue("account-holder").trim(),
+        };
+        try {
+          await saveSettings(sections.account, settings);
+          flashButton(accountSaveButton, "已保存");
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
     if (taskList) {
       taskList.addEventListener("change", (event) => {
         const target = event.target;
@@ -1161,6 +1216,14 @@
       setValue("backup-password", backupSettings.password || "");
       setValue("backup-ssl", backupSettings.ssl_mode || "require");
       setValue("backup-note", backupSettings.note || "");
+
+      const accountSettings = await fetchSettings(sections.account, {});
+      setValue("account-bank-name", accountSettings.bank_name || "");
+      setValue("account-branch-code", accountSettings.branch_code || "");
+      setValue("account-branch-name", accountSettings.branch_name || "");
+      setValue("account-type", accountSettings.account_type || "");
+      setValue("account-number", accountSettings.account_number || "");
+      setValue("account-holder", accountSettings.account_holder || "");
 
       sendmsgConfigs = await fetchSettings(sections.sendmsg, []);
       if (!Array.isArray(sendmsgConfigs)) {

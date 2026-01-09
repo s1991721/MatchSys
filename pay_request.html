@@ -13,111 +13,25 @@
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
                    "Hiragino Sans GB", "Microsoft YaHei", Arial, "Noto Sans";
-      background: transparent;
+      background: var(--bg);
       color:var(--text);
     }
 
-    .container{ padding:22px; max-width:1200px; margin:0 auto; }
-    .page-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:16px;
-    }
-    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
-    .stats{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:12px;
-      margin-bottom:14px;
-    }
-.stat{
-      padding:14px 16px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .stat .label{ color:var(--muted); font-size:12px; font-weight:800; }
-    .stat .value{ font-size:20px; font-weight:900; }
-    .chip{
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
+    .pay-amount{
       font-weight:800;
-      background: rgba(124,58,237,.12);
-      color:#5b21b6;
-      border:1px solid rgba(124,58,237,.2);
+      color:#1f60d8;
     }
-
-    .filters{
-      display:flex;
-      flex-wrap:wrap;
-      gap:12px;
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      background: rgba(247,249,253,.9);
-    }
-    .field{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      padding:8px 10px;
-      border-radius:10px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-size:13px;
+    .pay-status .c-pill{
       font-weight:700;
-      color:#3b4a60;
     }
-    .field input, .field select{
-      border:0;
-      outline:none;
-      font-size:13px;
+    .pay-request-table .c-table th{
       font-weight:700;
-      color:#2c3d55;
-      background:transparent;
-      min-width:140px;
     }
-
-    .item{
-      display:grid;
-      grid-template-columns: 1.2fr .8fr .8fr .6fr .6fr;
-      gap:10px;
-      padding:14px 16px;
-      border-bottom:1px solid var(--border);
-      align-items:center;
-      font-weight:700;
-      color:#2c3d55;
-    }
-    .item.head{
-      background: rgba(247,249,253,.9);
-      color:var(--muted);
-      font-size:12px;
-      font-weight:800;
-      text-transform:uppercase;
-    }
-    .tag{
-      display:inline-flex;
-      align-items:center;
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:800;
-      border:1px solid transparent;
-    }
-    .tag.wait{ color:#b45309; background: rgba(245,158,11,.16); border-color: rgba(245,158,11,.25); }
-    .tag.ok{ color:#0f7a3a; background: rgba(22,163,74,.12); border-color: rgba(22,163,74,.22); }
-    .tag.sub{ color:#1d4ed8; background: rgba(28,123,255,.12); border-color: rgba(28,123,255,.22); }
-
-    .link{ color:var(--brand); text-decoration:none; font-weight:800; }
 
     @media (max-width: 900px){
-      .page-head{ flex-direction:column; align-items:stretch; }
-      .stats{ grid-template-columns: repeat(2, 1fr); }
-      .item{ grid-template-columns: 1fr; gap:6px; }
-      .item.head{ display:none; }
+      .pay-request-table table{
+        min-width:900px;
+      }
       .pay-total-field{
         grid-column: 1 / -1;
         justify-self: stretch;
@@ -253,116 +167,125 @@
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <div class="page-head">
-      <div class="title">
-        <h1 class="c-page-title" data-i18n="pay.title">请求书管理</h1>
-        <p class="c-page-subtitle" data-i18n="pay.subtitle">管理付款请求的提交、审批与执行进度</p>
-      </div>
-      <div class="actions">
-        <button class="c-btn c-btn-primary" id="createPayBtn" type="button" data-i18n="pay.action.create">新增请求书</button>
-        <button class="c-btn c-btn-secondary" type="button" data-i18n="pay.action.batch_approve">批量审批</button>
-        <button class="c-btn c-btn-secondary" type="button" data-i18n="pay.action.export">导出</button>
-      </div>
-    </div>
-
-    <section class="stats">
-      <div class="c-card">
-        <div class="stat">
-          <div>
-            <div class="label" data-i18n="pay.stat.pending">待审批</div>
-            <div class="value">12</div>
-          </div>
-          <span class="chip" data-i18n="pay.stat.week_delta">本周 +3</span>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="stat">
-          <div>
-            <div class="label" data-i18n="pay.stat.submitted">已提交</div>
-            <div class="value">38</div>
-          </div>
-          <span class="chip" style="background: rgba(28,123,255,.12); color:#1d4ed8; border-color: rgba(28,123,255,.22);" data-i18n="pay.stat.in_progress">进行中</span>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="stat">
-          <div>
-            <div class="label" data-i18n="pay.stat.paid">已付款</div>
-            <div class="value">26</div>
-          </div>
-          <span class="chip" style="background: rgba(22,163,74,.12); color:#0f7a3a; border-color: rgba(22,163,74,.22);" data-i18n="pay.stat.done">完成</span>
-        </div>
-      </div>
-      <div class="c-card">
-        <div class="stat">
-          <div>
-            <div class="label" data-i18n="pay.stat.exception">异常处理</div>
-            <div class="value">2</div>
-          </div>
-          <span class="chip" style="background: rgba(245,158,11,.16); color:#b45309; border-color: rgba(245,158,11,.25);" data-i18n="pay.stat.follow_up">需跟进</span>
-        </div>
-      </div>
-    </section>
-
+<body class="pay-request-page">
+  <div class="page">
     <section class="c-card">
-      <div class="filters">
-        <div class="field">
-          <span data-i18n="pay.filter.month">月份</span>
-          <select>
-            <option>2024-07</option>
-            <option>2024-06</option>
-            <option>2024-05</option>
-          </select>
+      <div class="filters c-filter-panel">
+        <div class="filter-grid c-filter-grid-wide">
+          <label class="c-field">
+            <span>客户名称</span>
+            <input type="text" placeholder="输入客户名称" />
+          </label>
+          <label class="c-field">
+            <span>月份</span>
+            <select>
+              <option>2024-07</option>
+              <option>2024-06</option>
+              <option>2024-05</option>
+            </select>
+          </label>
         </div>
-        <div class="field">
-          <span data-i18n="pay.filter.status">状态</span>
-          <select>
-            <option data-i18n="pay.option.all">全部</option>
-            <option data-i18n="pay.stat.pending">待审批</option>
-            <option data-i18n="pay.stat.submitted">已提交</option>
-            <option data-i18n="pay.stat.paid">已付款</option>
-          </select>
-        </div>
-        <div class="field">
-          <span data-i18n="pay.filter.keyword">关键字</span>
-          <input type="text" placeholder="请求书号/项目/申请人" data-i18n-placeholder="pay.filter.keyword_placeholder" />
+        <div class="filter-actions c-filter-actions-bar">
+          <div class="filter-actions-left c-filter-actions-left">
+            <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createPayBtn" type="button">+ 新增请求书</button>
+          </div>
+          <div class="filter-actions-right c-filter-actions-group">
+            <button class="c-btn c-btn-primary" type="button">搜索</button>
+            <button class="c-btn c-btn-warn" type="button">重置</button>
+          </div>
         </div>
       </div>
 
-      <ul class="list c-list">
-        <li class="item head">
-          <div data-i18n="pay.table.no">请求书号</div>
-          <div data-i18n="pay.table.project">项目</div>
-          <div data-i18n="pay.table.requester">申请人</div>
-          <div data-i18n="pay.table.amount">金额</div>
-          <div data-i18n="pay.table.status">状态</div>
-        </li>
-        <li class="item">
-          <div>PR-2024-118</div>
-          <div>云迁移支持</div>
-          <div>王强</div>
-          <div>¥ 68,000</div>
-          <div><span class="tag wait" data-i18n="pay.stat.pending">待审批</span></div>
-        </li>
-        <li class="item">
-          <div>PR-2024-121</div>
-          <div>安全加固</div>
-          <div>铃木</div>
-          <div>¥ 40,000</div>
-          <div><span class="tag sub" data-i18n="pay.stat.submitted">已提交</span></div>
-        </li>
-        <li class="item">
-          <div>PR-2024-109</div>
-          <div>CRM 优化</div>
-          <div>赵敏</div>
-          <div>¥ 120,000</div>
-          <div><span class="tag ok" data-i18n="pay.stat.paid">已付款</span></div>
-        </li>
-      </ul>
-      <div style="padding:12px 16px; display:flex; justify-content:flex-end;">
-        <a class="link" href="#" data-i18n="pay.action.view_all">查看全部记录</a>
+      <div class="table-actions c-table-actions"></div>
+
+      <div class="table-wrapper c-table-wrapper pay-request-table">
+        <table class="c-table c-table-hover c-table-center">
+          <thead>
+          <tr>
+            <th>请求书编号</th>
+            <th>客户名称</th>
+            <th>总价</th>
+            <th>状态</th>
+            <th>请求书日期</th>
+            <th class="c-actions-col">操作</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>PR-2024-118</td>
+            <td>海月科技</td>
+            <td class="pay-amount">¥ 68,000</td>
+            <td class="pay-status"><span class="c-pill c-pill-warn">待审批</span></td>
+            <td>2024-07-18</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-121</td>
+            <td>北斗系统</td>
+            <td class="pay-amount">¥ 40,000</td>
+            <td class="pay-status"><span class="c-pill c-pill-info">审批中</span></td>
+            <td>2024-07-16</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-109</td>
+            <td>辰曜咨询</td>
+            <td class="pay-amount">¥ 120,000</td>
+            <td class="pay-status"><span class="c-pill c-pill-success">已付款</span></td>
+            <td>2024-07-10</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-105</td>
+            <td>凌云数据</td>
+            <td class="pay-amount">¥ 32,500</td>
+            <td class="pay-status"><span class="c-pill c-pill-danger">退回</span></td>
+            <td>2024-07-04</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-102</td>
+            <td>恒星贸易</td>
+            <td class="pay-amount">¥ 88,900</td>
+            <td class="pay-status"><span class="c-pill c-pill-primary">已提交</span></td>
+            <td>2024-07-01</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination c-pagination">
+        <div class="pagination-summary">共 5 条 · 第 1/1 页</div>
+        <div class="pagination-pages">
+          <button class="c-btn c-btn-sm" type="button">上一页</button>
+          <button class="c-btn c-btn-sm is-active" type="button">1</button>
+          <button class="c-btn c-btn-sm" type="button">下一页</button>
+        </div>
       </div>
     </section>
   </div>
@@ -380,6 +303,13 @@
           <label class="c-inline-field">
             <span data-i18n="pay.field.order_no">对应注文书编号</span>
             <input type="text" placeholder="PO-2024-XXX"/>
+          </label>
+          <label class="c-inline-field">
+            <span>状态</span>
+            <select id="pay-status-select">
+              <option value="pending">待付款</option>
+              <option value="paid">已付款</option>
+            </select>
           </label>
         </div>
         <div class="pay-column-group">
@@ -440,8 +370,8 @@
               </tr>
               <tr>
                 <td data-i18n="pay.tax.subtotal">小计</td>
-                <td><input class="c-input" type="text" placeholder="¥ 0" disabled/></td>
-                <td><input class="c-input" type="text" placeholder="¥ 0" disabled/></td>
+                <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
+                <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
               </tr>
               </tbody>
             </table>
@@ -481,7 +411,7 @@
     </div>
     <div class="c-modal-actions">
       <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
-      <button class="c-btn c-btn-primary" type="button" data-i18n="common.create">开始创建</button>
+      <button class="c-btn c-btn-primary" type="button" id="payDialogSubmitBtn" data-i18n="common.create">开始创建</button>
     </div>
   </dialog>
 
@@ -495,6 +425,8 @@
     }
     const createPayBtn = document.getElementById("createPayBtn");
     const createPayDialog = document.getElementById("createPayDialog");
+    const createPayTitle = document.getElementById("createPayTitle");
+    const payDialogSubmitBtn = document.getElementById("payDialogSubmitBtn");
     const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
     const detailAddBtn = document.getElementById("detailAddBtn");
     const detailTableBody = document.getElementById("detailTableBody");
@@ -504,9 +436,43 @@
     const payCustomerInfo = document.getElementById("payCustomerInfo");
     const payCustomerName = document.getElementById("payCustomerName");
     const payCustomerAddress = document.getElementById("payCustomerAddress");
+    const payStatusSelect = document.getElementById("pay-status-select");
+    const payRequestTable = document.querySelector(".pay-request-table");
+
+    const setDialogReadonly = (readonly) => {
+      if (!createPayDialog) return;
+      const fields = createPayDialog.querySelectorAll("input, select, textarea");
+      fields.forEach((field) => {
+        if (field.type === "hidden") return;
+        if (!readonly && field.hasAttribute("data-always-disabled")) return;
+        field.disabled = readonly;
+      });
+      if (detailAddBtn) detailAddBtn.disabled = readonly;
+      if (detailTableBody) {
+        detailTableBody.querySelectorAll("button").forEach((btn) => {
+          btn.disabled = readonly;
+        });
+      }
+    };
+
+    const setDialogMode = (mode) => {
+      if (!createPayDialog) return;
+      createPayDialog.dataset.mode = mode;
+      if (createPayTitle) {
+        createPayTitle.textContent = mode === "edit" ? "编辑请求书" : mode === "view" ? "请求书详情" : "新建请求书";
+      }
+      if (payDialogSubmitBtn) {
+        payDialogSubmitBtn.textContent = mode === "edit" ? "保存修改" : mode === "view" ? "关闭" : "开始创建";
+      }
+      if (mode === "create" && payStatusSelect) {
+        payStatusSelect.value = "pending";
+      }
+      setDialogReadonly(mode === "view");
+    };
 
     if (createPayBtn && createPayDialog) {
       createPayBtn.addEventListener("click", () => {
+        setDialogMode("create");
         createPayDialog.showModal();
       });
     }
@@ -518,13 +484,23 @@
       });
     });
 
+    if (payDialogSubmitBtn && createPayDialog) {
+      payDialogSubmitBtn.addEventListener("click", () => {
+        if (createPayDialog.dataset.mode === "view") {
+          createPayDialog.close();
+          return;
+        }
+        createPayDialog.close();
+      });
+    }
+
     const buildDetailRow = () => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td><input class="c-input" type="text" placeholder="服务/物料"/></td>
         <td><input class="c-input" type="number" min="0" placeholder="1"/></td>
         <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-        <td><input class="c-input" type="text" placeholder="¥ 0" disabled/></td>
+        <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
         <td><input class="c-input" type="text" placeholder="备注"/></td>
         <td>
           <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-action="save" data-i18n="pay.detail.save">${t("pay.detail.save", "保存")}</button>
@@ -642,6 +618,16 @@
       });
       payCustomerNameInput.addEventListener("change", () => {
         updatePayCustomerInfo(payCustomerNameInput.value.trim());
+      });
+    }
+
+    if (payRequestTable && createPayDialog) {
+      payRequestTable.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-action]");
+        if (!btn) return;
+        const mode = btn.dataset.action === "edit" ? "edit" : "view";
+        setDialogMode(mode);
+        createPayDialog.showModal();
       });
     }
   </script>

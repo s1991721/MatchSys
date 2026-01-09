@@ -10,22 +10,23 @@ USE matchSys;
 # ----------------------------------------------- 登录及权限 -----------------------------------------------
 CREATE TABLE IF NOT EXISTS user_login
 (
-    employee_id   BIGINT       NOT NULL PRIMARY KEY COMMENT '员工ID，对应 employee.id',
-    employee_name VARCHAR(100) NOT NULL COMMENT '员工姓名',
+    employee_id         BIGINT       NOT NULL PRIMARY KEY COMMENT '员工ID，对应 employee.id',
+    employee_name       VARCHAR(100) NOT NULL COMMENT '员工姓名',
 
-    user_name     VARCHAR(100) NOT NULL COMMENT '登录用户名',
-    password      VARCHAR(255) NOT NULL COMMENT '密码（建议存 hash）',
+    user_name           VARCHAR(100) NOT NULL COMMENT '登录用户名',
+    password            VARCHAR(255) NOT NULL COMMENT '密码（建议存 hash）',
+    password_expires_at DATETIME     NULL COMMENT '密码过期时间',
 
-    role_id       BIGINT       NULL COMMENT '角色id',
-    menu_list     TEXT         NULL COMMENT '拥有的菜单',
+    role_id             BIGINT       NULL COMMENT '角色id',
+    menu_list           TEXT         NULL COMMENT '拥有的菜单',
 
-    created_by    BIGINT       NULL COMMENT '创建人 employee.id',
-    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    created_by          BIGINT       NULL COMMENT '创建人 employee.id',
+    created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
-    updated_by    BIGINT       NULL COMMENT '更新人 employee.id',
-    updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    updated_by          BIGINT       NULL COMMENT '更新人 employee.id',
+    updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
-    deleted_at    DATETIME     NULL COMMENT '删除时间（软删除）'
+    deleted_at          DATETIME     NULL COMMENT '删除时间（软删除）'
 
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4

@@ -1,5 +1,6 @@
 import json
 import threading
+from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings as django_settings
@@ -9,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bpmatch.authorize_gmail import test_connection
+from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
 from settings.llm_check import check_cloud_model, check_local_model
@@ -300,6 +302,47 @@ def sys_tasks_api(request):
     if "tasks" not in payload:
         return api_error("Missing field: tasks")
     return _handle_tasks(payload.get("tasks"), login_id)
+
+
+# ---------------------------------------------账号密码重置---------------------------------------------
+
+@csrf_exempt
+@require_POST
+def sys_password_reset_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        return payload_error
+
+    user_name = (payload.get("user_name") or "").strip()
+    password = payload.get("password") or ""
+    expires_in_days = payload.get("expires_in_days", 1)
+    if not user_name or not password:
+        return api_error("Missing user_name or password")
+    try:
+        expires_in_days = int(expires_in_days)
+    except (TypeError, ValueError):
+        return api_error("Invalid expires_in_days")
+    if expires_in_days < 1:
+        return api_error("expires_in_days must be at least 1")
+
+    user_login = UserLogin.objects.filter(user_name=user_name, deleted_at__isnull=True).first()
+    if not user_login:
+        return api_error("User login not found", status=404)
+
+    expires_at = timezone.now() + timedelta(days=expires_in_days)
+    user_login.password = password
+    user_login.password_expires_at = expires_at
+    user_login.updated_by = login_id
+    user_login.save(update_fields=["password", "password_expires_at", "updated_by", "updated_at"])
+
+    return api_success(data={
+        "user_name": user_name,
+        "expires_at": expires_at.isoformat(),
+    })
 
 
 # ---------------------------------------------配置的执行项---------------------------------------------

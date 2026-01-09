@@ -47,38 +47,64 @@
         </section>
       </div>
 
-      <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title">AI 设置</h2>
-        <p class="c-card-subtitle settings-desc">选择本地或云端模式，并填写对应模型配置。</p>
-        <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换">
-          <button type="button" class="c-toggle is-active" data-ai-mode="local">本地</button>
-          <button type="button" class="c-toggle" data-ai-mode="cloud">云端</button>
-        </div>
-        <form class="form-grid form-grid-spaced">
-          <div class="ai-fields is-active" data-ai-fields="local">
-            <div class="form-field full">
-              <label for="ai-model-local">模型名称</label>
-              <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" />
-              <div class="hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
-            </div>
+      <div class="settings-right c-stack">
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title">AI 设置</h2>
+          <p class="c-card-subtitle settings-desc">选择本地或云端模式，并填写对应模型配置。</p>
+          <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换">
+            <button type="button" class="c-toggle is-active" data-ai-mode="local">本地</button>
+            <button type="button" class="c-toggle" data-ai-mode="cloud">云端</button>
           </div>
-          <div class="ai-fields" data-ai-fields="cloud">
-            <div class="form-field full">
-              <label for="ai-model-cloud">模型名称</label>
-              <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" />
+          <form class="form-grid form-grid-spaced">
+            <div class="ai-fields is-active" data-ai-fields="local">
+              <div class="form-field full">
+                <label for="ai-model-local">模型名称</label>
+                <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" />
+                <div class="hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
+              </div>
             </div>
-            <div class="form-field full">
-              <label for="ai-api-key">API Key</label>
-              <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" />
+            <div class="ai-fields" data-ai-fields="cloud">
+              <div class="form-field full">
+                <label for="ai-model-cloud">模型名称</label>
+                <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" />
+              </div>
+              <div class="form-field full">
+                <label for="ai-api-key">API Key</label>
+                <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" />
+              </div>
             </div>
-          </div>
-          <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button" id="ai-test">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button" id="ai-save">保存配置</button>
-          </div>
-          <div class="hint" id="ai-test-status"></div>
-        </form>
-      </section>
+            <div class="form-actions">
+              <button class="c-btn c-btn-secondary" type="button" id="ai-test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="ai-save">保存配置</button>
+            </div>
+            <div class="hint" id="ai-test-status"></div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title">账号密码重置</h2>
+          <p class="c-card-subtitle settings-desc">为账号重置密码并设置有效期（天）。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field">
+              <label for="preview-user">账号</label>
+              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" />
+              <datalist id="user-login-suggestions"></datalist>
+            </div>
+            <div class="form-field">
+              <label for="preview-password">新密码</label>
+              <input id="preview-password" type="text" placeholder="请输入新密码" />
+            </div>
+            <div class="form-field">
+              <label for="preview-expiry">有效期（天）</label>
+              <input id="preview-expiry" type="number" min="1" step="1" value="1" />
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-primary" type="button" id="preview-reset">重置密码</button>
+            </div>
+            <div class="hint" id="preview-reset-status"></div>
+          </form>
+        </section>
+      </div>
 
       <section class="c-card c-card-pad settings-card span-2">
         <h2 class="c-card-title">数据备份</h2>
@@ -186,6 +212,9 @@
     const aiTestStatus = document.getElementById("ai-test-status");
     const backupSaveButton = document.getElementById("backup-save");
     const backupTestButton = document.getElementById("backup-test");
+    const previewResetButton = document.getElementById("preview-reset");
+    const previewResetStatus = document.getElementById("preview-reset-status");
+    const userLoginSuggestions = document.getElementById("user-login-suggestions");
     let pendingDelete = null;
     let systemTasks = [];
     let sendmsgConfigs = [];
@@ -274,6 +303,22 @@
         const payload = await requestJson(tasksApi, { method: "GET" });
         return payload.data && Array.isArray(payload.data.tasks)
           ? payload.data.tasks
+          : [];
+      } catch (error) {
+        console.warn(error);
+        return [];
+      }
+    };
+
+    const fetchUserLoginNames = async (query) => {
+      const q = (query || "").trim();
+      if (!q) return [];
+      try {
+        const payload = await requestJson(`/api/user-logins/names?q=${encodeURIComponent(q)}`, {
+          method: "GET",
+        });
+        return payload.data && Array.isArray(payload.data.names)
+          ? payload.data.names
           : [];
       } catch (error) {
         console.warn(error);
@@ -533,6 +578,21 @@
         .join("");
     };
 
+    const renderUserLoginSuggestions = (names) => {
+      if (!userLoginSuggestions) return;
+      userLoginSuggestions.innerHTML = "";
+      const options = (names || []).map((name) => `<option value="${name}"></option>`);
+      userLoginSuggestions.innerHTML = options.join("");
+    };
+
+    const debounce = (fn, wait = 200) => {
+      let timer = null;
+      return (...args) => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), wait);
+      };
+    };
+
 
     const aiToggleButtons = document.querySelectorAll(".ai-toggle button");
     const aiFields = document.querySelectorAll("[data-ai-fields]");
@@ -774,6 +834,43 @@
           await saveSettings(sections.match, settings);
           flashButton(matchSaveButton, "已保存");
         } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (previewResetButton) {
+      previewResetButton.addEventListener("click", async () => {
+        const userName = getValue("preview-user").trim();
+        const password = getValue("preview-password");
+        const expiresInDays = Number(getValue("preview-expiry"));
+        if (!userName || !password) {
+          notifyError("请填写账号与新密码。");
+          return;
+        }
+        if (!Number.isInteger(expiresInDays) || expiresInDays < 1) {
+          notifyError("有效期必须是大于等于 1 的整数。");
+          return;
+        }
+        try {
+          const payload = await requestJson("/api/sys-password-reset", {
+            method: "POST",
+            body: JSON.stringify({
+              user_name: userName,
+              password,
+              expires_in_days: expiresInDays,
+            }),
+          });
+          const expiresAt = payload.data && payload.data.expires_at
+            ? new Date(payload.data.expires_at)
+            : null;
+          const message = expiresAt
+            ? `已重置，有效期至 ${expiresAt.toLocaleString("zh-CN", { hour12: false })}`
+            : "已重置";
+          setInlineStatus("preview-reset-status", message, true);
+          flashButton(previewResetButton, "已重置");
+        } catch (error) {
+          setInlineStatus("preview-reset-status", error.message || "重置失败", false);
           notifyError(error.message);
         }
       });
@@ -1034,6 +1131,17 @@
     };
 
     loadSettings();
+
+    const previewUserInput = document.getElementById("preview-user");
+    if (previewUserInput) {
+      const handleUserInput = debounce(async (event) => {
+        const value = event.target ? event.target.value : "";
+        const names = await fetchUserLoginNames(value);
+        renderUserLoginSuggestions(names);
+      }, 200);
+      previewUserInput.addEventListener("input", handleUserInput);
+      previewUserInput.addEventListener("focus", handleUserInput);
+    }
   </script>
 </body>
 </html>

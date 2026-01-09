@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.http import FileResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods, require_POST
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_date, parse_json_body, require_login, years_ago, ss_storage_dir
@@ -80,6 +80,14 @@ def login_api(request):
         _log_login_attempt(request, user_name, False, reason="invalid_credentials")
         return api_error(
             "Invalid credentials",
+            status=401,
+        )
+
+    password_expires_at = getattr(user_login, "password_expires_at", None)
+    if password_expires_at and password_expires_at <= timezone.now():
+        _log_login_attempt(request, user_name, False, reason="password_expired", employee_id=user_login.employee_id)
+        return api_error(
+            "密码已过期，请联系管理员重置",
             status=401,
         )
 
@@ -406,6 +414,27 @@ def login_audit_api(request):
         total=total,
         total_pages=total_pages
     )
+
+
+@csrf_exempt
+@require_GET
+def user_login_names_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    query = (request.GET.get("q") or "").strip()
+    user_names = (
+        UserLogin.objects.filter(deleted_at__isnull=True)
+        .filter(user_name__icontains=query) if query else UserLogin.objects.filter(deleted_at__isnull=True)
+    )
+    user_names = (
+        user_names
+        .order_by("user_name")
+        .values_list("user_name", flat=True)
+        .distinct()
+    )[:20]
+    return api_success(data={"names": list(user_names)})
 
 
 @csrf_exempt

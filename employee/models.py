@@ -8,6 +8,7 @@ class UserLogin(models.Model):
     employee_name = models.CharField(max_length=100, verbose_name="员工姓名")
     user_name = models.CharField(max_length=100, unique=True, verbose_name="登录账号")
     password = models.CharField(max_length=255, verbose_name="密码")
+    password_expires_at = models.DateTimeField(null=True, blank=True, verbose_name="密码过期时间")
     role_id = models.BigIntegerField(null=True, blank=True, verbose_name="角色ID")
     menu_list = models.TextField(blank=True, verbose_name="菜单列表")
 

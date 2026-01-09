@@ -57,6 +57,7 @@ from employee.views import (
     technician_ss_download,
     technician_ss_upload,
     technicians_api,
+    user_login_names_api,
 )
 from order.views import (
     purchase_orders_api,
@@ -73,6 +74,7 @@ from permission.views import (
 from settings.views import (
     sys_settings_ai_test_api,
     sys_settings_gmail_test_api,
+    sys_password_reset_api,
     sys_settings_section_api,
     sys_tasks_api,
     time_to_save,
@@ -148,6 +150,7 @@ urlpatterns = [
     # -------------------------------employee API-------------------------------
     path("api/login", login_api, name="employee-login"),
     path("api/login-audit", login_audit_api, name="login-audit"),
+    path("api/user-logins/names", user_login_names_api, name="user-login-names"),
     path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("api/employees/<int:employee_id>/permission", employee_permission_api, name="employee-permission"),
     path("api/logout", logout_api, name="employee-logout"),
@@ -195,6 +198,7 @@ urlpatterns = [
     path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
     path("api/sys-settings/business-email/test", sys_settings_gmail_test_api, name="sys-settings-gmail-test"),
     path("api/sys-settings/ai/test", sys_settings_ai_test_api, name="sys-settings-ai-test"),
+    path("api/sys-password-reset", sys_password_reset_api, name="sys-password-reset"),
     path("api/sys-tasks", sys_tasks_api, name="sys-tasks"),
     path("api/time-to-save", time_to_save, name="time_to_save"),
     path("api/time-to-claen", time_to_clean, name="time_to_clean"),

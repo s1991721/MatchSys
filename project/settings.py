@@ -149,6 +149,7 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Session expires after 30 minutes of inactivity.
 SESSION_COOKIE_AGE = 30 * 60
+SESSION_SAVE_EVERY_REQUEST = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

@@ -92,6 +92,7 @@
             const fileInput = document.getElementById('file-input');
             const attachmentList = document.getElementById('attachment-list');
             const jobOriginal = document.getElementById('job-original');
+            const originalTitle = document.querySelector('.songxin-original-card .c-card-title');
             const loadingMask = document.getElementById('loading-mask');
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
@@ -111,7 +112,9 @@
             const attachments = [];
             const selectionKey = 'matchSelection';
             const matchMailType = 2;
-            const isMatchFlow = new URLSearchParams(window.location.search).get('from') === 'match';
+            const queryParams = new URLSearchParams(window.location.search);
+            const isMatchFlow = queryParams.get('from') === 'match';
+            const sceneParam = (queryParams.get('scene') || '').toLowerCase();
             let loadingTimer = null;
             let currentSelection = null;
 
@@ -127,6 +130,20 @@
                     currentSelection = null;
                 }
                 return currentSelection;
+            };
+
+            const resolveScene = (selection) => {
+                if (sceneParam === 'technician' || sceneParam === 'tech' || sceneParam === 'person') {
+                    return 'technician';
+                }
+                if (sceneParam === 'project' || sceneParam === 'job') {
+                    return 'project';
+                }
+                const mailType = Number(selection?.mail_type);
+                if (Number.isFinite(mailType)) {
+                    return mailType === 1 ? 'technician' : 'project';
+                }
+                return 'project';
             };
 
             const extractEmail = (raw) => {
@@ -154,12 +171,21 @@
                     job.detail ? `${t('songxin.label.detail')}：\n${job.detail}` : null
                 ].filter(Boolean).join('\n');
 
+                const countryLabel = person.country_label || person.country || '';
+                const personMetaLines = [
+                    countryLabel ? `国籍：${countryLabel}` : null,
+                    person.age ? `年龄：${person.age}` : null,
+                    person.price ? `金额：${person.price}` : null,
+                    person.intro ? `介绍文：\n${person.intro}` : null
+                ].filter(Boolean);
+
                 const personLines = [
                     t('songxin.person_info'),
                     person.name ? `${t('songxin.label.name')}：${person.name}` : null,
                     person.belong ? `${t('songxin.label.belong')}：${person.belong}` : null,
                     person.time ? `${t('songxin.label.time')}：${person.time}` : null,
-                    person.detail ? `${t('songxin.label.detail')}：\n${person.detail}` : null
+                    person.detail ? `${t('songxin.label.detail')}：\n${person.detail}` : null,
+                    personMetaLines.length ? personMetaLines.join('\n') : null
                 ].filter(Boolean).join('\n');
 
                 const combined = [jobLines, personLines].filter(Boolean).join('\n\n');
@@ -184,7 +210,12 @@
                     }
                 }
 
-                return job.detail || job.desc || jobLines || '';
+                return {
+                    jobText: job.detail || job.desc || jobLines || '',
+                    personText: person.detail || personLines || '',
+                    job,
+                    person
+                };
             };
 
             const setLoading = (isLoading, options = {}) => {
@@ -212,15 +243,18 @@
                 loadingMask.setAttribute('aria-busy', 'false');
             };
 
-            const analyzeQiuren = async (jobText) => {
+            const analyzeByScene = async (jobText, scene) => {
                 if (!jobText) return;
                 setLoading(true, { title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub') });
                 try {
-                    const res = await fetchWithAuth(`${API_BASE}/extract-qiuren-detail`, {
+                    const endpoint = scene === 'technician'
+                        ? `${API_BASE}/api/extract-technician-detail`
+                        : `${API_BASE}/api/extract-project-detail`;
+                    const res = await fetchWithAuth(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({ text: jobText })
+                        body: JSON.stringify({ body: jobText })
                     });
                     if (!res.ok) {
                         throw new Error(`HTTP ${res.status}`);
@@ -416,7 +450,7 @@
                         }
                     }
 
-                    const res = await fetchWithAuth(`${API_BASE}/send-mail`, {
+                    const res = await fetchWithAuth(`${API_BASE}/api/send-mail`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
@@ -448,11 +482,18 @@
                 }
             });
 
-            const jobText = applySelectionFromMatch();
+            const selectionPayload = applySelectionFromMatch();
             renderAttachments();
             renderPreview();
-            renderOriginal(jobText);
-            analyzeQiuren(jobText);
+            const scene = resolveScene(currentSelection || readSelection());
+            const jobText = selectionPayload?.jobText || '';
+            const personText = selectionPayload?.personText || '';
+            const originalText = scene === 'technician' ? personText : jobText;
+            if (originalTitle) {
+                originalTitle.textContent = scene === 'technician' ? '技术者原文' : '案件原文';
+            }
+            renderOriginal(originalText);
+            analyzeByScene(originalText, scene);
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
                     if (i18n) {

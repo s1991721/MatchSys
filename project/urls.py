@@ -38,6 +38,7 @@ from bpmatch.views import (
     mail_project_search_api,
     mail_technician_search_api,
     extract_project_detail,
+    extract_technician_detail,
     send_mail,
     send_history,
 )
@@ -180,6 +181,7 @@ urlpatterns = [
     path("api/mail-projects/search", mail_project_search_api, name="mail-projects-search"),
     path("api/mail-technicians/search", mail_technician_search_api, name="mail-technicians-search"),
     path("api/extract-project-detail", extract_project_detail, name="extract_project_detail"),
+    path("api/extract-technician-detail", extract_technician_detail, name="extract_technician_detail"),
     path("api/send-mail", send_mail, name="send_mail"),
     path("api/send-history", send_history, name="send_history"),
     # -------------------------------customer API-------------------------------

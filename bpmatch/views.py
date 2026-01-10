@@ -60,6 +60,15 @@ def _normalize_country(value):
     return text
 
 
+def _read_payload_text(payload):
+    if not isinstance(payload, dict):
+        return ""
+    text = payload.get("body")
+    if not text:
+        text = payload.get("text")
+    return str(text or "")
+
+
 @csrf_exempt
 @require_GET
 # 获取案件列表
@@ -374,7 +383,7 @@ def extract_project_detail(request):
     if error:
         return error
 
-    text = payload.get("body") or ""
+    text = _read_payload_text(payload)
     if not text.strip():
         return api_error("Missing field: body")
 
@@ -461,6 +470,80 @@ def extract_project_detail(request):
 
     formatted_message = template.format(**fields)
 
+    response_payload = {"data": formatted_message, "raw": llm_result}
+    return api_success(data=response_payload)
+
+
+@csrf_exempt
+@require_POST
+# 抽取技术者信息，生成送信模板
+def extract_technician_detail(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    text = _read_payload_text(payload)
+    if not text.strip():
+        return api_error("Missing field: body")
+
+    try:
+        llm_result = llmsTool.qiuanjian_detail_analysis(text)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+    try:
+        parsed = json.loads(llm_result)
+    except Exception as exc:
+        print(f"[extract_technician_detail] 解析 LLM JSON 失败: {exc}")
+        parsed = {}
+
+    if not isinstance(parsed, dict):
+        parsed = {}
+
+    def make_block(title: str, value) -> str:
+        if value in (None, "", [], 0):
+            return ""
+        if isinstance(value, list):
+            value = "\n".join(v for v in value if v)
+        value = str(value).strip()
+        if not value:
+            return ""
+        return f"{title}\n{value}\n\n"
+
+    country_value = parsed.get("country")
+    country_label = ""
+    if country_value == 0 or str(country_value) == "0":
+        country_label = "日本籍"
+    elif country_value == 1 or str(country_value) == "1":
+        country_label = "外国籍"
+
+    skills = parsed.get("skills", [])
+    price = parsed.get("price", 0)
+
+    fields = {
+        "country_block": make_block("【国籍】", country_label),
+        "skills_block": make_block("【スキル】", skills),
+        "price_block": make_block("【希望単価】", price),
+    }
+
+    # todo 根据需求更改模板
+    template = (
+        "いつもお世話になっております。\n"
+        "株式会社の林でございます。\n"
+        "\n"
+        "技術者をご紹介させて頂きます。\n"
+        "ご検討頂けますと幸いです。\n"
+        "\n"
+        "**************************************\n"
+        "{country_block}"
+        "{skills_block}"
+        "{price_block}"
+        "**************************************\n"
+        "\n"
+        "今後とも何卒よろしくお願い申し上げます。\n"
+    )
+
+    formatted_message = template.format(**fields)
     response_payload = {"data": formatted_message, "raw": llm_result}
     return api_success(data=response_payload)
 

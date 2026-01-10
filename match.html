@@ -101,6 +101,9 @@
                     <div id="case-detail" class="detail">
                         这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                     </div>
+                    <div class="detail-actions">
+                        <button class="c-btn c-btn-primary" type="button" id="send-btn">送信</button>
+                    </div>
                 </div>
             </div>
         </section>
@@ -125,8 +128,11 @@
             const listTitle = document.getElementById('list-title');
             const detailTitle = document.getElementById('detail-title');
             const nationSelect = document.getElementById('nation');
+            const ageInput = document.getElementById('age');
+            const priceInput = document.getElementById('price');
             const introInput = document.getElementById('intro');
             const caseInfoInput = document.getElementById('case-info');
+            const sendBtn = document.getElementById('send-btn');
             const filters = {
                 range: 'all'
             };
@@ -229,6 +235,10 @@
                     li.className = 'item' + (index === 0 ? ' active' : '');
                     li.dataset.detail = item.detail;
                     li.dataset.id = item.id;
+                    li.dataset.item = JSON.stringify(item);
+                    if (item.matched_skills && Array.isArray(item.matched_skills)) {
+                        li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
+                    }
                     if (item.matched_skills && Array.isArray(item.matched_skills)) {
                         li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
                     }
@@ -350,6 +360,111 @@
                     fetchCases();
                 });
             });
+
+            if (sendBtn) {
+                sendBtn.addEventListener('click', () => {
+                    const activeItem = list?.querySelector('.item.active');
+                    if (!activeItem) {
+                        alert(t('match.send_tip'));
+                        return;
+                    }
+
+                    const parseDatasetJSON = (el, key) => {
+                        if (!el || !el.dataset) return null;
+                        const raw = el.dataset[key];
+                        if (!raw) return null;
+                        try {
+                            return JSON.parse(raw);
+                        } catch {
+                            return null;
+                        }
+                    };
+
+                    const view = getActiveView();
+                    const itemData = parseDatasetJSON(activeItem, 'item') || {};
+                    const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
+                    const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
+                    const itemDetail = itemData.detail || activeItem.dataset.detail || '';
+                    const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
+
+                    let jobPayload = {};
+                    let personPayload = {};
+                    let mailType = 2;
+
+                    if (view === 'people') {
+                        const personParts = [];
+                        const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
+                        if (nationSelect && nationSelect.value) {
+                            personParts.push(`国籍：${nationLabel || nationSelect.value}`);
+                        }
+                        if (ageInput && ageInput.value.trim()) {
+                            personParts.push(`年龄：${ageInput.value.trim()}`);
+                        }
+                        if (priceInput && priceInput.value.trim()) {
+                            personParts.push(`金额：${priceInput.value.trim()}`);
+                        }
+                        if (introInput && introInput.value.trim()) {
+                            personParts.push(`介绍文：\n${introInput.value.trim()}`);
+                        }
+                        const personDetail = personParts.join('\n');
+
+                        jobPayload = {
+                            id: itemData.id || activeItem.dataset.id || '',
+                            title: itemTitle,
+                            desc: itemDesc,
+                            detail: itemDetail,
+                            time: itemDate
+                        };
+
+                        personPayload = {
+                            name: '人员信息',
+                            subject: itemTitle || '',
+                            belong: itemDesc || '',
+                            detail: personDetail,
+                            time: ''
+                        };
+
+                        mailType = 1;
+                    } else {
+                        const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
+                        const caseTitle = rawCaseInfo ? rawCaseInfo.split('\n')[0].trim() : '';
+
+                        jobPayload = {
+                            id: '',
+                            title: caseTitle || '案件信息',
+                            desc: '',
+                            detail: rawCaseInfo,
+                            time: ''
+                        };
+
+                        personPayload = {
+                            id: itemData.id || activeItem.dataset.id || '',
+                            name: itemTitle,
+                            subject: itemTitle,
+                            belong: itemDesc,
+                            detail: itemDetail,
+                            time: itemDate
+                        };
+
+                        mailType = 2;
+                    }
+
+                    const payload = {
+                        job: jobPayload,
+                        person: personPayload,
+                        mail_type: mailType,
+                        updatedAt: Date.now()
+                    };
+
+                    try {
+                        localStorage.setItem('matchSelection', JSON.stringify(payload));
+                    } catch (err) {
+                        console.error(t('match.cache_failed') || '保存失败', err);
+                    }
+
+                    window.location.href = 'songxin.html?from=match';
+                });
+            }
 
             viewButtons.forEach(btn => {
                 btn.addEventListener('click', () => {

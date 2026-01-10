@@ -701,12 +701,16 @@ def technicians_api(request):
 
 
 @csrf_exempt
-@require_http_methods(["PUT", "PATCH", "DELETE"])
-# 删除技术者、更新技术者
+@require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
+# 删除技术者、更新技术者、获取技术者详情
 def technician_detail_api(request, employee_id):
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
         return api_error("Technician not found", status=404)
+
+    if request.method == "GET":
+        item = Technician.serialize(tech)
+        return api_success(data={"item": item})
 
     if request.method == "DELETE":
         tech.delete()

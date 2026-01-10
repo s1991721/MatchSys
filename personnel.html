@@ -351,6 +351,7 @@
     }
     const t = (key) => (i18n ? i18n.t(key) : key);
     const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
+    const TECH_PREFILL_KEY = "tech_edit_employee_prefill";
     const tableBody = document.getElementById("tableBody");
     const searchInput = document.getElementById("searchInput");
     const deptSelect = document.getElementById("deptSelect");
@@ -518,6 +519,13 @@
         } else if (action === "tech-edit") {
             try {
                 localStorage.setItem("tech_edit_employee_id", String(id));
+                const target = allEmployees.find(item => String(item.id) === String(id));
+                if (target) {
+                    localStorage.setItem(TECH_PREFILL_KEY, JSON.stringify({
+                        name: target.name || "",
+                        birthday: target.birthday || ""
+                    }));
+                }
                 if (window.parent && window.parent !== window) {
                     window.parent.location.hash = "people.html";
                     return;

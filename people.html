@@ -126,7 +126,6 @@
                     <select name="nationality" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
                         <option value="日本" data-i18n="people.nationality.jp">日本</option>
-                        <option value="中国" data-i18n="people.nationality.cn">中国</option>
                         <option value="其他" data-i18n="people.nationality.other">其他</option>
                     </select>
                 </label>
@@ -145,7 +144,7 @@
                 </label>
                 <label>
                     <span data-i18n="people.field.site_contract">现场契约</span>
-                    <input type="date" name="siteContract" required/>
+                    <input type="date" name="siteContract"/>
                 </label>
                 <label>
                     <span data-i18n="people.field.business_status">营业状态</span>
@@ -240,6 +239,41 @@
         nationality: '',
         contractType: null,
         businessStatus: null
+    };
+    const TECH_PREFILL_KEY = 'tech_edit_employee_prefill';
+
+    const getSharedStorage = () => {
+        try {
+            if (window.top && window.top.localStorage) {
+                return window.top.localStorage;
+            }
+        } catch (error) {
+        }
+        return localStorage;
+    };
+
+    const loadTechPrefill = () => {
+        try {
+            const storage = getSharedStorage();
+            const raw = storage.getItem(TECH_PREFILL_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return null;
+            return {
+                name: parsed.name || '',
+                birthday: parsed.birthday || ''
+            };
+        } catch (error) {
+            return null;
+        }
+    };
+
+    const clearTechPrefill = () => {
+        try {
+            const storage = getSharedStorage();
+            storage.removeItem(TECH_PREFILL_KEY);
+        } catch (error) {
+        }
     };
 
     const contractLabelToType = (label) => {
@@ -461,6 +495,41 @@
         }
     };
 
+    const mapTechnicianItem = (item) => {
+        return {
+            id: item.employee_id,
+            name: item.name || '',
+            nickname: item.name_mask,
+            birthday: item.birthday || '',
+            age: calcAge(item.birthday),
+            nationality: item.nationality || '',
+            price: item.price ? Number(item.price) : 0,
+            contract: contractTypeToLabel(item.contract_type),
+            siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
+            businessStatus: item.business_status ?? 0,
+            intro: item.introduction || '',
+            note: item.remark || '',
+            ssPath: item.ss || '',
+            ssUrl: item.ss_url || ''
+        };
+    };
+
+    const fetchTechnicianById = async (employeeId) => {
+        if (!employeeId) return null;
+        try {
+            const res = await fetchWithAuth(`/api/technicians/${employeeId}`, {method: 'GET'});
+            const data = await res.json();
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) return null;
+            const result = payload.data || {};
+            const item = result.item || {};
+            if (!item.employee_id) return null;
+            return mapTechnicianItem(item);
+        } catch (error) {
+            return null;
+        }
+    };
+
     const fetchPeople = async () => {
         try {
             const params = new URLSearchParams();
@@ -483,24 +552,7 @@
             const result = payload.data || {};
             const meta = payload.meta || {};
             const items = Array.isArray(result.items) ? result.items : [];
-            people = items.map(item => {
-                return {
-                    id: item.employee_id,
-                    name: item.name || '',
-                    nickname: item.name_mask,
-                    birthday: item.birthday || '',
-                    age: calcAge(item.birthday),
-                    nationality: item.nationality || '',
-                    price: item.price ? Number(item.price) : 0,
-                    contract: contractTypeToLabel(item.contract_type),
-                    siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
-                    businessStatus: item.business_status ?? 0,
-                    intro: item.introduction || '',
-                    note: item.remark || '',
-                    ssPath: item.ss || '',
-                    ssUrl: item.ss_url || ''
-                };
-            });
+            people = items.map(mapTechnicianItem);
             totalCount = Number.isFinite(meta.total) ? meta.total : people.length;
             totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
             currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
@@ -510,10 +562,27 @@
                 forcedEmployeeId = targetId;
                 const target = people.find(item => String(item.id) === String(targetId));
                 if (target) {
+                    clearTechPrefill();
                     openEditDialog(target);
                 } else {
-                    openCreateDialog();
-                    await prefillFromEmployee(targetId);
+                    const remote = await fetchTechnicianById(targetId);
+                    if (remote) {
+                        clearTechPrefill();
+                        openEditDialog(remote);
+                    } else {
+                        openCreateDialog();
+                        const prefill = loadTechPrefill();
+                        if (prefill) {
+                            personForm.name.value = prefill.name || '';
+                            if (personForm.name.value) {
+                                personForm.name.setAttribute('readonly', 'readonly');
+                            }
+                            personForm.birthday.value = prefill.birthday || '';
+                            clearTechPrefill();
+                        } else {
+                            await prefillFromEmployee(targetId);
+                        }
+                    }
                 }
             }
         } catch (error) {
@@ -685,16 +754,6 @@
         event.preventDefault();
         return;
     });
-    const getSharedStorage = () => {
-        try {
-            if (window.top && window.top.localStorage) {
-                return window.top.localStorage;
-            }
-        } catch (error) {
-        }
-        return localStorage;
-    };
-
     const cacheMatchPayload = (person) => {
         if (!person) return;
         const payload = {

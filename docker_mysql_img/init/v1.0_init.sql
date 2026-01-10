@@ -10,22 +10,23 @@ USE matchSys;
 # ----------------------------------------------- 登录及权限 -----------------------------------------------
 CREATE TABLE IF NOT EXISTS user_login
 (
-    employee_id   BIGINT       NOT NULL PRIMARY KEY COMMENT '员工ID，对应 employee.id',
-    employee_name VARCHAR(100) NOT NULL COMMENT '员工姓名',
+    employee_id         BIGINT       NOT NULL PRIMARY KEY COMMENT '员工ID，对应 employee.id',
+    employee_name       VARCHAR(100) NOT NULL COMMENT '员工姓名',
 
-    user_name     VARCHAR(100) NOT NULL COMMENT '登录用户名',
-    password      VARCHAR(255) NOT NULL COMMENT '密码（建议存 hash）',
+    user_name           VARCHAR(100) NOT NULL COMMENT '登录用户名',
+    password            VARCHAR(255) NOT NULL COMMENT '密码（建议存 hash）',
+    password_expires_at DATETIME     NULL COMMENT '密码过期时间',
 
-    role_id       BIGINT       NULL COMMENT '角色id',
-    menu_list     TEXT         NULL COMMENT '拥有的菜单',
+    role_id             BIGINT       NULL COMMENT '角色id',
+    menu_list           TEXT         NULL COMMENT '拥有的菜单',
 
-    created_by    BIGINT       NULL COMMENT '创建人 employee.id',
-    created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    created_by          BIGINT       NULL COMMENT '创建人 employee.id',
+    created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
-    updated_by    BIGINT       NULL COMMENT '更新人 employee.id',
-    updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    updated_by          BIGINT       NULL COMMENT '更新人 employee.id',
+    updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
 
-    deleted_at    DATETIME     NULL COMMENT '删除时间（软删除）'
+    deleted_at          DATETIME     NULL COMMENT '删除时间（软删除）'
 
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -331,6 +332,7 @@ CREATE TABLE IF NOT EXISTS purchase_order
     working_hours    DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
     period_start     DATE           NOT NULL COMMENT '期间开始日',
     period_end       DATE           NOT NULL COMMENT '期间结束日',
+    remark           TEXT COMMENT '备注',
 
     created_by       VARCHAR(100)   NOT NULL COMMENT '创建人',
     created_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -357,6 +359,7 @@ CREATE TABLE IF NOT EXISTS sales_order
     working_hours    DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
     period_start     DATE           NOT NULL COMMENT '期间开始日',
     period_end       DATE           NOT NULL COMMENT '期间结束日',
+    remark           TEXT COMMENT '备注',
 
     created_by       VARCHAR(100)   NOT NULL COMMENT '创建人',
     created_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -367,6 +370,31 @@ CREATE TABLE IF NOT EXISTS sales_order
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='受注表';
 
+CREATE TABLE pay_request
+(
+    id            bigint         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    request_no    varchar(50)    NOT NULL COMMENT '请求书编号',
+    order_no      varchar(50)             DEFAULT NULL COMMENT '对应注文书编号',
+    status        varchar(50)    NOT NULL COMMENT '状态：0=待支付 1=已支付',
+    customer_id   bigint         NOT NULL COMMENT '客户ID',
+    customer_name varchar(255)   NOT NULL COMMENT '客户名称',
+    total_amount  decimal(12, 2) NOT NULL DEFAULT 0.00 COMMENT '总价',
+    request_date  DATE           NOT NULL COMMENT '请求书日期',
+    due_date      DATE                    DEFAULT NULL COMMENT '最迟支付日',
+    details       TEXT                    DEFAULT NULL COMMENT '明细JSON',
+    tax_breakdown TEXT                    DEFAULT NULL COMMENT '税相关JSON',
+
+    attachments   TEXT                    DEFAULT NULL COMMENT '附件信息',
+    remark        TEXT                    DEFAULT NULL COMMENT '备注',
+
+    created_by    VARCHAR(100)   NOT NULL COMMENT '创建人',
+    created_at    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by    VARCHAR(100) COMMENT '更新人',
+    updated_at    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted_at    DATETIME       NULL COMMENT '删除时间（逻辑删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='请求书';
 
 # ----------------------------------------------- match -----------------------------------------------
 CREATE TABLE IF NOT EXISTS sent_email_logs
@@ -380,7 +408,7 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
     body        TEXT         NOT NULL COMMENT '邮件正文',
     attachments TEXT         NOT NULL COMMENT '附件列表(JSON字符串)',
 
-    mail_type   INT          NOT NULL COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信',
+    mail_type   INT          NOT NULL COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信 -1:其他',
     sent_at     DATETIME     NOT NULL COMMENT '邮件发送时间',
 
     created_by  VARCHAR(100) NOT NULL COMMENT '创建人',
@@ -392,3 +420,83 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
     COMMENT ='已发送邮件日志(Gmail API)';
+
+CREATE TABLE mail_project_info
+(
+    id      VARCHAR(255) PRIMARY KEY,
+    title   VARCHAR(255) NOT NULL COMMENT '邮件标题',
+    address VARCHAR(255) NOT NULL COMMENT '发件人',
+    body    TEXT COMMENT '正文内容',
+    files   TEXT COMMENT '附件信息',
+    date    DATETIME COMMENT '日期',
+    remark  VARCHAR(500) COMMENT '备注',
+    country VARCHAR(100) COMMENT '国家 0=日本籍 1=日本籍以外',
+    skills  VARCHAR(255) COMMENT '技能要求',
+    price   DECIMAL(10, 2) COMMENT '价格'
+) COMMENT ='邮件案件表';
+
+CREATE TABLE mail_technician_info
+(
+    id      VARCHAR(255) PRIMARY KEY,
+    title   VARCHAR(255) NOT NULL COMMENT '邮件标题',
+    address VARCHAR(255) NOT NULL COMMENT '发件人',
+    body    TEXT COMMENT '正文内容',
+    files   TEXT COMMENT '附件信息',
+    date    DATETIME COMMENT '日期',
+    remark  VARCHAR(500) COMMENT '备注',
+    country VARCHAR(100) COMMENT '国家',
+    skills  VARCHAR(255) COMMENT '技能要求',
+    price   DECIMAL(10, 2) COMMENT '价格'
+) COMMENT ='邮件技术者表';
+
+CREATE TABLE saved_mail_info
+(
+    id   VARCHAR(255) PRIMARY KEY,
+    date DATETIME COMMENT '日期'
+
+) COMMENT ='系统中存储的邮件列表';
+
+# ----------------------------------------------- 系统设置 -----------------------------------------------
+
+CREATE TABLE sys_settings
+(
+    id         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
+    name       VARCHAR(255) NOT NULL COMMENT '配置名称（唯一）',
+    settings   JSON         NOT NULL COMMENT '配置内容（JSON）',
+    created_by BIGINT       NULL COMMENT '创建人ID',
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by BIGINT       NULL COMMENT '更新人ID',
+    updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted_at DATETIME     NULL COMMENT '删除时间（软删）'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='系统设置表';
+
+INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at)
+VALUES ('match', '{"cycle_days": 14}', 1, '2026-01-03 17:08:42', 1, '2026-01-04 14:01:59', NULL),
+       ('ai', '{"api_key": "", "mode_type": "local", "model_name": "llama3.2:3b-instruct-q4_K_M"}', 1,
+        '2026-01-04 05:31:02', 1, '2026-01-04 05:42:31', NULL);
+
+CREATE TABLE sys_tasks
+(
+    id          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    name        VARCHAR(255) NOT NULL DEFAULT '' COMMENT '任务名称',
+    time        TIME         NULL COMMENT '执行时间',
+    frequency   VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '执行频率',
+    cron_expr   VARCHAR(100) NOT NULL DEFAULT '' COMMENT 'Cron 表达式',
+    method      VARCHAR(10)  NOT NULL DEFAULT 'POST' COMMENT '请求方式',
+    api         VARCHAR(500) NOT NULL DEFAULT '' COMMENT 'API 地址',
+    body        TEXT         NOT NULL COMMENT '请求参数 / Body',
+    enabled     TINYINT(1)   NOT NULL DEFAULT 1 COMMENT '是否启用',
+    last_run_at DATETIME     NULL COMMENT '上次执行时间',
+    next_run_at DATETIME     NULL COMMENT '下次执行时间',
+    last_status VARCHAR(50)  NOT NULL DEFAULT '' COMMENT '上次执行状态',
+    last_error  TEXT         NOT NULL COMMENT '上次错误信息',
+    created_by  BIGINT       NULL COMMENT '创建人ID',
+    created_at  DATETIME     NOT NULL COMMENT '创建时间',
+    updated_by  BIGINT       NULL COMMENT '更新人ID',
+    updated_at  DATETIME     NOT NULL COMMENT '更新时间',
+    deleted_at  DATETIME     NULL COMMENT '删除时间（软删）'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='定时任务';
+
+

@@ -53,3 +53,29 @@ class SalesOrder(models.Model):
 
     def __str__(self) -> str:
         return f"{self.id}:{self.order_no}"
+
+
+class PayRequest(models.Model):
+    request_no = models.CharField(max_length=50)
+    order_no = models.CharField(max_length=50, null=True, blank=True)
+    status = models.CharField(max_length=50)
+    customer_id = models.BigIntegerField()
+    customer_name = models.CharField(max_length=255)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    request_date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
+    details = models.TextField(null=True, blank=True)
+    tax_breakdown = models.TextField(null=True, blank=True)
+    attachments = models.TextField(null=True, blank=True)
+    remark = models.TextField(null=True, blank=True)
+    created_by = models.CharField(max_length=100)
+    created_at = models.DateTimeField()
+    updated_by = models.CharField(max_length=100, null=True, blank=True)
+    updated_at = models.DateTimeField()
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "pay_request"
+
+    def __str__(self) -> str:
+        return f"{self.id}:{self.request_no}"

@@ -370,6 +370,31 @@ CREATE TABLE IF NOT EXISTS sales_order
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='受注表';
 
+CREATE TABLE pay_request
+(
+    id            bigint         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    request_no    varchar(50)    NOT NULL COMMENT '请求书编号',
+    order_no      varchar(50)             DEFAULT NULL COMMENT '对应注文书编号',
+    status        varchar(50)    NOT NULL COMMENT '状态：0=待支付 1=已支付',
+    customer_id   bigint         NOT NULL COMMENT '客户ID',
+    customer_name varchar(255)   NOT NULL COMMENT '客户名称',
+    total_amount  decimal(12, 2) NOT NULL DEFAULT 0.00 COMMENT '总价',
+    request_date  DATE           NOT NULL COMMENT '请求书日期',
+    due_date      DATE                    DEFAULT NULL COMMENT '最迟支付日',
+    details       TEXT                    DEFAULT NULL COMMENT '明细JSON',
+    tax_breakdown TEXT                    DEFAULT NULL COMMENT '税相关JSON',
+
+    attachments   TEXT                    DEFAULT NULL COMMENT '附件信息',
+    remark        TEXT                    DEFAULT NULL COMMENT '备注',
+
+    created_by    VARCHAR(100)   NOT NULL COMMENT '创建人',
+    created_at    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by    VARCHAR(100) COMMENT '更新人',
+    updated_at    DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted_at    DATETIME       NULL COMMENT '删除时间（逻辑删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='请求书';
 
 # ----------------------------------------------- match -----------------------------------------------
 CREATE TABLE IF NOT EXISTS sent_email_logs

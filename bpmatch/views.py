@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -42,6 +43,21 @@ def _normalize_skills(value):
         if item_str:
             cleaned.append(item_str)
     return cleaned
+
+
+def _normalize_country(value):
+    if value is None:
+        return ""
+    if isinstance(value, int):
+        return str(value)
+    text = str(value).strip()
+    if text in ("0", "1"):
+        return text
+    if text in ("日本籍", "日本", "日本国籍"):
+        return "0"
+    if text in ("外国籍", "外国", "非日本"):
+        return "1"
+    return text
 
 
 @csrf_exempt
@@ -154,6 +170,198 @@ def mail_project_match_api(request):
             "price": float(project.price) if project.price is not None else None,
         },
         "matches": matches
+    }
+    return api_success(data=payload)
+
+
+@csrf_exempt
+@require_POST
+# 根据技术者信息匹配案件
+def mail_project_search_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    country = _normalize_country(payload.get("country"))
+    sender = (payload.get("sender") or "").strip()
+    date_range = (payload.get("date_range") or "all").strip().lower()
+    intro = payload.get("intro") or ""
+
+    parsed = {}
+    if intro.strip():
+        try:
+            llm_result = llmsTool.qiuanjian_detail_analysis(intro)
+        except Exception as exc:
+            return api_error(str(exc), status=500)
+        try:
+            parsed = json.loads(llm_result)
+        except Exception as exc:
+            print(f"[mail_project_search_api] 解析 LLM JSON 失败: {exc}")
+            parsed = {}
+
+    input_skills = _normalize_skills(parsed.get("skills") if isinstance(parsed, dict) else None)
+
+    queryset = MailProjectInfo.objects.all()
+
+    if country:
+        queryset = queryset.filter(country=country)
+
+    if sender:
+        queryset = queryset.filter(address__icontains=sender)
+
+    if date_range in ("today", "yesterday"):
+        target_date = timezone.localdate()
+        if date_range == "yesterday":
+            target_date = target_date - timedelta(days=1)
+        queryset = queryset.filter(date__date=target_date)
+
+    queryset = queryset.order_by("-date", "-id")
+
+    items = []
+    scored_items = []
+    for row in queryset:
+        project_skills = _normalize_skills(row.skills)
+        matched = []
+        score = 0
+        if input_skills:
+            project_skill_set = {skill.lower() for skill in project_skills}
+            seen = set()
+            for skill in input_skills:
+                key = skill.lower()
+                if key in project_skill_set and key not in seen:
+                    matched.append(skill)
+                    seen.add(key)
+            score = len(matched)
+            if score == 0:
+                continue
+
+        item = {
+            "id": row.id,
+            "title": row.title or "(无标题)",
+            "desc": row.address or "",
+            "detail": row.body or "",
+            "date": row.date.isoformat() if row.date else "",
+            "sender": row.address or "",
+            "country": row.country or "",
+            "skills": project_skills,
+            "matched_skills": matched,
+            "match_score": score,
+        }
+
+        if input_skills:
+            scored_items.append((score, item))
+        else:
+            items.append(item)
+
+    if input_skills:
+        scored_items.sort(key=lambda item: item[0], reverse=True)
+        items = [item for _, item in scored_items]
+
+    payload = {
+        "items": items,
+        "filters": {
+            "country": country,
+            "sender": sender,
+            "date_range": date_range,
+            "skills": input_skills,
+        },
+    }
+    return api_success(data=payload)
+
+
+@csrf_exempt
+@require_POST
+# 根据案件信息匹配技术者
+def mail_technician_search_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    sender = (payload.get("sender") or "").strip()
+    date_range = (payload.get("date_range") or "all").strip().lower()
+    intro = payload.get("intro") or ""
+
+    parsed = {}
+    if intro.strip():
+        try:
+            llm_result = llmsTool.qiuren_detail_analysis(intro)
+        except Exception as exc:
+            return api_error(str(exc), status=500)
+        try:
+            parsed = json.loads(llm_result)
+        except Exception as exc:
+            print(f"[mail_technician_search_api] 解析 LLM JSON 失败: {exc}")
+            parsed = {}
+
+    parsed_country = None
+    if isinstance(parsed, dict):
+        parsed_country = _normalize_country(parsed.get("country"))
+    input_skills = _normalize_skills(parsed.get("skills") if isinstance(parsed, dict) else None)
+
+    queryset = MailTechnicianInfo.objects.all()
+
+    if parsed_country:
+        queryset = queryset.filter(country=parsed_country)
+
+    if sender:
+        queryset = queryset.filter(address__icontains=sender)
+
+    if date_range in ("today", "yesterday"):
+        target_date = timezone.localdate()
+        if date_range == "yesterday":
+            target_date = target_date - timedelta(days=1)
+        queryset = queryset.filter(date__date=target_date)
+
+    queryset = queryset.order_by("-date", "-id")
+
+    items = []
+    scored_items = []
+    for row in queryset:
+        tech_skills = _normalize_skills(row.skills)
+        matched = []
+        score = 0
+        if input_skills:
+            tech_skill_set = {skill.lower() for skill in tech_skills}
+            seen = set()
+            for skill in input_skills:
+                key = skill.lower()
+                if key in tech_skill_set and key not in seen:
+                    matched.append(skill)
+                    seen.add(key)
+            score = len(matched)
+            if score == 0:
+                continue
+
+        item = {
+            "id": row.id,
+            "title": row.title or "(无标题)",
+            "desc": row.address or "",
+            "detail": row.body or "",
+            "date": row.date.isoformat() if row.date else "",
+            "sender": row.address or "",
+            "country": row.country or "",
+            "skills": tech_skills,
+            "matched_skills": matched,
+            "match_score": score,
+        }
+
+        if input_skills:
+            scored_items.append((score, item))
+        else:
+            items.append(item)
+
+    if input_skills:
+        scored_items.sort(key=lambda item: item[0], reverse=True)
+        items = [item for _, item in scored_items]
+
+    payload = {
+        "items": items,
+        "filters": {
+            "sender": sender,
+            "date_range": date_range,
+            "country": parsed_country or "",
+            "skills": input_skills,
+        },
     }
     return api_success(data=payload)
 

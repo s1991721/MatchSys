@@ -7,7 +7,7 @@ CREATE TABLE mail_project_info
     files   TEXT COMMENT '附件信息',
     date    DATETIME COMMENT '日期',
     remark  VARCHAR(500) COMMENT '备注',
-    country VARCHAR(100) COMMENT '国家',
+    country VARCHAR(100) COMMENT '国家 0=日本籍 1=日本籍以外',
     skills  VARCHAR(255) COMMENT '技能要求',
     price   DECIMAL(10, 2) COMMENT '价格'
 ) COMMENT ='邮件案件表';

@@ -30,8 +30,8 @@
                     <label for="nation">国籍</label>
                     <select id="nation">
                         <option value="">请选择</option>
-                        <option value="中国">中国</option>
-                        <option value="日本">日本</option>
+                        <option value="0">日本籍</option>
+                        <option value="1">外国籍</option>
                     </select>
                 </div>
                 <div class="form-field">
@@ -108,52 +108,11 @@
     </div>
 
     <script src="i18n.js"></script>
+    <script src="common.js"></script>
     <script>
         (function () {
             const i18n = window.I18N;
             const t = (key) => (i18n ? i18n.t(key) : key);
-            const cases = [
-                {
-                    id: 1,
-                    title: '案件1标题',
-                    desc: '案件1的简单说明 content',
-                    detail: '这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
-                    sender: '山田',
-                    date: '2025-12-01'
-                },
-                {
-                    id: 2,
-                    title: '案件2标题',
-                    desc: '案件2的简单说明 content',
-                    detail: '这是案件2的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
-                    sender: '佐藤',
-                    date: '2025-11-25'
-                },
-                {
-                    id: 3,
-                    title: '案件3标题',
-                    desc: '案件3的简单说明 content',
-                    detail: '这是案件3的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
-                    sender: '鈴木',
-                    date: '2025-11-20'
-                },
-                {
-                    id: 4,
-                    title: '案件4标题',
-                    desc: '案件4的简单说明 content',
-                    detail: '这是案件4的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
-                    sender: '田中',
-                    date: '2025-11-18'
-                },
-                {
-                    id: 5,
-                    title: '案件5标题',
-                    desc: '案件5的简单说明 content',
-                    detail: '这是案件5的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
-                    sender: '小林',
-                    date: '2025-11-12'
-                }
-            ];
 
             const list = document.getElementById('case-list');
             const detail = document.getElementById('case-detail');
@@ -165,12 +124,70 @@
             const searchButtons = Array.from(document.querySelectorAll('.js-search'));
             const listTitle = document.getElementById('list-title');
             const detailTitle = document.getElementById('detail-title');
+            const nationSelect = document.getElementById('nation');
+            const introInput = document.getElementById('intro');
+            const caseInfoInput = document.getElementById('case-info');
             const filters = {
                 range: 'all'
             };
             const viewInputs = {
                 people: ['nation', 'age', 'price', 'intro'],
                 cases: ['case-info']
+            };
+            let senderTimer = null;
+            const formatDisplayDate = (raw) => (window.formatDate ? window.formatDate(raw) : raw || '');
+            const sanitize = (str = '') =>
+                str
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            const stripCssNoise = (text = '') => {
+                if (!text) return '';
+                const firstGap = text.indexOf('\n\n');
+                const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
+                if (firstGap >= 0 && hasBraces) {
+                    return text.slice(firstGap + 2);
+                }
+                return text;
+            };
+
+            const readMatchedSkills = (item) => {
+                const raw = item?.dataset?.matchedSkills;
+                if (!raw) return [];
+                try {
+                    const parsed = JSON.parse(raw);
+                    return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
+                } catch {
+                    return [];
+                }
+            };
+
+            const renderDetail = (target, text = '', highlights = []) => {
+                if (!target) return;
+                const cleaned = stripCssNoise(text || '');
+                const normalized = cleaned
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
+                const escapedHighlights = (Array.isArray(highlights) ? highlights : [])
+                    .filter(Boolean)
+                    .map(v => sanitize(String(v)))
+                    .map(escapeRegExp);
+                const highlightRegex = escapedHighlights.length
+                    ? new RegExp(`(${escapedHighlights.join('|')})`, 'gi')
+                    : null;
+                const applyHighlight = (val) =>
+                    highlightRegex ? val.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>') : val;
+                const html = sanitize(normalized)
+                    .split(/\n{2,}/)
+                    .filter(Boolean)
+                    .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
+                    .join('');
+                target.innerHTML = html || `<p style="color:#9aa4b5">${t('qiuanjian.empty.detail')}</p>`;
             };
 
             const getActiveView = () => {
@@ -203,7 +220,7 @@
                     empty.className = 'empty';
                     empty.textContent = t('qiuanjian.empty.list');
                     list.appendChild(empty);
-                    detail.textContent = t('qiuanjian.empty.detail');
+                    renderDetail(detail, t('qiuanjian.empty.detail'));
                     return;
                 }
 
@@ -212,6 +229,9 @@
                     li.className = 'item' + (index === 0 ? ' active' : '');
                     li.dataset.detail = item.detail;
                     li.dataset.id = item.id;
+                    if (item.matched_skills && Array.isArray(item.matched_skills)) {
+                        li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
+                    }
 
                     const main = document.createElement('div');
                     main.className = 'item-main';
@@ -226,7 +246,7 @@
 
                     const time = document.createElement('div');
                     time.className = 'item-time';
-                    time.textContent = item.date;
+                    time.textContent = formatDisplayDate(item.date);
 
                     main.appendChild(title);
                     main.appendChild(desc);
@@ -237,29 +257,53 @@
 
                 const first = list.querySelector('.item');
                 if (first) {
-                    detail.textContent = first.dataset.detail || '';
+                    renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
                 }
             };
 
-            const applyFilters = () => {
-                const today = new Date();
-                const yesterdayDate = new Date();
-                yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-                const targetDate = filters.range === 'today'
-                    ? today.toISOString().slice(0, 10)
-                    : filters.range === 'yesterday'
-                        ? yesterdayDate.toISOString().slice(0, 10)
-                        : '';
-                const sender = senderInput.value.trim().toLowerCase();
-                const filtered = cases.filter(item => {
-                    const matchSender = sender
-                        ? (item.sender || '').toLowerCase().includes(sender)
-                        : true;
-                    const matchDate = targetDate ? item.date === targetDate : true;
-                    return matchSender && matchDate;
-                });
+            const setLoading = (message) => {
+                list.innerHTML = '';
+                const empty = document.createElement('li');
+                empty.className = 'empty';
+                empty.textContent = message;
+                list.appendChild(empty);
+                renderDetail(detail, '');
+            };
 
-                renderList(filtered);
+            const fetchCases = async () => {
+                if (!list || !detail) return;
+                const view = getActiveView();
+                const introText = view === 'cases'
+                    ? (caseInfoInput ? caseInfoInput.value.trim() : '')
+                    : (introInput ? introInput.value.trim() : '');
+                const payload = {
+                    intro: introText,
+                    date_range: filters.range || 'all',
+                    sender: senderInput ? senderInput.value.trim() : ''
+                };
+                if (view === 'people') {
+                    payload.country = nationSelect ? nationSelect.value.trim() : '';
+                }
+                setLoading(t('common.loading') || '加载中...');
+                try {
+                    const endpoint = view === 'cases'
+                        ? '/api/mail-technicians/search'
+                        : '/api/mail-projects/search';
+                    const response = await window.fetchWithAuth(endpoint, {
+                        method: 'POST',
+                        body: JSON.stringify(payload)
+                    });
+                    const raw = await response.json();
+                    const result = window.normalizeApiResponse ? window.normalizeApiResponse(raw) : raw;
+                    if (!result || result.success === false) {
+                        throw new Error(result?.message || '加载失败');
+                    }
+                    const items = Array.isArray(result.data?.items) ? result.data.items : [];
+                    renderList(items);
+                } catch (err) {
+                    console.error('fetch cases failed', err);
+                    setLoading(t('common.failed') || '加载失败');
+                }
             };
 
             list.addEventListener('click', (e) => {
@@ -267,7 +311,7 @@
                 if (!item) return;
                 list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
                 item.classList.add('active');
-                detail.textContent = item.dataset.detail || '';
+                renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
             });
 
             dateButtons.forEach(btn => {
@@ -275,12 +319,17 @@
                     dateButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     filters.range = btn.dataset.range;
-                    applyFilters();
+                    fetchCases();
                 });
             });
 
             senderInput.addEventListener('input', () => {
-                applyFilters();
+                if (senderTimer) {
+                    window.clearTimeout(senderTimer);
+                }
+                senderTimer = window.setTimeout(() => {
+                    fetchCases();
+                }, 400);
             });
 
             resetButtons.forEach(btn => {
@@ -292,18 +341,20 @@
                     if (elements[0]) {
                         elements[0].focus();
                     }
+                    fetchCases();
                 });
             });
 
             searchButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    alert('已搜索');
+                    fetchCases();
                 });
             });
 
             viewButtons.forEach(btn => {
                 btn.addEventListener('click', () => {
                     setView(btn.dataset.view);
+                    fetchCases();
                 });
             });
 
@@ -312,13 +363,13 @@
                 i18n.apply();
             }
             setView(getActiveView());
-            renderList(cases);
+            fetchCases();
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
                     if (i18n) {
                         i18n.apply();
                     }
-                    applyFilters();
+                    fetchCases();
                 });
             }
         })();

@@ -682,12 +682,16 @@ def send_history(request):
     page_size = max(min(page_size, 100), 1)
 
     queryset = SentEmailLog.objects.filter(created_by=login_id)
-    if mail_type != "":
+    if mail_type and mail_type.lower() != "all":
         try:
-            mail_type_value = int(mail_type)
+            if "," in mail_type:
+                mail_type_values = [int(v.strip()) for v in mail_type.split(",") if v.strip() != ""]
+                queryset = queryset.filter(mail_type__in=mail_type_values)
+            else:
+                mail_type_value = int(mail_type)
+                queryset = queryset.filter(mail_type=mail_type_value)
         except (TypeError, ValueError):
             return api_error("Invalid mail_type")
-        queryset = queryset.filter(mail_type=mail_type_value)
     if keyword:
         queryset = queryset.filter(to__icontains=keyword)
     queryset = queryset.order_by("-sent_at")

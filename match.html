@@ -222,13 +222,13 @@
                 if (!payload) return false;
 
                 if (nationSelect) {
-                    if (payload.nationality === '日本') {
-                        nationSelect.value = '0';
-                    } else if (payload.nationality) {
-                        nationSelect.value = '1';
-                    } else {
-                        nationSelect.value = '';
+                    let nationalityValue = '';
+                    if (payload.nationality === 0 || payload.nationality === '0' || payload.nationality === '日本') {
+                        nationalityValue = '0';
+                    } else if (payload.nationality === 1 || payload.nationality === '1' || payload.nationality === '其他') {
+                        nationalityValue = '1';
                     }
+                    nationSelect.value = nationalityValue;
                 }
                 if (ageInput) ageInput.value = payload.age ?? '';
                 if (priceInput) priceInput.value = payload.price ?? '';

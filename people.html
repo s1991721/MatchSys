@@ -25,9 +25,8 @@
                     <span data-i18n="people.filter.nationality">国籍</span>
                     <select id="filterNationality">
                         <option value="" data-i18n="common.all">全部</option>
-                        <option value="日本" data-i18n="people.nationality.jp">日本</option>
-                        <option value="中国" data-i18n="people.nationality.cn">中国</option>
-                        <option value="其他" data-i18n="people.nationality.other">其他</option>
+                        <option value="0" data-i18n="people.nationality.jp">日本</option>
+                        <option value="1" data-i18n="people.nationality.other">其他</option>
                     </select>
                 </label>
                 <label>
@@ -125,8 +124,8 @@
                     <span data-i18n="people.field.nationality">国籍</span>
                     <select name="nationality" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
-                        <option value="日本" data-i18n="people.nationality.jp">日本</option>
-                        <option value="其他" data-i18n="people.nationality.other">其他</option>
+                        <option value="0" data-i18n="people.nationality.jp">日本</option>
+                        <option value="1" data-i18n="people.nationality.other">其他</option>
                     </select>
                 </label>
                 <label>
@@ -288,6 +287,22 @@
         return mapping[label] ?? 0;
     };
 
+    const normalizeNationalityValue = (value) => {
+        if (value === null || value === undefined || value === '') return '';
+        if (value === 0 || value === '0') return 0;
+        if (value === 1 || value === '1') return 1;
+        if (value === '日本') return 0;
+        if (value === '其他') return 1;
+        return '';
+    };
+
+    const nationalityLabel = (value) => {
+        const normalized = normalizeNationalityValue(value);
+        if (normalized === 0) return t("people.nationality.jp");
+        if (normalized === 1) return t("people.nationality.other");
+        return '-';
+    };
+
     const normalizeDateInput = (value) => {
         if (!value) return '';
         const date = new Date(value);
@@ -340,7 +355,7 @@
                     <td data-label="${t("people.table.name")}">${person.name}</td>
                     <td data-label="${t("people.table.nickname")}">${person.nickname || '-'}</td>
                     <td data-label="${t("people.table.age")}">${person.age}</td>
-                    <td data-label="${t("people.table.nationality")}">${person.nationality}</td>
+                    <td data-label="${t("people.table.nationality")}">${nationalityLabel(person.nationality)}</td>
                     <td data-label="${t("people.table.price")}">${person.price} ${t("people.price_unit")}</td>
                     <td data-label="${t("people.table.intro")}"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
                     <td data-label="${t("people.table.contract")}"><span class="${chipClass}">${person.contract}</span></td>
@@ -401,7 +416,8 @@
         personForm.name.value = person.name;
         personForm.nickname.value = person.nickname || '';
         personForm.birthday.value = person.birthday || '';
-        personForm.nationality.value = person.nationality;
+        const nationalityValue = normalizeNationalityValue(person.nationality);
+        personForm.nationality.value = nationalityValue === '' ? '' : String(nationalityValue);
         personForm.price.value = person.price;
         personForm.contract.value = person.contract;
         personForm.siteContract.value = person.siteContract || '';
@@ -502,7 +518,7 @@
             nickname: item.name_mask,
             birthday: item.birthday || '',
             age: calcAge(item.birthday),
-            nationality: item.nationality || '',
+            nationality: normalizeNationalityValue(item.nationality),
             price: item.price ? Number(item.price) : 0,
             contract: contractTypeToLabel(item.contract_type),
             siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
@@ -701,12 +717,13 @@
             }
         }
 
+        const nationalityValue = normalizeNationalityValue(formValue.nationality);
         const payload = {
             employee_id: effectiveId,
             name: formValue.name,
             name_mask: formValue.nickname || formValue.name,
             birthday: formValue.birthday || '',
-            nationality: formValue.nationality || '',
+            nationality: nationalityValue === '' ? null : nationalityValue,
             price: Number.isFinite(formValue.price) ? formValue.price : null,
             introduction: formValue.intro || '',
             contract_type: contractLabelToType(formValue.contract),
@@ -757,7 +774,7 @@
     const cacheMatchPayload = (person) => {
         if (!person) return;
         const payload = {
-            nationality: person.nationality || '',
+            nationality: normalizeNationalityValue(person.nationality),
             age: person.age ?? '',
             price: person.price ?? '',
             intro: person.intro || ''

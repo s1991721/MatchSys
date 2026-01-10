@@ -49,6 +49,23 @@ def _build_date_range(filters, field_name, start_value, end_value):
         filters[f"{field_name}__lte"] = end_dt
 
 
+def _parse_nationality(value):
+    if value is None or value == "":
+        return None, None
+    if isinstance(value, str):
+        if value == "日本":
+            return 0, None
+        if value == "其他":
+            return 1, None
+    try:
+        int_value = int(value)
+    except (TypeError, ValueError):
+        return None, api_error("Invalid field: nationality", status=400)
+    if int_value not in (0, 1):
+        return None, api_error("Invalid field: nationality", status=400)
+    return int_value, None
+
+
 @csrf_exempt
 @require_POST
 # 登录
@@ -618,12 +635,16 @@ def technicians_api(request):
 
         ss_value = (payload.get("ss") or "").strip() or None
 
+        nationality_value, error = _parse_nationality(payload.get("nationality"))
+        if error:
+            return error
+
         tech = Technician.objects.create(
             employee_id=employee_id,
             name=name,
             name_mask=name_mask,
             birthday=birthday,
-            nationality=(payload.get("nationality") or "").strip() or None,
+            nationality=nationality_value,
             price=price,
             introduction=(payload.get("introduction") or "").strip() or None,
             contract_type=contract_type if contract_type is not None else 0,
@@ -641,13 +662,17 @@ def technicians_api(request):
 
         keyword = (request.GET.get("keyword") or "").strip()
         age_max = request.GET.get("age_max")
-        nationality = (request.GET.get("nationality") or "").strip()
+        nationality = request.GET.get("nationality")
         price_max = request.GET.get("price_max")
         contract_type = request.GET.get("contract_type")
         business_status = request.GET.get("business_status")
 
-        if nationality:
-            filters["nationality"] = nationality
+        if nationality is not None and nationality != "":
+            nationality_value, error = _parse_nationality(nationality)
+            if error:
+                return error
+            if nationality_value is not None:
+                filters["nationality"] = nationality_value
 
         if price_max is not None:
             filters["price__lte"] = price_max
@@ -730,7 +755,10 @@ def technician_detail_api(request, employee_id):
     if "name" in payload:
         tech.name = (payload.get("name") or "").strip()
     if "nationality" in payload:
-        tech.nationality = (payload.get("nationality") or "").strip() or None
+        nationality_value, error = _parse_nationality(payload.get("nationality"))
+        if error:
+            return error
+        tech.nationality = nationality_value
     if "price" in payload:
         tech.price = payload.get("price")
     if "introduction" in payload:

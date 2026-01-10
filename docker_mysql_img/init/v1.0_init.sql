@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS technician
     name_mask              VARCHAR(100)   NOT NULL COMMENT '姓名掩码',
     birthday               DATE           NULL COMMENT '生日',
 
-    nationality            VARCHAR(50)    NULL COMMENT '国籍',
+    nationality            TINYINT        NULL COMMENT '国籍：0-日本 1-其他',
     price                  DECIMAL(10, 2) NULL COMMENT '单价/报价',
     introduction           TEXT           NULL COMMENT '简介',
 

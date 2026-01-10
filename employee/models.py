@@ -125,7 +125,17 @@ class Technician(models.Model):
 
     birthday = models.DateField(null=True, blank=True, verbose_name="生日")
 
-    nationality = models.CharField(max_length=50, null=True, blank=True, verbose_name="国籍")
+    NATIONALITY_CHOICES = (
+        (0, "日本"),
+        (1, "其他"),
+    )
+
+    nationality = models.SmallIntegerField(
+        choices=NATIONALITY_CHOICES,
+        null=True,
+        blank=True,
+        verbose_name="国籍",
+    )
 
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name="报价")
 
@@ -173,7 +183,7 @@ class Technician(models.Model):
             "name": tech.name,
             "name_mask": tech.name_mask,
             "birthday": tech.birthday.isoformat() if tech.birthday else "",
-            "nationality": tech.nationality or "",
+            "nationality": tech.nationality if tech.nationality is not None else None,
             "price": str(tech.price) if tech.price is not None else "",
             "introduction": tech.introduction or "",
             "contract_type": tech.contract_type,

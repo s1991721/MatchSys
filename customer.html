@@ -199,6 +199,15 @@
                            data-i18n-placeholder="customer.bulk.subject_placeholder"/>
                 </div>
                 <div class="form-item">
+                    <div class="form-label">送信类型</div>
+                    <select class="input" id="bulk-mail-type">
+                        <option value="-1">其他</option>
+                        <option value="0">BP</option>
+                        <option value="1">技术者送信</option>
+                        <option value="2">案件送信</option>
+                    </select>
+                </div>
+                <div class="form-item">
                     <div class="form-label" data-i18n="customer.bulk.body">邮件内容</div>
                     <textarea class="textarea" id="bulk-mail-body" rows="10" placeholder="请输入邮件内容"
                               data-i18n-placeholder="customer.bulk.body_placeholder"></textarea>
@@ -252,6 +261,7 @@
     const bulkMailDialog = document.getElementById("bulk-mail-dialog");
     const bulkMailSubject = document.getElementById("bulk-mail-subject");
     const bulkMailBody = document.getElementById("bulk-mail-body");
+    const bulkMailType = document.getElementById("bulk-mail-type");
     const bulkMailRecipients = document.getElementById("bulk-mail-recipients");
     const bulkMailSelected = document.getElementById("bulk-mail-selected");
     const bulkMailSend = document.getElementById("bulk-mail-send");
@@ -725,6 +735,7 @@
         const recipients = readSelectedEmails();
         const subject = bulkMailSubject.value.trim();
         const body = bulkMailBody.value.trim();
+        const mailType = bulkMailType ? bulkMailType.value : "";
 
         if (!recipients.length) {
             alert(t("customer.bulk.alert.recipient_required"));
@@ -746,6 +757,7 @@
                 to: recipients.join(","),
                 subject,
                 body,
+                mail_type: mailType,
             }),
         })
             .then(async (response) => {

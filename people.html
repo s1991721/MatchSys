@@ -317,6 +317,7 @@
                     <td data-label="${t("people.table.actions")}">
                         <div class="row-actions c-row-actions c-row-actions-nowrap">
                             <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">${t("common.edit")}</button>
+                            <button type="button" class="c-btn c-btn-warn-lite c-btn-sm" data-match="${person.id}">匹配案件</button>
                             <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">${t("common.delete")}</button>
                         </div>
                     </td>
@@ -684,14 +685,51 @@
         event.preventDefault();
         return;
     });
+    const getSharedStorage = () => {
+        try {
+            if (window.top && window.top.localStorage) {
+                return window.top.localStorage;
+            }
+        } catch (error) {
+        }
+        return localStorage;
+    };
+
+    const cacheMatchPayload = (person) => {
+        if (!person) return;
+        const payload = {
+            nationality: person.nationality || '',
+            age: person.age ?? '',
+            price: person.price ?? '',
+            intro: person.intro || ''
+        };
+        try {
+            const storage = getSharedStorage();
+            storage.setItem('match_prefill', JSON.stringify(payload));
+        } catch (error) {
+            console.warn('match_prefill 缓存失败', error);
+        }
+    };
+
     peopleTableBody.addEventListener('click', (event) => {
         const editId = event.target.getAttribute('data-edit');
         const deleteId = event.target.getAttribute('data-delete');
+        const matchId = event.target.getAttribute('data-match');
 
         if (editId) {
             const person = people.find(item => String(item.id) === editId);
             if (person) {
                 openEditDialog(person);
+            }
+        } else if (matchId) {
+            const person = people.find(item => String(item.id) === matchId);
+            if (person) {
+                cacheMatchPayload(person);
+                if (window.top && window.top !== window) {
+                    window.top.postMessage({ type: 'route:change', src: 'match.html' }, '*');
+                } else {
+                    window.location.href = 'match.html';
+                }
             }
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);

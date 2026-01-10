@@ -201,6 +201,46 @@
                 return active ? active.dataset.view : 'people';
             };
 
+            const getSharedStorage = () => {
+                try {
+                    if (window.top && window.top.localStorage) {
+                        return window.top.localStorage;
+                    }
+                } catch (error) {
+                }
+                return localStorage;
+            };
+
+            const applyPrefill = () => {
+                let payload = null;
+                try {
+                    const storage = getSharedStorage();
+                    payload = JSON.parse(storage.getItem('match_prefill') || 'null');
+                } catch (error) {
+                    payload = null;
+                }
+                if (!payload) return false;
+
+                if (nationSelect) {
+                    if (payload.nationality === '日本') {
+                        nationSelect.value = '0';
+                    } else if (payload.nationality) {
+                        nationSelect.value = '1';
+                    } else {
+                        nationSelect.value = '';
+                    }
+                }
+                if (ageInput) ageInput.value = payload.age ?? '';
+                if (priceInput) priceInput.value = payload.price ?? '';
+                if (introInput) introInput.value = payload.intro || '';
+                try {
+                    const storage = getSharedStorage();
+                    storage.removeItem('match_prefill');
+                } catch (error) {
+                }
+                return true;
+            };
+
             const setView = (view) => {
                 views.forEach(section => {
                     section.classList.toggle('hidden', section.dataset.view !== view);
@@ -482,8 +522,12 @@
                 i18n.init();
                 i18n.apply();
             }
-            setView(getActiveView());
-            fetchCases();
+            const didPrefill = applyPrefill();
+            const initialView = didPrefill ? 'people' : getActiveView();
+            setView(initialView);
+            if (!didPrefill) {
+                fetchCases();
+            }
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
                     if (i18n) {

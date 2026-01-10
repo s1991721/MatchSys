@@ -340,6 +340,9 @@ body > .page {
   .content-spaced > .c-card {
     padding: 14px;
   }
+  .match-page .match-sticky-column {
+    position: static;
+  }
 }
 .c-title-bar-lg {
   font-size: 20px;
@@ -1718,6 +1721,11 @@ svg {
 /* Match page */
 .match-page .match-list {
   max-height: 360px;
+}
+.match-page .match-sticky-column {
+  position: sticky;
+  top: 16px;
+  align-self: start;
 }
 .match-page .date-input {
   max-width: 160px;

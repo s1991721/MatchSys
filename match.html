@@ -22,7 +22,7 @@
         </div>
 
         <div class="content-grid">
-        <div>
+        <div class="match-sticky-column">
         <section class="c-card c-card-pad match-view" data-view="people">
             <h2 class="title c-panel-title">技术者信息</h2>
             <div class="form-grid form-grid-spaced">
@@ -85,12 +85,11 @@
                                 <button class="chip c-chip active" data-range="all" type="button" data-i18n="qiuanjian.range.all">全部</button>
                                 <button class="chip c-chip" data-range="today" type="button" data-i18n="qiuanjian.range.today">今天</button>
                                 <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="qiuanjian.range.yesterday">昨天</button>
-                                <input id="date-picker" class="input c-input date-input" type="date" aria-label="选择日期" data-i18n-aria="qiuanjian.date.label">
                             </div>
                         </div>
-                        <div class="filter-group c-filter-group">
-                            <span class="filter-label c-filter-label" data-i18n="qiuanjian.filter.keyword">关键字</span>
-                            <input id="keyword-input" class="input c-input" type="search" placeholder="搜索案件标题、描述或细节" data-i18n-placeholder="qiuanjian.keyword.placeholder">
+                        <div class="filter-group c-filter-group sender-group">
+                            <span class="filter-label c-filter-label">发件人</span>
+                            <input id="sender-input" class="input c-input" type="search" placeholder="搜索发件人">
                         </div>
                     </div>
                     <ul id="case-list" class="list c-list match-list">
@@ -118,7 +117,8 @@
                     id: 1,
                     title: '案件1标题',
                     desc: '案件1的简单说明 content',
-                    detail: '这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    detail: '这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    sender: '山田',
                     date: '2025-12-01'
                 },
                 {
@@ -126,6 +126,7 @@
                     title: '案件2标题',
                     desc: '案件2的简单说明 content',
                     detail: '这是案件2的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    sender: '佐藤',
                     date: '2025-11-25'
                 },
                 {
@@ -133,6 +134,7 @@
                     title: '案件3标题',
                     desc: '案件3的简单说明 content',
                     detail: '这是案件3的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    sender: '鈴木',
                     date: '2025-11-20'
                 },
                 {
@@ -140,6 +142,7 @@
                     title: '案件4标题',
                     desc: '案件4的简单说明 content',
                     detail: '这是案件4的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    sender: '田中',
                     date: '2025-11-18'
                 },
                 {
@@ -147,14 +150,14 @@
                     title: '案件5标题',
                     desc: '案件5的简单说明 content',
                     detail: '这是案件5的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。',
+                    sender: '小林',
                     date: '2025-11-12'
                 }
             ];
 
             const list = document.getElementById('case-list');
             const detail = document.getElementById('case-detail');
-            const keywordInput = document.getElementById('keyword-input');
-            const datePicker = document.getElementById('date-picker');
+            const senderInput = document.getElementById('sender-input');
             const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
             const viewButtons = Array.from(document.querySelectorAll('.c-toggle[data-view]'));
             const views = Array.from(document.querySelectorAll('.match-view'));
@@ -163,8 +166,7 @@
             const listTitle = document.getElementById('list-title');
             const detailTitle = document.getElementById('detail-title');
             const filters = {
-                range: 'all',
-                customDate: ''
+                range: 'all'
             };
             const viewInputs = {
                 people: ['nation', 'age', 'price', 'intro'],
@@ -192,8 +194,6 @@
                     detailTitle.textContent = view === 'cases' ? '技术者详情' : '案件详情';
                 }
             };
-
-            const formatDate = (date) => date.toISOString().slice(0, 10);
 
             const renderList = (items) => {
                 list.innerHTML = '';
@@ -242,26 +242,21 @@
             };
 
             const applyFilters = () => {
-                const today = formatDate(new Date());
+                const today = new Date();
                 const yesterdayDate = new Date();
                 yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-                const yesterday = formatDate(yesterdayDate);
-
-                const keyword = keywordInput.value.trim().toLowerCase();
                 const targetDate = filters.range === 'today'
-                    ? today
+                    ? today.toISOString().slice(0, 10)
                     : filters.range === 'yesterday'
-                        ? yesterday
-                        : filters.range === 'custom'
-                            ? filters.customDate
-                            : '';
-
+                        ? yesterdayDate.toISOString().slice(0, 10)
+                        : '';
+                const sender = senderInput.value.trim().toLowerCase();
                 const filtered = cases.filter(item => {
-                    const matchKeyword = keyword
-                        ? (item.title + item.desc + item.detail).toLowerCase().includes(keyword)
+                    const matchSender = sender
+                        ? (item.sender || '').toLowerCase().includes(sender)
                         : true;
                     const matchDate = targetDate ? item.date === targetDate : true;
-                    return matchKeyword && matchDate;
+                    return matchSender && matchDate;
                 });
 
                 renderList(filtered);
@@ -280,31 +275,11 @@
                     dateButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     filters.range = btn.dataset.range;
-                    filters.customDate = '';
-                    datePicker.value = '';
-                    datePicker.classList.remove('active');
                     applyFilters();
                 });
             });
 
-            datePicker.addEventListener('change', () => {
-                if (datePicker.value) {
-                    filters.range = 'custom';
-                    filters.customDate = datePicker.value;
-                    dateButtons.forEach(b => b.classList.remove('active'));
-                    datePicker.classList.add('active');
-                } else {
-                    filters.range = 'all';
-                    filters.customDate = '';
-                    dateButtons.forEach(b => {
-                        b.classList.toggle('active', b.dataset.range === 'all');
-                    });
-                    datePicker.classList.remove('active');
-                }
-                applyFilters();
-            });
-
-            keywordInput.addEventListener('input', () => {
+            senderInput.addEventListener('input', () => {
                 applyFilters();
             });
 

@@ -4,10 +4,8 @@ services:
     container_name: matchsys-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: matchSys
+      MYSQL_ROOT_PASSWORD: 123456
       TZ: Asia/Tokyo
     volumes:
       - mysql_data:/var/lib/mysql
@@ -23,9 +21,7 @@ services:
     depends_on:
       - db
     volumes:
-      # 给 nginx 读的静态/媒体 volume
-      - static_volume:/app/staticfiles
-      - media_volume:/app/media
+      -
     networks:
       - matchsys-net
     # 关键提醒：

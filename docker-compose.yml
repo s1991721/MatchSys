@@ -42,8 +42,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - static_volume:/static:ro
-      - media_volume:/media:ro
+      - ./frontend:/var/www/frontend
     networks:
       - matchsys-net
 

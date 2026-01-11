@@ -349,7 +349,7 @@ CREATE TABLE IF NOT EXISTS sales_order
     order_no         VARCHAR(50)    NOT NULL COMMENT '受注单号',
     person_in_charge VARCHAR(100)   NOT NULL COMMENT '负责人',
     status           VARCHAR(50)    NOT NULL COMMENT '状态',
-    purchase_id      BIGINT         NOT NULL COMMENT '对应发注ID',
+    purchase_id      BIGINT         NULL COMMENT '对应发注ID',
     project_name     VARCHAR(255)   NOT NULL COMMENT '项目名称',
     customer_id      BIGINT         NOT NULL COMMENT '客户ID',
     customer_name    VARCHAR(255)   NOT NULL COMMENT '客户名称',
@@ -498,5 +498,4 @@ CREATE TABLE sys_tasks
     deleted_at  DATETIME     NULL COMMENT '删除时间（软删）'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='定时任务';
-
 

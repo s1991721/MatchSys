@@ -277,7 +277,7 @@ def _apply_sales_payload(order, payload):
         value, error = _parse_int(payload.get("purchase_id"), "purchase_id")
         if error:
             return error
-        order.purchase_id = value or 0
+        order.purchase_id = value if value is not None else None
 
     if "technician_id" in payload:
         value, error = _parse_int(payload.get("technician_id"), "technician_id")
@@ -594,7 +594,6 @@ def sales_orders_api(request):
             return error
         required_fields = [
             "order_no",
-            "purchase_id",
             "project_name",
             "customer_id",
             "customer_name",

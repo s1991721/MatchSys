@@ -31,7 +31,7 @@ class SalesOrder(models.Model):
     order_no = models.CharField(max_length=50)
     person_in_charge = models.CharField(max_length=100)
     status = models.CharField(max_length=50)
-    purchase_id = models.BigIntegerField()
+    purchase_id = models.BigIntegerField(null=True, blank=True)
     project_name = models.CharField(max_length=255)
     customer_id = models.BigIntegerField()
     customer_name = models.CharField(max_length=255)

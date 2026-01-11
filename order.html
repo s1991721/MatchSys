@@ -767,10 +767,11 @@
         }
 
         const buildAcceptPayload = (fromDetail) => {
+            const purchaseIdRaw = (fromDetail ? detailFields.purchaseId.value : acceptForm.purchaseId.value).trim();
             return {
                 order_no: fromDetail ? detailFields.orderNo.value.trim() : acceptForm.orderNo.value.trim(),
                 project_name: fromDetail ? detailFields.project.value.trim() : acceptForm.projectName.value.trim(),
-                purchase_id: Number(fromDetail ? detailFields.purchaseId.value : acceptForm.purchaseId.value) || 0,
+                purchase_id: purchaseIdRaw ? Number(purchaseIdRaw) : null,
                 customer_id: Number(fromDetail ? detailFields.customerId.value : acceptForm.customerId.value) || 0,
                 customer_name: fromDetail ? detailFields.client.value.trim() : acceptForm.customerName.value.trim(),
                 technician_id: Number(fromDetail ? detailFields.technicianId.value : acceptForm.technicianId.value) || 0,

@@ -1,0 +1,58 @@
+services:
+  db:
+    image: jef4267/matchsys-mysql:1.0
+    container_name: matchsys-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      TZ: Asia/Tokyo
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - matchsys-net
+
+  web:
+    image: jef4267/matchsys-web:1.0
+    container_name: matchsys-web
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+    volumes:
+      # 给 nginx 读的静态/媒体 volume
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    networks:
+      - matchsys-net
+    # 关键提醒：
+    # 如果你 Django 镜像里还在 build 阶段 collectstatic（RUN python manage.py collectstatic），
+    # 那么挂载 static_volume 会覆盖镜像层里的静态文件，可能导致 /static 为空。
+    # 更推荐：把 collectstatic 放到启动时执行（entrypoint/command），再挂载这个 volume。
+
+  nginx:
+    image: jef4267/matchsys-nginx:1.0
+    container_name: matchsys-nginx
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+    volumes:
+      - static_volume:/static:ro
+      - media_volume:/media:ro
+    networks:
+      - matchsys-net
+
+volumes:
+  mysql_data:
+  static_volume:
+  media_volume:
+
+networks:
+  matchsys-net:
+    # 如果服务器上你会提前创建网络（推荐）
+    external: true

@@ -43,6 +43,12 @@ docker run --name matchsys-test \
 ------------------------------------------------ 发布 镜像
 docker push jef4267/matchsys-mysql:1.0
 docker push jef4267/matchsys:1.0
+docker push jef4267/matchsys-nginx:1.0
+
+
+------------------------------------------------ nginx 镜像
+docker buildx build --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-nginx:1.0 --push .
 
 
 
+------------------------------------------------ 服务器部署使用

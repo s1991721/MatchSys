@@ -42,6 +42,7 @@ from bpmatch.views import (
     send_mail,
     send_history,
 )
+from data_analysis.views import home_match_stats_api
 from customer.views import (
     employee_names_api,
     customers_api,
@@ -184,6 +185,7 @@ urlpatterns = [
     path("api/extract-technician-detail", extract_technician_detail, name="extract_technician_detail"),
     path("api/send-mail", send_mail, name="send_mail"),
     path("api/send-history", send_history, name="send_history"),
+    path("api/home/stats", home_match_stats_api, name="home-match-stats"),
     # -------------------------------customer API-------------------------------
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),

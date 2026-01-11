@@ -18,8 +18,8 @@
     }
 
     .container{
-      padding:22px;
-      max-width: 1180px;
+      padding:16px 20px;
+      max-width: 1440px;
       width:100%;
       margin:0 auto;
     }
@@ -353,8 +353,12 @@
         <div class="stat">
           <div>
             <div class="label" data-i18n="home.stats.week_match">本周match数</div>
-            <div class="value">12,580</div>
-            <div class="delta up">▲ 8.5% <span class="pill" data-i18n="home.vs_last_week">vs 上周</span></div>
+            <div class="value" id="week-match-count">0</div>
+            <div class="delta" id="week-match-delta">
+              <span class="delta-indicator">-</span>
+              <span class="delta-percent">-</span>
+              <span class="pill" data-i18n="home.vs_last_week">vs 上周</span>
+            </div>
           </div>
         </div>
       </div>
@@ -363,8 +367,12 @@
         <div class="stat">
           <div>
             <div class="label" data-i18n="home.stats.today_match">今天match数</div>
-            <div class="value">324</div>
-            <div class="delta up">▲ 2.3% <span class="pill" data-i18n="home.vs_yesterday">vs 昨天</span></div>
+            <div class="value" id="today-match-count">0</div>
+            <div class="delta" id="today-match-delta">
+              <span class="delta-indicator">-</span>
+              <span class="delta-percent">-</span>
+              <span class="pill" data-i18n="home.vs_yesterday">vs 昨天</span>
+            </div>
           </div>
         </div>
       </div>
@@ -373,8 +381,12 @@
         <div class="stat">
           <div>
             <div class="label" data-i18n="home.stats.month_entry">本月入场人数</div>
-            <div class="value">18</div>
-            <div class="delta down">▼ 1.2% <span class="pill" data-i18n="home.vs_last_week">vs 上周</span></div>
+            <div class="value" id="month-entry-count">0</div>
+            <div class="delta" id="month-entry-delta">
+              <span class="delta-indicator">-</span>
+              <span class="delta-percent">-</span>
+              <span class="pill" data-i18n="home.vs_last_month">vs 上月</span>
+            </div>
           </div>
         </div>
       </div>
@@ -383,8 +395,7 @@
         <div class="stat">
           <div>
             <div class="label" data-i18n="home.stats.two_weeks">两周内求案件人数</div>
-            <div class="value">¥52,780</div>
-            <div class="delta up">▲ 15.7% <span class="pill" data-i18n="home.mtd">MTD</span></div>
+            <div class="value" id="two-weeks-count">0</div>
           </div>
         </div>
       </div>
@@ -486,60 +497,14 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot" style="background:var(--purple)"></span>
-            <h2 data-i18n="home.monthly_sales">当月营业技术者（4名）</h2>
-          </div>
-          <select class="select" aria-label="筛选" data-i18n-aria="home.filter.label">
-            <option data-i18n="home.filter.overview">营业概览</option>
-            <option data-i18n="home.filter.week">本周</option>
-            <option data-i18n="home.filter.month">本月</option>
-          </select>
-        </div>
-
-        <div class="list">
-          <div class="row">
-            <div class="left">
-              <div class="check"></div>
-              <div class="name-wrap">
-                <div class="name">张三</div>
-                <div class="sub">java</div>
-              </div>
-            </div>
-            <button class="c-btn c-btn-success c-btn-sm" data-i18n="home.action.approve">通过 →</button>
-          </div>
-
-          <div class="row">
-            <div class="left">
-              <div class="check"></div>
-              <div class="name-wrap">
-                <div class="name">李四</div>
-                <div class="sub">C#</div>
-              </div>
-            </div>
-            <button class="c-btn c-btn-primary c-btn-sm">1/2 →</button>
-          </div>
-
-          <div class="row">
-            <div class="left">
-              <div class="check"></div>
-              <div class="name-wrap">
-                <div class="name">王五</div>
-                <div class="sub">PHP</div>
-              </div>
-            </div>
-            <button class="c-btn c-btn-danger c-btn-sm" data-i18n="home.action.standby">待机 →</button>
-          </div>
-
-          <div class="row">
-            <div class="left">
-              <div class="check"></div>
-              <div class="name-wrap">
-                <div class="name">赵六</div>
-                <div class="sub">python</div>
-              </div>
-            </div>
-            <button class="c-btn c-btn-warn c-btn-sm" data-i18n="home.action.wait">结果等待 →</button>
+            <h2>
+              <span data-i18n="home.monthly_sales">当月营业技术者</span>
+              （<span id="monthly-sales-count">0</span>名）
+            </h2>
           </div>
         </div>
+
+        <div class="list" id="monthly-sales-list"></div>
       </div>
     </section>
 
@@ -665,6 +630,147 @@
       window.I18N.init();
       window.I18N.apply();
     }
+  </script>
+  <script>
+    const formatCount = (value) => {
+      if (typeof value !== "number") return "-";
+      return value.toLocaleString("en-US");
+    };
+
+    const formatPercent = (value) => {
+      if (typeof value !== "number") return "-";
+      return `${Math.abs(value).toFixed(1)}%`;
+    };
+
+    const updateDelta = (deltaEl, direction, deltaPercent) => {
+      if (!deltaEl) return;
+      const indicator = deltaEl.querySelector(".delta-indicator");
+      const percent = deltaEl.querySelector(".delta-percent");
+
+      deltaEl.classList.remove("up", "down");
+      if (direction === "up") {
+        deltaEl.classList.add("up");
+        if (indicator) indicator.textContent = "▲";
+      } else if (direction === "down") {
+        deltaEl.classList.add("down");
+        if (indicator) indicator.textContent = "▼";
+      } else if (indicator) {
+        indicator.textContent = "-";
+      }
+
+      if (percent) {
+        percent.textContent = formatPercent(deltaPercent);
+      }
+    };
+
+    const updateWeekMatchStats = (payload) => {
+      const countEl = document.getElementById("week-match-count");
+      const deltaEl = document.getElementById("week-match-delta");
+      if (!countEl || !deltaEl) return;
+
+      countEl.textContent = formatCount(payload?.week_count);
+      updateDelta(deltaEl, payload?.week_direction || "flat", payload?.week_delta_percent);
+    };
+
+    const updateTodayMatchStats = (payload) => {
+      const countEl = document.getElementById("today-match-count");
+      const deltaEl = document.getElementById("today-match-delta");
+      if (!countEl || !deltaEl) return;
+
+      countEl.textContent = formatCount(payload?.today_count);
+      updateDelta(deltaEl, payload?.day_direction || "flat", payload?.day_delta_percent);
+    };
+
+    const updateMonthEntryStats = (payload) => {
+      const countEl = document.getElementById("month-entry-count");
+      const deltaEl = document.getElementById("month-entry-delta");
+      if (!countEl || !deltaEl) return;
+
+      countEl.textContent = formatCount(payload?.month_entry_count);
+      updateDelta(deltaEl, payload?.month_direction || "flat", payload?.month_delta_percent);
+    };
+
+    const updateTwoWeeksStats = (payload) => {
+      const countEl = document.getElementById("two-weeks-count");
+      if (!countEl) return;
+      countEl.textContent = formatCount(payload?.two_weeks_count);
+    };
+
+    const createMonthlySalesRow = (item) => {
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const left = document.createElement("div");
+      left.className = "left";
+      const check = document.createElement("div");
+      check.className = "check";
+      const nameWrap = document.createElement("div");
+      nameWrap.className = "name-wrap";
+      const name = document.createElement("div");
+      name.className = "name";
+      name.textContent = item?.name || "-";
+      const sub = document.createElement("div");
+      sub.className = "sub";
+      sub.textContent = item?.remark || "-";
+      nameWrap.appendChild(name);
+      nameWrap.appendChild(sub);
+      left.appendChild(check);
+      left.appendChild(nameWrap);
+
+      const button = document.createElement("button");
+      button.className = "c-btn c-btn-sm";
+      const status = Number(item?.business_status);
+      if (status === 0) {
+        button.classList.add("c-btn-success");
+        button.textContent = "营业中 →";
+      } else if (status === 1) {
+        button.classList.add("c-btn-primary");
+        button.textContent = "1/2 →";
+      } else {
+        button.classList.add("c-btn-warn");
+        button.textContent = "结果等待 →";
+      }
+
+      row.appendChild(left);
+      row.appendChild(button);
+      return row;
+    };
+
+    const updateMonthlySalesTechs = (payload) => {
+      const listEl = document.getElementById("monthly-sales-list");
+      const countEl = document.getElementById("monthly-sales-count");
+      if (!listEl || !countEl) return;
+
+      const items = Array.isArray(payload?.monthly_sales_techs)
+        ? payload.monthly_sales_techs
+        : [];
+
+      listEl.innerHTML = "";
+      items.forEach((item) => {
+        listEl.appendChild(createMonthlySalesRow(item));
+      });
+      countEl.textContent = items.length;
+    };
+
+    const loadWeekMatchStats = async () => {
+      try {
+        const response = await fetch("/api/home/stats");
+        if (!response.ok) return;
+        const payload = await response.json();
+        const data = payload && (payload.data || {});
+        if (payload && (payload.status === "ok" || payload.success === true)) {
+          updateWeekMatchStats(data);
+          updateTodayMatchStats(data);
+          updateMonthEntryStats(data);
+          updateTwoWeeksStats(data);
+          updateMonthlySalesTechs(data);
+        }
+      } catch (error) {
+        console.error("Failed to load home stats", error);
+      }
+    };
+
+    loadWeekMatchStats();
   </script>
 </body>
 </html>

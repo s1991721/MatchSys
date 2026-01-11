@@ -12,7 +12,7 @@ class SentEmailLog(models.Model):
     subject = models.CharField(max_length=512, blank=True, default="")
     body = models.TextField(blank=True, default="")
     attachments = models.TextField(blank=True, default="")  # JSON 序列化的附件名列表
-    mail_type = models.IntegerField()  # 邮件类型 0:bp 1:技术者送信 2:案件送信
+    mail_type = models.IntegerField()  # 邮件类型 0:bp 1:技术者送信 2:案件送信 -1:其他
     sent_at = models.DateTimeField()
 
     created_by = models.BigIntegerField(null=True, blank=True, verbose_name="员工ID")

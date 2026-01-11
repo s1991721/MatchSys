@@ -15,8 +15,7 @@ def _require_login(request):
     if not request.session.get("employee_id"):
         return api_error(
             "Unauthorized",
-            status=401,
-            legacy={"error": "Unauthorized"},
+            status=401
         )
     return None
 
@@ -27,9 +26,7 @@ def _parse_json_body(request):
         return json.loads(raw or "{}"), None
     except json.JSONDecodeError:
         return None, api_error(
-            "Invalid JSON body",
-            status=400,
-            legacy={"error": "Invalid JSON body"},
+            "Invalid JSON body"
         )
 
 
@@ -40,9 +37,7 @@ def _parse_date(value, field):
         return datetime.strptime(value, "%Y-%m-%d").date(), None
     except (TypeError, ValueError):
         return None, api_error(
-            f"Invalid date: {field}",
-            status=400,
-            legacy={"error": f"Invalid date: {field}"},
+            f"Invalid date: {field}"
         )
 
 
@@ -66,9 +61,7 @@ def _parse_decimal(value, field):
         return Decimal(raw), None
     except (InvalidOperation, ValueError):
         return None, api_error(
-            f"Invalid number: {field}",
-            status=400,
-            legacy={"error": f"Invalid number: {field}"},
+            f"Invalid number: {field}"
         )
 
 
@@ -79,9 +72,7 @@ def _parse_int(value, field):
         return int(value), None
     except (TypeError, ValueError):
         return None, api_error(
-            f"Invalid number: {field}",
-            status=400,
-            legacy={"error": f"Invalid number: {field}"},
+            f"Invalid number: {field}"
         )
 
 
@@ -94,9 +85,7 @@ def _is_truthy(value):
 def _normalize_pay_request_status(value):
     if value in (None, ""):
         return None, api_error(
-            "Invalid status",
-            status=400,
-            legacy={"error": "Invalid status"},
+            "Invalid status"
         )
     raw = str(value).strip().lower()
     mapping = {
@@ -110,9 +99,7 @@ def _normalize_pay_request_status(value):
     if raw in mapping:
         return mapping[raw], None
     return None, api_error(
-        "Invalid status",
-        status=400,
-        legacy={"error": "Invalid status"},
+        "Invalid status"
     )
 
 
@@ -415,9 +402,7 @@ def _apply_filters(queryset, request):
             queryset = queryset.filter(customer_id=int(customer_id))
         except ValueError:
             return None, api_error(
-                "Invalid customer_id",
-                status=400,
-                legacy={"error": "Invalid customer_id"},
+                "Invalid customer_id"
             )
     if technician_name:
         queryset = queryset.filter(technician_name__icontains=technician_name)
@@ -479,9 +464,7 @@ def _apply_pay_request_filters(queryset, request):
             end_date = datetime(year, month_value, last_day).date()
         except (ValueError, calendar.IllegalMonthError):
             return None, api_error(
-                "Invalid month",
-                status=400,
-                legacy={"error": "Invalid month"},
+                "Invalid month"
             )
         queryset = queryset.filter(request_date__gte=start_date, request_date__lte=end_date)
 
@@ -526,9 +509,7 @@ def purchase_orders_api(request):
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
                 return api_error(
-                    f"Missing field: {field}",
-                    status=400,
-                    legacy={"error": f"Missing field: {field}"},
+                    f"Missing field: {field}"
                 )
         order = PurchaseOrder()
         apply_error = _apply_purchase_payload(order, payload)
@@ -542,12 +523,11 @@ def purchase_orders_api(request):
         order.updated_at = now
         order.save()
         item = _serialize_purchase(order)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     return api_error(
         "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
+        status=405
     )
 
 
@@ -561,13 +541,12 @@ def purchase_order_detail_api(request, order_id):
     if not order:
         return api_error(
             "Order not found",
-            status=404,
-            legacy={"error": "Order not found"},
+            status=404
         )
 
     if request.method == "GET":
         item = _serialize_purchase(order)
-        return api_success(data={"item": item}, legacy={"item": item})
+        return api_success(data={"item": item})
 
     if request.method == "PUT":
         payload, error = _parse_json_body(request)
@@ -580,12 +559,11 @@ def purchase_order_detail_api(request, order_id):
         order.updated_at = timezone.now()
         order.save()
         item = _serialize_purchase(order)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     return api_error(
         "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
+        status=405
     )
 
 
@@ -628,9 +606,7 @@ def sales_orders_api(request):
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
                 return api_error(
-                    f"Missing field: {field}",
-                    status=400,
-                    legacy={"error": f"Missing field: {field}"},
+                    f"Missing field: {field}"
                 )
         order = SalesOrder()
         apply_error = _apply_sales_payload(order, payload)
@@ -644,12 +620,11 @@ def sales_orders_api(request):
         order.updated_at = now
         order.save()
         item = _serialize_sales(order)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     return api_error(
         "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
+        status=405
     )
 
 
@@ -663,13 +638,12 @@ def sales_order_detail_api(request, order_id):
     if not order:
         return api_error(
             "Order not found",
-            status=404,
-            legacy={"error": "Order not found"},
+            status=404
         )
 
     if request.method == "GET":
         item = _serialize_sales(order)
-        return api_success(data={"item": item}, legacy={"item": item})
+        return api_success(data={"item": item})
 
     if request.method == "PUT":
         payload, error = _parse_json_body(request)
@@ -682,12 +656,11 @@ def sales_order_detail_api(request, order_id):
         order.updated_at = timezone.now()
         order.save()
         item = _serialize_sales(order)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     return api_error(
         "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
+        status=405
     )
 
 
@@ -729,9 +702,7 @@ def pay_requests_api(request):
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
                 return api_error(
-                    f"Missing field: {field}",
-                    status=400,
-                    legacy={"error": f"Missing field: {field}"},
+                    f"Missing field: {field}"
                 )
         request_item = PayRequest()
         apply_error = _apply_pay_request_payload(request_item, payload)
@@ -747,12 +718,11 @@ def pay_requests_api(request):
         request_item.updated_at = now
         request_item.save()
         item = _serialize_pay_request(request_item)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     return api_error(
         "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
+        status=405
     )
 
 
@@ -766,13 +736,12 @@ def pay_request_detail_api(request, request_id):
     if not request_item:
         return api_error(
             "Pay request not found",
-            status=404,
-            legacy={"error": "Pay request not found"},
+            status=404
         )
 
     if request.method == "GET":
         item = _serialize_pay_request(request_item)
-        return api_success(data={"item": item}, legacy={"item": item})
+        return api_success(data={"item": item})
 
     if request.method == "PUT":
         payload, error = _parse_json_body(request)
@@ -785,10 +754,9 @@ def pay_request_detail_api(request, request_id):
         request_item.updated_at = timezone.now()
         request_item.save()
         item = _serialize_pay_request(request_item)
-        return api_success(data={"item": item}, legacy={"status": "ok", "item": item})
+        return api_success(data={"item": item})
 
     return api_error(
         "Method not allowed",
-        status=405,
-        legacy={"error": "Method not allowed"},
+        status=405
     )

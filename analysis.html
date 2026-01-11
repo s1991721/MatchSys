@@ -14,7 +14,7 @@
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
             <div class="c-panel-title" data-i18n="analysis.card.monthly">当前最挣钱的员工</div>
-            <span class="c-tag c-tag-info" data-i18n="analysis.tag.month">本月</span>
+            <span class="c-tag c-tag-info" data-i18n="analysis.tag.current">当前</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
@@ -22,30 +22,10 @@
                 <tr>
                   <th data-i18n="analysis.table.rank">排名</th>
                   <th data-i18n="analysis.table.employee">员工</th>
-                  <th data-i18n="analysis.table.business">业务</th>
-                  <th data-i18n="analysis.table.amount">金额</th>
+                  <th data-i18n="analysis.table.diff">差额</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>张三</td>
-                  <td>BP Match</td>
-                  <td>¥128,000</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>李四</td>
-                  <td>社内 Match</td>
-                  <td>¥96,500</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>王五</td>
-                  <td>客户管理</td>
-                  <td>¥84,200</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-current-top"></tbody>
             </table>
           </div>
         </section>
@@ -60,37 +40,17 @@
                 <tr>
                   <th data-i18n="analysis.table.rank">排名</th>
                   <th data-i18n="analysis.table.employee">员工</th>
-                  <th data-i18n="analysis.table.business">业务</th>
                   <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>赵六</td>
-                  <td>订单管理</td>
-                  <td>¥1,280,000</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>孙七</td>
-                  <td>客户管理</td>
-                  <td>¥1,060,000</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>周八</td>
-                  <td>请求书管理</td>
-                  <td>¥980,000</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-yearly-top"></tbody>
             </table>
           </div>
         </section>
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
             <div class="c-panel-title" data-i18n="analysis.card.customer_profit">最挣钱的客户</div>
-            <span class="c-tag c-tag-success" data-i18n="analysis.tag.days90">近90天</span>
+            <span class="c-tag c-tag-success" data-i18n="analysis.tag.year">年累计</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
@@ -98,37 +58,17 @@
                 <tr>
                   <th data-i18n="analysis.table.rank">排名</th>
                   <th data-i18n="analysis.table.customer">客户</th>
-                  <th data-i18n="analysis.table.contracts">合同数</th>
                   <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>星河科技</td>
-                  <td>12</td>
-                  <td>¥620,000</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>飞云数据</td>
-                  <td>9</td>
-                  <td>¥540,000</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>远航系统</td>
-                  <td>7</td>
-                  <td>¥480,000</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-top-customers"></tbody>
             </table>
           </div>
         </section>
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
             <div class="c-panel-title" data-i18n="analysis.card.customer_volume">单最多的客户</div>
-            <span class="c-tag c-tag-warn" data-i18n="analysis.tag.days90">近90天</span>
+            <span class="c-tag c-tag-warn" data-i18n="analysis.tag.year">年累计</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
@@ -137,36 +77,16 @@
                   <th data-i18n="analysis.table.rank">排名</th>
                   <th data-i18n="analysis.table.customer">客户</th>
                   <th data-i18n="analysis.table.orders">订单数</th>
-                  <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>北斗咨询</td>
-                  <td>36</td>
-                  <td>¥390,000</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>银河智造</td>
-                  <td>29</td>
-                  <td>¥350,000</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>极光软件</td>
-                  <td>24</td>
-                  <td>¥310,000</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-top-order-customers"></tbody>
             </table>
           </div>
         </section>
         <section class="c-card c-card-fixed">
           <div class="c-card-header">
             <div class="c-panel-title" data-i18n="analysis.card.low_profit_employees">当前利润较低员工</div>
-            <span class="c-tag c-tag-info" data-i18n="analysis.tag.month">本月</span>
+            <span class="c-tag c-tag-info" data-i18n="analysis.tag.current">当前</span>
           </div>
           <div class="c-table-wrapper">
             <table class="c-table c-table-compact c-table-center c-table-compact-last">
@@ -174,30 +94,10 @@
                 <tr>
                   <th data-i18n="analysis.table.rank">排名</th>
                   <th data-i18n="analysis.table.employee">员工</th>
-                  <th data-i18n="analysis.table.business">业务</th>
-                  <th data-i18n="analysis.table.amount">金额</th>
+                  <th data-i18n="analysis.table.diff">差额</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>陈晨</td>
-                  <td>客户管理</td>
-                  <td>¥18,600</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>林月</td>
-                  <td>BP Match</td>
-                  <td>¥22,400</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>高宇</td>
-                  <td>请求书管理</td>
-                  <td>¥25,900</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-current-low"></tbody>
             </table>
           </div>
         </section>
@@ -211,31 +111,11 @@
               <thead>
                 <tr>
                   <th data-i18n="analysis.table.rank">排名</th>
-                  <th data-i18n="analysis.table.business">业务</th>
+                  <th data-i18n="analysis.table.employee">员工</th>
                   <th data-i18n="analysis.table.orders">订单数</th>
-                  <th data-i18n="analysis.table.amount">金额</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>订单管理</td>
-                  <td>42</td>
-                  <td>¥520,000</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>客户管理</td>
-                  <td>35</td>
-                  <td>¥460,000</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>请求书管理</td>
-                  <td>27</td>
-                  <td>¥390,000</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-monthly-orders"></tbody>
             </table>
           </div>
         </section>
@@ -249,31 +129,12 @@
               <thead>
                 <tr>
                   <th data-i18n="analysis.table.rank">排名</th>
-                  <th data-i18n="analysis.table.business">业务</th>
+                  <th data-i18n="analysis.table.employee">员工</th>
                   <th data-i18n="analysis.table.amount">金额</th>
                   <th data-i18n="analysis.table.orders">订单数</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td>1</td>
-                  <td>BP Match</td>
-                  <td>¥680,000</td>
-                  <td>31</td>
-                </tr>
-                <tr>
-                  <td>2</td>
-                  <td>订单管理</td>
-                  <td>¥560,000</td>
-                  <td>28</td>
-                </tr>
-                <tr>
-                  <td>3</td>
-                  <td>客户管理</td>
-                  <td>¥430,000</td>
-                  <td>24</td>
-                </tr>
-              </tbody>
+              <tbody id="analysis-monthly-profit"></tbody>
             </table>
           </div>
         </section>
@@ -285,6 +146,117 @@
       window.I18N.init();
       window.I18N.apply();
     }
+  </script>
+  <script>
+    const formatCount = (value) => {
+      if (typeof value !== "number") return "-";
+      return value.toLocaleString("en-US");
+    };
+
+    const formatMoney = (value) => {
+      const numberValue = Number(value);
+      if (!Number.isFinite(numberValue)) return "-";
+      return `¥${numberValue.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    };
+
+    const fillTable = (tbodyId, rows) => {
+      const tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      rows.forEach((cells) => {
+        const tr = document.createElement("tr");
+        cells.forEach((cell) => {
+          const td = document.createElement("td");
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    };
+
+    const renderAnalysis = (data) => {
+      fillTable(
+        "analysis-current-top",
+        (data?.current_top_profit_employees || []).map((item) => [
+          item.rank ?? "-",
+          item.employee_name || "-",
+          formatMoney(item.amount),
+        ])
+      );
+
+      fillTable(
+        "analysis-yearly-top",
+        (data?.yearly_top_profit_employees || []).map((item) => [
+          item.rank ?? "-",
+          item.employee_name || "-",
+          formatMoney(item.amount),
+        ])
+      );
+
+      fillTable(
+        "analysis-top-customers",
+        (data?.top_profit_customers || []).map((item) => [
+          item.rank ?? "-",
+          item.customer_name || "-",
+          formatMoney(item.amount),
+        ])
+      );
+
+      fillTable(
+        "analysis-top-order-customers",
+        (data?.top_order_customers || []).map((item) => [
+          item.rank ?? "-",
+          item.customer_name || "-",
+          formatCount(item.order_count),
+        ])
+      );
+
+      fillTable(
+        "analysis-current-low",
+        (data?.current_low_profit_employees || []).map((item) => [
+          item.rank ?? "-",
+          item.employee_name || "-",
+          formatMoney(item.amount),
+        ])
+      );
+
+      fillTable(
+        "analysis-monthly-orders",
+        (data?.monthly_order_volume || []).map((item) => [
+          item.rank ?? "-",
+          item.employee_name || "-",
+          formatCount(item.order_count),
+        ])
+      );
+
+      fillTable(
+        "analysis-monthly-profit",
+        (data?.monthly_sales_profit || []).map((item) => [
+          item.rank ?? "-",
+          item.employee_name || "-",
+          formatMoney(item.amount),
+          formatCount(item.order_count),
+        ])
+      );
+    };
+
+    const loadAnalysis = async () => {
+      try {
+        const response = await fetch("/api/analysis/stats");
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (payload && (payload.status === "ok" || payload.success === true)) {
+          renderAnalysis(payload.data || {});
+        }
+      } catch (error) {
+        console.error("Failed to load analysis stats", error);
+      }
+    };
+
+    loadAnalysis();
   </script>
 </body>
 </html>

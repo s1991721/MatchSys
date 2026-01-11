@@ -23,6 +23,8 @@ SECTION_DEFAULTS = {
     "business-email": {
         "auth_filename": "",
         "auth_path": "",
+        "token_filename": "",
+        "token_path": "",
     },
     "match": {
         "cycle_days": 14,
@@ -75,25 +77,43 @@ def _save_setting(section, settings_payload, login_id):
 
 
 # 营业邮箱配置
-def _handle_business_email_upload(auth_file, login_id):
-    if not auth_file:
-        return api_error("Missing Gmail auth file")
-    try:
-        file_bytes = auth_file.read()
-        json.loads(file_bytes.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError):
-        return api_error("Invalid Gmail auth JSON file")
+def _handle_business_email_upload(auth_file, token_file, login_id):
+    if not auth_file and not token_file:
+        return api_error("Missing Gmail auth or token file")
+
+    record = _get_setting("business-email")
+    settings_payload = record.settings if record else SECTION_DEFAULTS["business-email"].copy()
 
     base_dir = Path(django_settings.BASE_DIR)
     credentials_dir = base_dir / "credentials"
     credentials_dir.mkdir(parents=True, exist_ok=True)
-    target_path = credentials_dir / "gmail_credentials.json"
-    target_path.write_bytes(file_bytes)
 
-    settings_payload = {
-        "auth_filename": "gmail_credentials.json",
-        "auth_path": str(Path("credentials") / "gmail_credentials.json"),
-    }
+    if auth_file:
+        try:
+            auth_bytes = auth_file.read()
+            json.loads(auth_bytes.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return api_error("Invalid Gmail auth JSON file")
+        auth_target = credentials_dir / "gmail_credentials.json"
+        auth_target.write_bytes(auth_bytes)
+        settings_payload.update({
+            "auth_filename": "gmail_credentials.json",
+            "auth_path": str(Path("credentials") / "gmail_credentials.json"),
+        })
+
+    if token_file:
+        try:
+            token_bytes = token_file.read()
+            json.loads(token_bytes.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return api_error("Invalid Gmail token JSON file")
+        token_target = credentials_dir / "gmail_token.json"
+        token_target.write_bytes(token_bytes)
+        settings_payload.update({
+            "token_filename": "gmail_token.json",
+            "token_path": str(Path("credentials") / "gmail_token.json"),
+        })
+
     return _save_setting("business-email", settings_payload, login_id)
 
 
@@ -301,10 +321,14 @@ def sys_settings_section_api(request, section):
 
     if request.method == "POST":
         # gmail认证文件上传start
-        if request.FILES.get("auth_file"):
+        if request.FILES.get("auth_file") or request.FILES.get("token_file"):
             if section != "business-email":
                 return api_error("Unsupported action for this section", status=405)
-            return _handle_business_email_upload(request.FILES.get("auth_file"), login_id)
+            return _handle_business_email_upload(
+                request.FILES.get("auth_file"),
+                request.FILES.get("token_file"),
+                login_id,
+            )
         # gmail认证文件上传end
 
         payload, error = parse_json_body(request)

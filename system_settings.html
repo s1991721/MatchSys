@@ -18,8 +18,14 @@
             <div class="form-field full">
               <label for="gmail-auth">Gmail 认证文件</label>
               <input id="gmail-auth" type="file" accept=".json" />
-              <div class="hint">仅支持上传 Google OAuth 凭据 JSON 文件，将替换 credentials/gmail_credentials.json。</div>
+              <div class="hint">仅支持上传 Google OAuth 凭据 JSON 文件。</div>
               <div class="hint" id="gmail-auth-current"></div>
+            </div>
+            <div class="form-field full">
+              <label for="gmail-token">Gmail token 文件</label>
+              <input id="gmail-token" type="file" accept=".json" />
+              <div class="hint">仅支持上传 Gmail token JSON 文件。</div>
+              <div class="hint" id="gmail-token-current"></div>
             </div>
             <div class="form-actions">
               <button class="c-btn c-btn-secondary" type="button" id="gmail-test">连接测试</button>
@@ -239,6 +245,8 @@
     const cancelDeleteButton = document.getElementById("cancel-delete");
     const gmailAuthInput = document.getElementById("gmail-auth");
     const gmailAuthCurrent = document.getElementById("gmail-auth-current");
+    const gmailTokenInput = document.getElementById("gmail-token");
+    const gmailTokenCurrent = document.getElementById("gmail-token-current");
     const gmailSaveButton = document.getElementById("gmail-save");
     const gmailTestButton = document.getElementById("gmail-test");
     const matchSaveButton = document.getElementById("match-save");
@@ -254,8 +262,14 @@
     let pendingDelete = null;
     let systemTasks = [];
     let sendmsgConfigs = [];
-    let businessEmailConfig = { auth_filename: "", auth_path: "" };
+    let businessEmailConfig = {
+      auth_filename: "",
+      auth_path: "",
+      token_filename: "",
+      token_path: "",
+    };
     let businessEmailFile = null;
+    let businessEmailTokenFile = null;
 
     const notifyError = (message) => {
       window.alert(message || "请求失败，请稍后再试。");
@@ -305,6 +319,16 @@
       if (config.auth_filename) return config.auth_filename;
       if (config.auth_path) {
         const parts = String(config.auth_path).split("/");
+        return parts[parts.length - 1];
+      }
+      return "";
+    };
+
+    const resolveTokenName = (config) => {
+      if (!config) return "";
+      if (config.token_filename) return config.token_filename;
+      if (config.token_path) {
+        const parts = String(config.token_path).split("/");
         return parts[parts.length - 1];
       }
       return "";
@@ -801,6 +825,8 @@
           businessEmailConfig = {
             auth_filename: file.name || "",
             auth_path: "",
+            token_filename: businessEmailConfig.token_filename,
+            token_path: businessEmailConfig.token_path,
           };
           businessEmailFile = file;
           if (gmailAuthCurrent) {
@@ -814,15 +840,49 @@
       });
     }
 
+    if (gmailTokenInput) {
+      gmailTokenInput.addEventListener("change", async (event) => {
+        const file = event.target.files ? event.target.files[0] : null;
+        if (!file) return;
+        try {
+          businessEmailConfig = {
+            auth_filename: businessEmailConfig.auth_filename,
+            auth_path: businessEmailConfig.auth_path,
+            token_filename: file.name || "",
+            token_path: "",
+          };
+          businessEmailTokenFile = file;
+          if (gmailTokenCurrent) {
+            gmailTokenCurrent.textContent = businessEmailConfig.token_filename
+              ? `已选择：${businessEmailConfig.token_filename}`
+              : "已选择 token";
+          }
+        } catch (error) {
+          notifyError("读取文件失败，请重试。");
+        }
+      });
+    }
+
     if (gmailSaveButton) {
       gmailSaveButton.addEventListener("click", async () => {
-        if (!businessEmailFile) {
+        const authFile =
+          (gmailAuthInput && gmailAuthInput.files && gmailAuthInput.files[0]) ||
+          businessEmailFile;
+        const tokenFile =
+          (gmailTokenInput && gmailTokenInput.files && gmailTokenInput.files[0]) ||
+          businessEmailTokenFile;
+        if (!authFile) {
           notifyError("请先选择 Gmail 认证文件。");
+          return;
+        }
+        if (!tokenFile) {
+          notifyError("请先选择 Gmail token 文件。");
           return;
         }
         try {
           const formData = new FormData();
-          formData.append("auth_file", businessEmailFile);
+          formData.append("auth_file", authFile);
+          formData.append("token_file", tokenFile);
           const payload = await requestFormData(
             `${apiBase}/${sections.businessEmail}`,
             formData
@@ -831,9 +891,20 @@
             ? payload.data.settings
             : businessEmailConfig;
           businessEmailFile = null;
+          businessEmailTokenFile = null;
+          if (gmailAuthInput) {
+            gmailAuthInput.value = "";
+          }
+          if (gmailTokenInput) {
+            gmailTokenInput.value = "";
+          }
           if (gmailAuthCurrent) {
             const filename = resolveAuthName(businessEmailConfig);
             gmailAuthCurrent.textContent = filename ? `已保存：${filename}` : "已保存凭据";
+          }
+          if (gmailTokenCurrent) {
+            const filename = resolveTokenName(businessEmailConfig);
+            gmailTokenCurrent.textContent = filename ? `已保存：${filename}` : "已保存 token";
           }
           flashButton(gmailSaveButton, "已保存");
         } catch (error) {
@@ -1186,6 +1257,10 @@
       if (gmailAuthCurrent) {
         const filename = resolveAuthName(businessEmailConfig);
         gmailAuthCurrent.textContent = filename ? `已保存：${filename}` : "";
+      }
+      if (gmailTokenCurrent) {
+        const filename = resolveTokenName(businessEmailConfig);
+        gmailTokenCurrent.textContent = filename ? `已保存：${filename}` : "";
       }
 
       const matchSettings = await fetchSettings(sections.match, { cycle_days: 14 });

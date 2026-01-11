@@ -517,61 +517,9 @@
             <span class="dot" style="background:var(--green)"></span>
             <h2 data-i18n="home.entry_month">当月入场</h2>
           </div>
-          <div class="tools">
-            <button class="tool" title="统计" data-i18n-title="home.stats">▦</button>
-            <button class="tool" title="更多" data-i18n-title="home.more">⋯</button>
-          </div>
         </div>
 
-        <div class="progress">
-          <div class="pitem">
-            <div class="meta">
-              <span class="ico" style="background:rgba(47,111,236,.18)"></span>
-              <b>井氏</b>
-              <small>新大久保</small>
-            </div>
-            <div class="bar" aria-label="75%">
-              <span style="width:75%"></span>
-            </div>
-            <small>5日</small>
-          </div>
-
-          <div class="pitem">
-            <div class="meta">
-              <span class="ico" style="background:rgba(124,58,237,.18)"></span>
-              <b>矢田</b>
-              <small>上野</small>
-            </div>
-            <div class="bar" aria-label="40%">
-              <span style="width:40%; background:var(--purple)"></span>
-            </div>
-            <small>28日</small>
-          </div>
-
-          <div class="pitem">
-            <div class="meta">
-              <span class="ico" style="background:rgba(22,163,74,.18)"></span>
-              <b>澤田</b>
-              <small>池袋</small>
-            </div>
-            <div class="bar" aria-label="60%">
-              <span style="width:60%; background:var(--green)"></span>
-            </div>
-            <small>10日</small>
-          </div>
-
-          <div class="pitem">
-            <div class="meta">
-              <span class="ico" style="background:rgba(245,158,11,.18)"></span>
-              <b>新一</b>
-              <small>横浜</small>
-            </div>
-            <div class="bar" aria-label="85%">
-              <span style="width:85%; background:var(--orange)"></span>
-            </div>
-            <small>8日</small>
-          </div>
-        </div>
+        <div class="progress" id="entry-progress-list"></div>
       </div>
 
       <!-- Activity -->
@@ -579,48 +527,14 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot" style="background:var(--orange)"></span>
-            <h2 data-i18n="home.next_month_sales">下月营业技术者（3名）</h2>
+            <h2>
+              <span data-i18n="home.next_month_sales">下月营业技术者</span>
+              （<span id="next-month-sales-count">0</span>名）
+            </h2>
           </div>
         </div>
 
-        <div class="activity">
-          <div class="a">
-            <div class="who">
-              <div class="face"></div>
-              <div class="txt">
-                <b>達也</b>
-                <small>java</small>
-              </div>
-            </div>
-            <div class="time" data-i18n="home.exit_jan">1月退场</div>
-          </div>
-
-          <div class="a">
-            <div class="who">
-              <div class="face"></div>
-              <div class="txt">
-                <b>石田</b>
-                <small>aws</small>
-              </div>
-            </div>
-            <div class="time" data-i18n="home.standby">待机</div>
-          </div>
-
-          <div class="a">
-            <div class="who">
-              <div class="face"></div>
-              <div class="txt">
-                <b>田中</b>
-                <small>PM</small>
-              </div>
-            </div>
-            <div class="time" data-i18n="home.newcomer">新人</div>
-          </div>
-
-          <div style="display:flex; justify-content:flex-end; padding-top:4px;">
-            <button class="c-btn c-btn-primary c-btn-sm" data-i18n="home.action.view_more">查看更多 →</button>
-          </div>
-        </div>
+        <div class="activity" id="next-month-sales-list"></div>
       </div>
     </section>
   </section>
@@ -752,6 +666,103 @@
       countEl.textContent = items.length;
     };
 
+    const createNextMonthSalesRow = (item) => {
+      const row = document.createElement("div");
+      row.className = "a";
+
+      const who = document.createElement("div");
+      who.className = "who";
+      const face = document.createElement("div");
+      face.className = "face";
+      const txt = document.createElement("div");
+      txt.className = "txt";
+      const name = document.createElement("b");
+      name.textContent = item?.name || "-";
+      const sub = document.createElement("small");
+      sub.textContent = item?.spot_contract_deadline || "-";
+      txt.appendChild(name);
+      txt.appendChild(sub);
+      who.appendChild(face);
+      who.appendChild(txt);
+
+      const time = document.createElement("div");
+      time.className = "time";
+      time.textContent = "";
+
+      row.appendChild(who);
+      row.appendChild(time);
+      return row;
+    };
+
+    const updateNextMonthSalesTechs = (payload) => {
+      const listEl = document.getElementById("next-month-sales-list");
+      const listCount = document.getElementById("next-month-sales-count");
+      if (!listEl || !listCount) return;
+
+      const items = Array.isArray(payload?.next_month_sales_techs)
+        ? payload.next_month_sales_techs
+        : [];
+
+      listEl.innerHTML = "";
+      items.forEach((item) => {
+        listEl.appendChild(createNextMonthSalesRow(item));
+      });
+      listCount.textContent = items.length;
+    };
+
+    const entryPalette = [
+      { bar: "var(--blue)", icon: "rgba(47,111,236,.18)" },
+      { bar: "var(--purple)", icon: "rgba(124,58,237,.18)" },
+      { bar: "var(--green)", icon: "rgba(22,163,74,.18)" },
+      { bar: "var(--orange)", icon: "rgba(245,158,11,.18)" },
+    ];
+
+    const createEntryProgressRow = (item, index) => {
+      const row = document.createElement("div");
+      row.className = "pitem";
+
+      const palette = entryPalette[index % entryPalette.length];
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      const icon = document.createElement("span");
+      icon.className = "ico";
+      icon.style.background = palette.icon;
+      const name = document.createElement("b");
+      name.textContent = item?.technician_name || "-";
+      const sub = document.createElement("small");
+      sub.textContent = item?.customer_name || "-";
+      meta.appendChild(icon);
+      meta.appendChild(name);
+      meta.appendChild(sub);
+
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      const percent = Math.max(0, Math.min(100, Number(item?.progress) || 0));
+      bar.setAttribute("aria-label", `${percent}%`);
+      const barSpan = document.createElement("span");
+      barSpan.style.width = `${percent}%`;
+      barSpan.style.background = palette.bar;
+      bar.appendChild(barSpan);
+
+      const time = document.createElement("small");
+      time.textContent = item?.period_start || "-";
+
+      row.appendChild(meta);
+      row.appendChild(bar);
+      row.appendChild(time);
+      return row;
+    };
+
+    const updateEntryProgress = (payload) => {
+      const listEl = document.getElementById("entry-progress-list");
+      if (!listEl) return;
+      const items = Array.isArray(payload?.entry_items) ? payload.entry_items : [];
+      listEl.innerHTML = "";
+      items.forEach((item, index) => {
+        listEl.appendChild(createEntryProgressRow(item, index));
+      });
+    };
+
     const loadWeekMatchStats = async () => {
       try {
         const response = await fetch("/api/home/stats");
@@ -764,6 +775,8 @@
           updateMonthEntryStats(data);
           updateTwoWeeksStats(data);
           updateMonthlySalesTechs(data);
+          updateNextMonthSalesTechs(data);
+          updateEntryProgress(data);
         }
       } catch (error) {
         console.error("Failed to load home stats", error);

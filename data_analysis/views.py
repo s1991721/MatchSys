@@ -1,4 +1,5 @@
-from datetime import timedelta
+import calendar
+from datetime import date, timedelta
 
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +10,13 @@ from bpmatch.models import SentEmailLog, MailTechnicianInfo
 from order.models import PurchaseOrder, SalesOrder
 from project.api import api_success
 from project.common_tools import require_login, shift_month
+
+
+def _add_months(value: date, months: int) -> date:
+    year = value.year + (value.month - 1 + months) // 12
+    month = (value.month - 1 + months) % 12 + 1
+    day = min(value.day, calendar.monthrange(year, month)[1])
+    return date(year, month, day)
 
 
 @csrf_exempt
@@ -26,9 +34,12 @@ def home_match_stats_api(request):
     start_of_yesterday = start_of_today - timedelta(days=1)
     start_of_two_weeks = now - timedelta(days=14)
     today = now.date()
+    start_date = today - timedelta(days=1)
+    end_date = _add_months(today, 1)
     start_of_month = today.replace(day=1)
     start_of_next_month = shift_month(start_of_month, 1)
     start_of_last_month = shift_month(start_of_month, -1)
+    start_of_month_after_next = shift_month(start_of_month, 2)
 
     base_queryset = SentEmailLog.objects.filter(
         created_by=login_id,
@@ -119,7 +130,7 @@ def home_match_stats_api(request):
 
     monthly_sales_techs = Technician.objects.filter(
         spot_contract_deadline__isnull=False,
-        spot_contract_deadline__lte=today,
+        spot_contract_deadline__lt=start_of_next_month,
         business_status__in=[0, 1, 2],
     ).order_by("spot_contract_deadline", "employee_id")
     monthly_sales_items = [
@@ -130,6 +141,53 @@ def home_match_stats_api(request):
             "business_status": tech.business_status,
         }
         for tech in monthly_sales_techs
+    ]
+
+    entry_orders = []
+    purchase_entries = PurchaseOrder.objects.filter(
+        deleted_at__isnull=True,
+        period_start__gte=start_date,
+        period_start__lte=end_date,
+    )
+    sales_entries = SalesOrder.objects.filter(
+        deleted_at__isnull=True,
+        period_start__gte=start_date,
+        period_start__lte=end_date,
+    )
+    entry_orders.extend(purchase_entries)
+    entry_orders.extend(sales_entries)
+
+    total_days = (end_date - today).days or 1
+    entry_items = []
+    for order in entry_orders:
+        period_start = order.period_start
+        remaining_days = (period_start - today).days if period_start else total_days
+        progress = (1 - (remaining_days / total_days)) * 100
+        progress = max(0, min(100, round(progress)))
+        entry_items.append(
+            {
+                "technician_name": order.technician_name or "",
+                "customer_name": order.customer_name or "",
+                "period_start": period_start.isoformat() if period_start else "",
+                "progress": progress,
+            }
+        )
+    entry_items.sort(key=lambda item: item["period_start"])
+
+    next_month_sales_techs = Technician.objects.filter(
+        spot_contract_deadline__gte=start_of_next_month,
+        spot_contract_deadline__lt=start_of_month_after_next,
+    ).order_by("spot_contract_deadline", "employee_id")
+    next_month_sales_items = [
+        {
+            "employee_id": tech.employee_id,
+            "name": tech.name,
+            "spot_contract_deadline": tech.spot_contract_deadline.isoformat()
+            if tech.spot_contract_deadline
+            else "",
+            "business_status": tech.business_status,
+        }
+        for tech in next_month_sales_techs
     ]
 
     two_weeks_count = MailTechnicianInfo.objects.filter(
@@ -152,5 +210,7 @@ def home_match_stats_api(request):
         "month_direction": month_direction,
         "two_weeks_count": two_weeks_count,
         "monthly_sales_techs": monthly_sales_items,
+        "entry_items": entry_items,
+        "next_month_sales_techs": next_month_sales_items,
     }
     return api_success(data=payload)

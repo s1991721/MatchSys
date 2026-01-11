@@ -19,6 +19,12 @@ from .models import Employee, LoginAudit, Technician, UserLogin
 logger = logging.getLogger(__name__)
 
 
+def _is_truthy(value):
+    if value is None:
+        return False
+    return str(value).strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 def _get_client_ip(request):
     forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if forwarded_for:
@@ -472,6 +478,45 @@ def user_login_names_api(request):
         .distinct()
     )[:20]
     return api_success(data={"names": list(user_names)})
+
+
+@csrf_exempt
+@require_GET
+def user_logins_by_role_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    raw_role_ids = request.GET.getlist("role_id")
+    if not raw_role_ids:
+        role_id_raw = (request.GET.get("role_id") or "").strip()
+        raw_role_ids = [item for item in role_id_raw.split(",") if item.strip()]
+    if not raw_role_ids:
+        return api_error("Missing role_id")
+    role_ids = []
+    for value in raw_role_ids:
+        try:
+            role_ids.append(int(str(value).strip()))
+        except (TypeError, ValueError):
+            return api_error("Invalid role_id")
+
+    exclude_role = _is_truthy(request.GET.get("exclude"))
+    queryset = UserLogin.objects.filter(deleted_at__isnull=True)
+    if exclude_role:
+        queryset = queryset.exclude(role_id__in=role_ids)
+    else:
+        queryset = queryset.filter(role_id__in=role_ids)
+
+    items = [
+        {
+            "employee_id": user.employee_id,
+            "employee_name": user.employee_name or "",
+            "user_name": user.user_name or "",
+            "role_id": user.role_id,
+        }
+        for user in queryset.order_by("employee_name")
+    ]
+    return api_success(data={"items": items})
 
 
 @csrf_exempt

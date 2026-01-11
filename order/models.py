@@ -3,6 +3,7 @@ from django.db import models
 
 class PurchaseOrder(models.Model):
     order_no = models.CharField(max_length=50)
+    person_in_charge_id = models.BigIntegerField(null=True, blank=True)
     person_in_charge = models.CharField(max_length=100)
     status = models.CharField(max_length=50)
     project_name = models.CharField(max_length=255)
@@ -29,6 +30,7 @@ class PurchaseOrder(models.Model):
 
 class SalesOrder(models.Model):
     order_no = models.CharField(max_length=50)
+    person_in_charge_id = models.BigIntegerField(null=True, blank=True)
     person_in_charge = models.CharField(max_length=100)
     status = models.CharField(max_length=50)
     purchase_id = models.BigIntegerField(null=True, blank=True)

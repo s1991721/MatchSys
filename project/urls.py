@@ -62,6 +62,7 @@ from employee.views import (
     technician_ss_download,
     technician_ss_upload,
     technicians_api,
+    user_logins_by_role_api,
     user_login_names_api,
 )
 from order.views import (
@@ -157,6 +158,7 @@ urlpatterns = [
     path("api/login", login_api, name="employee-login"),
     path("api/login-audit", login_audit_api, name="login-audit"),
     path("api/user-logins/names", user_login_names_api, name="user-login-names"),
+    path("api/user-logins/by-role", user_logins_by_role_api, name="user-logins-by-role"),
     path("api/employees/<int:employee_id>", employee_detail_api, name="employee-detail"),
     path("api/employees/<int:employee_id>/permission", employee_permission_api, name="employee-permission"),
     path("api/logout", logout_api, name="employee-logout"),

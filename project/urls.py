@@ -90,7 +90,7 @@ from settings.views import (
     time_to_hello,
 )
 
-custom_404 = TemplateView.as_view(template_name="404.html")
+custom_404 = TemplateView.as_view(template_name="frontend/404.html")
 handler404 = "project.urls.custom_404"
 
 # Cache static-like templates only in production.
@@ -101,53 +101,53 @@ cache_static_asset = (
 urlpatterns = [
     # ###################################-Front End-###################################
     path("", RedirectView.as_view(url="/index.html", permanent=False)),
-    path("index.html", TemplateView.as_view(template_name="index.html")),
-    path("home.html", TemplateView.as_view(template_name="home.html")),
+    path("index.html", TemplateView.as_view(template_name="frontend/index.html")),
+    path("home.html", TemplateView.as_view(template_name="frontend/home.html")),
 
     # -------------------------------employee UI-------------------------------
-    path("login.html", xframe_options_deny(TemplateView.as_view(template_name="login.html"))),
-    path("profile.html", TemplateView.as_view(template_name="profile.html")),
-    path("personnel.html", TemplateView.as_view(template_name="personnel.html")),
-    path("people.html", TemplateView.as_view(template_name="people.html")),
-    path("login_audit.html", TemplateView.as_view(template_name="login_audit.html")),
+    path("login.html", xframe_options_deny(TemplateView.as_view(template_name="frontend/login.html"))),
+    path("profile.html", TemplateView.as_view(template_name="frontend/profile.html")),
+    path("personnel.html", TemplateView.as_view(template_name="frontend/personnel.html")),
+    path("people.html", TemplateView.as_view(template_name="frontend/people.html")),
+    path("login_audit.html", TemplateView.as_view(template_name="frontend/login_audit.html")),
     # -------------------------------attendance UI-------------------------------
-    path("attendance.html", TemplateView.as_view(template_name="attendance.html")),
-    path("myattendance.html", TemplateView.as_view(template_name="myattendance.html")),
+    path("attendance.html", TemplateView.as_view(template_name="frontend/attendance.html")),
+    path("myattendance.html", TemplateView.as_view(template_name="frontend/myattendance.html")),
     # -------------------------------bpmatch UI-------------------------------
-    path("bpmatch.html", TemplateView.as_view(template_name="bpmatch.html")),
-    path("match.html", TemplateView.as_view(template_name="match.html")),
-    path("qiuren.html", TemplateView.as_view(template_name="qiuren.html")),
-    path("songxin.html", TemplateView.as_view(template_name="songxin.html")),
-    path("songxinhistory.html", TemplateView.as_view(template_name="songxinhistory.html")),
+    path("bpmatch.html", TemplateView.as_view(template_name="frontend/bpmatch.html")),
+    path("match.html", TemplateView.as_view(template_name="frontend/match.html")),
+    path("qiuren.html", TemplateView.as_view(template_name="frontend/qiuren.html")),
+    path("songxin.html", TemplateView.as_view(template_name="frontend/songxin.html")),
+    path("songxinhistory.html", TemplateView.as_view(template_name="frontend/songxinhistory.html")),
     # -------------------------------customer UI-------------------------------
-    path("customer.html", TemplateView.as_view(template_name="customer.html")),
+    path("customer.html", TemplateView.as_view(template_name="frontend/customer.html")),
     # -------------------------------order UI-------------------------------
-    path("order.html", TemplateView.as_view(template_name="order.html")),
-    path("pay_request.html", TemplateView.as_view(template_name="pay_request.html")),
+    path("order.html", TemplateView.as_view(template_name="frontend/order.html")),
+    path("pay_request.html", TemplateView.as_view(template_name="frontend/pay_request.html")),
     # -------------------------------permission UI-------------------------------
-    path("permission.html", TemplateView.as_view(template_name="permission.html")),
+    path("permission.html", TemplateView.as_view(template_name="frontend/permission.html")),
     # -------------------------------notification UI-------------------------------
-    path("notification.html", TemplateView.as_view(template_name="notification.html")),
-    path("analysis.html", TemplateView.as_view(template_name="analysis.html")),
-    path("system_settings.html", TemplateView.as_view(template_name="system_settings.html")),
+    path("notification.html", TemplateView.as_view(template_name="frontend/notification.html")),
+    path("analysis.html", TemplateView.as_view(template_name="frontend/analysis.html")),
+    path("system_settings.html", TemplateView.as_view(template_name="frontend/system_settings.html")),
     # -------------------------------common-------------------------------
     path(
         "common.css",
-        cache_static_asset(TemplateView.as_view(template_name="common.css", content_type="text/css")),
+        cache_static_asset(TemplateView.as_view(template_name="frontend/common.css", content_type="text/css")),
     ),
     path(
         "components.css",
-        cache_static_asset(TemplateView.as_view(template_name="components.css", content_type="text/css")),
+        cache_static_asset(TemplateView.as_view(template_name="frontend/components.css", content_type="text/css")),
     ),
     path(
         "common.js",
         cache_static_asset(
-            TemplateView.as_view(template_name="common.js", content_type="application/javascript")
+            TemplateView.as_view(template_name="frontend/common.js", content_type="application/javascript")
         ),
     ),
     path(
         "i18n.js",
-        cache_static_asset(TemplateView.as_view(template_name="i18n.js", content_type="application/javascript")),
+        cache_static_asset(TemplateView.as_view(template_name="frontend/i18n.js", content_type="application/javascript")),
     ),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),

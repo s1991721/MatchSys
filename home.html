@@ -408,7 +408,7 @@
         <div class="c-card-header">
           <div class="h">
             <span class="dot"></span>
-            <h2 data-i18n="home.trend">趋势统计</h2>
+            <h2 data-i18n="home.trend">注文统计</h2>
           </div>
           <div class="tools">
             <button class="tool" title="下载" data-i18n-title="home.download">⤓</button>
@@ -418,12 +418,12 @@
 
         <div class="chart">
           <div class="legend">
-            <div class="lg"><i class="b"></i> <span data-i18n="home.legend.entry">入场人数</span></div>
-            <div class="lg"><i class="p"></i> <span data-i18n="home.legend.exit">退场人数</span></div>
+            <div class="lg"><i class="b"></i> <span data-i18n="home.legend.entry">发注数</span></div>
+            <div class="lg"><i class="p"></i> <span data-i18n="home.legend.exit">受注数</span></div>
           </div>
 
-          <!-- SVG 折线图（示意，便于直接预览） -->
-          <svg viewBox="0 0 900 320" aria-label="line chart">
+          <!-- SVG 折线图（按月统计） -->
+          <svg id="order-chart" viewBox="0 0 900 320" aria-label="line chart">
             <g opacity=".55">
               <line x1="60" y1="50" x2="860" y2="50" stroke="#e5e7eb"/>
               <line x1="60" y1="110" x2="860" y2="110" stroke="#e5e7eb"/>
@@ -431,63 +431,13 @@
               <line x1="60" y1="230" x2="860" y2="230" stroke="#e5e7eb"/>
               <line x1="60" y1="290" x2="860" y2="290" stroke="#e5e7eb"/>
             </g>
-
-            <g fill="#6b7686" font-size="14" font-weight="800">
-              <text x="70" y="310">Mon</text>
-              <text x="190" y="310">Tue</text>
-              <text x="310" y="310">Wed</text>
-              <text x="430" y="310">Thu</text>
-              <text x="550" y="310">Fri</text>
-              <text x="670" y="310">Sat</text>
-              <text x="790" y="310">Sun</text>
-            </g>
-
-            <path d="M60 240
-                     C120 180, 160 210, 200 170
-                     S280 120, 320 150
-                     S400 210, 440 160
-                     S520 80, 560 120
-                     S640 220, 680 170
-                     S760 70, 860 110
-                     L860 290 L60 290 Z"
-                  fill="rgba(47,111,236,.18)"/>
-
-            <path d="M60 265
-                     C120 230, 160 250, 200 235
-                     S280 185, 320 200
-                     S400 235, 440 215
-                     S520 140, 560 165
-                     S640 240, 680 205
-                     S760 120, 860 145
-                     L860 290 L60 290 Z"
-                  fill="rgba(124,58,237,.14)"/>
-
-            <path d="M60 240
-                     C120 180, 160 210, 200 170
-                     S280 120, 320 150
-                     S400 210, 440 160
-                     S520 80, 560 120
-                     S640 220, 680 170
-                     S760 70, 860 110"
-                  fill="none" stroke="#2f6fec" stroke-width="5" stroke-linecap="round"/>
-
-            <path d="M60 265
-                     C120 230, 160 250, 200 235
-                     S280 185, 320 200
-                     S400 235, 440 215
-                     S520 140, 560 165
-                     S640 240, 680 205
-                     S760 120, 860 145"
-                  fill="none" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
-
-            <g>
-              <circle cx="200" cy="170" r="6" fill="#2f6fec"/>
-              <circle cx="560" cy="120" r="6" fill="#2f6fec"/>
-              <circle cx="860" cy="110" r="6" fill="#2f6fec"/>
-              <circle cx="200" cy="235" r="6" fill="#7c3aed"/>
-              <circle cx="560" cy="165" r="6" fill="#7c3aed"/>
-              <circle cx="860" cy="145" r="6" fill="#7c3aed"/>
-            </g>
+            <path id="order-line-purchase" fill="none" stroke="#2f6fec" stroke-width="5" stroke-linecap="round"/>
+            <path id="order-line-sales" fill="none" stroke="#7c3aed" stroke-width="5" stroke-linecap="round"/>
+            <g id="order-points-purchase"></g>
+            <g id="order-points-sales"></g>
+            <g id="order-values-purchase" fill="#2f6fec" font-size="12" font-weight="800"></g>
+            <g id="order-values-sales" fill="#7c3aed" font-size="12" font-weight="800"></g>
+            <g id="order-axis-labels" fill="#6b7686" font-size="14" font-weight="800"></g>
           </svg>
         </div>
       </div>
@@ -763,6 +713,117 @@
       });
     };
 
+    const updateOrderChart = (payload) => {
+      const svg = document.getElementById("order-chart");
+      if (!svg) return;
+
+      const labels = Array.isArray(payload?.order_month_labels)
+        ? payload.order_month_labels
+        : [];
+      const purchase = Array.isArray(payload?.order_purchase_counts)
+        ? payload.order_purchase_counts
+        : [];
+      const sales = Array.isArray(payload?.order_sales_counts)
+        ? payload.order_sales_counts
+        : [];
+      const pointCount = Math.max(labels.length, purchase.length, sales.length);
+      if (!pointCount) return;
+
+      const left = 60;
+      const right = 860;
+      const top = 60;
+      const bottom = 270;
+      const step = pointCount > 1 ? (right - left) / (pointCount - 1) : 0;
+      const maxValue = Math.max(
+        1,
+        ...purchase.map(Number),
+        ...sales.map(Number),
+      );
+
+      const toY = (value) => {
+        const ratio = Number(value) / maxValue;
+        return bottom - ratio * (bottom - top);
+      };
+
+      const buildPath = (values) => {
+        return values
+          .map((value, index) => {
+            const x = left + step * index;
+            const y = toY(value);
+            return `${index === 0 ? "M" : "L"}${x} ${y}`;
+          })
+          .join(" ");
+      };
+
+      const purchaseLine = document.getElementById("order-line-purchase");
+      const salesLine = document.getElementById("order-line-sales");
+      if (purchaseLine) purchaseLine.setAttribute("d", buildPath(purchase));
+      if (salesLine) salesLine.setAttribute("d", buildPath(sales));
+
+      const purchasePoints = document.getElementById("order-points-purchase");
+      const salesPoints = document.getElementById("order-points-sales");
+      const purchaseValues = document.getElementById("order-values-purchase");
+      const salesValues = document.getElementById("order-values-sales");
+      const axisLabels = document.getElementById("order-axis-labels");
+
+      if (purchasePoints) purchasePoints.innerHTML = "";
+      if (salesPoints) salesPoints.innerHTML = "";
+      if (purchaseValues) purchaseValues.innerHTML = "";
+      if (salesValues) salesValues.innerHTML = "";
+      if (axisLabels) axisLabels.innerHTML = "";
+
+      labels.forEach((label, index) => {
+        const x = left + step * index;
+        const purchaseY = toY(purchase[index] || 0);
+        const salesY = toY(sales[index] || 0);
+
+        if (purchasePoints) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", purchaseY);
+          circle.setAttribute("r", "5");
+          circle.setAttribute("fill", "#2f6fec");
+          purchasePoints.appendChild(circle);
+        }
+
+        if (salesPoints) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", salesY);
+          circle.setAttribute("r", "5");
+          circle.setAttribute("fill", "#7c3aed");
+          salesPoints.appendChild(circle);
+        }
+
+        if (purchaseValues) {
+          const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          text.setAttribute("x", x);
+          text.setAttribute("y", purchaseY - 10);
+          text.setAttribute("text-anchor", "middle");
+          text.textContent = String(purchase[index] ?? 0);
+          purchaseValues.appendChild(text);
+        }
+
+        if (salesValues) {
+          const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          text.setAttribute("x", x);
+          text.setAttribute("y", salesY + 18);
+          text.setAttribute("text-anchor", "middle");
+          text.textContent = String(sales[index] ?? 0);
+          salesValues.appendChild(text);
+        }
+
+        if (axisLabels) {
+          const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          text.setAttribute("x", x);
+          text.setAttribute("y", "310");
+          text.setAttribute("text-anchor", "middle");
+          text.textContent = label;
+          axisLabels.appendChild(text);
+        }
+      });
+    };
+
     const loadWeekMatchStats = async () => {
       try {
         const response = await fetch("/api/home/stats");
@@ -777,6 +838,7 @@
           updateMonthlySalesTechs(data);
           updateNextMonthSalesTechs(data);
           updateEntryProgress(data);
+          updateOrderChart(data);
         }
       } catch (error) {
         console.error("Failed to load home stats", error);

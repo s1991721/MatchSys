@@ -179,9 +179,8 @@
             </label>
             <label class="c-inline-field">
                 <span data-i18n="order.field.owner">负责人</span>
-                <input id="issue-owner" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="issue-owner-list"/>
+                <select id="issue-owner"></select>
             </label>
-            <datalist id="issue-owner-list"></datalist>
             <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
                 <span data-i18n="order.field.remark">备注</span>
                 <textarea id="issue-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
@@ -252,9 +251,8 @@
             </label>
             <label class="c-inline-field">
                 <span data-i18n="order.field.owner">负责人</span>
-                <input id="accept-owner" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="accept-owner-list"/>
+                <select id="accept-owner"></select>
             </label>
-            <datalist id="accept-owner-list"></datalist>
             <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
                 <span data-i18n="order.field.remark">备注</span>
                 <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
@@ -336,7 +334,7 @@
             </label>
             <label class="c-inline-field">
                 <span data-i18n="order.field.owner">负责人</span>
-                <input type="text" data-field="owner"/>
+                <select data-field="owner"></select>
             </label>
             <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
                 <span data-i18n="order.field.remark">备注</span>
@@ -368,6 +366,20 @@
         }
         const t = (key) => (i18n ? i18n.t(key) : key);
         const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
+        const formatDateValue = (value) => {
+            if (!value) return "";
+            const text = String(value);
+            return text.length >= 10 ? text.slice(0, 10) : text;
+        };
+        const readOwnerSelect = (selectEl) => {
+            if (!selectEl) return { id: null, name: "" };
+            const selected = selectEl.options[selectEl.selectedIndex];
+            const idValue = selected ? Number(selected.value) : null;
+            return {
+                id: Number.isFinite(idValue) && idValue ? idValue : null,
+                name: selected ? selected.textContent.trim() : "",
+            };
+        };
         const switches = Array.from(document.querySelectorAll(".c-switcher-group .c-toggle"));
         const swapNodes = Array.from(document.querySelectorAll("[data-issue][data-accept]"));
         const swapPlaceholders = Array.from(document.querySelectorAll("[data-issue-placeholder][data-accept-placeholder]"));
@@ -416,7 +428,6 @@
             start: document.getElementById("issue-start"),
             end: document.getElementById("issue-end"),
             owner: document.getElementById("issue-owner"),
-            ownerList: document.getElementById("issue-owner-list"),
             remark: document.getElementById("issue-remark"),
         };
 
@@ -436,7 +447,6 @@
             start: document.getElementById("accept-start"),
             end: document.getElementById("accept-end"),
             owner: document.getElementById("accept-owner"),
-            ownerList: document.getElementById("accept-owner-list"),
             remark: document.getElementById("accept-remark"),
         };
 
@@ -737,11 +747,13 @@
             if (detailFields.hours) detailFields.hours.value = item.working_hours || "";
             if (detailFields.start) detailFields.start.value = item.period_start || "";
             if (detailFields.end) detailFields.end.value = item.period_end || "";
-            if (detailFields.createdAt) detailFields.createdAt.value = item.created_at || "";
+            if (detailFields.createdAt) detailFields.createdAt.value = formatDateValue(item.created_at);
             if (detailFields.creator) detailFields.creator.value = item.created_by || "";
-            if (detailFields.owner) detailFields.owner.value = item.person_in_charge || "";
+            if (detailFields.owner) {
+                loadOwnerSelectOptions(detailFields.owner, item.person_in_charge_id || item.person_in_charge || "");
+            }
             if (detailFields.remark) detailFields.remark.value = item.remark || "";
-            if (detailFields.updatedAt) detailFields.updatedAt.value = item.updated_at || "";
+            if (detailFields.updatedAt) detailFields.updatedAt.value = formatDateValue(item.updated_at);
             if (detailFields.updater) detailFields.updater.value = item.updated_by || "";
 
             currentDetailId = item.id;
@@ -750,6 +762,7 @@
         }
 
         const buildIssuePayload = (fromDetail) => {
+            const owner = readOwnerSelect(fromDetail ? detailFields.owner : issueForm.owner);
             return {
                 order_no: fromDetail ? detailFields.orderNo.value.trim() : issueForm.orderNo.value.trim(),
                 project_name: fromDetail ? detailFields.project.value.trim() : issueForm.projectName.value.trim(),
@@ -761,13 +774,15 @@
                 working_hours: fromDetail ? detailFields.hours.value.trim() : issueForm.hours.value.trim(),
                 period_start: fromDetail ? detailFields.start.value : issueForm.start.value,
                 period_end: fromDetail ? detailFields.end.value : issueForm.end.value,
-                person_in_charge: fromDetail ? detailFields.owner.value.trim() : issueForm.owner.value.trim(),
+                person_in_charge_id: owner.id,
+                person_in_charge: owner.name,
                 remark: fromDetail ? detailFields.remark.value.trim() : issueForm.remark.value.trim(),
             };
         }
 
         const buildAcceptPayload = (fromDetail) => {
             const purchaseIdRaw = (fromDetail ? detailFields.purchaseId.value : acceptForm.purchaseId.value).trim();
+            const owner = readOwnerSelect(fromDetail ? detailFields.owner : acceptForm.owner);
             return {
                 order_no: fromDetail ? detailFields.orderNo.value.trim() : acceptForm.orderNo.value.trim(),
                 project_name: fromDetail ? detailFields.project.value.trim() : acceptForm.projectName.value.trim(),
@@ -781,7 +796,8 @@
                 working_hours: fromDetail ? detailFields.hours.value.trim() : acceptForm.hours.value.trim(),
                 period_start: fromDetail ? detailFields.start.value : acceptForm.start.value,
                 period_end: fromDetail ? detailFields.end.value : acceptForm.end.value,
-                person_in_charge: fromDetail ? detailFields.owner.value.trim() : acceptForm.owner.value.trim(),
+                person_in_charge_id: owner.id,
+                person_in_charge: owner.name,
                 remark: fromDetail ? detailFields.remark.value.trim() : acceptForm.remark.value.trim(),
             };
         }
@@ -883,38 +899,47 @@
             });
         }
 
-        const fetchEmployeeOptions = (inputEl, listEl) => {
-            const keyword = inputEl.value.trim();
-            if (!keyword) {
-                listEl.innerHTML = "";
-                return;
-            }
+        const TECHNICIAN_ROLE_ID = 1;
+
+        const loadOwnerSelectOptions = (selectEl, currentValue) => {
+            if (!selectEl) return;
             const params = new URLSearchParams();
-            params.append("keyword", keyword);
-            fetchWithAuth(`/api/employees?${params.toString()}`, { method: "GET" })
+            params.append("role_id", String(TECHNICIAN_ROLE_ID));
+            params.append("exclude", "1");
+            fetchWithAuth(`/api/user-logins/by-role?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
                     const payload = normalizeApiResponse(data);
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
-                    listEl.innerHTML = "";
+                    selectEl.innerHTML = "";
                     items.forEach((item) => {
-                        if (!item || !item.name) return;
+                        if (!item || !item.employee_name) return;
                         const opt = document.createElement("option");
-                        opt.value = item.name;
-                        listEl.appendChild(opt);
+                        opt.value = String(item.employee_id || "");
+                        opt.textContent = item.employee_name;
+                        selectEl.appendChild(opt);
                     });
+                    if (currentValue && !items.some((item) => String(item.employee_id || "") === String(currentValue))) {
+                        const opt = document.createElement("option");
+                        opt.value = String(currentValue);
+                        opt.textContent = String(currentValue);
+                        selectEl.appendChild(opt);
+                    }
+                    if (currentValue) {
+                        selectEl.value = String(currentValue);
+                    }
                 })
                 .catch(() => {
-                    listEl.innerHTML = "";
+                    selectEl.innerHTML = "";
+                    if (currentValue) {
+                        const opt = document.createElement("option");
+                        opt.value = String(currentValue);
+                        opt.textContent = String(currentValue);
+                        selectEl.appendChild(opt);
+                        selectEl.value = String(currentValue);
+                    }
                 });
-        }
-
-        const bindOwnerLookup = (form) => {
-            if (!form.owner || !form.ownerList) return;
-            form.owner.addEventListener("input", () => {
-                fetchEmployeeOptions(form.owner, form.ownerList);
-            });
         }
 
         const renderTechnicianOptions = (listEl, map, items) => {
@@ -1052,8 +1077,8 @@
         bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap);
         bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap);
         bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap);
-        bindOwnerLookup(issueForm);
-        bindOwnerLookup(acceptForm);
+        loadOwnerSelectOptions(issueForm.owner);
+        loadOwnerSelectOptions(acceptForm.owner);
         bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap);
 
         const refreshI18n = () => {

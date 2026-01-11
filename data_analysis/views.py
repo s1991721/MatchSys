@@ -183,6 +183,45 @@ def _next_month_sales_techs(start_of_next_month, start_of_month_after_next):
     ]
 
 
+def _order_monthly_stats(employee_id, start_of_month):
+    """按月统计发注数与受注数。"""
+    labels = []
+    purchase_counts = []
+    sales_counts = []
+
+    months = [shift_month(start_of_month, -offset) for offset in range(6, -1, -1)]
+    for month_start in months:
+        month_end = shift_month(month_start, 1)
+        label = f"{month_start.year}-{month_start.month:02d}"
+        labels.append(label)
+        if employee_id:
+            purchase_counts.append(
+                PurchaseOrder.objects.filter(
+                    deleted_at__isnull=True,
+                    period_start__gte=month_start,
+                    period_start__lt=month_end,
+                    person_in_charge_id=employee_id,
+                ).count()
+            )
+            sales_counts.append(
+                SalesOrder.objects.filter(
+                    deleted_at__isnull=True,
+                    period_start__gte=month_start,
+                    period_start__lt=month_end,
+                    person_in_charge_id=employee_id,
+                ).count()
+            )
+        else:
+            purchase_counts.append(0)
+            sales_counts.append(0)
+
+    return {
+        "order_month_labels": labels,
+        "order_purchase_counts": purchase_counts,
+        "order_sales_counts": sales_counts,
+    }
+
+
 @csrf_exempt
 @require_GET
 def home_match_stats_api(request):
@@ -222,6 +261,9 @@ def home_match_stats_api(request):
     payload["entry_items"] = _entry_items(today, start_date, end_date)
     payload["next_month_sales_techs"] = _next_month_sales_techs(
         start_of_next_month, start_of_month_after_next
+    )
+    payload.update(
+        _order_monthly_stats(request.session.get("employee_id"), start_of_month)
     )
 
     return api_success(data=payload)

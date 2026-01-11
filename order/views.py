@@ -3,12 +3,13 @@ import json
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
-from project.api import api_error, api_paginated, api_success
 from django.db.models import Q
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
+from employee.models import Employee
 from order.models import PayRequest, PurchaseOrder, SalesOrder
+from project.api import api_error, api_paginated, api_success
 
 
 def _require_login(request):
@@ -134,6 +135,7 @@ def _serialize_purchase(order):
     return {
         "id": order.id,
         "order_no": order.order_no,
+        "person_in_charge_id": order.person_in_charge_id or None,
         "person_in_charge": order.person_in_charge,
         "status": order.status,
         "project_name": order.project_name,
@@ -158,6 +160,7 @@ def _serialize_sales(order):
     return {
         "id": order.id,
         "order_no": order.order_no,
+        "person_in_charge_id": order.person_in_charge_id or None,
         "person_in_charge": order.person_in_charge,
         "status": order.status,
         "purchase_id": order.purchase_id,
@@ -202,11 +205,29 @@ def _serialize_pay_request(request_item):
     }
 
 
+def _apply_person_in_charge(order, payload):
+    if "person_in_charge_id" not in payload and "person_in_charge" not in payload:
+        return None
+    person_id, error = _parse_int(payload.get("person_in_charge_id"), "person_in_charge_id")
+    if error:
+        return error
+    if person_id:
+        employee = Employee.objects.filter(id=person_id, deleted_at__isnull=True).first()
+        order.person_in_charge_id = person_id
+        order.person_in_charge = employee.name if employee else (payload.get("person_in_charge") or "").strip()
+        return None
+    if "person_in_charge" in payload:
+        order.person_in_charge = (payload.get("person_in_charge") or "").strip()
+    order.person_in_charge_id = None
+    return None
+
+
 def _apply_purchase_payload(order, payload):
     if "order_no" in payload:
         order.order_no = (payload.get("order_no") or "").strip()
-    if "person_in_charge" in payload:
-        order.person_in_charge = (payload.get("person_in_charge") or "").strip()
+    owner_error = _apply_person_in_charge(order, payload)
+    if owner_error:
+        return owner_error
     if "status" in payload:
         order.status = (payload.get("status") or "").strip()
     if "project_name" in payload:
@@ -255,8 +276,9 @@ def _apply_purchase_payload(order, payload):
 def _apply_sales_payload(order, payload):
     if "order_no" in payload:
         order.order_no = (payload.get("order_no") or "").strip()
-    if "person_in_charge" in payload:
-        order.person_in_charge = (payload.get("person_in_charge") or "").strip()
+    owner_error = _apply_person_in_charge(order, payload)
+    if owner_error:
+        return owner_error
     if "status" in payload:
         order.status = (payload.get("status") or "").strip()
     if "project_name" in payload:
@@ -501,16 +523,15 @@ def purchase_orders_api(request):
             "project_name",
             "customer_id",
             "customer_name",
-            "person_in_charge",
             "status",
             "period_start",
             "period_end",
         ]
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
-                return api_error(
-                    f"Missing field: {field}"
-                )
+                return api_error(f"Missing field: {field}")
+        if not (payload.get("person_in_charge_id") or str(payload.get("person_in_charge") or "").strip()):
+            return api_error("Missing field: person_in_charge")
         order = PurchaseOrder()
         apply_error = _apply_purchase_payload(order, payload)
         if apply_error:
@@ -597,16 +618,15 @@ def sales_orders_api(request):
             "project_name",
             "customer_id",
             "customer_name",
-            "person_in_charge",
             "status",
             "period_start",
             "period_end",
         ]
         for field in required_fields:
             if str(payload.get(field) or "").strip() == "":
-                return api_error(
-                    f"Missing field: {field}"
-                )
+                return api_error(f"Missing field: {field}")
+        if not (payload.get("person_in_charge_id") or str(payload.get("person_in_charge") or "").strip()):
+            return api_error("Missing field: person_in_charge")
         order = SalesOrder()
         apply_error = _apply_sales_payload(order, payload)
         if apply_error:

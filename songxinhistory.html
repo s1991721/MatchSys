@@ -197,7 +197,7 @@
                 isLoading = true;
                 lastQueryKey = queryKey;
                 try {
-                    const resp = await fetchWithAuth(`/api/send-history?${queryKey}`);
+                    const resp = await fetchWithAuth(`/api/send-history?${queryKey}`, { method: 'GET' });
                     if (!resp.ok) {
                         throw new Error(t('songxinhistory.error.load_failed'));
                     }

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title data-i18n="login.title">系统登录 - IT营业管理系统</title>
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="login.title">系统登录 - IT营业管理系统</title>
 </head>
 <body class="c-form-page c-center-page">
 <div class="login-card c-card c-card-pad c-auth-card">
@@ -26,11 +26,11 @@
         <div class="form-grid form-grid-single">
             <div class="form-field">
                 <label data-i18n="login.username">账号</label>
-                <input id="userName" type="text" name="user_name" placeholder="admin" required>
+                <input id="userName" type="text" name="user_name" required>
             </div>
             <div class="form-field">
                 <label data-i18n="login.password">密码</label>
-                <input id="password" type="password" name="password" placeholder="••••••••" required>
+                <input id="password" type="password" name="password" required>
             </div>
         </div>
         <div class="form-actions">
@@ -68,7 +68,10 @@
         const submitBtn = document.getElementById("submitBtn");
 
         const storeLang = (lang) => {
-            try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+            try {
+                localStorage.setItem(LANG_KEY, lang);
+            } catch (e) {
+            }
         };
 
         const applyLang = (lang) => {
@@ -116,7 +119,7 @@
                 try {
                     const res = await fetch(LOGIN_ENDPOINT, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {"Content-Type": "application/json"},
                         credentials: "include",
                         body: JSON.stringify({
                             user_name: document.getElementById("userName").value.trim(),
@@ -148,7 +151,8 @@
                             } else if (Array.isArray(parsed)) {
                                 menuList = parsed.includes("*") ? ["*"] : parsed;
                             }
-                        } catch (e) {}
+                        } catch (e) {
+                        }
                     }
                     try {
                         if (roleId !== "" && roleId !== null && roleId !== undefined) {
@@ -180,13 +184,15 @@
                         } else {
                             localStorage.removeItem(EMPLOYEE_POSITION_KEY);
                         }
-                    } catch (e) {}
+                    } catch (e) {
+                    }
                     const target = "index.html".replace(/^\//, "");
                     const next = new URL(target, window.location.href);
                     let currentLang = "zh-CN";
                     try {
                         currentLang = localStorage.getItem(LANG_KEY) || currentLang;
-                    } catch (e) {}
+                    } catch (e) {
+                    }
                     const i18n = getI18n();
                     if (i18n && i18n.getLang) {
                         currentLang = i18n.getLang() || currentLang;

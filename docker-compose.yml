@@ -18,10 +18,13 @@ services:
     restart: unless-stopped
     env_file:
       - ./.env
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             gunicorn project.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     depends_on:
       - db
     volumes:
-      -
+      - static_volume:/app/staticfiles
     networks:
       - matchsys-net
     # 关键提醒：
@@ -38,7 +41,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./frontend:/var/www/frontend
+      - static_volume:/staticfiles
     networks:
       - matchsys-net
 

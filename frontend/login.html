@@ -51,6 +51,9 @@
     const LANG_KEY = "app_lang";
     const ROLE_KEY = "app_role_id";
     const MENU_KEY = "app_menu_list";
+    const EMPLOYEE_ID_KEY = "app_employee_id";
+    const EMPLOYEE_NAME_KEY = "app_employee_name";
+    const EMPLOYEE_POSITION_KEY = "app_employee_position_name";
 
     const getI18n = () => window.I18N || null;
     const t = (key) => {
@@ -127,6 +130,9 @@
                     }
                     const loginData = payload.data || {};
                     const roleId = loginData.role_id ?? loginData.roleId ?? "";
+                    const employeeId = loginData.employee_id ?? loginData.employeeId ?? "";
+                    const employeeName = loginData.employee_name ?? loginData.employeeName ?? loginData.name ?? loginData.user_name ?? loginData.userName ?? "";
+                    const employeePositionName = loginData.employee_position_name ?? loginData.employeePositionName ?? loginData.position_name ?? loginData.positionName ?? "";
                     let menuList = loginData.menu_list ?? loginData.menuList ?? "";
                     if (menuList === "*") {
                         menuList = ["*"];
@@ -158,6 +164,21 @@
                             }
                         } else {
                             localStorage.removeItem(MENU_KEY);
+                        }
+                        if (employeeId !== "" && employeeId !== null && employeeId !== undefined) {
+                            localStorage.setItem(EMPLOYEE_ID_KEY, String(employeeId));
+                        } else {
+                            localStorage.removeItem(EMPLOYEE_ID_KEY);
+                        }
+                        if (employeeName !== "" && employeeName !== null && employeeName !== undefined) {
+                            localStorage.setItem(EMPLOYEE_NAME_KEY, String(employeeName));
+                        } else {
+                            localStorage.removeItem(EMPLOYEE_NAME_KEY);
+                        }
+                        if (employeePositionName !== "" && employeePositionName !== null && employeePositionName !== undefined) {
+                            localStorage.setItem(EMPLOYEE_POSITION_KEY, String(employeePositionName));
+                        } else {
+                            localStorage.removeItem(EMPLOYEE_POSITION_KEY);
                         }
                     } catch (e) {}
                     const target = "index.html".replace(/^\//, "");

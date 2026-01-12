@@ -117,6 +117,14 @@ def login_api(request):
     request.session.cycle_key()
     request.session["employee_id"] = user_login.employee_id
     request.session["employee_name"] = user_login.employee_name
+    employee_department_name = ""
+    employee_position_name = ""
+    employee = Employee.objects.filter(id=user_login.employee_id, deleted_at__isnull=True).first()
+    if employee:
+        employee_department_name = employee.department_name or ""
+        employee_position_name = employee.position_name or ""
+    request.session["employee_department_name"] = employee_department_name
+    request.session["employee_position_name"] = employee_position_name
     raw_menu_list = user_login.menu_list or ""
     normalized_menu_list = raw_menu_list
     if raw_menu_list == "*":
@@ -134,6 +142,10 @@ def login_api(request):
     )
 
     return api_success(data={
+        "employee_id": user_login.employee_id,
+        "employee_name": user_login.employee_name,
+        "employee_department_name": employee_department_name,
+        "employee_position_name": employee_position_name,
         "role_id": user_login.role_id,
         "menu_list": normalized_menu_list,
     })

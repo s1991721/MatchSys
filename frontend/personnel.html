@@ -391,7 +391,6 @@
     const fieldHireDate = document.getElementById("fieldHireDate");
     const fieldLeaveDate = document.getElementById("fieldLeaveDate");
     const ROLE_KEY = "app_role_id";
-    const sessionRoleId = "{{ request.session.role_id|default:'' }}";
 
     let allEmployees = [];
     let cachedDepartments = [];
@@ -410,10 +409,6 @@
             const stored = localStorage.getItem(ROLE_KEY);
             if (stored) return stored;
         } catch (err) {
-        }
-        if (sessionRoleId) {
-            try { localStorage.setItem(ROLE_KEY, String(sessionRoleId)); } catch (err) {}
-            return String(sessionRoleId);
         }
         return "";
     };

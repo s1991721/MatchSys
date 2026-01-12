@@ -497,7 +497,7 @@
         ssFileName.textContent = name ? format("people.ss_exists", { name }) : '';
     };
 
-    {#员工页跳转编辑时，获取员工信息#}
+    // 员工页跳转编辑时，获取员工信息
     const getAutoEditId = () => {
         try {
             const cached = localStorage.getItem("tech_edit_employee_id") || "";

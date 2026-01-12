@@ -32,22 +32,22 @@ docker network connect matchsys-net matchsys-test
  Dockerfile
 .dockerignore
 
-docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys:1.0 --push .
+docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.0 --push .
 
 docker run --name matchsys-test \
   -p 8000:8000 \
-  -d jef4267/matchsys:1.0
+  -d jef4267/matchsys-web:1.0
 
 
 
 ------------------------------------------------ 发布 镜像
 docker push jef4267/matchsys-mysql:1.0
-docker push jef4267/matchsys:1.0
+docker push jef4267/matchsys-web:1.0
 docker push jef4267/matchsys-nginx:1.0
 
 
 ------------------------------------------------ nginx 镜像
-docker buildx build --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-nginx:1.0 --push .
+docker buildx build --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.0 --push .
 
 
 

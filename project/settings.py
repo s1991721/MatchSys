@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,12 +23,19 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-lr)((vj19xh@jsutc2es_&e=+_j=6#jxb5_c$w1e@pd!0#3o=2"
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-lr)((vj19xh@jsutc2es_&e=+_j=6#jxb5_c$w1e@pd!0#3o=2",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() in {"1", "true", "yes", "on"}
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get("ALLOWED_HOSTS", "*").split(",")
+    if host.strip()
+]
 
 
 # Application definition
@@ -60,7 +68,10 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = (
+    os.environ.get("CORS_ALLOW_ALL_ORIGINS", "True").lower()
+    in {"1", "true", "yes", "on"}
+)
 
 ROOT_URLCONF = "project.urls"
 
@@ -88,12 +99,11 @@ WSGI_APPLICATION = "project.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "matchSys",
-        "USER": "root",
-        "PASSWORD": "123456",
-        # "HOST": "matchsys-mysql-test",  # docker数据库地址
-        "HOST": "127.0.0.1",  # 本机数据库地址
-        "PORT": "3306",
+        "NAME": os.environ.get("DB_NAME", "matchSys"),
+        "USER": os.environ.get("DB_USER", "root"),
+        "PASSWORD": os.environ.get("DB_PASSWORD", "123456"),
+        "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("DB_PORT", "3306"),
         "OPTIONS": {
             "charset": "utf8mb4",
             # 确保数据库连接也使用东京时区
@@ -142,7 +152,7 @@ TASK_BASE_URL = "http://127.0.0.1:8000"
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 
 # Allow same-origin iframes for the dashboard shell.
 X_FRAME_OPTIONS = "SAMEORIGIN"

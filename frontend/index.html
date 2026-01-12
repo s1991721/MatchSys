@@ -171,7 +171,7 @@
     <main class="main">
       <header class="topbar">
         <div class="title">
-          <span data-i18n="welcome">欢迎回来，</span>{{ request.session.employee_name }}!
+          <span data-i18n="welcome">欢迎回来，</span><span id="employeeNameText"></span>!
           <span id="pageSubtitle">· 主页</span>
         </div>
         <div class="topbar-mid" aria-label="日期" data-i18n-aria="topbar.date">
@@ -191,8 +191,8 @@
           <a class="avatar" href="#profile.html" data-src="profile.html" title="个人信息" aria-label="个人信息" data-i18n-title="topbar.profile" data-i18n-aria="topbar.profile">
             <div class="pic"></div>
             <div>
-              <strong>{{ request.session.employee_name }}</strong>
-              <small>{{ request.session.employee_position_name }}</small>
+              <strong id="employeeNameLabel"></strong>
+              <small id="employeePositionLabel"></small>
             </div>
           </a>
         </div>
@@ -228,9 +228,26 @@
       const KEY = "chat_sidebar_collapsed";
       const LANG_KEY = "app_lang";
       const MENU_KEY = "app_menu_list";
-      const sessionMenuList = "{{ request.session.menu_list|default:'' }}";
+      const EMPLOYEE_NAME_KEY = "app_employee_name";
+      const EMPLOYEE_POSITION_KEY = "app_employee_position_name";
+      const sessionMenuList = "";
       const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
       const i18n = window.I18N;
+      const employeeNameText = document.getElementById("employeeNameText");
+      const employeeNameLabel = document.getElementById("employeeNameLabel");
+      const employeePositionLabel = document.getElementById("employeePositionLabel");
+
+      const loadEmployeeMeta = () => {
+        let name = "";
+        let position = "";
+        try {
+          name = localStorage.getItem(EMPLOYEE_NAME_KEY) || "";
+          position = localStorage.getItem(EMPLOYEE_POSITION_KEY) || "";
+        } catch (e) {}
+        if (employeeNameText) employeeNameText.textContent = name;
+        if (employeeNameLabel) employeeNameLabel.textContent = name;
+        if (employeePositionLabel) employeePositionLabel.textContent = position;
+      };
 
       const setCollapsed = (collapsed) => {
         document.body.classList.toggle("sidebar-collapsed", collapsed);
@@ -321,6 +338,8 @@
       const readCollapsed = () => {
         try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
       };
+
+      loadEmployeeMeta();
 
       if (btn) {
         setCollapsed(readCollapsed());

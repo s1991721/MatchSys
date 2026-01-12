@@ -20,11 +20,11 @@
                 </svg>
             </div>
             <div>
-                <div class="profile-name" id="profileName">{{ request.session.employee_name }}</div>
+                <div class="profile-name" id="profileName"></div>
                 <div class="profile-meta">
-                    <span id="profileDepartment">{{ request.session.employee_department_name }}</span>
+                    <span id="profileDepartment"></span>
                     <span class="dot" aria-hidden="true"></span>
-                    <span id="profilePosition">{{ request.session.employee_position_name }}</span>
+                    <span id="profilePosition"></span>
                 </div>
             </div>
         </div>
@@ -133,11 +133,30 @@
     }
     const t = (key) => (i18n ? i18n.t(key) : key);
     const API_BASE = "";
-    const employeeId = "{{ request.session.employee_id }}";
+    const EMPLOYEE_ID_KEY = "app_employee_id";
+    const EMPLOYEE_NAME_KEY = "app_employee_name";
+    const EMPLOYEE_POSITION_KEY = "app_employee_position_name";
+    let employeeId = "";
+    let employeeName = "";
+    let employeePosition = "";
+    try {
+        employeeId = localStorage.getItem(EMPLOYEE_ID_KEY) || "";
+        employeeName = localStorage.getItem(EMPLOYEE_NAME_KEY) || "";
+        employeePosition = localStorage.getItem(EMPLOYEE_POSITION_KEY) || "";
+    } catch (e) {}
 
     const employeeForm = document.getElementById("employeeForm");
     const passwordForm = document.getElementById("passwordForm");
     const logoutBtn = document.getElementById("logoutBtn");
+    const profileName = document.getElementById("profileName");
+    const profilePosition = document.getElementById("profilePosition");
+
+    if (profileName && employeeName) {
+        profileName.textContent = employeeName;
+    }
+    if (profilePosition && employeePosition) {
+        profilePosition.textContent = employeePosition;
+    }
 
     const setReadOnlyWhenFilled = (fieldId, value) => {
         const field = document.getElementById(fieldId);
@@ -198,8 +217,16 @@
             document.getElementById("profileName").textContent = item.name || "";
             document.getElementById("profileDepartment").textContent = item.department_name ||"";
             document.getElementById("profilePosition").textContent = item.position_name || "";
+            try {
+                if (item.name) {
+                    localStorage.setItem(EMPLOYEE_NAME_KEY, String(item.name));
+                }
+                if (item.position_name) {
+                    localStorage.setItem(EMPLOYEE_POSITION_KEY, String(item.position_name));
+                }
+            } catch (e) {}
         } catch (err) {
-            showStatus(err.message || t("common.load_failed"), "error");
+            alert(err.message || t("common.load_failed"));
         }
     }
 
@@ -234,6 +261,14 @@
                 const item = result.item;
                 document.getElementById("profileName").textContent = item.name || "";
                 document.getElementById("profileDepartment").textContent = item.department_name || "";
+                try {
+                    if (item.name) {
+                        localStorage.setItem(EMPLOYEE_NAME_KEY, String(item.name));
+                    }
+                    if (item.position_name) {
+                        localStorage.setItem(EMPLOYEE_POSITION_KEY, String(item.position_name));
+                    }
+                } catch (e) {}
                 setReadOnlyWhenFilled("empPhone", item.phone);
                 setReadOnlyWhenFilled("empEmail", item.email);
                 setReadOnlyWhenFilled("empAddress", item.address);
@@ -299,6 +334,11 @@
             }
             const target = "login.html".replace(/^\//, "");
             const nextUrl = new URL(target, window.location.href).toString();
+            try {
+                localStorage.removeItem(EMPLOYEE_ID_KEY);
+                localStorage.removeItem(EMPLOYEE_NAME_KEY);
+                localStorage.removeItem(EMPLOYEE_POSITION_KEY);
+            } catch (e) {}
             if (window.top && window.top !== window) {
                 window.top.location.href = nextUrl;
             } else {

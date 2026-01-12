@@ -53,3 +53,7 @@ docker compose up -d --force-recreate
 docker compose logs -f ollama
 docker ps
 docker exec -it ollama ollama list
+
+--单个镜像更新
+docker compose pull web
+docker compose up -d --no-deps --force-recreate web

@@ -41,9 +41,13 @@ docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.0
 
 ------------------------------------------------ 服务器部署使用
 docker compose down
+--删除镜像
+docker compose down --rmi all
+
 docker compose up -d
 --强制重建
 docker compose up -d --force-recreate
+
 
 --因为ollama耗时，所以需要查看
 docker compose logs -f ollama

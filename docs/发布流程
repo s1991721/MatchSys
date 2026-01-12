@@ -4,7 +4,7 @@ pip freeze > requirements.txt
 
 ------------------------------------------------ mysql 镜像
 
-docker buildx build --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.0 --push .
+docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.0 --push .
 docker build -f docker_mysql_img/Dockerfile -t jef4267/matchsys-mysql:1.0 .
 
 docker run --name matchsys-mysql-test \
@@ -19,7 +19,7 @@ docker network connect matchsys-net matchsys-mysql-test
 docker network connect matchsys-net matchsys-test
 ------------------------------------------------ Django 镜像
 
-docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.0 --push .
+docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.0 --push .
 docker build -f ./Dockerfile -t jef4267/matchsys-web:1.0 .
 
 docker run --name matchsys-test \
@@ -34,7 +34,7 @@ docker push jef4267/matchsys-nginx:1.0
 
 ------------------------------------------------ nginx 镜像
 
-docker buildx build --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.0 --push .
+docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.0 --push .
 docker build -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.0 .
 
 docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.0

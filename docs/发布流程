@@ -2,18 +2,10 @@
 --项目依赖
 pip freeze > requirements.txt
 
-
 ------------------------------------------------ mysql 镜像
-Dockerfile
-```
-FROM mysql:8.0
-
-# 把初始化脚本拷贝进去（容器第一次初始化数据目录时会自动执行）
-COPY ./init/ /docker-entrypoint-initdb.d/
-```
 
 docker buildx build --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.0 --push .
-
+docker build -f docker_mysql_img/Dockerfile -t jef4267/matchsys-mysql:1.0 .
 
 docker run --name matchsys-mysql-test \
   -e MYSQL_ROOT_PASSWORD=123456 \
@@ -25,30 +17,31 @@ docker run --name matchsys-mysql-test \
 docker network create matchsys-net
 docker network connect matchsys-net matchsys-mysql-test
 docker network connect matchsys-net matchsys-test
-
-
 ------------------------------------------------ Django 镜像
 
- Dockerfile
-.dockerignore
-
 docker buildx build --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.0 --push .
+docker build -f ./Dockerfile -t jef4267/matchsys-web:1.0 .
 
 docker run --name matchsys-test \
   -p 8000:8000 \
   -d jef4267/matchsys-web:1.0
 
-
-
 ------------------------------------------------ 发布 镜像
+
 docker push jef4267/matchsys-mysql:1.0
 docker push jef4267/matchsys-web:1.0
 docker push jef4267/matchsys-nginx:1.0
 
-
 ------------------------------------------------ nginx 镜像
+
 docker buildx build --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.0 --push .
+docker build -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.0 .
 
-
+docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.0
 
 ------------------------------------------------ 服务器部署使用
+docker compose down
+docker compose up -d
+--强制重建
+docker compose up -d --force-recreate
+

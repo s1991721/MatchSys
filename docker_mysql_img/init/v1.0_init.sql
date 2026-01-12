@@ -320,52 +320,54 @@ CREATE TABLE IF NOT EXISTS customer
 # ----------------------------------------------- 注文 -----------------------------------------------
 CREATE TABLE IF NOT EXISTS purchase_order
 (
-    id               BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
-    order_no         VARCHAR(50)    NOT NULL COMMENT '发注单号',
-    person_in_charge VARCHAR(100)   NOT NULL COMMENT '负责人',
-    status           VARCHAR(50)    NOT NULL COMMENT '状态',
-    project_name     VARCHAR(255)   NOT NULL COMMENT '项目名称',
-    customer_id      BIGINT         NOT NULL COMMENT '客户ID',
-    customer_name    VARCHAR(255)   NOT NULL COMMENT '客户名称',
-    technician_name  VARCHAR(255) COMMENT '技术人员名称',
-    price            DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '金额',
-    working_hours    DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
-    period_start     DATE           NOT NULL COMMENT '期间开始日',
-    period_end       DATE           NOT NULL COMMENT '期间结束日',
-    remark           TEXT COMMENT '备注',
+    id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    order_no            VARCHAR(50)    NOT NULL COMMENT '发注单号',
+    person_in_charge    VARCHAR(100)   NOT NULL COMMENT '负责人',
+    person_in_charge_id VARCHAR(100)   NOT NULL COMMENT '负责人id',
+    status              VARCHAR(50)    NOT NULL COMMENT '状态',
+    project_name        VARCHAR(255)   NOT NULL COMMENT '项目名称',
+    customer_id         BIGINT         NOT NULL COMMENT '客户ID',
+    customer_name       VARCHAR(255)   NOT NULL COMMENT '客户名称',
+    technician_name     VARCHAR(255) COMMENT '技术人员名称',
+    price               DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '金额',
+    working_hours       DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
+    period_start        DATE           NOT NULL COMMENT '期间开始日',
+    period_end          DATE           NOT NULL COMMENT '期间结束日',
+    remark              TEXT COMMENT '备注',
 
-    created_by       VARCHAR(100)   NOT NULL COMMENT '创建人',
-    created_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by       VARCHAR(100) COMMENT '更新人',
-    updated_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted_at       DATETIME       NULL COMMENT '删除时间（逻辑删除）'
+    created_by          VARCHAR(100)   NOT NULL COMMENT '创建人',
+    created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by          VARCHAR(100) COMMENT '更新人',
+    updated_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted_at          DATETIME       NULL COMMENT '删除时间（逻辑删除）'
 
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='发注表';
 
 CREATE TABLE IF NOT EXISTS sales_order
 (
-    id               BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
-    order_no         VARCHAR(50)    NOT NULL COMMENT '受注单号',
-    person_in_charge VARCHAR(100)   NOT NULL COMMENT '负责人',
-    status           VARCHAR(50)    NOT NULL COMMENT '状态',
-    purchase_id      BIGINT         NOT NULL COMMENT '对应发注ID',
-    project_name     VARCHAR(255)   NOT NULL COMMENT '项目名称',
-    customer_id      BIGINT         NOT NULL COMMENT '客户ID',
-    customer_name    VARCHAR(255)   NOT NULL COMMENT '客户名称',
-    technician_id    BIGINT COMMENT '技术人员ID',
-    technician_name  VARCHAR(255) COMMENT '技术人员名称',
-    price            DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '金额',
-    working_hours    DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
-    period_start     DATE           NOT NULL COMMENT '期间开始日',
-    period_end       DATE           NOT NULL COMMENT '期间结束日',
-    remark           TEXT COMMENT '备注',
+    id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+    order_no            VARCHAR(50)    NOT NULL COMMENT '受注单号',
+    person_in_charge    VARCHAR(100)   NOT NULL COMMENT '负责人',
+    person_in_charge_id VARCHAR(100)   NOT NULL COMMENT '负责人id',
+    status              VARCHAR(50)    NOT NULL COMMENT '状态',
+    purchase_id         BIGINT         NULL COMMENT '对应发注ID',
+    project_name        VARCHAR(255)   NOT NULL COMMENT '项目名称',
+    customer_id         BIGINT         NOT NULL COMMENT '客户ID',
+    customer_name       VARCHAR(255)   NOT NULL COMMENT '客户名称',
+    technician_id       BIGINT COMMENT '技术人员ID',
+    technician_name     VARCHAR(255) COMMENT '技术人员名称',
+    price               DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '金额',
+    working_hours       DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
+    period_start        DATE           NOT NULL COMMENT '期间开始日',
+    period_end          DATE           NOT NULL COMMENT '期间结束日',
+    remark              TEXT COMMENT '备注',
 
-    created_by       VARCHAR(100)   NOT NULL COMMENT '创建人',
-    created_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_by       VARCHAR(100) COMMENT '更新人',
-    updated_at       DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted_at       DATETIME       NULL COMMENT '删除时间（逻辑删除）'
+    created_by          VARCHAR(100)   NOT NULL COMMENT '创建人',
+    created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_by          VARCHAR(100) COMMENT '更新人',
+    updated_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted_at          DATETIME       NULL COMMENT '删除时间（逻辑删除）'
 
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='受注表';
@@ -472,8 +474,14 @@ CREATE TABLE sys_settings
   DEFAULT CHARSET = utf8mb4 COMMENT ='系统设置表';
 
 INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at)
-VALUES ('match', '{"cycle_days": 14}', 1, '2026-01-03 17:08:42', 1, '2026-01-04 14:01:59', NULL),
-       ('ai', '{"api_key": "", "mode_type": "local", "model_name": "llama3.2:3b-instruct-q4_K_M"}', 1,
+VALUES ('match', '{
+  "cycle_days": 14
+}', 1, '2026-01-03 17:08:42', 1, '2026-01-04 14:01:59', NULL),
+       ('ai', '{
+         "api_key": "",
+         "mode_type": "local",
+         "model_name": "llama3.2:3b-instruct-q4_K_M"
+       }', 1,
         '2026-01-04 05:31:02', 1, '2026-01-04 05:42:31', NULL);
 
 CREATE TABLE sys_tasks
@@ -498,5 +506,4 @@ CREATE TABLE sys_tasks
     deleted_at  DATETIME     NULL COMMENT '删除时间（软删）'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='定时任务';
-
 

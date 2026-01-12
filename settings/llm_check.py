@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import urllib
 
@@ -7,6 +8,30 @@ from project.api import api_error, api_success
 
 # 检测本地模型
 def check_local_model(model_name):
+    ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1").strip()
+    if ollama_host:
+        try:
+            url = ollama_host.rstrip("/") + "/api/tags"
+            with urllib.request.urlopen(url, timeout=10) as resp:
+                if resp.status != 200:
+                    return api_error("Ollama 接口返回失败")
+                payload = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", "ignore")
+            return api_error(detail or "Ollama 接口返回失败")
+        except urllib.error.URLError as exc:
+            return api_error(str(exc.reason) or "Ollama 接口请求失败")
+        except (ValueError, TypeError):
+            return api_error("Ollama 接口返回无效数据")
+        models = {
+            (item or {}).get("name")
+            for item in (payload or {}).get("models", [])
+        }
+        models.discard(None)
+        if model_name not in models:
+            return api_error("模型不存在，请先下载。")
+        return api_success()
+
     try:
         list_result = subprocess.run(
             ["ollama", "list"],

@@ -24,12 +24,12 @@ services:
     networks:
       - matchsys-net
     environment:
-        DB_NAME: matchSys
-        DB_USER: root
-        DB_PASSWORD: 123456
-        DB_HOST: db
-        DB_PORT: 3306
-
+      DB_NAME: matchSys
+      DB_USER: root
+      DB_PASSWORD: 123456
+      DB_HOST: db
+      DB_PORT: 3306
+      OLLAMA_HOST: http://ollama:11434
 
   nginx:
     image: jef4267/matchsys-nginx:1.0
@@ -42,10 +42,23 @@ services:
     networks:
       - matchsys-net
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - matchsys-net
+    command: >
+      sh -c "ollama serve & sleep 2 && ollama pull llama3.2:3b-instruct-q4_K_M && wait"
+
 volumes:
   mysql_data:
+  ollama_data:
 
 networks:
   matchsys-net:
     name: matchsys-net
-

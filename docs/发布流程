@@ -45,3 +45,7 @@ docker compose up -d
 --强制重建
 docker compose up -d --force-recreate
 
+--因为ollama耗时，所以需要查看
+docker compose logs -f ollama
+docker ps
+docker exec -it ollama ollama list

@@ -1,3 +1,5 @@
+import os
+
 from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -5,12 +7,14 @@ from langchain_core.messages import SystemMessage, HumanMessage
 # ---------------------------
 #  初始化 LLM（建议单例）
 # ---------------------------
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "127.0.0.1").strip() or None
 llm = ChatOllama(
     model="llama3.2:3b-instruct-q4_K_M",
     # model="llama3.1:8b-instruct-q4_K_M",
     # model="gpt-oss:20b",
     # model="phi3:mini",
     temperature=0,
+    base_url=OLLAMA_HOST,
 )
 
 

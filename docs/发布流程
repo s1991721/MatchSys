@@ -54,6 +54,6 @@ docker compose logs -f ollama
 docker ps
 docker exec -it ollama ollama list
 
---单个镜像更新
+--单个镜像更新 --Docker pull 其实比对的是 digest（镜像内容哈希）
 docker compose pull web
 docker compose up -d --no-deps --force-recreate web

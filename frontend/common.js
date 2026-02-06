@@ -1,6 +1,37 @@
 (function () {
     const i18n = window.I18N || null;
     const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
+    const format = (key, vars, fallback) => (
+        i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
+    );
+
+    const resolveLabel = (key, fallback) => {
+        const value = t(key, fallback);
+        return value === key ? fallback : value;
+    };
+
+    const translateApiMessage = (message) => {
+        if (!message || typeof message !== "string") return message;
+        const missingFieldMatch = message.match(/^Missing field:\s*(.+)$/);
+        if (missingFieldMatch) {
+            const rawField = missingFieldMatch[1].trim();
+            const fieldKeyMap = {
+                name: "personnel.field.name",
+                email: "personnel.field.email",
+                birthday: "personnel.field.birthday",
+                user_name: "login.username",
+                password: "login.password",
+            };
+            const fieldKey = fieldKeyMap[rawField];
+            const fieldLabel = fieldKey ? resolveLabel(fieldKey, rawField) : rawField;
+            return format("common.error.missing_field", {field: fieldLabel}, `Missing field: ${fieldLabel}`);
+        }
+        if (message === "Invalid date") {
+            return resolveLabel("common.error.invalid_date", message);
+        }
+        return message;
+    };
+    window.translateApiMessage = translateApiMessage;
     // 接口校验登录
     window.fetchWithAuth = async function (url, options = {}) {
         const mergedOptions = {
@@ -22,7 +53,7 @@
         if (!res.ok) {
             const payload = await res.json().catch(() => ({}));
             const message = payload?.message || `HTTP ${res.status}`;
-            const error = new Error(message);
+            const error = new Error(translateApiMessage(message));
             error.payload = payload;
             throw error;
         }

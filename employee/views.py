@@ -578,6 +578,8 @@ def employees_api(request):
         birthday, error = parse_date(payload.get("birthday"))
         if error:
             return error
+        if not birthday:
+            return api_error("Missing field: birthday")
 
         with transaction.atomic():
             employee = Employee.objects.create(
@@ -596,11 +598,12 @@ def employees_api(request):
                 position_name=(payload.get("position_name") or "").strip() or None,
                 created_by=login_id
             )
+            default_password = birthday.strftime("%Y%m%d")
             UserLogin.objects.create(
                 employee_id=employee.id,
                 employee_name=employee.name,
                 user_name=email,
-                password="123456",
+                password=default_password,
                 created_by=login_id
             )
 

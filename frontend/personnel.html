@@ -798,7 +798,10 @@
         const data = await res.json();
         const responsePayload = normalizeApiResponse(data);
         if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || t("personnel.error.create_failed"));
+            const message = window.translateApiMessage
+                ? window.translateApiMessage(responsePayload.message)
+                : responsePayload.message;
+            throw new Error(message || t("personnel.error.create_failed"));
         }
         return responsePayload.data || {};
     }
@@ -811,7 +814,10 @@
         const data = await res.json();
         const responsePayload = normalizeApiResponse(data);
         if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || t("personnel.error.update_failed"));
+            const message = window.translateApiMessage
+                ? window.translateApiMessage(responsePayload.message)
+                : responsePayload.message;
+            throw new Error(message || t("personnel.error.update_failed"));
         }
         return responsePayload.data || {};
     }
@@ -822,7 +828,10 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!res.ok || !payload.success) {
-                throw new Error(payload.message || t("personnel.error.delete_failed"));
+                const message = window.translateApiMessage
+                    ? window.translateApiMessage(payload.message)
+                    : payload.message;
+                throw new Error(message || t("personnel.error.delete_failed"));
             }
             await fetchEmployees();
         } catch (err) {
@@ -979,6 +988,10 @@
         const payload = buildPayload();
         if (!payload.name) {
             alert(t("personnel.error.name_required"));
+            return;
+        }
+        if (!editingId && !payload.birthday) {
+            alert(t("personnel.error.birthday_required"));
             return;
         }
         try {

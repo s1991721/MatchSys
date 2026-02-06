@@ -15,6 +15,8 @@
             "common.all": "全部",
             "common.select": "请选择",
             "common.invalid_response": "无效响应",
+            "common.error.missing_field": "缺少字段：{field}",
+            "common.error.invalid_date": "日期格式不正确",
             "pagination.prev": "上一页",
             "pagination.next": "下一页",
             "login.title": "系统登录 - IT营业管理系统",
@@ -471,6 +473,7 @@
             "personnel.error.update_failed": "更新失败",
             "personnel.error.delete_failed": "删除失败",
             "personnel.error.name_required": "姓名不能为空",
+            "personnel.error.birthday_required": "生日不能为空",
             "personnel.confirm.delete": "确认删除 {name}？"
             ,
             "profile.title": "个人信息",
@@ -780,6 +783,8 @@
             "common.all": "すべて",
             "common.select": "選択してください",
             "common.invalid_response": "無効なレスポンス",
+            "common.error.missing_field": "必須項目がありません：{field}",
+            "common.error.invalid_date": "日付形式が正しくありません",
             "pagination.prev": "前へ",
             "pagination.next": "次へ",
             "login.title": "ログイン - IT営業管理システム",
@@ -1233,6 +1238,7 @@
             "personnel.error.update_failed": "更新に失敗しました",
             "personnel.error.delete_failed": "削除に失敗しました",
             "personnel.error.name_required": "氏名は必須です",
+            "personnel.error.birthday_required": "生年月日は必須です",
             "personnel.confirm.delete": "{name} を削除しますか？"
             ,
             "profile.title": "プロフィール",

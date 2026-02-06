@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS sys_role
 INSERT INTO sys_role (id, role_name, description, menu_list)
 VALUES (1, '技术者', '公司内技术人员', '[myattendance.html]'),
        (2, '营业', '公司营业部成员',
-        '[home.html,match.html,qiuanjian.html,songxinhistory.html,people.html,attendance.html,myattendance.html,order.html,pay_request.html]'),
+        '[home.html,bpmatch.html,match.html,songxinhistory.html,people.html,attendance.html,myattendance.html,order.html,pay_request.html]'),
        (999, '管理员', '整个系统的管理者', '*');
 
 

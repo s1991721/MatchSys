@@ -76,8 +76,8 @@ CREATE TABLE IF NOT EXISTS sys_menu
 
 INSERT INTO sys_menu (menu_name, menu_html, sort_order)
 VALUES ('主页', 'home.html', 1),
-       ('BP Match', 'match.html', 2),
-       ('社内 Match', 'qiuanjian.html', 3),
+       ('BP Match', 'bpmatch.html', 2),
+       ('社内 Match', 'match.html', 3),
        ('送信历史', 'songxinhistory.html', 4),
        ('技术者管理', 'people.html', 5),
        ('社内人员管理', 'personnel.html', 6),
@@ -89,7 +89,8 @@ VALUES ('主页', 'home.html', 1),
        ('权限管理', 'permission.html', 12),
        ('登录日志', 'login_audit.html', 13),
        ('客户管理', 'customer.html', 14),
-       ('数据分析', 'analysis.html', 15);
+       ('数据分析', 'analysis.html', 15),
+       ('系统设置', 'system_settings.html', 16);
 
 
 CREATE TABLE IF NOT EXISTS sys_role

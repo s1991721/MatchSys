@@ -3,9 +3,18 @@ SET character_set_client = utf8mb4;
 SET character_set_connection = utf8mb4;
 SET character_set_results = utf8mb4;
 
-
+-- 创建业务数据库
 CREATE DATABASE IF NOT EXISTS matchSys DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE matchSys;
+
+-- 创建业务用户（只允许远程连接）
+CREATE USER IF NOT EXISTS 'bpmatch_user'@'%'
+  IDENTIFIED BY 'bpmatch_user_AbCdEfG';
+
+-- 授权
+GRANT ALL PRIVILEGES ON matchSys.* TO 'bpmatch_user'@'%';
+
+FLUSH PRIVILEGES;
 
 # ----------------------------------------------- 登录及权限 -----------------------------------------------
 CREATE TABLE IF NOT EXISTS user_login
@@ -76,8 +85,8 @@ CREATE TABLE IF NOT EXISTS sys_menu
 
 INSERT INTO sys_menu (menu_name, menu_html, sort_order)
 VALUES ('主页', 'home.html', 1),
-       ('BP Match', 'match.html', 2),
-       ('社内 Match', 'qiuanjian.html', 3),
+       ('BP Match', 'bpmatch.html', 2),
+       ('社内 Match', 'match.html', 3),
        ('送信历史', 'songxinhistory.html', 4),
        ('技术者管理', 'people.html', 5),
        ('社内人员管理', 'personnel.html', 6),
@@ -89,7 +98,8 @@ VALUES ('主页', 'home.html', 1),
        ('权限管理', 'permission.html', 12),
        ('登录日志', 'login_audit.html', 13),
        ('客户管理', 'customer.html', 14),
-       ('数据分析', 'analysis.html', 15);
+       ('数据分析', 'analysis.html', 15),
+       ('系统设置', 'system_settings.html', 16);
 
 
 CREATE TABLE IF NOT EXISTS sys_role
@@ -112,7 +122,7 @@ CREATE TABLE IF NOT EXISTS sys_role
 INSERT INTO sys_role (id, role_name, description, menu_list)
 VALUES (1, '技术者', '公司内技术人员', '[myattendance.html]'),
        (2, '营业', '公司营业部成员',
-        '[home.html,match.html,qiuanjian.html,songxinhistory.html,people.html,attendance.html,myattendance.html,order.html,pay_request.html]'),
+        '[home.html,bpmatch.html,match.html,songxinhistory.html,people.html,attendance.html,myattendance.html,order.html,pay_request.html]'),
        (999, '管理员', '整个系统的管理者', '*');
 
 

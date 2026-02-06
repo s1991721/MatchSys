@@ -3,12 +3,21 @@ services:
     image: jef4267/matchsys-mysql:1.0
     container_name: matchsys-mysql
     restart: unless-stopped
+    # 容器内存上限（8G机器建议先给 6G）
+    mem_limit: 3g
+    ports:
+      - "6033:3306"
     environment:
       MYSQL_DATABASE: matchSys
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: YourStrongPassword:123!
       TZ: Asia/Tokyo
     volumes:
       - mysql_data:/var/lib/mysql
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"
     networks:
       - matchsys-net
 
@@ -25,10 +34,10 @@ services:
       - matchsys-net
     environment:
       DB_NAME: matchSys
-      DB_USER: root
-      DB_PASSWORD: 123456
+      DB_USER: bpmatch_user
+      DB_PASSWORD: bpmatch_user_AbCdEfG
       DB_HOST: db
-      DB_PORT: 3306
+      DB_PORT: 6033
       OLLAMA_HOST: http://ollama:11434
 
   nginx:

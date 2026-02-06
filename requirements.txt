@@ -16,6 +16,7 @@ defusedxml==0.7.1
 Django==5.1.1
 django-cors-headers==4.9.0
 docopt==0.6.2
+et_xmlfile==2.0.0
 executing==2.2.1
 fastjsonschema==2.21.2
 google-api-core==2.28.1
@@ -51,6 +52,7 @@ nbconvert==7.16.6
 nbformat==5.10.4
 oauthlib==3.3.1
 ollama==0.6.1
+openpyxl==3.1.5
 orjson==3.11.5
 packaging==25.0
 pandocfilters==1.5.1
@@ -98,5 +100,4 @@ wcwidth==0.2.14
 webencodings==0.5.1
 yarg==0.1.9
 zstandard==0.25.0
-openpyxl==3.1.5
 gunicorn

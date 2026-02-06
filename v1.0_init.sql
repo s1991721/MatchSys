@@ -3,9 +3,18 @@ SET character_set_client = utf8mb4;
 SET character_set_connection = utf8mb4;
 SET character_set_results = utf8mb4;
 
-
+-- 创建业务数据库
 CREATE DATABASE IF NOT EXISTS matchSys DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE matchSys;
+
+-- 创建业务用户（只允许远程连接）
+CREATE USER IF NOT EXISTS 'bpmatch_user'@'%'
+  IDENTIFIED BY 'bpmatch_user_AbCdEfG';
+
+-- 授权
+GRANT ALL PRIVILEGES ON matchSys.* TO 'bpmatch_user'@'%';
+
+FLUSH PRIVILEGES;
 
 # ----------------------------------------------- 登录及权限 -----------------------------------------------
 CREATE TABLE IF NOT EXISTS user_login

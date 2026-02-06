@@ -3,9 +3,17 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
+    <style>
+        .c-panel-title-actions {
+            width: 100%;
+        }
+        .c-panel-title-spacer {
+            flex: 1;
+        }
+    </style>
     <title data-i18n="attendance.title">考勤管理</title>
 </head>
 <body class="c-form-page">
@@ -88,15 +96,30 @@
     const pageSummary = document.getElementById("attendance-page-summary");
     const filters = { name: "", month: "" };
 
-    const setDetailContent = (wrapper, title, content) => {
+    const renderDetailHeader = (name, employeeId) => {
+        const title = format("attendance.detail.title", { name: name || "" });
+        return `
+            <div class="c-panel-title c-panel-title-actions">
+                <span>${title}</span>
+                <span class="c-panel-title-spacer"></span>
+                <button class="c-btn c-btn-ghost c-btn-sm js-attendance-export" type="button"
+                        data-employee-id="${employeeId || ""}"
+                        data-employee-name="${name || ""}">
+                    ${t("attendance.action.export")}
+                </button>
+            </div>
+        `;
+    };
+
+    const setDetailContent = (wrapper, headerHtml, content) => {
         wrapper.innerHTML = `
-            <div class="c-panel-title">${title}</div>
+            ${headerHtml}
             ${content}
         `;
     };
 
-    const setDetailMessage = (wrapper, title, message) => {
-        setDetailContent(wrapper, title, `<div class="c-empty">${message}</div>`);
+    const setDetailMessage = (wrapper, headerHtml, message) => {
+        setDetailContent(wrapper, headerHtml, `<div class="c-empty">${message}</div>`);
     };
 
     const renderSummary = () => {
@@ -139,7 +162,7 @@
             detailRow.innerHTML = `
                 <td colspan="6">
                     <div class="c-card-compact" data-detail-wrapper>
-                        <div class="c-panel-title">${format("attendance.detail.title", { name: person.name })}</div>
+                        ${renderDetailHeader(person.name, person.employee_id)}
                         ${renderDetailTable([])}
                     </div>
                 </td>
@@ -224,25 +247,64 @@
             return;
         }
 
-        setDetailMessage(wrapper, t("common.loading"), t("attendance.detail.loading"));
+        const fallbackName = detailRow.previousElementSibling?.dataset.name || "";
+        setDetailMessage(wrapper, renderDetailHeader(fallbackName, employeeId), t("attendance.detail.loading"));
 
         try {
             const response = await fetchWithAuth(url, { method: "GET" });
             const data = await response.json();
             const payload = normalizeApiResponse(data);
             if (!response.ok || !payload.success) {
-                setDetailMessage(wrapper, t("attendance.detail.failed"), payload.message || t("attendance.detail.retry"));
+                setDetailMessage(
+                    wrapper,
+                    renderDetailHeader(fallbackName, employeeId),
+                    payload.message || t("attendance.detail.retry")
+                );
                 return;
             }
 
             const result = payload.data || {};
-            const name = result.employee?.name || detailRow.previousElementSibling?.dataset.name || "";
+            const name = result.employee?.name || fallbackName;
             const details = result.details || [];
-            setDetailContent(wrapper, format("attendance.detail.title", { name }), renderDetailTable(details));
+            setDetailContent(wrapper, renderDetailHeader(name, employeeId), renderDetailTable(details));
         } catch (error) {
-            setDetailMessage(wrapper, t("attendance.detail.failed"), t("attendance.detail.retry"));
+            setDetailMessage(wrapper, renderDetailHeader(fallbackName, employeeId), t("attendance.detail.retry"));
         }
     }
+
+    const exportAttendance = async (employeeId, name) => {
+        const params = createParams([
+            ["month", filters.month]
+        ]);
+        const url = buildUrl(`/api/attendance/${employeeId}/export`, params);
+        try {
+            const response = await fetchWithAuth(url, { method: "GET" });
+            const blob = await response.blob();
+            const safeName = (name || "attendance").replace(/[\\\\/:*?\"<>|]/g, "_");
+            const monthLabel = filters.month || "";
+            let filename = `${safeName}_${monthLabel || "month"}.xlsx`;
+            const disposition = response.headers.get("Content-Disposition") || "";
+            const filenameStarMatch = disposition.match(/filename\\*=(?:UTF-8'')?([^;]+)/i);
+            const filenameMatch = disposition.match(/filename=\"?([^\";]+)\"?/i);
+            if (filenameStarMatch && filenameStarMatch[1]) {
+                filename = decodeURIComponent(filenameStarMatch[1]);
+            } else if (filenameMatch && filenameMatch[1]) {
+                filename = filenameMatch[1];
+            }
+            filename = filename.replace(/^\"|\"$/g, "").trim();
+            filename = filename.replace(/^_+|_+$/g, "");
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(blobUrl);
+        } catch (error) {
+            alert(error.message || t("attendance.export.failed"));
+        }
+    };
 
     const attachRowEvents = () => {
         summaryBody.querySelectorAll(".summary-row").forEach(row => {
@@ -319,6 +381,13 @@
 
     applyBtn.addEventListener("click", handleFilterApply);
     resetBtn.addEventListener("click", resetFilters);
+    summaryBody.addEventListener("click", (event) => {
+        const exportBtn = event.target.closest(".js-attendance-export");
+        if (!exportBtn) return;
+        event.preventDefault();
+        event.stopPropagation();
+        exportAttendance(exportBtn.dataset.employeeId, exportBtn.dataset.employeeName);
+    });
 
     window.bindPagination(pagination, (value) => {
         if (!value) return;

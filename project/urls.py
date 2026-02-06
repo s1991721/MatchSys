@@ -29,6 +29,7 @@ from attendance.views import (
     attendance_record_today_api,
     attendance_detail_api,
     attendance_summary_api,
+    attendance_export_api,
     my_attendance_summary_api,
     my_attendance_detail_api,
 )
@@ -176,6 +177,7 @@ urlpatterns = [
     path("api/attendance/record/today", attendance_record_today_api, name="attendance-record-today"),
     path("api/attendance/summary", attendance_summary_api, name="attendance-summary"),
     path("api/attendance/<int:employee_id>/detail", attendance_detail_api, name="attendance-detail"),
+    path("api/attendance/<int:employee_id>/export", attendance_export_api, name="attendance-export"),
     path("api/my-attendance-summary", my_attendance_summary_api, name="my-attendance-summary"),
     path("api/my-attendance-detail", my_attendance_detail_api, name="my-attendance-detail"),
     # -------------------------------bpmatch API-------------------------------

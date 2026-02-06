@@ -1,5 +1,9 @@
 from datetime import datetime, time
+import os
+from urllib.parse import quote
 
+from django.conf import settings
+from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
@@ -8,6 +12,7 @@ from employee.models import Employee
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, parse_time_value, weekday_label, is_workday, count_workdays
 from .models import AttendancePolicy, get_monthly_attendance_models
+from .exporters import export_kintai_xlsx, build_year_template
 
 
 @csrf_exempt
@@ -501,3 +506,78 @@ def attendance_detail_api(request, employee_id):
         "details": details,
     }
     return api_success(data=response_payload)
+
+
+@require_GET
+# employee_id员工在month月的考勤导出
+def attendance_export_api(request, employee_id):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error("Unauthorized", status=401)
+
+    target_month = (request.GET.get("month") or "").strip()
+    if not target_month:
+        return api_error("Missing month")
+
+    try:
+        target_date = datetime.strptime(target_month, "%Y-%m").date()
+    except ValueError:
+        return api_error("Invalid date")
+
+    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
+    if not employee:
+        return api_error("Employee not found", status=404)
+
+    record_model = get_monthly_attendance_models(target_date)[1]
+    records = record_model.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).order_by("punch_date")
+
+    export_records = [
+        {
+            "date": record.punch_date.isoformat(),
+            "end_time": record.end_time.strftime("%H:%M") if record.end_time else "",
+        }
+        for record in records
+    ]
+
+    base_template_path = os.path.join(settings.BASE_DIR, "attendance", "templates", "kintai_template.xlsx")
+    year_template_filename = f"kintai_{target_date.year}.xlsx"
+    template_path = os.path.join(settings.BASE_DIR, "attendance", "templates", year_template_filename)
+    if not os.path.exists(template_path):
+        try:
+            build_year_template(base_template_path, template_path, target_date.year)
+        except Exception:
+            return api_error("年模板生成失败", status=500)
+    try:
+        output = export_kintai_xlsx(
+            template_path,
+            target_date.year,
+            target_date.month,
+            export_records,
+            employee_name=employee.name,
+        )
+    except FileNotFoundError:
+        return api_error("Template not found", status=500)
+    except KeyError:
+        return api_error("Template sheet not found", status=500)
+    except Exception:
+        return api_error("Export failed", status=500)
+
+    raw_name = (employee.name or "").strip().strip("_")
+    compact_name = "".join(raw_name.split())
+    safe_name = (compact_name or f"{employee.id}").replace("/", "_").replace("\\", "_").strip("_")
+    ym = target_date.strftime("%Y-%m")
+    safe_filename = f"{safe_name}_{ym}.xlsx"
+    display_base = (raw_name or str(employee.id)).strip("_")
+    display_filename = f"{display_base}_{ym}.xlsx"
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = (
+        f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{quote(display_filename)}"
+    )
+    return response
+

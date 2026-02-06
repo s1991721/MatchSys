@@ -129,7 +129,7 @@
                     const data = await res.json();
                     const payload = normalizeApiResponse(data);
                     if (!res.ok || !payload.success) {
-                        throw new Error(payload.message || t("login.failed"));
+                        throw new Error(t("login.failed"));
                     }
                     const loginData = payload.data || {};
                     const roleId = loginData.role_id ?? loginData.roleId ?? "";
@@ -203,7 +203,7 @@
                     window.location.href = next.toString();
                 } catch (err) {
                     if (errorBox) {
-                        errorBox.textContent = err.message || t("login.failed");
+                    errorBox.textContent = t("login.failed");
                         errorBox.classList.remove("hidden");
                     }
                 } finally {

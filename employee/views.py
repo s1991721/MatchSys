@@ -197,9 +197,18 @@ def employee_detail_api(request, employee_id):
     if request.method == "DELETE":
         login_id = request.session.get("employee_id")
         if login_id:
-            employee.deleted_at = timezone.now()
+            deleted_at = timezone.now()
+            employee.deleted_at = deleted_at
             employee.updated_by = login_id
-            employee.save()
+            employee.save(update_fields=["deleted_at", "updated_by", "updated_at"])
+            UserLogin.objects.filter(
+                employee_id=employee.id,
+                deleted_at__isnull=True,
+            ).update(
+                deleted_at=deleted_at,
+                updated_by=login_id,
+                updated_at=deleted_at,
+            )
             return api_success()
         return api_error(status=401, message="请先登录")
 

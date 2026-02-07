@@ -37,7 +37,7 @@ services:
       DB_USER: bpmatch_user
       DB_PASSWORD: bpmatch_user_AbCdEfG
       DB_HOST: db
-      DB_PORT: 6033
+      DB_PORT: 3306
       OLLAMA_HOST: http://ollama:11434
 
   nginx:

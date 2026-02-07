@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS user_login
 
 INSERT INTO user_login (employee_id, employee_name, user_name, password, role_id, menu_list, created_by, created_at,
                         updated_by, updated_at, deleted_at)
-VALUES (1, '系统管理员', 'admin', 'admin',
+VALUES (0, '系统管理员', 'admin', 'admin',
         999, '["*"]', NULL, NOW(), NULL, NOW(), NULL);
 
 

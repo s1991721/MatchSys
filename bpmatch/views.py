@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import timedelta
 
 from django.utils import timezone
@@ -392,11 +393,38 @@ def extract_project_detail(request):
     except Exception as exc:
         return api_error(str(exc), status=500)
 
-    try:
-        parsed = json.loads(llm_result)
-    except Exception as exc:
-        print(f"[extract_qiuren_detail] 解析 LLM JSON 失败: {exc}")
-        parsed = {}
+    def _safe_parse_llm_json(raw_text: str) -> dict:
+        """
+        尝试解析 LLM 返回的 JSON。
+        兜底策略：
+        1) 直接 json.loads
+        2) 提取首个 { ... } 片段再解析
+        3) 失败则返回 {}
+        """
+        if not raw_text:
+            return {}
+        text = str(raw_text).strip()
+        if not text:
+            return {}
+        try:
+            parsed_obj = json.loads(text)
+            return parsed_obj if isinstance(parsed_obj, dict) else {}
+        except Exception:
+            pass
+
+        # 尝试从文本中提取第一个 JSON 对象
+        match = re.search(r"\{.*\}", text, flags=re.S)
+        if match:
+            try:
+                parsed_obj = json.loads(match.group(0))
+                return parsed_obj if isinstance(parsed_obj, dict) else {}
+            except Exception:
+                return {}
+        return {}
+
+    parsed = _safe_parse_llm_json(llm_result)
+    if not parsed:
+        print("[extract_qiuren_detail] 解析 LLM JSON 失败或为空")
 
     if not isinstance(parsed, dict):
         parsed = {}

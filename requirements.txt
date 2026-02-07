@@ -25,6 +25,7 @@ google-auth==2.41.1
 google-auth-httplib2==0.3.0
 google-auth-oauthlib==1.2.3
 googleapis-common-protos==1.72.0
+gunicorn==25.0.2
 h11==0.16.0
 httpcore==1.0.9
 httplib2==0.31.0
@@ -100,4 +101,3 @@ wcwidth==0.2.14
 webencodings==0.5.1
 yarg==0.1.9
 zstandard==0.25.0
-gunicorn

@@ -15,6 +15,7 @@ llm = ChatOllama(
     # model="phi3:mini",
     temperature=0,
     base_url=OLLAMA_HOST,
+    client_kwargs={"timeout": 600},
 )
 
 

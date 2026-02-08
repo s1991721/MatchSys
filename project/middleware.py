@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.shortcuts import redirect
+from django.http import HttpResponse
 
 from project.api import api_error
 
@@ -14,7 +14,11 @@ class SessionLoginRequiredMiddleware:
         path = request.path
         if self._should_skip(path) or request.session.get("employee_id"):
             return self.get_response(request)
-        return redirect("/login.html")
+        return HttpResponse(
+            "<!doctype html><html><head><meta charset='utf-8'></head>"
+            "<body><script>window.top.location.href='login.html';</script></body></html>",
+            status=401,
+        )
 
     @staticmethod
     def _should_skip(path: str) -> bool:

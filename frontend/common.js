@@ -42,7 +42,7 @@
         };
         const res = await fetch(url, mergedOptions);
         if (res.status === 401) {
-            const target = "/login.html";
+            const target = "login.html";
             if (window.top && window.top !== window) {
                 window.top.location.href = target;
             } else {

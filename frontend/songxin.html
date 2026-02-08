@@ -101,14 +101,7 @@
                 i18n.init();
                 i18n.apply();
             }
-            const fetchWithAuth = async (url, options = {}) => {
-                const res = await fetch(url, options);
-                if (res.status === 401) {
-                    window.location.href = '/login.html';
-                    throw new Error('Unauthorized');
-                }
-                return res;
-            };
+            const fetchWithAuth = window.fetchWithAuth;
             const attachments = [];
             const selectionKey = 'matchSelection';
             const matchMailType = 2;

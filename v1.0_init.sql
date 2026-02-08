@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS user_login
 
 INSERT INTO user_login (employee_id, employee_name, user_name, password, role_id, menu_list, created_by, created_at,
                         updated_by, updated_at, deleted_at)
-VALUES (0, '系统管理员', 'admin', 'admin',
+VALUES (1, '系统管理员', 'admin', 'admin',
         999, '["*"]', NULL, NOW(), NULL, NOW(), NULL);
 
 
@@ -162,6 +162,9 @@ CREATE TABLE IF NOT EXISTS employee
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
     COMMENT ='员工表';
+
+INSERT INTO employee (id, name, department_name, position_name)
+VALUES (1, '管理员', '系统管理', '管理员');
 
 
 CREATE TABLE IF NOT EXISTS technician
@@ -516,4 +519,3 @@ CREATE TABLE sys_tasks
     deleted_at  DATETIME     NULL COMMENT '删除时间（软删）'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='定时任务';
-

@@ -163,26 +163,6 @@ def logout_api(request):
 @require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
 # 获取用户详情、更新用户信息、删除用户
 def employee_detail_api(request, employee_id):
-    roid = request.session.get("role_id")
-    if request.method == "GET" and roid == 999:
-        item = {
-            "id": employee_id,
-            "name": "管理员",
-            "gender": None,
-            "birthday": "",
-            "department_name": "系统管理",
-            "position_name": "管理员",
-            "phone": "",
-            "email": "",
-            "address": "",
-            "emergency_contact_name": "",
-            "emergency_contact_phone": "",
-            "emergency_contact_relationship": "",
-            "hire_date": "",
-            "leave_date": "",
-        }
-        return api_success(data={"item": item})
-
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
         return api_error(

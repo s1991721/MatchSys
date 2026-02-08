@@ -111,9 +111,10 @@ def _month_entry_stats(start_of_month, start_of_next_month, start_of_last_month)
 def _monthly_sales_techs(start_of_next_month):
     """查询当月营业技术者列表。"""
     monthly_sales_techs = Technician.objects.filter(
-        spot_contract_deadline__isnull=False,
-        spot_contract_deadline__lt=start_of_next_month,
         business_status__in=[0, 1, 2],
+    ).filter(
+        Q(spot_contract_deadline__lt=start_of_next_month)
+        | Q(spot_contract_deadline__isnull=True)
     ).order_by("spot_contract_deadline", "employee_id")
     return [
         {

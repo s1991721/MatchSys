@@ -146,6 +146,13 @@
   const roleDialog = document.getElementById("role-dialog");
   const roleDialogTitle = document.getElementById("role-dialog-title");
   const roleDialogBody = document.getElementById("role-dialog-body");
+
+  [menuDialog, roleDialog].forEach((dialog) => {
+    if (!dialog) return;
+    dialog.addEventListener("cancel", (event) => {
+      event.preventDefault();
+    });
+  });
   const roleSaveBtn = document.getElementById("role-save");
   const roleMasterCheck = document.getElementById("role-master-check");
   const roleSelectedCount = document.getElementById("role-selected-count");

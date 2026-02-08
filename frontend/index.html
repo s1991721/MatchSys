@@ -356,10 +356,8 @@
         noticeClose.addEventListener("click", closeNoticeDialog);
       }
       if (noticeDialog) {
-        noticeDialog.addEventListener("click", (event) => {
-          if (event.target === noticeDialog) {
-            closeNoticeDialog();
-          }
+        noticeDialog.addEventListener("cancel", (event) => {
+          event.preventDefault();
         });
       }
 

@@ -933,9 +933,6 @@
         closeModal();
     });
     permissionClose.addEventListener("click", closePermissionModal);
-    permissionModal.addEventListener("click", (e) => {
-        if (e.target === permissionModal) closePermissionModal();
-    });
     permissionRoleList.addEventListener("change", (event) => {
         const target = event.target;
         if (!target || target.type !== "radio") return;
@@ -977,12 +974,6 @@
         }
     });
     attendanceSettingClose.addEventListener("click", closeAttendanceSettingModal);
-    attendanceSettingModal.addEventListener("click", (e) => {
-        if (e.target === attendanceSettingModal) closeAttendanceSettingModal();
-    });
-    employeeModal.addEventListener("click", (e) => {
-        if (e.target === employeeModal) closeModal();
-    });
     employeeForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const payload = buildPayload();

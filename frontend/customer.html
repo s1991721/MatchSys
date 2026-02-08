@@ -265,6 +265,12 @@
     const bulkMailRecipients = document.getElementById("bulk-mail-recipients");
     const bulkMailSelected = document.getElementById("bulk-mail-selected");
     const bulkMailSend = document.getElementById("bulk-mail-send");
+    [editDialog, bulkMailDialog].forEach((dialog) => {
+        if (!dialog) return;
+        dialog.addEventListener("cancel", (event) => {
+            event.preventDefault();
+        });
+    });
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),

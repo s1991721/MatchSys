@@ -377,6 +377,12 @@
     const payStatusSelect = document.getElementById("pay-status-select");
     const payRequestTable = document.querySelector(".pay-request-table");
 
+    if (createPayDialog) {
+      createPayDialog.addEventListener("cancel", (event) => {
+        event.preventDefault();
+      });
+    }
+
     const setDialogReadonly = (readonly) => {
       if (!createPayDialog) return;
       const fields = createPayDialog.querySelectorAll("input, select, textarea");

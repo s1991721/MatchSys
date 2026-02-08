@@ -578,16 +578,6 @@
       cancelDeleteButton.addEventListener("click", closeDeleteModal);
     }
 
-    if (deleteModal) {
-      deleteModal.addEventListener("click", (event) => {
-        const target = event.target;
-        if (target instanceof HTMLElement && target.classList.contains("c-modal-backdrop")) {
-          closeDeleteModal();
-        }
-      });
-    }
-
-
     const sendmsgFormHtml = (index, config) => `
       <li class="config-item">
         <div class="config-head">

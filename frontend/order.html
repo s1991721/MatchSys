@@ -391,6 +391,13 @@
         const issueCreateSubmit = document.getElementById("issue-create-submit");
         const acceptCreateSubmit = document.getElementById("accept-create-submit");
         const detailDialog = document.getElementById("detailDialog");
+
+        [createDialogIssue, createDialogAccept, detailDialog].forEach((dialog) => {
+            if (!dialog) return;
+            dialog.addEventListener("cancel", (event) => {
+                event.preventDefault();
+            });
+        });
         const detailTitle = document.getElementById("detailTitle");
         const detailSubtitle = document.getElementById("detailSubtitle");
         const detailSave = document.getElementById("detailSave");

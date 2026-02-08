@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS employee
     COMMENT ='员工表';
 
 INSERT INTO employee (id, name, department_name, position_name)
-VALUES (1, '管理员', '系统管理', '管理员');
+VALUES (1, '系统管理员', '系统管理', '管理员');
 
 
 CREATE TABLE IF NOT EXISTS technician

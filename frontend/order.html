@@ -900,17 +900,18 @@
             });
         }
 
-        const fetchCustomerOptions = (inputEl, listEl, map) => {
+        const fetchCustomerOptions = (inputEl, listEl, map, options = {}) => {
             const keyword = inputEl.value.trim();
-            if (!keyword) {
+            const useDefault = options.useDefault === true;
+            if (!keyword && !useDefault) {
                 listEl.innerHTML = "";
                 map.clear();
                 return;
             }
             const params = new URLSearchParams();
-            params.append("company_name", keyword);
+            if (keyword) params.append("company_name", keyword);
             params.append("page", "1");
-            params.append("page_size", "10");
+            params.append("page_size", keyword ? "10" : "5");
             fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
@@ -925,12 +926,17 @@
                 });
         }
 
-        const bindCustomerLookup = (inputEl, idEl, listEl, map) => {
+        const bindCustomerLookup = (inputEl, idEl, listEl, map, options = {}) => {
             if (!inputEl || !idEl || !listEl) return;
             inputEl.addEventListener("input", () => {
                 fetchCustomerOptions(inputEl, listEl, map);
                 idEl.value = "";
             });
+            if (options.enableDefault) {
+                inputEl.addEventListener("focus", () => {
+                    fetchCustomerOptions(inputEl, listEl, map, { useDefault: true });
+                });
+            }
             inputEl.addEventListener("change", () => {
                 const id = map.get(inputEl.value.trim());
                 idEl.value = id ? String(id) : "";
@@ -992,15 +998,17 @@
             });
         }
 
-        const fetchTechnicianOptions = (inputEl, listEl, map) => {
+        const fetchTechnicianOptions = (inputEl, listEl, map, options = {}) => {
             const keyword = inputEl.value.trim();
-            if (!keyword) {
+            const useDefault = options.useDefault === true;
+            if (!keyword && !useDefault) {
                 listEl.innerHTML = "";
                 map.clear();
                 return;
             }
             const params = new URLSearchParams();
-            params.append("keyword", keyword);
+            if (keyword) params.append("keyword", keyword);
+            params.append("page_size", keyword ? "10" : "5");
             fetchWithAuth(`/api/technicians?${params.toString()}`, { method: "GET" })
                 .then((response) => response.json())
                 .then((data) => {
@@ -1015,12 +1023,17 @@
                 });
         }
 
-        const bindTechnicianLookup = (inputEl, idEl, listEl, map) => {
+        const bindTechnicianLookup = (inputEl, idEl, listEl, map, options = {}) => {
             if (!inputEl || !idEl || !listEl) return;
             inputEl.addEventListener("input", () => {
                 fetchTechnicianOptions(inputEl, listEl, map);
                 idEl.value = "";
             });
+            if (options.enableDefault) {
+                inputEl.addEventListener("focus", () => {
+                    fetchTechnicianOptions(inputEl, listEl, map, { useDefault: true });
+                });
+            }
             inputEl.addEventListener("change", () => {
                 const id = map.get(inputEl.value.trim());
                 idEl.value = id ? String(id) : "";
@@ -1113,11 +1126,11 @@
         });
 
         bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap);
-        bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap);
+        bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap, { enableDefault: true });
         bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap);
         loadOwnerSelectOptions(issueForm.owner);
         loadOwnerSelectOptions(acceptForm.owner);
-        bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap);
+        bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap, { enableDefault: true });
 
         const refreshI18n = () => {
             if (i18n) {

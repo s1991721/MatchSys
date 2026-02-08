@@ -802,7 +802,38 @@
             };
         }
 
+        const showMissingField = (label, fieldEl) => {
+            alert(format("common.error.missing_field", { field: label }, `缺少字段：${label}`));
+            if (fieldEl && typeof fieldEl.focus === "function") {
+                fieldEl.focus();
+            }
+        };
+
+        const validateAcceptForm = () => {
+            const orderNo = acceptForm.orderNo.value.trim();
+            if (!orderNo) return showMissingField(t("order.field.order_no"), acceptForm.orderNo), false;
+            const project = acceptForm.projectName.value.trim();
+            if (!project) return showMissingField(t("order.field.project"), acceptForm.projectName), false;
+            const customer = acceptForm.customerName.value.trim();
+            if (!customer) return showMissingField(t("order.field.customer_accept"), acceptForm.customerName), false;
+            const technician = acceptForm.technicianName.value.trim();
+            if (!technician) return showMissingField(t("order.field.technician"), acceptForm.technicianName), false;
+            const status = acceptForm.status.value;
+            if (!status || status === "请选择状态") return showMissingField(t("order.field.status"), acceptForm.status), false;
+            const price = acceptForm.price.value.trim();
+            if (!price) return showMissingField(t("order.field.price"), acceptForm.price), false;
+            const hours = acceptForm.hours.value.trim();
+            if (!hours) return showMissingField(t("order.field.hours"), acceptForm.hours), false;
+            const start = acceptForm.start.value;
+            const end = acceptForm.end.value;
+            if (!start || !end) return showMissingField(t("order.field.period"), acceptForm.start), false;
+            const owner = readOwnerSelect(acceptForm.owner);
+            if (!owner.id) return showMissingField(t("order.field.owner"), acceptForm.owner), false;
+            return true;
+        };
+
         const submitCreate = (view) => {
+            if (view === "accept" && !validateAcceptForm()) return;
             const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
             const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
             fetchWithAuth(url, {

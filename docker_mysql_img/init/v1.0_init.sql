@@ -163,6 +163,9 @@ CREATE TABLE IF NOT EXISTS employee
   DEFAULT CHARSET = utf8mb4
     COMMENT ='员工表';
 
+INSERT INTO employee (id, name, department_name, position_name)
+VALUES (1, '管理员', '系统管理', '管理员');
+
 
 CREATE TABLE IF NOT EXISTS technician
 (
@@ -516,4 +519,3 @@ CREATE TABLE sys_tasks
     deleted_at  DATETIME     NULL COMMENT '删除时间（软删）'
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='定时任务';
-

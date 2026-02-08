@@ -584,6 +584,7 @@ def employees_api(request):
                 employee_name=employee.name,
                 user_name=email,
                 password=default_password,
+                menu_list="[]",
                 created_by=login_id
             )
 

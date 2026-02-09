@@ -33,7 +33,7 @@ class SessionLoginRequiredMiddleware:
             "/i18n.js",
         }:
             return True
-        if path.startswith(("/api/", "/admin/", "/static/")):
+        if path.startswith(("/admin/", "/static/")):
             return True
         return False
 

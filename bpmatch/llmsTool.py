@@ -1,22 +1,130 @@
+import json
 import os
+import ssl
+import urllib.request
 
 from langchain_ollama import ChatOllama
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
+from settings.models import SysSettings
 
 
 # ---------------------------
-#  初始化 LLM（建议单例）
+#  LLM Router (local / cloud)
 # ---------------------------
-OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "127.0.0.1").strip() or None
-llm = ChatOllama(
-    model="llama3.2:3b-instruct-q4_K_M",
-    # model="llama3.1:8b-instruct-q4_K_M",
-    # model="gpt-oss:20b",
-    # model="phi3:mini",
-    temperature=0,
-    base_url=OLLAMA_HOST,
-    client_kwargs={"timeout": 600},
-)
+DEFAULT_LOCAL_MODEL = "llama3.2:3b-instruct-q4_K_M"
+DEFAULT_TEMPERATURE = 0
+DEFAULT_TIMEOUT = 600
+DEFAULT_OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+
+_LLM_CACHE = {"config": None, "client": None}
+
+
+class _SimpleMessage:
+    def __init__(self, content: str):
+        self.content = content
+
+
+def _build_ssl_context():
+    verify = os.environ.get("OPENAI_SSL_VERIFY", "1").strip().lower()
+    if verify in {"0", "false", "no"}:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
+
+
+def _load_ai_settings():
+    record = SysSettings.objects.filter(name="ai", deleted_at__isnull=True).first()
+    if not record or not isinstance(record.settings, dict):
+        return {"model_type": "local", "model_name": "", "api_key": ""}
+    return record.settings
+
+
+def _to_openai_messages(messages):
+    converted = []
+    for msg in messages:
+        role = getattr(msg, "type", None) or "user"
+        if role == "human":
+            role = "user"
+        elif role == "ai":
+            role = "assistant"
+        converted.append({"role": role, "content": msg.content})
+    return converted
+
+
+class CloudChatOpenAI:
+    def __init__(self, model: str, api_key: str, base_url: str):
+        self.model = model
+        self.api_key = api_key
+        self.base_url = base_url
+
+    def invoke(self, messages):
+        payload = {
+            "model": self.model,
+            "messages": _to_openai_messages(messages),
+            "temperature": DEFAULT_TEMPERATURE,
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            self.base_url,
+            data=data,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(
+            req,
+            timeout=DEFAULT_TIMEOUT,
+            context=_build_ssl_context(),
+        ) as resp:
+            raw = resp.read().decode("utf-8", "ignore")
+        parsed = json.loads(raw or "{}")
+        if "error" in parsed:
+            message = (parsed.get("error") or {}).get("message") or "OpenAI error"
+            raise RuntimeError(message)
+        content = ""
+        choices = parsed.get("choices") or []
+        if choices:
+            content = ((choices[0] or {}).get("message") or {}).get("content") or ""
+        return _SimpleMessage(content=content)
+
+
+def _get_llm():
+    settings_payload = _load_ai_settings()
+    model_type = settings_payload.get("model_type") or "local"
+    model_name = (settings_payload.get("model_name") or "").strip()
+    api_key = (settings_payload.get("api_key") or "").strip()
+
+    ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1").strip() or None
+    openai_url = (os.environ.get("OPENAI_BASE_URL") or DEFAULT_OPENAI_URL).strip()
+
+    cache_key = (model_type, model_name, api_key, ollama_host, openai_url)
+    if _LLM_CACHE["config"] == cache_key and _LLM_CACHE["client"] is not None:
+        return _LLM_CACHE["client"]
+
+    if model_type == "cloud":
+        if not model_name or not api_key:
+            raise RuntimeError("Cloud model requires model_name and api_key")
+        client = CloudChatOpenAI(model=model_name, api_key=api_key, base_url=openai_url)
+    else:
+        client = ChatOllama(
+            model=model_name or DEFAULT_LOCAL_MODEL,
+            temperature=DEFAULT_TEMPERATURE,
+            base_url=ollama_host,
+            client_kwargs={"timeout": DEFAULT_TIMEOUT},
+        )
+
+    _LLM_CACHE["config"] = cache_key
+    _LLM_CACHE["client"] = client
+    return client
 
 
 # ---------------------------
@@ -70,7 +178,7 @@ def title_analysis(text: str) -> str:
         HumanMessage(content=text),
     ]
 
-    ai_msg = llm.invoke(messages)
+    ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
 
 
@@ -163,7 +271,7 @@ def qiuren_detail_analysis(text: str) -> str:
         ),
         HumanMessage(content=text),
     ]
-    ai_msg = llm.invoke(messages)
+    ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
 
 
@@ -290,7 +398,7 @@ def qiuanjian_detail_analysis(text: str) -> str:
         ),
         HumanMessage(content=text),
     ]
-    ai_msg = llm.invoke(messages)
+    ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
 
 
@@ -412,7 +520,7 @@ def extract_qiuren_detail(text: str) -> str:
         HumanMessage(content=text),
     ]
 
-    ai_msg = llm.invoke(messages)
+    ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
 
 

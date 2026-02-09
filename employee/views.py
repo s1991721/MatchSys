@@ -440,6 +440,9 @@ def login_audit_api(request):
 
     items = []
     for row in qs[offset:offset + page_size]:
+        created_at = ""
+        if row.created_at:
+            created_at = timezone.localtime(row.created_at).strftime("%Y-%m-%d %H:%M:%S")
         items.append({
             "id": row.id,
             "employee_id": row.employee_id,
@@ -448,7 +451,7 @@ def login_audit_api(request):
             "reason": row.reason,
             "ip_address": row.ip_address,
             "user_agent": row.user_agent,
-            "created_at": row.created_at.isoformat() if row.created_at else "",
+            "created_at": created_at,
         })
 
     return api_paginated(

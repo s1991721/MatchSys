@@ -139,7 +139,7 @@
                 const reason = row.reason || "-";
                 const ua = row.user_agent || "-";
                 const uaText = truncate(ua, 80);
-                const timeText = row.created_at ? window.formatDate(row.created_at) + " " + new Date(row.created_at).toLocaleTimeString() : "";
+                const timeText = row.created_at || "";
                 return `
                     <tr>
                         <td>${timeText}</td>

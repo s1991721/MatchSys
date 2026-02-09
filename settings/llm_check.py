@@ -1,9 +1,25 @@
 import json
 import os
+import ssl
 import subprocess
 import urllib
 
 from project.api import api_error, api_success
+
+
+def _build_ssl_context():
+    verify = os.environ.get("OPENAI_SSL_VERIFY", "1").strip().lower()
+    if verify in {"0", "false", "no"}:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        return ctx
+    try:
+        import certifi
+
+        return ssl.create_default_context(cafile=certifi.where())
+    except Exception:
+        return ssl.create_default_context()
 
 
 # 检测本地模型
@@ -77,10 +93,14 @@ def check_cloud_model(model_name, api_key):
             },
             method="POST",
         )
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(
+            req,
+            timeout=20,
+            context=_build_ssl_context(),
+        ) as resp:
             if resp.status != 200:
                 return api_error("OpenAI 接口返回失败")
-            _ = resp.read()
+            return api_success()
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "ignore")
         return api_error(detail or "OpenAI 接口返回失败")

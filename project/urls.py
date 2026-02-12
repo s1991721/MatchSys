@@ -79,6 +79,8 @@ from permission.views import (
     role_detail_api,
 )
 from settings.views import (
+    activation_code_api,
+    activation_status_api,
     sys_settings_ai_test_api,
     sys_settings_gmail_test_api,
     sys_settings_sendmsg_test_api,
@@ -220,4 +222,6 @@ urlpatterns = [
     path("api/time-to-claen", time_to_clean, name="time_to_clean"),
     path("api/time-to-backup", time_to_backup, name="time_to_backup"),
     path("api/time-to-hello", time_to_hello, name="time_to_hello"),
+    path("api/activation", activation_code_api, name="activation-code"),
+    path("api/activation/status", activation_status_api, name="activation-status"),
 ]

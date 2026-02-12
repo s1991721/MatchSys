@@ -33,6 +33,23 @@
                 <input id="password" type="password" name="password" required>
             </div>
         </div>
+        <div id="activationBox" class="hidden activation-panel">
+            <div class="activation-header">
+                <span class="activation-title" data-i18n="login.activation">激活码</span>
+                <span class="activation-note" data-i18n="login.activation_hint">请输入激活码</span>
+            </div>
+            <div class="form-grid form-grid-single">
+                <div class="form-field">
+                    <input id="activationCode" type="text" autocomplete="off" data-i18n-placeholder="login.activation_hint" placeholder="请输入激活码">
+                    <div id="activationMessage" class="hint"></div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button id="activationSubmit" type="button" class="c-btn c-btn-secondary c-btn-block" data-i18n="login.activation_submit">
+                    提交激活码
+                </button>
+            </div>
+        </div>
         <div class="form-actions">
             <button id="submitBtn" type="submit" class="c-btn c-btn-primary c-btn-block">
                 登 录
@@ -48,6 +65,8 @@
     }
     const API_BASE = "";
     const LOGIN_ENDPOINT = `${API_BASE}/api/login`;
+    const ACTIVATION_ENDPOINT = `${API_BASE}/api/activation`;
+    const ACTIVATION_STATUS_ENDPOINT = `${API_BASE}/api/activation/status`;
     const LANG_KEY = "app_lang";
     const ROLE_KEY = "app_role_id";
     const MENU_KEY = "app_menu_list";
@@ -66,6 +85,10 @@
         const form = document.getElementById("loginForm");
         const errorBox = document.getElementById("errorBox");
         const submitBtn = document.getElementById("submitBtn");
+        const activationBox = document.getElementById("activationBox");
+        const activationInput = document.getElementById("activationCode");
+        const activationSubmit = document.getElementById("activationSubmit");
+        const activationMessage = document.getElementById("activationMessage");
 
         const storeLang = (lang) => {
             try {
@@ -106,6 +129,69 @@
             submitBtn.textContent = t(key);
         };
 
+        const updateActivationMessage = (message, isError) => {
+            if (!activationMessage) return;
+            activationMessage.textContent = message;
+            activationMessage.style.color = isError ? "var(--danger)" : "var(--muted)";
+        };
+
+        const showActivationBox = () => {
+            if (activationBox) {
+                activationBox.classList.remove("hidden");
+            }
+        };
+
+        const shouldShowActivation = () => {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("activation") === "1";
+        };
+
+        const checkActivationStatus = async () => {
+            try {
+                const res = await fetch(ACTIVATION_STATUS_ENDPOINT, { credentials: "include" });
+                const data = await res.json();
+                const payload = normalizeApiResponse(data);
+                if (payload && payload.data && payload.data.valid === false) {
+                    showActivationBox();
+                }
+            } catch (e) {
+            }
+        };
+
+        if (activationSubmit) {
+            activationSubmit.addEventListener("click", async () => {
+                if (!activationInput) return;
+                const code = activationInput.value.trim();
+                if (!code) {
+                    updateActivationMessage(t("login.activation_hint"), true);
+                    return;
+                }
+                activationSubmit.disabled = true;
+                updateActivationMessage("");
+                try {
+                    const res = await fetch(ACTIVATION_ENDPOINT, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        credentials: "include",
+                        body: JSON.stringify({ code }),
+                    });
+                    const data = await res.json();
+                    const payload = normalizeApiResponse(data);
+                    if (!res.ok || !payload.success) {
+                        throw new Error(t("login.activation_failed"));
+                    }
+                    updateActivationMessage(t("login.activation_success"), false);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("activation");
+                    window.location.href = url.toString();
+                } catch (err) {
+                    updateActivationMessage(t("login.activation_failed"), true);
+                } finally {
+                    activationSubmit.disabled = false;
+                }
+            });
+        }
+
         if (form) {
             form.addEventListener("submit", async (event) => {
                 event.preventDefault();
@@ -129,6 +215,15 @@
                     const data = await res.json();
                     const payload = normalizeApiResponse(data);
                     if (!res.ok || !payload.success) {
+                        const apiMessage = (payload && payload.message) || "";
+                        if (res.status === 403 || apiMessage === "Activation required") {
+                            showActivationBox();
+                            if (errorBox) {
+                                errorBox.textContent = t("login.activation_failed");
+                                errorBox.classList.remove("hidden");
+                            }
+                            return;
+                        }
                         throw new Error(t("login.failed"));
                     }
                     const loginData = payload.data || {};
@@ -215,6 +310,11 @@
 
         initLang();
         updateSubmitText("login.submit");
+        if (shouldShowActivation()) {
+            showActivationBox();
+        } else {
+            checkActivationStatus();
+        }
     };
 
     start();

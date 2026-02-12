@@ -14,6 +14,7 @@ from bpmatch.smtp_sender import test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
+from settings.activation_code import is_activation_code_valid
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
 from settings.timer_task import run_time_to_save, run_time_to_clean, run_time_to_hello
@@ -52,6 +53,12 @@ SECTION_DEFAULTS = {
         "account_holder": "",
     },
     "sendmsg": [],
+    "activation": {
+        "code": "",
+        "expires_at": "",
+        "username": "",
+        "email": "",
+    },
 }
 
 
@@ -205,6 +212,25 @@ def _handle_bank_account(settings_payload, login_id):
     return _save_setting("bank-account", normalized, login_id)
 
 
+def _handle_activation(settings_payload, login_id):
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+    code = str(settings_payload.get("code") or "").strip()
+    if not code:
+        return api_error("Missing activation code")
+    valid, payload, _reason = is_activation_code_valid(code, now=timezone.now())
+    if not valid or not payload:
+        return api_error("Invalid or expired activation code")
+    expires_at = str(payload.get("expires_at") or "")
+    normalized = {
+        "code": code,
+        "expires_at": expires_at,
+        "username": str(payload.get("username") or ""),
+        "email": str(payload.get("email") or ""),
+    }
+    return _save_setting("activation", normalized, login_id)
+
+
 def _handle_tasks(settings_payload, login_id):
     if settings_payload is None:
         settings_payload = []
@@ -300,6 +326,7 @@ SECTION_HANDLERS = {
     "backup": _handle_backup,
     "bank-account": _handle_bank_account,
     "sendmsg": _handle_sendmsg,
+    "activation": _handle_activation,
 }
 
 
@@ -345,6 +372,50 @@ def sys_settings_section_api(request, section):
         return handler(settings_payload, login_id)
 
     return api_error("Unknown settings section", status=404)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def activation_status_api(request):
+    record = _get_setting("activation")
+    if not record:
+        return api_success(data={"valid": False, "reason": "missing"})
+    settings_payload = record.settings or {}
+    code = str(settings_payload.get("code") or "").strip()
+    if not code:
+        return api_success(data={"valid": False, "reason": "missing"})
+    valid, payload, reason = is_activation_code_valid(code, now=timezone.now())
+    if not valid:
+        return api_success(data={"valid": False, "reason": reason or "invalid"})
+    return api_success(
+        data={
+            "valid": True,
+            "expires_at": payload.get("expires_at") if payload else "",
+            "username": payload.get("username") if payload else "",
+            "email": payload.get("email") if payload else "",
+        }
+    )
+
+
+@csrf_exempt
+@require_POST
+def activation_code_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    code = str(payload.get("code") or "").strip()
+    if not code:
+        return api_error("Missing activation code")
+    valid, parsed, _reason = is_activation_code_valid(code, now=timezone.now())
+    if not valid or not parsed:
+        return api_error("Invalid or expired activation code")
+    settings_payload = {
+        "code": code,
+        "expires_at": str(parsed.get("expires_at") or ""),
+        "username": str(parsed.get("username") or ""),
+        "email": str(parsed.get("email") or ""),
+    }
+    return _save_setting("activation", settings_payload, login_id=None)
 
 
 @csrf_exempt

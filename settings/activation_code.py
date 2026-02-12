@@ -150,6 +150,33 @@ def parse_activation_code(token: str, secret: Optional[str] = None) -> dict:
     return payload
 
 
+def _parse_iso_datetime(value: str) -> datetime:
+    if not value:
+        raise ValueError("日期不能为空")
+    parsed = datetime.fromisoformat(value)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def is_activation_code_valid(
+    token: str,
+    secret: Optional[str] = None,
+    now: Optional[datetime] = None,
+) -> tuple[bool, Optional[dict], Optional[str]]:
+    try:
+        payload = parse_activation_code(token, secret=secret)
+        expires_at = _parse_iso_datetime(str(payload.get("expires_at") or ""))
+        current_time = now or datetime.now(timezone.utc)
+        if current_time.tzinfo is None:
+            current_time = current_time.replace(tzinfo=timezone.utc)
+        if expires_at <= current_time:
+            return False, payload, "expired"
+        return True, payload, None
+    except Exception as exc:
+        return False, None, str(exc)
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     try:
         username = input("请输入用户名: ").strip()
@@ -167,6 +194,4 @@ def main(argv: Optional[list[str]] = None) -> int:
 
 
 if __name__ == "__main__":
-    print(parse_activation_code(
-        "gAAAAABpjd-Y1WGQoLdKqlJuvNZsYdUlpqz66Mg5n8B9lP7c6Y5NggQzOrjbu8owrzmAd-6U40QFHcNCCIv1L6rxREuvmfTkTwUmE1CWDurBH6hkMXRF_Lhxnnii8pGuvospS-VXlRIxHPgP1udxjHtx4TxScq8tFMZ6QTCZmW232t0CYlJjGYiqweFl63tdqw_BbKsXJ2ZSWsvgx90iPh3Wen9QhtWNKjKPJfG6aB91FL5N8bdadHJuH-MLZEeJh11asVB98Ygkqkrd2C5srk8jy0iSfLLIMKovUB8M2hqJPIYMonJ7PZJ-aqp3bJ36jz1C4ZhtyeM6"))
-    # raise SystemExit(main())
+    raise SystemExit(main())

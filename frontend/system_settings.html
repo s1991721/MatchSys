@@ -110,6 +110,24 @@
             <div class="hint" id="preview-reset-status"></div>
           </form>
         </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title">激活码更新</h2>
+          <p class="c-card-subtitle settings-desc">更新系统激活码，保存后立即生效。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field full">
+              <label for="activation-code">激活码</label>
+              <input id="activation-code" type="text" placeholder="请输入激活码" autocomplete="off" />
+            </div>
+            <div class="form-field full">
+              <div class="hint" id="activation-current"></div>
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-primary" type="button" id="activation-save">更新激活码</button>
+            </div>
+            <div class="hint" id="activation-status"></div>
+          </form>
+        </section>
       </div>
 
       <section class="c-card c-card-pad settings-card span-2">
@@ -226,6 +244,7 @@
     }
     const apiBase = "/api/sys-settings";
     const tasksApi = "/api/sys-tasks";
+    const activationValidateApi = "/api/activation/validate";
     const sections = {
       businessEmail: "business-email",
       match: "match",
@@ -233,6 +252,7 @@
       backup: "backup",
       account: "bank-account",
       sendmsg: "sendmsg",
+      activation: "activation",
     };
 
     const taskList = document.getElementById("task-list");
@@ -258,6 +278,10 @@
     const accountSaveButton = document.getElementById("account-save");
     const previewResetButton = document.getElementById("preview-reset");
     const previewResetStatus = document.getElementById("preview-reset-status");
+    const activationSaveButton = document.getElementById("activation-save");
+    const activationCodeInput = document.getElementById("activation-code");
+    const activationStatus = document.getElementById("activation-status");
+    const activationCurrent = document.getElementById("activation-current");
     const userLoginSuggestions = document.getElementById("user-login-suggestions");
     let pendingDelete = null;
     let systemTasks = [];
@@ -682,6 +706,18 @@
       el.classList.toggle("success", Boolean(success));
     };
 
+    const setActivationHint = (text) => {
+      if (!activationCurrent) return;
+      activationCurrent.textContent = text || "";
+    };
+
+    const formatDateOnly = (raw) => {
+      if (!raw) return "";
+      const date = new Date(raw);
+      if (Number.isNaN(date.getTime())) return String(raw);
+      return date.toLocaleDateString("zh-CN");
+    };
+
     const setAiTestStatus = (data) => {
       if (!aiTestStatus) return;
       if (!data) {
@@ -970,6 +1006,38 @@
         } catch (error) {
           setInlineStatus("preview-reset-status", error.message || "重置失败", false);
           notifyError(error.message);
+        }
+      });
+    }
+
+    if (activationSaveButton) {
+      activationSaveButton.addEventListener("click", async () => {
+        const code = getValue("activation-code").trim();
+        if (!code) {
+          setInlineStatus("activation-status", "请输入激活码。", false);
+          return;
+        }
+        try {
+          const validation = await requestJson(activationValidateApi, {
+            method: "POST",
+            body: JSON.stringify({ code }),
+          });
+          if (!validation || !validation.data) {
+            throw new Error("激活码无效或已过期");
+          }
+          const settings = { code };
+          const saved = await saveSettings(sections.activation, settings);
+          const expiresAt = saved && saved.expires_at ? formatDateOnly(saved.expires_at) : "";
+          const message = expiresAt ? `已保存，有效期至 ${expiresAt}` : "已保存";
+          setInlineStatus("activation-status", message, true);
+          setActivationHint(expiresAt ? `当前有效期：${expiresAt}` : "已保存激活码");
+          flashButton(activationSaveButton, "已保存");
+        } catch (error) {
+          const message = error.message || "激活码无效或已过期";
+          setInlineStatus("activation-status", message, false);
+          if (activationCodeInput) {
+            activationCodeInput.focus();
+          }
         }
       });
     }
@@ -1301,6 +1369,19 @@
         systemTasks = [];
       }
       renderTasks(systemTasks);
+
+      const activationSettings = await fetchSettings(sections.activation, {});
+      setValue("activation-code", activationSettings.code || "");
+      const activationExpires = activationSettings.expires_at || "";
+      const activationUser = activationSettings.username || "";
+      const activationEmail = activationSettings.email || "";
+      const activationHintParts = [];
+      if (activationUser) activationHintParts.push(`用户：${activationUser}`);
+      if (activationEmail) activationHintParts.push(`邮箱：${activationEmail}`);
+      if (activationExpires) activationHintParts.push(`有效期：${formatDateOnly(activationExpires)}`);
+      if (activationHintParts.length) {
+        setActivationHint(`当前激活信息：${activationHintParts.join(" · ")}`);
+      }
     };
 
     loadSettings();

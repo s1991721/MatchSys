@@ -408,7 +408,7 @@ def activation_code_api(request):
         return api_error("Missing activation code")
     valid, parsed, _reason = is_activation_code_valid(code, now=timezone.now())
     if not valid or not parsed:
-        return api_error("Invalid or expired activation code")
+        return api_error("激活码无效或已过期")
     settings_payload = {
         "code": code,
         "expires_at": str(parsed.get("expires_at") or ""),
@@ -416,6 +416,27 @@ def activation_code_api(request):
         "email": str(parsed.get("email") or ""),
     }
     return _save_setting("activation", settings_payload, login_id=None)
+
+
+@csrf_exempt
+@require_POST
+def activation_validate_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    code = str(payload.get("code") or "").strip()
+    if not code:
+        return api_error("Missing activation code")
+    valid, parsed, _reason = is_activation_code_valid(code, now=timezone.now())
+    if not valid or not parsed:
+        return api_error("激活码无效或已过期")
+    return api_success(
+        data={
+            "expires_at": str(parsed.get("expires_at") or ""),
+            "username": str(parsed.get("username") or ""),
+            "email": str(parsed.get("email") or ""),
+        }
+    )
 
 
 @csrf_exempt

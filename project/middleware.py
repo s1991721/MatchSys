@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils import timezone
 
@@ -42,6 +43,9 @@ class SessionLoginRequiredMiddleware:
         if path.startswith(("/static/", "/admin/")):
             return True
 
+        if path.startswith("/api/login"):
+            return True
+
         if path.startswith("/api/activation"):
             return True
 
@@ -49,6 +53,8 @@ class SessionLoginRequiredMiddleware:
 
     @staticmethod
     def _check_activation() -> bool:
+        if cache.get("activation_valid") is True:
+            return True
         record = SysSettings.objects.filter(name="activation", deleted_at__isnull=True).first()
         if not record:
             return False
@@ -57,6 +63,8 @@ class SessionLoginRequiredMiddleware:
         if not token:
             return False
         valid, _payload, _reason = is_activation_code_valid(token, now=timezone.now())
+        if valid:
+            cache.set("activation_valid", True, timeout=3600)
         return valid
 
     @staticmethod

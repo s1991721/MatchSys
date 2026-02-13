@@ -1016,7 +1016,7 @@
             "login.activation_failed": "コードが無効または期限切れです",
             "brand.title": "IT営業管理システム",
             "brand.subtitle": "IT Business Management System",
-            "welcome": "お帰りなさい、",
+            "welcome": "お疲れ様です",
             "topbar.date": "日付",
             "topbar.notice": "通知",
             "topbar.profile": "プロフィール",

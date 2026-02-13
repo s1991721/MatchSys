@@ -41,18 +41,26 @@
             ...options,
         };
         const res = await fetch(url, mergedOptions);
-        if (res.status === 401) {
-            const target = "login.html";
-            if (window.top && window.top !== window) {
-                window.top.location.href = target;
-            } else {
-                window.location.href = target;
-            }
-            throw new Error("Unauthorized");
-        }
         if (!res.ok) {
             const payload = await res.json().catch(() => ({}));
             const message = payload?.message || `HTTP ${res.status}`;
+            if (res.status === 401) {
+                const target = "login.html";
+                if (window.top && window.top !== window) {
+                    window.top.location.href = target;
+                } else {
+                    window.location.href = target;
+                }
+                throw new Error("Unauthorized");
+            }
+            if (res.status === 403) {
+                const target = "login.html?activation=1";
+                if (window.top && window.top !== window) {
+                    window.top.location.href = target;
+                } else {
+                    window.location.href = target;
+                }
+            }
             const error = new Error(translateApiMessage(message));
             error.payload = payload;
             throw error;

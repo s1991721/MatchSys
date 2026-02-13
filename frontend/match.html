@@ -6,16 +6,16 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <title data-i18n="qiuanjian.title">求案件</title>
+  <title data-i18n="match.title">Match</title>
 </head>
 <body>
     <div class="page page-wide c-stack match-page">
         <div class="c-page-head-grid">
             <div class="c-page-head-spacer" aria-hidden="true"></div>
             <div class="c-switch-wrap order-page">
-                <div class="c-switcher-group" role="tablist" aria-label="模式切换">
-                    <button class="c-toggle is-active" type="button" role="tab" aria-selected="true" data-view="people">有人</button>
-                    <button class="c-toggle" type="button" role="tab" aria-selected="false" data-view="cases">有案件</button>
+                <div class="c-switcher-group" role="tablist" aria-label="模式切换" data-i18n-aria="match.view_switch">
+                    <button class="c-toggle is-active" type="button" role="tab" aria-selected="true" data-view="people" data-i18n="match.people">技术者列表</button>
+                    <button class="c-toggle" type="button" role="tab" aria-selected="false" data-view="cases" data-i18n="match.jobs">案件列表</button>
                 </div>
             </div>
             <div class="c-page-head-spacer" aria-hidden="true"></div>
@@ -24,51 +24,51 @@
         <div class="content-grid">
         <div class="match-sticky-column">
         <section class="c-card c-card-pad match-view" data-view="people">
-            <h2 class="title c-panel-title">技术者信息</h2>
+            <h2 class="title c-panel-title" data-i18n="match.form.people_title">技术者信息</h2>
             <div class="form-grid form-grid-spaced">
                 <div class="form-field">
-                    <label for="nation">国籍</label>
+                    <label for="nation" data-i18n="match.form.nation">国籍</label>
                     <select id="nation">
-                        <option value="">请选择</option>
-                        <option value="0">日本籍</option>
-                        <option value="1">外国籍</option>
+                        <option value="" data-i18n="common.select">请选择</option>
+                        <option value="0" data-i18n="match.form.nation.jp">日本籍</option>
+                        <option value="1" data-i18n="match.form.nation.other">外国籍</option>
                     </select>
                 </div>
                 <div class="form-field">
-                    <label for="age">年龄</label>
-                    <input id="age" type="number" placeholder="例如：32">
+                    <label for="age" data-i18n="match.form.age">年龄</label>
+                    <input id="age" type="number" placeholder="例如：32" data-i18n-placeholder="match.form.age_placeholder">
                 </div>
                 <div class="form-field full">
-                    <label for="price">金额</label>
-                    <input id="price" type="text" placeholder="例如：￥50,000">
+                    <label for="price" data-i18n="match.form.price">金额</label>
+                    <input id="price" type="text" placeholder="例如：￥50,000" data-i18n-placeholder="match.form.price_placeholder">
                 </div>
                 <div class="form-field full">
-                    <label for="intro">介绍文</label>
-                    <textarea id="intro" rows="10" placeholder="请输入人员介绍、技能或补充说明。"></textarea>
+                    <label for="intro" data-i18n="match.form.intro">介绍文</label>
+                    <textarea id="intro" rows="10" placeholder="请输入人员介绍、技能或补充说明。" data-i18n-placeholder="match.form.intro_placeholder"></textarea>
                 </div>
             </div>
             <div class="c-filter-actions-bar">
                 <div class="c-filter-actions-left"></div>
                 <div class="c-filter-actions-right">
-                    <button class="c-btn c-btn-ghost js-reset" type="button">清空</button>
-                    <button class="c-btn c-btn-primary js-search" type="button">搜索</button>
+                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="match.clear">清空</button>
+                    <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索</button>
                 </div>
             </div>
         </section>
 
         <section class="c-card c-card-pad match-view hidden" data-view="cases">
-            <h2 class="title c-panel-title">案件信息</h2>
+            <h2 class="title c-panel-title" data-i18n="match.form.case_title">案件信息</h2>
             <div class="form-grid form-grid-single form-grid-spaced">
                 <div class="form-field">
-                    <label for="case-info">案件信息</label>
-                    <textarea id="case-info" rows="10" placeholder="请输入案件信息。"></textarea>
+                    <label for="case-info" data-i18n="match.form.case_info">案件信息</label>
+                    <textarea id="case-info" rows="10" placeholder="请输入案件信息。" data-i18n-placeholder="match.form.case_info_placeholder"></textarea>
                 </div>
             </div>
             <div class="c-filter-actions-bar">
                 <div class="c-filter-actions-left"></div>
                 <div class="c-filter-actions-right">
-                    <button class="c-btn c-btn-ghost js-reset" type="button">清空</button>
-                    <button class="c-btn c-btn-primary js-search" type="button">搜索</button>
+                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="match.clear">清空</button>
+                    <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索</button>
                 </div>
             </div>
         </section>
@@ -77,19 +77,19 @@
         <section class="c-card c-card-pad">
             <div class="c-stack">
                 <div>
-                    <h2 class="title c-panel-title" id="list-title">案件列表</h2>
+                    <h2 class="title c-panel-title" id="list-title" data-i18n="match.jobs">案件列表</h2>
                     <div class="filters c-filter-grid">
                         <div class="filter-group c-filter-group">
-                            <span class="filter-label c-filter-label" data-i18n="qiuanjian.filter.time">时间</span>
+                            <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
                             <div class="chip-row c-chip-row">
-                                <button class="chip c-chip active" data-range="all" type="button" data-i18n="qiuanjian.range.all">全部</button>
-                                <button class="chip c-chip" data-range="today" type="button" data-i18n="qiuanjian.range.today">今天</button>
-                                <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="qiuanjian.range.yesterday">昨天</button>
+                                <button class="chip c-chip active" data-range="all" type="button" data-i18n="match.range.all">全部</button>
+                                <button class="chip c-chip" data-range="today" type="button" data-i18n="match.range.today">今天</button>
+                                <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
                             </div>
                         </div>
                         <div class="filter-group c-filter-group sender-group">
-                            <span class="filter-label c-filter-label">发件人</span>
-                            <input id="sender-input" class="input c-input" type="search" placeholder="搜索发件人">
+                            <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
+                            <input id="sender-input" class="input c-input" type="search" placeholder="搜索发件人" data-i18n-placeholder="match.sender_placeholder">
                         </div>
                     </div>
                     <ul id="case-list" class="list c-list match-list">
@@ -97,12 +97,12 @@
                 </div>
 
                 <div>
-                    <h2 class="title c-panel-title" id="detail-title">案件详情</h2>
+                    <h2 class="title c-panel-title" id="detail-title" data-i18n="match.job_detail">案件详情</h2>
                     <div id="case-detail" class="detail">
                         这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                     </div>
                     <div class="detail-actions">
-                        <button class="c-btn c-btn-primary" type="button" id="send-btn">送信</button>
+                        <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send">送信</button>
                     </div>
                 </div>
             </div>
@@ -115,7 +115,7 @@
     <script>
         (function () {
             const i18n = window.I18N;
-            const t = (key) => (i18n ? i18n.t(key) : key);
+            const t = (key, fallback) => (i18n ? i18n.t(key) : (fallback || key));
 
             const list = document.getElementById('case-list');
             const detail = document.getElementById('case-detail');
@@ -193,7 +193,7 @@
                     .filter(Boolean)
                     .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
                     .join('');
-                target.innerHTML = html || `<p style="color:#9aa4b5">${t('qiuanjian.empty.detail')}</p>`;
+                target.innerHTML = html || `<p style="color:#9aa4b5">${t('match.empty')}</p>`;
             };
 
             const getActiveView = () => {
@@ -251,22 +251,23 @@
                     btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
                 });
                 if (listTitle) {
-                    listTitle.textContent = view === 'cases' ? '技术者列表' : '案件列表';
+                    listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
                 }
                 if (detailTitle) {
-                    detailTitle.textContent = view === 'cases' ? '技术者详情' : '案件详情';
+                    detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.job_detail');
                 }
             };
 
             const renderList = (items) => {
                 list.innerHTML = '';
+                const view = getActiveView();
 
                 if (!items.length) {
                     const empty = document.createElement('li');
                     empty.className = 'empty';
-                    empty.textContent = t('qiuanjian.empty.list');
+                    empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
                     list.appendChild(empty);
-                    renderDetail(detail, t('qiuanjian.empty.detail'));
+                    renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
                     return;
                 }
 
@@ -345,16 +346,16 @@
                     });
                     const raw = await response.json();
                     const result = window.normalizeApiResponse ? window.normalizeApiResponse(raw) : raw;
-                    if (!result || result.success === false) {
-                        throw new Error(result?.message || '加载失败');
-                    }
-                    const items = Array.isArray(result.data?.items) ? result.data.items : [];
-                    renderList(items);
-                } catch (err) {
-                    console.error('fetch cases failed', err);
-                    setLoading(t('common.failed') || '加载失败');
+                if (!result || result.success === false) {
+                    throw new Error(result?.message || '加载失败');
                 }
-            };
+                const items = Array.isArray(result.data?.items) ? result.data.items : [];
+                renderList(items);
+            } catch (err) {
+                console.error('fetch cases failed', err);
+                setLoading(t('match.failed') || '加载失败');
+            }
+        };
 
             list.addEventListener('click', (e) => {
                 const item = e.target.closest('.item');

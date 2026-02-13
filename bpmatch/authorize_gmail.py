@@ -61,7 +61,7 @@ def test_connection() -> Dict[str, Optional[str]]:
 
 
 def main():
-    result = test_connection(allow_interactive=True)
+    result = test_connection()
     print("Gmail connection ok.")
     if result.get("email_address"):
         print("Account:", result["email_address"])

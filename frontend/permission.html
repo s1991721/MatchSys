@@ -6,7 +6,7 @@
     <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <title>权限管理</title>
+    <title data-i18n="permission.title">权限管理</title>
     <style>
         body {
             background: transparent;
@@ -38,18 +38,18 @@
         <section class="c-card">
             <div class="c-card-header c-card-header-gradient">
                 <div>
-                    <h3 class="c-panel-title">角色管理</h3>
-                    <p class="permission-subtitle">当前系统内置角色，仅展示，不支持新建。</p>
+                    <h3 class="c-panel-title" data-i18n="permission.role.title">角色管理</h3>
+                    <p class="permission-subtitle" data-i18n="permission.role.subtitle">当前系统内置角色，仅展示，不支持新建。</p>
                 </div>
-                <span class="c-tag c-tag-neutral">只读</span>
+                <span class="c-tag c-tag-neutral" data-i18n="permission.role.readonly">只读</span>
             </div>
             <div class="c-table-wrapper">
                 <table class="c-table c-table-hover c-table-center">
                     <thead>
                     <tr>
-                        <th>角色</th>
-                        <th>角色描述</th>
-                        <th class="c-actions-col">操作</th>
+                        <th data-i18n="permission.role.table.role">角色</th>
+                        <th data-i18n="permission.role.table.desc">角色描述</th>
+                        <th class="c-actions-col" data-i18n="permission.role.table.action">操作</th>
                     </tr>
                     </thead>
                     <tbody id="role-body"></tbody>
@@ -60,19 +60,19 @@
         <section class="c-card">
             <div class="c-card-header c-card-header-gradient">
                 <div>
-                    <h3 class="c-panel-title">菜单管理</h3>
-                    <p class="permission-subtitle">index.html 中所有功能列表由此维护。</p>
+                    <h3 class="c-panel-title" data-i18n="permission.menu.title">菜单管理</h3>
+                    <p class="permission-subtitle" data-i18n="permission.menu.subtitle">index.html 中所有功能列表由此维护。</p>
                 </div>
-                <button class="c-btn c-btn-primary c-btn-strong" id="menu-add" type="button">+ 新增菜单</button>
+                <button class="c-btn c-btn-primary c-btn-strong" id="menu-add" type="button" data-i18n="permission.menu.add">+ 新增菜单</button>
             </div>
             <div class="c-table-wrapper">
                 <table class="c-table c-table-hover c-table-center">
                     <thead>
                     <tr>
-                        <th>菜单名</th>
-                        <th>页面文件</th>
-                        <th>排序</th>
-                        <th class="c-actions-col">操作</th>
+                        <th data-i18n="permission.menu.table.name">菜单名</th>
+                        <th data-i18n="permission.menu.table.page">页面文件</th>
+                        <th data-i18n="permission.menu.table.sort">排序</th>
+                        <th class="c-actions-col" data-i18n="permission.menu.table.action">操作</th>
                     </tr>
                     </thead>
                     <tbody id="menu-body"></tbody>
@@ -84,55 +84,68 @@
 
 <dialog class="c-dialog" id="menu-dialog">
     <div class="c-dialog-header">
-        <h3 id="menu-dialog-title">新增菜单</h3>
-        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+        <h3 id="menu-dialog-title" data-i18n="permission.menu.dialog.add">新增菜单</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
         <form id="menu-form" class="form-grid">
             <label class="c-field">
-                <span>菜单名</span>
+                <span data-i18n="permission.menu.field.name">菜单名</span>
                 <input id="menu-name" type="text" required>
             </label>
             <label class="c-field">
-                <span>页面文件</span>
-                <input id="menu-page" type="text" placeholder="例如：customer.html" required>
+                <span data-i18n="permission.menu.field.page">页面文件</span>
+                <input id="menu-page" type="text" placeholder="例如：customer.html" data-i18n-placeholder="permission.menu.placeholder.page" required>
             </label>
             <label class="c-field">
-                <span>排序</span>
-                <input id="menu-sort" type="number" min="1" step="1" placeholder="例如：10" required>
+                <span data-i18n="permission.menu.field.sort">排序</span>
+                <input id="menu-sort" type="number" min="1" step="1" placeholder="例如：10" data-i18n-placeholder="permission.menu.placeholder.sort" required>
             </label>
         </form>
     </div>
     <div class="c-dialog-actions">
-        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
-        <button class="c-btn c-btn-primary" id="menu-save" type="button">保存</button>
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary" id="menu-save" type="button" data-i18n="common.save">保存</button>
     </div>
 </dialog>
 
 <dialog class="c-dialog" id="role-dialog">
     <div class="c-dialog-header">
-        <h3 id="role-dialog-title">角色详情</h3>
-        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+        <h3 id="role-dialog-title" data-i18n="permission.role.dialog.title">角色详情</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
         <div class="c-dialog-toolbar">
             <label class="c-dialog-count">
-                <input type="checkbox" id="role-master-check" aria-label="全选">
-                <span>已选</span>
+                <input type="checkbox" id="role-master-check" aria-label="全选" data-i18n-aria="permission.role.select_all">
+                <span data-i18n="permission.role.selected">已选</span>
                 <strong id="role-selected-count">0</strong>
-                <span>项</span>
+                <span data-i18n="permission.role.items">项</span>
             </label>
         </div>
         <div id="role-dialog-body" class="c-card c-card-compact"></div>
     </div>
     <div class="c-dialog-actions">
-        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
-        <button class="c-btn c-btn-primary" type="button" id="role-save">保存</button>
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="role-save" data-i18n="common.save">保存</button>
     </div>
 </dialog>
 
+<script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
+  const i18n = window.I18N || null;
+  if (i18n) {
+    i18n.init();
+    i18n.apply();
+  }
+  const t = (key, fallback) => (
+    i18n && typeof i18n.t === "function" ? i18n.t(key) : (fallback || key)
+  );
+  const format = (key, vars, fallback) => (
+    i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
+  );
+
   const menuDialog = document.getElementById("menu-dialog");
   const menuDialogTitle = document.getElementById("menu-dialog-title");
   const menuForm = document.getElementById("menu-form");
@@ -177,12 +190,12 @@
     if (mode === "edit" && row) {
       menuDialog.dataset.editing = "1";
       menuDialog.dataset.menuId = row.dataset.id || "";
-      menuDialogTitle.textContent = "编辑菜单";
+      menuDialogTitle.textContent = t("permission.menu.dialog.edit", "编辑菜单");
       menuName.value = row.dataset.name || "";
       menuPage.value = row.dataset.page || "";
       menuSort.value = row.dataset.sort || "";
     } else {
-      menuDialogTitle.textContent = "新增菜单";
+      menuDialogTitle.textContent = t("permission.menu.dialog.add", "新增菜单");
       menuForm.reset();
       menuSort.value = "";
     }
@@ -202,8 +215,8 @@
         <td>${menu.menu_html || ""}</td>
         <td>${menu.sort_order ?? ""}</td>
         <td class="c-row-actions c-row-actions-center">
-          <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">编辑</button>
-          <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">删除</button>
+          <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">${t("common.edit", "编辑")}</button>
+          <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">${t("common.delete", "删除")}</button>
         </td>
       `;
       menuBody.appendChild(row);
@@ -229,7 +242,7 @@
         </td>
         <td>${role.description || ""}</td>
         <td class="c-row-actions c-row-actions-center">
-          <button class="c-btn c-btn-lite c-btn-sm" data-role-id="${role.id || ""}">详情</button>
+          <button class="c-btn c-btn-lite c-btn-sm" data-role-id="${role.id || ""}">${t("permission.role.detail_btn", "详情")}</button>
         </td>
       `;
       roleBody.appendChild(row);
@@ -264,7 +277,13 @@
     if (btn.dataset.action === "delete") {
       const menuId = row.dataset.id;
       if (!menuId) return;
-      if (!confirm(`确定删除菜单「${row.dataset.name || "未命名"}」吗？`)) return;
+      const menuName = row.dataset.name || t("permission.menu.unnamed", "未命名");
+      const confirmText = format(
+        "permission.menu.delete_confirm",
+        { name: menuName },
+        `确定删除菜单「${menuName}」吗？`
+      );
+      if (!confirm(confirmText)) return;
       requestJson(`/api/menus/${menuId}`, { method: "DELETE" })
         .then((res) => {
           if (res.success) {
@@ -312,17 +331,17 @@
     }
   });
 
-  roleBody.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-role-id]");
-    if (!btn) return;
-    const roleId = Number(btn.dataset.roleId || 0);
-    const role = cachedRoles.find((item) => item.id === roleId);
+  const renderRoleDialog = (role, { open = false } = {}) => {
     if (!role) return;
     const hasAll = role.menu_list === "*";
     const menuSet = new Set(Array.isArray(role.menu_list) ? role.menu_list : []);
     const allMenus = getAllMenus();
-    activeRoleId = roleId;
-    roleDialogTitle.textContent = `${role.role_name || ""} - 角色详情`;
+    activeRoleId = role.id || null;
+    roleDialogTitle.textContent = format(
+      "permission.role.detail_title",
+      { role: role.role_name || "" },
+      `${role.role_name || ""} - 角色详情`
+    );
     roleDialogBody.innerHTML = allMenus.length
       ? `<div class="c-checklist">${allMenus.map(item => `
           <label class="c-check-item">
@@ -331,9 +350,20 @@
             <span>${item.menu_html}</span>
           </label>
         `).join("")}</div>`
-      : "<p class=\"permission-subtitle\">暂无菜单</p>";
+      : `<p class="permission-subtitle">${t("permission.menu.empty", "暂无菜单")}</p>`;
     updateRoleSelectedCount();
-    roleDialog.showModal();
+    if (open && !roleDialog.open) {
+      roleDialog.showModal();
+    }
+  };
+
+  roleBody.addEventListener("click", (event) => {
+    const btn = event.target.closest("[data-role-id]");
+    if (!btn) return;
+    const roleId = Number(btn.dataset.roleId || 0);
+    const role = cachedRoles.find((item) => item.id === roleId);
+    if (!role) return;
+    renderRoleDialog(role, { open: true });
   });
 
   menuDialog.addEventListener("click", (event) => {
@@ -402,8 +432,29 @@
     updateRoleSelectedCount();
   });
 
+  const refreshI18n = () => {
+    if (i18n) {
+      i18n.apply();
+    }
+    renderMenus(cachedMenus);
+    renderRoles(cachedRoles);
+    if (menuDialog && menuDialog.open) {
+      menuDialogTitle.textContent = menuDialog.dataset.editing
+        ? t("permission.menu.dialog.edit", "编辑菜单")
+        : t("permission.menu.dialog.add", "新增菜单");
+    }
+    if (roleDialog && roleDialog.open && activeRoleId) {
+      const role = cachedRoles.find((item) => item.id === activeRoleId);
+      if (role) {
+        renderRoleDialog(role, { open: false });
+      }
+    }
+  };
+
   loadMenus();
   loadRoles();
+
+  window.addEventListener("i18n:change", refreshI18n);
 </script>
 </body>
 </html>

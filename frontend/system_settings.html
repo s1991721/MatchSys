@@ -331,7 +331,8 @@
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.success) {
           const message = payload.message || t("system_settings.common.request_failed", "请求失败");
-          throw new Error(message);
+          const localized = window.translateApiMessage ? window.translateApiMessage(message) : message;
+          throw new Error(localized);
         }
         return payload;
       });
@@ -345,7 +346,8 @@
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.success) {
           const message = payload.message || t("system_settings.common.request_failed", "请求失败");
-          throw new Error(message);
+          const localized = window.translateApiMessage ? window.translateApiMessage(message) : message;
+          throw new Error(localized);
         }
         return payload;
       });

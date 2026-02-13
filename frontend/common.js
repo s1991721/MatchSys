@@ -29,6 +29,15 @@
         if (message === "Invalid date") {
             return resolveLabel("common.error.invalid_date", message);
         }
+        if (message === "Activation required") {
+            return resolveLabel("common.error.activation_required", message);
+        }
+        if (message === "请先登录") {
+            return resolveLabel("common.error.login_required", message);
+        }
+        if (message === "Internal server error") {
+            return resolveLabel("common.error.internal_server_error", message);
+        }
         return message;
     };
     window.translateApiMessage = translateApiMessage;

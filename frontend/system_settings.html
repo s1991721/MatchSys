@@ -13,40 +13,40 @@
     <div class="content-grid settings-stack">
       <div class="settings-left c-stack">
         <section class="c-card c-card-pad settings-card">
-          <h2 class="c-card-title">营业邮箱配置</h2>
+          <h2 class="c-card-title" data-i18n="system_settings.business_email.title">营业邮箱配置</h2>
           <form class="form-grid form-grid-spaced">
             <div class="form-field full">
-              <label for="gmail-auth">Gmail 认证文件</label>
+              <label for="gmail-auth" data-i18n="system_settings.business_email.gmail_auth">Gmail 认证文件</label>
               <input id="gmail-auth" type="file" accept=".json" />
-              <div class="hint">仅支持上传 Google OAuth 凭据 JSON 文件。</div>
+              <div class="hint" data-i18n="system_settings.business_email.gmail_auth_hint">仅支持上传 Google OAuth 凭据 JSON 文件。</div>
               <div class="hint" id="gmail-auth-current"></div>
             </div>
             <div class="form-field full">
-              <label for="gmail-token">Gmail token 文件</label>
+              <label for="gmail-token" data-i18n="system_settings.business_email.gmail_token">Gmail token 文件</label>
               <input id="gmail-token" type="file" accept=".json" />
-              <div class="hint">仅支持上传 Gmail token JSON 文件。</div>
+              <div class="hint" data-i18n="system_settings.business_email.gmail_token_hint">仅支持上传 Gmail token JSON 文件。</div>
               <div class="hint" id="gmail-token-current"></div>
             </div>
             <div class="form-actions">
-              <button class="c-btn c-btn-secondary" type="button" id="gmail-test">连接测试</button>
-              <button class="c-btn c-btn-primary" type="button" id="gmail-save">保存配置</button>
+              <button class="c-btn c-btn-secondary" type="button" id="gmail-test" data-i18n="system_settings.common.test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="gmail-save" data-i18n="system_settings.common.save_config">保存配置</button>
             </div>
           </form>
         </section>
 
         <section class="c-card c-card-pad settings-card">
           <div class="match-head">
-            <h2 class="c-card-title">Match 配置</h2>
-            <p class="c-card-subtitle settings-desc">周期配置的长短会影响Match的效率和成功率，建议不超过两周</p>
+            <h2 class="c-card-title" data-i18n="system_settings.match.title">Match 配置</h2>
+            <p class="c-card-subtitle settings-desc" data-i18n="system_settings.match.desc">周期配置的长短会影响Match的效率和成功率，建议不超过两周</p>
           </div>
           <form class="form-grid form-grid-spaced match-form">
             <div class="match-row">
               <div class="form-field match-field">
-                <label for="match-cycle">周期（天）</label>
-                <input id="match-cycle" type="number" inputmode="numeric" step="1" min="1" placeholder="例如：14" />
+                <label for="match-cycle" data-i18n="system_settings.match.cycle">周期（天）</label>
+                <input id="match-cycle" type="number" inputmode="numeric" step="1" min="1" placeholder="例如：14" data-i18n-placeholder="system_settings.match.cycle_placeholder" />
               </div>
               <div class="form-actions">
-                <button class="c-btn c-btn-primary" type="button" id="match-save">保存配置</button>
+                <button class="c-btn c-btn-primary" type="button" id="match-save" data-i18n="system_settings.common.save_config">保存配置</button>
               </div>
             </div>
           </form>
@@ -55,75 +55,75 @@
 
       <div class="settings-right c-stack">
         <section class="c-card c-card-pad settings-card">
-          <h2 class="c-card-title">AI 设置</h2>
-          <p class="c-card-subtitle settings-desc">选择本地或云端模式，并填写对应模型配置。</p>
-          <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换">
-            <button type="button" class="c-toggle is-active" data-ai-mode="local">本地</button>
-            <button type="button" class="c-toggle" data-ai-mode="cloud">云端</button>
+          <h2 class="c-card-title" data-i18n="system_settings.ai.title">AI 设置</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.ai.desc">选择本地或云端模式，并填写对应模型配置。</p>
+          <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换" data-i18n-aria="system_settings.ai.mode_aria">
+            <button type="button" class="c-toggle is-active" data-ai-mode="local" data-i18n="system_settings.ai.mode_local">本地</button>
+            <button type="button" class="c-toggle" data-ai-mode="cloud" data-i18n="system_settings.ai.mode_cloud">云端</button>
           </div>
           <form class="form-grid form-grid-spaced">
             <div class="ai-fields is-active" data-ai-fields="local">
               <div class="form-field full">
-                <label for="ai-model-local">模型名称</label>
-                <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" />
-                <div class="hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
+                <label for="ai-model-local" data-i18n="system_settings.ai.model_name">模型名称</label>
+                <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" data-i18n-placeholder="system_settings.ai.model_local_placeholder" />
+                <div class="hint" data-i18n="system_settings.ai.local_hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
               </div>
             </div>
             <div class="ai-fields" data-ai-fields="cloud">
               <div class="form-field full">
-                <label for="ai-model-cloud">模型名称</label>
-                <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" />
+                <label for="ai-model-cloud" data-i18n="system_settings.ai.model_name">模型名称</label>
+                <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" data-i18n-placeholder="system_settings.ai.model_cloud_placeholder" />
               </div>
               <div class="form-field full">
-                <label for="ai-api-key">API Key</label>
-                <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" />
+                <label for="ai-api-key" data-i18n="system_settings.ai.api_key">API Key</label>
+                <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" data-i18n-placeholder="system_settings.ai.api_key_placeholder" />
               </div>
             </div>
             <div class="form-actions">
-              <button class="c-btn c-btn-secondary" type="button" id="ai-test">连接测试</button>
-              <button class="c-btn c-btn-primary" type="button" id="ai-save">保存配置</button>
+              <button class="c-btn c-btn-secondary" type="button" id="ai-test" data-i18n="system_settings.common.test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="ai-save" data-i18n="system_settings.common.save_config">保存配置</button>
             </div>
             <div class="hint" id="ai-test-status"></div>
           </form>
         </section>
 
         <section class="c-card c-card-pad settings-card">
-          <h2 class="c-card-title">账号密码重置</h2>
-          <p class="c-card-subtitle settings-desc">为账号重置密码并设置有效期（天）。</p>
+          <h2 class="c-card-title" data-i18n="system_settings.password_reset.title">账号密码重置</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.password_reset.desc">为账号重置密码并设置有效期（天）。</p>
           <form class="form-grid form-grid-spaced">
             <div class="form-field">
-              <label for="preview-user">账号</label>
-              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" />
+              <label for="preview-user" data-i18n="system_settings.password_reset.user">账号</label>
+              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" data-i18n-placeholder="system_settings.password_reset.user_placeholder" />
               <datalist id="user-login-suggestions"></datalist>
             </div>
             <div class="form-field">
-              <label for="preview-password">新密码</label>
-              <input id="preview-password" type="text" placeholder="请输入新密码" />
+              <label for="preview-password" data-i18n="system_settings.password_reset.password">新密码</label>
+              <input id="preview-password" type="text" placeholder="请输入新密码" data-i18n-placeholder="system_settings.password_reset.password_placeholder" />
             </div>
             <div class="form-field">
-              <label for="preview-expiry">有效期（天）</label>
+              <label for="preview-expiry" data-i18n="system_settings.password_reset.expiry">有效期（天）</label>
               <input id="preview-expiry" type="number" min="1" step="1" value="1" />
             </div>
             <div class="form-actions">
-              <button class="c-btn c-btn-primary" type="button" id="preview-reset">重置密码</button>
+              <button class="c-btn c-btn-primary" type="button" id="preview-reset" data-i18n="system_settings.password_reset.reset">重置密码</button>
             </div>
             <div class="hint" id="preview-reset-status"></div>
           </form>
         </section>
 
         <section class="c-card c-card-pad settings-card">
-          <h2 class="c-card-title">激活码更新</h2>
-          <p class="c-card-subtitle settings-desc">更新系统激活码，保存后立即生效。</p>
+          <h2 class="c-card-title" data-i18n="system_settings.activation.title">激活码更新</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.activation.desc">更新系统激活码，保存后立即生效。</p>
           <form class="form-grid form-grid-spaced">
             <div class="form-field full">
-              <label for="activation-code">激活码</label>
-              <input id="activation-code" type="text" placeholder="请输入激活码" autocomplete="off" />
+              <label for="activation-code" data-i18n="system_settings.activation.code">激活码</label>
+              <input id="activation-code" type="text" placeholder="请输入激活码" autocomplete="off" data-i18n-placeholder="system_settings.activation.code_placeholder" />
             </div>
             <div class="form-field full">
               <div class="hint" id="activation-current"></div>
             </div>
             <div class="form-actions">
-              <button class="c-btn c-btn-primary" type="button" id="activation-save">更新激活码</button>
+              <button class="c-btn c-btn-primary" type="button" id="activation-save" data-i18n="system_settings.activation.save">更新激活码</button>
             </div>
             <div class="hint" id="activation-status"></div>
           </form>
@@ -131,107 +131,107 @@
       </div>
 
       <section class="c-card c-card-pad settings-card span-2">
-        <h2 class="c-card-title">数据备份</h2>
-        <p class="c-card-subtitle settings-desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
+        <h2 class="c-card-title" data-i18n="system_settings.backup.title">数据备份</h2>
+        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.backup.desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
         <form class="form-grid form-grid-spaced">
           <div class="form-field">
-            <label for="backup-host">备用数据库地址</label>
-            <input id="backup-host" type="text" placeholder="db-backup.internal" />
+            <label for="backup-host" data-i18n="system_settings.backup.host">备用数据库地址</label>
+            <input id="backup-host" type="text" placeholder="db-backup.internal" data-i18n-placeholder="system_settings.backup.host_placeholder" />
           </div>
           <div class="form-field">
-            <label for="backup-port">端口</label>
-            <input id="backup-port" type="number" placeholder="5432" />
+            <label for="backup-port" data-i18n="system_settings.backup.port">端口</label>
+            <input id="backup-port" type="number" placeholder="5432" data-i18n-placeholder="system_settings.backup.port_placeholder" />
           </div>
           <div class="form-field">
-            <label for="backup-db">数据库名称</label>
-            <input id="backup-db" type="text" placeholder="matchsys_backup" />
+            <label for="backup-db" data-i18n="system_settings.backup.db">数据库名称</label>
+            <input id="backup-db" type="text" placeholder="matchsys_backup" data-i18n-placeholder="system_settings.backup.db_placeholder" />
           </div>
           <div class="form-field">
-            <label for="backup-user">用户名</label>
-            <input id="backup-user" type="text" placeholder="backup_admin" />
+            <label for="backup-user" data-i18n="system_settings.backup.user">用户名</label>
+            <input id="backup-user" type="text" placeholder="backup_admin" data-i18n-placeholder="system_settings.backup.user_placeholder" />
           </div>
           <div class="form-field">
-            <label for="backup-password">密码</label>
-            <input id="backup-password" type="password" placeholder="••••••••" />
+            <label for="backup-password" data-i18n="system_settings.backup.password">密码</label>
+            <input id="backup-password" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.backup.password_placeholder" />
           </div>
           <div class="form-field">
-            <label for="backup-ssl">SSL 模式</label>
+            <label for="backup-ssl" data-i18n="system_settings.backup.ssl">SSL 模式</label>
             <select id="backup-ssl">
-              <option>require</option>
-              <option>prefer</option>
-              <option>disable</option>
+              <option data-i18n="system_settings.backup.ssl.require">require</option>
+              <option data-i18n="system_settings.backup.ssl.prefer">prefer</option>
+              <option data-i18n="system_settings.backup.ssl.disable">disable</option>
             </select>
           </div>
           <div class="form-field full">
-            <label for="backup-note">备注</label>
-            <textarea id="backup-note" placeholder="例如：与主库保持实时同步"></textarea>
+            <label for="backup-note" data-i18n="system_settings.backup.note">备注</label>
+            <textarea id="backup-note" placeholder="例如：与主库保持实时同步" data-i18n-placeholder="system_settings.backup.note_placeholder"></textarea>
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button" id="backup-test">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button" id="backup-save">保存备份配置</button>
+            <button class="c-btn c-btn-secondary" type="button" id="backup-test" data-i18n="system_settings.common.test">连接测试</button>
+            <button class="c-btn c-btn-primary" type="button" id="backup-save" data-i18n="system_settings.backup.save">保存备份配置</button>
           </div>
         </form>
       </section>
 
       <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title">口座信息</h2>
-        <p class="c-card-subtitle settings-desc">配置银行口座的基础信息。</p>
+        <h2 class="c-card-title" data-i18n="system_settings.bank.title">口座信息</h2>
+        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.bank.desc">配置银行口座的基础信息。</p>
         <form class="form-grid form-grid-spaced">
           <div class="form-field">
-            <label for="account-bank-name">银行名</label>
-            <input id="account-bank-name" type="text" placeholder="例如：みずほ銀行" />
+            <label for="account-bank-name" data-i18n="system_settings.bank.name">银行名</label>
+            <input id="account-bank-name" type="text" placeholder="例如：みずほ銀行" data-i18n-placeholder="system_settings.bank.name_placeholder" />
           </div>
           <div class="form-field">
-            <label for="account-branch-code">支点编号</label>
-            <input id="account-branch-code" type="text" placeholder="例如：123" />
+            <label for="account-branch-code" data-i18n="system_settings.bank.branch_code">支点编号</label>
+            <input id="account-branch-code" type="text" placeholder="例如：123" data-i18n-placeholder="system_settings.bank.branch_code_placeholder" />
           </div>
           <div class="form-field">
-            <label for="account-branch-name">支点名</label>
-            <input id="account-branch-name" type="text" placeholder="例如：新宿" />
+            <label for="account-branch-name" data-i18n="system_settings.bank.branch_name">支点名</label>
+            <input id="account-branch-name" type="text" placeholder="例如：新宿" data-i18n-placeholder="system_settings.bank.branch_name_placeholder" />
           </div>
           <div class="form-field">
-            <label for="account-type">口座种类</label>
-            <input id="account-type" type="text" placeholder="例如：普通" />
+            <label for="account-type" data-i18n="system_settings.bank.account_type">口座种类</label>
+            <input id="account-type" type="text" placeholder="例如：普通" data-i18n-placeholder="system_settings.bank.account_type_placeholder" />
           </div>
           <div class="form-field">
-            <label for="account-number">口座号</label>
-            <input id="account-number" type="text" placeholder="例如：1234567" />
+            <label for="account-number" data-i18n="system_settings.bank.account_number">口座号</label>
+            <input id="account-number" type="text" placeholder="例如：1234567" data-i18n-placeholder="system_settings.bank.account_number_placeholder" />
           </div>
           <div class="form-field">
-            <label for="account-holder">口座名义</label>
-            <input id="account-holder" type="text" placeholder="例如：株式会社xxxx" />
+            <label for="account-holder" data-i18n="system_settings.bank.account_holder">口座名义</label>
+            <input id="account-holder" type="text" placeholder="例如：株式会社xxxx" data-i18n-placeholder="system_settings.bank.account_holder_placeholder" />
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-primary" type="button" id="account-save">保存配置</button>
+            <button class="c-btn c-btn-primary" type="button" id="account-save" data-i18n="system_settings.common.save_config">保存配置</button>
           </div>
         </form>
       </section>
 
       <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title">送信配置</h2>
-        <p class="c-card-subtitle settings-desc">配置常用邮箱登录信息，并指定使用人。</p>
+        <h2 class="c-card-title" data-i18n="system_settings.sendmsg.title">送信配置</h2>
+        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.sendmsg.desc">配置常用邮箱登录信息，并指定使用人。</p>
         <ul class="config-list" id="sendmsg-list"></ul>
         <div class="form-actions">
-          <button class="c-btn c-btn-secondary" type="button" id="add-sendmsg">新增配置</button>
+          <button class="c-btn c-btn-secondary" type="button" id="add-sendmsg" data-i18n="system_settings.sendmsg.add">新增配置</button>
         </div>
       </section>
 
       <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title">定时任务</h2>
-        <p class="c-card-subtitle settings-desc">支持配置多个任务，每个任务可单独执行与保存。</p>
+        <h2 class="c-card-title" data-i18n="system_settings.tasks.title">定时任务</h2>
+        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.tasks.desc">支持配置多个任务，每个任务可单独执行与保存。</p>
         <ul class="task-list" id="task-list"></ul>
         <div class="form-actions">
-          <button class="c-btn c-btn-secondary" type="button" id="add-task">新增任务</button>
+          <button class="c-btn c-btn-secondary" type="button" id="add-task" data-i18n="system_settings.tasks.add">新增任务</button>
         </div>
       </section>
     </div>
     <div class="c-modal-backdrop" id="delete-modal" aria-hidden="true">
       <div class="c-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
-        <h3 id="delete-title">确认删除</h3>
-        <p id="delete-message">确定删除该项配置吗？</p>
+        <h3 id="delete-title" data-i18n="system_settings.modal.delete_title">确认删除</h3>
+        <p id="delete-message" data-i18n="system_settings.modal.delete_message">确定删除该项配置吗？</p>
         <div class="c-modal-actions">
-          <button class="c-btn c-btn-ghost" type="button" id="cancel-delete">取消</button>
-          <button class="c-btn c-btn-danger" type="button" id="confirm-delete">确认删除</button>
+          <button class="c-btn c-btn-ghost" type="button" id="cancel-delete" data-i18n="system_settings.modal.cancel">取消</button>
+          <button class="c-btn c-btn-danger" type="button" id="confirm-delete" data-i18n="system_settings.modal.confirm">确认删除</button>
         </div>
       </div>
     </div>
@@ -239,9 +239,16 @@
 
   <script src="i18n.js"></script>
   <script>
-    if (window.I18N) {
-      window.I18N.apply();
+    const i18n = window.I18N || null;
+    if (i18n) {
+      i18n.init();
+      i18n.apply();
     }
+    const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : (fallback || key));
+    const format = (key, vars, fallback) => (
+      i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
+    );
+    const locale = () => (i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN");
     const apiBase = "/api/sys-settings";
     const tasksApi = "/api/sys-tasks";
     const activationValidateApi = "/api/activation/validate";
@@ -286,6 +293,11 @@
     let pendingDelete = null;
     let systemTasks = [];
     let sendmsgConfigs = [];
+    let activationMeta = {
+      expires_at: "",
+      username: "",
+      email: "",
+    };
     let businessEmailConfig = {
       auth_filename: "",
       auth_path: "",
@@ -296,7 +308,7 @@
     let businessEmailTokenFile = null;
 
     const notifyError = (message) => {
-      window.alert(message || "请求失败，请稍后再试。");
+      window.alert(message || t("system_settings.common.request_failed_retry", "请求失败，请稍后再试。"));
     };
 
     const flashButton = (button, text) => {
@@ -318,7 +330,7 @@
       }).then(async (response) => {
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.success) {
-          const message = payload.message || "请求失败";
+          const message = payload.message || t("system_settings.common.request_failed", "请求失败");
           throw new Error(message);
         }
         return payload;
@@ -332,7 +344,7 @@
       }).then(async (response) => {
         const payload = await response.json().catch(() => ({}));
         if (!response.ok || !payload.success) {
-          const message = payload.message || "请求失败";
+          const message = payload.message || t("system_settings.common.request_failed", "请求失败");
           throw new Error(message);
         }
         return payload;
@@ -357,6 +369,19 @@
       }
       return "";
     };
+
+    const gmailHintText = (state, filename, noNameKey, noNameFallback) => {
+      if (filename) {
+        return format(
+          `system_settings.gmail.${state}_with_name`,
+          { name: filename },
+          `${state === "selected" ? "已选择" : "已保存"}：${filename}`
+        );
+      }
+      return t(noNameKey, noNameFallback);
+    };
+
+    const formatDateTime = (date) => date.toLocaleString(locale(), { hour12: false });
 
     const fetchSettings = async (section, fallback) => {
       try {
@@ -450,18 +475,18 @@
 
     const renderWeekdayOptions = (selected) => {
       const options = [
-        { value: "1", label: "周一" },
-        { value: "2", label: "周二" },
-        { value: "3", label: "周三" },
-        { value: "4", label: "周四" },
-        { value: "5", label: "周五" },
-        { value: "6", label: "周六" },
-        { value: "7", label: "周日" },
+        { value: "1", key: "system_settings.task.weekday.mon", label: "周一" },
+        { value: "2", key: "system_settings.task.weekday.tue", label: "周二" },
+        { value: "3", key: "system_settings.task.weekday.wed", label: "周三" },
+        { value: "4", key: "system_settings.task.weekday.thu", label: "周四" },
+        { value: "5", key: "system_settings.task.weekday.fri", label: "周五" },
+        { value: "6", key: "system_settings.task.weekday.sat", label: "周六" },
+        { value: "7", key: "system_settings.task.weekday.sun", label: "周日" },
       ];
       return options
         .map(
           (option) =>
-            `<option value="${option.value}" ${option.value === selected ? "selected" : ""}>${option.label}</option>`
+            `<option value="${option.value}" ${option.value === selected ? "selected" : ""}>${t(option.key, option.label)}</option>`
         )
         .join("");
     };
@@ -470,7 +495,7 @@
       let options = "";
       for (let day = 1; day <= 31; day += 1) {
         const value = String(day);
-        options += `<option value="${value}" ${value === selected ? "selected" : ""}>${value} 日</option>`;
+        options += `<option value="${value}" ${value === selected ? "selected" : ""}>${format("system_settings.task.monthday", { day: value }, `${value} 日`)}</option>`;
       }
       return options;
     };
@@ -481,52 +506,52 @@
       return `
       <li class="task-item">
         <div class="task-head">
-          <span class="task-title">任务 ${String(index + 1).padStart(2, "0")}</span>
-          <span class="inline-status" id="task-status-${index}">未执行</span>
+          <span class="task-title">${format("system_settings.task.title", { num: String(index + 1).padStart(2, "0") }, `任务 ${String(index + 1).padStart(2, "0")}`)}</span>
+          <span class="inline-status" id="task-status-${index}">${t("system_settings.task.status.not_run", "未执行")}</span>
         </div>
         <form class="form-grid">
           <div class="form-field">
-            <label for="task-name-${index}">任务名称</label>
-            <input id="task-name-${index}" type="text" placeholder="每日同步客户" value="${task.name || ""}" />
+            <label for="task-name-${index}">${t("system_settings.task.name", "任务名称")}</label>
+            <input id="task-name-${index}" type="text" placeholder="每日同步客户" data-i18n-placeholder="system_settings.task.name_placeholder" value="${task.name || ""}" />
           </div>
           <div class="form-field">
-            <label for="task-time-${index}">执行时间</label>
+            <label for="task-time-${index}">${t("system_settings.task.time", "执行时间")}</label>
             <input id="task-time-${index}" type="time" value="${task.time || "09:00"}" />
           </div>
           <div class="form-field">
-            <label for="task-frequency-${index}">执行频率</label>
+            <label for="task-frequency-${index}">${t("system_settings.task.frequency", "执行频率")}</label>
             <select id="task-frequency-${index}" data-task-frequency="${index}">
-              <option ${defaults.frequency === "每天" ? "selected" : ""}>每天</option>
-              <option ${defaults.frequency === "每周" ? "selected" : ""}>每周</option>
-              <option ${defaults.frequency === "每月" ? "selected" : ""}>每月</option>
-              <option ${defaults.frequency === "自定义 Cron" ? "selected" : ""}>自定义 Cron</option>
+              <option value="每天" ${defaults.frequency === "每天" ? "selected" : ""}>${t("system_settings.task.frequency.daily", "每天")}</option>
+              <option value="每周" ${defaults.frequency === "每周" ? "selected" : ""}>${t("system_settings.task.frequency.weekly", "每周")}</option>
+              <option value="每月" ${defaults.frequency === "每月" ? "selected" : ""}>${t("system_settings.task.frequency.monthly", "每月")}</option>
+              <option value="自定义 Cron" ${defaults.frequency === "自定义 Cron" ? "selected" : ""}>${t("system_settings.task.frequency.cron", "自定义 Cron")}</option>
             </select>
           </div>
           <div class="form-field">
-            <label for="task-enabled-${index}">启用</label>
+            <label for="task-enabled-${index}">${t("system_settings.task.enabled", "启用")}</label>
             <div class="task-toggle">
               <input id="task-enabled-${index}" type="checkbox" ${isEnabled ? "checked" : ""} />
-              <span>${isEnabled ? "已启用" : "已停用"}</span>
+              <span>${isEnabled ? t("system_settings.task.status.enabled", "已启用") : t("system_settings.task.status.disabled", "已停用")}</span>
             </div>
           </div>
           <div class="form-field hidden" data-task-index="${index}" data-frequency-field="每周">
-            <label for="task-weekday-${index}">每周执行</label>
+            <label for="task-weekday-${index}">${t("system_settings.task.weekday", "每周执行")}</label>
             <select id="task-weekday-${index}">
               ${renderWeekdayOptions(defaults.weekday)}
             </select>
           </div>
           <div class="form-field hidden" data-task-index="${index}" data-frequency-field="每月">
-            <label for="task-monthday-${index}">每月执行</label>
+            <label for="task-monthday-${index}">${t("system_settings.task.monthday_label", "每月执行")}</label>
             <select id="task-monthday-${index}">
               ${renderMonthdayOptions(defaults.monthday)}
             </select>
           </div>
           <div class="form-field full hidden" data-task-index="${index}" data-frequency-field="自定义 Cron">
-            <label for="task-cron-${index}">Cron 表达式</label>
-            <input id="task-cron-${index}" type="text" placeholder="0 9 * * 1-5" value="${defaults.cronExpr}" />
+            <label for="task-cron-${index}">${t("system_settings.task.cron", "Cron 表达式")}</label>
+            <input id="task-cron-${index}" type="text" placeholder="0 9 * * 1-5" data-i18n-placeholder="system_settings.task.cron_placeholder" value="${defaults.cronExpr}" />
           </div>
           <div class="form-field">
-            <label for="task-method-${index}">请求方式</label>
+            <label for="task-method-${index}">${t("system_settings.task.method", "请求方式")}</label>
             <select id="task-method-${index}">
               <option ${task.method === "POST" ? "selected" : ""}>POST</option>
               <option ${task.method === "GET" ? "selected" : ""}>GET</option>
@@ -535,17 +560,17 @@
             </select>
           </div>
           <div class="form-field full">
-            <label for="task-api-${index}">API 地址</label>
-            <input id="task-api-${index}" type="text" placeholder="https://api.example.com/sync" value="${task.api || ""}" />
+            <label for="task-api-${index}">${t("system_settings.task.api", "API 地址")}</label>
+            <input id="task-api-${index}" type="text" placeholder="https://api.example.com/sync" data-i18n-placeholder="system_settings.task.api_placeholder" value="${task.api || ""}" />
           </div>
           <div class="form-field full">
-            <label for="task-body-${index}">请求参数 / Body</label>
-            <textarea id="task-body-${index}" placeholder='{"range":"today"}'>${task.body || ""}</textarea>
+            <label for="task-body-${index}">${t("system_settings.task.body", "请求参数 / Body")}</label>
+            <textarea id="task-body-${index}" placeholder='{"range":"today"}' data-i18n-placeholder="system_settings.task.body_placeholder">${task.body || ""}</textarea>
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-success" type="button" data-run-now="${index}">立即执行</button>
-            <button class="c-btn c-btn-primary" type="button" data-save-task="${index}">保存任务</button>
-            <button class="c-btn c-btn-danger" type="button" data-delete-task="${index}">删除</button>
+            <button class="c-btn c-btn-success" type="button" data-run-now="${index}">${t("system_settings.task.run_now", "立即执行")}</button>
+            <button class="c-btn c-btn-primary" type="button" data-save-task="${index}">${t("system_settings.task.save", "保存任务")}</button>
+            <button class="c-btn c-btn-danger" type="button" data-delete-task="${index}">${t("system_settings.common.delete", "删除")}</button>
           </div>
         </form>
       </li>
@@ -568,6 +593,9 @@
       taskList.innerHTML = "";
       const items = tasks.length ? tasks : [{}];
       taskList.innerHTML = items.map((task, index) => taskFormHtml(index, task)).join("");
+      if (i18n) {
+        i18n.apply(taskList);
+      }
       items.forEach((task, index) => {
         const defaults = resolveTaskDefaults(task);
         updateTaskFrequencyUI(index, defaults.frequency);
@@ -605,40 +633,41 @@
     const sendmsgFormHtml = (index, config) => `
       <li class="config-item">
         <div class="config-head">
-          <span class="config-title">配置 ${String(index + 1).padStart(2, "0")}</span>
+          <span class="config-title">${format("system_settings.sendmsg.item_title", { num: String(index + 1).padStart(2, "0") }, `配置 ${String(index + 1).padStart(2, "0")}`)}</span>
           <span class="inline-status" id="sendmsg-status-${index}"></span>
         </div>
         <form class="form-grid">
           <div class="form-field">
-            <label for="sendmsg-email-${index}">邮箱账号</label>
-            <input id="sendmsg-email-${index}" type="email" placeholder="staff@company.com" value="${config.email || ""}" />
+            <label for="sendmsg-email-${index}">${t("system_settings.sendmsg.email", "邮箱账号")}</label>
+            <input id="sendmsg-email-${index}" type="email" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.email_placeholder" value="${config.email || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendmsg-password-${index}">密码 / 授权码</label>
-            <input id="sendmsg-password-${index}" type="password" placeholder="••••••••" value="${config.password || ""}" />
+            <label for="sendmsg-password-${index}">${t("system_settings.sendmsg.password", "密码 / 授权码")}</label>
+            <input id="sendmsg-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.password_placeholder" value="${config.password || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendmsg-smtp-${index}">SMTP 服务器</label>
-            <input id="sendmsg-smtp-${index}" type="text" placeholder="smtp.gmail.com" value="${config.smtp || ""}" />
+            <label for="sendmsg-smtp-${index}">${t("system_settings.sendmsg.smtp", "SMTP 服务器")}</label>
+            <input id="sendmsg-smtp-${index}" type="text" placeholder="smtp.gmail.com" data-i18n-placeholder="system_settings.sendmsg.smtp_placeholder" value="${config.smtp || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendmsg-port-${index}">端口</label>
-            <input id="sendmsg-port-${index}" type="number" placeholder="587" value="${config.port || ""}" />
+            <label for="sendmsg-port-${index}">${t("system_settings.sendmsg.port", "端口")}</label>
+            <input id="sendmsg-port-${index}" type="number" placeholder="587" data-i18n-placeholder="system_settings.sendmsg.port_placeholder" value="${config.port || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendmsg-user-${index}">使用人</label>
+            <label for="sendmsg-user-${index}">${t("system_settings.sendmsg.user", "使用人")}</label>
             <input
               id="sendmsg-user-${index}"
               type="text"
               list="user-login-suggestions"
               placeholder="请输入登录账号"
+              data-i18n-placeholder="system_settings.sendmsg.user_placeholder"
               value="${config.user || ""}"
             />
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button" data-test-sendmsg="${index}">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button" data-save-sendmsg="${index}">保存配置</button>
-            <button class="c-btn c-btn-danger" type="button" data-delete-sendmsg="${index}">删除</button>
+            <button class="c-btn c-btn-secondary" type="button" data-test-sendmsg="${index}">${t("system_settings.common.test", "连接测试")}</button>
+            <button class="c-btn c-btn-primary" type="button" data-save-sendmsg="${index}">${t("system_settings.common.save_config", "保存配置")}</button>
+            <button class="c-btn c-btn-danger" type="button" data-delete-sendmsg="${index}">${t("system_settings.common.delete", "删除")}</button>
           </div>
         </form>
       </li>
@@ -651,6 +680,82 @@
       sendmsgList.innerHTML = items
         .map((config, index) => sendmsgFormHtml(index, config))
         .join("");
+      if (i18n) {
+        i18n.apply(sendmsgList);
+      }
+    };
+
+    const snapshotTaskStatuses = () => {
+      if (!taskList) return [];
+      const items = taskList.querySelectorAll(".task-item");
+      return Array.from(items).map((_, index) => {
+        const el = document.getElementById(`task-status-${index}`);
+        return {
+          text: el ? el.textContent : "",
+          success: el ? el.classList.contains("success") : false,
+        };
+      });
+    };
+
+    const snapshotSendmsgStatuses = () => {
+      if (!sendmsgList) return [];
+      const items = sendmsgList.querySelectorAll(".config-item");
+      return Array.from(items).map((_, index) => {
+        const el = document.getElementById(`sendmsg-status-${index}`);
+        return {
+          text: el ? el.textContent : "",
+          success: el ? el.classList.contains("success") : false,
+        };
+      });
+    };
+
+    const applyStatuses = (prefix, statuses) => {
+      if (!Array.isArray(statuses)) return;
+      statuses.forEach((status, index) => {
+        const el = document.getElementById(`${prefix}-${index}`);
+        if (!el) return;
+        el.textContent = status && status.text ? status.text : "";
+        el.classList.toggle("success", Boolean(status && status.success));
+      });
+    };
+
+    const snapshotTasksFromDom = () => {
+      if (!taskList) return systemTasks;
+      const items = taskList.querySelectorAll(".task-item");
+      if (!items.length) return systemTasks;
+      return Array.from(items).map((_, index) => collectTaskConfig(index));
+    };
+
+    const snapshotSendmsgFromDom = () => {
+      if (!sendmsgList) return sendmsgConfigs;
+      const items = sendmsgList.querySelectorAll(".config-item");
+      if (!items.length) return sendmsgConfigs;
+      return Array.from(items).map((_, index) => collectSendmsgConfig(index));
+    };
+
+    const updateBusinessEmailHints = () => {
+      if (gmailAuthCurrent) {
+        const filename = businessEmailFile ? businessEmailFile.name : resolveAuthName(businessEmailConfig);
+        const state = businessEmailFile ? "selected" : "saved";
+        const noNameKey = state === "selected"
+          ? "system_settings.gmail.auth_selected_no_name"
+          : "system_settings.gmail.auth_saved_no_name";
+        const noNameFallback = state === "selected" ? "已选择凭据" : "已保存凭据";
+        gmailAuthCurrent.textContent = filename
+          ? gmailHintText(state, filename, noNameKey, noNameFallback)
+          : "";
+      }
+      if (gmailTokenCurrent) {
+        const filename = businessEmailTokenFile ? businessEmailTokenFile.name : resolveTokenName(businessEmailConfig);
+        const state = businessEmailTokenFile ? "selected" : "saved";
+        const noNameKey = state === "selected"
+          ? "system_settings.gmail.token_selected_no_name"
+          : "system_settings.gmail.token_saved_no_name";
+        const noNameFallback = state === "selected" ? "已选择 token" : "已保存 token";
+        gmailTokenCurrent.textContent = filename
+          ? gmailHintText(state, filename, noNameKey, noNameFallback)
+          : "";
+      }
     };
 
     const renderUserLoginSuggestions = (names) => {
@@ -711,11 +816,30 @@
       activationCurrent.textContent = text || "";
     };
 
+    const updateActivationHint = () => {
+      const parts = [];
+      if (activationMeta.username) {
+        parts.push(format("system_settings.activation.current_user", { user: activationMeta.username }, `用户：${activationMeta.username}`));
+      }
+      if (activationMeta.email) {
+        parts.push(format("system_settings.activation.current_email", { email: activationMeta.email }, `邮箱：${activationMeta.email}`));
+      }
+      if (activationMeta.expires_at) {
+        const dateText = formatDateOnly(activationMeta.expires_at);
+        parts.push(format("system_settings.activation.current_expiry", { date: dateText }, `有效期：${dateText}`));
+      }
+      if (parts.length) {
+        setActivationHint(format("system_settings.activation.current", { info: parts.join(" · ") }, `当前激活信息：${parts.join(" · ")}`));
+      } else {
+        setActivationHint("");
+      }
+    };
+
     const formatDateOnly = (raw) => {
       if (!raw) return "";
       const date = new Date(raw);
       if (Number.isNaN(date.getTime())) return String(raw);
-      return date.toLocaleDateString("zh-CN");
+      return date.toLocaleDateString(locale());
     };
 
     const setAiTestStatus = (data) => {
@@ -793,7 +917,7 @@
 
     const runTaskNow = async (task) => {
       const api = (task.api || "").trim();
-      if (!api) throw new Error("请先填写 API 地址。");
+      if (!api) throw new Error(t("system_settings.task.api_required", "请先填写 API 地址。"));
       const method = (task.method || "POST").trim().toUpperCase();
       const hasBody = !["GET", "HEAD"].includes(method);
       let body = undefined;
@@ -805,7 +929,7 @@
           try {
             body = JSON.stringify(JSON.parse(rawBody));
           } catch (error) {
-            throw new Error("请求参数必须是合法 JSON。");
+            throw new Error(t("system_settings.task.invalid_json", "请求参数必须是合法 JSON。"));
           }
         }
       }
@@ -822,11 +946,11 @@
         payload = null;
       }
       if (!response.ok) {
-        const message = payload && payload.message ? payload.message : "请求失败";
+        const message = payload && payload.message ? payload.message : t("system_settings.common.request_failed", "请求失败");
         throw new Error(message);
       }
       if (payload && payload.success === false) {
-        throw new Error(payload.message || "请求失败");
+        throw new Error(payload.message || t("system_settings.common.request_failed", "请求失败"));
       }
       return payload;
     };
@@ -856,12 +980,15 @@
           };
           businessEmailFile = file;
           if (gmailAuthCurrent) {
-            gmailAuthCurrent.textContent = businessEmailConfig.auth_filename
-              ? `已选择：${businessEmailConfig.auth_filename}`
-              : "已选择凭据";
+            gmailAuthCurrent.textContent = gmailHintText(
+              "selected",
+              businessEmailConfig.auth_filename,
+              "system_settings.gmail.auth_selected_no_name",
+              "已选择凭据"
+            );
           }
         } catch (error) {
-          notifyError("读取文件失败，请重试。");
+          notifyError(t("system_settings.gmail.error_read_file", "读取文件失败，请重试。"));
         }
       });
     }
@@ -879,12 +1006,15 @@
           };
           businessEmailTokenFile = file;
           if (gmailTokenCurrent) {
-            gmailTokenCurrent.textContent = businessEmailConfig.token_filename
-              ? `已选择：${businessEmailConfig.token_filename}`
-              : "已选择 token";
+            gmailTokenCurrent.textContent = gmailHintText(
+              "selected",
+              businessEmailConfig.token_filename,
+              "system_settings.gmail.token_selected_no_name",
+              "已选择 token"
+            );
           }
         } catch (error) {
-          notifyError("读取文件失败，请重试。");
+          notifyError(t("system_settings.gmail.error_read_file", "读取文件失败，请重试。"));
         }
       });
     }
@@ -898,11 +1028,11 @@
           (gmailTokenInput && gmailTokenInput.files && gmailTokenInput.files[0]) ||
           businessEmailTokenFile;
         if (!authFile) {
-          notifyError("请先选择 Gmail 认证文件。");
+          notifyError(t("system_settings.gmail.error_select_auth", "请先选择 Gmail 认证文件。"));
           return;
         }
         if (!tokenFile) {
-          notifyError("请先选择 Gmail token 文件。");
+          notifyError(t("system_settings.gmail.error_select_token", "请先选择 Gmail token 文件。"));
           return;
         }
         try {
@@ -926,13 +1056,23 @@
           }
           if (gmailAuthCurrent) {
             const filename = resolveAuthName(businessEmailConfig);
-            gmailAuthCurrent.textContent = filename ? `已保存：${filename}` : "已保存凭据";
+            gmailAuthCurrent.textContent = gmailHintText(
+              "saved",
+              filename,
+              "system_settings.gmail.auth_saved_no_name",
+              "已保存凭据"
+            );
           }
           if (gmailTokenCurrent) {
             const filename = resolveTokenName(businessEmailConfig);
-            gmailTokenCurrent.textContent = filename ? `已保存：${filename}` : "已保存 token";
+            gmailTokenCurrent.textContent = gmailHintText(
+              "saved",
+              filename,
+              "system_settings.gmail.token_saved_no_name",
+              "已保存 token"
+            );
           }
-          flashButton(gmailSaveButton, "已保存");
+          flashButton(gmailSaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -946,10 +1086,13 @@
             method: "POST",
             body: JSON.stringify({}),
           });
-          const message = payload.data && payload.data.message ? payload.data.message : "连接成功";
+          const message = payload.data && payload.data.message ? payload.data.message : t("system_settings.common.connection_success", "连接成功");
           const email = payload.data && payload.data.email_address ? payload.data.email_address : "";
-          window.alert(email ? `${message}\n邮箱：${email}` : message);
-          flashButton(gmailTestButton, "成功");
+          const emailLine = email
+            ? format("system_settings.gmail.test_email", { email }, `邮箱：${email}`)
+            : "";
+          window.alert(email ? `${message}\n${emailLine}` : message);
+          flashButton(gmailTestButton, t("system_settings.common.success", "成功"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -960,13 +1103,13 @@
       matchSaveButton.addEventListener("click", async () => {
         const cycleValue = Number(getValue("match-cycle"));
         if (!cycleValue || cycleValue < 1) {
-          notifyError("周期（天）必须大于 0。");
+          notifyError(t("system_settings.match.error_cycle", "周期（天）必须大于 0。"));
           return;
         }
         const settings = { cycle_days: cycleValue };
         try {
           await saveSettings(sections.match, settings);
-          flashButton(matchSaveButton, "已保存");
+          flashButton(matchSaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -979,11 +1122,11 @@
         const password = getValue("preview-password");
         const expiresInDays = Number(getValue("preview-expiry"));
         if (!userName || !password) {
-          notifyError("请填写账号与新密码。");
+          notifyError(t("system_settings.password_reset.error_missing", "请填写账号与新密码。"));
           return;
         }
         if (!Number.isInteger(expiresInDays) || expiresInDays < 1) {
-          notifyError("有效期必须是大于等于 1 的整数。");
+          notifyError(t("system_settings.password_reset.error_expiry", "有效期必须是大于等于 1 的整数。"));
           return;
         }
         try {
@@ -999,12 +1142,12 @@
             ? new Date(payload.data.expires_at)
             : null;
           const message = expiresAt
-            ? `已重置，有效期至 ${expiresAt.toLocaleString("zh-CN", { hour12: false })}`
-            : "已重置";
+            ? format("system_settings.password_reset.success_until", { time: formatDateTime(expiresAt) }, `已重置，有效期至 ${formatDateTime(expiresAt)}`)
+            : t("system_settings.password_reset.success", "已重置");
           setInlineStatus("preview-reset-status", message, true);
-          flashButton(previewResetButton, "已重置");
+          flashButton(previewResetButton, t("system_settings.password_reset.success", "已重置"));
         } catch (error) {
-          setInlineStatus("preview-reset-status", error.message || "重置失败", false);
+          setInlineStatus("preview-reset-status", error.message || t("system_settings.password_reset.error_failed", "重置失败"), false);
           notifyError(error.message);
         }
       });
@@ -1014,7 +1157,7 @@
       activationSaveButton.addEventListener("click", async () => {
         const code = getValue("activation-code").trim();
         if (!code) {
-          setInlineStatus("activation-status", "请输入激活码。", false);
+          setInlineStatus("activation-status", t("system_settings.activation.error_empty", "请输入激活码。"), false);
           return;
         }
         try {
@@ -1023,17 +1166,22 @@
             body: JSON.stringify({ code }),
           });
           if (!validation || !validation.data) {
-            throw new Error("激活码无效或已过期");
+            throw new Error(t("system_settings.activation.error_invalid", "激活码无效或已过期"));
           }
           const settings = { code };
           const saved = await saveSettings(sections.activation, settings);
           const expiresAt = saved && saved.expires_at ? formatDateOnly(saved.expires_at) : "";
-          const message = expiresAt ? `已保存，有效期至 ${expiresAt}` : "已保存";
+          const message = expiresAt
+            ? format("system_settings.activation.saved_until", { date: expiresAt }, `已保存，有效期至 ${expiresAt}`)
+            : t("system_settings.activation.saved", "已保存");
           setInlineStatus("activation-status", message, true);
-          setActivationHint(expiresAt ? `当前有效期：${expiresAt}` : "已保存激活码");
-          flashButton(activationSaveButton, "已保存");
+          setActivationHint(expiresAt
+            ? format("system_settings.activation.current_until", { date: expiresAt }, `当前有效期：${expiresAt}`)
+            : t("system_settings.activation.current_saved", "已保存激活码")
+          );
+          flashButton(activationSaveButton, t("system_settings.activation.saved", "已保存"));
         } catch (error) {
-          const message = error.message || "激活码无效或已过期";
+          const message = error.message || t("system_settings.activation.error_invalid", "激活码无效或已过期");
           setInlineStatus("activation-status", message, false);
           if (activationCodeInput) {
             activationCodeInput.focus();
@@ -1057,7 +1205,7 @@
         };
         try {
           await saveSettings(sections.ai, settings);
-          flashButton(aiSaveButton, "已保存");
+          flashButton(aiSaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -1067,7 +1215,7 @@
     if (aiTestButton) {
       aiTestButton.addEventListener("click", async () => {
         try {
-          setAiTestStatus({ message: "正在检查配置…", status: "checking" });
+          setAiTestStatus({ message: t("system_settings.ai.test_checking", "正在检查配置…"), status: "checking" });
           const modeButton = document.querySelector(".ai-toggle button.is-active");
           const mode = modeButton ? modeButton.getAttribute("data-ai-mode") : "local";
           const modelName =
@@ -1085,11 +1233,11 @@
           });
           const data = payload.data || {};
           setAiTestStatus(data);
-          const message = data.message || "连接成功";
+          const message = data.message || t("system_settings.common.connection_success", "连接成功");
           window.alert(message);
-          flashButton(aiTestButton, "成功");
+          flashButton(aiTestButton, t("system_settings.common.success", "成功"));
         } catch (error) {
-          setAiTestStatus({ message: error.message || "连接失败", status: "error" });
+          setAiTestStatus({ message: error.message || t("system_settings.common.connection_failed", "连接失败"), status: "error" });
           notifyError(error.message);
         }
       });
@@ -1108,7 +1256,7 @@
         };
         try {
           await saveSettings(sections.backup, settings);
-          flashButton(backupSaveButton, "已保存");
+          flashButton(backupSaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -1117,7 +1265,7 @@
 
     if (backupTestButton) {
       backupTestButton.addEventListener("click", () => {
-        notifyError("连接测试暂未实现，请先保存配置。");
+        notifyError(t("system_settings.backup.test_unavailable", "连接测试暂未实现，请先保存配置。"));
       });
     }
 
@@ -1133,7 +1281,7 @@
         };
         try {
           await saveSettings(sections.account, settings);
-          flashButton(accountSaveButton, "已保存");
+          flashButton(accountSaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -1153,7 +1301,11 @@
         if (target.matches("input[type=\"checkbox\"][id^=\"task-enabled-\"]")) {
           const wrap = target.closest(".task-toggle");
           const label = wrap ? wrap.querySelector("span") : null;
-          if (label) label.textContent = target.checked ? "已启用" : "已停用";
+          if (label) {
+            label.textContent = target.checked
+              ? t("system_settings.task.status.enabled", "已启用")
+              : t("system_settings.task.status.disabled", "已停用");
+          }
         }
       });
 
@@ -1166,7 +1318,7 @@
         if (deleteButton) {
           const index = Number(deleteButton.getAttribute("data-delete-task"));
           if (Number.isNaN(index)) return;
-          openDeleteModal("确定删除该定时任务吗？", async () => {
+          openDeleteModal(t("system_settings.task.delete_confirm", "确定删除该定时任务吗？"), async () => {
             systemTasks.splice(index, 1);
             renderTasks(systemTasks);
             try {
@@ -1187,9 +1339,9 @@
               systemTasks = saved;
               renderTasks(systemTasks);
             }
-            setInlineStatus(`task-status-${index}`, "已保存", true);
+            setInlineStatus(`task-status-${index}`, t("system_settings.common.saved", "已保存"), true);
             const freshSaveButton = document.querySelector(`[data-save-task="${index}"]`);
-            flashButton(freshSaveButton, "已保存");
+            flashButton(freshSaveButton, t("system_settings.common.saved", "已保存"));
           } catch (error) {
             notifyError(error.message);
           }
@@ -1199,19 +1351,21 @@
         const index = runButton.getAttribute("data-run-now");
         const statusEl = document.getElementById(`task-status-${index}`);
         if (!statusEl) return;
-        statusEl.textContent = "执行中...";
+        statusEl.textContent = t("system_settings.task.status.running", "执行中...");
         statusEl.classList.remove("success");
         const taskConfig = collectTaskConfig(Number(index));
         try {
           await runTaskNow(taskConfig);
           const now = new Date();
-          statusEl.textContent = `已触发：${now.toLocaleString("zh-CN", {
-            hour12: false,
-          })}`;
+          statusEl.textContent = format(
+            "system_settings.task.status.triggered",
+            { time: formatDateTime(now) },
+            `已触发：${formatDateTime(now)}`
+          );
           statusEl.classList.add("success");
-          flashButton(runButton, "已触发");
+          flashButton(runButton, t("system_settings.task.status.triggered_short", "已触发"));
         } catch (error) {
-          statusEl.textContent = "执行失败";
+          statusEl.textContent = t("system_settings.task.status.failed", "执行失败");
           statusEl.classList.remove("success");
           notifyError(error.message);
         }
@@ -1235,7 +1389,7 @@
         if (deleteButton) {
           const index = Number(deleteButton.getAttribute("data-delete-sendmsg"));
           if (Number.isNaN(index)) return;
-          openDeleteModal("确定删除该送信配置吗？", async () => {
+          openDeleteModal(t("system_settings.sendmsg.delete_confirm", "确定删除该送信配置吗？"), async () => {
             sendmsgConfigs.splice(index, 1);
             renderSendmsgConfigs(sendmsgConfigs);
             try {
@@ -1252,7 +1406,7 @@
           sendmsgConfigs[index] = collectSendmsgConfig(index);
           try {
             await saveSettings(sections.sendmsg, sendmsgConfigs);
-            setInlineStatus(`sendmsg-status-${index}`, "已保存", true);
+            setInlineStatus(`sendmsg-status-${index}`, t("system_settings.common.saved", "已保存"), true);
           } catch (error) {
             notifyError(error.message);
           }
@@ -1263,7 +1417,7 @@
           if (Number.isNaN(index)) return;
           const settings = collectSendmsgConfig(index);
           if (!settings.email || !settings.password || !settings.smtp || !settings.port) {
-            notifyError("请填写完整的 SMTP 配置。");
+            notifyError(t("system_settings.sendmsg.smtp_incomplete", "请填写完整的 SMTP 配置。"));
             return;
           }
           try {
@@ -1271,12 +1425,12 @@
               method: "POST",
               body: JSON.stringify(settings),
             });
-            const message = payload.data && payload.data.message ? payload.data.message : "连接成功";
+            const message = payload.data && payload.data.message ? payload.data.message : t("system_settings.common.connection_success", "连接成功");
             setInlineStatus(`sendmsg-status-${index}`, message, true);
             window.alert(message);
-            flashButton(testButton, "成功");
+            flashButton(testButton, t("system_settings.common.success", "成功"));
           } catch (error) {
-            setInlineStatus(`sendmsg-status-${index}`, error.message || "连接失败", false);
+            setInlineStatus(`sendmsg-status-${index}`, error.message || t("system_settings.common.connection_failed", "连接失败"), false);
             notifyError(error.message);
           }
         }
@@ -1312,14 +1466,7 @@
 
     const loadSettings = async () => {
       businessEmailConfig = await fetchSettings(sections.businessEmail, businessEmailConfig);
-      if (gmailAuthCurrent) {
-        const filename = resolveAuthName(businessEmailConfig);
-        gmailAuthCurrent.textContent = filename ? `已保存：${filename}` : "";
-      }
-      if (gmailTokenCurrent) {
-        const filename = resolveTokenName(businessEmailConfig);
-        gmailTokenCurrent.textContent = filename ? `已保存：${filename}` : "";
-      }
+      updateBusinessEmailHints();
 
       const matchSettings = await fetchSettings(sections.match, { cycle_days: 14 });
       setValue("match-cycle", matchSettings.cycle_days || "");
@@ -1372,19 +1519,35 @@
 
       const activationSettings = await fetchSettings(sections.activation, {});
       setValue("activation-code", activationSettings.code || "");
-      const activationExpires = activationSettings.expires_at || "";
-      const activationUser = activationSettings.username || "";
-      const activationEmail = activationSettings.email || "";
-      const activationHintParts = [];
-      if (activationUser) activationHintParts.push(`用户：${activationUser}`);
-      if (activationEmail) activationHintParts.push(`邮箱：${activationEmail}`);
-      if (activationExpires) activationHintParts.push(`有效期：${formatDateOnly(activationExpires)}`);
-      if (activationHintParts.length) {
-        setActivationHint(`当前激活信息：${activationHintParts.join(" · ")}`);
-      }
+      activationMeta = {
+        expires_at: activationSettings.expires_at || "",
+        username: activationSettings.username || "",
+        email: activationSettings.email || "",
+      };
+      updateActivationHint();
     };
 
     loadSettings();
+
+    const refreshI18n = () => {
+      if (i18n) {
+        i18n.apply();
+      }
+      const taskSnapshot = snapshotTasksFromDom();
+      const sendmsgSnapshot = snapshotSendmsgFromDom();
+      const taskStatuses = snapshotTaskStatuses();
+      const sendmsgStatuses = snapshotSendmsgStatuses();
+      renderTasks(taskSnapshot);
+      renderSendmsgConfigs(sendmsgSnapshot);
+      applyStatuses("task-status", taskStatuses);
+      applyStatuses("sendmsg-status", sendmsgStatuses);
+      updateBusinessEmailHints();
+      updateActivationHint();
+    };
+
+    if (window && window.addEventListener) {
+      window.addEventListener("i18n:change", refreshI18n);
+    }
 
     const previewUserInput = document.getElementById("preview-user");
     if (previewUserInput) {

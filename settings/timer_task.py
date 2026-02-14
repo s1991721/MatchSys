@@ -4,13 +4,15 @@ import os
 from datetime import timedelta
 
 from django.conf import settings as django_settings
-from django.db import close_old_connections, transaction
+from django.db import close_old_connections, connection, transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo
+from settings.activation_code import is_activation_code_valid
 from settings.models import SysSettings
 
 
@@ -18,6 +20,28 @@ def _ensure_time_to_save_logger(date_tag: str, logger: logging.Logger):
     logs_dir = os.path.join(django_settings.BASE_DIR, "logs")
     os.makedirs(logs_dir, exist_ok=True)
     log_path = os.path.join(logs_dir, f"time_to_save_{date_tag}.log")
+
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler) and handler.baseFilename == log_path:
+            return
+
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        fmt="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+
+def _ensure_time_to_clean_logger(date_tag: str, logger: logging.Logger):
+    # 确保清理任务日志文件按日期创建并复用
+    logs_dir = os.path.join(django_settings.BASE_DIR, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_path = os.path.join(logs_dir, f"time_to_clean_{date_tag}.log")
 
     for handler in logger.handlers:
         if isinstance(handler, logging.FileHandler) and handler.baseFilename == log_path:
@@ -65,6 +89,8 @@ def run_time_to_save():
         timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"),
     )
     try:
+        if not _validate_activation(logger_save, "time_to_save"):
+            return
         end_date = timezone.now().date()
         start_date = end_date - timedelta(days=_get_cycle_days())
         gmail = GmailTool()
@@ -201,8 +227,110 @@ def run_time_to_save():
 logger_clean = logging.getLogger("bpmatch.time_to_clean")
 
 
+def _validate_activation(logger: logging.Logger, task_name: str) -> bool:
+    # 校验激活码是否存在且在有效期内
+    activation_record = SysSettings.objects.filter(
+        name="activation", deleted_at__isnull=True
+    ).first()
+    activation_settings = (
+        activation_record.settings
+        if activation_record and isinstance(activation_record.settings, dict)
+        else {}
+    )
+    activation_code = str(activation_settings.get("code") or "").strip()
+    if not activation_code:
+        logger.warning("%s skipped: missing activation code", task_name)
+        return False
+    valid, _payload, reason = is_activation_code_valid(
+        activation_code, now=timezone.now()
+    )
+    if not valid:
+        logger.warning("%s skipped: invalid activation code reason=%s", task_name, reason)
+        return False
+    return True
+
+
+def _clean_expired_mails():
+    # 清理过期邮件（含日期为空的记录）
+    cutoff = timezone.now() - timedelta(days=_get_cycle_days())
+    with transaction.atomic():
+        saved_deleted, _ = SavedMailInfo.objects.filter(
+            Q(date__lt=cutoff) | Q(date__isnull=True)
+        ).delete()
+        project_deleted, _ = MailProjectInfo.objects.filter(
+            Q(date__lt=cutoff) | Q(date__isnull=True)
+        ).delete()
+        technician_deleted, _ = MailTechnicianInfo.objects.filter(
+            Q(date__lt=cutoff) | Q(date__isnull=True)
+        ).delete()
+
+    logger_clean.info(
+        "time_to_clean mails deleted saved=%s projects=%s technicians=%s cutoff=%s",
+        saved_deleted,
+        project_deleted,
+        technician_deleted,
+        cutoff.isoformat(),
+    )
+
+
+def _drop_expired_attendance_tables():
+    # 删除上个月及之前的考勤分表
+    today = timezone.localdate()
+    first_of_month = today.replace(day=1)
+    last_month_date = first_of_month - timedelta(days=1)
+    last_month_suffix = int(last_month_date.strftime("%Y%m"))
+
+    table_prefix = "attendance_punch_"
+    to_drop = []
+    existing_tables = set(connection.introspection.table_names())
+    for table_name in existing_tables:
+        if not table_name.startswith(table_prefix):
+            continue
+        suffix = table_name[len(table_prefix) :]
+        if len(suffix) != 6 or not suffix.isdigit():
+            continue
+        if int(suffix) <= last_month_suffix:
+            to_drop.append(table_name)
+
+    dropped_tables = 0
+    if to_drop:
+        with connection.cursor() as cursor:
+            for table_name in sorted(to_drop):
+                quoted = connection.ops.quote_name(table_name)
+                cursor.execute(f"DROP TABLE IF EXISTS {quoted}")
+                dropped_tables += 1
+
+    logger_clean.info(
+        "time_to_clean attendance tables dropped=%s through_suffix=%s tables=%s",
+        dropped_tables,
+        last_month_suffix,
+        ",".join(sorted(to_drop)) if to_drop else "",
+    )
+
+
 def run_time_to_clean():
-    return
+    date_tag = timezone.now().strftime("%Y-%m-%d")
+    _ensure_time_to_clean_logger(date_tag, logger_clean)
+    close_old_connections()
+    started_at = timezone.now()
+    logger_clean.info(
+        "time_to_clean started at %s",
+        timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"),
+    )
+    try:
+        if not _validate_activation(logger_clean, "time_to_clean"):
+            return
+
+        _clean_expired_mails()
+        _drop_expired_attendance_tables()
+        logger_clean.info(
+            "time_to_clean finished duration_s=%.2f",
+            (timezone.now() - started_at).total_seconds(),
+        )
+    except Exception:
+        logger_clean.exception("time_to_clean failed")
+    finally:
+        close_old_connections()
 
 
 def run_time_to_hello():

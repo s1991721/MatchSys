@@ -2291,6 +2291,35 @@ svg {
   font-size: 13px;
   color: #516079;
 }
+.system-settings .task-log-modal .c-modal {
+  width: 80%;
+  max-width: 980px;
+}
+.system-settings .task-log-filters {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.system-settings .task-log-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  grid-column: 1 / -1;
+}
+.system-settings .task-log-output {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #e6ebf4;
+  background: #f8fafc;
+  font-size: 12px;
+  color: #2c3d55;
+  line-height: 1.5;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
 .system-settings .span-2 {
   grid-column: 1 / -1;
 }
@@ -2303,6 +2332,12 @@ svg {
     width: 100%;
   }
   .system-settings .match-row .form-actions {
+    justify-content: flex-start;
+  }
+  .system-settings .task-log-filters {
+    grid-template-columns: 1fr;
+  }
+  .system-settings .task-log-actions {
     justify-content: flex-start;
   }
 }

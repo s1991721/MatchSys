@@ -235,6 +235,32 @@
         </div>
       </div>
     </div>
+    <div class="c-modal-backdrop task-log-modal" id="task-log-modal" aria-hidden="true">
+      <div class="c-modal" role="dialog" aria-modal="true" aria-labelledby="task-log-title">
+        <div class="c-modal-head">
+          <h3 class="c-modal-title" id="task-log-title" data-i18n="system_settings.task.logs_title">执行日志</h3>
+          <button class="c-modal-close" type="button" id="task-log-close" aria-label="Close">×</button>
+        </div>
+        <div class="c-modal-body">
+          <div class="task-log-filters">
+            <div class="c-modal-field">
+              <label for="task-log-start" data-i18n="system_settings.task.logs_filter_start">开始日期</label>
+              <input id="task-log-start" type="date" />
+            </div>
+            <div class="c-modal-field">
+              <label for="task-log-end" data-i18n="system_settings.task.logs_filter_end">结束日期</label>
+              <input id="task-log-end" type="date" />
+            </div>
+            <div class="task-log-actions">
+              <button class="c-btn c-btn-secondary" type="button" id="task-log-search" data-i18n="system_settings.task.logs_search">查询</button>
+              <button class="c-btn c-btn-ghost" type="button" id="task-log-reset" data-i18n="system_settings.task.logs_reset">清空</button>
+            </div>
+          </div>
+          <div class="hint" id="task-log-meta" data-i18n="system_settings.task.logs_hint">选择日期后查询执行情况</div>
+          <pre class="task-log-output" id="task-log-output"></pre>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="i18n.js"></script>
@@ -251,6 +277,7 @@
     const locale = () => (i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN");
     const apiBase = "/api/sys-settings";
     const tasksApi = "/api/sys-tasks";
+    const taskLogsApi = "/api/sys-tasks/logs";
     const activationValidateApi = "/api/activation/validate";
     const sections = {
       businessEmail: "business-email",
@@ -573,6 +600,7 @@
             <button class="c-btn c-btn-success" type="button" data-run-now="${index}">${t("system_settings.task.run_now", "立即执行")}</button>
             <button class="c-btn c-btn-primary" type="button" data-save-task="${index}">${t("system_settings.task.save", "保存任务")}</button>
             <button class="c-btn c-btn-danger" type="button" data-delete-task="${index}">${t("system_settings.common.delete", "删除")}</button>
+            <button class="c-btn c-btn-secondary" type="button" data-show-logs="${index}">${t("system_settings.task.logs", "执行日志")}</button>
           </div>
         </form>
       </li>
@@ -957,6 +985,96 @@
       return payload;
     };
 
+    const formatLogLine = (entry) => {
+      if (!entry) return "";
+      const time = entry.time ? entry.time : "";
+      const level = entry.level ? entry.level : "";
+      const message = entry.message ? entry.message : "";
+      const parts = [time, level].filter(Boolean).join(" ");
+      return parts ? `${parts} ${message}`.trim() : message;
+    };
+
+    const taskLogModal = document.getElementById("task-log-modal");
+    const taskLogTitle = document.getElementById("task-log-title");
+    const taskLogOutput = document.getElementById("task-log-output");
+    const taskLogMeta = document.getElementById("task-log-meta");
+    const taskLogStart = document.getElementById("task-log-start");
+    const taskLogEnd = document.getElementById("task-log-end");
+    const taskLogSearch = document.getElementById("task-log-search");
+    const taskLogReset = document.getElementById("task-log-reset");
+    const taskLogClose = document.getElementById("task-log-close");
+    let activeTaskLog = { index: null, id: null, name: "" };
+
+    const openTaskLogModal = (index) => {
+      if (!taskLogModal || !taskLogTitle) return;
+      const task = systemTasks[index] || {};
+      const fallbackName = format(
+        "system_settings.task.title",
+        { num: String(index + 1).padStart(2, "0") },
+        `任务 ${String(index + 1).padStart(2, "0")}`
+      );
+      const name = (task.name || "").trim() || fallbackName;
+      activeTaskLog = { index, id: task.id || null, name };
+      taskLogTitle.textContent = format(
+        "system_settings.task.logs_title_named",
+        { name },
+        `执行日志 - ${name}`
+      );
+      if (taskLogEnd && !taskLogEnd.value) {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        taskLogEnd.value = `${yyyy}-${mm}-${dd}`;
+      }
+      taskLogModal.classList.add("show");
+      taskLogModal.setAttribute("aria-hidden", "false");
+      loadTaskLogsForModal();
+    };
+
+    const closeTaskLogModal = () => {
+      if (!taskLogModal) return;
+      taskLogModal.classList.remove("show");
+      taskLogModal.setAttribute("aria-hidden", "true");
+    };
+
+    const loadTaskLogsForModal = async () => {
+      if (!taskLogOutput || !taskLogMeta) return;
+      const taskId = activeTaskLog.id;
+      if (!taskId) {
+        taskLogMeta.textContent = "";
+        taskLogOutput.textContent = t("system_settings.task.logs_need_save", "请先保存任务后再查看日志。");
+        return;
+      }
+      const params = new URLSearchParams({ task_id: String(taskId), limit: "50" });
+      if (taskLogStart && taskLogStart.value) params.append("start_date", taskLogStart.value);
+      if (taskLogEnd && taskLogEnd.value) params.append("end_date", taskLogEnd.value);
+      taskLogMeta.textContent = t("system_settings.task.logs_loading", "加载中...");
+      taskLogOutput.textContent = "";
+      try {
+        const payload = await requestJson(`${taskLogsApi}?${params.toString()}`, {
+          method: "GET",
+        });
+        const data = payload.data || {};
+        const entries = Array.isArray(data.entries) ? data.entries : [];
+        if (!entries.length) {
+          taskLogOutput.textContent = t("system_settings.task.logs_empty", "暂无执行日志。");
+          taskLogMeta.textContent = t("system_settings.task.logs_empty_short", "暂无记录");
+          return;
+        }
+        taskLogOutput.textContent = entries.map(formatLogLine).join("\n");
+        const countText = format(
+          "system_settings.task.logs_count",
+          { count: String(entries.length) },
+          `最近 ${entries.length} 条`
+        );
+        taskLogMeta.textContent = countText;
+      } catch (error) {
+        taskLogMeta.textContent = "";
+        taskLogOutput.textContent = error.message || t("system_settings.common.request_failed", "请求失败");
+      }
+    };
+
     const syncAiModelInputs = (sourceId, targetId) => {
       const source = document.getElementById(sourceId);
       const target = document.getElementById(targetId);
@@ -1317,6 +1435,7 @@
         const runButton = target.closest("[data-run-now]");
         const deleteButton = target.closest("[data-delete-task]");
         const saveButton = target.closest("[data-save-task]");
+        const logButton = target.closest("[data-show-logs]");
         if (deleteButton) {
           const index = Number(deleteButton.getAttribute("data-delete-task"));
           if (Number.isNaN(index)) return;
@@ -1349,6 +1468,12 @@
           }
           return;
         }
+        if (logButton) {
+          const index = Number(logButton.getAttribute("data-show-logs"));
+          if (Number.isNaN(index)) return;
+          openTaskLogModal(index);
+          return;
+        }
         if (!runButton) return;
         const index = runButton.getAttribute("data-run-now");
         const statusEl = document.getElementById(`task-status-${index}`);
@@ -1378,6 +1503,32 @@
       addTaskButton.addEventListener("click", () => {
         systemTasks.push({});
         renderTasks(systemTasks);
+      });
+    }
+
+    if (taskLogSearch) {
+      taskLogSearch.addEventListener("click", () => {
+        loadTaskLogsForModal();
+      });
+    }
+
+    if (taskLogReset) {
+      taskLogReset.addEventListener("click", () => {
+        if (taskLogStart) taskLogStart.value = "";
+        if (taskLogEnd) taskLogEnd.value = "";
+        loadTaskLogsForModal();
+      });
+    }
+
+    if (taskLogClose) {
+      taskLogClose.addEventListener("click", closeTaskLogModal);
+    }
+
+    if (taskLogModal) {
+      taskLogModal.addEventListener("click", (event) => {
+        if (event.target === taskLogModal) {
+          closeTaskLogModal();
+        }
       });
     }
 

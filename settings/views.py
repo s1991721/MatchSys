@@ -1,6 +1,7 @@
 import json
+import re
 import threading
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from django.conf import settings as django_settings
@@ -314,6 +315,67 @@ def _serialize_task(task: ScheduledTask):
     }
 
 
+_TASK_LOG_LINE_RE = re.compile(
+    r"^(?P<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (?P<level>[A-Z]+) (?P<message>.+)$"
+)
+
+
+def _parse_task_log_line(line):
+    match = _TASK_LOG_LINE_RE.match(line)
+    if not match:
+        return None
+    return {
+        "time": match.group("time"),
+        "level": match.group("level"),
+        "message": match.group("message"),
+    }
+
+
+def _parse_log_date(value):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _collect_task_logs(task_id, limit, start_date=None, end_date=None):
+    logs_dir = Path(django_settings.BASE_DIR) / "logs"
+    if not logs_dir.exists():
+        return [], 0
+    files = sorted(
+        logs_dir.glob("scheduled_tasks.log*"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    entries = []
+    task_pattern = re.compile(rf"\\btask={task_id}\\b")
+    for log_file in files:
+        if len(entries) >= limit:
+            break
+        try:
+            lines = log_file.read_text(encoding="utf-8", errors="ignore").splitlines()
+        except OSError:
+            continue
+        for line in reversed(lines):
+            if len(entries) >= limit:
+                break
+            if not task_pattern.search(line):
+                continue
+            parsed = _parse_task_log_line(line)
+            if parsed:
+                log_date = _parse_log_date(parsed["time"][:10])
+                if start_date and (not log_date or log_date < start_date):
+                    continue
+                if end_date and (not log_date or log_date > end_date):
+                    continue
+                entries.append(parsed)
+            else:
+                if start_date or end_date:
+                    continue
+                entries.append({"time": "", "level": "", "message": line})
+    return entries, len(files)
+
+
 def _list_tasks():
     tasks = ScheduledTask.objects.filter(deleted_at__isnull=True).order_by("id")
     return [_serialize_task(task) for task in tasks]
@@ -455,6 +517,48 @@ def sys_tasks_api(request):
     if "tasks" not in payload:
         return api_error("Missing field: tasks")
     return _handle_tasks(payload.get("tasks"), login_id)
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def sys_task_logs_api(request):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    task_id_raw = request.GET.get("task_id")
+    if not task_id_raw:
+        return api_error("Missing task_id")
+    try:
+        task_id = int(task_id_raw)
+    except (TypeError, ValueError):
+        return api_error("Invalid task_id")
+
+    limit_raw = request.GET.get("limit", 50)
+    try:
+        limit = int(limit_raw)
+    except (TypeError, ValueError):
+        limit = 50
+    limit = max(1, min(limit, 200))
+
+    start_date = _parse_log_date(request.GET.get("start_date"))
+    end_date = _parse_log_date(request.GET.get("end_date"))
+    if request.GET.get("start_date") and not start_date:
+        return api_error("Invalid start_date")
+    if request.GET.get("end_date") and not end_date:
+        return api_error("Invalid end_date")
+    if start_date and end_date and start_date > end_date:
+        return api_error("Invalid date range")
+
+    entries, file_count = _collect_task_logs(task_id, limit, start_date, end_date)
+    return api_success(
+        data={
+            "task_id": task_id,
+            "entries": entries,
+            "limit": limit,
+            "file_count": file_count,
+        }
+    )
 
 
 # ---------------------------------------------账号密码重置---------------------------------------------

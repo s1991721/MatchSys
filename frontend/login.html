@@ -51,7 +51,7 @@
             </div>
         </div>
         <div class="form-actions">
-            <button id="submitBtn" type="submit" class="c-btn c-btn-primary c-btn-block">
+            <button id="submitBtn" type="submit" class="c-btn c-btn-primary c-btn-block" data-i18n="login.submit">
                 登 录
             </button>
         </div>
@@ -97,6 +97,14 @@
             }
         };
 
+        let submitStateKey = "login.submit";
+        const updateSubmitText = (key) => {
+            if (!submitBtn) return;
+            submitStateKey = key || submitStateKey;
+            submitBtn.setAttribute("data-i18n", submitStateKey);
+            submitBtn.textContent = t(submitStateKey);
+        };
+
         const applyLang = (lang) => {
             const i18n = getI18n();
             const safeLang = i18n ? i18n.setLang(lang) : lang;
@@ -109,6 +117,7 @@
             if (i18n && typeof i18n.apply === "function") {
                 i18n.apply();
             }
+            updateSubmitText(submitStateKey);
         };
 
         const initLang = () => {
@@ -123,11 +132,6 @@
                 applyLang(lang);
             });
         });
-
-        const updateSubmitText = (key) => {
-            if (!submitBtn) return;
-            submitBtn.textContent = t(key);
-        };
 
         const updateActivationMessage = (message, isError) => {
             if (!activationMessage) return;

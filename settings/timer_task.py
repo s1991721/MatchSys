@@ -269,7 +269,7 @@ def _clean_expired_mails():
         saved_deleted,
         project_deleted,
         technician_deleted,
-        cutoff.isoformat(),
+        timezone.localtime(cutoff).strftime("%Y-%m-%d %H:%M:%S"),
     )
 
 

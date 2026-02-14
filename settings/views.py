@@ -748,7 +748,7 @@ def time_to_save(request):
 @csrf_exempt
 @require_POST
 # 定时清理过期的案件及技术者信息
-def time_to_clean():
+def time_to_clean(request):
     thread = threading.Thread(
         target=run_time_to_clean,
         name="time_to_clean",
@@ -761,7 +761,7 @@ def time_to_clean():
 @csrf_exempt
 @require_POST
 # 定时备份数据
-def time_to_backup():
+def time_to_backup(request):
     thread = threading.Thread(
         target=run_time_to_clean,
         name="time_to_clean",

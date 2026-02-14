@@ -60,7 +60,10 @@ def run_time_to_save():
     _ensure_time_to_save_logger(date_tag, logger_save)
     close_old_connections()
     started_at = timezone.now()
-    logger_save.info("time_to_save started at %s", started_at.isoformat())
+    logger_save.info(
+        "time_to_save started at %s",
+        timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"),
+    )
     try:
         end_date = timezone.now().date()
         start_date = end_date - timedelta(days=_get_cycle_days())

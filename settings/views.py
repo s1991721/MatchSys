@@ -338,42 +338,47 @@ def _parse_log_date(value):
         return None
 
 
-def _collect_task_logs(task_id, limit, start_date=None, end_date=None):
+def _collect_task_logs(task_id, limit, start_date=None, end_date=None, log_glob="scheduled_tasks.log*", task_filter=None):
     logs_dir = Path(django_settings.BASE_DIR) / "logs"
     if not logs_dir.exists():
         return [], 0
     files = sorted(
-        logs_dir.glob("scheduled_tasks.log*"),
+        logs_dir.glob(log_glob),
         key=lambda path: path.stat().st_mtime,
-        reverse=True,
     )
+    task_pattern = re.compile(rf"\\btask={task_id}\\b") if task_id else None
     entries = []
-    task_pattern = re.compile(rf"\\btask={task_id}\\b")
+    current = None
     for log_file in files:
-        if len(entries) >= limit:
-            break
         try:
             lines = log_file.read_text(encoding="utf-8", errors="ignore").splitlines()
         except OSError:
             continue
-        for line in reversed(lines):
-            if len(entries) >= limit:
-                break
-            if not task_pattern.search(line):
-                continue
+        for line in lines:
             parsed = _parse_task_log_line(line)
             if parsed:
-                log_date = _parse_log_date(parsed["time"][:10])
-                if start_date and (not log_date or log_date < start_date):
-                    continue
-                if end_date and (not log_date or log_date > end_date):
-                    continue
-                entries.append(parsed)
+                current = parsed
+                entries.append(current)
+            elif current:
+                current["message"] = f"{current['message']}\n{line}"
             else:
-                if start_date or end_date:
-                    continue
-                entries.append({"time": "", "level": "", "message": line})
-    return entries, len(files)
+                continue
+    filtered = []
+    for entry in entries:
+        message = entry.get("message") or ""
+        if task_pattern and not task_pattern.search(message):
+            continue
+        if task_filter and not task_filter.search(message):
+            continue
+        log_date = _parse_log_date((entry.get("time") or "")[:10])
+        if start_date and (not log_date or log_date < start_date):
+            continue
+        if end_date and (not log_date or log_date > end_date):
+            continue
+        filtered.append(entry)
+    if not filtered:
+        return [], len(files)
+    return list(reversed(filtered[-limit:])), len(files)
 
 
 def _list_tasks():
@@ -550,7 +555,31 @@ def sys_task_logs_api(request):
     if start_date and end_date and start_date > end_date:
         return api_error("Invalid date range")
 
-    entries, file_count = _collect_task_logs(task_id, limit, start_date, end_date)
+    task = ScheduledTask.objects.filter(id=task_id, deleted_at__isnull=True).first()
+    log_glob = "scheduled_tasks.log*"
+    task_filter = None
+    if task and task.api:
+        api = task.api.strip()
+        if "time-to-save" in api:
+            log_glob = "time_to_save_*.log"
+        elif "time-to-clean" in api:
+            log_glob = "time_to_clean_*.log"
+        elif "time-to-backup" in api:
+            log_glob = "time_to_backup_*.log"
+        elif "time-to-hello" in api:
+            log_glob = "time_to_hello_*.log"
+        else:
+            log_glob = "scheduled_tasks.log*"
+            task_filter = re.compile(rf"\\btask={task_id}\\b")
+
+    entries, file_count = _collect_task_logs(
+        task_id if log_glob == "scheduled_tasks.log*" else None,
+        limit,
+        start_date,
+        end_date,
+        log_glob=log_glob,
+        task_filter=task_filter,
+    )
     return api_success(
         data={
             "task_id": task_id,

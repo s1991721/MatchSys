@@ -582,6 +582,8 @@
 
         try {
             const payload = JSON.stringify(prefill);
+            localStorage.removeItem('bulkMailContext');
+            sessionStorage.removeItem('bulkMailContext');
             localStorage.setItem('bulkMailPrefill', payload);
             sessionStorage.setItem('bulkMailPrefill', payload);
         } catch (err) {

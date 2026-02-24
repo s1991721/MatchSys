@@ -341,25 +341,68 @@
         localStorage.removeItem(PREFILL_KEY);
     };
 
+    const clearStoredKey = (key) => {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+    };
+
     const applyContextAndPrefill = () => {
-        const context = readJSONFromStorage(CONTEXT_KEY);
+        const contextRaw = readJSONFromStorage(CONTEXT_KEY);
         const prefillRaw = readJSONFromStorage(PREFILL_KEY);
 
-        if (context && context.source === "customer" && isFreshPayload(context) && Array.isArray(context.selected_ids)) {
+        const hasFreshCustomerContext = Boolean(
+            contextRaw
+            && contextRaw.source === "customer"
+            && isFreshPayload(contextRaw)
+        );
+        const hasFreshPrefill = Boolean(
+            prefillRaw
+            && typeof prefillRaw === "object"
+            && isFreshPayload(prefillRaw)
+        );
+
+        if (contextRaw && !hasFreshCustomerContext) {
+            clearStoredKey(CONTEXT_KEY);
+        }
+        if (prefillRaw && !hasFreshPrefill) {
+            clearStoredKey(PREFILL_KEY);
+        }
+
+        const context = hasFreshCustomerContext ? contextRaw : null;
+        const prefillCandidate = hasFreshPrefill ? prefillRaw : null;
+
+        if (context && Array.isArray(context.selected_ids)) {
             selectedCustomerIdSet = new Set(context.selected_ids.map((id) => String(id)));
         }
-        if (context && context.source === "customer" && isFreshPayload(context) && Array.isArray(context.selected_items)) {
+        if (context && Array.isArray(context.selected_items)) {
             selectedCustomersSnapshot = context.selected_items;
         }
 
-        if (prefillRaw && typeof prefillRaw === "object" && isFreshPayload(prefillRaw)) {
-            prefillSource = String(prefillRaw.source || "");
-            prefill = {
-                subject: String(prefillRaw.subject || ""),
-                body: String(prefillRaw.body || ""),
-                mailType: String(prefillRaw.mail_type || "-1"),
-            };
+        // customer 入口不应继承其他入口的邮件内容
+        if (context && prefillCandidate && String(prefillCandidate.source || "") !== "customer") {
+            clearStoredKey(PREFILL_KEY);
+            prefill = null;
+            prefillSource = "";
+            return;
         }
+
+        // 带 prefill 的入口（people / bpmatch）不应继承 customer 的收件人筛选上下文
+        if (!context && prefillCandidate) {
+            clearStoredKey(CONTEXT_KEY);
+        }
+
+        if (prefillCandidate) {
+            prefillSource = String(prefillCandidate.source || "");
+            prefill = {
+                subject: String(prefillCandidate.subject || ""),
+                body: String(prefillCandidate.body || ""),
+                mailType: String(prefillCandidate.mail_type || "-1"),
+            };
+            return;
+        }
+
+        prefill = null;
+        prefillSource = "";
     };
 
     const fetchAllCustomers = async () => {
@@ -395,7 +438,12 @@
     };
 
     const applyPrefillToForm = () => {
-        if (!prefill) return;
+        if (!prefill) {
+            bulkMailSubject.value = "";
+            bulkMailBody.value = "";
+            if (bulkMailType) bulkMailType.value = "-1";
+            return;
+        }
         bulkMailSubject.value = prefill.subject || "";
         bulkMailBody.value = prefill.body || "";
         if (bulkMailType) bulkMailType.value = prefill.mailType || "-1";
@@ -403,14 +451,19 @@
 
     const enrichPrefillFromProjectDetail = async () => {
         if (!prefill) return;
-        if (prefillSource !== "bpmatch") return;
+        const extractApiBySource = {
+            bpmatch: "/api/extract-project-detail",
+            people: "/api/extract-technician-detail",
+        };
+        const extractApi = extractApiBySource[prefillSource];
+        if (!extractApi) return;
         const rawBody = String(prefill.body || "").trim();
         if (!rawBody) return;
         if (bulkMailBodyMask) bulkMailBodyMask.classList.add("show");
         if (bulkMailBody) bulkMailBody.classList.add("is-processing");
         if (bulkMailSend) bulkMailSend.disabled = true;
         try {
-            const res = await fetchWithAuth("/api/extract-project-detail", {
+            const res = await fetchWithAuth(extractApi, {
                 method: "POST",
                 body: JSON.stringify({body: rawBody}),
             });
@@ -422,7 +475,7 @@
             prefill.body = formatted;
             applyPrefillToForm();
         } catch (error) {
-            console.error("extract project detail failed", error);
+            console.error("extract prefill detail failed", error);
         } finally {
             if (bulkMailBodyMask) bulkMailBodyMask.classList.remove("show");
             if (bulkMailBody) bulkMailBody.classList.remove("is-processing");

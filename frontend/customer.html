@@ -454,6 +454,8 @@
         if (selectedCustomerIds.size === 0) return;
         const selectedItems = cachedItems.filter((item) => selectedCustomerIds.has(String(item.id)));
         try {
+            localStorage.removeItem("bulkMailPrefill");
+            sessionStorage.removeItem("bulkMailPrefill");
             const contextPayload = JSON.stringify({
                 selected_ids: Array.from(selectedCustomerIds),
                 selected_items: selectedItems,

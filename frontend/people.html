@@ -366,6 +366,7 @@
                     <td data-label="${t("people.table.actions")}">
                         <div class="row-actions c-row-actions c-row-actions-nowrap">
                             <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">${t("common.edit")}</button>
+                            <button type="button" class="c-btn c-btn-primary c-btn-sm" data-find-case="${person.id}">找案件</button>
                             <button type="button" class="c-btn c-btn-warn-lite c-btn-sm" data-match="${person.id}">匹配案件</button>
                             <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">${t("common.delete")}</button>
                         </div>
@@ -787,15 +788,58 @@
         }
     };
 
+    const cacheBulkMailPrefill = (person) => {
+        if (!person) return;
+        const bodyLines = [
+            `姓名：${person.name || '-'}`,
+            `昵称：${person.nickname || '-'}`,
+            `年龄：${person.age ?? '-'}`,
+            `国籍：${nationalityLabel(person.nationality) || '-'}`,
+            `单价（万/月）：${person.price ?? '-'}`,
+            `契约状况：${person.contract || '-'}`,
+            `营业状态：${businessStatusLabel(person.businessStatus) || '-'}`,
+            `现场契约：${person.siteContract || '-'}`,
+            `介绍文：${person.intro || '-'}`,
+            `备注：${person.note || '-'}`
+        ];
+        const payload = JSON.stringify({
+            subject: `技术者推荐：${person.name || ''}`,
+            body: bodyLines.join('\n'),
+            mail_type: '1',
+            source: 'people',
+            updatedAt: Date.now()
+        });
+        try {
+            const storage = getSharedStorage();
+            storage.removeItem('bulkMailContext');
+            sessionStorage.removeItem('bulkMailContext');
+            storage.setItem('bulkMailPrefill', payload);
+            sessionStorage.setItem('bulkMailPrefill', payload);
+        } catch (error) {
+            console.warn('bulkMailPrefill 缓存失败', error);
+        }
+    };
+
     peopleTableBody.addEventListener('click', (event) => {
         const editId = event.target.getAttribute('data-edit');
         const deleteId = event.target.getAttribute('data-delete');
         const matchId = event.target.getAttribute('data-match');
+        const findCaseId = event.target.getAttribute('data-find-case');
 
         if (editId) {
             const person = people.find(item => String(item.id) === editId);
             if (person) {
                 openEditDialog(person);
+            }
+        } else if (findCaseId) {
+            const person = people.find(item => String(item.id) === findCaseId);
+            if (person) {
+                cacheBulkMailPrefill(person);
+                if (window.top && window.top !== window) {
+                    window.top.postMessage({ type: 'route:change', src: 'bulk_email.html' }, '*');
+                } else {
+                    window.location.href = 'bulk_email.html';
+                }
             }
         } else if (matchId) {
             const person = people.find(item => String(item.id) === matchId);

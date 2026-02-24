@@ -386,8 +386,10 @@
       </article>
 
       <article class="mail-panel mail-reply">
-        <h3>回复邮件</h3>
+        <h3 id="composeTitle">回复邮件</h3>
         <input class="mail-input" id="replyTo" type="email" placeholder="收件人邮箱" />
+        <input class="mail-input" id="forwardRecipientInput" type="text" placeholder="输入公司名称或邮箱" list="forwardRecipientOptions" style="display:none;" />
+        <datalist id="forwardRecipientOptions"></datalist>
         <input class="mail-input" id="replySubject" type="text" placeholder="邮件主题" />
         <textarea class="mail-textarea" id="replyBody" placeholder="请输入回复内容"></textarea>
         <div class="mail-actions">
@@ -416,7 +418,10 @@
       const replyActionBtn = document.getElementById("replyActionBtn");
       const forwardActionBtn = document.getElementById("forwardActionBtn");
       const replyPanel = document.querySelector(".mail-reply");
+      const composeTitle = document.getElementById("composeTitle");
       const replyTo = document.getElementById("replyTo");
+      const forwardRecipientInput = document.getElementById("forwardRecipientInput");
+      const forwardRecipientOptions = document.getElementById("forwardRecipientOptions");
       const replySubject = document.getElementById("replySubject");
       const replyBody = document.getElementById("replyBody");
       const replyStatus = document.getElementById("replyStatus");
@@ -426,6 +431,10 @@
       let activeMail = null;
       let listNoticeMessage = "";
       let isReplyExpanded = false;
+      let composeMode = "reply";
+      let forwardSearchTimer = null;
+      let forwardSearchSeq = 0;
+      let forwardSuggestionMap = {};
       let currentFilters = {
         keyword: "",
         send_date: "",
@@ -446,6 +455,81 @@
           .replace(/>/g, "&gt;")
           .replace(/\"/g, "&quot;")
           .replace(/'/g, "&#39;");
+      };
+
+      const buildForwardRecipientOptions = (customers) => {
+        const options = [];
+        (customers || []).forEach((item) => {
+          const companyName = (item.company_name || "").trim() || "未命名客户";
+          [
+            { name: item.contact1_name, email: item.contact1_email, index: 1 },
+            { name: item.contact2_name, email: item.contact2_email, index: 2 },
+            { name: item.contact3_name, email: item.contact3_email, index: 3 },
+          ].forEach((entry) => {
+            const email = (entry.email || "").trim();
+            if (!email) return;
+            const name = (entry.name || "").trim();
+            const labelName = name || `联系人${entry.index}`;
+            options.push({
+              email,
+              label: `${companyName} - ${labelName} <${email}>`,
+            });
+          });
+        });
+        options.sort((a, b) => a.label.localeCompare(b.label, "zh-Hans-CN"));
+        return options;
+      };
+
+      const renderForwardRecipients = (items) => {
+        if (!forwardRecipientOptions) return;
+        forwardSuggestionMap = {};
+        if (!items || !items.length) {
+          forwardRecipientOptions.innerHTML = "";
+          return;
+        }
+        const optionsHtml = items
+          .map((item) => {
+            const optionValue = `${item.label}`;
+            forwardSuggestionMap[optionValue] = item.email;
+            return `<option value="${escapeHtml(optionValue)}"></option>`;
+          })
+          .join("");
+        forwardRecipientOptions.innerHTML = optionsHtml;
+      };
+
+      const searchForwardRecipients = async (keyword) => {
+        let page = 1;
+        let totalPagesLocal = 1;
+        const customers = [];
+        do {
+          const params = new URLSearchParams({
+            page: String(page),
+            page_size: "100",
+            company_name: keyword,
+          });
+          const res = await fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" });
+          const payload = await res.json();
+          if (!payload || payload.success === false) {
+            throw new Error((payload && payload.message) || "读取客户联系人失败");
+          }
+          const pageItems = (((payload.data || {}).items) || []);
+          customers.push(...pageItems);
+          const meta = payload.meta || {};
+          totalPagesLocal = Number(meta.total_pages || 1) || 1;
+          page += 1;
+        } while (page <= totalPagesLocal);
+        return buildForwardRecipientOptions(customers);
+      };
+
+      const setComposerMode = (mode) => {
+        composeMode = mode === "forward" ? "forward" : "reply";
+        if (!replyTo || !forwardRecipientInput) return;
+        const isForward = composeMode === "forward";
+        if (composeTitle) {
+          composeTitle.textContent = isForward ? "转发邮件" : "回复邮件";
+        }
+        replyTo.style.display = isForward ? "none" : "";
+        forwardRecipientInput.style.display = isForward ? "" : "none";
       };
 
       const renderList = () => {
@@ -482,6 +566,7 @@
       };
 
       const openComposer = (mode) => {
+        setComposerMode(mode);
         setReplyExpanded(true);
         if (replyPanel && typeof replyPanel.scrollIntoView === "function") {
           replyPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -492,7 +577,7 @@
             replyTo.focus();
             return;
           }
-          const toEmail = activeMail.reply_to_email || activeMail.from_email || "";
+          const toEmail = activeMail.from_email || "";
           replyTo.value = toEmail;
           replySubject.value = activeMail.subject && !/^\s*Re:/i.test(activeMail.subject)
             ? `Re: ${activeMail.subject}`
@@ -503,18 +588,18 @@
         if (mode === "forward") {
           if (!activeMail) {
             setStatus("未选中邮件，无法自动转发原文。", true);
-            replyTo.focus();
+            if (forwardRecipientInput) forwardRecipientInput.focus();
             return;
           }
-          replyTo.value = "";
-          replySubject.value = activeMail.subject && !/^\s*Fwd:/i.test(activeMail.subject)
-            ? `Fwd: ${activeMail.subject}`
-            : (activeMail.subject || "");
+          if (forwardRecipientInput) forwardRecipientInput.value = "";
+          renderForwardRecipients([]);
+          replySubject.value = "转发邮件";
           const source = activeMail.body || "";
           replyBody.value = source
             ? `\n\n---------- 转发邮件 ----------\n${source}`
             : "";
-          replyBody.focus();
+          setStatus("请输入公司名称查询联系人，或直接输入邮箱", false);
+          if (forwardRecipientInput) forwardRecipientInput.focus();
         }
       };
 
@@ -525,6 +610,7 @@
           mailMeta.textContent = "请在左侧选择邮件后查看详情";
           mailBody.textContent = "";
           replyTo.value = "";
+          if (forwardRecipientInput) forwardRecipientInput.value = "";
           replySubject.value = "";
           replyBody.value = "";
           renderList();
@@ -535,8 +621,9 @@
         mailMeta.textContent = `主题: ${subjectText} | 发件人: ${detail.from || ""} | 时间: ${detail.date || ""}`;
         mailBody.textContent = detail.body || "";
 
-        const toEmail = detail.reply_to_email || detail.from_email || "";
+        const toEmail = detail.from_email || "";
         replyTo.value = toEmail;
+        if (forwardRecipientInput) forwardRecipientInput.value = "";
         replySubject.value = detail.subject && !/^\s*Re:/i.test(detail.subject)
           ? `Re: ${detail.subject}`
           : (detail.subject || "");
@@ -698,8 +785,42 @@
         });
       }
 
+      if (forwardRecipientInput) {
+        forwardRecipientInput.addEventListener("input", () => {
+          if (composeMode !== "forward") return;
+          const keyword = (forwardRecipientInput.value || "").trim();
+          const isEmailInput = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(keyword);
+          if (forwardSearchTimer) {
+            clearTimeout(forwardSearchTimer);
+          }
+          forwardSearchTimer = setTimeout(async () => {
+            if (!keyword || isEmailInput) {
+              renderForwardRecipients([]);
+              return;
+            }
+            const currentSeq = ++forwardSearchSeq;
+            try {
+              setStatus("查询客户联系人中...", false);
+              const options = await searchForwardRecipients(keyword);
+              if (currentSeq !== forwardSearchSeq) return;
+              renderForwardRecipients(options);
+              setStatus(options.length ? "" : "未找到匹配客户联系人", !options.length);
+            } catch (error) {
+              if (currentSeq !== forwardSearchSeq) return;
+              renderForwardRecipients([]);
+              setStatus(error.message || "读取客户联系人失败", true);
+            }
+          }, 300);
+        });
+      }
+
       sendBtn.addEventListener("click", async () => {
-        const to = (replyTo.value || "").trim();
+        const forwardInput = ((forwardRecipientInput && forwardRecipientInput.value) || "").trim();
+        const forwardMapped = forwardSuggestionMap[forwardInput] || "";
+        const forwardManual = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(forwardInput) ? forwardInput : "";
+        const to = composeMode === "forward"
+          ? (forwardMapped || forwardManual)
+          : (replyTo.value || "").trim();
         const subject = (replySubject.value || "").trim();
         const body = (replyBody.value || "").trim();
         if (!to || !body) {
@@ -709,12 +830,12 @@
 
         const payload = {
           to,
-          subject: subject || "回复邮件",
+          subject: subject || (composeMode === "forward" ? "转发邮件" : "回复邮件"),
           body,
           mail_type: -1,
         };
         // 带上回复链字段，便于对方邮箱客户端识别为同一会话线程。
-        if (activeMail && activeMail.message_id) {
+        if (composeMode === "reply" && activeMail && activeMail.message_id) {
           payload.in_reply_to = activeMail.message_id;
           payload.references = activeMail.references || activeMail.message_id;
         }
@@ -729,6 +850,10 @@
           if (!result || result.success === false) {
             throw new Error((result && result.message) || "发送失败");
           }
+          if (composeMode === "forward" && forwardRecipientInput) {
+            forwardRecipientInput.value = "";
+            renderForwardRecipients([]);
+          }
           replyBody.value = "";
           setStatus("发送成功", false);
         } catch (error) {
@@ -736,6 +861,8 @@
         }
       });
 
+      renderForwardRecipients([]);
+      setComposerMode("reply");
       setReplyExpanded(false);
       loadList();
     })();

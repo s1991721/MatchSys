@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>我的邮件</title>
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    :root {
+      --mail-border: #e1e8f3;
+      --mail-muted: #6f7b8f;
+      --mail-bg: #f5f8ff;
+      --mail-accent: #1d4ed8;
+    }
+
+    body {
+      margin: 0;
+      background: var(--mail-bg);
+      color: #1f2937;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .mail-page {
+      display: grid;
+      grid-template-columns: 3fr 7fr;
+      gap: 14px;
+      height: 100vh;
+      padding: 14px;
+      box-sizing: border-box;
+    }
+
+    .mail-panel {
+      background: #fff;
+      border: 1px solid var(--mail-border);
+      border-radius: 12px;
+      box-shadow: 0 8px 22px rgba(26, 47, 94, 0.06);
+      min-height: 0;
+    }
+
+    .mail-list {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .mail-list-head {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--mail-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mail-list-head h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .mail-list-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .list-refresh-icon {
+      width: 40px;
+      min-width: 40px;
+      height: 40px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+    }
+
+    .mailbox {
+      color: var(--mail-muted);
+      font-size: 12px;
+      text-align: right;
+      word-break: break-all;
+    }
+
+    .mail-items {
+      overflow: auto;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      flex: 1;
+    }
+
+    .mail-item {
+      border-bottom: 1px solid #eef3fb;
+      padding: 12px 14px;
+      cursor: pointer;
+      display: grid;
+      gap: 4px;
+    }
+
+    .mail-item:hover {
+      background: #f3f7ff;
+    }
+
+    .mail-item.active {
+      background: #e8f0ff;
+      border-left: 3px solid var(--mail-accent);
+      padding-left: 11px;
+    }
+
+    .mail-item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .mail-item-subject {
+      font-size: 14px;
+      font-weight: 700;
+      color: #101828;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mail-item-date {
+      font-size: 12px;
+      color: var(--mail-muted);
+      white-space: nowrap;
+    }
+
+    .mail-item-from {
+      font-size: 12px;
+      color: #475467;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mail-unread-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ef4444;
+      display: inline-block;
+      margin-right: 6px;
+    }
+
+    .mail-right {
+      display: grid;
+      grid-template-rows: 1fr 0;
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .mail-right.reply-expanded {
+      grid-template-rows: 1fr 460px;
+    }
+
+    .mail-right.reply-collapsed .mail-reply {
+      display: none;
+    }
+
+    .mail-view {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .mail-view-head {
+      border-bottom: 1px solid var(--mail-border);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mail-view-meta {
+      color: var(--mail-muted);
+      font-size: 13px;
+    }
+
+    .mail-view-body {
+      white-space: pre-wrap;
+      overflow: auto;
+      line-height: 1.6;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .mail-view-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 10px;
+      margin-top: 10px;
+      border-top: 1px solid var(--mail-border);
+    }
+
+    .mail-reply {
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto 44px 44px 1fr auto;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .mail-reply h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .mail-input,
+    .mail-textarea {
+      width: 100%;
+      border: 1px solid #c9d6ea;
+      border-radius: 8px;
+      padding: 8px 10px;
+      box-sizing: border-box;
+      font: inherit;
+      background: #fff;
+    }
+
+    /* 收件人/主题固定单行高度，避免被父级拉伸成大块区域。 */
+    .mail-input {
+      height: 44px;
+      line-height: 26px;
+    }
+
+    .mail-textarea {
+      resize: none;
+      min-height: 0;
+      height: 100%;
+      min-height: 220px;
+      line-height: 1.5;
+    }
+
+    .mail-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .mail-status {
+      margin-right: auto;
+      color: var(--mail-muted);
+      font-size: 12px;
+    }
+
+    .mail-empty {
+      color: var(--mail-muted);
+      font-size: 14px;
+      padding: 16px;
+    }
+
+    @media (max-width: 980px) {
+      .mail-page {
+        grid-template-columns: 1fr;
+        grid-template-rows: 45vh 1fr;
+      }
+
+      .mail-right.reply-expanded {
+        grid-template-rows: 1fr 340px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="mail-page">
+    <section class="mail-panel mail-list">
+      <div class="mail-list-head">
+        <h2>我的邮件</h2>
+        <div class="mail-list-tools">
+          <div class="mailbox" id="mailboxText"></div>
+          <button
+            class="c-btn c-btn-secondary list-refresh-icon"
+            type="button"
+            id="listRefreshBtn"
+            aria-label="刷新"
+            title="刷新"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M12 5a7 7 0 0 1 6.3 3.9h-2.1a1 1 0 0 0 0 2H21a1 1 0 0 0 1-1V5.2a1 1 0 1 0-2 0v1.6A9 9 0 1 0 21 12a1 1 0 1 0-2 0 7 7 0 1 1-7-7z"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <ul class="mail-items" id="mailItems"></ul>
+    </section>
+
+    <section class="mail-right reply-collapsed" id="mailRight">
+      <article class="mail-panel mail-view">
+        <header class="mail-view-head">
+          <div class="mail-view-meta" id="mailMeta"></div>
+        </header>
+        <div class="mail-view-body" id="mailBody"></div>
+        <div class="mail-view-actions">
+          <button class="c-btn c-btn-secondary" type="button" id="replyActionBtn">回复</button>
+          <button class="c-btn c-btn-secondary" type="button" id="forwardActionBtn">转发</button>
+        </div>
+      </article>
+
+      <article class="mail-panel mail-reply">
+        <h3>回复邮件</h3>
+        <input class="mail-input" id="replyTo" type="email" placeholder="收件人邮箱" />
+        <input class="mail-input" id="replySubject" type="text" placeholder="邮件主题" />
+        <textarea class="mail-textarea" id="replyBody" placeholder="请输入回复内容"></textarea>
+        <div class="mail-actions">
+          <span class="mail-status" id="replyStatus"></span>
+          <button class="c-btn c-btn-primary" type="button" id="sendBtn">送信</button>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script src="common.js"></script>
+  <script>
+    (function () {
+      const mailItems = document.getElementById("mailItems");
+      const mailRight = document.getElementById("mailRight");
+      const listRefreshBtn = document.getElementById("listRefreshBtn");
+      const mailboxText = document.getElementById("mailboxText");
+      const mailMeta = document.getElementById("mailMeta");
+      const mailBody = document.getElementById("mailBody");
+      const replyActionBtn = document.getElementById("replyActionBtn");
+      const forwardActionBtn = document.getElementById("forwardActionBtn");
+      const replyPanel = document.querySelector(".mail-reply");
+      const replyTo = document.getElementById("replyTo");
+      const replySubject = document.getElementById("replySubject");
+      const replyBody = document.getElementById("replyBody");
+      const replyStatus = document.getElementById("replyStatus");
+      const sendBtn = document.getElementById("sendBtn");
+
+      let listItems = [];
+      let activeMail = null;
+      let listNoticeMessage = "";
+      let isReplyExpanded = false;
+
+      const setStatus = (text, isError) => {
+        replyStatus.textContent = text || "";
+        replyStatus.style.color = isError ? "#dc2626" : "#6f7b8f";
+      };
+
+      const escapeHtml = (value) => {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/\"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      };
+
+      const renderList = () => {
+        if (!mailItems) return;
+        if (!listItems.length) {
+          const emptyText = listNoticeMessage || "暂无邮件";
+          mailItems.innerHTML = `<li class="mail-empty">${escapeHtml(emptyText)}</li>`;
+          return;
+        }
+        mailItems.innerHTML = listItems.map((item) => {
+          const unreadDot = item.unread ? '<span class="mail-unread-dot"></span>' : "";
+          return `
+            <li class="mail-item ${activeMail && activeMail.id === item.id ? "active" : ""}" data-id="${escapeHtml(item.id)}">
+              <div class="mail-item-top">
+                <span class="mail-item-subject">${unreadDot}${escapeHtml(item.subject || "(无标题)")}</span>
+                <span class="mail-item-date">${escapeHtml(item.date || "")}</span>
+              </div>
+              <div class="mail-item-from">${escapeHtml(item.from || item.from_email || "")}</div>
+            </li>
+          `;
+        }).join("");
+      };
+
+      // 回复区默认折叠，仅在用户需要时展开，减少首屏占用。
+      const setReplyExpanded = (expanded) => {
+        isReplyExpanded = Boolean(expanded);
+        if (!mailRight) return;
+        mailRight.classList.toggle("reply-expanded", isReplyExpanded);
+        mailRight.classList.toggle("reply-collapsed", !isReplyExpanded);
+        // 显式控制显示，避免仅依赖 class 切换导致某些情况下未正确渲染。
+        if (replyPanel) {
+          replyPanel.style.display = isReplyExpanded ? "grid" : "none";
+        }
+      };
+
+      const openComposer = (mode) => {
+        setReplyExpanded(true);
+        if (replyPanel && typeof replyPanel.scrollIntoView === "function") {
+          replyPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+        if (mode === "reply") {
+          if (!activeMail) {
+            setStatus("未选中邮件，请手动填写收件人和主题。", true);
+            replyTo.focus();
+            return;
+          }
+          const toEmail = activeMail.reply_to_email || activeMail.from_email || "";
+          replyTo.value = toEmail;
+          replySubject.value = activeMail.subject && !/^\s*Re:/i.test(activeMail.subject)
+            ? `Re: ${activeMail.subject}`
+            : (activeMail.subject || "");
+          replyBody.focus();
+          return;
+        }
+        if (mode === "forward") {
+          if (!activeMail) {
+            setStatus("未选中邮件，无法自动转发原文。", true);
+            replyTo.focus();
+            return;
+          }
+          replyTo.value = "";
+          replySubject.value = activeMail.subject && !/^\s*Fwd:/i.test(activeMail.subject)
+            ? `Fwd: ${activeMail.subject}`
+            : (activeMail.subject || "");
+          const source = activeMail.body || "";
+          replyBody.value = source
+            ? `\n\n---------- 转发邮件 ----------\n${source}`
+            : "";
+          replyBody.focus();
+        }
+      };
+
+      const fillDetail = (detail) => {
+        activeMail = detail || null;
+        if (!detail) {
+          // 顶部信息栏用于说明当前状态，避免出现“只有一条横线”的空白感。
+          mailMeta.textContent = "请在左侧选择邮件后查看详情";
+          mailBody.textContent = "";
+          replyTo.value = "";
+          replySubject.value = "";
+          replyBody.value = "";
+          renderList();
+          return;
+        }
+
+        const subjectText = detail.subject || "(无标题)";
+        mailMeta.textContent = `主题: ${subjectText} | 发件人: ${detail.from || ""} | 时间: ${detail.date || ""}`;
+        mailBody.textContent = detail.body || "";
+
+        const toEmail = detail.reply_to_email || detail.from_email || "";
+        replyTo.value = toEmail;
+        replySubject.value = detail.subject && !/^\s*Re:/i.test(detail.subject)
+          ? `Re: ${detail.subject}`
+          : (detail.subject || "");
+        replyBody.value = "";
+
+        renderList();
+      };
+
+      const loadDetail = async (mailId) => {
+        try {
+          setStatus("加载邮件内容...", false);
+          const res = await fetchWithAuth(`/api/my-mails/${encodeURIComponent(mailId)}`, { method: "GET" });
+          const payload = await res.json();
+          if (!payload || payload.success === false) {
+            throw new Error((payload && payload.message) || "读取邮件失败");
+          }
+          fillDetail(payload.data || null);
+          setStatus("", false);
+        } catch (error) {
+          setStatus(error.message || "读取邮件失败", true);
+        }
+      };
+
+      const loadList = async () => {
+        try {
+          setStatus("加载邮件列表...", false);
+          // 列表接口只返回头字段，先让左侧快速可用，再按需加载详情。
+          const res = await fetchWithAuth("/api/my-mails?page=1&page_size=30", { method: "GET" });
+          const payload = await res.json();
+          if (!payload || payload.success === false) {
+            throw new Error((payload && payload.message) || "读取邮件列表失败");
+          }
+          const data = payload.data || {};
+          listItems = Array.isArray(data.items) ? data.items : [];
+          listNoticeMessage = "";
+          mailboxText.textContent = data.mailbox_email ? `邮箱: ${data.mailbox_email}` : "";
+
+          if (listItems.length) {
+            // 优先保持当前选中邮件；不存在时选中首封，确保收件人/标题默认值持续可用。
+            const activeId = activeMail && activeMail.id ? String(activeMail.id) : "";
+            const matched = listItems.find((item) => String(item.id) === activeId);
+            const target = matched || listItems[0];
+            await loadDetail(target.id);
+          } else {
+            fillDetail(null);
+            renderList();
+          }
+          setStatus("", false);
+        } catch (error) {
+          listItems = [];
+          const rawMessage = String(
+            (error && error.payload && error.payload.message) || error.message || ""
+          );
+          // 无送信配置时，在列表区域给出明确的配置引导，避免仅看到接口错误文案。
+          if (rawMessage === "No send config for current user") {
+            listNoticeMessage = "当前登录用户未配置邮箱，请到【系统设置 → 送信配置】新增并绑定当前使用人。";
+          } else {
+            listNoticeMessage = "读取邮件列表失败，请稍后重试。";
+          }
+          renderList();
+          fillDetail(null);
+          setStatus(listNoticeMessage, true);
+        }
+      };
+
+      mailItems.addEventListener("click", (event) => {
+        const target = event.target.closest(".mail-item[data-id]");
+        if (!target) return;
+        const mailId = target.getAttribute("data-id");
+        if (!mailId) return;
+        loadDetail(mailId);
+      });
+
+      // 列表头刷新按钮：不展开回复区也能刷新“我的邮件”列表。
+      if (listRefreshBtn) {
+        listRefreshBtn.addEventListener("click", () => {
+          loadList();
+        });
+      }
+
+      // 邮件内容区动作按钮：触发展开回复区，并按动作填充默认内容。
+      if (replyActionBtn) {
+        replyActionBtn.addEventListener("click", () => {
+          openComposer("reply");
+        });
+      }
+
+      if (forwardActionBtn) {
+        forwardActionBtn.addEventListener("click", () => {
+          openComposer("forward");
+        });
+      }
+
+      sendBtn.addEventListener("click", async () => {
+        const to = (replyTo.value || "").trim();
+        const subject = (replySubject.value || "").trim();
+        const body = (replyBody.value || "").trim();
+        if (!to || !body) {
+          setStatus("收件人和正文不能为空", true);
+          return;
+        }
+
+        const payload = {
+          to,
+          subject: subject || "回复邮件",
+          body,
+          mail_type: -1,
+        };
+        // 带上回复链字段，便于对方邮箱客户端识别为同一会话线程。
+        if (activeMail && activeMail.message_id) {
+          payload.in_reply_to = activeMail.message_id;
+          payload.references = activeMail.references || activeMail.message_id;
+        }
+
+        try {
+          setStatus("发送中...", false);
+          const res = await fetchWithAuth("/api/send-mail", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          const result = await res.json();
+          if (!result || result.success === false) {
+            throw new Error((result && result.message) || "发送失败");
+          }
+          replyBody.value = "";
+          setStatus("发送成功", false);
+        } catch (error) {
+          setStatus(error.message || "发送失败", true);
+        }
+      });
+
+      setReplyExpanded(false);
+      loadList();
+    })();
+  </script>
+</body>
+</html>

@@ -1,5 +1,4 @@
 import json
-import re
 from datetime import timedelta
 
 from django.utils import timezone
@@ -9,10 +8,8 @@ from django.views.decorators.http import require_GET, require_POST
 
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_json_body, require_login
-from employee.models import UserLogin
-from settings.models import SysSettings
 from . import llmsTool
-from .smtp_sender import SmtpMailSender
+from .smtpTool import send_mail, my_mails_api, my_mail_detail_api
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
 
 
@@ -574,118 +571,6 @@ def extract_technician_detail(request):
     formatted_message = template.format(**fields)
     response_payload = {"data": formatted_message, "raw": llm_result}
     return api_success(data=response_payload)
-
-
-@csrf_exempt
-@require_POST
-# 送信
-def send_mail(request):
-    login_id, error = require_login(request)
-    if error:
-        return error
-
-    payload, error = parse_json_body(request)
-    if error:
-        return error
-
-    to_addr = (payload.get("to") or "").strip()
-    cc_addr = (payload.get("cc") or "").strip()
-    subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
-    body = payload.get("body") or ""
-    attachments = payload.get("attachments") or []
-    raw_mail_type = payload.get("mail_type")
-    mail_type = None
-    if raw_mail_type not in (None, ""):
-        try:
-            mail_type = int(raw_mail_type)
-        except (TypeError, ValueError):
-            return api_error("Invalid field: mail_type")
-
-    if not to_addr:
-        return api_error("Missing field: to")
-    if not body.strip():
-        return api_error("Missing field: body")
-
-    user_login = UserLogin.objects.filter(
-        employee_id=login_id,
-        deleted_at__isnull=True,
-    ).first()
-    if not user_login:
-        return api_error("User login not found", status=404)
-
-    send_settings = SysSettings.objects.filter(
-        name="sendmsg",
-        deleted_at__isnull=True,
-    ).first()
-    send_configs = send_settings.settings if send_settings else []
-    if not isinstance(send_configs, list):
-        send_configs = []
-    target_users = {
-        str(user_login.user_name or "").strip(),
-        str(user_login.employee_name or "").strip(),
-        str(login_id),
-    }
-    send_config = None
-    for item in send_configs:
-        if not isinstance(item, dict):
-            continue
-        item_user = str(item.get("user") or "").strip()
-        if item_user and item_user in target_users:
-            send_config = item
-            break
-
-    if not send_config:
-        return api_error("No send config for current user")
-
-    smtp_host = str(send_config.get("smtp") or "").strip()
-    smtp_port_raw = str(send_config.get("port") or "").strip()
-    smtp_user = str(send_config.get("email") or "").strip()
-    smtp_password = str(send_config.get("password") or "")
-
-    if not smtp_host or not smtp_port_raw or not smtp_user or not smtp_password:
-        return api_error("Send config is incomplete")
-    try:
-        smtp_port = int(smtp_port_raw)
-    except (TypeError, ValueError):
-        return api_error("Invalid SMTP port")
-
-    # 标准化附件结构
-    normalized_atts = []
-    for att in attachments:
-        if not isinstance(att, dict):
-            continue
-        normalized_atts.append(
-            {
-                "filename": att.get("filename") or "attachment",
-                "content_type": att.get("content_type") or "application/octet-stream",
-                "content": att.get("content") or "",
-            }
-        )
-
-    try:
-        sender = SmtpMailSender(
-            host=smtp_host,
-            port=smtp_port,
-            username=smtp_user,
-            password=smtp_password,
-        )
-        message_id = sender.send_message(
-            to=to_addr,
-            cc=cc_addr or None,
-            subject=subject,
-            body=body,
-            sender=smtp_user,
-            attachments=normalized_atts,
-            in_reply_to=payload.get("in_reply_to"),
-            references=payload.get("references"),
-            mail_type=mail_type,
-            created_by=login_id,
-        )
-    except Exception as exc:
-        return api_error(str(exc), status=500)
-
-    payload = {"message_id": message_id}
-    return api_success(data=payload)
 
 
 @csrf_exempt

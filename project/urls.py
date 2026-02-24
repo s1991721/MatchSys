@@ -38,6 +38,8 @@ from bpmatch.views import (
     mail_project_match_api,
     mail_project_search_api,
     mail_technician_search_api,
+    my_mails_api,
+    my_mail_detail_api,
     extract_project_detail,
     extract_technician_detail,
     send_mail,
@@ -124,6 +126,7 @@ urlpatterns = [
     path("qiuren.html", TemplateView.as_view(template_name="frontend/qiuren.html")),
     path("songxin.html", TemplateView.as_view(template_name="frontend/songxin.html")),
     path("songxinhistory.html", TemplateView.as_view(template_name="frontend/songxinhistory.html")),
+    path("my_mail.html", TemplateView.as_view(template_name="frontend/my_mail.html")),
     # -------------------------------customer UI-------------------------------
     path("customer.html", TemplateView.as_view(template_name="frontend/customer.html")),
     # -------------------------------order UI-------------------------------
@@ -191,6 +194,8 @@ urlpatterns = [
     path("api/mail-technicians/search", mail_technician_search_api, name="mail-technicians-search"),
     path("api/extract-project-detail", extract_project_detail, name="extract_project_detail"),
     path("api/extract-technician-detail", extract_technician_detail, name="extract_technician_detail"),
+    path("api/my-mails", my_mails_api, name="my-mails"),
+    path("api/my-mails/<str:mail_id>", my_mail_detail_api, name="my-mail-detail"),
     path("api/send-mail", send_mail, name="send_mail"),
     path("api/send-history", send_history, name="send_history"),
     path("api/home/stats", home_match_stats_api, name="home-match-stats"),

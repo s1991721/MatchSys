@@ -225,6 +225,7 @@
       const noticeDialog = document.getElementById("noticeDialog");
       const noticeClose = document.getElementById("noticeClose");
       const pageSubtitle = document.getElementById("pageSubtitle");
+      const noticeRoute = "my_mail.html";
       const KEY = "chat_sidebar_collapsed";
       const LANG_KEY = "app_lang";
       const MENU_KEY = "app_menu_list";
@@ -350,7 +351,14 @@
 
 
       if (noticeBtn) {
-        noticeBtn.addEventListener("click", openNoticeDialog);
+        // 顶部消息图标直接切换功能页，保持与左侧菜单一致的路由行为。
+        noticeBtn.addEventListener("click", () => {
+          if (location.hash !== "#" + noticeRoute) {
+            location.hash = noticeRoute;
+          } else {
+            applyRoute(noticeRoute);
+          }
+        });
       }
       if (noticeClose) {
         noticeClose.addEventListener("click", closeNoticeDialog);
@@ -416,6 +424,8 @@
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
         if (normalized === fallbackRoute) return true;
+        // “我的邮件”通过顶部入口访问，不依赖左侧菜单权限列表。
+        if (normalized === noticeRoute) return true;
         return allowedMenuSet.has(normalized);
       };
       const applyMenuFilter = () => {
@@ -441,9 +451,12 @@
       const setSubtitle = (src) => {
         if (!pageSubtitle) return;
         const match = links.find((a) => (a.getAttribute("data-src") || "") === src);
-        const label = match
+        let label = match
           ? (match.getAttribute("data-title") || match.getAttribute("title") || match.textContent).trim()
           : (i18n ? i18n.t("nav.home") : "主页");
+        if (!match && src === noticeRoute) {
+          label = "我的邮件";
+        }
         pageSubtitle.textContent = `· ${label}`;
         return label;
       };

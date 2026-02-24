@@ -132,6 +132,7 @@ urlpatterns = [
     path("my_mail.html", TemplateView.as_view(template_name="frontend/my_mail.html")),
     # -------------------------------customer UI-------------------------------
     path("customer.html", TemplateView.as_view(template_name="frontend/customer.html")),
+    path("bulk_email.html", TemplateView.as_view(template_name="frontend/bulk_email.html")),
     # -------------------------------order UI-------------------------------
     path("order.html", TemplateView.as_view(template_name="frontend/order.html")),
     path("pay_request.html", TemplateView.as_view(template_name="frontend/pay_request.html")),

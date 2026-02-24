@@ -466,6 +466,8 @@
 }
 .c-bulk-dialog .recipients-list {
   display: grid;
+  align-content: start;
+  grid-auto-rows: max-content;
   gap: 14px;
   max-height: 420px;
   overflow: auto;
@@ -508,6 +510,12 @@
 }
 .c-bulk-dialog .group-body {
   display: grid;
+}
+.c-bulk-dialog .group-card.is-collapsed .group-body {
+  display: none;
+}
+.c-bulk-dialog .group-card.is-collapsed .group-header {
+  border-bottom: none;
 }
 .c-bulk-dialog .contact-row {
   display: grid;

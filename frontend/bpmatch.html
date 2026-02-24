@@ -586,11 +586,7 @@
             console.error(t("match.cache_failed"), err);
         }
 
-        if (window.top && window.top !== window) {
-            window.top.location.hash = 'customer.html';
-            return;
-        }
-        window.location.href = 'customer.html';
+        window.location.href = 'bulk_email.html';
     });
 
 </script>

@@ -547,12 +547,14 @@
       };
       const allowedMenuSet = buildAllowedMenuSet();
       const fallbackRoute = "profile.html";
+      const bulkMailRoute = "bulk_email.html";
       const isAllowedRoute = (src) => {
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
         if (normalized === fallbackRoute) return true;
         // “我的邮件”通过顶部入口访问，不依赖左侧菜单权限列表。
         if (normalized === noticeRoute) return true;
+        if (normalized === bulkMailRoute) return true;
         return allowedMenuSet.has(normalized);
       };
       const applyMenuFilter = () => {
@@ -583,6 +585,9 @@
           : (i18n ? i18n.t("nav.home") : "主页");
         if (!match && src === noticeRoute) {
           label = "我的邮件";
+        }
+        if (!match && src === bulkMailRoute) {
+          label = i18n ? i18n.t("customer.bulk.title") : "群发邮件";
         }
         pageSubtitle.textContent = `· ${label}`;
         return label;

@@ -581,7 +581,9 @@
         };
 
         try {
-            localStorage.setItem('bulkMailPrefill', JSON.stringify(prefill));
+            const payload = JSON.stringify(prefill);
+            localStorage.setItem('bulkMailPrefill', payload);
+            sessionStorage.setItem('bulkMailPrefill', payload);
         } catch (err) {
             console.error(t("match.cache_failed"), err);
         }

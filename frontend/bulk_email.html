@@ -54,6 +54,57 @@
             margin-top: 6px;
         }
 
+        .bulk-email-page .mail-body-wrap {
+            position: relative;
+        }
+
+        .bulk-email-page .mail-body-mask {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(22, 32, 55, 0.52);
+            border: 1px solid #d8dfec;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+            z-index: 2;
+        }
+
+        .bulk-email-page .mail-body-mask.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .bulk-email-page .mail-body-mask::before {
+            content: "";
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #ffffff;
+            animation: bulk-email-spin 0.8s linear infinite;
+        }
+
+        .bulk-email-page #bulk-mail-body.is-processing {
+            filter: blur(0.5px);
+        }
+
+        @keyframes bulk-email-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
         .bulk-email-page #bulk-mail-body {
             min-height: 420px;
         }
@@ -110,8 +161,11 @@
                     </div>
                     <div class="form-item">
                         <div class="form-label" data-i18n="customer.bulk.body">邮件内容</div>
-                        <textarea class="textarea" id="bulk-mail-body" rows="10" placeholder="请输入邮件内容"
-                                  data-i18n-placeholder="customer.bulk.body_placeholder"></textarea>
+                        <div class="mail-body-wrap">
+                            <textarea class="textarea" id="bulk-mail-body" rows="10" placeholder="请输入邮件内容"
+                                      data-i18n-placeholder="customer.bulk.body_placeholder"></textarea>
+                            <div class="mail-body-mask" id="bulk-mail-body-mask">邮件内容处理中，请稍候...</div>
+                        </div>
                     </div>
                     <div class="mail-submit-row">
                         <button class="btn btn-primary" id="bulk-mail-send" type="button" data-i18n="customer.bulk.send">
@@ -154,6 +208,7 @@
     const bulkMailRecipients = document.getElementById("bulk-mail-recipients");
     const bulkMailSelected = document.getElementById("bulk-mail-selected");
     const bulkRecipientFilter = document.getElementById("bulk-recipient-filter");
+    const bulkMailBodyMask = document.getElementById("bulk-mail-body-mask");
     const bulkMailSend = document.getElementById("bulk-mail-send");
 
     const CONTEXT_KEY = "bulkMailContext";
@@ -165,6 +220,7 @@
     let recipientSourceItems = [];
     let selectedEmailSet = new Set();
     let prefill = null;
+    let prefillSource = "";
 
     const extractRecipients = (items) => {
         const groups = [];
@@ -297,6 +353,7 @@
         }
 
         if (prefillRaw && typeof prefillRaw === "object" && isFreshPayload(prefillRaw)) {
+            prefillSource = String(prefillRaw.source || "");
             prefill = {
                 subject: String(prefillRaw.subject || ""),
                 body: String(prefillRaw.body || ""),
@@ -342,6 +399,35 @@
         bulkMailSubject.value = prefill.subject || "";
         bulkMailBody.value = prefill.body || "";
         if (bulkMailType) bulkMailType.value = prefill.mailType || "-1";
+    };
+
+    const enrichPrefillFromProjectDetail = async () => {
+        if (!prefill) return;
+        if (prefillSource !== "bpmatch") return;
+        const rawBody = String(prefill.body || "").trim();
+        if (!rawBody) return;
+        if (bulkMailBodyMask) bulkMailBodyMask.classList.add("show");
+        if (bulkMailBody) bulkMailBody.classList.add("is-processing");
+        if (bulkMailSend) bulkMailSend.disabled = true;
+        try {
+            const res = await fetchWithAuth("/api/extract-project-detail", {
+                method: "POST",
+                body: JSON.stringify({body: rawBody}),
+            });
+            const data = await res.json().catch(() => ({}));
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) return;
+            const formatted = String(payload.data?.data || "").trim();
+            if (!formatted) return;
+            prefill.body = formatted;
+            applyPrefillToForm();
+        } catch (error) {
+            console.error("extract project detail failed", error);
+        } finally {
+            if (bulkMailBodyMask) bulkMailBodyMask.classList.remove("show");
+            if (bulkMailBody) bulkMailBody.classList.remove("is-processing");
+            if (bulkMailSend) bulkMailSend.disabled = false;
+        }
     };
 
     bulkMailRecipients.addEventListener("change", (event) => {
@@ -441,6 +527,7 @@
             renderFilteredRecipients();
             applyPrefillToForm();
         });
+    enrichPrefillFromProjectDetail();
 </script>
 </body>
 </html>

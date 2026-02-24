@@ -24,7 +24,7 @@ def _build_ssl_context():
 
 # 检测本地模型
 def check_local_model(model_name):
-    ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1").strip()
+    ollama_host = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").strip()
     if ollama_host:
         try:
             url = ollama_host.rstrip("/") + "/api/tags"

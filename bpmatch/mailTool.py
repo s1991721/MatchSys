@@ -390,16 +390,16 @@ def count_unread_mails_from_db(owner_id):
     return MyMail.objects.filter(owner_id=owner_id, is_unread=True).count()
 
 
-def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
+def sync_my_mails_from_imap(owner_id, send_config, sync_limit=120):
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_user = str(send_config.get("email") or "").strip()
     smtp_password = str(send_config.get("password") or "")
     if not smtp_host or not smtp_user or not smtp_password:
-        raise SmtpToolError("Send config is incomplete")
+        raise MailToolError("Send config is incomplete")
 
     imap_host = _resolve_imap_host(smtp_host)
     if not imap_host:
-        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
+        raise MailToolError("Cannot resolve IMAP host from SMTP config")
 
     mail = None
     updated = 0
@@ -408,11 +408,11 @@ def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
         mail.login(smtp_user, smtp_password)
         status, _select_data = mail.select("INBOX")
         if status != "OK":
-            raise SmtpToolError("Failed to open INBOX", status=500)
+            raise MailToolError("Failed to open INBOX", status=500)
 
         status, search_data = mail.search(None, "ALL")
         if status != "OK":
-            raise SmtpToolError("Failed to read mailbox", status=500)
+            raise MailToolError("Failed to read mailbox", status=500)
 
         all_ids = search_data[0].split() if search_data and search_data[0] else []
         all_ids = list(reversed(all_ids))
@@ -467,9 +467,9 @@ def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
             updated += 1
         return updated
     except Exception as exc:
-        if isinstance(exc, SmtpToolError):
+        if isinstance(exc, MailToolError):
             raise
-        raise SmtpToolError(str(exc), status=500)
+        raise MailToolError(str(exc), status=500)
     finally:
         if mail:
             try:
@@ -478,7 +478,7 @@ def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
                 pass
 
 
-def query_my_mails_from_smtp(
+def query_my_mails_from_imap(
     send_config,
     page=1,
     page_size=20,
@@ -494,11 +494,11 @@ def query_my_mails_from_smtp(
     smtp_user = str(send_config.get("email") or "").strip()
     smtp_password = str(send_config.get("password") or "")
     if not smtp_host or not smtp_user or not smtp_password:
-        raise SmtpToolError("Send config is incomplete")
+        raise MailToolError("Send config is incomplete")
 
     imap_host = _resolve_imap_host(smtp_host)
     if not imap_host:
-        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
+        raise MailToolError("Cannot resolve IMAP host from SMTP config")
 
     try:
         page = int(page)
@@ -515,7 +515,7 @@ def query_my_mails_from_smtp(
     send_date_text = str(send_date or "").strip()
     target_date = django_parse_date(send_date_text) if send_date_text else None
     if send_date_text and target_date is None:
-        raise SmtpToolError("Invalid send_date")
+        raise MailToolError("Invalid send_date")
 
     mail = None
     try:
@@ -523,11 +523,11 @@ def query_my_mails_from_smtp(
         mail.login(smtp_user, smtp_password)
         status, _select_data = mail.select("INBOX")
         if status != "OK":
-            raise SmtpToolError("Failed to open INBOX", status=500)
+            raise MailToolError("Failed to open INBOX", status=500)
 
         status, search_data = mail.search(None, "ALL")
         if status != "OK":
-            raise SmtpToolError("Failed to read mailbox", status=500)
+            raise MailToolError("Failed to read mailbox", status=500)
 
         all_ids = search_data[0].split() if search_data and search_data[0] else []
         all_ids = list(reversed(all_ids))
@@ -609,9 +609,9 @@ def query_my_mails_from_smtp(
         }
         return data, meta
     except Exception as exc:
-        if isinstance(exc, SmtpToolError):
+        if isinstance(exc, MailToolError):
             raise
-        raise SmtpToolError(str(exc), status=500)
+        raise MailToolError(str(exc), status=500)
     finally:
         if mail:
             try:
@@ -620,7 +620,7 @@ def query_my_mails_from_smtp(
                 pass
 
 
-class SmtpToolError(Exception):
+class MailToolError(Exception):
     """SMTP/IMAP 业务异常，供视图层转换为统一 API 响应。"""
 
     def __init__(self, message: str, status: int = 400):
@@ -633,9 +633,9 @@ def ensure_send_config_for_login(login_id):
     send_config, config_error = _find_send_config_for_login(login_id)
     if config_error:
         status = 404 if config_error == "User login not found" else 400
-        raise SmtpToolError(config_error, status=status)
+        raise MailToolError(config_error, status=status)
     if not send_config:
-        raise SmtpToolError("No send config for current user")
+        raise MailToolError("No send config for current user")
     return send_config
 
 
@@ -651,12 +651,12 @@ def send_mail_by_login(login_id, payload):
         try:
             mail_type = int(raw_mail_type)
         except (TypeError, ValueError):
-            raise SmtpToolError("Invalid field: mail_type")
+            raise MailToolError("Invalid field: mail_type")
 
     if not to_addr:
-        raise SmtpToolError("Missing field: to")
+        raise MailToolError("Missing field: to")
     if not body.strip():
-        raise SmtpToolError("Missing field: body")
+        raise MailToolError("Missing field: body")
 
     send_config = ensure_send_config_for_login(login_id)
 
@@ -666,11 +666,11 @@ def send_mail_by_login(login_id, payload):
     smtp_password = str(send_config.get("password") or "")
 
     if not smtp_host or not smtp_port_raw or not smtp_user or not smtp_password:
-        raise SmtpToolError("Send config is incomplete")
+        raise MailToolError("Send config is incomplete")
     try:
         smtp_port = int(smtp_port_raw)
     except (TypeError, ValueError):
-        raise SmtpToolError("Invalid SMTP port")
+        raise MailToolError("Invalid SMTP port")
 
     # 标准化附件结构
     normalized_atts = []
@@ -705,25 +705,25 @@ def send_mail_by_login(login_id, payload):
             created_by=login_id,
         )
     except Exception as exc:
-        raise SmtpToolError(str(exc), status=500)
+        raise MailToolError(str(exc), status=500)
 
     return {"message_id": message_id}
 
 
-def get_my_mail_detail_from_smtp(send_config, mail_id):
+def get_my_mail_detail_from_imap(send_config, mail_id):
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_user = str(send_config.get("email") or "").strip()
     smtp_password = str(send_config.get("password") or "")
     if not smtp_host or not smtp_user or not smtp_password:
-        raise SmtpToolError("Send config is incomplete")
+        raise MailToolError("Send config is incomplete")
 
     imap_host = _resolve_imap_host(smtp_host)
     if not imap_host:
-        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
+        raise MailToolError("Cannot resolve IMAP host from SMTP config")
 
     safe_mail_id = str(mail_id or "").strip()
     if not safe_mail_id:
-        raise SmtpToolError("Missing field: mail_id")
+        raise MailToolError("Missing field: mail_id")
 
     mail = None
     try:
@@ -731,7 +731,7 @@ def get_my_mail_detail_from_smtp(send_config, mail_id):
         mail.login(smtp_user, smtp_password)
         status, _select_data = mail.select("INBOX")
         if status != "OK":
-            raise SmtpToolError("Failed to open INBOX", status=500)
+            raise MailToolError("Failed to open INBOX", status=500)
 
         # 详情页再按 UID 拉整封 RFC822 原文，保证正文与回复链字段完整。
         status, fetch_data = mail.fetch(
@@ -739,7 +739,7 @@ def get_my_mail_detail_from_smtp(send_config, mail_id):
             "(RFC822 FLAGS)",
         )
         if status != "OK" or not fetch_data:
-            raise SmtpToolError("Mail not found", status=404)
+            raise MailToolError("Mail not found", status=404)
 
         raw_message = b""
         raw_meta = b""
@@ -749,7 +749,7 @@ def get_my_mail_detail_from_smtp(send_config, mail_id):
                 if isinstance(row[1], bytes):
                     raw_message = row[1]
         if not raw_message:
-            raise SmtpToolError("Mail not found", status=404)
+            raise MailToolError("Mail not found", status=404)
 
         parsed = message_from_bytes(raw_message, policy=policy.default)
         subject = _decode_mime_header(parsed.get("Subject")) or "(无标题)"
@@ -783,9 +783,9 @@ def get_my_mail_detail_from_smtp(send_config, mail_id):
             "mailbox_email": smtp_user,
         }
     except Exception as exc:
-        if isinstance(exc, SmtpToolError):
+        if isinstance(exc, MailToolError):
             raise
-        raise SmtpToolError(str(exc), status=500)
+        raise MailToolError(str(exc), status=500)
     finally:
         if mail:
             try:

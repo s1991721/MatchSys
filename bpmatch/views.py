@@ -11,13 +11,14 @@ from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_json_body, require_login
 from . import llmsTool
 from .mailTool import (
-    SmtpToolError,
+    MailToolError,
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
+    query_my_mails_from_imap,
     count_unread_mails_from_db,
-    sync_my_mails_from_smtp,
-    get_my_mail_detail_from_smtp,
+    sync_my_mails_from_imap,
+    get_my_mail_detail_from_imap,
 )
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
 
@@ -595,7 +596,7 @@ def send_mail(request):
     try:
         data = send_mail_by_login(login_id, payload)
         return api_success(data=data)
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
     except Exception as exc:
         return api_error(str(exc), status=500)
@@ -603,7 +604,7 @@ def send_mail(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件列表（接口入口在 views，SMTP/IMAP 细节在 mailTool）
+# 我的邮件列表（接口入口在 views，邮件协议细节在 mailTool）
 def my_mails_api(request):
     # 1. 检查是否登录
     login_id, error = require_login(request)
@@ -613,7 +614,7 @@ def my_mails_api(request):
     # 2. 检查当前登录用户是否配置了邮箱信息
     try:
         send_config = ensure_send_config_for_login(login_id)
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
 
     page = request.GET.get("page", 1)
@@ -638,7 +639,7 @@ def my_mails_api(request):
             mailbox_email=str(send_config.get("email") or "").strip(),
         )
         return api_success(data=data, meta=meta)
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
     except Exception as exc:
         return api_error(str(exc), status=500)
@@ -646,14 +647,15 @@ def my_mails_api(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件查询（发件人、关键字、送信日期）
+# 我的邮件查询（关键字、送信日期）
+# 注意：查询直接走 IMAP 服务器，不落本地 DB。
 def my_mails_query_api(request):
     login_id, error = require_login(request)
     if error:
         return error
     try:
         send_config = ensure_send_config_for_login(login_id)
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
 
     page = request.GET.get("page", 1)
@@ -672,16 +674,15 @@ def my_mails_query_api(request):
     page_size = max(1, min(page_size, 50))
 
     try:
-        data, meta = list_my_mails_from_db(
-            login_id,
+        data, meta = query_my_mails_from_imap(
+            send_config,
             page=page,
             page_size=page_size,
-            mailbox_email=str(send_config.get("email") or "").strip(),
             keyword=keyword,
             send_date=send_date,
         )
         return api_success(data=data, meta=meta)
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
     except Exception as exc:
         return api_error(str(exc), status=500)
@@ -696,9 +697,9 @@ def my_mails_sync_api(request):
         return error
     try:
         send_config = ensure_send_config_for_login(login_id)
-        updated = sync_my_mails_from_smtp(login_id, send_config)
+        updated = sync_my_mails_from_imap(login_id, send_config)
         return api_success(data={"updated": int(updated or 0)})
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
     except Exception as exc:
         return api_error(str(exc), status=500)
@@ -706,17 +707,17 @@ def my_mails_sync_api(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件详情（接口入口在 views，SMTP/IMAP 细节在 mailTool）
+# 我的邮件详情（接口入口在 views，IMAP 细节在 mailTool）
 def my_mail_detail_api(request, mail_id):
     login_id, error = require_login(request)
     if error:
         return error
     try:
-        # 5. 用户点击邮件列表时，按外部唯一标识从 SMTP 获取详情
+        # 5. 用户点击邮件列表时，按外部唯一标识从 IMAP 获取详情
         send_config = ensure_send_config_for_login(login_id)
-        data = get_my_mail_detail_from_smtp(send_config, mail_id)
+        data = get_my_mail_detail_from_imap(send_config, mail_id)
         return api_success(data=data)
-    except SmtpToolError as exc:
+    except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
     except Exception as exc:
         return api_error(str(exc), status=500)
@@ -732,7 +733,7 @@ def my_mails_unread_count_api(request):
     try:
         # 首页仅显示红点计数，若未配置邮箱则按 0 处理，避免顶部报错。
         ensure_send_config_for_login(login_id)
-    except SmtpToolError:
+    except MailToolError:
         return api_success(data={"unread_count": 0, "has_mailbox": False})
 
     try:

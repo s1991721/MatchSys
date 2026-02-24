@@ -11,11 +11,6 @@ from email.utils import getaddresses, make_msgid, parsedate_to_datetime
 from typing import List, Optional
 
 from django.utils import timezone as django_timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_POST
-
-from project.api import api_error, api_success
-from project.common_tools import parse_json_body, require_login
 from employee.models import UserLogin
 from settings.models import SysSettings
 
@@ -323,17 +318,16 @@ def _find_send_config_for_login(login_id):
     return None, "No send config for current user"
 
 
-@csrf_exempt
-@require_POST
-def send_mail(request):
-    login_id, error = require_login(request)
-    if error:
-        return error
+class SmtpToolError(Exception):
+    """SMTP/IMAP 业务异常，供视图层转换为统一 API 响应。"""
 
-    payload, error = parse_json_body(request)
-    if error:
-        return error
+    def __init__(self, message: str, status: int = 400):
+        super().__init__(message)
+        self.message = message
+        self.status = status
 
+
+def send_mail_by_login(login_id, payload):
     to_addr = (payload.get("to") or "").strip()
     cc_addr = (payload.get("cc") or "").strip()
     subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
@@ -345,19 +339,19 @@ def send_mail(request):
         try:
             mail_type = int(raw_mail_type)
         except (TypeError, ValueError):
-            return api_error("Invalid field: mail_type")
+            raise SmtpToolError("Invalid field: mail_type")
 
     if not to_addr:
-        return api_error("Missing field: to")
+        raise SmtpToolError("Missing field: to")
     if not body.strip():
-        return api_error("Missing field: body")
+        raise SmtpToolError("Missing field: body")
 
     send_config, config_error = _find_send_config_for_login(login_id)
     if config_error:
         status = 404 if config_error == "User login not found" else 400
-        return api_error(config_error, status=status)
+        raise SmtpToolError(config_error, status=status)
     if not send_config:
-        return api_error("No send config for current user")
+        raise SmtpToolError("No send config for current user")
 
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_port_raw = str(send_config.get("port") or "").strip()
@@ -365,11 +359,11 @@ def send_mail(request):
     smtp_password = str(send_config.get("password") or "")
 
     if not smtp_host or not smtp_port_raw or not smtp_user or not smtp_password:
-        return api_error("Send config is incomplete")
+        raise SmtpToolError("Send config is incomplete")
     try:
         smtp_port = int(smtp_port_raw)
     except (TypeError, ValueError):
-        return api_error("Invalid SMTP port")
+        raise SmtpToolError("Invalid SMTP port")
 
     # 标准化附件结构
     normalized_atts = []
@@ -404,36 +398,29 @@ def send_mail(request):
             created_by=login_id,
         )
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        raise SmtpToolError(str(exc), status=500)
 
-    response_payload = {"message_id": message_id}
-    return api_success(data=response_payload)
+    return {"message_id": message_id}
 
 
-@csrf_exempt
-@require_GET
-def my_mails_api(request):
-    login_id, error = require_login(request)
-    if error:
-        return error
-
+def list_my_mails_by_login(login_id, page=1, page_size=20):
     send_config, config_error = _find_send_config_for_login(login_id)
     if config_error:
         status = 404 if config_error == "User login not found" else 400
-        return api_error(config_error, status=status)
+        raise SmtpToolError(config_error, status=status)
 
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_user = str(send_config.get("email") or "").strip()
     smtp_password = str(send_config.get("password") or "")
     if not smtp_host or not smtp_user or not smtp_password:
-        return api_error("Send config is incomplete")
+        raise SmtpToolError("Send config is incomplete")
 
     try:
-        page = int(request.GET.get("page", 1))
+        page = int(page)
     except (TypeError, ValueError):
         page = 1
     try:
-        page_size = int(request.GET.get("page_size", 20))
+        page_size = int(page_size)
     except (TypeError, ValueError):
         page_size = 20
     page = max(1, page)
@@ -441,7 +428,7 @@ def my_mails_api(request):
 
     imap_host = _resolve_imap_host(smtp_host)
     if not imap_host:
-        return api_error("Cannot resolve IMAP host from SMTP config")
+        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
 
     mail = None
     try:
@@ -449,11 +436,11 @@ def my_mails_api(request):
         mail.login(smtp_user, smtp_password)
         status, _select_data = mail.select("INBOX")
         if status != "OK":
-            return api_error("Failed to open INBOX", status=500)
+            raise SmtpToolError("Failed to open INBOX", status=500)
 
         status, search_data = mail.search(None, "ALL")
         if status != "OK":
-            return api_error("Failed to read mailbox", status=500)
+            raise SmtpToolError("Failed to read mailbox", status=500)
 
         # IMAP SEARCH 返回升序 UID，这里倒序后按页截取实现“最新在前”。
         all_ids = search_data[0].split() if search_data and search_data[0] else []
@@ -506,20 +493,21 @@ def my_mails_api(request):
                 }
             )
 
-        return api_success(
-            data={
-                "mailbox_email": smtp_user,
-                "items": items,
-            },
-            meta={
-                "page": page,
-                "page_size": page_size,
-                "total": total,
-                "total_pages": total_pages,
-            },
-        )
+        data = {
+            "mailbox_email": smtp_user,
+            "items": items,
+        }
+        meta = {
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": total_pages,
+        }
+        return data, meta
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        if isinstance(exc, SmtpToolError):
+            raise
+        raise SmtpToolError(str(exc), status=500)
     finally:
         if mail:
             try:
@@ -528,31 +516,25 @@ def my_mails_api(request):
                 pass
 
 
-@csrf_exempt
-@require_GET
-def my_mail_detail_api(request, mail_id):
-    login_id, error = require_login(request)
-    if error:
-        return error
-
+def get_my_mail_detail_by_login(login_id, mail_id):
     send_config, config_error = _find_send_config_for_login(login_id)
     if config_error:
         status = 404 if config_error == "User login not found" else 400
-        return api_error(config_error, status=status)
+        raise SmtpToolError(config_error, status=status)
 
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_user = str(send_config.get("email") or "").strip()
     smtp_password = str(send_config.get("password") or "")
     if not smtp_host or not smtp_user or not smtp_password:
-        return api_error("Send config is incomplete")
+        raise SmtpToolError("Send config is incomplete")
 
     imap_host = _resolve_imap_host(smtp_host)
     if not imap_host:
-        return api_error("Cannot resolve IMAP host from SMTP config")
+        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
 
     safe_mail_id = str(mail_id or "").strip()
     if not safe_mail_id:
-        return api_error("Missing field: mail_id")
+        raise SmtpToolError("Missing field: mail_id")
 
     mail = None
     try:
@@ -560,7 +542,7 @@ def my_mail_detail_api(request, mail_id):
         mail.login(smtp_user, smtp_password)
         status, _select_data = mail.select("INBOX")
         if status != "OK":
-            return api_error("Failed to open INBOX", status=500)
+            raise SmtpToolError("Failed to open INBOX", status=500)
 
         # 详情页再按 UID 拉整封 RFC822 原文，保证正文与回复链字段完整。
         status, fetch_data = mail.fetch(
@@ -568,7 +550,7 @@ def my_mail_detail_api(request, mail_id):
             "(RFC822 FLAGS)",
         )
         if status != "OK" or not fetch_data:
-            return api_error("Mail not found", status=404)
+            raise SmtpToolError("Mail not found", status=404)
 
         raw_message = b""
         raw_meta = b""
@@ -578,7 +560,7 @@ def my_mail_detail_api(request, mail_id):
                 if isinstance(row[1], bytes):
                     raw_message = row[1]
         if not raw_message:
-            return api_error("Mail not found", status=404)
+            raise SmtpToolError("Mail not found", status=404)
 
         parsed = message_from_bytes(raw_message, policy=policy.default)
         subject = _decode_mime_header(parsed.get("Subject")) or "(无标题)"
@@ -593,7 +575,7 @@ def my_mail_detail_api(request, mail_id):
         body = _extract_mail_body(parsed)
         unread = b"\\Seen" not in raw_meta
 
-        response_payload = {
+        return {
             "id": safe_mail_id,
             "subject": subject,
             "from": from_raw,
@@ -611,9 +593,10 @@ def my_mail_detail_api(request, mail_id):
             "reply_to_email": _extract_first_email(reply_to) or _extract_first_email(from_raw),
             "mailbox_email": smtp_user,
         }
-        return api_success(data=response_payload)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        if isinstance(exc, SmtpToolError):
+            raise
+        raise SmtpToolError(str(exc), status=500)
     finally:
         if mail:
             try:

@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import timedelta
 
 from django.utils import timezone
@@ -9,7 +10,12 @@ from django.views.decorators.http import require_GET, require_POST
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_json_body, require_login
 from . import llmsTool
-from .smtpTool import send_mail, my_mails_api, my_mail_detail_api
+from .smtpTool import (
+    SmtpToolError,
+    send_mail_by_login,
+    list_my_mails_by_login,
+    get_my_mail_detail_by_login,
+)
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
 
 
@@ -571,6 +577,59 @@ def extract_technician_detail(request):
     formatted_message = template.format(**fields)
     response_payload = {"data": formatted_message, "raw": llm_result}
     return api_success(data=response_payload)
+
+
+@csrf_exempt
+@require_POST
+# 送信（接口入口在 views，SMTP 细节在 smtpTool）
+def send_mail(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    try:
+        data = send_mail_by_login(login_id, payload)
+        return api_success(data=data)
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+# 我的邮件列表（接口入口在 views，SMTP/IMAP 细节在 smtpTool）
+def my_mails_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    page = request.GET.get("page", 1)
+    page_size = request.GET.get("page_size", 20)
+    try:
+        data, meta = list_my_mails_by_login(login_id, page=page, page_size=page_size)
+        return api_success(data=data, meta=meta)
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+# 我的邮件详情（接口入口在 views，SMTP/IMAP 细节在 smtpTool）
+def my_mail_detail_api(request, mail_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    try:
+        data = get_my_mail_detail_by_login(login_id, mail_id)
+        return api_success(data=data)
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
 
 
 @csrf_exempt

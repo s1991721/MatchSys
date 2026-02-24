@@ -73,3 +73,21 @@ class SavedMailInfo(models.Model):
     class Meta:
         db_table = "saved_mail_info"
         verbose_name = "系统中存储的邮件列表"
+
+
+class MyMail(models.Model):
+    id = models.CharField(
+        primary_key=True,
+        max_length=255,
+        verbose_name="外部邮件唯一标识（如 IMAP UID / Message-ID）",
+    )
+    owner_id = models.BigIntegerField("员工ID", null=True, blank=True)
+    subject = models.CharField("邮件主题", max_length=512, null=True, blank=True)
+    from_email = models.CharField("发件人邮箱", max_length=255, null=True, blank=True)
+    received_at = models.DateTimeField("接收时间", null=True, blank=True)
+    is_unread = models.BooleanField("是否未读", default=False)
+
+    class Meta:
+        db_table = "my_mail"
+        verbose_name = "我的邮件缓存"
+        verbose_name_plural = "我的邮件缓存"

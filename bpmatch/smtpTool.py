@@ -13,6 +13,7 @@ from typing import List, Optional
 from django.utils import timezone as django_timezone
 from employee.models import UserLogin
 from settings.models import SysSettings
+from .models import MyMail
 
 class SmtpMailSender:
     def __init__(
@@ -318,6 +319,138 @@ def _find_send_config_for_login(login_id):
     return None, "No send config for current user"
 
 
+def _format_received_label(value):
+    if not value:
+        return ""
+    try:
+        return django_timezone.localtime(value).strftime("%Y-%m-%d %H:%M")
+    except Exception:
+        return str(value)
+
+
+def list_my_mails_from_db(owner_id, page=1, page_size=20, mailbox_email=""):
+    queryset = MyMail.objects.filter(owner_id=owner_id).order_by("-received_at", "-id")
+    total = queryset.count()
+    total_pages = max((total + page_size - 1) // page_size, 1)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+    rows = queryset[offset: offset + page_size]
+    items = []
+    for row in rows:
+        items.append(
+            {
+                "id": row.id,
+                "subject": row.subject or "(无标题)",
+                "from": row.from_email or "",
+                "from_email": row.from_email or "",
+                "reply_to": "",
+                "date": _format_received_label(row.received_at),
+                "unread": bool(row.is_unread),
+                # 列表端保留该字段，便于前端沿用现有数据结构。
+                "message_id": row.id,
+                "references": "",
+            }
+        )
+
+    data = {"mailbox_email": str(mailbox_email or ""), "items": items}
+    meta = {
+        "page": page,
+        "page_size": page_size,
+        "total": total,
+        "total_pages": total_pages,
+    }
+    return data, meta
+
+
+def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
+    smtp_host = str(send_config.get("smtp") or "").strip()
+    smtp_user = str(send_config.get("email") or "").strip()
+    smtp_password = str(send_config.get("password") or "")
+    if not smtp_host or not smtp_user or not smtp_password:
+        raise SmtpToolError("Send config is incomplete")
+
+    imap_host = _resolve_imap_host(smtp_host)
+    if not imap_host:
+        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
+
+    mail = None
+    updated = 0
+    try:
+        mail = imaplib.IMAP4_SSL(imap_host, 993)
+        mail.login(smtp_user, smtp_password)
+        status, _select_data = mail.select("INBOX")
+        if status != "OK":
+            raise SmtpToolError("Failed to open INBOX", status=500)
+
+        status, search_data = mail.search(None, "ALL")
+        if status != "OK":
+            raise SmtpToolError("Failed to read mailbox", status=500)
+
+        all_ids = search_data[0].split() if search_data and search_data[0] else []
+        all_ids = list(reversed(all_ids))
+        if sync_limit > 0:
+            all_ids = all_ids[:sync_limit]
+
+        for uid_bytes in all_ids:
+            uid = uid_bytes.decode("utf-8", errors="ignore")
+            if not uid:
+                continue
+            status, fetch_data = mail.fetch(
+                uid_bytes,
+                "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)] FLAGS)",
+            )
+            if status != "OK" or not fetch_data:
+                continue
+            header_bytes = b""
+            raw_meta = b""
+            for row in fetch_data:
+                if isinstance(row, tuple):
+                    raw_meta = row[0] if isinstance(row[0], bytes) else raw_meta
+                    if isinstance(row[1], bytes):
+                        header_bytes = row[1]
+            if not header_bytes:
+                continue
+
+            parsed = message_from_bytes(header_bytes, policy=policy.default)
+            subject = _decode_mime_header(parsed.get("Subject")) or "(无标题)"
+            from_raw = _decode_mime_header(parsed.get("From"))
+            from_email = _extract_first_email(from_raw)
+            received_at = None
+            if parsed.get("Date"):
+                try:
+                    parsed_dt = parsedate_to_datetime(str(parsed.get("Date") or ""))
+                    if parsed_dt:
+                        if parsed_dt.tzinfo is None:
+                            parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                        received_at = parsed_dt
+                except Exception:
+                    received_at = None
+            unread = b"\\Seen" not in raw_meta
+
+            # 使用外部邮件标识作为主键（当前按你的 DDL 与接口约定使用 UID）。
+            defaults = {
+                "owner_id": owner_id,
+                "subject": subject,
+                "from_email": from_email,
+                "received_at": received_at,
+                "is_unread": bool(unread),
+            }
+            MyMail.objects.update_or_create(id=uid, defaults=defaults)
+            updated += 1
+        return updated
+    except Exception as exc:
+        if isinstance(exc, SmtpToolError):
+            raise
+        raise SmtpToolError(str(exc), status=500)
+    finally:
+        if mail:
+            try:
+                mail.logout()
+            except Exception:
+                pass
+
+
 class SmtpToolError(Exception):
     """SMTP/IMAP 业务异常，供视图层转换为统一 API 响应。"""
 
@@ -325,6 +458,16 @@ class SmtpToolError(Exception):
         super().__init__(message)
         self.message = message
         self.status = status
+
+
+def ensure_send_config_for_login(login_id):
+    send_config, config_error = _find_send_config_for_login(login_id)
+    if config_error:
+        status = 404 if config_error == "User login not found" else 400
+        raise SmtpToolError(config_error, status=status)
+    if not send_config:
+        raise SmtpToolError("No send config for current user")
+    return send_config
 
 
 def send_mail_by_login(login_id, payload):
@@ -346,12 +489,7 @@ def send_mail_by_login(login_id, payload):
     if not body.strip():
         raise SmtpToolError("Missing field: body")
 
-    send_config, config_error = _find_send_config_for_login(login_id)
-    if config_error:
-        status = 404 if config_error == "User login not found" else 400
-        raise SmtpToolError(config_error, status=status)
-    if not send_config:
-        raise SmtpToolError("No send config for current user")
+    send_config = ensure_send_config_for_login(login_id)
 
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_port_raw = str(send_config.get("port") or "").strip()
@@ -403,125 +541,7 @@ def send_mail_by_login(login_id, payload):
     return {"message_id": message_id}
 
 
-def list_my_mails_by_login(login_id, page=1, page_size=20):
-    send_config, config_error = _find_send_config_for_login(login_id)
-    if config_error:
-        status = 404 if config_error == "User login not found" else 400
-        raise SmtpToolError(config_error, status=status)
-
-    smtp_host = str(send_config.get("smtp") or "").strip()
-    smtp_user = str(send_config.get("email") or "").strip()
-    smtp_password = str(send_config.get("password") or "")
-    if not smtp_host or not smtp_user or not smtp_password:
-        raise SmtpToolError("Send config is incomplete")
-
-    try:
-        page = int(page)
-    except (TypeError, ValueError):
-        page = 1
-    try:
-        page_size = int(page_size)
-    except (TypeError, ValueError):
-        page_size = 20
-    page = max(1, page)
-    page_size = max(1, min(page_size, 50))
-
-    imap_host = _resolve_imap_host(smtp_host)
-    if not imap_host:
-        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
-
-    mail = None
-    try:
-        mail = imaplib.IMAP4_SSL(imap_host, 993)
-        mail.login(smtp_user, smtp_password)
-        status, _select_data = mail.select("INBOX")
-        if status != "OK":
-            raise SmtpToolError("Failed to open INBOX", status=500)
-
-        status, search_data = mail.search(None, "ALL")
-        if status != "OK":
-            raise SmtpToolError("Failed to read mailbox", status=500)
-
-        # IMAP SEARCH 返回升序 UID，这里倒序后按页截取实现“最新在前”。
-        all_ids = search_data[0].split() if search_data and search_data[0] else []
-        all_ids = list(reversed(all_ids))
-        total = len(all_ids)
-        total_pages = max((total + page_size - 1) // page_size, 1)
-        if page > total_pages:
-            page = total_pages
-        offset = (page - 1) * page_size
-        page_ids = all_ids[offset: offset + page_size]
-
-        items = []
-        for uid_bytes in page_ids:
-            uid = uid_bytes.decode("utf-8", errors="ignore")
-            status, fetch_data = mail.fetch(
-                uid_bytes,
-                "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE MESSAGE-ID REFERENCES REPLY-TO)] FLAGS)",
-            )
-            if status != "OK" or not fetch_data:
-                continue
-            header_bytes = b""
-            raw_meta = b""
-            for row in fetch_data:
-                if isinstance(row, tuple):
-                    raw_meta = row[0] if isinstance(row[0], bytes) else raw_meta
-                    if isinstance(row[1], bytes):
-                        header_bytes = row[1]
-            if not header_bytes:
-                continue
-            # 列表页只拉取头信息，避免一次性下载完整正文造成慢查询。
-            parsed = message_from_bytes(header_bytes, policy=policy.default)
-            subject = _decode_mime_header(parsed.get("Subject"))
-            from_raw = _decode_mime_header(parsed.get("From"))
-            reply_to = _decode_mime_header(parsed.get("Reply-To"))
-            date_text = _format_mail_datetime(parsed.get("Date"))
-            message_id = str(parsed.get("Message-ID") or "").strip()
-            references = str(parsed.get("References") or "").strip()
-            unread = b"\\Seen" not in raw_meta
-            items.append(
-                {
-                    "id": uid,
-                    "subject": subject or "(无标题)",
-                    "from": from_raw,
-                    "from_email": _extract_first_email(from_raw),
-                    "reply_to": reply_to,
-                    "date": date_text,
-                    "unread": unread,
-                    "message_id": message_id,
-                    "references": references,
-                }
-            )
-
-        data = {
-            "mailbox_email": smtp_user,
-            "items": items,
-        }
-        meta = {
-            "page": page,
-            "page_size": page_size,
-            "total": total,
-            "total_pages": total_pages,
-        }
-        return data, meta
-    except Exception as exc:
-        if isinstance(exc, SmtpToolError):
-            raise
-        raise SmtpToolError(str(exc), status=500)
-    finally:
-        if mail:
-            try:
-                mail.logout()
-            except Exception:
-                pass
-
-
-def get_my_mail_detail_by_login(login_id, mail_id):
-    send_config, config_error = _find_send_config_for_login(login_id)
-    if config_error:
-        status = 404 if config_error == "User login not found" else 400
-        raise SmtpToolError(config_error, status=status)
-
+def get_my_mail_detail_from_smtp(send_config, mail_id):
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_user = str(send_config.get("email") or "").strip()
     smtp_password = str(send_config.get("password") or "")

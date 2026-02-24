@@ -13,8 +13,10 @@ from . import llmsTool
 from .smtpTool import (
     SmtpToolError,
     send_mail_by_login,
-    list_my_mails_by_login,
-    get_my_mail_detail_by_login,
+    ensure_send_config_for_login,
+    list_my_mails_from_db,
+    sync_my_mails_from_smtp,
+    get_my_mail_detail_from_smtp,
 )
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
 
@@ -602,13 +604,43 @@ def send_mail(request):
 @require_GET
 # 我的邮件列表（接口入口在 views，SMTP/IMAP 细节在 smtpTool）
 def my_mails_api(request):
+    # 1. 检查是否登录
     login_id, error = require_login(request)
     if error:
         return error
+
+    # 2. 检查当前登录用户是否配置了邮箱信息
+    try:
+        send_config = ensure_send_config_for_login(login_id)
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+
     page = request.GET.get("page", 1)
     page_size = request.GET.get("page_size", 20)
     try:
-        data, meta = list_my_mails_by_login(login_id, page=page, page_size=page_size)
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(page_size)
+    except (TypeError, ValueError):
+        page_size = 20
+    page = max(1, page)
+    page_size = max(1, min(page_size, 50))
+
+    try:
+        # 4. 用户点击刷新时，先取 SMTP 更新本地 DB
+        refresh = str(request.GET.get("refresh") or "").strip().lower()
+        if refresh in ("1", "true", "yes", "y", "on"):
+            sync_my_mails_from_smtp(login_id, send_config)
+
+        # 3. 默认从 DB 读取邮件列表
+        data, meta = list_my_mails_from_db(
+            login_id,
+            page=page,
+            page_size=page_size,
+            mailbox_email=str(send_config.get("email") or "").strip(),
+        )
         return api_success(data=data, meta=meta)
     except SmtpToolError as exc:
         return api_error(exc.message, status=exc.status)
@@ -624,7 +656,9 @@ def my_mail_detail_api(request, mail_id):
     if error:
         return error
     try:
-        data = get_my_mail_detail_by_login(login_id, mail_id)
+        # 5. 用户点击邮件列表时，按外部唯一标识从 SMTP 获取详情
+        send_config = ensure_send_config_for_login(login_id)
+        data = get_my_mail_detail_from_smtp(send_config, mail_id)
         return api_success(data=data)
     except SmtpToolError as exc:
         return api_error(exc.message, status=exc.status)

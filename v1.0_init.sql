@@ -471,6 +471,19 @@ CREATE TABLE saved_mail_info
 
 ) COMMENT ='系统中存储的邮件列表';
 
+CREATE TABLE my_mail
+(
+    id               VARCHAR(255) NOT NULL COMMENT '外部邮件唯一标识（如 IMAP UID / Message-ID）',
+    owner_id         BIGINT       NULL COMMENT '员工ID，对应 employee.id',
+    subject          VARCHAR(512) NULL COMMENT '邮件主题',
+    from_email       VARCHAR(255) NULL COMMENT '发件人邮箱',
+    received_at      DATETIME     NULL COMMENT '接收时间',
+    is_unread        TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '是否未读',
+
+    PRIMARY KEY (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='我的邮件缓存表';
+
 # ----------------------------------------------- 系统设置 -----------------------------------------------
 
 CREATE TABLE sys_settings

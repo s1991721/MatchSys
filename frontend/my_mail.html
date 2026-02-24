@@ -467,11 +467,15 @@
         }
       };
 
-      const loadList = async () => {
+      const loadList = async (forceRefresh = false) => {
         try {
           setStatus("加载邮件列表...", false);
-          // 列表接口只返回头字段，先让左侧快速可用，再按需加载详情。
-          const res = await fetchWithAuth("/api/my-mails?page=1&page_size=30", { method: "GET" });
+          // 默认读 DB 缓存；点“刷新”时追加 refresh=1，触发服务端同步 SMTP 再回写 DB。
+          const params = new URLSearchParams({ page: "1", page_size: "30" });
+          if (forceRefresh) {
+            params.set("refresh", "1");
+          }
+          const res = await fetchWithAuth(`/api/my-mails?${params.toString()}`, { method: "GET" });
           const payload = await res.json();
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件列表失败");
@@ -520,7 +524,7 @@
       // 列表头刷新按钮：不展开回复区也能刷新“我的邮件”列表。
       if (listRefreshBtn) {
         listRefreshBtn.addEventListener("click", () => {
-          loadList();
+          loadList(true);
         });
       }
 

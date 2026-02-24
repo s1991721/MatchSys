@@ -436,7 +436,7 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
   DEFAULT CHARSET = utf8mb4
     COMMENT ='已发送邮件日志(Gmail API)';
 
-CREATE TABLE mail_project_info
+CREATE TABLE IF NOT EXISTS mail_project_info
 (
     id      VARCHAR(255) PRIMARY KEY,
     title   VARCHAR(255) NOT NULL COMMENT '邮件标题',
@@ -450,7 +450,7 @@ CREATE TABLE mail_project_info
     price   DECIMAL(10, 2) COMMENT '价格'
 ) COMMENT ='邮件案件表';
 
-CREATE TABLE mail_technician_info
+CREATE TABLE IF NOT EXISTS mail_technician_info
 (
     id      VARCHAR(255) PRIMARY KEY,
     title   VARCHAR(255) NOT NULL COMMENT '邮件标题',
@@ -464,14 +464,14 @@ CREATE TABLE mail_technician_info
     price   DECIMAL(10, 2) COMMENT '价格'
 ) COMMENT ='邮件技术者表';
 
-CREATE TABLE saved_mail_info
+CREATE TABLE IF NOT EXISTS saved_mail_info
 (
     id   VARCHAR(255) PRIMARY KEY,
     date DATETIME COMMENT '日期'
 
 ) COMMENT ='系统中存储的邮件列表';
 
-CREATE TABLE my_mail
+CREATE TABLE IF NOT EXISTS my_mail
 (
     id               VARCHAR(255) NOT NULL COMMENT '外部邮件唯一标识（如 IMAP UID / Message-ID）',
     owner_id         BIGINT       NULL COMMENT '员工ID，对应 employee.id',
@@ -486,7 +486,7 @@ CREATE TABLE my_mail
 
 # ----------------------------------------------- 系统设置 -----------------------------------------------
 
-CREATE TABLE sys_settings
+CREATE TABLE IF NOT EXISTS sys_settings
 (
     id         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键ID',
     name       VARCHAR(255) NOT NULL COMMENT '配置名称（唯一）',
@@ -510,7 +510,7 @@ VALUES ('match', '{
        }', 1,
         '2026-01-04 05:31:02', 1, '2026-01-04 05:42:31', NULL);
 
-CREATE TABLE sys_tasks
+CREATE TABLE IF NOT EXISTS sys_tasks
 (
     id          BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     name        VARCHAR(255) NOT NULL DEFAULT '' COMMENT '任务名称',

@@ -15,6 +15,7 @@ from .mailTool import (
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
+    count_unread_mails_from_db,
     sync_my_mails_from_smtp,
     get_my_mail_detail_from_smtp,
 )
@@ -717,6 +718,26 @@ def my_mail_detail_api(request, mail_id):
         return api_success(data=data)
     except SmtpToolError as exc:
         return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+# 我的邮件未读数（首页铃铛使用 DB 缓存统计）
+def my_mails_unread_count_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    try:
+        # 首页仅显示红点计数，若未配置邮箱则按 0 处理，避免顶部报错。
+        ensure_send_config_for_login(login_id)
+    except SmtpToolError:
+        return api_success(data={"unread_count": 0, "has_mailbox": False})
+
+    try:
+        unread_count = count_unread_mails_from_db(login_id)
+        return api_success(data={"unread_count": int(unread_count), "has_mailbox": True})
     except Exception as exc:
         return api_error(str(exc), status=500)
 

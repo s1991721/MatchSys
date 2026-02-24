@@ -382,6 +382,14 @@ def list_my_mails_from_db(
     return data, meta
 
 
+def count_unread_mails_from_db(owner_id):
+    """
+    统计当前用户在本地缓存库中的未读邮件数。
+    仅依赖 DB，不触发 IMAP 拉取。
+    """
+    return MyMail.objects.filter(owner_id=owner_id, is_unread=True).count()
+
+
 def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_user = str(send_config.get("email") or "").strip()

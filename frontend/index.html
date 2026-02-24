@@ -185,7 +185,7 @@
           </div>
           <button class="icon-btn c-btn c-btn-icon c-btn-ghost" id="noticeBtn" aria-label="通知" data-i18n-aria="topbar.notice">
             🔔
-            <span class="badge">2</span>
+            <span class="badge" id="noticeBadge" hidden></span>
           </button>
 
           <a class="avatar" href="#profile.html" data-src="profile.html" title="个人信息" aria-label="个人信息" data-i18n-title="topbar.profile" data-i18n-aria="topbar.profile">
@@ -222,6 +222,7 @@
       const frame = document.getElementById("mainFrame");
       const topDate = document.getElementById("topDate");
       const noticeBtn = document.getElementById("noticeBtn");
+      const noticeBadge = document.getElementById("noticeBadge");
       const noticeDialog = document.getElementById("noticeDialog");
       const noticeClose = document.getElementById("noticeClose");
       const pageSubtitle = document.getElementById("pageSubtitle");
@@ -324,6 +325,39 @@
           noticeDialog.showModal();
         } else {
           noticeDialog.setAttribute("open", "open");
+        }
+      };
+
+      const setNoticeBadge = (count) => {
+        if (!noticeBadge) return;
+        const safeCount = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+        if (safeCount <= 0) {
+          noticeBadge.textContent = "";
+          noticeBadge.hidden = true;
+          return;
+        }
+        // 大于 99 时按常见通知样式显示 99+，避免角标撑破。
+        noticeBadge.textContent = safeCount > 99 ? "99+" : String(safeCount);
+        noticeBadge.hidden = false;
+      };
+
+      const loadNoticeUnreadCount = async () => {
+        try {
+          const response = await fetch("/api/my-mails/unread-count", {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          });
+          const payload = await response.json();
+          if (!payload || payload.success === false) {
+            setNoticeBadge(0);
+            return;
+          }
+          const data = payload.data || {};
+          setNoticeBadge(Number(data.unread_count || 0));
+        } catch (e) {
+          // 首页铃铛计数失败时不打断主流程，仅隐藏角标。
+          setNoticeBadge(0);
         }
       };
 
@@ -493,6 +527,8 @@
           }
         }
         applyRoute(src);
+        // 页面路由变化后刷新一次未读数，保证从“我的邮件”返回首页时角标最新。
+        loadNoticeUnreadCount();
       };
 
       const handleRouteClick = (event) => {
@@ -533,6 +569,13 @@
         syncFromHash();
         frame.addEventListener("load", broadcastLang);
       }
+      // 首次加载与重新聚焦时刷新未读角标。
+      loadNoticeUnreadCount();
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          loadNoticeUnreadCount();
+        }
+      });
     });
   </script>
 </body>

@@ -521,7 +521,7 @@ CREATE TABLE sys_tasks
   DEFAULT CHARSET = utf8mb4 COMMENT ='定时任务';
 
 INSERT INTO sys_tasks (name,`time`,frequency,cron_expr,`method`,api,body,enabled,last_run_at,next_run_at,last_status,last_error,created_by,created_at,updated_by,updated_at,deleted_at) VALUES
-	 ('夜间数据处理','01:00:00','每天','0 1 * * *','POST','api/time-to-save','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 14:51:21',1,'2026-02-13 16:00:00',NULL),
-	 ('夜间过期数据清理','05:00:00','每天','0 5 * * *','POST','api/time-to-clean','',1,'2026-01-10 20:00:00',NULL,'error','HTTP 500',1,'2026-01-04 15:20:48',1,'2026-01-10 20:00:00',NULL),
-	 ('重要数据备份','01:00:00','每周','0 1 * * 6','POST','api/time-to-backup','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
+	 ('夜间数据处理','01:00:00','每天','0 1 * * *','POST','/api/time-to-save','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 14:51:21',1,'2026-02-13 16:00:00',NULL),
+	 ('夜间过期数据清理','05:00:00','每天','0 5 * * *','POST','/api/time-to-clean','',1,'2026-01-10 20:00:00',NULL,'error','HTTP 500',1,'2026-01-04 15:20:48',1,'2026-01-10 20:00:00',NULL),
+	 ('重要数据备份','01:00:00','每周','0 1 * * 6','POST','/api/time-to-backup','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
 	 ('测试hello','09:00:00','自定义 Cron','*/1 * * * *','POST','/api/time-to-hello','',0,'2026-01-09 01:38:00',NULL,'success','',1,'2026-01-04 15:46:16',1,'2026-01-09 01:38:23',NULL);

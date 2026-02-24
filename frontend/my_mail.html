@@ -91,6 +91,52 @@
       flex: 1;
     }
 
+    .mail-filters {
+      padding: 10px 14px 12px;
+      border-bottom: 1px solid #eef3fb;
+    }
+
+    /* 复用系统筛选面板视觉风格，并保持“我的邮件”筛选区单行显示。 */
+    .mail-filters.c-filter-panel {
+      background: radial-gradient(circle at top, rgba(28, 123, 255, 0.08), transparent 70%);
+    }
+
+    .mail-filters .filter-grid {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    .mail-filters .filter-group {
+      min-width: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .mail-filters .filter-group.filter-date {
+      flex: 0 0 146px;
+    }
+
+    .mail-filters .filter-label {
+      font-size: 12px;
+      color: #5b6b86;
+      line-height: 1;
+    }
+
+    .mail-filters .c-input {
+      height: 36px;
+    }
+
+    .mail-filters .filter-actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
     .mail-item {
       border-bottom: 1px solid #eef3fb;
       padding: 12px 14px;
@@ -264,6 +310,21 @@
       .mail-right.reply-expanded {
         grid-template-rows: 1fr 340px;
       }
+
+      /* 小屏允许筛选项换行，避免输入框被压缩不可用。 */
+      .mail-filters .filter-grid {
+        flex-wrap: wrap;
+      }
+
+      .mail-filters .filter-group,
+      .mail-filters .filter-group.filter-date {
+        flex: 1 1 100%;
+      }
+
+      .mail-filters .filter-actions {
+        width: 100%;
+        justify-content: flex-end;
+      }
     }
   </style>
 </head>
@@ -290,7 +351,26 @@
           </button>
         </div>
       </div>
+      <div class="mail-filters filters c-filter-panel">
+        <div class="filter-grid">
+          <label class="filter-group">
+            <span class="filter-label">关键字</span>
+            <input class="c-input" id="filterKeyword" type="text" placeholder="关键字（主题）" />
+          </label>
+          <label class="filter-group filter-date">
+            <span class="filter-label">送信日期</span>
+            <input class="c-input" id="filterSendDate" type="date" />
+          </label>
+          <div class="filter-actions c-filter-actions-right c-filter-actions-group">
+            <button class="c-btn c-btn-primary" type="button" id="searchBtn">查询</button>
+          </div>
+        </div>
+      </div>
       <ul class="mail-items" id="mailItems"></ul>
+      <div class="pagination c-pagination" id="mail-pagination">
+        <div class="pagination-summary" id="mail-pagination-summary">共 0 条 · 第 1/1 页</div>
+        <div class="pagination-pages" id="mail-pagination-pages"></div>
+      </div>
     </section>
 
     <section class="mail-right reply-collapsed" id="mailRight">
@@ -324,6 +404,12 @@
       const mailItems = document.getElementById("mailItems");
       const mailRight = document.getElementById("mailRight");
       const listRefreshBtn = document.getElementById("listRefreshBtn");
+      const filterKeyword = document.getElementById("filterKeyword");
+      const filterSendDate = document.getElementById("filterSendDate");
+      const searchBtn = document.getElementById("searchBtn");
+      const pagination = document.getElementById("mail-pagination");
+      const paginationPages = document.getElementById("mail-pagination-pages");
+      const paginationSummary = document.getElementById("mail-pagination-summary");
       const mailboxText = document.getElementById("mailboxText");
       const mailMeta = document.getElementById("mailMeta");
       const mailBody = document.getElementById("mailBody");
@@ -340,6 +426,13 @@
       let activeMail = null;
       let listNoticeMessage = "";
       let isReplyExpanded = false;
+      let currentFilters = {
+        keyword: "",
+        send_date: "",
+      };
+      let currentPage = 1;
+      let totalPages = 1;
+      let totalCount = 0;
 
       const setStatus = (text, isError) => {
         replyStatus.textContent = text || "";
@@ -467,23 +560,46 @@
         }
       };
 
+      const hasFilters = () => (
+        Boolean((currentFilters.keyword || "").trim())
+        || Boolean((currentFilters.send_date || "").trim())
+      );
+
       const loadList = async (forceRefresh = false) => {
         try {
           setStatus("加载邮件列表...", false);
-          // 默认读 DB 缓存；点“刷新”时追加 refresh=1，触发服务端同步 SMTP 再回写 DB。
-          const params = new URLSearchParams({ page: "1", page_size: "30" });
           if (forceRefresh) {
-            params.set("refresh", "1");
+            await fetchWithAuth("/api/my-mails/sync", {
+              method: "POST",
+              body: JSON.stringify({}),
+            });
           }
-          const res = await fetchWithAuth(`/api/my-mails?${params.toString()}`, { method: "GET" });
+
+          const params = new URLSearchParams({ page: String(currentPage), page_size: "30" });
+          if (hasFilters()) {
+            if (currentFilters.keyword) params.set("keyword", currentFilters.keyword);
+            if (currentFilters.send_date) params.set("send_date", currentFilters.send_date);
+          }
+          const endpoint = hasFilters() ? "/api/my-mails/query" : "/api/my-mails";
+          const res = await fetchWithAuth(`${endpoint}?${params.toString()}`, { method: "GET" });
           const payload = await res.json();
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件列表失败");
           }
           const data = payload.data || {};
+          const meta = payload.meta || {};
+          totalPages = Number(meta.total_pages || 1) || 1;
+          totalCount = Number(meta.total || 0) || 0;
+          currentPage = Number(meta.page || currentPage) || 1;
           listItems = Array.isArray(data.items) ? data.items : [];
           listNoticeMessage = "";
           mailboxText.textContent = data.mailbox_email ? `邮箱: ${data.mailbox_email}` : "";
+          if (paginationSummary) {
+            paginationSummary.textContent = `共 ${totalCount} 条 · 第 ${currentPage}/${totalPages} 页`;
+          }
+          if (pagination && window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+          }
 
           if (listItems.length) {
             // 优先保持当前选中邮件；不存在时选中首封，确保收件人/标题默认值持续可用。
@@ -498,6 +614,9 @@
           setStatus("", false);
         } catch (error) {
           listItems = [];
+          totalPages = 1;
+          totalCount = 0;
+          currentPage = 1;
           const rawMessage = String(
             (error && error.payload && error.payload.message) || error.message || ""
           );
@@ -510,6 +629,12 @@
           renderList();
           fillDetail(null);
           setStatus(listNoticeMessage, true);
+          if (paginationSummary) {
+            paginationSummary.textContent = "共 0 条 · 第 1/1 页";
+          }
+          if (pagination && window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, 1, 1);
+          }
         }
       };
 
@@ -525,6 +650,38 @@
       if (listRefreshBtn) {
         listRefreshBtn.addEventListener("click", () => {
           loadList(true);
+        });
+      }
+
+      if (searchBtn) {
+        searchBtn.addEventListener("click", () => {
+          currentPage = 1;
+          currentFilters = {
+            keyword: (filterKeyword && filterKeyword.value ? filterKeyword.value : "").trim(),
+            send_date: (filterSendDate && filterSendDate.value ? filterSendDate.value : "").trim(),
+          };
+          loadList(false);
+        });
+      }
+
+      if (pagination && window.bindPagination) {
+        window.bindPagination(pagination, (value) => {
+          if (value === "prev") {
+            if (currentPage <= 1) return;
+            currentPage -= 1;
+            loadList(false);
+            return;
+          }
+          if (value === "next") {
+            if (currentPage >= totalPages) return;
+            currentPage += 1;
+            loadList(false);
+            return;
+          }
+          const pageNum = Number(value);
+          if (!Number.isInteger(pageNum) || pageNum < 1 || pageNum > totalPages) return;
+          currentPage = pageNum;
+          loadList(false);
         });
       }
 

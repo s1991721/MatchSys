@@ -10,7 +10,7 @@ from django.views.decorators.http import require_GET, require_POST
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_json_body, require_login
 from . import llmsTool
-from .smtpTool import (
+from .mailTool import (
     SmtpToolError,
     send_mail_by_login,
     ensure_send_config_for_login,
@@ -583,7 +583,7 @@ def extract_technician_detail(request):
 
 @csrf_exempt
 @require_POST
-# 送信（接口入口在 views，SMTP 细节在 smtpTool）
+# 送信（接口入口在 views，SMTP 细节在 mailTool）
 def send_mail(request):
     login_id, error = require_login(request)
     if error:
@@ -602,7 +602,7 @@ def send_mail(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件列表（接口入口在 views，SMTP/IMAP 细节在 smtpTool）
+# 我的邮件列表（接口入口在 views，SMTP/IMAP 细节在 mailTool）
 def my_mails_api(request):
     # 1. 检查是否登录
     login_id, error = require_login(request)
@@ -629,11 +629,6 @@ def my_mails_api(request):
     page_size = max(1, min(page_size, 50))
 
     try:
-        # 4. 用户点击刷新时，先取 SMTP 更新本地 DB
-        refresh = str(request.GET.get("refresh") or "").strip().lower()
-        if refresh in ("1", "true", "yes", "y", "on"):
-            sync_my_mails_from_smtp(login_id, send_config)
-
         # 3. 默认从 DB 读取邮件列表
         data, meta = list_my_mails_from_db(
             login_id,
@@ -650,7 +645,67 @@ def my_mails_api(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件详情（接口入口在 views，SMTP/IMAP 细节在 smtpTool）
+# 我的邮件查询（发件人、关键字、送信日期）
+def my_mails_query_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    try:
+        send_config = ensure_send_config_for_login(login_id)
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+
+    page = request.GET.get("page", 1)
+    page_size = request.GET.get("page_size", 20)
+    keyword = request.GET.get("keyword", "")
+    send_date = request.GET.get("send_date", "")
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(page_size)
+    except (TypeError, ValueError):
+        page_size = 20
+    page = max(1, page)
+    page_size = max(1, min(page_size, 50))
+
+    try:
+        data, meta = list_my_mails_from_db(
+            login_id,
+            page=page,
+            page_size=page_size,
+            mailbox_email=str(send_config.get("email") or "").strip(),
+            keyword=keyword,
+            send_date=send_date,
+        )
+        return api_success(data=data, meta=meta)
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_POST
+# 我的邮件刷新同步（单独接口）
+def my_mails_sync_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    try:
+        send_config = ensure_send_config_for_login(login_id)
+        updated = sync_my_mails_from_smtp(login_id, send_config)
+        return api_success(data={"updated": int(updated or 0)})
+    except SmtpToolError as exc:
+        return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+# 我的邮件详情（接口入口在 views，SMTP/IMAP 细节在 mailTool）
 def my_mail_detail_api(request, mail_id):
     login_id, error = require_login(request)
     if error:

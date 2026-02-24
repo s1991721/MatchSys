@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bpmatch.authorize_gmail import test_connection
-from bpmatch.smtpTool import test_smtp_connection
+from bpmatch.mailTool import test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login

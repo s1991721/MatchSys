@@ -11,6 +11,7 @@ from email.utils import getaddresses, make_msgid, parsedate_to_datetime
 from typing import List, Optional
 
 from django.utils import timezone as django_timezone
+from django.utils.dateparse import parse_date as django_parse_date
 from employee.models import UserLogin
 from settings.models import SysSettings
 from .models import MyMail
@@ -328,8 +329,26 @@ def _format_received_label(value):
         return str(value)
 
 
-def list_my_mails_from_db(owner_id, page=1, page_size=20, mailbox_email=""):
-    queryset = MyMail.objects.filter(owner_id=owner_id).order_by("-received_at", "-id")
+def list_my_mails_from_db(
+    owner_id,
+    page=1,
+    page_size=20,
+    mailbox_email="",
+    keyword="",
+    send_date="",
+):
+    queryset = MyMail.objects.filter(owner_id=owner_id)
+    keyword_text = str(keyword or "").strip()
+    send_date_text = str(send_date or "").strip()
+
+    if keyword_text:
+        queryset = queryset.filter(subject__icontains=keyword_text)
+    if send_date_text:
+        target_date = django_parse_date(send_date_text)
+        if target_date:
+            queryset = queryset.filter(received_at__date=target_date)
+
+    queryset = queryset.order_by("-received_at", "-id")
     total = queryset.count()
     total_pages = max((total + page_size - 1) // page_size, 1)
     if page > total_pages:
@@ -439,6 +458,148 @@ def sync_my_mails_from_smtp(owner_id, send_config, sync_limit=120):
             MyMail.objects.update_or_create(id=uid, defaults=defaults)
             updated += 1
         return updated
+    except Exception as exc:
+        if isinstance(exc, SmtpToolError):
+            raise
+        raise SmtpToolError(str(exc), status=500)
+    finally:
+        if mail:
+            try:
+                mail.logout()
+            except Exception:
+                pass
+
+
+def query_my_mails_from_smtp(
+    send_config,
+    page=1,
+    page_size=20,
+    keyword="",
+    send_date="",
+):
+    """
+    直接从 IMAP 查询邮件列表（不依赖本地 DB），查询条件与前端保持一致：
+    - keyword: 主题关键字
+    - send_date: 送信日期(YYYY-MM-DD)
+    """
+    smtp_host = str(send_config.get("smtp") or "").strip()
+    smtp_user = str(send_config.get("email") or "").strip()
+    smtp_password = str(send_config.get("password") or "")
+    if not smtp_host or not smtp_user or not smtp_password:
+        raise SmtpToolError("Send config is incomplete")
+
+    imap_host = _resolve_imap_host(smtp_host)
+    if not imap_host:
+        raise SmtpToolError("Cannot resolve IMAP host from SMTP config")
+
+    try:
+        page = int(page)
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(page_size)
+    except (TypeError, ValueError):
+        page_size = 20
+    page = max(1, page)
+    page_size = max(1, min(page_size, 50))
+
+    keyword_text = str(keyword or "").strip()
+    send_date_text = str(send_date or "").strip()
+    target_date = django_parse_date(send_date_text) if send_date_text else None
+    if send_date_text and target_date is None:
+        raise SmtpToolError("Invalid send_date")
+
+    mail = None
+    try:
+        mail = imaplib.IMAP4_SSL(imap_host, 993)
+        mail.login(smtp_user, smtp_password)
+        status, _select_data = mail.select("INBOX")
+        if status != "OK":
+            raise SmtpToolError("Failed to open INBOX", status=500)
+
+        status, search_data = mail.search(None, "ALL")
+        if status != "OK":
+            raise SmtpToolError("Failed to read mailbox", status=500)
+
+        all_ids = search_data[0].split() if search_data and search_data[0] else []
+        all_ids = list(reversed(all_ids))
+
+        filtered_items = []
+        for uid_bytes in all_ids:
+            uid = uid_bytes.decode("utf-8", errors="ignore")
+            if not uid:
+                continue
+            status, fetch_data = mail.fetch(
+                uid_bytes,
+                "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE MESSAGE-ID REFERENCES REPLY-TO)] FLAGS)",
+            )
+            if status != "OK" or not fetch_data:
+                continue
+            header_bytes = b""
+            raw_meta = b""
+            for row in fetch_data:
+                if isinstance(row, tuple):
+                    raw_meta = row[0] if isinstance(row[0], bytes) else raw_meta
+                    if isinstance(row[1], bytes):
+                        header_bytes = row[1]
+            if not header_bytes:
+                continue
+
+            parsed = message_from_bytes(header_bytes, policy=policy.default)
+            subject = _decode_mime_header(parsed.get("Subject")) or "(无标题)"
+            from_raw = _decode_mime_header(parsed.get("From"))
+            date_text = _format_mail_datetime(parsed.get("Date"))
+
+            if keyword_text and keyword_text.lower() not in subject.lower():
+                continue
+
+            if target_date:
+                parsed_dt = None
+                try:
+                    parsed_dt = parsedate_to_datetime(str(parsed.get("Date") or ""))
+                    if parsed_dt and parsed_dt.tzinfo is None:
+                        parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                except Exception:
+                    parsed_dt = None
+                if not parsed_dt:
+                    continue
+                if django_timezone.localtime(parsed_dt).date() != target_date:
+                    continue
+
+            message_id = str(parsed.get("Message-ID") or "").strip()
+            references = str(parsed.get("References") or "").strip()
+            reply_to = _decode_mime_header(parsed.get("Reply-To"))
+            unread = b"\\Seen" not in raw_meta
+
+            filtered_items.append(
+                {
+                    "id": uid,
+                    "subject": subject,
+                    "from": from_raw,
+                    "from_email": _extract_first_email(from_raw),
+                    "reply_to": reply_to,
+                    "date": date_text,
+                    "unread": unread,
+                    "message_id": message_id,
+                    "references": references,
+                }
+            )
+
+        total = len(filtered_items)
+        total_pages = max((total + page_size - 1) // page_size, 1)
+        if page > total_pages:
+            page = total_pages
+        offset = (page - 1) * page_size
+        items = filtered_items[offset: offset + page_size]
+
+        data = {"mailbox_email": smtp_user, "items": items}
+        meta = {
+            "page": page,
+            "page_size": page_size,
+            "total": total,
+            "total_pages": total_pages,
+        }
+        return data, meta
     except Exception as exc:
         if isinstance(exc, SmtpToolError):
             raise

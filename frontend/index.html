@@ -156,8 +156,15 @@
       </ul>
 
       <div class="footer">
-        <span>v1.0</span>
-        <span>© Jef</span>
+        <div class="footer-main-row">
+          <span>v1.0</span>        
+          <div class="system-expiry-inline" id="systemExpiryStatus">
+            <span class="system-expiry-label">有效期至</span>
+            <span class="system-expiry-date">--</span>
+          </div>
+          <span>© Jef</span>
+        </div>
+
       </div>
 
       <button class="sidebar-handle" type="button" id="collapseBtn" aria-expanded="true" title="收起/展开">
@@ -238,6 +245,19 @@
       const employeeNameText = document.getElementById("employeeNameText");
       const employeeNameLabel = document.getElementById("employeeNameLabel");
       const employeePositionLabel = document.getElementById("employeePositionLabel");
+      const systemExpiryStatus = document.getElementById("systemExpiryStatus");
+      const systemExpiryDate = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-date") : null;
+      const systemExpiryLabel = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-label") : null;
+      const activationSettingsApi = "/api/sys-settings/activation";
+      let activationExpiryRaw = "";
+
+      const t = (key, fallback) => (
+        i18n && typeof i18n.t === "function" ? i18n.t(key) : (fallback || key)
+      );
+
+      const format = (key, vars, fallback) => (
+        i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
+      );
 
       const loadEmployeeMeta = () => {
         let name = "";
@@ -267,6 +287,78 @@
         return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日（周${zh[d.getDay()]}）`;
       };
 
+      const formatDateOnly = (raw) => {
+        if (!raw) return "";
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) return String(raw);
+        const lang = i18n ? i18n.getLang() : "zh-CN";
+        const locale = lang === "ja" ? "ja-JP" : "zh-CN";
+        return date.toLocaleDateString(locale);
+      };
+
+      const parseExpiryDate = (raw) => {
+        if (!raw) return null;
+        const safeRaw = String(raw).trim();
+        if (!safeRaw) return null;
+        const datePart = safeRaw.split("T")[0];
+        const match = datePart.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (match) {
+          const year = Number(match[1]);
+          const month = Number(match[2]) - 1;
+          const day = Number(match[3]);
+          return new Date(year, month, day);
+        }
+        const parsed = new Date(safeRaw);
+        if (Number.isNaN(parsed.getTime())) return null;
+        return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+      };
+
+      const isExpiryWithinDays = (raw, days) => {
+        const expiryDate = parseExpiryDate(raw);
+        if (!expiryDate) return false;
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const diffDays = Math.floor((expiryDate.getTime() - today.getTime()) / 86400000);
+        return diffDays <= days;
+      };
+
+      const renderSystemExpiryStatus = () => {
+        if (!systemExpiryStatus || !systemExpiryDate || !systemExpiryLabel) return;
+        systemExpiryLabel.textContent = t("index.system_validity_label", "系统有效期");
+        systemExpiryStatus.classList.remove("is-expiry-warning");
+        if (!activationExpiryRaw) {
+          systemExpiryDate.textContent = t("index.system_validity_empty_value", "未设置");
+          return;
+        }
+        systemExpiryDate.textContent = formatDateOnly(activationExpiryRaw);
+        if (isExpiryWithinDays(activationExpiryRaw, 30)) {
+          systemExpiryStatus.classList.add("is-expiry-warning");
+        }
+      };
+
+      const loadSystemExpiryStatus = async () => {
+        if (!systemExpiryStatus) return;
+        try {
+          const response = await fetch(activationSettingsApi, {
+            method: "GET",
+            credentials: "same-origin",
+            cache: "no-store",
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok || !payload || payload.success === false) {
+            activationExpiryRaw = "";
+            renderSystemExpiryStatus();
+            return;
+          }
+          const settings = payload.data && payload.data.settings ? payload.data.settings : {};
+          activationExpiryRaw = settings.expires_at || "";
+          renderSystemExpiryStatus();
+        } catch (e) {
+          activationExpiryRaw = "";
+          renderSystemExpiryStatus();
+        }
+      };
+
       const syncFrameLang = (lang) => {
         if (!frame) return;
         try {
@@ -292,6 +384,7 @@
         if (i18n && typeof i18n.apply === "function") {
           i18n.apply();
         }
+        renderSystemExpiryStatus();
         if (topDate) topDate.textContent = formatTopDate(safeLang);
         setSubtitle(resolveFromHash() || "home.html");
         syncFrameLang(safeLang);
@@ -571,9 +664,11 @@
       }
       // 首次加载与重新聚焦时刷新未读角标。
       loadNoticeUnreadCount();
+      loadSystemExpiryStatus();
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
           loadNoticeUnreadCount();
+          loadSystemExpiryStatus();
         }
       });
     });

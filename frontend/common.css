@@ -848,14 +848,51 @@ body.sidebar-collapsed .nav-item a:hover::after {
   color: var(--muted);
   font-size: 12px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
+}
+.footer-main-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
+  column-gap: 14px;
+}
+.footer-main-row > span:first-child {
+  justify-self: start;
+}
+.footer-main-row > span:last-child {
+  justify-self: end;
+}
+.system-expiry-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-width: 112px;
+  text-align: center;
+}
+.system-expiry-label,
+.system-expiry-date {
+  line-height: 1.18;
+  white-space: nowrap;
+}
+.system-expiry-label {
+  font-weight: 600;
+}
+.system-expiry-date {
+  font-weight: 700;
+}
+.system-expiry-inline.is-expiry-warning .system-expiry-date {
+  color: var(--danger);
 }
 body.sidebar-collapsed .sidebar .footer {
   flex-direction: column;
   gap: 4px;
   padding: 10px 0;
   align-items: center;
+}
+body.sidebar-collapsed .system-expiry-inline {
+  display: none;
 }
 .main {
   display: flex;

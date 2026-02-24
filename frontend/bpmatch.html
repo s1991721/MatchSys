@@ -60,11 +60,15 @@
     <!-- 下半部分：详情 -->
     <div class="c-split-grid-wide">
         <div class="panel-left c-card c-card-pad">
-            <div class="panel-title" data-i18n="match.job_detail">求人详情</div>
+            <div class="panel-title" data-i18n="match.case_detail">案件详情</div>
             <div class="detail detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
-            <div class="detail-actions-left"></div>
+            <div class="detail-actions-left">
+                <button class="c-btn c-btn-primary" type="button" id="send-bp-btn" data-i18n="match.send_to_bp">
+                    给BP提案件
+                </button>
+            </div>
         </div>
 
         <div class="panel-right c-card c-card-pad">
@@ -73,8 +77,8 @@
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
             <div class="detail-actions">
-                <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send">
-                    送信
+                <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send_to_tech">
+                    给技术者提案件
                 </button>
             </div>
         </div>
@@ -149,6 +153,7 @@
     const paginationPages = document.getElementById('job-pagination-pages');
     const pageSummary = document.getElementById('page-summary');
     const sendBtn = document.getElementById('send-btn');
+    const sendBpBtn = document.getElementById('send-bp-btn');
 
     let activeJobDetail = '';
     let activeMatchedSkills = [];
@@ -493,46 +498,56 @@
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
     });
 
-    // 将当前选中的求人与人员信息存入本地并跳转到送信页
+    const parseDatasetJSON = (el, key) => {
+        if (!el || !el.dataset) return null;
+        const raw = el.dataset[key];
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
 
-    sendBtn.addEventListener('click', () => {
+    const buildActivePayloads = () => {
         const activeJob = jobList?.querySelector('.item.active');
         const activePerson = personList?.querySelector('.item.active');
-
-        if (!activeJob || !activePerson) {
-            alert(t("match.send_tip"));
-            return;
-        }
-
-        const parseDatasetJSON = (el, key) => {
-            if (!el || !el.dataset) return null;
-            const raw = el.dataset[key];
-            if (!raw) return null;
-            try {
-                return JSON.parse(raw);
-            } catch {
-                return null;
-            }
-        };
 
         const jobData = parseDatasetJSON(activeJob, 'item') || {};
         const personData = parseDatasetJSON(activePerson, 'item') || {};
 
         const jobPayload = {
-            id: jobData.id || activeJob.dataset.id || '',
-            title: jobData.title || activeJob.querySelector('.item-title')?.textContent.trim() || '',
-            desc: jobData.desc || activeJob.querySelector('.item-desc')?.textContent.trim() || '',
-            detail: jobData.detail || activeJob.dataset.detail || '',
-            time: jobData.date || activeJob.querySelector('.item-time')?.textContent.trim() || ''
+            id: jobData.id || activeJob?.dataset?.id || '',
+            title: jobData.title || activeJob?.querySelector('.item-title')?.textContent.trim() || '',
+            desc: jobData.desc || activeJob?.querySelector('.item-desc')?.textContent.trim() || '',
+            detail: jobData.detail || activeJob?.dataset?.detail || '',
+            time: jobData.date || activeJob?.querySelector('.item-time')?.textContent.trim() || ''
         };
 
         const personPayload = {
-            id: personData.id || activePerson.dataset.id || '',
-            name: personData.title || activePerson.querySelector('.person-name')?.textContent.trim() || '',
-            belong: personData.from || activePerson.querySelector('.person-belong')?.textContent.trim() || '',
-            detail: personData.body || activePerson.dataset.detail || '',
-            time: personData.date || activePerson.querySelector('.person-time')?.textContent.trim() || ''
+            id: personData.id || activePerson?.dataset?.id || '',
+            name: personData.title || activePerson?.querySelector('.person-name')?.textContent.trim() || '',
+            belong: personData.from || activePerson?.querySelector('.person-belong')?.textContent.trim() || '',
+            detail: personData.body || activePerson?.dataset?.detail || '',
+            time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || ''
         };
+
+        return {
+            activeJob,
+            activePerson,
+            jobPayload,
+            personPayload
+        };
+    };
+
+    // 将当前选中的求人与人员信息存入本地并跳转到送信页
+    sendBtn.addEventListener('click', () => {
+        const {activeJob, activePerson, jobPayload, personPayload} = buildActivePayloads();
+
+        if (!activeJob || !activePerson) {
+            alert(t("match.send_tip"));
+            return;
+        }
 
         const payload = {
             job: jobPayload,
@@ -548,6 +563,34 @@
         }
 
         window.location.href = 'songxin.html?from=match';
+    });
+
+    sendBpBtn.addEventListener('click', () => {
+        const {activeJob, jobPayload} = buildActivePayloads();
+        if (!activeJob) {
+            alert(t("match.send_bp_tip"));
+            return;
+        }
+
+        const prefill = {
+            subject: jobPayload.title || jobPayload.desc || '',
+            body: jobPayload.detail || jobPayload.desc || '',
+            mail_type: '2',
+            source: 'bpmatch',
+            updatedAt: Date.now()
+        };
+
+        try {
+            localStorage.setItem('bulkMailPrefill', JSON.stringify(prefill));
+        } catch (err) {
+            console.error(t("match.cache_failed"), err);
+        }
+
+        if (window.top && window.top !== window) {
+            window.top.location.hash = 'customer.html';
+            return;
+        }
+        window.location.href = 'customer.html';
     });
 
 </script>

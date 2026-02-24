@@ -298,6 +298,7 @@
     let totalPages = 1;
     let bulkRecipientMeta = [];
     let selectedCustomerIds = new Set();
+    let pendingBulkPrefill = null;
 
     const openDialog = (dialog) => {
         if (!dialog) return;
@@ -391,6 +392,7 @@
                 if (!payload.success) {
                     cachedItems = [];
                     renderRows([], 0, 1, 1);
+                    applyBulkPrefillIfNeeded();
                     return;
                 }
                 const result = payload.data || {};
@@ -400,10 +402,12 @@
                 const page = meta.page
                 const totalPages = meta.total_pages
                 renderRows(cachedItems, total, page, totalPages);
+                applyBulkPrefillIfNeeded();
             })
             .catch(() => {
                 cachedItems = [];
                 renderRows([], 0, 1, 1);
+                applyBulkPrefillIfNeeded();
             });
     };
 
@@ -520,8 +524,40 @@
     const openBulkMailDialog = () => {
         bulkMailSubject.value = "";
         bulkMailBody.value = "";
+        if (bulkMailType) bulkMailType.value = "-1";
         renderBulkRecipients(getSelectedCustomers());
         openDialog(bulkMailDialog);
+    };
+
+    const applyBulkPrefillIfNeeded = () => {
+        if (!pendingBulkPrefill) return;
+        const recipients = selectedCustomerIds.size > 0 ? getSelectedCustomers() : cachedItems;
+        bulkMailSubject.value = pendingBulkPrefill.subject || "";
+        bulkMailBody.value = pendingBulkPrefill.body || "";
+        if (bulkMailType) bulkMailType.value = String(pendingBulkPrefill.mail_type || "2");
+        renderBulkRecipients(recipients);
+        openDialog(bulkMailDialog);
+        pendingBulkPrefill = null;
+    };
+
+    const loadBulkPrefill = () => {
+        const storageKey = "bulkMailPrefill";
+        let parsed = null;
+        try {
+            parsed = JSON.parse(localStorage.getItem(storageKey) || "null");
+        } catch {
+            parsed = null;
+        }
+        if (!parsed || typeof parsed !== "object") return;
+        const isFromBpMatch = parsed.source === "bpmatch";
+        const hasContent = parsed.subject || parsed.body;
+        if (!isFromBpMatch || !hasContent) return;
+        pendingBulkPrefill = {
+            subject: String(parsed.subject || ""),
+            body: String(parsed.body || ""),
+            mail_type: String(parsed.mail_type || "2"),
+        };
+        localStorage.removeItem(storageKey);
     };
 
     const getSelectedCustomers = () => {
@@ -783,6 +819,7 @@
             });
     });
 
+    loadBulkPrefill();
     fetchCustomers();
 </script>
 </body>

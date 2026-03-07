@@ -217,11 +217,12 @@
     <h3 id="noticeTitle" data-i18n="notice.title">通知</h3>
     <p data-i18n="notice.body">功能开发中</p>
     <div class="c-modal-actions">
-      <button class="c-btn c-btn-primary" type="button" id="noticeClose" data-i18n="notice.confirm">知道了</button>
+      <button class="c-btn c-btn-primary" type="button" id="noticeClose" data-dialog-close data-i18n="notice.confirm">知道了</button>
     </div>
   </dialog>
 
   <script src="i18n.js"></script>
+  <script src="common.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const btn = document.getElementById("collapseBtn");
@@ -231,7 +232,6 @@
       const noticeBtn = document.getElementById("noticeBtn");
       const noticeBadge = document.getElementById("noticeBadge");
       const noticeDialog = document.getElementById("noticeDialog");
-      const noticeClose = document.getElementById("noticeClose");
       const pageSubtitle = document.getElementById("pageSubtitle");
       const noticeRoute = "my_mail.html";
       const KEY = "chat_sidebar_collapsed";
@@ -454,15 +454,6 @@
         }
       };
 
-      const closeNoticeDialog = () => {
-        if (!noticeDialog) return;
-        if (typeof noticeDialog.close === "function") {
-          noticeDialog.close();
-        } else {
-          noticeDialog.removeAttribute("open");
-        }
-      };
-
       const readCollapsed = () => {
         try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
       };
@@ -487,12 +478,9 @@
           }
         });
       }
-      if (noticeClose) {
-        noticeClose.addEventListener("click", closeNoticeDialog);
-      }
-      if (noticeDialog) {
-        noticeDialog.addEventListener("cancel", (event) => {
-          event.preventDefault();
+      if (window.initDialogCloseBehavior) {
+        window.initDialogCloseBehavior({
+          dialogs: [noticeDialog]
         });
       }
 

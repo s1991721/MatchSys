@@ -232,6 +232,43 @@
         });
     };
 
+    // 统一 dialog 关闭逻辑：仅通过显式关闭按钮关闭，并阻止 Esc 默认关闭。
+    window.initDialogCloseBehavior = function (options = {}) {
+        const root = options.root || document;
+        const closeSelector = options.closeSelector || "[data-dialog-close]";
+        const dialogs = Array.isArray(options.dialogs)
+            ? options.dialogs.filter(Boolean)
+            : Array.from(root.querySelectorAll("dialog"));
+        const onClose = typeof options.onClose === "function" ? options.onClose : null;
+
+        dialogs.forEach((dialog) => {
+            if (dialog.__dialogCancelBound) return;
+            dialog.addEventListener("cancel", (event) => {
+                event.preventDefault();
+            });
+            dialog.__dialogCancelBound = true;
+        });
+
+        if (root.__dialogCloseDelegated) return;
+        root.addEventListener("click", (event) => {
+            const closer = event.target.closest(closeSelector);
+            if (!closer) return;
+            const dialog = closer.closest("dialog");
+            if (!dialog) return;
+            event.preventDefault();
+            if (onClose) {
+                const shouldContinue = onClose(dialog, closer);
+                if (shouldContinue === false) return;
+            }
+            if (typeof dialog.close === "function") {
+                dialog.close();
+            } else {
+                dialog.removeAttribute("open");
+            }
+        });
+        root.__dialogCloseDelegated = true;
+    };
+
     const notifyParentRoute = () => {
         if (window.__routeNotified) return;
         if (!window.top || window.top === window) return;

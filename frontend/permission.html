@@ -160,12 +160,11 @@
   const roleDialogTitle = document.getElementById("role-dialog-title");
   const roleDialogBody = document.getElementById("role-dialog-body");
 
-  [menuDialog, roleDialog].forEach((dialog) => {
-    if (!dialog) return;
-    dialog.addEventListener("cancel", (event) => {
-      event.preventDefault();
+  if (window.initDialogCloseBehavior) {
+    window.initDialogCloseBehavior({
+      dialogs: [menuDialog, roleDialog]
     });
-  });
+  }
   const roleSaveBtn = document.getElementById("role-save");
   const roleMasterCheck = document.getElementById("role-master-check");
   const roleSelectedCount = document.getElementById("role-selected-count");
@@ -364,18 +363,6 @@
     const role = cachedRoles.find((item) => item.id === roleId);
     if (!role) return;
     renderRoleDialog(role, { open: true });
-  });
-
-  menuDialog.addEventListener("click", (event) => {
-    if (event.target.matches("[data-dialog-close]")) {
-      menuDialog.close();
-    }
-  });
-
-  roleDialog.addEventListener("click", (event) => {
-    if (event.target.matches("[data-dialog-close]")) {
-      roleDialog.close();
-    }
   });
 
   roleSaveBtn.addEventListener("click", () => {

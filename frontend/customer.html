@@ -82,7 +82,7 @@
 <dialog class="c-dialog" id="edit-dialog">
     <div class="c-dialog-header">
         <h3 id="dialog-title">编辑客户</h3>
-        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close">×</button>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
         <div class="form-grid">
@@ -210,12 +210,6 @@
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
     const contractHint = document.getElementById("contract-hint");
-    [editDialog].forEach((dialog) => {
-        if (!dialog) return;
-        dialog.addEventListener("cancel", (event) => {
-            event.preventDefault();
-        });
-    });
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),
@@ -259,7 +253,23 @@
         } else {
             dialog.removeAttribute("open");
         }
+        if (dialog === editDialog) {
+            currentEditId = null;
+            editFields.contract.value = "";
+            currentContract = "";
+            contractHint.textContent = t("customer.contract.empty");
+        }
     };
+
+    if (window.initDialogCloseBehavior) {
+        window.initDialogCloseBehavior({
+            dialogs: [editDialog],
+            onClose: (dialog) => {
+                closeDialog(dialog);
+                return false;
+            }
+        });
+    }
 
     const renderNames = (names) => {
         nameList.innerHTML = names
@@ -504,19 +514,6 @@
         contractHint.textContent = file
             ? format("customer.contract.pending", {name: file.name})
             : (currentContract ? format("customer.contract.uploaded", {name: currentContract}) : t("customer.contract.empty"));
-    });
-
-    editDialog.addEventListener("click", (event) => {
-        if (event.target === editDialog) {
-            closeDialog(editDialog);
-        }
-    });
-
-    document.querySelectorAll("[data-dialog-close]").forEach((button) => {
-        button.addEventListener("click", () => {
-            const dialog = button.closest("dialog");
-            closeDialog(dialog);
-        });
     });
 
     const uploadContract = (customerId, file) => {

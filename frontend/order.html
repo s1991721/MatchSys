@@ -392,16 +392,14 @@
         const acceptCreateSubmit = document.getElementById("accept-create-submit");
         const detailDialog = document.getElementById("detailDialog");
 
-        [createDialogIssue, createDialogAccept, detailDialog].forEach((dialog) => {
-            if (!dialog) return;
-            dialog.addEventListener("cancel", (event) => {
-                event.preventDefault();
-            });
-        });
         const detailTitle = document.getElementById("detailTitle");
         const detailSubtitle = document.getElementById("detailSubtitle");
         const detailSave = document.getElementById("detailSave");
-        const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
+        if (window.initDialogCloseBehavior) {
+            window.initDialogCloseBehavior({
+                dialogs: [createDialogIssue, createDialogAccept, detailDialog]
+            });
+        }
         const tableBody = document.getElementById("order-body");
         const tableInfo = document.getElementById("table-info");
         const searchBtn = document.getElementById("searchBtn");
@@ -1117,13 +1115,6 @@
                 }
             });
         }
-
-        dialogCloseButtons.forEach((button) => {
-            button.addEventListener("click", () => {
-                const dialog = button.closest("dialog");
-                if (dialog) dialog.close();
-            });
-        });
 
         bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap);
         bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap, { enableDefault: true });

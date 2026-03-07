@@ -100,7 +100,7 @@
 <dialog id="personDialog" class="c-dialog">
     <div class="dialog-header c-dialog-header">
         <h3 id="dialogTitle">新增人员</h3>
-        <button type="button" class="dialog-close c-dialog-close" id="closeDialogBtn" data-close-dialog
+        <button type="button" class="dialog-close c-dialog-close" id="closeDialogBtn" data-dialog-close
                 aria-label="关闭" data-i18n-aria="common.close">&times;
         </button>
     </div>
@@ -172,7 +172,7 @@
             </div>
         </div>
         <div class="dialog-actions c-dialog-actions">
-            <button type="button" class="c-btn c-btn-secondary" id="cancelDialogBtn" data-close-dialog data-i18n="common.cancel">取消</button>
+            <button type="button" class="c-btn c-btn-secondary" id="cancelDialogBtn" data-dialog-close data-i18n="common.cancel">取消</button>
             <button type="submit" class="c-btn c-btn-primary" id="submitBtn" data-i18n="people.action.create">确认新增</button>
         </div>
     </form>
@@ -196,8 +196,6 @@
     const paginationPages = document.getElementById('paginationPages');
     const personDialog = document.getElementById('personDialog');
     const dialogTitle = document.getElementById('dialogTitle');
-    const closeDialogBtn = document.getElementById('closeDialogBtn');
-    const cancelDialogBtn = document.getElementById('cancelDialogBtn');
     const filterKeyword = document.getElementById('filterKeyword');
     const filterAgeMax = document.getElementById('filterAgeMax');
     const filterNationality = document.getElementById('filterNationality');
@@ -750,28 +748,15 @@
         });
     }
 
-
-    const attachCloseHandler = (element) => {
-        if (!element) return;
-        element.addEventListener('click', (event) => {
-            event.preventDefault();
-            closeDialog();
+    if (window.initDialogCloseBehavior) {
+        window.initDialogCloseBehavior({
+            dialogs: [personDialog],
+            onClose: () => {
+                closeDialog();
+                return false;
+            }
         });
-    };
-
-    attachCloseHandler(closeDialogBtn);
-    attachCloseHandler(cancelDialogBtn);
-    document.addEventListener('click', (event) => {
-        const closer = event.target.closest('[data-close-dialog]');
-        if (closer && closer !== closeDialogBtn && closer !== cancelDialogBtn) {
-            event.preventDefault();
-            closeDialog();
-        }
-    });
-    personDialog.addEventListener('cancel', (event) => {
-        event.preventDefault();
-        return;
-    });
+    }
     const cacheMatchPayload = (person) => {
         if (!person) return;
         const payload = {

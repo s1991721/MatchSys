@@ -354,6 +354,7 @@
   </dialog>
 
   <script src="i18n.js"></script>
+  <script src="common.js"></script>
   <script>
     const i18n = window.I18N || null;
     const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
@@ -365,7 +366,6 @@
     const createPayDialog = document.getElementById("createPayDialog");
     const createPayTitle = document.getElementById("createPayTitle");
     const payDialogSubmitBtn = document.getElementById("payDialogSubmitBtn");
-    const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
     const detailAddBtn = document.getElementById("detailAddBtn");
     const detailTableBody = document.getElementById("detailTableBody");
     const payCustomerNameInput = document.getElementById("pay-customer-name");
@@ -377,9 +377,9 @@
     const payStatusSelect = document.getElementById("pay-status-select");
     const payRequestTable = document.querySelector(".pay-request-table");
 
-    if (createPayDialog) {
-      createPayDialog.addEventListener("cancel", (event) => {
-        event.preventDefault();
+    if (window.initDialogCloseBehavior) {
+      window.initDialogCloseBehavior({
+        dialogs: [createPayDialog]
       });
     }
 
@@ -420,13 +420,6 @@
         createPayDialog.showModal();
       });
     }
-
-    dialogCloseButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        const dialog = button.closest("dialog");
-        if (dialog) dialog.close();
-      });
-    });
 
     if (payDialogSubmitBtn && createPayDialog) {
       payDialogSubmitBtn.addEventListener("click", () => {

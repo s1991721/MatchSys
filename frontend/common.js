@@ -232,6 +232,52 @@
         });
     };
 
+    window.startMailUnreadPolling = function (options = {}) {
+        const intervalMs = Math.max(60 * 1000, Number(options.intervalMs || 5 * 60 * 1000));
+        const onData = typeof options.onData === "function" ? options.onData : function () {};
+        const autoStart = options.autoStart !== false;
+
+        if (window.__mailUnreadPollingTimer) {
+            clearInterval(window.__mailUnreadPollingTimer);
+            window.__mailUnreadPollingTimer = null;
+        }
+
+        const tick = async () => {
+            try {
+                const response = await fetch("/api/my-mails/unread-count", {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store",
+                });
+                const payload = await response.json();
+                if (!payload || payload.success === false) {
+                    onData({ unread_count: 0, has_mailbox: false, error: true });
+                    return;
+                }
+                onData(payload.data || {});
+            } catch (error) {
+                onData({ unread_count: 0, has_mailbox: false, error: true });
+            }
+        };
+
+        const start = () => {
+            if (window.__mailUnreadPollingTimer) return;
+            tick();
+            window.__mailUnreadPollingTimer = setInterval(tick, intervalMs);
+        };
+
+        const stop = () => {
+            if (!window.__mailUnreadPollingTimer) return;
+            clearInterval(window.__mailUnreadPollingTimer);
+            window.__mailUnreadPollingTimer = null;
+        };
+
+        if (autoStart) {
+            start();
+        }
+        return { start, stop, tick };
+    };
+
     // 统一 dialog 关闭逻辑：仅通过显式关闭按钮关闭，并阻止 Esc 默认关闭。
     window.initDialogCloseBehavior = function (options = {}) {
         const root = options.root || document;

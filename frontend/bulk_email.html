@@ -151,12 +151,12 @@
                                data-i18n-placeholder="customer.bulk.subject_placeholder"/>
                     </div>
                     <div class="form-item">
-                        <div class="form-label">送信类型</div>
+                        <div class="form-label" data-i18n="customer.bulk.mailType">送信类型</div>
                         <select class="input" id="bulk-mail-type">
-                            <option value="-1">其他</option>
-                            <option value="0">BP</option>
-                            <option value="1">技术者送信</option>
-                            <option value="2">案件送信</option>
+                            <option value="0" data-i18n="customer.bulk.mailType.other">其他</option>
+                            <option value="1" data-i18n="customer.bulk.mailType.bp">BP</option>
+                            <option value="2" data-i18n="customer.bulk.mailType.engineer">技術者提案</option>
+                            <option value="3" data-i18n="customer.bulk.mailType.project">案件提案</option>
                         </select>
                     </div>
                     <div class="form-item">
@@ -183,7 +183,8 @@
                         <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
                     </div>
                     <div class="recipients-filter">
-                        <input class="input" id="bulk-recipient-filter" type="search" placeholder="按公司名过滤"/>
+                        <input class="input" id="bulk-recipient-filter" type="search" placeholder="按公司名过滤"
+                               data-i18n-placeholder="customer.bulk.filterCompany"/>
                     </div>
                     <div class="recipients-list" id="bulk-mail-recipients"></div>
                 </aside>

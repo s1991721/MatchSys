@@ -6,6 +6,37 @@
   <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
+  <style>
+    .sendmsg-toggle-field {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 44px;
+      width: 100%;
+    }
+
+    .sendmsg-toggle-compact {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 8px;
+      font-weight: 600;
+      color: #4b5563;
+      cursor: pointer;
+      white-space: nowrap;
+      line-height: 1;
+      text-align: left;
+      margin: 0;
+    }
+
+    .sendmsg-toggle-compact input {
+      margin: 0;
+    }
+
+    .sendmsg-auth-hidden {
+      display: none;
+    }
+  </style>
   <title data-i18n="nav.system_settings">系统设置</title>
 </head>
 <body class="system-settings">
@@ -208,7 +239,7 @@
       </section>
 
       <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title" data-i18n="system_settings.sendmsg.title">送信配置</h2>
+        <h2 class="c-card-title" data-i18n="system_settings.sendmsg.title">邮箱配置</h2>
         <p class="c-card-subtitle settings-desc" data-i18n="system_settings.sendmsg.desc">配置常用邮箱登录信息，并指定使用人。</p>
         <ul class="config-list" id="sendmsg-list"></ul>
         <div class="form-actions">
@@ -668,11 +699,11 @@
         </div>
         <form class="form-grid">
           <div class="form-field">
-            <label for="sendmsg-email-${index}">${t("system_settings.sendmsg.email", "邮箱账号")}</label>
+            <label for="sendmsg-email-${index}">${t("system_settings.sendmsg.smtp_user", "SMTP 用户名")}</label>
             <input id="sendmsg-email-${index}" type="email" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.email_placeholder" value="${config.email || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendmsg-password-${index}">${t("system_settings.sendmsg.password", "密码 / 授权码")}</label>
+            <label for="sendmsg-password-${index}">${t("system_settings.sendmsg.smtp_password", "SMTP 密码 / 授权码")}</label>
             <input id="sendmsg-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.password_placeholder" value="${config.password || ""}" />
           </div>
           <div class="form-field">
@@ -680,8 +711,42 @@
             <input id="sendmsg-smtp-${index}" type="text" placeholder="smtp.gmail.com" data-i18n-placeholder="system_settings.sendmsg.smtp_placeholder" value="${config.smtp || ""}" />
           </div>
           <div class="form-field">
-            <label for="sendmsg-port-${index}">${t("system_settings.sendmsg.port", "端口")}</label>
+            <label for="sendmsg-port-${index}">${t("system_settings.sendmsg.smtp_port", "SMTP 端口")}</label>
             <input id="sendmsg-port-${index}" type="number" placeholder="587" data-i18n-placeholder="system_settings.sendmsg.port_placeholder" value="${config.port || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendmsg-imap-host-${index}">${t("system_settings.sendmsg.imap_host", "IMAP 服务器")}</label>
+            <input id="sendmsg-imap-host-${index}" type="text" placeholder="imap.gmail.com" data-i18n-placeholder="system_settings.sendmsg.imap_host_placeholder" value="${config.imap_host || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendmsg-imap-port-${index}">${t("system_settings.sendmsg.imap_port", "IMAP 端口")}</label>
+            <input id="sendmsg-imap-port-${index}" type="number" placeholder="993" data-i18n-placeholder="system_settings.sendmsg.imap_port_placeholder" value="${config.imap_port || ""}" />
+          </div>
+          <div class="form-field">
+            <label for="sendmsg-imap-security-${index}">${t("system_settings.sendmsg.imap_security", "IMAP 加密方式")}</label>
+            <select id="sendmsg-imap-security-${index}">
+              <option value="ssl" ${String(config.imap_security || "ssl") === "ssl" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_ssl", "SSL/TLS")}</option>
+              <option value="starttls" ${String(config.imap_security || "") === "starttls" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_starttls", "STARTTLS")}</option>
+              <option value="none" ${String(config.imap_security || "") === "none" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_none", "无加密")}</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="sendmsg-imap-folder-${index}">${t("system_settings.sendmsg.imap_folder", "收件文件夹")}</label>
+            <input id="sendmsg-imap-folder-${index}" type="text" placeholder="INBOX" data-i18n-placeholder="system_settings.sendmsg.imap_folder_placeholder" value="${config.imap_folder || "INBOX"}" />
+          </div>
+          <div class="form-field full sendmsg-toggle-field">
+            <label class="sendmsg-toggle-compact" for="sendmsg-imap-use-smtp-auth-${index}">
+              <input id="sendmsg-imap-use-smtp-auth-${index}" type="checkbox" ${config.imap_use_smtp_auth === false ? "" : "checked"} />
+              <span>${t("system_settings.sendmsg.imap_use_smtp_auth", "复用 SMTP 账号密码")}</span>
+            </label>
+          </div>
+          <div class="form-field" id="sendmsg-imap-user-field-${index}">
+            <label for="sendmsg-imap-user-${index}">${t("system_settings.sendmsg.imap_user", "IMAP 用户名")}</label>
+            <input id="sendmsg-imap-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.imap_user_placeholder" value="${config.imap_user || ""}" />
+          </div>
+          <div class="form-field" id="sendmsg-imap-password-field-${index}">
+            <label for="sendmsg-imap-password-${index}">${t("system_settings.sendmsg.imap_password", "IMAP 密码 / 授权码")}</label>
+            <input id="sendmsg-imap-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.imap_password_placeholder" value="${config.imap_password || ""}" />
           </div>
           <div class="form-field">
             <label for="sendmsg-user-${index}">${t("system_settings.sendmsg.user", "使用人")}</label>
@@ -713,6 +778,7 @@
       if (i18n) {
         i18n.apply(sendmsgList);
       }
+      syncAllImapAuthFields();
     };
 
     const snapshotTaskStatuses = () => {
@@ -884,13 +950,53 @@
       aiTestStatus.classList.toggle("success", data.status === "ready");
     };
 
-    const collectSendmsgConfig = (index) => ({
-      email: getValue(`sendmsg-email-${index}`).trim(),
-      password: getValue(`sendmsg-password-${index}`),
-      smtp: getValue(`sendmsg-smtp-${index}`).trim(),
-      port: getValue(`sendmsg-port-${index}`),
-      user: getValue(`sendmsg-user-${index}`),
-    });
+    const syncImapAuthFields = (index) => {
+      const useSmtpAuthEl = document.getElementById(`sendmsg-imap-use-smtp-auth-${index}`);
+      const imapUserEl = document.getElementById(`sendmsg-imap-user-${index}`);
+      const imapPasswordEl = document.getElementById(`sendmsg-imap-password-${index}`);
+      const imapUserFieldEl = document.getElementById(`sendmsg-imap-user-field-${index}`);
+      const imapPasswordFieldEl = document.getElementById(`sendmsg-imap-password-field-${index}`);
+      if (!(useSmtpAuthEl instanceof HTMLInputElement)) return;
+      if (!(imapUserEl instanceof HTMLInputElement) || !(imapPasswordEl instanceof HTMLInputElement)) return;
+      const useSmtpAuth = Boolean(useSmtpAuthEl.checked);
+      if (useSmtpAuth) {
+        imapUserEl.value = getValue(`sendmsg-email-${index}`).trim();
+        imapPasswordEl.value = getValue(`sendmsg-password-${index}`);
+      }
+      if (imapUserFieldEl) {
+        imapUserFieldEl.classList.toggle("sendmsg-auth-hidden", useSmtpAuth);
+      }
+      if (imapPasswordFieldEl) {
+        imapPasswordFieldEl.classList.toggle("sendmsg-auth-hidden", useSmtpAuth);
+      }
+    };
+
+    const syncAllImapAuthFields = () => {
+      if (!sendmsgList) return;
+      const items = sendmsgList.querySelectorAll(".config-item");
+      Array.from(items).forEach((_, index) => syncImapAuthFields(index));
+    };
+
+    const collectSendmsgConfig = (index) => {
+      const email = getValue(`sendmsg-email-${index}`).trim();
+      const password = getValue(`sendmsg-password-${index}`);
+      const useSmtpAuthEl = document.getElementById(`sendmsg-imap-use-smtp-auth-${index}`);
+      const useSmtpAuth = !(useSmtpAuthEl instanceof HTMLInputElement) || Boolean(useSmtpAuthEl.checked);
+      return {
+        email,
+        password,
+        smtp: getValue(`sendmsg-smtp-${index}`).trim(),
+        port: getValue(`sendmsg-port-${index}`),
+        user: getValue(`sendmsg-user-${index}`),
+        imap_host: getValue(`sendmsg-imap-host-${index}`).trim(),
+        imap_port: getValue(`sendmsg-imap-port-${index}`),
+        imap_security: getValue(`sendmsg-imap-security-${index}`) || "ssl",
+        imap_folder: getValue(`sendmsg-imap-folder-${index}`).trim() || "INBOX",
+        imap_use_smtp_auth: useSmtpAuth,
+        imap_user: useSmtpAuth ? email : getValue(`sendmsg-imap-user-${index}`).trim(),
+        imap_password: useSmtpAuth ? password : getValue(`sendmsg-imap-password-${index}`),
+      };
+    };
 
     const parseTimeParts = (timeValue) => {
       if (!timeValue) return null;
@@ -1598,8 +1704,28 @@
       sendmsgList.addEventListener("input", (event) => {
         const target = event.target;
         if (!(target instanceof HTMLInputElement)) return;
+        const id = target.id || "";
+        if (
+          id.startsWith("sendmsg-email-")
+          || id.startsWith("sendmsg-password-")
+          || id.startsWith("sendmsg-imap-use-smtp-auth-")
+        ) {
+          const index = Number(id.split("-").pop());
+          if (!Number.isNaN(index)) {
+            syncImapAuthFields(index);
+          }
+        }
         if (!target.id.startsWith("sendmsg-user-")) return;
         handleSendmsgUserInput(event);
+      });
+
+      sendmsgList.addEventListener("change", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (!target.id.startsWith("sendmsg-imap-use-smtp-auth-")) return;
+        const index = Number(target.id.split("-").pop());
+        if (Number.isNaN(index)) return;
+        syncImapAuthFields(index);
       });
 
       sendmsgList.addEventListener("focusin", (event) => {

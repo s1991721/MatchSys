@@ -317,6 +317,7 @@
   padding: 0;
   border: none;
   cursor: pointer;
+  font-size: 22px;
 }
 .c-dialog-body {
   padding: 0 24px 10px;

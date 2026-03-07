@@ -36,6 +36,7 @@
     .sendmsg-auth-hidden {
       display: none;
     }
+
   </style>
   <title data-i18n="nav.system_settings">系统设置</title>
 </head>
@@ -142,6 +143,54 @@
           </form>
         </section>
 
+      </div>
+
+      <div class="settings-left c-stack">
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.bank.title">口座信息</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.bank.desc">配置银行口座的基础信息。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field">
+              <label for="account-bank-name" data-i18n="system_settings.bank.name">银行名</label>
+              <input id="account-bank-name" type="text" placeholder="例如：みずほ銀行" data-i18n-placeholder="system_settings.bank.name_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="account-branch-code" data-i18n="system_settings.bank.branch_code">支点编号</label>
+              <input id="account-branch-code" type="text" placeholder="例如：123" data-i18n-placeholder="system_settings.bank.branch_code_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="account-branch-name" data-i18n="system_settings.bank.branch_name">支点名</label>
+              <input id="account-branch-name" type="text" placeholder="例如：新宿" data-i18n-placeholder="system_settings.bank.branch_name_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="account-type" data-i18n="system_settings.bank.account_type">口座种类</label>
+              <input id="account-type" type="text" placeholder="例如：普通" data-i18n-placeholder="system_settings.bank.account_type_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="account-number" data-i18n="system_settings.bank.account_number">口座号</label>
+              <input id="account-number" type="text" placeholder="例如：1234567" data-i18n-placeholder="system_settings.bank.account_number_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="account-holder" data-i18n="system_settings.bank.account_holder">口座名义</label>
+              <input id="account-holder" type="text" placeholder="例如：株式会社xxxx" data-i18n-placeholder="system_settings.bank.account_holder_placeholder" />
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-primary" type="button" id="account-save" data-i18n="system_settings.common.save_config">保存配置</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.tasks.title">定时任务</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.tasks.desc">支持配置多个任务，每个任务可单独执行与保存。</p>
+          <ul class="task-list" id="task-list"></ul>
+          <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button" id="add-task" data-i18n="system_settings.tasks.add">新增任务</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="settings-right c-stack">
         <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title" data-i18n="system_settings.activation.title">激活码更新</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.activation.desc">更新系统激活码，保存后立即生效。</p>
@@ -159,102 +208,59 @@
             <div class="hint" id="activation-status"></div>
           </form>
         </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.sendmsg.title">邮箱配置</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.sendmsg.desc">配置常用邮箱登录信息，并指定使用人。</p>
+          <ul class="config-list" id="sendmsg-list"></ul>
+          <div class="form-actions">
+            <button class="c-btn c-btn-secondary" type="button" id="add-sendmsg" data-i18n="system_settings.sendmsg.add">新增配置</button>
+          </div>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.backup.title">数据备份</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.backup.desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field">
+              <label for="backup-host" data-i18n="system_settings.backup.host">备用数据库地址</label>
+              <input id="backup-host" type="text" placeholder="db-backup.internal" data-i18n-placeholder="system_settings.backup.host_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="backup-port" data-i18n="system_settings.backup.port">端口</label>
+              <input id="backup-port" type="number" placeholder="5432" data-i18n-placeholder="system_settings.backup.port_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="backup-db" data-i18n="system_settings.backup.db">数据库名称</label>
+              <input id="backup-db" type="text" placeholder="matchsys_backup" data-i18n-placeholder="system_settings.backup.db_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="backup-user" data-i18n="system_settings.backup.user">用户名</label>
+              <input id="backup-user" type="text" placeholder="backup_admin" data-i18n-placeholder="system_settings.backup.user_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="backup-password" data-i18n="system_settings.backup.password">密码</label>
+              <input id="backup-password" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.backup.password_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="backup-ssl" data-i18n="system_settings.backup.ssl">SSL 模式</label>
+              <select id="backup-ssl">
+                <option data-i18n="system_settings.backup.ssl.require">require</option>
+                <option data-i18n="system_settings.backup.ssl.prefer">prefer</option>
+                <option data-i18n="system_settings.backup.ssl.disable">disable</option>
+              </select>
+            </div>
+            <div class="form-field full">
+              <label for="backup-note" data-i18n="system_settings.backup.note">备注</label>
+              <textarea id="backup-note" placeholder="例如：与主库保持实时同步" data-i18n-placeholder="system_settings.backup.note_placeholder"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-secondary" type="button" id="backup-test" data-i18n="system_settings.common.test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="backup-save" data-i18n="system_settings.backup.save">保存备份配置</button>
+            </div>
+          </form>
+        </section>
       </div>
-
-      <section class="c-card c-card-pad settings-card span-2">
-        <h2 class="c-card-title" data-i18n="system_settings.backup.title">数据备份</h2>
-        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.backup.desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
-        <form class="form-grid form-grid-spaced">
-          <div class="form-field">
-            <label for="backup-host" data-i18n="system_settings.backup.host">备用数据库地址</label>
-            <input id="backup-host" type="text" placeholder="db-backup.internal" data-i18n-placeholder="system_settings.backup.host_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="backup-port" data-i18n="system_settings.backup.port">端口</label>
-            <input id="backup-port" type="number" placeholder="5432" data-i18n-placeholder="system_settings.backup.port_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="backup-db" data-i18n="system_settings.backup.db">数据库名称</label>
-            <input id="backup-db" type="text" placeholder="matchsys_backup" data-i18n-placeholder="system_settings.backup.db_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="backup-user" data-i18n="system_settings.backup.user">用户名</label>
-            <input id="backup-user" type="text" placeholder="backup_admin" data-i18n-placeholder="system_settings.backup.user_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="backup-password" data-i18n="system_settings.backup.password">密码</label>
-            <input id="backup-password" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.backup.password_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="backup-ssl" data-i18n="system_settings.backup.ssl">SSL 模式</label>
-            <select id="backup-ssl">
-              <option data-i18n="system_settings.backup.ssl.require">require</option>
-              <option data-i18n="system_settings.backup.ssl.prefer">prefer</option>
-              <option data-i18n="system_settings.backup.ssl.disable">disable</option>
-            </select>
-          </div>
-          <div class="form-field full">
-            <label for="backup-note" data-i18n="system_settings.backup.note">备注</label>
-            <textarea id="backup-note" placeholder="例如：与主库保持实时同步" data-i18n-placeholder="system_settings.backup.note_placeholder"></textarea>
-          </div>
-          <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button" id="backup-test" data-i18n="system_settings.common.test">连接测试</button>
-            <button class="c-btn c-btn-primary" type="button" id="backup-save" data-i18n="system_settings.backup.save">保存备份配置</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title" data-i18n="system_settings.bank.title">口座信息</h2>
-        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.bank.desc">配置银行口座的基础信息。</p>
-        <form class="form-grid form-grid-spaced">
-          <div class="form-field">
-            <label for="account-bank-name" data-i18n="system_settings.bank.name">银行名</label>
-            <input id="account-bank-name" type="text" placeholder="例如：みずほ銀行" data-i18n-placeholder="system_settings.bank.name_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="account-branch-code" data-i18n="system_settings.bank.branch_code">支点编号</label>
-            <input id="account-branch-code" type="text" placeholder="例如：123" data-i18n-placeholder="system_settings.bank.branch_code_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="account-branch-name" data-i18n="system_settings.bank.branch_name">支点名</label>
-            <input id="account-branch-name" type="text" placeholder="例如：新宿" data-i18n-placeholder="system_settings.bank.branch_name_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="account-type" data-i18n="system_settings.bank.account_type">口座种类</label>
-            <input id="account-type" type="text" placeholder="例如：普通" data-i18n-placeholder="system_settings.bank.account_type_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="account-number" data-i18n="system_settings.bank.account_number">口座号</label>
-            <input id="account-number" type="text" placeholder="例如：1234567" data-i18n-placeholder="system_settings.bank.account_number_placeholder" />
-          </div>
-          <div class="form-field">
-            <label for="account-holder" data-i18n="system_settings.bank.account_holder">口座名义</label>
-            <input id="account-holder" type="text" placeholder="例如：株式会社xxxx" data-i18n-placeholder="system_settings.bank.account_holder_placeholder" />
-          </div>
-          <div class="form-actions">
-            <button class="c-btn c-btn-primary" type="button" id="account-save" data-i18n="system_settings.common.save_config">保存配置</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title" data-i18n="system_settings.sendmsg.title">邮箱配置</h2>
-        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.sendmsg.desc">配置常用邮箱登录信息，并指定使用人。</p>
-        <ul class="config-list" id="sendmsg-list"></ul>
-        <div class="form-actions">
-          <button class="c-btn c-btn-secondary" type="button" id="add-sendmsg" data-i18n="system_settings.sendmsg.add">新增配置</button>
-        </div>
-      </section>
-
-      <section class="c-card c-card-pad settings-card">
-        <h2 class="c-card-title" data-i18n="system_settings.tasks.title">定时任务</h2>
-        <p class="c-card-subtitle settings-desc" data-i18n="system_settings.tasks.desc">支持配置多个任务，每个任务可单独执行与保存。</p>
-        <ul class="task-list" id="task-list"></ul>
-        <div class="form-actions">
-          <button class="c-btn c-btn-secondary" type="button" id="add-task" data-i18n="system_settings.tasks.add">新增任务</button>
-        </div>
-      </section>
     </div>
     <div class="c-modal-backdrop" id="delete-modal" aria-hidden="true">
       <div class="c-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">

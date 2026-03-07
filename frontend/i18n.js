@@ -1443,7 +1443,7 @@
             "customer.filter.owner": "担当者",
             "customer.filter.owner_placeholder": "担当者を入力",
             "customer.action.add": "+ 顧客追加",
-            "customer.action.bulk_email": "一斉メール",
+            "customer.action.bulk_email": "一括送信",
             "customer.table.company": "会社名",
             "customer.table.address": "会社住所",
             "customer.table.remark": "備考",

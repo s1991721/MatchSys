@@ -10,6 +10,7 @@ from email.message import EmailMessage
 from email.utils import getaddresses, make_msgid, parsedate_to_datetime
 from typing import List, Optional
 
+from django.db.models import Q
 from django.utils import timezone as django_timezone
 from django.utils.dateparse import parse_date as django_parse_date
 from employee.models import UserLogin
@@ -410,6 +411,68 @@ def _format_received_label(value):
         return str(value)
 
 
+def _resolve_owner_id_from_send_user(send_user):
+    user_text = str(send_user or "").strip()
+    if not user_text:
+        return None
+
+    owner = UserLogin.objects.filter(
+        deleted_at__isnull=True,
+    ).filter(
+        Q(user_name=user_text) | Q(employee_name=user_text)
+    ).first()
+    if owner:
+        return owner.employee_id
+
+    try:
+        employee_id = int(user_text)
+    except (TypeError, ValueError):
+        return None
+
+    owner = UserLogin.objects.filter(
+        employee_id=employee_id,
+        deleted_at__isnull=True,
+    ).first()
+    return owner.employee_id if owner else None
+
+
+def resolve_sendmsg_sync_targets():
+    """
+    解析 sendmsg 中所有可用于邮件同步的账号目标，返回：
+    - targets: [{owner_id, send_config}]
+    - skipped: [{user, reason}]
+    """
+    send_settings = SysSettings.objects.filter(
+        name="sendmsg",
+        deleted_at__isnull=True,
+    ).first()
+    raw_configs = send_settings.settings if send_settings else []
+    if not isinstance(raw_configs, list):
+        raw_configs = []
+
+    targets = []
+    skipped = []
+    seen = set()
+    for item in raw_configs:
+        if not isinstance(item, dict):
+            continue
+        owner_id = _resolve_owner_id_from_send_user(item.get("user"))
+        if not owner_id:
+            skipped.append(
+                {
+                    "user": str(item.get("user") or "").strip(),
+                    "reason": "owner_not_found",
+                }
+            )
+            continue
+        key = (owner_id, str(item.get("email") or "").strip())
+        if key in seen:
+            continue
+        seen.add(key)
+        targets.append({"owner_id": owner_id, "send_config": item})
+    return targets, skipped
+
+
 def list_my_mails_from_db(
     owner_id,
     page=1,
@@ -496,6 +559,8 @@ def sync_my_mails_from_imap(owner_id, send_config, sync_limit=120):
             uid = uid_bytes.decode("utf-8", errors="ignore")
             if not uid:
                 continue
+            if MyMail.objects.filter(id=uid).exists():
+                continue
             status, fetch_data = mail.fetch(
                 uid_bytes,
                 "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)] FLAGS)",
@@ -527,18 +592,114 @@ def sync_my_mails_from_imap(owner_id, send_config, sync_limit=120):
                 except Exception:
                     received_at = None
             unread = b"\\Seen" not in raw_meta
-
-            # 使用外部邮件标识作为主键（当前按你的 DDL 与接口约定使用 UID）。
             defaults = {
                 "owner_id": owner_id,
                 "subject": subject,
                 "from_email": from_email,
                 "received_at": received_at,
-                "is_unread": bool(unread),
             }
-            MyMail.objects.update_or_create(id=uid, defaults=defaults)
+            MyMail.objects.create(id=uid, is_unread=bool(unread), **defaults)
             updated += 1
         return updated
+    except Exception as exc:
+        if isinstance(exc, MailToolError):
+            raise
+        raise MailToolError(str(exc), status=500)
+    finally:
+        if mail:
+            try:
+                mail.logout()
+            except Exception:
+                pass
+
+
+def sync_today_my_mails_from_imap(owner_id, send_config, sync_limit=500, only_new=True):
+    """
+    同步当天邮件到 my_mail：
+    - only_new=True: 仅增量插入，不更新已存在记录。
+    """
+    imap_config = _resolve_imap_connection_config(send_config)
+    imap_folder = str(imap_config.get("folder") or "")
+    today = django_timezone.localdate()
+    today_str = today.strftime("%d-%b-%Y")
+
+    mail = None
+    inserted = 0
+    try:
+        mail = _open_imap_client(imap_config)
+        status, _select_data = mail.select(imap_folder)
+        if status != "OK":
+            raise MailToolError(f"Failed to open mailbox: {imap_folder}", status=500)
+
+        # 先按 IMAP 进行当天粗筛，再按本地时区日期精筛。
+        status, search_data = mail.search(None, "SINCE", today_str)
+        if status != "OK":
+            raise MailToolError("Failed to read mailbox", status=500)
+
+        all_ids = search_data[0].split() if search_data and search_data[0] else []
+        all_ids = list(reversed(all_ids))
+        if sync_limit > 0:
+            all_ids = all_ids[:sync_limit]
+
+        for uid_bytes in all_ids:
+            uid = uid_bytes.decode("utf-8", errors="ignore")
+            if not uid:
+                continue
+
+            if only_new and MyMail.objects.filter(id=uid).exists():
+                continue
+
+            status, fetch_data = mail.fetch(
+                uid_bytes,
+                "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)] FLAGS)",
+            )
+            if status != "OK" or not fetch_data:
+                continue
+            header_bytes = b""
+            raw_meta = b""
+            for row in fetch_data:
+                if isinstance(row, tuple):
+                    raw_meta = row[0] if isinstance(row[0], bytes) else raw_meta
+                    if isinstance(row[1], bytes):
+                        header_bytes = row[1]
+            if not header_bytes:
+                continue
+
+            parsed = message_from_bytes(header_bytes, policy=policy.default)
+            subject = _decode_mime_header(parsed.get("Subject")) or "(无标题)"
+            from_raw = _decode_mime_header(parsed.get("From"))
+            from_email = _extract_first_email(from_raw)
+            received_at = None
+            if parsed.get("Date"):
+                try:
+                    parsed_dt = parsedate_to_datetime(str(parsed.get("Date") or ""))
+                    if parsed_dt:
+                        if parsed_dt.tzinfo is None:
+                            parsed_dt = parsed_dt.replace(tzinfo=timezone.utc)
+                        received_at = parsed_dt
+                except Exception:
+                    received_at = None
+
+            if not received_at:
+                continue
+            if django_timezone.localtime(received_at).date() != today:
+                continue
+
+            unread = b"\\Seen" not in raw_meta
+            defaults = {
+                "owner_id": owner_id,
+                "subject": subject,
+                "from_email": from_email,
+                "received_at": received_at,
+            }
+            if only_new:
+                MyMail.objects.create(id=uid, is_unread=bool(unread), **defaults)
+            else:
+                if MyMail.objects.filter(id=uid).exists():
+                    continue
+                MyMail.objects.create(id=uid, is_unread=bool(unread), **defaults)
+            inserted += 1
+        return inserted
     except Exception as exc:
         if isinstance(exc, MailToolError):
             raise

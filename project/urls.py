@@ -98,6 +98,7 @@ from settings.views import (
     time_to_clean,
     time_to_backup,
     time_to_hello,
+    time_to_sync_my_mails,
 )
 
 custom_404 = TemplateView.as_view(template_name="frontend/404.html")
@@ -237,6 +238,7 @@ urlpatterns = [
     path("api/time-to-clean", time_to_clean, name="time_to_clean"),
     path("api/time-to-backup", time_to_backup, name="time_to_backup"),
     path("api/time-to-hello", time_to_hello, name="time_to_hello"),
+    path("api/time-to-sync-my-mails", time_to_sync_my_mails, name="time_to_sync_my_mails"),
     path("api/activation", activation_code_api, name="activation-code"),
     path("api/activation/status", activation_status_api, name="activation-status"),
     path("api/activation/validate", activation_validate_api, name="activation-validate"),

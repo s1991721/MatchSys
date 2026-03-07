@@ -18,7 +18,12 @@ from project.common_tools import parse_json_body, require_login
 from settings.activation_code import is_activation_code_valid
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
-from settings.timer_task import run_time_to_save, run_time_to_clean, run_time_to_hello
+from settings.timer_task import (
+    run_time_to_save,
+    run_time_to_clean,
+    run_time_to_hello,
+    run_time_to_sync_my_mails,
+)
 
 # 失败默认返回值
 SECTION_DEFAULTS = {
@@ -585,6 +590,8 @@ def sys_task_logs_api(request):
             log_glob = "time_to_backup_*.log"
         elif "time-to-hello" in api:
             log_glob = "time_to_hello_*.log"
+        elif "time-to-sync-my-mails" in api:
+            log_glob = "time_to_sync_my_mails_*.log"
         else:
             log_glob = "scheduled_tasks.log*"
             task_filter = re.compile(rf"\\btask={task_id}\\b")
@@ -794,6 +801,18 @@ def time_to_hello(request):
     thread = threading.Thread(
         target=run_time_to_hello,
         name="time_to_hello",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+@csrf_exempt
+@require_POST
+def time_to_sync_my_mails(request):
+    thread = threading.Thread(
+        target=run_time_to_sync_my_mails,
+        name="time_to_sync_my_mails",
         daemon=True,
     )
     thread.start()

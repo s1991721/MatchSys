@@ -11,7 +11,8 @@ from django.utils.dateparse import parse_datetime
 
 from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
-from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo
+from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_today_my_mails_from_imap
+from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
 from settings.activation_code import is_activation_code_valid
 from settings.models import SysSettings
 
@@ -42,6 +43,27 @@ def _ensure_time_to_clean_logger(date_tag: str, logger: logging.Logger):
     logs_dir = os.path.join(django_settings.BASE_DIR, "logs")
     os.makedirs(logs_dir, exist_ok=True)
     log_path = os.path.join(logs_dir, f"time_to_clean_{date_tag}.log")
+
+    for handler in logger.handlers:
+        if isinstance(handler, logging.FileHandler) and handler.baseFilename == log_path:
+            return
+
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        fmt="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
+    logger.setLevel(logging.INFO)
+    logger.propagate = False
+
+
+def _ensure_time_to_sync_my_mails_logger(date_tag: str, logger: logging.Logger):
+    logs_dir = os.path.join(django_settings.BASE_DIR, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    log_path = os.path.join(logs_dir, f"time_to_sync_my_mails_{date_tag}.log")
 
     for handler in logger.handlers:
         if isinstance(handler, logging.FileHandler) and handler.baseFilename == log_path:
@@ -263,12 +285,16 @@ def _clean_expired_mails():
         technician_deleted, _ = MailTechnicianInfo.objects.filter(
             Q(date__lt=cutoff) | Q(date__isnull=True)
         ).delete()
+        my_mail_deleted, _ = MyMail.objects.filter(
+            Q(received_at__lt=cutoff) | Q(received_at__isnull=True)
+        ).delete()
 
     logger_clean.info(
-        "time_to_clean mails deleted saved=%s projects=%s technicians=%s cutoff=%s",
+        "time_to_clean mails deleted saved=%s projects=%s technicians=%s my_mail=%s cutoff=%s",
         saved_deleted,
         project_deleted,
         technician_deleted,
+        my_mail_deleted,
         timezone.localtime(cutoff).strftime("%Y-%m-%d %H:%M:%S"),
     )
 
@@ -335,6 +361,66 @@ def run_time_to_clean():
 
 def run_time_to_hello():
     print("hello", flush=True)
+
+
+# -------------------------------------同步我的邮件
+logger_sync_my_mails = logging.getLogger("bpmatch.time_to_sync_my_mails")
+
+
+def run_time_to_sync_my_mails():
+    date_tag = timezone.now().strftime("%Y-%m-%d")
+    _ensure_time_to_sync_my_mails_logger(date_tag, logger_sync_my_mails)
+    close_old_connections()
+    started_at = timezone.now()
+    logger_sync_my_mails.info(
+        "time_to_sync_my_mails started at %s",
+        timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"),
+    )
+    try:
+        if not _validate_activation(logger_sync_my_mails, "time_to_sync_my_mails"):
+            return
+
+        targets, skipped = resolve_sendmsg_sync_targets()
+        inserted_total = 0
+        for item in targets:
+            owner_id = item.get("owner_id")
+            send_config = item.get("send_config") or {}
+            mailbox = str(send_config.get("email") or "").strip()
+            if not owner_id:
+                continue
+            try:
+                inserted = sync_today_my_mails_from_imap(
+                    owner_id=owner_id,
+                    send_config=send_config,
+                    sync_limit=500,
+                    only_new=True,
+                )
+                inserted_total += int(inserted or 0)
+                logger_sync_my_mails.info(
+                    "time_to_sync_my_mails owner_id=%s mailbox=%s inserted=%s",
+                    owner_id,
+                    mailbox,
+                    inserted,
+                )
+            except Exception as exc:
+                logger_sync_my_mails.warning(
+                    "time_to_sync_my_mails owner_id=%s mailbox=%s error=%s",
+                    owner_id,
+                    mailbox,
+                    exc,
+                )
+
+        logger_sync_my_mails.info(
+            "time_to_sync_my_mails finished targets=%s skipped=%s inserted_total=%s duration_s=%.2f",
+            len(targets),
+            len(skipped),
+            inserted_total,
+            (timezone.now() - started_at).total_seconds(),
+        )
+    except Exception:
+        logger_sync_my_mails.exception("time_to_sync_my_mails failed")
+    finally:
+        close_old_connections()
 
 
 # -------------------------------------备份数据

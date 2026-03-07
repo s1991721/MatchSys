@@ -223,20 +223,101 @@ def _extract_first_email(value):
     return (pairs[0][1] or "").strip()
 
 
-def _resolve_imap_host(smtp_host):
-    # 优先按常见服务商做精确映射，其余再按 smtp->imap 规则推导。
-    host = str(smtp_host or "").strip().lower()
-    if not host:
-        return ""
-    if "gmail" in host:
-        return "imap.gmail.com"
-    if "office365" in host or "outlook" in host or "hotmail" in host or "live.com" in host:
-        return "outlook.office365.com"
-    if host.startswith("smtp."):
-        return f"imap.{host[5:]}"
-    if "smtp" in host:
-        return host.replace("smtp", "imap", 1)
-    return host
+def _normalize_security_mode(value):
+    mode = str(value or "").strip().lower()
+    if mode in ("ssl", "tls", "ssl/tls"):
+        return "ssl"
+    if mode in ("starttls", "start_tls"):
+        return "starttls"
+    if mode in ("none", "plain", "no", "off"):
+        return "none"
+    return ""
+
+
+def _to_bool(value, default=True):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() not in ("0", "false", "no", "off")
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return default
+
+
+def _resolve_imap_connection_config(send_config):
+    smtp_user = str(send_config.get("email") or "").strip()
+    smtp_password = str(send_config.get("password") or "")
+
+    imap_host = str(send_config.get("imap_host") or "").strip()
+    imap_port_raw = str(send_config.get("imap_port") or "").strip()
+    security = _normalize_security_mode(send_config.get("imap_security"))
+    imap_folder = str(send_config.get("imap_folder") or "").strip()
+
+    missing_fields = []
+    if not imap_host:
+        missing_fields.append("imap_host")
+    if not imap_port_raw:
+        missing_fields.append("imap_port")
+    if not security:
+        missing_fields.append("imap_security")
+    if not imap_folder:
+        missing_fields.append("imap_folder")
+    if missing_fields:
+        raise MailToolError("请先在系统设置中配置完整的 IMAP 参数")
+
+    try:
+        imap_port = int(imap_port_raw)
+    except (TypeError, ValueError):
+        raise MailToolError("Invalid IMAP port")
+    if imap_port < 1 or imap_port > 65535:
+        raise MailToolError("Invalid IMAP port")
+
+    use_smtp_auth = _to_bool(send_config.get("imap_use_smtp_auth"), default=True)
+    explicit_imap_user = str(send_config.get("imap_user") or "").strip()
+    explicit_imap_password = str(send_config.get("imap_password") or "")
+
+    if use_smtp_auth:
+        imap_user = smtp_user or explicit_imap_user
+        imap_password = smtp_password or explicit_imap_password
+    else:
+        imap_user = explicit_imap_user
+        imap_password = explicit_imap_password
+
+    if use_smtp_auth and (not smtp_user or not smtp_password):
+        raise MailToolError("请先在系统设置中配置完整的 SMTP 登录参数")
+    if not use_smtp_auth and (not explicit_imap_user or not explicit_imap_password):
+        raise MailToolError("请先在系统设置中配置 IMAP 用户名和密码")
+
+    return {
+        "host": imap_host,
+        "port": imap_port,
+        "security": security,
+        "user": imap_user,
+        "password": imap_password,
+        "folder": imap_folder,
+    }
+
+
+def _open_imap_client(imap_config):
+    host = str(imap_config.get("host") or "").strip()
+    port = int(imap_config.get("port") or 0)
+    security = _normalize_security_mode(imap_config.get("security"))
+    username = str(imap_config.get("user") or "").strip()
+    password = str(imap_config.get("password") or "")
+
+    if security not in ("ssl", "starttls", "none"):
+        raise MailToolError("Invalid IMAP security")
+
+    if security == "ssl":
+        mail = imaplib.IMAP4_SSL(host, port)
+    else:
+        mail = imaplib.IMAP4(host, port)
+        if security == "starttls":
+            if not hasattr(mail, "starttls"):
+                raise MailToolError("IMAP STARTTLS is not supported")
+            mail.starttls()
+    mail.login(username, password)
+    return mail
 
 
 def _extract_mail_body(mail):
@@ -391,24 +472,16 @@ def count_unread_mails_from_db(owner_id):
 
 
 def sync_my_mails_from_imap(owner_id, send_config, sync_limit=120):
-    smtp_host = str(send_config.get("smtp") or "").strip()
-    smtp_user = str(send_config.get("email") or "").strip()
-    smtp_password = str(send_config.get("password") or "")
-    if not smtp_host or not smtp_user or not smtp_password:
-        raise MailToolError("Send config is incomplete")
-
-    imap_host = _resolve_imap_host(smtp_host)
-    if not imap_host:
-        raise MailToolError("Cannot resolve IMAP host from SMTP config")
+    imap_config = _resolve_imap_connection_config(send_config)
+    imap_folder = str(imap_config.get("folder") or "")
 
     mail = None
     updated = 0
     try:
-        mail = imaplib.IMAP4_SSL(imap_host, 993)
-        mail.login(smtp_user, smtp_password)
-        status, _select_data = mail.select("INBOX")
+        mail = _open_imap_client(imap_config)
+        status, _select_data = mail.select(imap_folder)
         if status != "OK":
-            raise MailToolError("Failed to open INBOX", status=500)
+            raise MailToolError(f"Failed to open mailbox: {imap_folder}", status=500)
 
         status, search_data = mail.search(None, "ALL")
         if status != "OK":
@@ -490,15 +563,9 @@ def query_my_mails_from_imap(
     - keyword: 主题关键字
     - send_date: 送信日期(YYYY-MM-DD)
     """
-    smtp_host = str(send_config.get("smtp") or "").strip()
-    smtp_user = str(send_config.get("email") or "").strip()
-    smtp_password = str(send_config.get("password") or "")
-    if not smtp_host or not smtp_user or not smtp_password:
-        raise MailToolError("Send config is incomplete")
-
-    imap_host = _resolve_imap_host(smtp_host)
-    if not imap_host:
-        raise MailToolError("Cannot resolve IMAP host from SMTP config")
+    imap_config = _resolve_imap_connection_config(send_config)
+    imap_folder = str(imap_config.get("folder") or "")
+    imap_user = str(imap_config.get("user") or "").strip()
 
     try:
         page = int(page)
@@ -519,11 +586,10 @@ def query_my_mails_from_imap(
 
     mail = None
     try:
-        mail = imaplib.IMAP4_SSL(imap_host, 993)
-        mail.login(smtp_user, smtp_password)
-        status, _select_data = mail.select("INBOX")
+        mail = _open_imap_client(imap_config)
+        status, _select_data = mail.select(imap_folder)
         if status != "OK":
-            raise MailToolError("Failed to open INBOX", status=500)
+            raise MailToolError(f"Failed to open mailbox: {imap_folder}", status=500)
 
         status, search_data = mail.search(None, "ALL")
         if status != "OK":
@@ -600,7 +666,7 @@ def query_my_mails_from_imap(
         offset = (page - 1) * page_size
         items = filtered_items[offset: offset + page_size]
 
-        data = {"mailbox_email": smtp_user, "items": items}
+        data = {"mailbox_email": imap_user, "items": items}
         meta = {
             "page": page,
             "page_size": page_size,
@@ -711,15 +777,9 @@ def send_mail_by_login(login_id, payload):
 
 
 def get_my_mail_detail_from_imap(send_config, mail_id):
-    smtp_host = str(send_config.get("smtp") or "").strip()
-    smtp_user = str(send_config.get("email") or "").strip()
-    smtp_password = str(send_config.get("password") or "")
-    if not smtp_host or not smtp_user or not smtp_password:
-        raise MailToolError("Send config is incomplete")
-
-    imap_host = _resolve_imap_host(smtp_host)
-    if not imap_host:
-        raise MailToolError("Cannot resolve IMAP host from SMTP config")
+    imap_config = _resolve_imap_connection_config(send_config)
+    imap_folder = str(imap_config.get("folder") or "")
+    imap_user = str(imap_config.get("user") or "").strip()
 
     safe_mail_id = str(mail_id or "").strip()
     if not safe_mail_id:
@@ -727,11 +787,10 @@ def get_my_mail_detail_from_imap(send_config, mail_id):
 
     mail = None
     try:
-        mail = imaplib.IMAP4_SSL(imap_host, 993)
-        mail.login(smtp_user, smtp_password)
-        status, _select_data = mail.select("INBOX")
+        mail = _open_imap_client(imap_config)
+        status, _select_data = mail.select(imap_folder)
         if status != "OK":
-            raise MailToolError("Failed to open INBOX", status=500)
+            raise MailToolError(f"Failed to open mailbox: {imap_folder}", status=500)
 
         # 详情页再按 UID 拉整封 RFC822 原文，保证正文与回复链字段完整。
         status, fetch_data = mail.fetch(
@@ -780,7 +839,7 @@ def get_my_mail_detail_from_imap(send_config, mail_id):
             "in_reply_to": in_reply_to,
             "reply_to": reply_to,
             "reply_to_email": _extract_first_email(reply_to) or _extract_first_email(from_raw),
-            "mailbox_email": smtp_user,
+            "mailbox_email": imap_user,
         }
     except Exception as exc:
         if isinstance(exc, MailToolError):

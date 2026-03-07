@@ -187,6 +187,16 @@ def _handle_sendmsg(settings_payload, login_id):
     for item in settings_payload:
         if not isinstance(item, dict):
             continue
+        imap_use_smtp_auth_raw = item.get("imap_use_smtp_auth")
+        if isinstance(imap_use_smtp_auth_raw, bool):
+            imap_use_smtp_auth = imap_use_smtp_auth_raw
+        elif isinstance(imap_use_smtp_auth_raw, str):
+            imap_use_smtp_auth = imap_use_smtp_auth_raw.strip().lower() not in ("0", "false", "no", "off")
+        elif isinstance(imap_use_smtp_auth_raw, (int, float)):
+            imap_use_smtp_auth = bool(imap_use_smtp_auth_raw)
+        else:
+            imap_use_smtp_auth = True
+
         normalized.append(
             {
                 "email": str(item.get("email") or "").strip(),
@@ -194,6 +204,13 @@ def _handle_sendmsg(settings_payload, login_id):
                 "smtp": str(item.get("smtp") or "").strip(),
                 "port": str(item.get("port") or "").strip(),
                 "user": str(item.get("user") or "").strip(),
+                "imap_host": str(item.get("imap_host") or "").strip(),
+                "imap_port": str(item.get("imap_port") or "").strip(),
+                "imap_security": str(item.get("imap_security") or "").strip().lower(),
+                "imap_folder": str(item.get("imap_folder") or "").strip(),
+                "imap_use_smtp_auth": imap_use_smtp_auth,
+                "imap_user": str(item.get("imap_user") or "").strip(),
+                "imap_password": str(item.get("imap_password") or ""),
             }
         )
     return _save_setting("sendmsg", normalized, login_id)

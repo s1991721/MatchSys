@@ -198,6 +198,26 @@
         </section>
 
         <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.line_notify.title">LINE通知</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.line_notify.desc">配置 LINE Messaging API 的推送参数。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field full">
+              <label for="line-channel-access-token" data-i18n="system_settings.line_notify.channel_access_token">Channel Access Token</label>
+              <input id="line-channel-access-token" type="text" autocomplete="off" placeholder="请输入 LINE Channel Access Token" data-i18n-placeholder="system_settings.line_notify.channel_access_token_placeholder" />
+            </div>
+            <div class="form-field full">
+              <label for="line-to-user-id" data-i18n="system_settings.line_notify.to_user_id">默认接收者 User ID</label>
+              <input id="line-to-user-id" type="text" autocomplete="off" placeholder="请输入接收者 User ID" data-i18n-placeholder="system_settings.line_notify.to_user_id_placeholder" />
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-secondary" type="button" id="line-notify-test" data-i18n="system_settings.common.test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="line-notify-save" data-i18n="system_settings.common.save_config">保存配置</button>
+            </div>
+            <div class="hint" id="line-notify-status"></div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title" data-i18n="system_settings.password_reset.title">账号密码重置</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.password_reset.desc">为账号重置密码并设置有效期（天）。</p>
           <form class="form-grid form-grid-spaced">
@@ -328,6 +348,7 @@
     const tasksApi = "/api/sys-tasks";
     const taskLogsApi = "/api/sys-tasks/logs";
     const activationValidateApi = "/api/activation/validate";
+    const lineNotifyTestApi = "/api/sys-settings/line-notify/test";
     const sections = {
       businessEmail: "business-email",
       match: "match",
@@ -337,6 +358,7 @@
       account: "bank-account",
       sendmsg: "sendmsg",
       activation: "activation",
+      lineNotify: "line-notify",
     };
 
     const taskList = document.getElementById("task-list");
@@ -369,6 +391,8 @@
     const activationCodeInput = document.getElementById("activation-code");
     const activationStatus = document.getElementById("activation-status");
     const activationCurrent = document.getElementById("activation-current");
+    const lineNotifySaveButton = document.getElementById("line-notify-save");
+    const lineNotifyTestButton = document.getElementById("line-notify-test");
     const userLoginSuggestions = document.getElementById("user-login-suggestions");
     let pendingDelete = null;
     let systemTasks = [];
@@ -1060,6 +1084,11 @@
       };
     };
 
+    const collectLineNotifySettings = () => ({
+      channel_access_token: getValue("line-channel-access-token").trim(),
+      to_user_id: getValue("line-to-user-id").trim(),
+    });
+
     const parseTimeParts = (timeValue) => {
       if (!timeValue) return null;
       const parts = timeValue.split(":");
@@ -1517,6 +1546,47 @@
       });
     }
 
+    if (lineNotifySaveButton) {
+      lineNotifySaveButton.addEventListener("click", async () => {
+        const settings = collectLineNotifySettings();
+        if (!settings.channel_access_token || !settings.to_user_id) {
+          setInlineStatus("line-notify-status", t("system_settings.line_notify.error_missing", "请填写 Token 和 User ID。"), false);
+          return;
+        }
+        try {
+          await saveSettings(sections.lineNotify, settings);
+          setInlineStatus("line-notify-status", t("system_settings.common.saved", "已保存"), true);
+          flashButton(lineNotifySaveButton, t("system_settings.common.saved", "已保存"));
+        } catch (error) {
+          setInlineStatus("line-notify-status", error.message || t("system_settings.common.request_failed", "请求失败"), false);
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (lineNotifyTestButton) {
+      lineNotifyTestButton.addEventListener("click", async () => {
+        const settings = collectLineNotifySettings();
+        if (!settings.channel_access_token || !settings.to_user_id) {
+          setInlineStatus("line-notify-status", t("system_settings.line_notify.error_missing", "请填写 Token 和 User ID。"), false);
+          return;
+        }
+        try {
+          const payload = await requestJson(lineNotifyTestApi, {
+            method: "POST",
+            body: JSON.stringify(settings),
+          });
+          const message = payload.data && payload.data.message ? payload.data.message : t("system_settings.common.connection_success", "连接成功");
+          setInlineStatus("line-notify-status", message, true);
+          window.alert(message);
+          flashButton(lineNotifyTestButton, t("system_settings.common.success", "成功"));
+        } catch (error) {
+          setInlineStatus("line-notify-status", error.message || t("system_settings.common.connection_failed", "连接失败"), false);
+          notifyError(error.message);
+        }
+      });
+    }
+
     if (aiSaveButton) {
       aiSaveButton.addEventListener("click", async () => {
         const modeButton = document.querySelector(".ai-toggle button.is-active");
@@ -1923,6 +1993,11 @@
         email: activationSettings.email || "",
       };
       updateActivationHint();
+
+      const lineNotifySettings = await fetchSettings(sections.lineNotify, {});
+      setValue("line-channel-access-token", lineNotifySettings.channel_access_token || "");
+      setValue("line-to-user-id", lineNotifySettings.to_user_id || "");
+      setInlineStatus("line-notify-status", "", false);
     };
 
     loadSettings();

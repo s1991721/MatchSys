@@ -36,6 +36,10 @@ SECTION_DEFAULTS = {
     "match": {
         "cycle_days": 14,
     },
+    "ocr": {
+        "ocr_filename": "",
+        "ocr_path": "",
+    },
     "ai": {
         "model_type": "local",
         "model_name": "",
@@ -166,6 +170,50 @@ def _handle_match(settings_payload, login_id):
         return api_error("Invalid cycle_days")
 
     return _save_setting("match", {"cycle_days": cycle_days}, login_id)
+
+
+def _handle_ocr_upload(ocr_auth_file, login_id):
+    if not ocr_auth_file:
+        return api_error("Missing OCR auth file")
+
+    try:
+        ocr_auth_bytes = ocr_auth_file.read()
+        json.loads(ocr_auth_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return api_error("Invalid OCR auth JSON file")
+
+    base_dir = Path(django_settings.BASE_DIR)
+    credentials_dir = base_dir / "credentials"
+    credentials_dir.mkdir(parents=True, exist_ok=True)
+
+    ocr_target = credentials_dir / "ocr_credentials.json"
+    ocr_target.write_bytes(ocr_auth_bytes)
+
+    record = _get_setting("ocr")
+    merged = SECTION_DEFAULTS["ocr"].copy()
+    if record and isinstance(record.settings, dict):
+        merged.update(record.settings)
+    merged.update({
+        "ocr_filename": "ocr_credentials.json",
+        "ocr_path": str(Path("credentials") / "ocr_credentials.json"),
+    })
+    return _save_setting("ocr", merged, login_id)
+
+
+def _handle_ocr(settings_payload, login_id):
+    if settings_payload is None:
+        settings_payload = {}
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+    record = _get_setting("ocr")
+    merged = SECTION_DEFAULTS["ocr"].copy()
+    if record and isinstance(record.settings, dict):
+        merged.update(record.settings)
+    if "ocr_filename" in settings_payload:
+        merged["ocr_filename"] = str(settings_payload.get("ocr_filename") or "").strip()
+    if "ocr_path" in settings_payload:
+        merged["ocr_path"] = str(settings_payload.get("ocr_path") or "").strip()
+    return _save_setting("ocr", merged, login_id)
 
 
 def _handle_backup(settings_payload, login_id):
@@ -411,6 +459,7 @@ def _list_tasks():
 # 各个配置的处理方法
 SECTION_HANDLERS = {
     "match": _handle_match,
+    "ocr": _handle_ocr,
     "ai": _handle_ai,
     "backup": _handle_backup,
     "bank-account": _handle_bank_account,
@@ -446,6 +495,13 @@ def sys_settings_section_api(request, section):
                 login_id,
             )
         # gmail认证文件上传end
+        if request.FILES.get("ocr_auth_file"):
+            if section != "ocr":
+                return api_error("Unsupported action for this section", status=405)
+            return _handle_ocr_upload(
+                request.FILES.get("ocr_auth_file"),
+                login_id,
+            )
 
         payload, error = parse_json_body(request)
         if error:

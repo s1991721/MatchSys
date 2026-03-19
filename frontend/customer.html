@@ -6,6 +6,47 @@
     <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
+    <style>
+        .customer-card-upload {
+            margin-bottom: 12px;
+        }
+
+        .customer-card-upload-head .hint {
+            margin: 4px 0 0;
+        }
+
+        .customer-card-upload-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0 10px;
+        }
+
+        .customer-card-preview {
+            border: 1px dashed var(--line, #d9deea);
+            border-radius: 10px;
+            min-height: 150px;
+            background: var(--card-soft, #f6f8ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .customer-card-preview img {
+            display: block;
+            max-width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .customer-card-preview-empty {
+            color: var(--muted, #7a8094);
+            font-size: 13px;
+        }
+    </style>
     <title data-i18n="customer.title">客户管理</title>
 </head>
 <body class="c-form-page">
@@ -86,6 +127,30 @@
     </div>
     <div class="c-dialog-body">
         <div class="form-grid">
+            <div class="form-field full customer-card-upload" id="card-upload-section">
+                <div class="customer-card-upload-head">
+                    <p class="c-panel-title" data-i18n="customer.card.title">名片上传</p>
+                    <p class="hint" data-i18n="customer.card.desc">上传名片图片后，可识别并自动填充联系人信息。</p>
+                </div>
+                <label class="c-field">
+                    <span data-i18n="customer.card.file">名片图片</span>
+                    <input id="edit-card-image" type="file" accept="image/*"/>
+                </label>
+                <div id="card-preview-section" hidden>
+                    <div class="customer-card-upload-actions">
+                        <button class="c-btn c-btn-secondary c-btn-sm" id="btn-card-ocr-fill" type="button"
+                                data-i18n="customer.card.action.fill">识别并填充
+                        </button>
+                        <span class="hint" id="card-ocr-hint" data-i18n="customer.card.hint">支持 JPG / PNG / WEBP。</span>
+                    </div>
+                    <div class="customer-card-preview">
+                        <img id="card-preview-image" alt="名片预览" hidden/>
+                        <div class="customer-card-preview-empty" id="card-preview-empty" data-i18n="customer.card.preview_empty">
+                            暂无预览
+                        </div>
+                    </div>
+                </div>
+            </div>
             <label class="c-field">
                 <span data-i18n="customer.table.company">公司名称</span>
                 <input id="edit-company" type="text"/>
@@ -210,6 +275,13 @@
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
     const contractHint = document.getElementById("contract-hint");
+    const cardUploadSection = document.getElementById("card-upload-section");
+    const cardPreviewSection = document.getElementById("card-preview-section");
+    const cardImageInput = document.getElementById("edit-card-image");
+    const cardPreviewImage = document.getElementById("card-preview-image");
+    const cardPreviewEmpty = document.getElementById("card-preview-empty");
+    const cardOcrHint = document.getElementById("card-ocr-hint");
+    const cardOcrFillButton = document.getElementById("btn-card-ocr-fill");
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),
@@ -236,6 +308,154 @@
     let pageSize = 10;
     let totalPages = 1;
     let selectedCustomerIds = new Set();
+    let cardPreviewObjectUrl = "";
+
+    const setCardHintText = (key, fallback) => {
+        if (!cardOcrHint) return;
+        const value = t(key);
+        cardOcrHint.textContent = value === key ? fallback : value;
+    };
+
+    const setCardHintFormat = (key, vars, fallback) => {
+        if (!cardOcrHint) return;
+        const value = format(key, vars);
+        cardOcrHint.textContent = value === key ? fallback : value;
+    };
+
+    const resetCardPreview = () => {
+        if (cardPreviewObjectUrl) {
+            URL.revokeObjectURL(cardPreviewObjectUrl);
+            cardPreviewObjectUrl = "";
+        }
+        if (cardImageInput) cardImageInput.value = "";
+        if (cardPreviewImage) {
+            cardPreviewImage.hidden = true;
+            cardPreviewImage.removeAttribute("src");
+        }
+        if (cardPreviewEmpty) {
+            cardPreviewEmpty.hidden = false;
+        }
+        if (cardPreviewSection) cardPreviewSection.hidden = true;
+        setCardHintText("customer.card.hint", "支持 JPG / PNG / WEBP。");
+    };
+
+    const applyCardResult = (result) => {
+        if (!result || typeof result !== "object") return;
+        if (result.company) editFields.company.value = result.company;
+        if (result.address) editFields.address.value = result.address;
+        if (result.name) editFields.contact1Name.value = result.name;
+        if (result.title) editFields.contact1Position.value = result.title;
+        if (result.email) editFields.contact1Email.value = result.email;
+        if (result.mobile || result.tel) editFields.contact1Phone.value = result.mobile || result.tel;
+    };
+
+    const normalizeCompanyName = (name) => {
+        return String(name || "")
+            .replace(/[\s\u3000]+/g, "")
+            .toLowerCase();
+    };
+
+    const findCompanyMatch = async (companyName) => {
+        const normalized = normalizeCompanyName(companyName);
+        if (!normalized) return null;
+
+        const pageSize = 100;
+        let page = 1;
+        let totalPageCount = 1;
+
+        while (page <= totalPageCount) {
+            const params = window.createParams([
+                ["company_name", String(companyName || "").trim()],
+                ["page", String(page)],
+                ["page_size", String(pageSize)],
+            ]);
+            const url = window.buildUrl("/api/customers", params);
+            const response = await fetchWithAuth(url, {method: "GET"});
+            const data = await response.json();
+            const payload = normalizeApiResponse(data);
+            if (!payload.success) return null;
+
+            const result = payload.data || {};
+            const meta = payload.meta || {};
+            const items = Array.isArray(result.items) ? result.items : [];
+
+            const hit = items.find((item) => {
+                return normalizeCompanyName(item.company_name) === normalized;
+            });
+            if (hit) return hit;
+
+            totalPageCount = Number(meta.total_pages) || 1;
+            page += 1;
+        }
+
+        return null;
+    };
+
+    const findFirstEmptyContactSlot = (item) => {
+        const slots = [1, 2, 3];
+        for (const slot of slots) {
+            const name = String(item?.[`contact${slot}_name`] || "").trim();
+            const email = String(item?.[`contact${slot}_email`] || "").trim();
+            const phone = String(item?.[`contact${slot}_phone`] || "").trim();
+            const isEmpty = !name && !email && !phone;
+            if (isEmpty) return slot;
+        }
+        return null;
+    };
+
+    const buildCustomerPayloadFromItem = (item) => {
+        return {
+            company_name: String(item?.company_name || "").trim(),
+            company_address: String(item?.company_address || "").trim(),
+            remark: String(item?.remark || "").trim(),
+            contact1_name: String(item?.contact1_name || "").trim(),
+            contact1_position: String(item?.contact1_position || "").trim(),
+            contact1_email: String(item?.contact1_email || "").trim(),
+            contact1_phone: String(item?.contact1_phone || "").trim(),
+            contact2_name: String(item?.contact2_name || "").trim(),
+            contact2_position: String(item?.contact2_position || "").trim(),
+            contact2_email: String(item?.contact2_email || "").trim(),
+            contact2_phone: String(item?.contact2_phone || "").trim(),
+            contact3_name: String(item?.contact3_name || "").trim(),
+            contact3_position: String(item?.contact3_position || "").trim(),
+            contact3_email: String(item?.contact3_email || "").trim(),
+            contact3_phone: String(item?.contact3_phone || "").trim(),
+            person_in_charge: String(item?.person_in_charge || "").trim(),
+        };
+    };
+
+    const fillContactSlotByCardResult = (payload, slot, result) => {
+        if (!payload || !slot || !result) return;
+        const phone = String(result.mobile || result.tel || "").trim();
+        payload[`contact${slot}_name`] = String(result.name || "").trim();
+        payload[`contact${slot}_position`] = String(result.title || "").trim();
+        payload[`contact${slot}_email`] = String(result.email || "").trim();
+        payload[`contact${slot}_phone`] = phone;
+    };
+
+    const applyCustomerToEditForm = (item) => {
+        editFields.company.value = item?.company_name || "";
+        editFields.address.value = item?.company_address || "";
+        editFields.contract.value = "";
+        currentContract = item?.contract || "";
+        contractHint.textContent = currentContract
+            ? format("customer.contract.uploaded", {name: currentContract})
+            : t("customer.contract.empty");
+        editFields.remark.value = item?.remark || "";
+        editFields.owner.value = item?.person_in_charge || "";
+        editFields.contact1Name.value = item?.contact1_name || "";
+        editFields.contact1Position.value = item?.contact1_position || "";
+        editFields.contact1Phone.value = item?.contact1_phone || "";
+        editFields.contact1Email.value = item?.contact1_email || "";
+        editFields.contact2Name.value = item?.contact2_name || "";
+        editFields.contact2Position.value = item?.contact2_position || "";
+        editFields.contact2Phone.value = item?.contact2_phone || "";
+        editFields.contact2Email.value = item?.contact2_email || "";
+        editFields.contact3Name.value = item?.contact3_name || "";
+        editFields.contact3Position.value = item?.contact3_position || "";
+        editFields.contact3Phone.value = item?.contact3_phone || "";
+        editFields.contact3Email.value = item?.contact3_email || "";
+    };
 
     const openDialog = (dialog) => {
         if (!dialog) return;
@@ -258,6 +478,8 @@
             editFields.contract.value = "";
             currentContract = "";
             contractHint.textContent = t("customer.contract.empty");
+            resetCardPreview();
+            if (cardUploadSection) cardUploadSection.hidden = false;
         }
     };
 
@@ -364,27 +586,9 @@
     const openEditDialog = (item) => {
         currentEditId = item ? item.id : null;
         dialogTitle.textContent = item ? t("customer.dialog.edit") : t("customer.dialog.create");
-        editFields.company.value = item?.company_name || "";
-        editFields.address.value = item?.company_address || "";
-        editFields.contract.value = "";
-        currentContract = item?.contract || "";
-        contractHint.textContent = currentContract
-            ? format("customer.contract.uploaded", {name: currentContract})
-            : t("customer.contract.empty");
-        editFields.remark.value = item?.remark || "";
-        editFields.owner.value = item?.person_in_charge || "";
-        editFields.contact1Name.value = item?.contact1_name || "";
-        editFields.contact1Position.value = item?.contact1_position || "";
-        editFields.contact1Phone.value = item?.contact1_phone || "";
-        editFields.contact1Email.value = item?.contact1_email || "";
-        editFields.contact2Name.value = item?.contact2_name || "";
-        editFields.contact2Position.value = item?.contact2_position || "";
-        editFields.contact2Phone.value = item?.contact2_phone || "";
-        editFields.contact2Email.value = item?.contact2_email || "";
-        editFields.contact3Name.value = item?.contact3_name || "";
-        editFields.contact3Position.value = item?.contact3_position || "";
-        editFields.contact3Phone.value = item?.contact3_phone || "";
-        editFields.contact3Email.value = item?.contact3_email || "";
+        if (cardUploadSection) cardUploadSection.hidden = Boolean(item);
+        resetCardPreview();
+        applyCustomerToEditForm(item);
 
         openDialog(editDialog);
     };
@@ -515,6 +719,124 @@
             ? format("customer.contract.pending", {name: file.name})
             : (currentContract ? format("customer.contract.uploaded", {name: currentContract}) : t("customer.contract.empty"));
     });
+
+    if (cardImageInput) {
+        cardImageInput.addEventListener("change", () => {
+            const file = cardImageInput.files && cardImageInput.files[0];
+            if (cardPreviewObjectUrl) {
+                URL.revokeObjectURL(cardPreviewObjectUrl);
+                cardPreviewObjectUrl = "";
+            }
+            if (!file) {
+                if (cardPreviewImage) {
+                    cardPreviewImage.hidden = true;
+                    cardPreviewImage.removeAttribute("src");
+                }
+                if (cardPreviewEmpty) cardPreviewEmpty.hidden = false;
+                if (cardPreviewSection) cardPreviewSection.hidden = true;
+                setCardHintText("customer.card.hint", "支持 JPG / PNG / WEBP。");
+                return;
+            }
+            if (cardPreviewSection) cardPreviewSection.hidden = false;
+            cardPreviewObjectUrl = URL.createObjectURL(file);
+            if (cardPreviewImage) {
+                cardPreviewImage.src = cardPreviewObjectUrl;
+                cardPreviewImage.hidden = false;
+            }
+            if (cardPreviewEmpty) cardPreviewEmpty.hidden = true;
+            setCardHintFormat("customer.card.selected", {name: file.name}, `已选择：${file.name}`);
+        });
+    }
+
+    if (cardOcrFillButton) {
+        cardOcrFillButton.addEventListener("click", async () => {
+            const file = cardImageInput && cardImageInput.files && cardImageInput.files[0];
+            if (!file) {
+                alert(t("customer.card.alert.file_required"));
+                return;
+            }
+            cardOcrFillButton.disabled = true;
+            const normalText = t("customer.card.action.fill");
+            const processingText = t("customer.card.action.processing");
+            cardOcrFillButton.textContent = processingText === "customer.card.action.processing" ? "识别中..." : processingText;
+            setCardHintText("customer.card.processing", "正在识别，请稍候...");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetchWithAuth("/api/customers/card-ocr", {
+                headers: {},
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then(async (data) => {
+                    const payload = normalizeApiResponse(data);
+                    if (!payload.success) {
+                        throw new Error(payload.message || t("customer.card.alert.ocr_failed"));
+                    }
+                    const result = payload.data?.result || {};
+                    const companyName = String(result.company || "").trim();
+                    if (!companyName) {
+                        applyCardResult(result);
+                        setCardHintText("customer.card.success", "识别成功，已自动填充。");
+                        return;
+                    }
+
+                    const existingCustomer = await findCompanyMatch(companyName);
+                    if (!existingCustomer) {
+                        applyCardResult(result);
+                        setCardHintText("customer.card.success", "识别成功，已自动填充。");
+                        return;
+                    }
+
+                    const targetSlot = findFirstEmptyContactSlot(existingCustomer);
+                    if (!targetSlot) {
+                        currentEditId = existingCustomer.id;
+                        dialogTitle.textContent = t("customer.dialog.edit");
+                        if (cardUploadSection) cardUploadSection.hidden = true;
+                        applyCustomerToEditForm(existingCustomer);
+                        setCardHintFormat(
+                            "customer.card.company_contacts_full_with_name",
+                            {company: existingCustomer.company_name || companyName},
+                            "公司联系人已满，请编辑后再添加。"
+                        );
+                        alert(
+                            format("customer.card.alert.contacts_full_with_name", {
+                                company: existingCustomer.company_name || companyName,
+                            })
+                        );
+                        return;
+                    }
+
+                    const updatePayload = buildCustomerPayloadFromItem(existingCustomer);
+                    fillContactSlotByCardResult(updatePayload, targetSlot, result);
+                    currentEditId = existingCustomer.id;
+                    dialogTitle.textContent = t("customer.dialog.edit");
+                    if (cardUploadSection) cardUploadSection.hidden = true;
+                    applyCustomerToEditForm(updatePayload);
+
+                    setCardHintFormat(
+                        "customer.card.company_matched_appended",
+                        {company: existingCustomer.company_name || companyName, slot: targetSlot},
+                        `已填入现有公司联系人${targetSlot}，请点击保存。`
+                    );
+                    alert(
+                        format("customer.card.alert.company_matched_appended", {
+                            company: existingCustomer.company_name || companyName,
+                            slot: targetSlot,
+                        })
+                    );
+                })
+                .catch((error) => {
+                    setCardHintText("customer.card.failed", "识别失败，请重试。");
+                    alert(error.message || t("customer.card.alert.ocr_failed"));
+                })
+                .finally(() => {
+                    cardOcrFillButton.disabled = false;
+                    cardOcrFillButton.textContent = normalText === "customer.card.action.fill" ? "识别并填充" : normalText;
+                });
+        });
+    }
 
     const uploadContract = (customerId, file) => {
         const formData = new FormData();

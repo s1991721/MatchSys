@@ -83,69 +83,24 @@
             </div>
           </form>
         </section>
-      </div>
 
-      <div class="settings-right c-stack">
         <section class="c-card c-card-pad settings-card">
-          <h2 class="c-card-title" data-i18n="system_settings.ai.title">AI 设置</h2>
-          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.ai.desc">选择本地或云端模式，并填写对应模型配置。</p>
-          <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换" data-i18n-aria="system_settings.ai.mode_aria">
-            <button type="button" class="c-toggle is-active" data-ai-mode="local" data-i18n="system_settings.ai.mode_local">本地</button>
-            <button type="button" class="c-toggle" data-ai-mode="cloud" data-i18n="system_settings.ai.mode_cloud">云端</button>
+          <div class="match-head">
+            <h2 class="c-card-title" data-i18n="system_settings.ocr.title">OCR 配置</h2>
+            <p class="c-card-subtitle settings-desc" data-i18n="system_settings.ocr.auth_hint">仅支持上传 Google Vision 授权 JSON 文件。</p>
           </div>
           <form class="form-grid form-grid-spaced">
-            <div class="ai-fields is-active" data-ai-fields="local">
-              <div class="form-field full">
-                <label for="ai-model-local" data-i18n="system_settings.ai.model_name">模型名称</label>
-                <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" data-i18n-placeholder="system_settings.ai.model_local_placeholder" />
-                <div class="hint" data-i18n="system_settings.ai.local_hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
-              </div>
-            </div>
-            <div class="ai-fields" data-ai-fields="cloud">
-              <div class="form-field full">
-                <label for="ai-model-cloud" data-i18n="system_settings.ai.model_name">模型名称</label>
-                <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" data-i18n-placeholder="system_settings.ai.model_cloud_placeholder" />
-              </div>
-              <div class="form-field full">
-                <label for="ai-api-key" data-i18n="system_settings.ai.api_key">API Key</label>
-                <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" data-i18n-placeholder="system_settings.ai.api_key_placeholder" />
-              </div>
+            <div class="form-field full">
+                <label for="match-ocr-auth" data-i18n="system_settings.ocr.auth">授权 JSON 文件</label>
+                <input id="match-ocr-auth" type="file" accept=".json" />
+                <div class="hint" id="match-ocr-auth-current"></div>
             </div>
             <div class="form-actions">
-              <button class="c-btn c-btn-secondary" type="button" id="ai-test" data-i18n="system_settings.common.test">连接测试</button>
-              <button class="c-btn c-btn-primary" type="button" id="ai-save" data-i18n="system_settings.common.save_config">保存配置</button>
+              <button class="c-btn c-btn-primary" type="button" id="ocr-save" data-i18n="system_settings.common.save_config">保存配置</button>
             </div>
-            <div class="hint" id="ai-test-status"></div>
           </form>
         </section>
 
-        <section class="c-card c-card-pad settings-card">
-          <h2 class="c-card-title" data-i18n="system_settings.password_reset.title">账号密码重置</h2>
-          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.password_reset.desc">为账号重置密码并设置有效期（天）。</p>
-          <form class="form-grid form-grid-spaced">
-            <div class="form-field">
-              <label for="preview-user" data-i18n="system_settings.password_reset.user">账号</label>
-              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" data-i18n-placeholder="system_settings.password_reset.user_placeholder" />
-              <datalist id="user-login-suggestions"></datalist>
-            </div>
-            <div class="form-field">
-              <label for="preview-password" data-i18n="system_settings.password_reset.password">新密码</label>
-              <input id="preview-password" type="text" placeholder="请输入新密码" data-i18n-placeholder="system_settings.password_reset.password_placeholder" />
-            </div>
-            <div class="form-field">
-              <label for="preview-expiry" data-i18n="system_settings.password_reset.expiry">有效期（天）</label>
-              <input id="preview-expiry" type="number" min="1" step="1" value="1" />
-            </div>
-            <div class="form-actions">
-              <button class="c-btn c-btn-primary" type="button" id="preview-reset" data-i18n="system_settings.password_reset.reset">重置密码</button>
-            </div>
-            <div class="hint" id="preview-reset-status"></div>
-          </form>
-        </section>
-
-      </div>
-
-      <div class="settings-left c-stack">
         <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title" data-i18n="system_settings.bank.title">口座信息</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.bank.desc">配置银行口座的基础信息。</p>
@@ -192,6 +147,39 @@
 
       <div class="settings-right c-stack">
         <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.ai.title">AI 设置</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.ai.desc">选择本地或云端模式，并填写对应模型配置。</p>
+          <div class="ai-toggle c-switcher-group" role="tablist" aria-label="AI 模式切换" data-i18n-aria="system_settings.ai.mode_aria">
+            <button type="button" class="c-toggle is-active" data-ai-mode="local" data-i18n="system_settings.ai.mode_local">本地</button>
+            <button type="button" class="c-toggle" data-ai-mode="cloud" data-i18n="system_settings.ai.mode_cloud">云端</button>
+          </div>
+          <form class="form-grid form-grid-spaced">
+            <div class="ai-fields is-active" data-ai-fields="local">
+              <div class="form-field full">
+                <label for="ai-model-local" data-i18n="system_settings.ai.model_name">模型名称</label>
+                <input id="ai-model-local" type="text" placeholder="例如：Qwen2.5-7B" data-i18n-placeholder="system_settings.ai.model_local_placeholder" />
+                <div class="hint" data-i18n="system_settings.ai.local_hint">提示：本地模型首次加载可能需要 30 秒到数分钟，期间响应会变慢，请耐心等待。</div>
+              </div>
+            </div>
+            <div class="ai-fields" data-ai-fields="cloud">
+              <div class="form-field full">
+                <label for="ai-model-cloud" data-i18n="system_settings.ai.model_name">模型名称</label>
+                <input id="ai-model-cloud" type="text" placeholder="例如：gpt-4o-mini" data-i18n-placeholder="system_settings.ai.model_cloud_placeholder" />
+              </div>
+              <div class="form-field full">
+                <label for="ai-api-key" data-i18n="system_settings.ai.api_key">API Key</label>
+                <input id="ai-api-key" type="text" placeholder="sk-xxxxxxxxxxxxxxxx" data-i18n-placeholder="system_settings.ai.api_key_placeholder" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-secondary" type="button" id="ai-test" data-i18n="system_settings.common.test">连接测试</button>
+              <button class="c-btn c-btn-primary" type="button" id="ai-save" data-i18n="system_settings.common.save_config">保存配置</button>
+            </div>
+            <div class="hint" id="ai-test-status"></div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title" data-i18n="system_settings.activation.title">激活码更新</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.activation.desc">更新系统激活码，保存后立即生效。</p>
           <form class="form-grid form-grid-spaced">
@@ -206,6 +194,30 @@
               <button class="c-btn c-btn-primary" type="button" id="activation-save" data-i18n="system_settings.activation.save">更新激活码</button>
             </div>
             <div class="hint" id="activation-status"></div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.password_reset.title">账号密码重置</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.password_reset.desc">为账号重置密码并设置有效期（天）。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field">
+              <label for="preview-user" data-i18n="system_settings.password_reset.user">账号</label>
+              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" data-i18n-placeholder="system_settings.password_reset.user_placeholder" />
+              <datalist id="user-login-suggestions"></datalist>
+            </div>
+            <div class="form-field">
+              <label for="preview-password" data-i18n="system_settings.password_reset.password">新密码</label>
+              <input id="preview-password" type="text" placeholder="请输入新密码" data-i18n-placeholder="system_settings.password_reset.password_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="preview-expiry" data-i18n="system_settings.password_reset.expiry">有效期（天）</label>
+              <input id="preview-expiry" type="number" min="1" step="1" value="1" />
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-primary" type="button" id="preview-reset" data-i18n="system_settings.password_reset.reset">重置密码</button>
+            </div>
+            <div class="hint" id="preview-reset-status"></div>
           </form>
         </section>
 
@@ -319,6 +331,7 @@
     const sections = {
       businessEmail: "business-email",
       match: "match",
+      ocr: "ocr",
       ai: "ai",
       backup: "backup",
       account: "bank-account",
@@ -340,6 +353,9 @@
     const gmailTokenCurrent = document.getElementById("gmail-token-current");
     const gmailSaveButton = document.getElementById("gmail-save");
     const gmailTestButton = document.getElementById("gmail-test");
+    const matchOcrAuthInput = document.getElementById("match-ocr-auth");
+    const matchOcrAuthCurrent = document.getElementById("match-ocr-auth-current");
+    const ocrSaveButton = document.getElementById("ocr-save");
     const matchSaveButton = document.getElementById("match-save");
     const aiSaveButton = document.getElementById("ai-save");
     const aiTestButton = document.getElementById("ai-test");
@@ -370,6 +386,14 @@
     };
     let businessEmailFile = null;
     let businessEmailTokenFile = null;
+    let matchSettingsState = {
+      cycle_days: 14,
+    };
+    let ocrSettingsState = {
+      ocr_filename: "",
+      ocr_path: "",
+    };
+    let matchOcrFile = null;
 
     const notifyError = (message) => {
       window.alert(message || t("system_settings.common.request_failed_retry", "请求失败，请稍后再试。"));
@@ -431,6 +455,16 @@
       if (config.token_filename) return config.token_filename;
       if (config.token_path) {
         const parts = String(config.token_path).split("/");
+        return parts[parts.length - 1];
+      }
+      return "";
+    };
+
+    const resolveMatchOcrName = (config) => {
+      if (!config) return "";
+      if (config.ocr_filename) return config.ocr_filename;
+      if (config.ocr_path) {
+        const parts = String(config.ocr_path).split("/");
         return parts[parts.length - 1];
       }
       return "";
@@ -857,6 +891,28 @@
         gmailTokenCurrent.textContent = filename
           ? gmailHintText(state, filename, noNameKey, noNameFallback)
           : "";
+      }
+    };
+
+    const updateMatchOcrHint = () => {
+      if (!matchOcrAuthCurrent) return;
+      const filename = matchOcrFile ? matchOcrFile.name : resolveMatchOcrName(ocrSettingsState);
+      if (!filename) {
+        matchOcrAuthCurrent.textContent = "";
+        return;
+      }
+      if (matchOcrFile) {
+        matchOcrAuthCurrent.textContent = format(
+          "system_settings.ocr.selected_with_name",
+          { name: filename },
+          `已选择：${filename}`
+        );
+      } else {
+        matchOcrAuthCurrent.textContent = format(
+          "system_settings.ocr.saved_with_name",
+          { name: filename },
+          `已保存：${filename}`
+        );
       }
     };
 
@@ -1311,6 +1367,14 @@
       });
     }
 
+    if (matchOcrAuthInput) {
+      matchOcrAuthInput.addEventListener("change", (event) => {
+        const file = event.target.files ? event.target.files[0] : null;
+        matchOcrFile = file || null;
+        updateMatchOcrHint();
+      });
+    }
+
     if (gmailTestButton) {
       gmailTestButton.addEventListener("click", async () => {
         try {
@@ -1340,8 +1404,39 @@
         }
         const settings = { cycle_days: cycleValue };
         try {
-          await saveSettings(sections.match, settings);
+          matchSettingsState = await saveSettings(sections.match, settings);
           flashButton(matchSaveButton, t("system_settings.common.saved", "已保存"));
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
+    if (ocrSaveButton) {
+      ocrSaveButton.addEventListener("click", async () => {
+        const selectedOcrFile =
+          (matchOcrAuthInput && matchOcrAuthInput.files && matchOcrAuthInput.files[0]) ||
+          matchOcrFile;
+        if (!selectedOcrFile) {
+          notifyError(t("system_settings.ocr.error_select_auth", "请先选择 OCR 授权 JSON 文件。"));
+          return;
+        }
+        try {
+          const formData = new FormData();
+          formData.append("ocr_auth_file", selectedOcrFile);
+          const payload = await requestFormData(
+            `${apiBase}/${sections.ocr}`,
+            formData
+          );
+          ocrSettingsState = payload.data && payload.data.settings
+            ? payload.data.settings
+            : ocrSettingsState;
+          matchOcrFile = null;
+          if (matchOcrAuthInput) {
+            matchOcrAuthInput.value = "";
+          }
+          updateMatchOcrHint();
+          flashButton(ocrSaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
         }
@@ -1753,8 +1848,26 @@
       businessEmailConfig = await fetchSettings(sections.businessEmail, businessEmailConfig);
       updateBusinessEmailHints();
 
-      const matchSettings = await fetchSettings(sections.match, { cycle_days: 14 });
-      setValue("match-cycle", matchSettings.cycle_days || "");
+      matchSettingsState = await fetchSettings(sections.match, {
+        cycle_days: 14,
+      });
+      setValue("match-cycle", matchSettingsState.cycle_days || "");
+
+      ocrSettingsState = await fetchSettings(sections.ocr, {
+        ocr_filename: "",
+        ocr_path: "",
+      });
+      if (!ocrSettingsState.ocr_filename && !ocrSettingsState.ocr_path) {
+        const legacyOcrFilename = matchSettingsState.ocr_filename || "";
+        const legacyOcrPath = matchSettingsState.ocr_path || "";
+        if (legacyOcrFilename || legacyOcrPath) {
+          ocrSettingsState = {
+            ocr_filename: legacyOcrFilename,
+            ocr_path: legacyOcrPath,
+          };
+        }
+      }
+      updateMatchOcrHint();
 
       const aiSettings = await fetchSettings(sections.ai, {
         model_type: "local",

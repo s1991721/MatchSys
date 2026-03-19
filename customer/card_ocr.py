@@ -57,6 +57,7 @@ def _extract_phone_numbers(text: str) -> List[str]:
 
 import re
 from typing import List, Optional, Dict
+import os
 
 
 class _BusinessCardParser:
@@ -367,10 +368,27 @@ class _BusinessCardParser:
 
 from typing import List
 from google.cloud import vision
+import json
+from pathlib import Path
+
+
+def _ensure_google_credentials_hardcoded() -> None:
+    project_root = Path(__file__).resolve().parent.parent
+    credential_path = (project_root / "credentials" / "matchsys-483603-1fb6e23be775.json").resolve()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(credential_path)
 
 
 class _GoogleVisionOCR:
     def __init__(self):
+        _ensure_google_credentials_hardcoded()
+        cred = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+        if not cred:
+            raise RuntimeError(
+                "Missing GOOGLE_APPLICATION_CREDENTIALS. "
+                "Please check hardcoded credential path config."
+            )
+        if not Path(cred).expanduser().exists():
+            raise FileNotFoundError(f"Credential file not found: {cred}")
         self.client = vision.ImageAnnotatorClient()
 
     def detect_text_lines(self, image_path: str) -> List[str]:
@@ -398,3 +416,16 @@ def parse_card(file_path: str) -> dict:
     lines = ocr.detect_text_lines(file_path)
     result = parser.parse(lines)
     return result
+
+
+def main() -> None:
+    image_path = Path("/Users/jef/Desktop/card.jpg").expanduser()
+    if not image_path.exists():
+        raise FileNotFoundError(f"Image file not found: {image_path}")
+
+    result = parse_card(str(image_path))
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+
+
+if __name__ == "__main__":
+    main()

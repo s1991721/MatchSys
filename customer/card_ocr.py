@@ -128,7 +128,7 @@ class _BusinessCardParser:
 
     def is_possible_japanese_name(self, line: str) -> bool:
         """
-        判断是否可能是日语姓名：
+        判断是否可能是日语/中文姓名：
         支持：
         - 山田太郎
         - 山田 太郎
@@ -161,7 +161,7 @@ class _BusinessCardParser:
         #     r"^[一-龥ァ-ヴーぁ-ん]{1,10}\s[一-龥ァ-ヴーぁ-ん]{1,10}$",
         # ]
 
-        patterns = [
+        japanese_patterns = [
             r"^[\u4E00-\u9FFF]{2,8}$",
             r"^[\u4E00-\u9FFF]{1,4}\s[\u4E00-\u9FFF]{1,4}$",
             r"^[\u30A0-\u30FFー]{2,20}$",
@@ -172,7 +172,21 @@ class _BusinessCardParser:
             r"^[\u4E00-\u9FFF\u30A0-\u30FF\u3040-\u309Fー]{1,10}\s[\u4E00-\u9FFF\u30A0-\u30FF\u3040-\u309Fー]{1,10}$",
         ]
 
-        return any(re.fullmatch(p, line) for p in patterns)
+        # 扩展 CJK 范围，兼容部分繁体/生僻字
+        han = r"[\u3400-\u4DBF\u4E00-\u9FFF]"
+
+        # 中文姓名（常见 2-4 字、复姓、空格分隔、少数民族中间点）
+        chinese_patterns = [
+            rf"^{han}{{2,4}}$",
+            rf"^{han}{{1,2}}\s{han}{{1,3}}$",
+            rf"^{han}{{1,4}}\s*[·・•]\s*{han}{{1,8}}$",
+            rf"^{han}{{1,4}}\s*[·・•]\s*{han}{{1,8}}\s*[·・•]\s*{han}{{1,8}}$",
+        ]
+
+        return (
+            any(re.fullmatch(p, line) for p in japanese_patterns)
+            or any(re.fullmatch(p, line) for p in chinese_patterns)
+        )
 
     def is_possible_english_name(self, line: str) -> bool:
         line = self.normalize_line(line)
@@ -214,8 +228,8 @@ class _BusinessCardParser:
             if self.is_possible_japanese_name(line):
                 return line
 
-            if self.is_possible_english_name(line):
-                return line
+            # if self.is_possible_english_name(line):
+            #     return line
 
         return None
 
@@ -374,7 +388,7 @@ from pathlib import Path
 
 def _ensure_google_credentials_hardcoded() -> None:
     project_root = Path(__file__).resolve().parent.parent
-    credential_path = (project_root / "credentials" / "matchsys-483603-1fb6e23be775.json").resolve()
+    credential_path = (project_root / "credentials" / "ocr_credentials.json").resolve()
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(credential_path)
 
 
@@ -385,7 +399,7 @@ class _GoogleVisionOCR:
         if not cred:
             raise RuntimeError(
                 "Missing GOOGLE_APPLICATION_CREDENTIALS. "
-                "Please check hardcoded credential path config."
+                "Please check OCR settings config."
             )
         if not Path(cred).expanduser().exists():
             raise FileNotFoundError(f"Credential file not found: {cred}")

@@ -6,6 +6,47 @@
     <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
+    <style>
+        .customer-card-upload {
+            margin-bottom: 12px;
+        }
+
+        .customer-card-upload-head .hint {
+            margin: 4px 0 0;
+        }
+
+        .customer-card-upload-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0 10px;
+        }
+
+        .customer-card-preview {
+            border: 1px dashed var(--line, #d9deea);
+            border-radius: 10px;
+            min-height: 150px;
+            background: var(--card-soft, #f6f8ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        .customer-card-preview img {
+            display: block;
+            max-width: 100%;
+            max-height: 260px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .customer-card-preview-empty {
+            color: var(--muted, #7a8094);
+            font-size: 13px;
+        }
+    </style>
     <title data-i18n="customer.title">客户管理</title>
 </head>
 <body class="c-form-page">
@@ -86,6 +127,28 @@
     </div>
     <div class="c-dialog-body">
         <div class="form-grid">
+            <div class="form-field full customer-card-upload" id="card-upload-section">
+                <div class="customer-card-upload-head">
+                    <p class="c-panel-title" data-i18n="customer.card.title">名片上传</p>
+                    <p class="hint" data-i18n="customer.card.desc">上传名片图片后，可识别并自动填充联系人信息。</p>
+                </div>
+                <label class="c-field">
+                    <span data-i18n="customer.card.file">名片图片</span>
+                    <input id="edit-card-image" type="file" accept="image/*"/>
+                </label>
+                <div class="customer-card-upload-actions">
+                    <button class="c-btn c-btn-secondary c-btn-sm" id="btn-card-ocr-fill" type="button"
+                            data-i18n="customer.card.action.fill">识别并填充
+                    </button>
+                    <span class="hint" id="card-ocr-hint" data-i18n="customer.card.hint">支持 JPG / PNG / WEBP。</span>
+                </div>
+                <div class="customer-card-preview">
+                    <img id="card-preview-image" alt="名片预览" hidden/>
+                    <div class="customer-card-preview-empty" id="card-preview-empty" data-i18n="customer.card.preview_empty">
+                        暂无预览
+                    </div>
+                </div>
+            </div>
             <label class="c-field">
                 <span data-i18n="customer.table.company">公司名称</span>
                 <input id="edit-company" type="text"/>
@@ -210,6 +273,12 @@
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
     const contractHint = document.getElementById("contract-hint");
+    const cardUploadSection = document.getElementById("card-upload-section");
+    const cardImageInput = document.getElementById("edit-card-image");
+    const cardPreviewImage = document.getElementById("card-preview-image");
+    const cardPreviewEmpty = document.getElementById("card-preview-empty");
+    const cardOcrHint = document.getElementById("card-ocr-hint");
+    const cardOcrFillButton = document.getElementById("btn-card-ocr-fill");
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),
@@ -236,6 +305,45 @@
     let pageSize = 10;
     let totalPages = 1;
     let selectedCustomerIds = new Set();
+    let cardPreviewObjectUrl = "";
+
+    const setCardHintText = (key, fallback) => {
+        if (!cardOcrHint) return;
+        const value = t(key);
+        cardOcrHint.textContent = value === key ? fallback : value;
+    };
+
+    const setCardHintFormat = (key, vars, fallback) => {
+        if (!cardOcrHint) return;
+        const value = format(key, vars);
+        cardOcrHint.textContent = value === key ? fallback : value;
+    };
+
+    const resetCardPreview = () => {
+        if (cardPreviewObjectUrl) {
+            URL.revokeObjectURL(cardPreviewObjectUrl);
+            cardPreviewObjectUrl = "";
+        }
+        if (cardImageInput) cardImageInput.value = "";
+        if (cardPreviewImage) {
+            cardPreviewImage.hidden = true;
+            cardPreviewImage.removeAttribute("src");
+        }
+        if (cardPreviewEmpty) {
+            cardPreviewEmpty.hidden = false;
+        }
+        setCardHintText("customer.card.hint", "支持 JPG / PNG / WEBP。");
+    };
+
+    const applyCardResult = (result) => {
+        if (!result || typeof result !== "object") return;
+        if (result.company) editFields.company.value = result.company;
+        if (result.address) editFields.address.value = result.address;
+        if (result.name) editFields.contact1Name.value = result.name;
+        if (result.title) editFields.contact1Position.value = result.title;
+        if (result.email) editFields.contact1Email.value = result.email;
+        if (result.mobile || result.tel) editFields.contact1Phone.value = result.mobile || result.tel;
+    };
 
     const openDialog = (dialog) => {
         if (!dialog) return;
@@ -258,6 +366,8 @@
             editFields.contract.value = "";
             currentContract = "";
             contractHint.textContent = t("customer.contract.empty");
+            resetCardPreview();
+            if (cardUploadSection) cardUploadSection.hidden = false;
         }
     };
 
@@ -364,6 +474,8 @@
     const openEditDialog = (item) => {
         currentEditId = item ? item.id : null;
         dialogTitle.textContent = item ? t("customer.dialog.edit") : t("customer.dialog.create");
+        if (cardUploadSection) cardUploadSection.hidden = Boolean(item);
+        resetCardPreview();
         editFields.company.value = item?.company_name || "";
         editFields.address.value = item?.company_address || "";
         editFields.contract.value = "";
@@ -515,6 +627,72 @@
             ? format("customer.contract.pending", {name: file.name})
             : (currentContract ? format("customer.contract.uploaded", {name: currentContract}) : t("customer.contract.empty"));
     });
+
+    if (cardImageInput) {
+        cardImageInput.addEventListener("change", () => {
+            const file = cardImageInput.files && cardImageInput.files[0];
+            if (cardPreviewObjectUrl) {
+                URL.revokeObjectURL(cardPreviewObjectUrl);
+                cardPreviewObjectUrl = "";
+            }
+            if (!file) {
+                if (cardPreviewImage) {
+                    cardPreviewImage.hidden = true;
+                    cardPreviewImage.removeAttribute("src");
+                }
+                if (cardPreviewEmpty) cardPreviewEmpty.hidden = false;
+                setCardHintText("customer.card.hint", "支持 JPG / PNG / WEBP。");
+                return;
+            }
+            cardPreviewObjectUrl = URL.createObjectURL(file);
+            if (cardPreviewImage) {
+                cardPreviewImage.src = cardPreviewObjectUrl;
+                cardPreviewImage.hidden = false;
+            }
+            if (cardPreviewEmpty) cardPreviewEmpty.hidden = true;
+            setCardHintFormat("customer.card.selected", {name: file.name}, `已选择：${file.name}`);
+        });
+    }
+
+    if (cardOcrFillButton) {
+        cardOcrFillButton.addEventListener("click", () => {
+            const file = cardImageInput && cardImageInput.files && cardImageInput.files[0];
+            if (!file) {
+                alert(t("customer.card.alert.file_required"));
+                return;
+            }
+            cardOcrFillButton.disabled = true;
+            const normalText = t("customer.card.action.fill");
+            const processingText = t("customer.card.action.processing");
+            cardOcrFillButton.textContent = processingText === "customer.card.action.processing" ? "识别中..." : processingText;
+            setCardHintText("customer.card.processing", "正在识别，请稍候...");
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetchWithAuth("/api/customers/card-ocr", {
+                headers: {},
+                body: formData,
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    const payload = normalizeApiResponse(data);
+                    if (!payload.success) {
+                        throw new Error(payload.message || t("customer.card.alert.ocr_failed"));
+                    }
+                    applyCardResult(payload.data?.result || {});
+                    setCardHintText("customer.card.success", "识别成功，已自动填充。");
+                })
+                .catch((error) => {
+                    setCardHintText("customer.card.failed", "识别失败，请重试。");
+                    alert(error.message || t("customer.card.alert.ocr_failed"));
+                })
+                .finally(() => {
+                    cardOcrFillButton.disabled = false;
+                    cardOcrFillButton.textContent = normalText === "customer.card.action.fill" ? "识别并填充" : normalText;
+                });
+        });
+    }
 
     const uploadContract = (customerId, file) => {
         const formData = new FormData();

@@ -1,4 +1,6 @@
 import os
+import tempfile
+from pathlib import Path
 
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
@@ -54,6 +56,36 @@ def customer_contract_upload(request, customer_id):
     customer.save()
 
     return api_success(data={"path": filename})
+
+
+@csrf_exempt
+@require_POST
+def customer_card_ocr_api(request):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error(status=401, message="employee id is required")
+
+    upload = request.FILES.get("file")
+    if not upload:
+        return api_error("Missing file")
+
+    suffix = Path(upload.name or "").suffix
+    temp_path = None
+    try:
+        from customer.card_ocr import parse_card
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            for chunk in upload.chunks():
+                temp_file.write(chunk)
+            temp_path = temp_file.name
+
+        result = parse_card(temp_path)
+        return api_success(data={"result": result})
+    except Exception as exc:
+        return api_error(f"OCR failed: {exc}")
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
 
 
 @csrf_exempt

@@ -15,6 +15,7 @@ from bpmatch.mailTool import test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
+from settings.LINE import test_line_connection
 from settings.activation_code import is_activation_code_valid
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
@@ -63,6 +64,12 @@ SECTION_DEFAULTS = {
         "account_holder": "",
     },
     "sendmsg": [],
+    "line-notify": {
+        "channel_access_token": "",
+        "to_user_id": "",
+        "notification_disabled": False,
+        "timeout_seconds": 10,
+    },
     "activation": {
         "code": "",
         "expires_at": "",
@@ -269,6 +276,25 @@ def _handle_sendmsg(settings_payload, login_id):
     return _save_setting("sendmsg", normalized, login_id)
 
 
+def _handle_line_notify(settings_payload, login_id):
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+    timeout_raw = settings_payload.get("timeout_seconds", 10)
+    try:
+        timeout_seconds = int(timeout_raw or 10)
+    except (TypeError, ValueError):
+        return api_error("Invalid timeout_seconds")
+    normalized = {
+        "channel_access_token": str(settings_payload.get("channel_access_token") or "").strip(),
+        "to_user_id": str(settings_payload.get("to_user_id") or "").strip(),
+        "notification_disabled": bool(settings_payload.get("notification_disabled", False)),
+        "timeout_seconds": timeout_seconds,
+    }
+    if normalized["timeout_seconds"] < 1:
+        return api_error("Invalid timeout_seconds")
+    return _save_setting("line-notify", normalized, login_id)
+
+
 def _handle_bank_account(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
@@ -464,6 +490,7 @@ SECTION_HANDLERS = {
     "backup": _handle_backup,
     "bank-account": _handle_bank_account,
     "sendmsg": _handle_sendmsg,
+    "line-notify": _handle_line_notify,
     "activation": _handle_activation,
 }
 
@@ -766,6 +793,37 @@ def sys_settings_sendmsg_test_api(request):
             username=email,
             password=password,
         )
+    except Exception as exc:
+        return api_error(str(exc))
+
+    return api_success(data=result)
+
+
+@csrf_exempt
+@require_POST
+def sys_settings_line_notify_test_api(request):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        payload = {}
+
+    channel_access_token = str(payload.get("channel_access_token") or "").strip() or None
+    to_user_id = str(payload.get("to_user_id") or "").strip() or None
+    timeout_raw = payload.get("timeout_seconds")
+    timeout = None
+    if timeout_raw not in (None, ""):
+        try:
+            timeout = int(timeout_raw)
+        except (TypeError, ValueError):
+            return api_error("Invalid timeout_seconds")
+        if timeout < 1:
+            return api_error("Invalid timeout_seconds")
+
+    try:
+        result = test_line_connection()
     except Exception as exc:
         return api_error(str(exc))
 

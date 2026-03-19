@@ -67,8 +67,6 @@ SECTION_DEFAULTS = {
     "line-notify": {
         "channel_access_token": "",
         "to_user_id": "",
-        "notification_disabled": False,
-        "timeout_seconds": 10,
     },
     "activation": {
         "code": "",
@@ -279,19 +277,10 @@ def _handle_sendmsg(settings_payload, login_id):
 def _handle_line_notify(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
-    timeout_raw = settings_payload.get("timeout_seconds", 10)
-    try:
-        timeout_seconds = int(timeout_raw or 10)
-    except (TypeError, ValueError):
-        return api_error("Invalid timeout_seconds")
     normalized = {
         "channel_access_token": str(settings_payload.get("channel_access_token") or "").strip(),
         "to_user_id": str(settings_payload.get("to_user_id") or "").strip(),
-        "notification_disabled": bool(settings_payload.get("notification_disabled", False)),
-        "timeout_seconds": timeout_seconds,
     }
-    if normalized["timeout_seconds"] < 1:
-        return api_error("Invalid timeout_seconds")
     return _save_setting("line-notify", normalized, login_id)
 
 
@@ -812,18 +801,12 @@ def sys_settings_line_notify_test_api(request):
 
     channel_access_token = str(payload.get("channel_access_token") or "").strip() or None
     to_user_id = str(payload.get("to_user_id") or "").strip() or None
-    timeout_raw = payload.get("timeout_seconds")
-    timeout = None
-    if timeout_raw not in (None, ""):
-        try:
-            timeout = int(timeout_raw)
-        except (TypeError, ValueError):
-            return api_error("Invalid timeout_seconds")
-        if timeout < 1:
-            return api_error("Invalid timeout_seconds")
 
     try:
-        result = test_line_connection()
+        result = test_line_connection(
+            user_id=to_user_id,
+            channel_access_token=channel_access_token,
+        )
     except Exception as exc:
         return api_error(str(exc))
 

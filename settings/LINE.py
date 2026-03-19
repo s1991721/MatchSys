@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -8,11 +8,10 @@ LINE_SETTING_SECTION = "line-notify"
 # sys_settings.settings 的字段名
 LINE_SETTING_KEY_ACCESS_TOKEN = "channel_access_token"
 LINE_SETTING_KEY_TO_USER_ID = "to_user_id"
-LINE_SETTING_KEY_NOTIFY_DISABLED = "notification_disabled"
-LINE_SETTING_KEY_REQUEST_TIMEOUT = "timeout_seconds"
 
 # API 基础地址（一般无需修改）
 LINE_API_BASE_URL = "https://api.line.me"
+LINE_REQUEST_TIMEOUT_SECONDS = 10
 
 
 class LineSendError(Exception):
@@ -41,7 +40,9 @@ def _line_headers(channel_access_token: str) -> Dict[str, str]:
 
 
 def send_line_messages(
-        messages: List[Dict[str, Any]]
+        messages: List[Dict[str, Any]],
+        user_id: Optional[str] = None,
+        channel_access_token: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     使用 LINE Messaging API Push Message 发送消息。
@@ -50,16 +51,18 @@ def send_line_messages(
         raise LineSendError("messages must be a non-empty list")
 
     settings = _get_line_settings_from_db()
-    target_id = settings.get(LINE_SETTING_KEY_TO_USER_ID)
-    token = settings.get(LINE_SETTING_KEY_ACCESS_TOKEN)
-    notify_disabled = settings.get(LINE_SETTING_KEY_NOTIFY_DISABLED)
-    request_timeout = settings.get(LINE_SETTING_KEY_REQUEST_TIMEOUT)
+    target_id = (user_id or settings.get(LINE_SETTING_KEY_TO_USER_ID) or "").strip()
+    token = (channel_access_token or settings.get(LINE_SETTING_KEY_ACCESS_TOKEN) or "").strip()
+    if not target_id:
+        raise LineSendError("Missing LINE target id")
+    if not token:
+        raise LineSendError("Missing LINE channel access token")
 
     url = f"{LINE_API_BASE_URL.rstrip('/')}/v2/bot/message/push"
     payload = {
         "to": target_id,
         "messages": messages,
-        "notificationDisabled": notify_disabled,
+        "notificationDisabled": False,
     }
 
     try:
@@ -67,7 +70,7 @@ def send_line_messages(
             url,
             headers=_line_headers(token),
             json=payload,
-            timeout=request_timeout,
+            timeout=LINE_REQUEST_TIMEOUT_SECONDS,
         )
     except requests.RequestException as exc:
         raise LineSendError(f"LINE request failed: {exc}") from exc
@@ -88,13 +91,26 @@ def send_line_messages(
 
 
 def send_line_text(
-        text: str
+        text: str,
+        user_id: Optional[str] = None,
+        channel_access_token: Optional[str] = None,
 ) -> Dict[str, Any]:
     if not str(text or "").strip():
         raise LineSendError("text is empty")
 
-    return send_line_messages(messages=[{"type": "text", "text": str(text)}])
+    return send_line_messages(
+        messages=[{"type": "text", "text": str(text)}],
+        user_id=user_id,
+        channel_access_token=channel_access_token,
+    )
 
 
-def test_line_connection():
-    send_line_text("LINE connection test")
+def test_line_connection(
+    user_id: Optional[str] = None,
+    channel_access_token: Optional[str] = None,
+):
+    return send_line_text(
+        "LINE connection test",
+        user_id=user_id,
+        channel_access_token=channel_access_token,
+    )

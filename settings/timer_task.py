@@ -14,6 +14,7 @@ from bpmatch.gmailTool import GmailTool
 from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_today_my_mails_from_imap
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
 from settings.activation_code import is_activation_code_valid
+from settings.LINE import send_line_text
 from settings.models import SysSettings
 
 
@@ -99,6 +100,45 @@ def _get_cycle_days():
     except (TypeError, ValueError):
         return DEFAULT_CYCLE_DAYS
     return value if value > 0 else DEFAULT_CYCLE_DAYS
+
+
+def _build_project_ingest_line_message(mail: dict, country: str, skills: str, price):
+    title = str(mail.get("subject") or "").strip()
+    sender = str(mail.get("from") or "").strip()
+    mail_date = str(mail.get("date") or "").strip()
+
+    title = title if title else "（无标题）"
+    sender = sender if sender else "（未知发件人）"
+    country = country if str(country or "").strip() else "-"
+    skills = skills if str(skills or "").strip() else "-"
+    price_text = "-"
+    if price is not None:
+        try:
+            price_text = f"{float(price):,.0f}"
+        except Exception:
+            price_text = str(price)
+
+    return (
+        "【Project邮件入库通知】\n"
+        f"标题: {title}\n"
+        f"发件人: {sender}\n"
+        f"邮件时间: {mail_date or '-'}\n"
+        f"国家: {country}\n"
+        f"技能: {skills}\n"
+        f"单价: {price_text}"
+    )
+
+
+def _notify_project_ingested(mail: dict, country: str, skills: str, price):
+    message = _build_project_ingest_line_message(mail, country, skills, price)
+    try:
+        send_line_text(message)
+    except Exception as exc:
+        logger_save.warning(
+            "time_to_save line notify failed message_id=%s error=%s",
+            mail.get("message_id_header"),
+            str(exc),
+        )
 
 
 def run_time_to_save():
@@ -209,6 +249,11 @@ def run_time_to_save():
                 SavedMailInfo.objects.create(
                     id=mail.get("message_id_header"),
                     date=mail.get("date"),
+                )
+                transaction.on_commit(
+                    lambda _mail=mail, _country=country, _skills=skills, _price=price: _notify_project_ingested(
+                        _mail, _country, _skills, _price
+                    )
                 )
 
         for mail in technician_list:

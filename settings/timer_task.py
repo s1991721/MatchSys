@@ -103,6 +103,7 @@ def _get_cycle_days():
 
 
 def _build_project_ingest_line_message(mail: dict, country: str, skills: str, price):
+    # todo 做成案件描述通知、附上链接，单击链接进入系统案件详情页
     title = str(mail.get("subject") or "").strip()
     sender = str(mail.get("from") or "").strip()
     mail_date = str(mail.get("date") or "").strip()

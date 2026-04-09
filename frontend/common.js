@@ -10,6 +10,80 @@
         return value === key ? fallback : value;
     };
 
+    const LOCALIZED_FILE_SKIP_SELECTOR = [
+        ".songxin-upload-bar",
+        ".file-picker",
+        "[data-file-i18n-skip='1']",
+    ].join(", ");
+
+    const ensureFileInputId = (input, index) => {
+        if (input.id) return input.id;
+        let generated = `file-input-${index}`;
+        let suffix = 1;
+        while (document.getElementById(generated)) {
+            generated = `file-input-${index}-${suffix}`;
+            suffix += 1;
+        }
+        input.id = generated;
+        return generated;
+    };
+
+    const getLocalizedNoFileText = () => resolveLabel("common.file.none", "未选择文件");
+
+    const formatSelectedFileText = (input) => {
+        const files = input && input.files ? Array.from(input.files) : [];
+        if (!files.length) return getLocalizedNoFileText();
+        const first = files[0] && files[0].name ? files[0].name : "";
+        if (files.length === 1) return first || getLocalizedNoFileText();
+        const rest = files.length - 1;
+        return `${first} +${rest}`;
+    };
+
+    const updateLocalizedFileText = (input) => {
+        if (!input) return;
+        const textEl = input.__localizedFileTextEl;
+        if (!textEl) return;
+        textEl.textContent = formatSelectedFileText(input);
+    };
+
+    const enhanceFileInput = (input, index) => {
+        if (!input || input.dataset.fileI18nEnhanced === "1") return;
+        if (input.closest(LOCALIZED_FILE_SKIP_SELECTOR)) return;
+        const inputId = ensureFileInputId(input, index);
+        const wrapper = document.createElement("div");
+        wrapper.className = "c-file-picker";
+        wrapper.setAttribute("data-file-i18n-wrapper", "1");
+
+        const trigger = document.createElement("label");
+        trigger.className = "c-btn c-btn-secondary c-btn-sm";
+        trigger.setAttribute("for", inputId);
+        trigger.setAttribute("data-i18n", "common.file.choose");
+        trigger.textContent = resolveLabel("common.file.choose", "选择文件");
+
+        const name = document.createElement("span");
+        name.className = "c-file-picker-name";
+        name.textContent = getLocalizedNoFileText();
+
+        wrapper.appendChild(trigger);
+        wrapper.appendChild(name);
+
+        input.classList.add("c-file-picker-native");
+        input.dataset.fileI18nEnhanced = "1";
+        input.__localizedFileTextEl = name;
+        input.addEventListener("change", () => updateLocalizedFileText(input));
+        input.insertAdjacentElement("afterend", wrapper);
+        updateLocalizedFileText(input);
+    };
+
+    const initLocalizedFileInputs = () => {
+        const fileInputs = document.querySelectorAll("input[type='file']");
+        fileInputs.forEach((input, index) => enhanceFileInput(input, index));
+        fileInputs.forEach((input) => updateLocalizedFileText(input));
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+
     const translateApiMessage = (message) => {
         if (!message || typeof message !== "string") return message;
         const missingFieldMatch = message.match(/^Missing field:\s*(.+)$/);
@@ -231,6 +305,13 @@
             onPageChange(btn.dataset.page || "");
         });
     };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initLocalizedFileInputs, { once: true });
+    } else {
+        initLocalizedFileInputs();
+    }
+    window.addEventListener("i18n:change", initLocalizedFileInputs);
 
     window.startMailUnreadPolling = function (options = {}) {
         const intervalMs = Math.max(60 * 1000, Number(options.intervalMs || 5 * 60 * 1000));

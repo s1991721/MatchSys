@@ -353,6 +353,31 @@ body > .page {
   font-size: 12px;
   margin-top: 6px;
 }
+
+.c-file-picker-native {
+  display: none;
+}
+
+.c-file-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid #d8dfec;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.c-file-picker-name {
+  flex: 1;
+  min-width: 0;
+  color: #4b5563;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 @media (max-width:900px) {
   .content-grid {
     grid-template-columns: 1fr;

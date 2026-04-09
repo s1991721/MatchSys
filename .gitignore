@@ -18,3 +18,5 @@ __pycache__/
 /.$ER.drawio.bkp
 /credentials/**
 /.vscode/
+/logs/
+/line_uploads/

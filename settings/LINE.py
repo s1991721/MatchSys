@@ -210,5 +210,60 @@ def send_line_text(
     )
 
 
+# LINE回复信息
+def reply_line_messages(
+        reply_token: str,
+        messages: List[Dict[str, Any]]
+) -> Dict[str, Any]:
+    if not isinstance(messages, list) or not messages:
+        raise LineSendError("messages must be a non-empty list")
+
+    rtoken = str(reply_token or "").strip()
+    if not rtoken:
+        raise LineSendError("reply_token is empty")
+
+    token = get_line_channel_access_token()
+    if not token:
+        raise LineSendError("Missing LINE channel access token")
+
+    url = f"{LINE_API_BASE_URL.rstrip('/')}/v2/bot/message/reply"
+    payload = {
+        "replyToken": rtoken,
+        "messages": messages,
+    }
+
+    try:
+        response = requests.post(
+            url,
+            headers=_line_headers(token),
+            json=payload,
+            timeout=LINE_REQUEST_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        raise LineSendError(f"LINE reply request failed: {exc}") from exc
+
+    if response.status_code >= 400:
+        detail: Any = ""
+        try:
+            detail = response.json()
+        except ValueError:
+            detail = response.text
+        raise LineSendError(f"LINE reply failed [{response.status_code}]: {detail}")
+
+    return {
+        "message": "LINE reply sent",
+        "status_code": response.status_code,
+    }
+
+
+def reply_line_text(reply_token: str, text: str) -> Dict[str, Any]:
+    if not str(text or "").strip():
+        raise LineSendError("text is empty")
+    return reply_line_messages(
+        reply_token=reply_token,
+        messages=[{"type": "text", "text": str(text)}],
+    )
+
+
 def test_line_connection():
     return send_line_text("LINE connection test")

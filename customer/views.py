@@ -17,6 +17,7 @@ from project.common_tools import contract_storage_dir, parse_json_body
 from settings.LINE import (
     get_line_message_content,
     get_line_channel_secret,
+    reply_line_text,
     verify_line_signature,
 )
 
@@ -119,7 +120,7 @@ def customer_card_ocr_api(request):
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
 
-# LINE webhook
+# LINE webhook 通过传送图片添加客户
 @csrf_exempt
 @require_POST
 def line_webhook_api(request):
@@ -157,6 +158,7 @@ def line_webhook_api(request):
             continue
 
         image_event_count += 1
+        reply_token = str(event.get("replyToken") or "").strip()
         message_id = str(message.get("id") or "").strip()
         if not message_id:
             errors.append("message_id is empty")
@@ -188,9 +190,19 @@ def line_webhook_api(request):
                     "size": content_length,
                 }
             )
+            if reply_token:
+                try:
+                    reply_line_text(reply_token, "已收到图片。")
+                except Exception:
+                    logger.exception("line webhook reply failed message_id=%s", message_id)
         except Exception:
             logger.exception("line webhook image download failed message_id=%s", message_id)
             errors.append(f"download failed: {message_id}")
+            if reply_token:
+                try:
+                    reply_line_text(reply_token, "图片接收失败，请稍后重试。")
+                except Exception:
+                    logger.exception("line webhook reply failed after download error message_id=%s", message_id)
 
     return api_success(
         data={

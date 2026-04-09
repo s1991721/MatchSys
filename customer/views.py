@@ -1,3 +1,5 @@
+import json
+import logging
 import os
 import tempfile
 from pathlib import Path
@@ -9,6 +11,13 @@ from customer.models import Customer
 from employee.models import Employee
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import contract_storage_dir, parse_json_body
+from settings.LINE import (
+    get_line_message_content,
+    get_line_channel_secret,
+    verify_line_signature,
+)
+
+logger = logging.getLogger(__name__)
 
 
 @require_GET
@@ -87,6 +96,65 @@ def customer_card_ocr_api(request):
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
+
+# LINE webhook
+@csrf_exempt
+@require_POST
+def line_webhook_api(request):
+    request_body = request.body or b""
+    signature = request.META.get("HTTP_X_LINE_SIGNATURE", "")
+    channel_secret = get_line_channel_secret()
+    if not channel_secret:
+        return api_error("Missing LINE channel secret", status=500)
+    if not verify_line_signature(request_body, signature, channel_secret):
+        return api_error("Invalid LINE signature", status=403)
+
+    try:
+        payload = json.loads(request_body.decode("utf-8") if request_body else "{}")
+    except json.JSONDecodeError:
+        return api_error("Invalid JSON body")
+
+    events = payload.get("events")
+    if not isinstance(events, list):
+        events = []
+
+    image_event_count = 0
+    downloaded_count = 0
+    errors = []
+
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        if event.get("type") != "message":
+            continue
+        message = event.get("message")
+        if not isinstance(message, dict) or message.get("type") != "image":
+            continue
+
+        image_event_count += 1
+        message_id = str(message.get("id") or "").strip()
+        if not message_id:
+            errors.append("message_id is empty")
+            continue
+
+        try:
+            content_result = get_line_message_content(message_id)
+            if content_result.get("content_length", 0) > 0:
+                downloaded_count += 1
+            else:
+                errors.append(f"empty image content: {message_id}")
+        except Exception:
+            logger.exception("line webhook image download failed message_id=%s", message_id)
+            errors.append(f"download failed: {message_id}")
+
+    return api_success(
+        data={
+            "received_events": len(events),
+            "image_events": image_event_count,
+            "downloaded_images": downloaded_count,
+            "errors": errors,
+        }
+    )
 
 
 @csrf_exempt

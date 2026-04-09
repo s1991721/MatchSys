@@ -1,41 +1,6 @@
 import logging
-import threading
 
-from settings.LINE import send_line_text
-from settings.models import SysSettings
-
-_LINE_NOTIFY_FILTER_CACHE_LOCK = threading.Lock()
-_LINE_NOTIFY_FILTER_CACHE = None
-
-
-# 内存缓存无效化
-def invalidate_line_notify_filter_cache():
-    global _LINE_NOTIFY_FILTER_CACHE
-    with _LINE_NOTIFY_FILTER_CACHE_LOCK:
-        _LINE_NOTIFY_FILTER_CACHE = None
-
-
-# 从数据库加载配置
-def _load_line_notify_filter_from_db():
-    record = SysSettings.objects.filter(name="line-notify", deleted_at__isnull=True).first()
-    if not record or not isinstance(record.settings, dict):
-        return {"nationality": -1, "skills": []}
-    settings_payload = record.settings
-    raw_skills = settings_payload.get("skills")
-    return {
-        "nationality": _normalize_line_notify_nationality(settings_payload.get("nationality", -1)),
-        "skills": _normalize_line_notify_skill_list(raw_skills),
-    }
-
-
-# 国籍限制转换 0、1
-def _normalize_line_notify_nationality(value):
-    # -1: 未设置, 0: 仅日本籍, 1: 外国籍可
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        return -1
-    return parsed if parsed in (-1, 0, 1) else -1
+from settings.LINE import get_line_notify_filter, send_line_text
 
 
 # 同意skills格式
@@ -51,19 +16,6 @@ def _normalize_line_notify_skill_list(value):
     for sep in ("，", ",", "/", "|", ";", "；"):
         normalized = normalized.replace(sep, "、")
     return [item.strip() for item in normalized.split("、") if item.strip()]
-
-
-# 送信过滤条件
-def _get_line_notify_filter():
-    global _LINE_NOTIFY_FILTER_CACHE
-    with _LINE_NOTIFY_FILTER_CACHE_LOCK:
-        if _LINE_NOTIFY_FILTER_CACHE is None:
-            _LINE_NOTIFY_FILTER_CACHE = _load_line_notify_filter_from_db()
-        # 返回副本，避免调用方修改缓存对象
-        return {
-            "nationality": _LINE_NOTIFY_FILTER_CACHE.get("nationality", -1),
-            "skills": list(_LINE_NOTIFY_FILTER_CACHE.get("skills", [])),
-        }
 
 
 # LINE 送信过滤技能关键词
@@ -113,7 +65,7 @@ logger_save = logging.getLogger("bpmatch.time_to_save")
 
 # LINE 送信前过滤
 def notify_project_ingested(mail: dict, country: str, skills: str, price):
-    line_filter = _get_line_notify_filter()
+    line_filter = get_line_notify_filter()
     nationality_filter = line_filter.get("nationality", -1)
     skill_filters = line_filter.get("skills", [])
 

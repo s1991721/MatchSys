@@ -15,7 +15,10 @@ from bpmatch.mailTool import test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
-from settings.LINE import test_line_connection
+from settings.LINE import (
+    invalidate_line_notify_filter_cache,
+    test_line_connection,
+)
 from settings.activation_code import is_activation_code_valid
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
@@ -25,7 +28,6 @@ from settings.timer_task import (
     run_time_to_hello,
     run_time_to_sync_my_mails,
 )
-from settings.mails_arrival_notification import invalidate_line_notify_filter_cache
 
 # 失败默认返回值
 SECTION_DEFAULTS = {
@@ -67,6 +69,7 @@ SECTION_DEFAULTS = {
     "sendmsg": [],
     "line-notify": {
         "channel_access_token": "",
+        "channel_secret": "",
         "to_user_id": "",
         "nationality": -1,
         "skills": [],
@@ -309,6 +312,8 @@ def _handle_line_notify(settings_payload, login_id):
 
     if "channel_access_token" in settings_payload:
         normalized["channel_access_token"] = str(settings_payload.get("channel_access_token") or "").strip()
+    if "channel_secret" in settings_payload:
+        normalized["channel_secret"] = str(settings_payload.get("channel_secret") or "").strip()
     if "to_user_id" in settings_payload:
         normalized["to_user_id"] = str(settings_payload.get("to_user_id") or "").strip()
     if "nationality" in settings_payload:

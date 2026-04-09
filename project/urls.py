@@ -55,6 +55,7 @@ from customer.views import (
     customer_detail_api,
     customer_contract_upload,
     customer_card_ocr_api,
+    line_webhook_api,
 )
 from employee.views import (
     change_password_api,
@@ -215,6 +216,7 @@ urlpatterns = [
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),
     path("api/customers/<int:customer_id>/contract", customer_contract_upload, name="customer-contract-upload"),
     path("api/customers/card-ocr", customer_card_ocr_api, name="customer-card-ocr"),
+    path("api/line/webhook", line_webhook_api, name="line-webhook"),
     # -------------------------------order API-------------------------------
     path("api/purchase-orders", purchase_orders_api, name="purchase-orders"),
     path("api/purchase-orders/<int:order_id>", purchase_order_detail_api, name="purchase-order-detail"),

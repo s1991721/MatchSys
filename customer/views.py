@@ -2,8 +2,11 @@ import json
 import logging
 import os
 import tempfile
+import uuid
+from datetime import datetime
 from pathlib import Path
 
+from django.conf import settings as django_settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
@@ -18,6 +21,25 @@ from settings.LINE import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _line_card_storage_dir() -> Path:
+    return Path(django_settings.BASE_DIR) / "line_uploads" / "cards"
+
+
+def _guess_image_suffix(content_type: str) -> str:
+    ctype = str(content_type or "").lower()
+    if "jpeg" in ctype or "jpg" in ctype:
+        return ".jpg"
+    if "png" in ctype:
+        return ".png"
+    if "webp" in ctype:
+        return ".webp"
+    if "gif" in ctype:
+        return ".gif"
+    if "bmp" in ctype:
+        return ".bmp"
+    return ".bin"
 
 
 @require_GET
@@ -121,6 +143,9 @@ def line_webhook_api(request):
     image_event_count = 0
     downloaded_count = 0
     errors = []
+    saved_files = []
+    base_dir = _line_card_storage_dir()
+    os.makedirs(base_dir, exist_ok=True)
 
     for event in events:
         if not isinstance(event, dict):
@@ -139,10 +164,30 @@ def line_webhook_api(request):
 
         try:
             content_result = get_line_message_content(message_id)
-            if content_result.get("content_length", 0) > 0:
-                downloaded_count += 1
-            else:
+            content = content_result.get("content") or b""
+            content_length = content_result.get("content_length", 0)
+            if content_length <= 0:
                 errors.append(f"empty image content: {message_id}")
+                continue
+
+            content_type = str(content_result.get("content_type") or "").strip()
+            suffix = _guess_image_suffix(content_type)
+            timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+            filename = f"line_{timestamp}_{message_id}_{uuid.uuid4().hex[:8]}{suffix}"
+            file_path = base_dir / filename
+            with open(file_path, "wb") as handle:
+                handle.write(content)
+
+            downloaded_count += 1
+            saved_files.append(
+                {
+                    "message_id": message_id,
+                    "content_type": content_type,
+                    "file_name": filename,
+                    "relative_path": str(Path("line_uploads") / "cards" / filename),
+                    "size": content_length,
+                }
+            )
         except Exception:
             logger.exception("line webhook image download failed message_id=%s", message_id)
             errors.append(f"download failed: {message_id}")
@@ -152,6 +197,7 @@ def line_webhook_api(request):
             "received_events": len(events),
             "image_events": image_event_count,
             "downloaded_images": downloaded_count,
+            "saved_files": saved_files,
             "errors": errors,
         }
     )

@@ -16,6 +16,7 @@ LINE_SETTING_KEY_CHANNEL_SECRET = "channel_secret"
 
 # API 基础地址（一般无需修改）
 LINE_API_BASE_URL = "https://api.line.me"
+LINE_DATA_API_BASE_URL = "https://api-data.line.me"
 LINE_REQUEST_TIMEOUT_SECONDS = 10
 
 
@@ -122,7 +123,7 @@ def get_line_message_content(
 
     token = get_line_channel_access_token()
 
-    url = f"{LINE_API_BASE_URL.rstrip('/')}/v2/bot/message/{mid}/content"
+    url = f"{LINE_DATA_API_BASE_URL.rstrip('/')}/v2/bot/message/{mid}/content"
     headers = {"Authorization": f"Bearer {token}"}
     try:
         response = requests.get(
@@ -135,7 +136,9 @@ def get_line_message_content(
 
     if response.status_code >= 400:
         detail: Any = response.text
-        raise LineSendError(f"LINE content fetch failed [{response.status_code}]: {detail}")
+        raise LineSendError(
+            f"LINE content fetch failed [{response.status_code}] message_id={mid}: {detail}"
+        )
 
     return {
         "message_id": mid,

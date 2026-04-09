@@ -25,6 +25,7 @@ from settings.timer_task import (
     run_time_to_hello,
     run_time_to_sync_my_mails,
 )
+from settings.mails_arrival_notification import invalidate_line_notify_filter_cache
 
 # 失败默认返回值
 SECTION_DEFAULTS = {
@@ -68,7 +69,7 @@ SECTION_DEFAULTS = {
         "channel_access_token": "",
         "to_user_id": "",
         "nationality": -1,
-        "skills": "",
+        "skills": [],
     },
     "activation": {
         "code": "",
@@ -280,6 +281,27 @@ def _handle_line_notify(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
 
+    def _normalize_nationality(value):
+        # -1: 未设置, 0: 仅日本籍, 1: 外国籍可
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return -1
+        return parsed if parsed in (-1, 0, 1) else -1
+
+    def _normalize_skills(value):
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+        raw = str(value).strip()
+        if not raw:
+            return []
+        normalized = raw
+        for sep in ("，", ",", "/", "|", ";", "；"):
+            normalized = normalized.replace(sep, "、")
+        return [item.strip() for item in normalized.split("、") if item.strip()]
+
     record = _get_setting("line-notify")
     normalized = SECTION_DEFAULTS["line-notify"].copy()
     if record and isinstance(record.settings, dict):
@@ -290,13 +312,16 @@ def _handle_line_notify(settings_payload, login_id):
     if "to_user_id" in settings_payload:
         normalized["to_user_id"] = str(settings_payload.get("to_user_id") or "").strip()
     if "nationality" in settings_payload:
-        normalized["nationality"] = int(settings_payload.get("nationality"))
+        normalized["nationality"] = _normalize_nationality(settings_payload.get("nationality"))
     else:
         normalized["nationality"] = -1
     if "skills" in settings_payload:
-        normalized["skills"] = str(settings_payload.get("skills") or "").strip()
+        skills_payload = settings_payload.get("skills")
+        normalized["skills"] = _normalize_skills(skills_payload)
 
-    return _save_setting("line-notify", normalized, login_id)
+    response = _save_setting("line-notify", normalized, login_id)
+    invalidate_line_notify_filter_cache()
+    return response
 
 
 def _handle_bank_account(settings_payload, login_id):

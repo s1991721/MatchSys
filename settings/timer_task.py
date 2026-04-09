@@ -14,8 +14,10 @@ from bpmatch.gmailTool import GmailTool
 from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_today_my_mails_from_imap
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
 from settings.activation_code import is_activation_code_valid
-from settings.LINE import send_line_text
+
 from settings.models import SysSettings
+
+from settings.mails_arrival_notification import notify_project_ingested
 
 
 def _ensure_time_to_save_logger(date_tag: str, logger: logging.Logger):
@@ -101,47 +103,7 @@ def _get_cycle_days():
         return DEFAULT_CYCLE_DAYS
     return value if value > 0 else DEFAULT_CYCLE_DAYS
 
-
-def _build_project_ingest_line_message(mail: dict, country: str, skills: str, price):
-    # todo 做成案件描述通知、附上链接，单击链接进入系统案件详情页
-    title = str(mail.get("subject") or "").strip()
-    sender = str(mail.get("from") or "").strip()
-    mail_date = str(mail.get("date") or "").strip()
-
-    title = title if title else "（无标题）"
-    sender = sender if sender else "（未知发件人）"
-    country = country if str(country or "").strip() else "-"
-    skills = skills if str(skills or "").strip() else "-"
-    price_text = "-"
-    if price is not None:
-        try:
-            price_text = f"{float(price):,.0f}"
-        except Exception:
-            price_text = str(price)
-
-    return (
-        "【Project邮件入库通知】\n"
-        f"标题: {title}\n"
-        f"发件人: {sender}\n"
-        f"邮件时间: {mail_date or '-'}\n"
-        f"国家: {country}\n"
-        f"技能: {skills}\n"
-        f"单价: {price_text}"
-    )
-
-
-def _notify_project_ingested(mail: dict, country: str, skills: str, price):
-    message = _build_project_ingest_line_message(mail, country, skills, price)
-    try:
-        send_line_text(message)
-    except Exception as exc:
-        logger_save.warning(
-            "time_to_save line notify failed message_id=%s error=%s",
-            mail.get("message_id_header"),
-            str(exc),
-        )
-
-
+# 定时处理营业邮件
 def run_time_to_save():
     date_tag = timezone.now().strftime("%Y-%m-%d")
     _ensure_time_to_save_logger(date_tag, logger_save)
@@ -252,7 +214,7 @@ def run_time_to_save():
                     date=mail.get("date"),
                 )
                 transaction.on_commit(
-                    lambda _mail=mail, _country=country, _skills=skills, _price=price: _notify_project_ingested(
+                    lambda _mail=mail, _country=country, _skills=skills, _price=price: notify_project_ingested(
                         _mail, _country, _skills, _price
                     )
                 )
@@ -294,7 +256,7 @@ def run_time_to_save():
 # -------------------------------------清理过期邮件
 logger_clean = logging.getLogger("bpmatch.time_to_clean")
 
-
+# 激活码验证
 def _validate_activation(logger: logging.Logger, task_name: str) -> bool:
     # 校验激活码是否存在且在有效期内
     activation_record = SysSettings.objects.filter(
@@ -317,7 +279,7 @@ def _validate_activation(logger: logging.Logger, task_name: str) -> bool:
         return False
     return True
 
-
+# 过期邮件清理
 def _clean_expired_mails():
     # 清理过期邮件（含日期为空的记录）
     cutoff = timezone.now() - timedelta(days=_get_cycle_days())
@@ -344,9 +306,9 @@ def _clean_expired_mails():
         timezone.localtime(cutoff).strftime("%Y-%m-%d %H:%M:%S"),
     )
 
-
+# 删除上个月及之前的考勤分表
 def _drop_expired_attendance_tables():
-    # 删除上个月及之前的考勤分表
+
     today = timezone.localdate()
     first_of_month = today.replace(day=1)
     last_month_date = first_of_month - timedelta(days=1)
@@ -379,7 +341,7 @@ def _drop_expired_attendance_tables():
         ",".join(sorted(to_drop)) if to_drop else "",
     )
 
-
+# 定时清理无用数据
 def run_time_to_clean():
     date_tag = timezone.now().strftime("%Y-%m-%d")
     _ensure_time_to_clean_logger(date_tag, logger_clean)
@@ -412,7 +374,7 @@ def run_time_to_hello():
 # -------------------------------------同步我的邮件
 logger_sync_my_mails = logging.getLogger("bpmatch.time_to_sync_my_mails")
 
-
+# 我的邮件（而非营业邮件）
 def run_time_to_sync_my_mails():
     date_tag = timezone.now().strftime("%Y-%m-%d")
     _ensure_time_to_sync_my_mails_logger(date_tag, logger_sync_my_mails)

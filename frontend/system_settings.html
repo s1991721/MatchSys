@@ -2086,7 +2086,7 @@
 
       const lineNotifySettings = await fetchSettings(sections.lineNotify, {});
       setLineNationalityCheckbox(lineNotifySettings.nationality);
-      setValue("line-condition-skill", lineNotifySettings.skill || "");
+      setValue("line-condition-skill", lineNotifySettings.skills || "");
       setValue("line-channel-access-token", lineNotifySettings.channel_access_token || "");
       setValue("line-to-user-id", lineNotifySettings.to_user_id || "");
       setInlineStatus("line-notify-status", "", false);

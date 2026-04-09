@@ -58,6 +58,7 @@ def customer_contract_upload(request, customer_id):
     return api_success(data={"path": filename})
 
 
+# 上传名片，添加客户
 @csrf_exempt
 @require_POST
 def customer_card_ocr_api(request):

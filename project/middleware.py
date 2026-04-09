@@ -49,6 +49,9 @@ class SessionLoginRequiredMiddleware:
         if path.startswith("/api/activation"):
             return True
 
+        if path.startswith("/api/line/webhook"):
+            return True
+
         return False
 
     @staticmethod

@@ -54,6 +54,8 @@ from customer.views import (
     customers_api,
     customer_detail_api,
     customer_contract_upload,
+    customer_card_ocr_api,
+    line_webhook_api,
 )
 from employee.views import (
     change_password_api,
@@ -89,6 +91,7 @@ from settings.views import (
     activation_validate_api,
     sys_settings_ai_test_api,
     sys_settings_gmail_test_api,
+    sys_settings_line_notify_test_api,
     sys_settings_sendmsg_test_api,
     sys_password_reset_api,
     sys_settings_section_api,
@@ -212,6 +215,8 @@ urlpatterns = [
     path("api/customers", customers_api, name="customer-list"),
     path("api/customers/<int:customer_id>", customer_detail_api, name="customer-detail"),
     path("api/customers/<int:customer_id>/contract", customer_contract_upload, name="customer-contract-upload"),
+    path("api/customers/card-ocr", customer_card_ocr_api, name="customer-card-ocr"),
+    path("api/line/webhook", line_webhook_api, name="line-webhook"),
     # -------------------------------order API-------------------------------
     path("api/purchase-orders", purchase_orders_api, name="purchase-orders"),
     path("api/purchase-orders/<int:order_id>", purchase_order_detail_api, name="purchase-order-detail"),
@@ -230,6 +235,7 @@ urlpatterns = [
     path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
     path("api/sys-settings/business-email/test", sys_settings_gmail_test_api, name="sys-settings-gmail-test"),
     path("api/sys-settings/sendmsg/test", sys_settings_sendmsg_test_api, name="sys-settings-sendmsg-test"),
+    path("api/sys-settings/line-notify/test", sys_settings_line_notify_test_api, name="sys-settings-line-notify-test"),
     path("api/sys-settings/ai/test", sys_settings_ai_test_api, name="sys-settings-ai-test"),
     path("api/sys-password-reset", sys_password_reset_api, name="sys-password-reset"),
     path("api/sys-tasks", sys_tasks_api, name="sys-tasks"),

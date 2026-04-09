@@ -15,6 +15,10 @@ from bpmatch.mailTool import test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
+from settings.LINE import (
+    invalidate_line_notify_filter_cache,
+    test_line_connection,
+)
 from settings.activation_code import is_activation_code_valid
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
@@ -35,6 +39,10 @@ SECTION_DEFAULTS = {
     },
     "match": {
         "cycle_days": 14,
+    },
+    "ocr": {
+        "ocr_filename": "",
+        "ocr_path": "",
     },
     "ai": {
         "model_type": "local",
@@ -59,6 +67,13 @@ SECTION_DEFAULTS = {
         "account_holder": "",
     },
     "sendmsg": [],
+    "line-notify": {
+        "channel_access_token": "",
+        "channel_secret": "",
+        "to_user_id": "",
+        "nationality": -1,
+        "skills": [],
+    },
     "activation": {
         "code": "",
         "expires_at": "",
@@ -168,6 +183,50 @@ def _handle_match(settings_payload, login_id):
     return _save_setting("match", {"cycle_days": cycle_days}, login_id)
 
 
+def _handle_ocr_upload(ocr_auth_file, login_id):
+    if not ocr_auth_file:
+        return api_error("Missing OCR auth file")
+
+    try:
+        ocr_auth_bytes = ocr_auth_file.read()
+        json.loads(ocr_auth_bytes.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return api_error("Invalid OCR auth JSON file")
+
+    base_dir = Path(django_settings.BASE_DIR)
+    credentials_dir = base_dir / "credentials"
+    credentials_dir.mkdir(parents=True, exist_ok=True)
+
+    ocr_target = credentials_dir / "ocr_credentials.json"
+    ocr_target.write_bytes(ocr_auth_bytes)
+
+    record = _get_setting("ocr")
+    merged = SECTION_DEFAULTS["ocr"].copy()
+    if record and isinstance(record.settings, dict):
+        merged.update(record.settings)
+    merged.update({
+        "ocr_filename": "ocr_credentials.json",
+        "ocr_path": str(Path("credentials") / "ocr_credentials.json"),
+    })
+    return _save_setting("ocr", merged, login_id)
+
+
+def _handle_ocr(settings_payload, login_id):
+    if settings_payload is None:
+        settings_payload = {}
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+    record = _get_setting("ocr")
+    merged = SECTION_DEFAULTS["ocr"].copy()
+    if record and isinstance(record.settings, dict):
+        merged.update(record.settings)
+    if "ocr_filename" in settings_payload:
+        merged["ocr_filename"] = str(settings_payload.get("ocr_filename") or "").strip()
+    if "ocr_path" in settings_payload:
+        merged["ocr_path"] = str(settings_payload.get("ocr_path") or "").strip()
+    return _save_setting("ocr", merged, login_id)
+
+
 def _handle_backup(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
@@ -219,6 +278,55 @@ def _handle_sendmsg(settings_payload, login_id):
             }
         )
     return _save_setting("sendmsg", normalized, login_id)
+
+
+def _handle_line_notify(settings_payload, login_id):
+    if not isinstance(settings_payload, dict):
+        return api_error("Invalid settings payload")
+
+    def _normalize_nationality(value):
+        # -1: 未设置, 0: 仅日本籍, 1: 外国籍可
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            return -1
+        return parsed if parsed in (-1, 0, 1) else -1
+
+    def _normalize_skills(value):
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
+        raw = str(value).strip()
+        if not raw:
+            return []
+        normalized = raw
+        for sep in ("，", ",", "/", "|", ";", "；"):
+            normalized = normalized.replace(sep, "、")
+        return [item.strip() for item in normalized.split("、") if item.strip()]
+
+    record = _get_setting("line-notify")
+    normalized = SECTION_DEFAULTS["line-notify"].copy()
+    if record and isinstance(record.settings, dict):
+        normalized.update(record.settings)
+
+    if "channel_access_token" in settings_payload:
+        normalized["channel_access_token"] = str(settings_payload.get("channel_access_token") or "").strip()
+    if "channel_secret" in settings_payload:
+        normalized["channel_secret"] = str(settings_payload.get("channel_secret") or "").strip()
+    if "to_user_id" in settings_payload:
+        normalized["to_user_id"] = str(settings_payload.get("to_user_id") or "").strip()
+    if "nationality" in settings_payload:
+        normalized["nationality"] = _normalize_nationality(settings_payload.get("nationality"))
+    else:
+        normalized["nationality"] = -1
+    if "skills" in settings_payload:
+        skills_payload = settings_payload.get("skills")
+        normalized["skills"] = _normalize_skills(skills_payload)
+
+    response = _save_setting("line-notify", normalized, login_id)
+    invalidate_line_notify_filter_cache()
+    return response
 
 
 def _handle_bank_account(settings_payload, login_id):
@@ -411,10 +519,12 @@ def _list_tasks():
 # 各个配置的处理方法
 SECTION_HANDLERS = {
     "match": _handle_match,
+    "ocr": _handle_ocr,
     "ai": _handle_ai,
     "backup": _handle_backup,
     "bank-account": _handle_bank_account,
     "sendmsg": _handle_sendmsg,
+    "line-notify": _handle_line_notify,
     "activation": _handle_activation,
 }
 
@@ -446,6 +556,13 @@ def sys_settings_section_api(request, section):
                 login_id,
             )
         # gmail认证文件上传end
+        if request.FILES.get("ocr_auth_file"):
+            if section != "ocr":
+                return api_error("Unsupported action for this section", status=405)
+            return _handle_ocr_upload(
+                request.FILES.get("ocr_auth_file"),
+                login_id,
+            )
 
         payload, error = parse_json_body(request)
         if error:
@@ -709,6 +826,31 @@ def sys_settings_sendmsg_test_api(request):
             port=smtp_port,
             username=email,
             password=password,
+        )
+    except Exception as exc:
+        return api_error(str(exc))
+
+    return api_success(data=result)
+
+
+@csrf_exempt
+@require_POST
+def sys_settings_line_notify_test_api(request):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        payload = {}
+
+    channel_access_token = str(payload.get("channel_access_token") or "").strip() or None
+    to_user_id = str(payload.get("to_user_id") or "").strip() or None
+
+    try:
+        result = test_line_connection(
+            user_id=to_user_id,
+            channel_access_token=channel_access_token,
         )
     except Exception as exc:
         return api_error(str(exc))

@@ -67,6 +67,8 @@ SECTION_DEFAULTS = {
     "line-notify": {
         "channel_access_token": "",
         "to_user_id": "",
+        "nationality": -1,
+        "skills": "",
     },
     "activation": {
         "code": "",
@@ -277,10 +279,23 @@ def _handle_sendmsg(settings_payload, login_id):
 def _handle_line_notify(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
         return api_error("Invalid settings payload")
-    normalized = {
-        "channel_access_token": str(settings_payload.get("channel_access_token") or "").strip(),
-        "to_user_id": str(settings_payload.get("to_user_id") or "").strip(),
-    }
+
+    record = _get_setting("line-notify")
+    normalized = SECTION_DEFAULTS["line-notify"].copy()
+    if record and isinstance(record.settings, dict):
+        normalized.update(record.settings)
+
+    if "channel_access_token" in settings_payload:
+        normalized["channel_access_token"] = str(settings_payload.get("channel_access_token") or "").strip()
+    if "to_user_id" in settings_payload:
+        normalized["to_user_id"] = str(settings_payload.get("to_user_id") or "").strip()
+    if "nationality" in settings_payload:
+        normalized["nationality"] = int(settings_payload.get("nationality"))
+    else:
+        normalized["nationality"] = -1
+    if "skills" in settings_payload:
+        normalized["skills"] = str(settings_payload.get("skills") or "").strip()
+
     return _save_setting("line-notify", normalized, login_id)
 
 

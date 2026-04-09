@@ -1158,16 +1158,25 @@
       };
     };
 
-    const collectLineNotifySettings = () => ({
-      channel_access_token: getValue("line-channel-access-token").trim(),
-      to_user_id: getValue("line-to-user-id").trim(),
-    });
+    const collectLineNotifySettings = () => {
+      const nationalityCheckbox = document.getElementById("line-condition-nationality-foreign-allow");
+      let nationality = -1;
+      if (nationalityCheckbox instanceof HTMLInputElement) {
+        nationality = nationalityCheckbox.checked ? 1 : 0;
+      }
+      return {
+        channel_access_token: getValue("line-channel-access-token").trim(),
+        to_user_id: getValue("line-to-user-id").trim(),
+        nationality,
+        skills: getValue("line-condition-skill").trim(),
+      };
+    };
 
     const setLineNationalityCheckbox = (value) => {
       const checkbox = document.getElementById("line-condition-nationality-foreign-allow");
       if (!(checkbox instanceof HTMLInputElement)) return;
       const normalized = String(value || "").trim();
-      checkbox.checked = normalized === "foreign_allowed" || normalized === "1" || normalized.toLowerCase() === "true";
+      checkbox.checked = normalized === "1" || normalized.toLowerCase() === "true";
     };
 
     const parseTimeParts = (timeValue) => {

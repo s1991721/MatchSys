@@ -10,6 +10,7 @@ from django.conf import settings as django_settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
+from customer.card_to_customer import process_uploaded_card_image
 from customer.models import Customer
 from employee.models import Employee
 from project.api import api_error, api_paginated, api_success
@@ -145,6 +146,7 @@ def line_webhook_api(request):
     downloaded_count = 0
     errors = []
     saved_files = []
+    processed_results = []
     base_dir = _line_card_storage_dir()
     os.makedirs(base_dir, exist_ok=True)
 
@@ -190,11 +192,15 @@ def line_webhook_api(request):
                     "size": content_length,
                 }
             )
-            if reply_token:
-                try:
-                    reply_line_text(reply_token, "已收到图片。")
-                except Exception:
-                    logger.exception("line webhook reply failed message_id=%s", message_id)
+            process_result = process_uploaded_card_image(str(file_path), reply_token)
+            processed_results.append(
+                {
+                    "message_id": message_id,
+                    "relative_path": str(Path("line_uploads") / "cards" / filename),
+                    "process": process_result,
+                }
+            )
+
         except Exception:
             logger.exception("line webhook image download failed message_id=%s", message_id)
             errors.append(f"download failed: {message_id}")
@@ -210,6 +216,7 @@ def line_webhook_api(request):
             "image_events": image_event_count,
             "downloaded_images": downloaded_count,
             "saved_files": saved_files,
+            "processed_results": processed_results,
             "errors": errors,
         }
     )

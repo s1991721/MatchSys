@@ -37,6 +37,58 @@
       display: none;
     }
 
+    .line-notify-conditions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      padding: 14px 16px;
+      border: 1px solid #dbe4f0;
+      border-radius: 14px;
+      background: #f8fafd;
+    }
+
+    .line-notify-condition-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .line-notify-condition-item label {
+      margin: 0;
+    }
+
+    .line-notify-radio-group {
+      display: flex;
+      align-items: center;
+      min-height: 52px;
+      border: 1px solid #cfd8e3;
+      border-radius: 12px;
+      padding: 0 14px;
+      background: #fff;
+    }
+
+    .line-notify-radio-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #4b5563;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .line-notify-radio-option input {
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .line-notify-conditions {
+        grid-template-columns: 1fr;
+      }
+    }
+
   </style>
   <title data-i18n="nav.system_settings">系统设置</title>
 </head>
@@ -201,6 +253,7 @@
           <h2 class="c-card-title" data-i18n="system_settings.line_notify.title">LINE通知</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.line_notify.desc">配置 LINE Messaging API 的推送参数。</p>
           <form class="form-grid form-grid-spaced">
+
             <div class="form-field full">
               <label for="line-channel-access-token" data-i18n="system_settings.line_notify.channel_access_token">Channel Access Token</label>
               <input id="line-channel-access-token" type="text" autocomplete="off" placeholder="请输入 LINE Channel Access Token" data-i18n-placeholder="system_settings.line_notify.channel_access_token_placeholder" />
@@ -208,6 +261,27 @@
             <div class="form-field full">
               <label for="line-to-user-id" data-i18n="system_settings.line_notify.to_user_id">默认接收者 User ID</label>
               <input id="line-to-user-id" type="text" autocomplete="off" placeholder="请输入接收者 User ID" data-i18n-placeholder="system_settings.line_notify.to_user_id_placeholder" />
+            </div>
+
+            <div class="form-field full">
+              <div class="hint" data-i18n="system_settings.line_notify.conditions_desc">推送条件：可按国籍与技能填写筛选条件。</div>
+            </div>
+            <div class="form-field full">
+              <div class="line-notify-conditions">
+                <div class="line-notify-condition-item">
+                  <label for="line-condition-nationality-foreign-allow" data-i18n="system_settings.line_notify.condition_nationality">国籍</label>
+                  <div class="line-notify-radio-group" id="line-condition-nationality">
+                    <label class="line-notify-radio-option" for="line-condition-nationality-foreign-allow">
+                      <input id="line-condition-nationality-foreign-allow" type="checkbox" name="line-condition-nationality" value="foreign_allowed" />
+                      <span data-i18n="system_settings.line_notify.condition_nationality_foreign_allowed">外国籍可</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="line-notify-condition-item">
+                  <label for="line-condition-skill" data-i18n="system_settings.line_notify.condition_skill">技能</label>
+                  <input id="line-condition-skill" type="text" autocomplete="off" placeholder="例如：Python、Java、Spring" data-i18n-placeholder="system_settings.line_notify.condition_skill_placeholder" />
+                </div>
+              </div>
             </div>
             <div class="form-actions">
               <button class="c-btn c-btn-secondary" type="button" id="line-notify-test" data-i18n="system_settings.common.test">连接测试</button>
@@ -1088,6 +1162,13 @@
       channel_access_token: getValue("line-channel-access-token").trim(),
       to_user_id: getValue("line-to-user-id").trim(),
     });
+
+    const setLineNationalityCheckbox = (value) => {
+      const checkbox = document.getElementById("line-condition-nationality-foreign-allow");
+      if (!(checkbox instanceof HTMLInputElement)) return;
+      const normalized = String(value || "").trim();
+      checkbox.checked = normalized === "foreign_allowed" || normalized === "1" || normalized.toLowerCase() === "true";
+    };
 
     const parseTimeParts = (timeValue) => {
       if (!timeValue) return null;
@@ -1995,6 +2076,8 @@
       updateActivationHint();
 
       const lineNotifySettings = await fetchSettings(sections.lineNotify, {});
+      setLineNationalityCheckbox(lineNotifySettings.nationality);
+      setValue("line-condition-skill", lineNotifySettings.skill || "");
       setValue("line-channel-access-token", lineNotifySettings.channel_access_token || "");
       setValue("line-to-user-id", lineNotifySettings.to_user_id || "");
       setInlineStatus("line-notify-status", "", false);

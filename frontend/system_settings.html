@@ -259,6 +259,10 @@
               <input id="line-channel-access-token" type="text" autocomplete="off" placeholder="请输入 LINE Channel Access Token" data-i18n-placeholder="system_settings.line_notify.channel_access_token_placeholder" />
             </div>
             <div class="form-field full">
+              <label for="line-channel-secret" data-i18n="system_settings.line_notify.channel_secret">Channel Secret</label>
+              <input id="line-channel-secret" type="text" autocomplete="off" placeholder="请输入 LINE Channel Secret" data-i18n-placeholder="system_settings.line_notify.channel_secret_placeholder" />
+            </div>
+            <div class="form-field full">
               <label for="line-to-user-id" data-i18n="system_settings.line_notify.to_user_id">默认接收者 User ID</label>
               <input id="line-to-user-id" type="text" autocomplete="off" placeholder="请输入接收者 User ID" data-i18n-placeholder="system_settings.line_notify.to_user_id_placeholder" />
             </div>
@@ -1166,6 +1170,7 @@
       }
       return {
         channel_access_token: getValue("line-channel-access-token").trim(),
+        channel_secret: getValue("line-channel-secret").trim(),
         to_user_id: getValue("line-to-user-id").trim(),
         nationality,
         skills: getValue("line-condition-skill").trim(),
@@ -2088,6 +2093,7 @@
       setLineNationalityCheckbox(lineNotifySettings.nationality);
       setValue("line-condition-skill", lineNotifySettings.skills || "");
       setValue("line-channel-access-token", lineNotifySettings.channel_access_token || "");
+      setValue("line-channel-secret", lineNotifySettings.channel_secret || "");
       setValue("line-to-user-id", lineNotifySettings.to_user_id || "");
       setInlineStatus("line-notify-status", "", false);
     };

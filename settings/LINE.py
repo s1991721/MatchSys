@@ -1,7 +1,6 @@
 import base64
 import hashlib
 import hmac
-import threading
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -24,7 +23,6 @@ class LineSendError(Exception):
     """LINE 送信错误。"""
 
 
-_LINE_SETTINGS_CACHE_LOCK = threading.Lock()
 _LINE_SETTINGS_CACHE: Optional[Dict[str, Any]] = None
 
 
@@ -34,8 +32,7 @@ def invalidate_line_notify_filter_cache():
     line-notify 配置更新后，清理相关缓存。
     """
     global _LINE_SETTINGS_CACHE
-    with _LINE_SETTINGS_CACHE_LOCK:
-        _LINE_SETTINGS_CACHE = None
+    _LINE_SETTINGS_CACHE = None
 
 
 # 加载DB数据到缓存
@@ -56,23 +53,21 @@ def _load_line_settings_from_db() -> Dict[str, Any]:
 # 从缓存获取配置
 def _get_line_settings_from_cache() -> Dict[str, Any]:
     global _LINE_SETTINGS_CACHE
-    with _LINE_SETTINGS_CACHE_LOCK:
-        if _LINE_SETTINGS_CACHE is None:
-            _LINE_SETTINGS_CACHE = _load_line_settings_from_db()
-        return dict(_LINE_SETTINGS_CACHE)
+    if _LINE_SETTINGS_CACHE is None:
+        _LINE_SETTINGS_CACHE = _load_line_settings_from_db()
+    return dict(_LINE_SETTINGS_CACHE)
 
 
 # 获取过滤配置
 def get_line_notify_filter() -> Dict[str, Any]:
     global _LINE_SETTINGS_CACHE
-    with _LINE_SETTINGS_CACHE_LOCK:
-        if _LINE_SETTINGS_CACHE is None:
-            _get_line_settings_from_cache()
+    if _LINE_SETTINGS_CACHE is None:
+        _get_line_settings_from_cache()
 
-        return {
-            "nationality": _LINE_SETTINGS_CACHE.get("nationality", -1),
-            "skills": list(_LINE_SETTINGS_CACHE.get("skills", [])),
-        }
+    return {
+        "nationality": _LINE_SETTINGS_CACHE.get("nationality", -1),
+        "skills": list(_LINE_SETTINGS_CACHE.get("skills", [])),
+    }
 
 
 # 构造请求头

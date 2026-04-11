@@ -24,6 +24,7 @@ from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
 from settings.timer_task import (
     run_time_to_save,
+    run_time_to_save_day,
     run_time_to_clean,
     run_time_to_hello,
     run_time_to_sync_my_mails,
@@ -898,10 +899,23 @@ def sys_settings_ai_test_api(request):
 
 @csrf_exempt
 @require_POST
-# 定时刷新数据库中的案件及技术者信息
+# 夜间定时刷新数据库中的案件及技术者信息
 def time_to_save(request):
     thread = threading.Thread(
         target=run_time_to_save,
+        name="time_to_save",
+        daemon=True,
+    )
+    thread.start()
+    return api_success()
+
+
+@csrf_exempt
+@require_POST
+# 日间定时刷新数据库中的案件及技术者信息，仅当天
+def time_to_save_day(request):
+    thread = threading.Thread(
+        target=run_time_to_save_day,
         name="time_to_save",
         daemon=True,
     )

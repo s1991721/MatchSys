@@ -125,7 +125,7 @@ def _parse_detail(value: str):
     return ("" if country is None else str(country), skills_text, price_value)
 
 
-# 定时处理营业邮件
+# 夜间定时处理营业邮件
 def run_time_to_save():
     _ensure_logger(logger_save)
     if not _validate_activation(logger_save, "time_to_save"):
@@ -236,6 +236,116 @@ def run_time_to_save():
                      (timezone.now() - started_at).total_seconds(), )
     close_old_connections()
 
+
+# 日间定时处理营业邮件
+def run_time_to_save_day():
+    _ensure_logger(logger_save)
+    if not _validate_activation(logger_save, "time_to_save_day"):
+        return
+    close_old_connections()
+    # 开始工作的时间
+    started_at = timezone.now()
+    logger_save.info("time_to_save_day started at %s", timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"))
+
+    # 日间同步只处理当天邮件，避免白天定时任务重复回扫历史周期
+    start_date = timezone.now().date()
+    end_date = start_date
+    gmail = GmailTool()
+
+    page = 1
+    page_size = 100
+    mail_list = []
+
+    # 获取邮件
+    while True:
+        messages, has_next, _ = gmail.fetch_new_messages(
+            page=page,
+            page_size=page_size,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        mail_list.extend(messages)
+        logger_save.info("time_to_save_day fetched page=%s count=%s", page, len(messages))
+        if not has_next:
+            break
+        page += 1
+
+    # 邮件分类
+    project_list = []
+    technician_list = []
+    for mail in mail_list:
+        title = mail.get("subject") or ""
+        label = llmsTool.title_analysis(title)
+        label_str = str(label).strip()
+        if label_str == "0":
+            project_list.append(mail)
+        elif label_str == "1":
+            technician_list.append(mail)
+
+    logger_save.info("time_to_save_day classified total=%s projects=%s technicians=%s",
+                     len(mail_list), len(project_list), len(technician_list), )
+
+    # 案件邮件落库
+    for mail in project_list:
+        try:
+            with transaction.atomic():
+                detail_json = llmsTool.qiuren_detail_analysis(mail.get("body") or "")
+                country, skills, price = _parse_detail(detail_json)
+                MailProjectInfo.objects.create(
+                    id=mail.get("id"),
+                    title=mail.get("subject") or "",
+                    address=mail.get("from") or "",
+                    body=mail.get("body") or "",
+                    files="",
+                    date=_parse_datetime(mail.get("date") or ""),
+                    remark="",
+                    country=country,
+                    skills=skills,
+                    price=price,
+                )
+                SavedMailInfo.objects.create(
+                    id=mail.get("id"),
+                    date=mail.get("date"),
+                )
+                transaction.on_commit(
+                    lambda _mail=mail, _country=country, _skills=skills, _price=price: notify_project_ingested(
+                        _mail, _country, _skills, _price
+                    )
+                )
+        except Exception:
+            logger_save.exception("time_to_save_day project failed from:%s subject:%s",
+                                  mail.get("from"), mail.get("subject"))
+
+    # 技术者邮件落库
+    for mail in technician_list:
+        try:
+            with transaction.atomic():
+                detail_json = llmsTool.qiuanjian_detail_analysis(mail.get("body") or "")
+                country, skills, price = _parse_detail(detail_json)
+                MailTechnicianInfo.objects.create(
+                    id=mail.get("id"),
+                    title=mail.get("subject") or "",
+                    address=mail.get("from") or "",
+                    body=mail.get("body") or "",
+                    files="",
+                    date=_parse_datetime(mail.get("date") or ""),
+                    remark="",
+                    country=country,
+                    skills=skills,
+                    price=price,
+                )
+                SavedMailInfo.objects.create(
+                    id=mail.get("id"),
+                    date=mail.get("date"),
+                )
+        except Exception:
+            logger_save.exception("time_to_save_day technician failed from:%s subject:%s",
+                                  mail.get("from"), mail.get("subject"))
+
+    logger_save.info("time_to_save_day finished total=%s projects=%s technicians=%s duration_s=%.2f",
+                     len(mail_list), len(project_list), len(technician_list),
+                     (timezone.now() - started_at).total_seconds(), )
+    close_old_connections()
 
 # -------------------------------------清理过期邮件
 logger_clean = logging.getLogger("bpmatch.time_to_clean")

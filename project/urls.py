@@ -17,8 +17,8 @@ Including another URLconf
 
 from django.conf import settings
 from django.urls import path
-from django.views.decorators.clickjacking import xframe_options_deny
 from django.views.decorators.cache import cache_control
+from django.views.decorators.clickjacking import xframe_options_deny
 from django.views.generic import TemplateView
 from django.views.generic.base import RedirectView
 from django.views.static import serve as static_serve
@@ -48,7 +48,6 @@ from bpmatch.views import (
     send_mail,
     send_history,
 )
-from data_analysis.views import analysis_stats_api, home_match_stats_api
 from customer.views import (
     employee_names_api,
     customers_api,
@@ -57,6 +56,7 @@ from customer.views import (
     customer_card_ocr_api,
     line_webhook_api,
 )
+from data_analysis.views import analysis_stats_api, home_match_stats_api
 from employee.views import (
     change_password_api,
     employee_detail_api,
@@ -98,6 +98,7 @@ from settings.views import (
     sys_tasks_api,
     sys_task_logs_api,
     time_to_save,
+    time_to_save_day,
     time_to_clean,
     time_to_backup,
     time_to_hello,
@@ -163,7 +164,8 @@ urlpatterns = [
     ),
     path(
         "i18n.js",
-        cache_static_asset(TemplateView.as_view(template_name="frontend/i18n.js", content_type="application/javascript")),
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/i18n.js", content_type="application/javascript")),
     ),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
@@ -241,6 +243,7 @@ urlpatterns = [
     path("api/sys-tasks", sys_tasks_api, name="sys-tasks"),
     path("api/sys-tasks/logs", sys_task_logs_api, name="sys-task-logs"),
     path("api/time-to-save", time_to_save, name="time_to_save"),
+    path("api/time-to-save-day", time_to_save_day, name="time_to_save"),
     path("api/time-to-clean", time_to_clean, name="time_to_clean"),
     path("api/time-to-backup", time_to_backup, name="time_to_backup"),
     path("api/time-to-hello", time_to_hello, name="time_to_hello"),

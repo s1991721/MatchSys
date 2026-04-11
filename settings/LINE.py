@@ -23,6 +23,7 @@ class LineSendError(Exception):
     """LINE 送信错误。"""
 
 
+# 内存缓存LINE 配置
 _LINE_SETTINGS_CACHE: Optional[Dict[str, Any]] = None
 
 
@@ -143,6 +144,7 @@ def get_line_message_content(
     }
 
 
+# LINE 送信
 def send_line_messages(
         messages: List[Dict[str, Any]]
 ) -> Dict[str, Any]:
@@ -162,36 +164,7 @@ def send_line_messages(
     if not token:
         raise LineSendError("Missing LINE channel access token")
 
-    url = f"{LINE_API_BASE_URL.rstrip('/')}/v2/bot/message/push"
-    payload = {
-        "to": target_id,
-        "messages": messages,
-        "notificationDisabled": False,
-    }
-
-    try:
-        response = requests.post(
-            url,
-            headers=_line_headers(token),
-            json=payload,
-            timeout=LINE_REQUEST_TIMEOUT_SECONDS,
-        )
-    except requests.RequestException as exc:
-        raise LineSendError(f"LINE request failed: {exc}") from exc
-
-    if response.status_code >= 400:
-        detail: Any = ""
-        try:
-            detail = response.json()
-        except ValueError:
-            detail = response.text
-        raise LineSendError(f"LINE send failed [{response.status_code}]: {detail}")
-
-    return {
-        "message": "LINE message sent",
-        "status_code": response.status_code,
-        "target_id": target_id,
-    }
+    return real_send_line_messages(messages, token, target_id)
 
 
 def send_line_text(
@@ -251,6 +224,7 @@ def reply_line_messages(
     }
 
 
+# 回信
 def reply_line_text(reply_token: str, text: str) -> Dict[str, Any]:
     if not str(text or "").strip():
         raise LineSendError("text is empty")
@@ -260,5 +234,41 @@ def reply_line_text(reply_token: str, text: str) -> Dict[str, Any]:
     )
 
 
-def test_line_connection():
-    return send_line_text("LINE connection test")
+# 测试链接
+def test_line_connection(channel_access_token: str, to_user_id: str):
+    messages = [{"type": "text", "text": str("LINE connection test")}]
+    return real_send_line_messages(messages, channel_access_token, to_user_id)
+
+
+# 真送信
+def real_send_line_messages(messages: List[Dict[str, Any]], token: str, target_id: str) -> Dict[str, Any]:
+    url = f"{LINE_API_BASE_URL.rstrip('/')}/v2/bot/message/push"
+    payload = {
+        "to": target_id,
+        "messages": messages,
+        "notificationDisabled": False,
+    }
+
+    try:
+        response = requests.post(
+            url,
+            headers=_line_headers(token),
+            json=payload,
+            timeout=LINE_REQUEST_TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        raise LineSendError(f"LINE request failed: {exc}") from exc
+
+    if response.status_code >= 400:
+        detail: Any = ""
+        try:
+            detail = response.json()
+        except ValueError:
+            detail = response.text
+        raise LineSendError(f"LINE send failed [{response.status_code}]: {detail}")
+
+    return {
+        "message": "LINE message sent",
+        "status_code": response.status_code,
+        "target_id": target_id,
+    }

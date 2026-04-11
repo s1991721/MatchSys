@@ -849,7 +849,7 @@ def sys_settings_line_notify_test_api(request):
     to_user_id = str(payload.get("to_user_id") or "").strip() or None
 
     try:
-        result = test_line_connection()
+        result = test_line_connection(channel_access_token, to_user_id)
     except Exception as exc:
         return api_error(str(exc))
 

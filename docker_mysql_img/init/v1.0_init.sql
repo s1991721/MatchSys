@@ -446,7 +446,7 @@ CREATE TABLE IF NOT EXISTS mail_project_info
     date    DATETIME COMMENT '日期',
     remark  VARCHAR(500) COMMENT '备注',
     country VARCHAR(100) COMMENT '国家 0=日本籍 1=日本籍以外',
-    skills  VARCHAR(255) COMMENT '技能要求',
+    skills  VARCHAR(500) COMMENT '技能要求',
     price   DECIMAL(10, 2) COMMENT '价格'
 ) COMMENT ='邮件案件表';
 
@@ -460,7 +460,7 @@ CREATE TABLE IF NOT EXISTS mail_technician_info
     date    DATETIME COMMENT '日期',
     remark  VARCHAR(500) COMMENT '备注',
     country VARCHAR(100) COMMENT '国家',
-    skills  VARCHAR(255) COMMENT '技能要求',
+    skills  VARCHAR(500) COMMENT '技能要求',
     price   DECIMAL(10, 2) COMMENT '价格'
 ) COMMENT ='邮件技术者表';
 
@@ -537,5 +537,5 @@ INSERT INTO sys_tasks (name,`time`,frequency,cron_expr,`method`,api,body,enabled
 	 ('夜间数据处理','01:00:00','每天','0 1 * * *','POST','/api/time-to-save','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 14:51:21',1,'2026-02-13 16:00:00',NULL),
 	 ('夜间过期数据清理','05:00:00','每天','0 5 * * *','POST','/api/time-to-clean','',1,'2026-01-10 20:00:00',NULL,'error','HTTP 500',1,'2026-01-04 15:20:48',1,'2026-01-10 20:00:00',NULL),
 	 ('重要数据备份','01:00:00','每周','0 1 * * 6','POST','/api/time-to-backup','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
-	 ('我的邮件定时同步','09:00:00','自定义 Cron','*/10 * * * *','POST','/api/time-to-sync-my-mails','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
+	 ('我的邮件定时同步','09:00:00','自定义 Cron','*/10 9-20 * * *','POST','/api/time-to-sync-my-mails','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
 	 ('测试hello','09:00:00','自定义 Cron','*/1 * * * *','POST','/api/time-to-hello','',0,'2026-01-09 01:38:00',NULL,'success','',1,'2026-01-04 15:46:16',1,'2026-01-09 01:38:23',NULL);

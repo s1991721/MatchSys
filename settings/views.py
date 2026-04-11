@@ -468,7 +468,8 @@ def _parse_log_date(value):
         return None
 
 
-def _collect_task_logs(task_id, limit, start_date=None, end_date=None, log_glob="scheduled_tasks.log*", task_filter=None):
+def _collect_task_logs(task_id, limit, start_date=None, end_date=None, log_glob="scheduled_tasks.log*",
+                       task_filter=None):
     logs_dir = Path(django_settings.BASE_DIR) / "logs"
     if not logs_dir.exists():
         return [], 0
@@ -848,10 +849,7 @@ def sys_settings_line_notify_test_api(request):
     to_user_id = str(payload.get("to_user_id") or "").strip() or None
 
     try:
-        result = test_line_connection(
-            user_id=to_user_id,
-            channel_access_token=channel_access_token,
-        )
+        result = test_line_connection()
     except Exception as exc:
         return api_error(str(exc))
 

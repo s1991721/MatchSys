@@ -181,7 +181,7 @@ def run_time_to_save():
                 detail_json = llmsTool.qiuren_detail_analysis(mail.get("body") or "")
                 country, skills, price = _parse_detail(detail_json)
                 MailProjectInfo.objects.create(
-                    id=mail.get("message_id_header"),
+                    id=mail.get("id"),
                     title=mail.get("subject") or "",
                     address=mail.get("from") or "",
                     body=mail.get("body") or "",
@@ -193,7 +193,7 @@ def run_time_to_save():
                     price=price,
                 )
                 SavedMailInfo.objects.create(
-                    id=mail.get("message_id_header"),
+                    id=mail.get("id"),
                     date=mail.get("date"),
                 )
                 transaction.on_commit(
@@ -212,7 +212,7 @@ def run_time_to_save():
                 detail_json = llmsTool.qiuanjian_detail_analysis(mail.get("body") or "")
                 country, skills, price = _parse_detail(detail_json)
                 MailTechnicianInfo.objects.create(
-                    id=mail.get("message_id_header"),
+                    id=mail.get("id"),
                     title=mail.get("subject") or "",
                     address=mail.get("from") or "",
                     body=mail.get("body") or "",
@@ -224,7 +224,7 @@ def run_time_to_save():
                     price=price,
                 )
                 SavedMailInfo.objects.create(
-                    id=mail.get("message_id_header"),
+                    id=mail.get("id"),
                     date=mail.get("date"),
                 )
         except Exception:

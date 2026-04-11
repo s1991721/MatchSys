@@ -66,10 +66,10 @@ logger_save = logging.getLogger("bpmatch.time_to_save")
 # LINE 送信前过滤
 def notify_project_ingested(mail: dict, country: str, skills: str, price):
     line_filter = get_line_notify_filter()
-    nationality_filter = line_filter.get("nationality", -1)
+    nationality_filter = int(line_filter.get("nationality", -1))
     skill_filters = line_filter.get("skills", [])
 
-    if country != nationality_filter:
+    if int(country) != nationality_filter:
         return
     if not _skills_match_line_filter(skills, skill_filters):
         return

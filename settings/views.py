@@ -701,7 +701,9 @@ def sys_task_logs_api(request):
     task_filter = None
     if task and task.api:
         api = task.api.strip()
-        if "time-to-save" in api:
+        if "time-to-save-day" in api:
+            log_glob = "time_to_save_day_*.log"
+        elif "time-to-save" in api:
             log_glob = "time_to_save_*.log"
         elif "time-to-clean" in api:
             log_glob = "time_to_clean_*.log"

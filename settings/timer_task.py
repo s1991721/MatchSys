@@ -19,11 +19,11 @@ from settings.models import SysSettings
 
 
 # 按日期初始化日志logger
-def _ensure_logger(logger: logging.Logger):
+def _ensure_logger(logger: logging.Logger, log_prefix: str):
     date_tag = timezone.now().strftime("%Y-%m-%d")
     logs_dir = os.path.join(django_settings.BASE_DIR, "logs")
     os.makedirs(logs_dir, exist_ok=True)
-    log_path = os.path.join(logs_dir, f"time_to_save_{date_tag}.log")
+    log_path = os.path.join(logs_dir, f"{log_prefix}_{date_tag}.log")
 
     for handler in logger.handlers:
         if isinstance(handler, logging.FileHandler) and handler.baseFilename == log_path:
@@ -67,6 +67,7 @@ def _validate_activation(logger: logging.Logger, task_name: str) -> bool:
 
 # -------------------------------------分析邮件
 logger_save = logging.getLogger("bpmatch.time_to_save")
+logger_save_day = logging.getLogger("bpmatch.time_to_save_day")
 
 # 默认周期天数
 DEFAULT_CYCLE_DAYS = 14
@@ -127,7 +128,7 @@ def _parse_detail(value: str):
 
 # 夜间定时处理营业邮件
 def run_time_to_save():
-    _ensure_logger(logger_save)
+    _ensure_logger(logger_save, "time_to_save")
     if not _validate_activation(logger_save, "time_to_save"):
         return
     close_old_connections()
@@ -239,13 +240,13 @@ def run_time_to_save():
 
 # 日间定时处理营业邮件
 def run_time_to_save_day():
-    _ensure_logger(logger_save)
-    if not _validate_activation(logger_save, "time_to_save_day"):
+    _ensure_logger(logger_save_day, "time_to_save_day")
+    if not _validate_activation(logger_save_day, "time_to_save_day"):
         return
     close_old_connections()
     # 开始工作的时间
     started_at = timezone.now()
-    logger_save.info("time_to_save_day started at %s", timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"))
+    logger_save_day.info("time_to_save_day started at %s", timezone.localtime(started_at).strftime("%Y-%m-%d %H:%M:%S"))
 
     # 日间同步只处理当天邮件，避免白天定时任务重复回扫历史周期
     start_date = timezone.now().date()
@@ -265,7 +266,7 @@ def run_time_to_save_day():
             end_date=end_date,
         )
         mail_list.extend(messages)
-        logger_save.info("time_to_save_day fetched page=%s count=%s", page, len(messages))
+        logger_save_day.info("time_to_save_day fetched page=%s count=%s", page, len(messages))
         if not has_next:
             break
         page += 1
@@ -282,8 +283,8 @@ def run_time_to_save_day():
         elif label_str == "1":
             technician_list.append(mail)
 
-    logger_save.info("time_to_save_day classified total=%s projects=%s technicians=%s",
-                     len(mail_list), len(project_list), len(technician_list), )
+    logger_save_day.info("time_to_save_day classified total=%s projects=%s technicians=%s",
+                         len(mail_list), len(project_list), len(technician_list), )
 
     # 案件邮件落库
     for mail in project_list:
@@ -313,8 +314,8 @@ def run_time_to_save_day():
                     )
                 )
         except Exception:
-            logger_save.exception("time_to_save_day project failed from:%s subject:%s",
-                                  mail.get("from"), mail.get("subject"))
+            logger_save_day.exception("time_to_save_day project failed from:%s subject:%s",
+                                      mail.get("from"), mail.get("subject"))
 
     # 技术者邮件落库
     for mail in technician_list:
@@ -339,12 +340,12 @@ def run_time_to_save_day():
                     date=mail.get("date"),
                 )
         except Exception:
-            logger_save.exception("time_to_save_day technician failed from:%s subject:%s",
-                                  mail.get("from"), mail.get("subject"))
+            logger_save_day.exception("time_to_save_day technician failed from:%s subject:%s",
+                                      mail.get("from"), mail.get("subject"))
 
-    logger_save.info("time_to_save_day finished total=%s projects=%s technicians=%s duration_s=%.2f",
-                     len(mail_list), len(project_list), len(technician_list),
-                     (timezone.now() - started_at).total_seconds(), )
+    logger_save_day.info("time_to_save_day finished total=%s projects=%s technicians=%s duration_s=%.2f",
+                         len(mail_list), len(project_list), len(technician_list),
+                         (timezone.now() - started_at).total_seconds(), )
     close_old_connections()
 
 # -------------------------------------清理过期邮件
@@ -416,7 +417,7 @@ def _drop_expired_attendance_tables():
 
 # 定时清理无用数据
 def run_time_to_clean():
-    _ensure_logger(logger_clean)
+    _ensure_logger(logger_clean, "time_to_clean")
     if not _validate_activation(logger_clean, "time_to_clean"):
         return
     close_old_connections()
@@ -448,7 +449,7 @@ logger_sync_my_mails = logging.getLogger("bpmatch.time_to_sync_my_mails")
 
 # 我的邮件（而非营业邮件）
 def run_time_to_sync_my_mails():
-    _ensure_logger(logger_sync_my_mails)
+    _ensure_logger(logger_sync_my_mails, "time_to_sync_my_mails")
     close_old_connections()
     started_at = timezone.now()
     logger_sync_my_mails.info(

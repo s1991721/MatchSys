@@ -380,10 +380,15 @@ class GmailTool:
                 yield payload
 
         payload = msg.get("payload", {})
-        body_texts = []
+        plain_text = ""
+        html_text = ""
 
         for part in _get_parts(payload):
             mime_type = part.get("mimeType", "")
+            filename = part.get("filename", "")
+            if filename:
+                continue
+
             body = part.get("body", {})
             data = body.get("data")
             if not data:
@@ -393,14 +398,13 @@ class GmailTool:
             text = decoded_bytes.decode("utf-8", errors="ignore")
 
             if mime_type == "text/plain":
-                body_texts.insert(0, text)  # 优先 text/plain
-            else:
-                if mime_type == "text/html":
-                    body_texts.append(html_to_text(text))
-                else:
-                    body_texts.append(text)
+                if not plain_text:
+                    plain_text = text
+            elif mime_type == "text/html":
+                if not html_text:
+                    html_text = html_to_text(text)
 
-        return "\n\n".join(body_texts).strip()
+        return (plain_text or html_text).strip()
 
 
 # ---------------------------

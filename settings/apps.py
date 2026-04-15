@@ -24,7 +24,11 @@ class SettingsConfig(AppConfig):
             )
         ):
             return
-        if django_settings.DEBUG and os.environ.get("RUN_MAIN") != "true":
+        if (
+            "runserver" in sys.argv
+            and django_settings.DEBUG
+            and os.environ.get("RUN_MAIN") != "true"
+        ):
             return
         from .task_scheduler import start_scheduler
 

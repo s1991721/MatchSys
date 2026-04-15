@@ -240,6 +240,7 @@ def _run_task(task: ScheduledTask, timeout=10):
         return False, str(exc)
 
 
+# todo 将tasks进行缓存，新增和编辑定时任务时，缓存失效
 def _scan_and_run():
     logger = _get_logger()
     now = timezone.localtime(timezone.now())
@@ -270,6 +271,7 @@ def _scan_and_run():
     logger.info("scan finished")
 
 
+# 每分钟扫一遍定时任务列表，符合条件即执行
 def start_scheduler():
     global _scheduler
     logger = _get_logger()

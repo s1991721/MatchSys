@@ -2,6 +2,7 @@ import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
 import os
+import fcntl
 import threading
 import urllib.error
 import urllib.request
@@ -17,6 +18,7 @@ from django.utils import timezone
 from settings.models import ScheduledTask
 
 _scheduler_lock = threading.Lock()
+_scheduler_process_lock_file = None
 _scheduler = None
 _logger = None
 
@@ -50,6 +52,36 @@ def _get_logger():
         logger.propagate = False
     _logger = logger
     return logger
+
+
+# 抢一个跨进程文件锁
+def _acquire_scheduler_process_lock(logger):
+    global _scheduler_process_lock_file
+    if _scheduler_process_lock_file:
+        return True
+
+    logs_dir = os.path.join(django_settings.BASE_DIR, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    lock_path = os.path.join(logs_dir, "scheduler.lock")
+    lock_file = open(lock_path, "a+", encoding="utf-8")
+    try:
+        fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        lock_file.close()
+        logger.info("scheduler skipped because another process holds lock")
+        return False
+    except Exception:
+        lock_file.close()
+        logger.exception("scheduler skipped because process lock failed")
+        return False
+
+    lock_file.seek(0)
+    lock_file.truncate()
+    lock_file.write(str(os.getpid()))
+    lock_file.flush()
+    _scheduler_process_lock_file = lock_file
+    logger.info("scheduler process lock acquired pid=%s", os.getpid())
+    return True
 
 
 def _base_url():
@@ -244,6 +276,8 @@ def start_scheduler():
     with _scheduler_lock:
         if _scheduler and _scheduler.running:
             return _scheduler
+        if not _acquire_scheduler_process_lock(logger):
+            return None
         tz_name = getattr(django_settings, "TIME_ZONE", "UTC")
         tz = ZoneInfo(tz_name)
         scheduler = BackgroundScheduler(timezone=tz)

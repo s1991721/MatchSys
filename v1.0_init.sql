@@ -439,7 +439,7 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
 CREATE TABLE IF NOT EXISTS mail_project_info
 (
     id      VARCHAR(255) PRIMARY KEY,
-    title   VARCHAR(255) NOT NULL COMMENT '邮件标题',
+    title   VARCHAR(500) NOT NULL COMMENT '邮件标题',
     address VARCHAR(255) NOT NULL COMMENT '发件人',
     body    TEXT COMMENT '正文内容',
     files   TEXT COMMENT '附件信息',
@@ -453,7 +453,7 @@ CREATE TABLE IF NOT EXISTS mail_project_info
 CREATE TABLE IF NOT EXISTS mail_technician_info
 (
     id      VARCHAR(255) PRIMARY KEY,
-    title   VARCHAR(255) NOT NULL COMMENT '邮件标题',
+    title   VARCHAR(500) NOT NULL COMMENT '邮件标题',
     address VARCHAR(255) NOT NULL COMMENT '发件人',
     body    TEXT COMMENT '正文内容',
     files   TEXT COMMENT '附件信息',

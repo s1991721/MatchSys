@@ -39,6 +39,12 @@ services:
       DB_HOST: db
       DB_PORT: 3306
       OLLAMA_HOST: http://ollama:11434
+    volumes:
+      - web_credentials:/app/credentials
+      - web_customer_contract:/app/customer_contract
+      - web_uploads:/app/line_uploads
+      - web_logs:/app/logs
+      - web_ss:/app/ss
 
   nginx:
     image: jef4267/matchsys-nginx:1.0
@@ -74,6 +80,9 @@ services:
 volumes:
   mysql_data:
   ollama_data:
+  web_credentials:
+  web_uploads:
+  web_logs:
 
 networks:
   matchsys-net:

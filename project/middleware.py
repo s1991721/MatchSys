@@ -40,6 +40,15 @@ class SessionLoginRequiredMiddleware:
         }:
             return True
 
+        if path in {
+            "/api/time-to-save",
+            "/api/time-to-clean",
+            "/api/time-to-backup",
+            "/api/time-to-sync-my-mails",
+            "/api/time-to-save-day",
+        }:
+            return True
+
         if path.startswith(("/static/", "/admin/")):
             return True
 

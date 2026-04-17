@@ -81,8 +81,10 @@ volumes:
   mysql_data:
   ollama_data:
   web_credentials:
+  web_customer_contract:
   web_uploads:
   web_logs:
+  web_ss:
 
 networks:
   matchsys-net:

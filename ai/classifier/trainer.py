@@ -19,19 +19,19 @@ def load_data(csv_path: str) -> pd.DataFrame:
 
     df = pd.read_csv(csv_path)
 
-    required_columns = {"title", "label"}
+    required_columns = {"Subject", "label"}
     if not required_columns.issubset(df.columns):
         raise ValueError(f"CSV 必须包含列: {required_columns}")
 
     # 去除空值
-    df = df.dropna(subset=["title", "label"]).copy()
+    df = df.dropna(subset=["Subject", "label"]).copy()
 
     # 转字符串，去空格
-    df["title"] = df["title"].astype(str).str.strip()
+    df["Subject"] = df["Subject"].astype(str).str.strip()
     df["label"] = df["label"].astype(str).str.strip()
 
     # 去掉空字符串
-    df = df[(df["title"] != "") & (df["label"] != "")]
+    df = df[(df["Subject"] != "") & (df["label"] != "")]
 
     if len(df) == 0:
         raise ValueError("训练数据为空，无法训练。")
@@ -65,7 +65,7 @@ def build_pipeline() -> Pipeline:
 
 
 def train_and_evaluate(df: pd.DataFrame, model_output_path: str) -> None:
-    X = df["title"]
+    X = df["Subject"]
     y = df["label"]
 
     unique_labels = sorted(y.unique())
@@ -119,10 +119,12 @@ def train_and_evaluate(df: pd.DataFrame, model_output_path: str) -> None:
     print(f"模型已保存到: {model_output_path}")
 
 
+from pathlib import Path
 if __name__ == "__main__":
-    csv_path = "train_data.csv"
-    model_output_path = "email_title_classifier.joblib"
+    base_dir = Path(__file__).resolve().parent
+    csv_path = base_dir.parent / "data" / "data_cleand.csv"
+    model_output_path = base_dir / "email_title_classifier.joblib"
 
-    df = load_data(csv_path)
+    df = load_data(str(csv_path))
     print(f"读取到 {len(df)} 条训练数据")
-    train_and_evaluate(df, model_output_path)
+    train_and_evaluate(df, str(model_output_path))

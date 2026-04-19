@@ -66,6 +66,26 @@ class MailTechnicianInfo(models.Model):
         verbose_name = "技术者邮件"
 
 
+class WrongMailInfo(models.Model):
+    id = models.CharField(primary_key=True, unique=True, max_length=255, verbose_name="messageId")
+    title = models.CharField("邮件标题", max_length=500, blank=True, default="")
+    address = models.CharField("发件人", max_length=255)
+    body = models.TextField("正文内容", blank=True, default="")
+    files = models.TextField("附件信息", blank=True, default="")
+    date = models.DateTimeField("日期", null=True, blank=True)
+    remark = models.CharField("备注", max_length=500, blank=True, default="")
+    country = models.CharField("国家", max_length=100, blank=True, default="")
+    skills = models.CharField("技能要求", max_length=500, blank=True, default="")
+    price = models.DecimalField("价格", max_digits=10, decimal_places=2, null=True, blank=True)
+    wrong_label = models.SmallIntegerField("错误分类", null=True, blank=True)
+    correct_label = models.SmallIntegerField("正确分类", null=True, blank=True)
+
+    class Meta:
+        db_table = "wrong_mail_info"
+        verbose_name = "错误分类邮件"
+        verbose_name_plural = "错误分类邮件"
+
+
 class SavedMailInfo(models.Model):
     id = models.CharField(primary_key=True, unique=True, max_length=255, verbose_name="messageId")
     date = models.DateTimeField("日期", null=True, blank=True)

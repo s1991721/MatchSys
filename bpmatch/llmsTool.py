@@ -3,10 +3,11 @@ import os
 import ssl
 import urllib.request
 
-from langchain_ollama import ChatOllama
 from langchain_core.messages import HumanMessage, SystemMessage
-from settings.models import SysSettings
+from langchain_ollama import ChatOllama
 
+from ai.classifier.priority_classification import predict_subject
+from settings.models import SysSettings
 
 # ---------------------------
 #  LLM Router (local / cloud)
@@ -81,9 +82,9 @@ class CloudChatOpenAI:
             method="POST",
         )
         with urllib.request.urlopen(
-            req,
-            timeout=DEFAULT_TIMEOUT,
-            context=_build_ssl_context(),
+                req,
+                timeout=DEFAULT_TIMEOUT,
+                context=_build_ssl_context(),
         ) as resp:
             raw = resp.read().decode("utf-8", "ignore")
         parsed = json.loads(raw or "{}")
@@ -131,55 +132,9 @@ def _get_llm():
 #  分析邮件标题 返回邮件类型
 # ---------------------------
 def title_analysis(text: str) -> str:
-    # 规则 A：出现这些关键词 → 优先判定为 0（求人）
-    KEYWORDS_JOB = ["急募案件", "エンド直", "代替"]
-    # 规则 B：出现这些关键词 → 优先判定为 1（求案件）
-    KEYWORDS_PROJECT = ["歳", "人材", "要員", "社員", "フリーランス"]
-    # 检查规则 A（求人）
-    matched_job = [kw for kw in KEYWORDS_JOB if kw in text]
-    if matched_job:
-        print("匹配到【求人（0）】关键词：", matched_job)
-        return 0
-
-    # 检查规则 B（求案件）
-    matched_project = [kw for kw in KEYWORDS_PROJECT if kw in text]
-    if matched_project:
-        print("匹配到【求案件（1）】关键词：", matched_project)
-        return 1
-
-    messages = [
-        SystemMessage(
-            content=(
-                """
-                你现在的任务是：只根据整封邮件的日文标题（subject）来判断这封邮件的类型，并输出一个固定整型标签。
-
-                分类：
-                ・0 = 求人：我这边有案件
-                ・1 = 求案件：我这边有人
-                ・-1 = 其他类型：非以上两种。
-
-                判断要点：
-                ・标题中主要在介绍案件，多数是 0（求人），例如：
-                　「案件のご紹介」「案件」「エンジニア募集」「支援」「エンド直」「フルリモート」「急募案件」「技術者募集」等。
-                ・标题中主要在介绍候補者，多数是 1（求案件），例如：
-                　「弊社所属」「弊社のご紹介」「案件募集」「案件探してます」「実績」「人材」「稼働可能」「社員」「フリーランス」「歳」等。。
-
-                关键词规则：
-                ・包含「案件のご紹介」「案件」「エンジニア募集」「支援」「エンド直」「フルリモート」「急募案件」「技術者募集」时，优先判定为 0（求人）。
-                ・包含「弊社所属」「弊社のご紹介」「案件募集」「案件探してます」「実績」「人材」「稼働可能」「社員」「フリーランス」「〇〇歳」「直個人」「1社下社員」时，优先判定为 1（求案件）。
-
-                其他说明：
-                1. 只看标题，不要臆测正文内容。
-                2. 邮件标题是日文，你需要根据日文标题的含义进行判断。
-                3. 必须只输出一个整数标签：0、1 或 -1，不要输出其它任何文字、符号或说明。
-                4. 如果无法确定是「求人」还是「求案件」，默认输出 -1。"""
-            )
-        ),
-        HumanMessage(content=text),
-    ]
-
-    ai_msg = _get_llm().invoke(messages)
-    return ai_msg.content.strip()
+    label = predict_subject(text)
+    print(f"Subject:{text}  label:{label}")
+    return str(label)
 
 
 # ---------------------------

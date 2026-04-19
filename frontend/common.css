@@ -1866,6 +1866,88 @@ svg {
   font-size: 12px;
   white-space: nowrap;
 }
+.match-page .mail-feedback-control {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.match-page .mail-feedback-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #c9d5ea;
+  border-radius: 999px;
+  background: #fff;
+  color: #6d7b92;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.match-page .mail-feedback-btn:hover {
+  border-color: #7aa7ff;
+  color: var(--primary);
+  background: #f5f9ff;
+}
+.match-page .mail-feedback-btn.is-submitted {
+  border-color: #f2b35e;
+  background: #fff3df;
+  color: #b46b00;
+  cursor: default;
+}
+.match-page .mail-feedback-popover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1200;
+  width: 280px;
+  padding: 14px;
+  border: 1px solid #d9e3f2;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(35, 61, 112, 0.14);
+  display: none;
+}
+.match-page .mail-feedback-popover.is-visible {
+  display: block;
+}
+.match-page .mail-feedback-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #243247;
+}
+.match-page .mail-feedback-desc {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.match-page .mail-feedback-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: #324156;
+  font-size: 13px;
+}
+.match-page .mail-feedback-option input {
+  margin: 0;
+}
+.match-page .mail-feedback-note {
+  margin-top: 10px;
+  min-height: 72px;
+  resize: vertical;
+}
+.match-page .mail-feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
 .match-page .detail {
   border: 1px solid var(--line);
   border-radius: 10px;

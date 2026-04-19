@@ -11,7 +11,6 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 
-
 LABEL_NEG1 = -1
 LABEL_0 = 0
 LABEL_1 = 1
@@ -25,6 +24,7 @@ THRESHOLD_1_CANDIDATES = np.arange(0.50, 0.96, 0.02)
 MIN_PRECISION_FOR_0 = 0.90
 
 
+# 加载数据
 def load_data(csv_path: str) -> pd.DataFrame:
     if not os.path.exists(csv_path):
         raise FileNotFoundError(f"训练数据文件不存在: {csv_path}")
@@ -52,6 +52,7 @@ def load_data(csv_path: str) -> pd.DataFrame:
     return df.reset_index(drop=True)
 
 
+# 打印日志-各label分布情况
 def print_label_distribution(df: pd.DataFrame, title: str) -> None:
     print(f"\n=== {title} ===")
     total = len(df)
@@ -62,6 +63,7 @@ def print_label_distribution(df: pd.DataFrame, title: str) -> None:
         print(f"label {label:>2}: {count:>5} ({ratio:.2%})")
 
 
+# 流水线 向量化➡️分类器
 def build_binary_pipeline(class_weight: Dict[int, float]) -> Pipeline:
     return Pipeline([
         (
@@ -86,6 +88,7 @@ def build_binary_pipeline(class_weight: Dict[int, float]) -> Pipeline:
     ])
 
 
+# 因为二阶段模型的原因，一阶段模型标签由-1、0、1转为True、False
 def prepare_stage1_labels(y: pd.Series) -> np.ndarray:
     """
     阶段1：0 vs 非0
@@ -95,6 +98,7 @@ def prepare_stage1_labels(y: pd.Series) -> np.ndarray:
     return (y.to_numpy(dtype=int) == LABEL_0).astype(int)
 
 
+# 二阶段模型的新标签
 def prepare_stage2_labels(y: pd.Series) -> np.ndarray:
     """
     阶段2：1 vs 非1
@@ -104,12 +108,13 @@ def prepare_stage2_labels(y: pd.Series) -> np.ndarray:
     return (y.to_numpy(dtype=int) == LABEL_1).astype(int)
 
 
+# 根据传过来的阈值，生成判断，供下一步回归调优
 def predict_two_stage(
-    stage1_model: Pipeline,
-    stage2_model: Pipeline,
-    texts: List[str],
-    threshold_0: float,
-    threshold_1: float
+        stage1_model: Pipeline,
+        stage2_model: Pipeline,
+        texts: List[str],
+        threshold_0: float,
+        threshold_1: float
 ) -> np.ndarray:
     """
     两阶段预测：
@@ -118,20 +123,23 @@ def predict_two_stage(
       3. 否则输出 -1
     """
     texts = [str(x).strip() for x in texts]
-
-    # stage1 正类=原始0
-    proba_stage1 = stage1_model.predict_proba(texts)[:, 1]
-
+    # 默认填充类型为-1类型
     preds = np.full(len(texts), LABEL_NEG1, dtype=int)
 
+    # 使用stage1_model判断为0类型的概率
+    proba_stage1 = stage1_model.predict_proba(texts)[:, 1]
+
+    # 概率大于阈值threshold_0时，认为是0类型
     idx_stage0 = np.where(proba_stage1 >= threshold_0)[0]
     preds[idx_stage0] = LABEL_0
 
+    # 找到剩余-1类型，还未分类的数据
     remaining_idx = np.where(preds == LABEL_NEG1)[0]
     if len(remaining_idx) > 0:
         remaining_texts = [texts[i] for i in remaining_idx]
         proba_stage2 = stage2_model.predict_proba(remaining_texts)[:, 1]
 
+        # 注意index的local和global
         idx_stage1_local = np.where(proba_stage2 >= threshold_1)[0]
         idx_stage1_global = remaining_idx[idx_stage1_local]
         preds[idx_stage1_global] = LABEL_1
@@ -139,34 +147,36 @@ def predict_two_stage(
     return preds
 
 
+# 计算各个类别的准度、覆盖率
 def calc_binary_precision_recall_for_label(
-    y_true: np.ndarray, y_pred: np.ndarray, target_label: int
+        y_true: np.ndarray, y_pred: np.ndarray, target_label: int
 ) -> Tuple[float, float]:
-    tp = int(((y_true == target_label) & (y_pred == target_label)).sum())
-    fp = int(((y_true != target_label) & (y_pred == target_label)).sum())
-    fn = int(((y_true == target_label) & (y_pred != target_label)).sum())
+    tp = int(((y_true == target_label) & (y_pred == target_label)).sum())  # 真实是目标类，并且也预测成目标类
+    fp = int(((y_true != target_label) & (y_pred == target_label)).sum())  # 真实不是目标类，但却被预测成目标类
+    fn = int(((y_true == target_label) & (y_pred != target_label)).sum())  # 真实是目标类，但却没有被预测成目标类
 
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0  # 准度 凡是模型说是 0 的，到底有多少真的是 0？
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0  # 覆盖率 所有真实是 0 的样本里，模型到底找出了多少？
     return precision, recall
 
 
+# 评估预测的准确率
 def score_thresholds(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, Dict[str, float]]:
     p0, r0 = calc_binary_precision_recall_for_label(y_true, y_pred, LABEL_0)
     p1, r1 = calc_binary_precision_recall_for_label(y_true, y_pred, LABEL_1)
-    acc = accuracy_score(y_true, y_pred)
+    acc = accuracy_score(y_true, y_pred)  # 所有样本里，预测正确的比例是多少。
 
     penalty = 0.0
     if p0 < MIN_PRECISION_FOR_0:
         penalty = (MIN_PRECISION_FOR_0 - p0) * 10.0
 
     score = (
-        5.0 * p0 +
-        2.5 * r0 +
-        1.5 * r1 +
-        0.5 * p1 +
-        0.5 * acc -
-        penalty
+            5.0 * p0 +
+            2.5 * r0 +
+            1.5 * r1 +
+            0.5 * p1 +
+            0.5 * acc -
+            penalty
     )
 
     metrics = {
@@ -179,11 +189,12 @@ def score_thresholds(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, Dic
     return score, metrics
 
 
+# 遍历所有可能性，找出最合适的参数对
 def search_best_thresholds(
-    stage1_model: Pipeline,
-    stage2_model: Pipeline,
-    x_val: pd.Series,
-    y_val: pd.Series
+        stage1_model: Pipeline,
+        stage2_model: Pipeline,
+        x_val: pd.Series,
+        y_val: pd.Series
 ) -> Tuple[float, float, Dict[str, float]]:
     best_score = -1e18
     best_t0 = 0.85
@@ -212,13 +223,14 @@ def search_best_thresholds(
     return best_t0, best_t1, best_metrics
 
 
+# 评估模型
 def evaluate_model(
-    stage1_model: Pipeline,
-    stage2_model: Pipeline,
-    x_test: pd.Series,
-    y_test: pd.Series,
-    threshold_0: float,
-    threshold_1: float
+        stage1_model: Pipeline,
+        stage2_model: Pipeline,
+        x_test: pd.Series,
+        y_test: pd.Series,
+        threshold_0: float,
+        threshold_1: float
 ) -> None:
     y_true = y_test.to_numpy(dtype=int)
     y_pred = predict_two_stage(
@@ -264,9 +276,11 @@ def evaluate_model(
     print(f"拒识率（预测为-1比例） : {reject_rate:.4f}")
 
 
+# 训练并保存模型
 def train_and_save(df: pd.DataFrame, model_output_path: str) -> None:
     print_label_distribution(df, "原始数据分布")
 
+    # 训练集、测试集拆分   stratify（分层）保证各类数据在测试集和训练集中的比例相同
     train_val_df, test_df = train_test_split(
         df,
         test_size=0.2,
@@ -274,6 +288,7 @@ def train_and_save(df: pd.DataFrame, model_output_path: str) -> None:
         stratify=df["label"]
     )
 
+    # 训练集拆分为”训练集和验证集” 整体60% train / 20% val / 20% test
     train_df, val_df = train_test_split(
         train_val_df,
         test_size=0.25,
@@ -296,7 +311,7 @@ def train_and_save(df: pd.DataFrame, model_output_path: str) -> None:
 
     # 阶段1：0 vs 非0
     y_train_stage1 = prepare_stage1_labels(y_train)
-    stage1_model = build_binary_pipeline(class_weight={0: 1.0, 1: 3.0})
+    stage1_model = build_binary_pipeline(class_weight={0: 1.0, 1: 3.0})  # 判别0标签的比重更大
     stage1_model.fit(x_train, y_train_stage1)
 
     # 阶段2：1 vs 非1
@@ -354,6 +369,7 @@ def train_and_save(df: pd.DataFrame, model_output_path: str) -> None:
     print(f"\n模型已保存到: {model_output_path}")
 
 
+# 加载模型
 def load_artifact(model_path: str) -> dict:
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"模型文件不存在: {model_path}")

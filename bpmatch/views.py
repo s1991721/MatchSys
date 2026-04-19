@@ -2,6 +2,7 @@ import json
 import re
 from datetime import timedelta
 
+from django.db import transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
@@ -20,7 +21,7 @@ from .mailTool import (
     sync_my_mails_from_imap,
     get_my_mail_detail_from_imap,
 )
-from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo
+from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo
 
 
 def _normalize_skills(value):
@@ -189,6 +190,58 @@ def mail_project_match_api(request):
         "matches": matches
     }
     return api_success(data=payload)
+
+
+# 提交被错误分类的邮件
+@csrf_exempt
+@require_POST
+def wrong_mail_info_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    mail_id = str(payload.get("id") or "").strip()
+    if not mail_id:
+        return api_error("Missing field: id")
+
+    wrong_label = payload.get("wrong_label")
+    if wrong_label is None:
+        return api_error("Missing field: wrong_label")
+
+    correct_label = payload.get("correct_label")
+
+    if wrong_label == 1:
+        source_obj = MailTechnicianInfo.objects.filter(id=mail_id).first()
+    elif wrong_label == 0:
+        source_obj = MailProjectInfo.objects.filter(id=mail_id).first()
+    else:
+        return api_error("Invalid field: wrong_label")
+
+    if source_obj is None:
+        return api_error("Mail not found", status=404)
+
+    defaults = {
+        "title": source_obj.title,
+        "address": source_obj.address,
+        "body": source_obj.body,
+        "files": source_obj.files,
+        "date": source_obj.date,
+        "remark": source_obj.remark,
+        "country": source_obj.country,
+        "skills": source_obj.skills,
+        "price": source_obj.price,
+        "wrong_label": wrong_label,
+        "correct_label": correct_label,
+    }
+
+    with transaction.atomic():
+        WrongMailInfo.objects.update_or_create(
+            id=mail_id,
+            defaults=defaults,
+        )
+        source_obj.delete()
+
+    return api_success()
 
 
 @csrf_exempt

@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -407,6 +408,34 @@ def predict_subjects(model_path: str, subjects: List[str]) -> pd.DataFrame:
         })
 
     return pd.DataFrame(rows)
+
+
+@lru_cache(maxsize=4)
+def load_artifact_cached() -> dict:
+    base_dir = Path(__file__).resolve().parent
+    model_path = base_dir / "email_title_classifier_two_stage_v1.joblib"
+    return load_artifact(str(model_path))
+
+
+def predict_subject(text: str) -> int:
+    artifact = load_artifact_cached()
+
+    stage1_model = artifact["stage1_model"]
+    stage2_model = artifact["stage2_model"]
+    threshold_0 = artifact["threshold_0"]
+    threshold_1 = artifact["threshold_1"]
+
+    text = str(text).strip()
+
+    proba_stage1 = stage1_model.predict_proba([text])[:, 1]
+    if proba_stage1[0] >= threshold_0:
+        return 0
+
+    proba_stage2 = stage2_model.predict_proba([text])[:, 1]
+    if proba_stage2[0] >= threshold_1:
+        return 1
+
+    return -1
 
 
 if __name__ == "__main__":

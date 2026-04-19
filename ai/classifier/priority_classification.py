@@ -437,24 +437,27 @@ def predict_subject(text: str) -> int:
 
     return -1
 
-
 if __name__ == "__main__":
-    base_dir = Path(__file__).resolve().parent
-    csv_path = base_dir.parent / "data" / "data_cleand.csv"
-    model_output_path = base_dir / "email_title_classifier_two_stage.joblib"
+    print(predict_subject("【自社要員】Javaエンジニアのご紹介"))
 
-    df = load_data(str(csv_path))
-    print(f"读取到 {len(df)} 条训练数据")
-    train_and_save(df, str(model_output_path))
 
-    demo_subjects = [
-        "案件のご紹介 / Python案件 / リモート可",
-        "弊社所属エンジニアのご提案",
-        "セミナー開催のお知らせ",
-        "要件定義から対応可能な人材のご紹介",
-        "急募案件のご案内",
-    ]
-
-    print("\n=== 预测示例 ===")
-    pred_df = predict_subjects(str(model_output_path), demo_subjects)
-    print(pred_df)
+# if __name__ == "__main__":
+#     base_dir = Path(__file__).resolve().parent
+#     csv_path = base_dir.parent / "data" / "data_cleand.csv"
+#     model_output_path = base_dir / "email_title_classifier_two_stage.joblib"
+#
+#     df = load_data(str(csv_path))
+#     print(f"读取到 {len(df)} 条训练数据")
+#     train_and_save(df, str(model_output_path))
+#
+#     demo_subjects = [
+#         "案件のご紹介 / Python案件 / リモート可",
+#         "弊社所属エンジニアのご提案",
+#         "セミナー開催のお知らせ",
+#         "要件定義から対応可能な人材のご紹介",
+#         "急募案件のご案内",
+#     ]
+#
+#     print("\n=== 预测示例 ===")
+#     pred_df = predict_subjects(str(model_output_path), demo_subjects)
+#     print(pred_df)

@@ -366,14 +366,13 @@
                 <div class="mail-feedback-title">${sanitize(t('match.feedback.title'))}</div>
                 <div class="mail-feedback-desc">${sanitize(t('match.feedback.desc'))}</div>
                 <label class="mail-feedback-option">
-                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="technician" ${feedbackDraft.expectedCategory === 'technician' ? 'checked' : ''}>
+                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="1" ${String(feedbackDraft.expectedCategory) === '1' ? 'checked' : ''}>
                     <span>${sanitize(t('match.feedback.option.technician'))}</span>
                 </label>
                 <label class="mail-feedback-option">
-                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="other" ${feedbackDraft.expectedCategory === 'other' ? 'checked' : ''}>
+                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="-1" ${String(feedbackDraft.expectedCategory) === '-1' ? 'checked' : ''}>
                     <span>${sanitize(t('match.feedback.option.other'))}</span>
                 </label>
-                <textarea class="c-input mail-feedback-note" rows="3" placeholder="${sanitize(t('match.feedback.note_placeholder'))}" ${feedbackDraft.submitted ? 'disabled' : ''}>${sanitize(feedbackDraft.note || '')}</textarea>
                 <div class="mail-feedback-actions">
                     <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-feedback-cancel="1">${sanitize(t('common.cancel'))}</button>
                     <button class="c-btn c-btn-primary c-btn-sm" type="button" data-feedback-submit="1" ${feedbackDraft.submitted ? 'disabled' : ''}>${sanitize(t('match.feedback.submit'))}</button>
@@ -478,14 +477,13 @@
                 <div class="mail-feedback-title">${sanitize(t('match.feedback.title'))}</div>
                 <div class="mail-feedback-desc">${sanitize(t('match.feedback.person_desc'))}</div>
                 <label class="mail-feedback-option">
-                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="project" ${feedbackDraft.expectedCategory === 'project' ? 'checked' : ''}>
+                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="0" ${String(feedbackDraft.expectedCategory) === '0' ? 'checked' : ''}>
                     <span>${sanitize(t('match.feedback.option.project'))}</span>
                 </label>
                 <label class="mail-feedback-option">
-                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="other" ${feedbackDraft.expectedCategory === 'other' ? 'checked' : ''}>
+                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="-1" ${String(feedbackDraft.expectedCategory) === '-1' ? 'checked' : ''}>
                     <span>${sanitize(t('match.feedback.option.other'))}</span>
                 </label>
-                <textarea class="c-input mail-feedback-note" rows="3" placeholder="${sanitize(t('match.feedback.note_placeholder'))}" ${feedbackDraft.submitted ? 'disabled' : ''}>${sanitize(feedbackDraft.note || '')}</textarea>
                 <div class="mail-feedback-actions">
                     <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-person-feedback-cancel="1">${sanitize(t('common.cancel'))}</button>
                     <button class="c-btn c-btn-primary c-btn-sm" type="button" data-person-feedback-submit="1" ${feedbackDraft.submitted ? 'disabled' : ''}>${sanitize(t('match.feedback.submit'))}</button>
@@ -517,6 +515,40 @@
     }
 
     const rerenderPersonList = () => {
+        renderPersonList(currentPersonItems, {preserveSelection: true});
+    };
+
+    const removeJobFromCurrentList = (jobId) => {
+        const removedActive = String(activeJobId) === String(jobId);
+        currentJobItems = currentJobItems.filter((item) => String(item.id) !== String(jobId));
+        totalCount = Math.max(0, totalCount - 1);
+        totalPages = Math.max(1, Math.ceil(totalCount / 50));
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        if (removedActive) {
+            activeJobId = '';
+            activeJobDetail = '';
+            activeMatchedSkills = [];
+            openJobFeedbackId = '';
+            openPersonFeedbackId = '';
+            currentPersonItems = [];
+            activePersonId = '';
+            renderPersonList([]);
+            renderJobList(currentJobItems, {preserveSelection: true});
+        } else {
+            renderJobList(currentJobItems, {preserveSelection: true});
+        }
+        updatePaginationUI();
+    };
+
+    const removePersonFromCurrentList = (personId) => {
+        currentPersonItems = currentPersonItems.filter((item) => String(item.id) !== String(personId));
+        if (String(activePersonId) === String(personId)) {
+            activePersonId = '';
+        }
+        openPersonFeedbackId = '';
         renderPersonList(currentPersonItems, {preserveSelection: true});
     };
 
@@ -658,7 +690,7 @@
         }
     });
 
-    jobList.addEventListener('click', (event) => {
+    jobList.addEventListener('click', async (event) => {
         const toggleBtn = event.target.closest('[data-feedback-toggle]');
         if (toggleBtn) {
             event.stopPropagation();
@@ -687,17 +719,31 @@
             const item = submitBtn.closest('.item');
             const jobId = String(item?.dataset?.id || '');
             const selected = wrapper?.querySelector('input[type="radio"]:checked')?.value || '';
-            const note = wrapper?.querySelector('.mail-feedback-note')?.value.trim() || '';
             if (!selected) {
                 alert(t('match.feedback.select_expected'));
                 return;
             }
-            const draft = getJobFeedbackDraft(jobId);
-            draft.expectedCategory = selected;
-            draft.note = note;
-            draft.submitted = true;
-            openJobFeedbackId = '';
-            rerenderJobList();
+            try {
+                const res = await fetchWithAuth('/api/wrong-mails', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: jobId,
+                        wrong_label: 0,
+                        correct_label: Number(selected)
+                    })
+                });
+                const data = await res.json();
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    throw new Error(payload.message || t("match.failed"));
+                }
+                const draft = getJobFeedbackDraft(jobId);
+                draft.expectedCategory = selected;
+                draft.submitted = true;
+                removeJobFromCurrentList(jobId);
+            } catch (err) {
+                alert(`${t("match.failed")}：${err.message}`);
+            }
         }
     });
 
@@ -710,15 +756,6 @@
         draft.expectedCategory = radio.value;
     });
 
-    jobList.addEventListener('input', (event) => {
-        const note = event.target.closest('.mail-feedback-note');
-        if (!note) return;
-        const item = note.closest('.item');
-        const jobId = String(item?.dataset?.id || '');
-        const draft = getJobFeedbackDraft(jobId);
-        draft.note = note.value;
-    });
-
     document.addEventListener('click', (event) => {
         if (!openJobFeedbackId) return;
         if (event.target.closest('.mail-feedback-control')) return;
@@ -726,7 +763,7 @@
         rerenderJobList();
     });
 
-    personList.addEventListener('click', (event) => {
+    personList.addEventListener('click', async (event) => {
         const toggleBtn = event.target.closest('[data-person-feedback-toggle]');
         if (toggleBtn) {
             event.stopPropagation();
@@ -755,17 +792,31 @@
             const item = submitBtn.closest('.item');
             const personId = String(item?.dataset?.id || '');
             const selected = wrapper?.querySelector('input[type="radio"]:checked')?.value || '';
-            const note = wrapper?.querySelector('.mail-feedback-note')?.value.trim() || '';
             if (!selected) {
                 alert(t('match.feedback.select_expected'));
                 return;
             }
-            const draft = getPersonFeedbackDraft(personId);
-            draft.expectedCategory = selected;
-            draft.note = note;
-            draft.submitted = true;
-            openPersonFeedbackId = '';
-            rerenderPersonList();
+            try {
+                const res = await fetchWithAuth('/api/wrong-mails', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: personId,
+                        wrong_label: 1,
+                        correct_label: Number(selected)
+                    })
+                });
+                const data = await res.json();
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    throw new Error(payload.message || t("match.failed"));
+                }
+                const draft = getPersonFeedbackDraft(personId);
+                draft.expectedCategory = selected;
+                draft.submitted = true;
+                removePersonFromCurrentList(personId);
+            } catch (err) {
+                alert(`${t("match.failed")}：${err.message}`);
+            }
         }
     });
 
@@ -776,15 +827,6 @@
         const personId = String(item?.dataset?.id || '');
         const draft = getPersonFeedbackDraft(personId);
         draft.expectedCategory = radio.value;
-    });
-
-    personList.addEventListener('input', (event) => {
-        const note = event.target.closest('.mail-feedback-note');
-        if (!note) return;
-        const item = note.closest('.item');
-        const personId = String(item?.dataset?.id || '');
-        const draft = getPersonFeedbackDraft(personId);
-        draft.note = note.value;
     });
 
     document.addEventListener('click', (event) => {

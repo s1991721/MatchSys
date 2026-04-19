@@ -1937,11 +1937,6 @@ svg {
 .match-page .mail-feedback-option input {
   margin: 0;
 }
-.match-page .mail-feedback-note {
-  margin-top: 10px;
-  min-height: 72px;
-  resize: vertical;
-}
 .match-page .mail-feedback-actions {
   display: flex;
   justify-content: flex-end;

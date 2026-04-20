@@ -46,17 +46,14 @@ class MailReceiver:
     def sync_mails(self, owner_id, sync_limit=120):
         return self.receiver.sync_mails(owner_id, sync_limit=sync_limit)
 
-
-    def query_mails(self, page=1, page_size=20, keyword="", send_date=""):
+    def query_mails(self, owner_id=None, page=1, page_size=20, keyword="", send_date=""):
         return self.receiver.query_mails(
+            owner_id=owner_id,
             page=page,
             page_size=page_size,
             keyword=keyword,
             send_date=send_date,
         )
-
-    def get_mail_detail(self, mail_id):
-        return self.receiver.get_mail_detail(mail_id)
 
     def test_connection(self):
         return self.receiver.test_connection()
@@ -73,32 +70,25 @@ class MailReceiver:
 
 
 # 同步我的邮件（昨天-现在）
-def sync_my_mails(owner_id, send_config, sync_limit=120):
+def sync_my_mails(owner_id, send_config):
     try:
-        return MailReceiver(send_config).sync_mails(owner_id, sync_limit=sync_limit)
+        return MailReceiver(send_config).sync_mails(owner_id)
     except Exception as exc:
         if isinstance(exc, MailToolError):
             raise
         raise MailToolError(str(exc), status=500)
 
 
-def query_my_mails(send_config, page=1, page_size=20, keyword="", send_date=""):
+# 根据keyword、date查询邮件
+def query_my_mails(send_config, owner_id=None, page=1, page_size=20, keyword="", send_date=""):
     try:
         return MailReceiver(send_config).query_mails(
+            owner_id=owner_id,
             page=page,
             page_size=page_size,
             keyword=keyword,
             send_date=send_date,
         )
-    except Exception as exc:
-        if isinstance(exc, MailToolError):
-            raise
-        raise MailToolError(str(exc), status=500)
-
-
-def get_my_mail_detail(send_config, mail_id):
-    try:
-        return MailReceiver(send_config).get_mail_detail(mail_id)
     except Exception as exc:
         if isinstance(exc, MailToolError):
             raise

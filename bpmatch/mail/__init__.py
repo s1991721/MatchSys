@@ -2,12 +2,12 @@ from .common import (
     MailToolError,
     count_unread_mails_from_db,
     ensure_send_config_for_login,
+    get_my_mail_detail_from_db,
     list_my_mails_from_db,
     resolve_sendmsg_sync_targets,
 )
 from .receiver import (
     MailReceiver,
-    get_my_mail_detail,
     query_my_mails,
     sync_my_mails,
     test_receive_connection,
@@ -23,7 +23,7 @@ __all__ = [
     "Pop3Receiver",
     "count_unread_mails_from_db",
     "ensure_send_config_for_login",
-    "get_my_mail_detail",
+    "get_my_mail_detail_from_db",
     "list_my_mails_from_db",
     "query_my_mails",
     "resolve_sendmsg_sync_targets",

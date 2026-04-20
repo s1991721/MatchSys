@@ -19,7 +19,7 @@ from .mailTool import (
     query_my_mails,
     count_unread_mails_from_db,
     sync_my_mails,
-    get_my_mail_detail,
+    get_my_mail_detail_from_db,
 )
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo
 
@@ -657,7 +657,7 @@ def send_mail(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件列表（接口入口在 views，邮件协议细节在 mailTool）
+# 我的邮件列表
 def my_mails_api(request):
     # 1. 检查是否登录
     login_id, error = require_login(request)
@@ -731,6 +731,7 @@ def my_mails_query_api(request):
     try:
         data, meta = query_my_mails(
             send_config,
+            owner_id=login_id,
             page=page,
             page_size=page_size,
             keyword=keyword,
@@ -745,7 +746,7 @@ def my_mails_query_api(request):
 
 @csrf_exempt
 @require_POST
-# 我的邮件刷新同步（单独接口）
+# 我的邮件本地DB刷新，与邮件服务器一致
 def my_mails_sync_api(request):
     login_id, error = require_login(request)
     if error:
@@ -768,9 +769,7 @@ def my_mail_detail_api(request, mail_id):
     if error:
         return error
     try:
-        # 5. 用户点击邮件列表时，按外部唯一标识从 IMAP 获取详情
-        send_config = ensure_send_config_for_login(login_id)
-        data = get_my_mail_detail(send_config, mail_id)
+        data = get_my_mail_detail_from_db(login_id, mail_id)
         return api_success(data=data)
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)

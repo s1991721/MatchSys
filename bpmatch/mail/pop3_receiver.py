@@ -14,6 +14,7 @@ from .common import (
     decode_mime_header,
     extract_first_email,
     extract_mail_body,
+    extract_mail_files,
     format_mail_datetime,
     normalize_security_mode,
     to_bool,
@@ -84,6 +85,7 @@ class Pop3Receiver(ReceiverInterface):
         self.current_mailbox = "INBOX"
         self._uidl_map = None
 
+    # 创立连接
     def connect(self):
         host = str(self.pop3_config.get("host") or "").strip()
         port = int(self.pop3_config.get("port") or 0)
@@ -102,6 +104,7 @@ class Pop3Receiver(ReceiverInterface):
                 self.mail.stls()
         return self.mail
 
+    # 登录
     def authenticate(self, username: str, password: str):
         if not self.mail:
             self.connect()
@@ -204,7 +207,8 @@ class Pop3Receiver(ReceiverInterface):
         finally:
             self.logout()
 
-    def sync_mails(self, owner_id, sync_limit=120):
+    # 同步本地邮件
+    def sync_mails(self, owner_id):
         updated = 0
         now = django_timezone.now()
         start_date = django_timezone.localdate() - timedelta(days=1)
@@ -216,15 +220,20 @@ class Pop3Receiver(ReceiverInterface):
             self.login_from_config()
             self.open_configured_mailbox()
             all_ids = list(reversed(self.list_message_ids({"search_args": ["ALL"]})))
-            if sync_limit > 0:
-                all_ids = all_ids[:sync_limit]
-
+            remote_ids = []
             for uid_bytes in all_ids:
                 uid = uid_bytes.decode("utf-8", errors="ignore")
-                if not uid or MyMail.objects.filter(id=uid).exists():
+                if uid:
+                    remote_ids.append(uid)
+            existing_ids = set(
+                MyMail.objects.filter(id__in=remote_ids).values_list("id", flat=True)
+            )
+
+            for uid in remote_ids:
+                if uid in existing_ids:
                     continue
-                header_result = self.fetch_headers(uid, fields=["SUBJECT", "FROM", "DATE"])
-                parsed = header_result["headers"]
+                message_result = self.fetch_message(uid)
+                parsed = message_result["message"]
                 received_at = self._parse_received_at(parsed.get("Date"))
                 if not received_at:
                     continue
@@ -239,6 +248,8 @@ class Pop3Receiver(ReceiverInterface):
                     owner_id=owner_id,
                     subject=decode_mime_header(parsed.get("Subject")) or "(无标题)",
                     from_email=extract_first_email(from_raw),
+                    body=extract_mail_body(parsed),
+                    files=extract_mail_files(parsed),
                     received_at=received_at,
                     is_unread=True,
                 )
@@ -247,7 +258,8 @@ class Pop3Receiver(ReceiverInterface):
         finally:
             self.logout()
 
-    def query_mails(self, page=1, page_size=20, keyword="", send_date=""):
+    # 根据keyword、send_date查询邮件
+    def query_mails(self, owner_id=None, page=1, page_size=20, keyword="", send_date=""):
         pop3_user = str(self.pop3_config.get("user") or "").strip()
         page = self._safe_int(page, default=1)
         page_size = max(1, min(self._safe_int(page_size, default=20), 50))
@@ -306,6 +318,30 @@ class Pop3Receiver(ReceiverInterface):
                 page = total_pages
             offset = (page - 1) * page_size
             items = filtered_items[offset: offset + page_size]
+            if owner_id and items:
+                page_ids = [str(item.get("id") or "").strip() for item in items if item.get("id")]
+                existing_ids = set(
+                    MyMail.objects.filter(id__in=page_ids).values_list("id", flat=True)
+                )
+                for item in items:
+                    uid = str(item.get("id") or "").strip()
+                    if not uid or uid in existing_ids:
+                        continue
+                    message_result = self.fetch_message(uid)
+                    parsed = message_result["message"]
+                    from_raw = decode_mime_header(parsed.get("From"))
+                    received_at = self._parse_received_at(parsed.get("Date"))
+                    MyMail.objects.create(
+                        id=uid,
+                        owner_id=owner_id,
+                        subject=decode_mime_header(parsed.get("Subject")) or "(无标题)",
+                        from_email=extract_first_email(from_raw),
+                        body=extract_mail_body(parsed),
+                        files=extract_mail_files(parsed),
+                        received_at=received_at,
+                        is_unread=True,
+                    )
+                    existing_ids.add(uid)
             return {
                 "mailbox_email": pop3_user,
                 "items": items,
@@ -318,39 +354,7 @@ class Pop3Receiver(ReceiverInterface):
         finally:
             self.logout()
 
-    def get_mail_detail(self, mail_id):
-        pop3_user = str(self.pop3_config.get("user") or "").strip()
-        try:
-            self.login_from_config()
-            self.open_configured_mailbox()
-            message_result = self.fetch_message(mail_id)
-            parsed = message_result["message"]
-            from_raw = decode_mime_header(parsed.get("From"))
-            to_raw = decode_mime_header(parsed.get("To"))
-            reply_to = decode_mime_header(parsed.get("Reply-To"))
-            flags = self.get_flags(mail_id)
-
-            return {
-                "id": self.get_stable_remote_id(mail_id),
-                "subject": decode_mime_header(parsed.get("Subject")) or "(无标题)",
-                "from": from_raw,
-                "from_email": extract_first_email(from_raw),
-                "to": to_raw,
-                "to_email": extract_first_email(to_raw),
-                "cc": decode_mime_header(parsed.get("Cc")),
-                "date": format_mail_datetime(parsed.get("Date")),
-                "body": extract_mail_body(parsed),
-                "unread": bool(flags.get("unread")),
-                "message_id": str(parsed.get("Message-ID") or "").strip(),
-                "references": str(parsed.get("References") or "").strip(),
-                "in_reply_to": str(parsed.get("In-Reply-To") or "").strip(),
-                "reply_to": reply_to,
-                "reply_to_email": extract_first_email(reply_to) or extract_first_email(from_raw),
-                "mailbox_email": pop3_user,
-            }
-        finally:
-            self.logout()
-
+    # 根据配置登录
     def login_from_config(self):
         self.connect()
         self.authenticate(
@@ -358,6 +362,7 @@ class Pop3Receiver(ReceiverInterface):
             str(self.pop3_config.get("password") or ""),
         )
 
+    # 指定文件夹
     def open_configured_mailbox(self):
         self.open_mailbox(str(self.pop3_config.get("folder") or "INBOX"))
 

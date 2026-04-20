@@ -1,3 +1,5 @@
+import html
+import json
 import re
 from datetime import timezone
 from email.header import decode_header
@@ -22,6 +24,7 @@ class MailToolError(Exception):
         self.status = status
 
 
+# 解码
 def decode_mime_header(value):
     text = str(value or "")
     if not text:
@@ -39,6 +42,7 @@ def decode_mime_header(value):
     return "".join(parts).strip()
 
 
+# 抽取发件人
 def extract_first_email(value):
     pairs = getaddresses([str(value or "")])
     if not pairs:
@@ -67,6 +71,20 @@ def to_bool(value, default=True):
     return default
 
 
+def html_to_text(raw_html):
+    text = str(raw_html or "")
+    if not text:
+        return ""
+    normalized = re.sub(r"(?is)<\s*br\s*/?\s*>", "\n", text)
+    normalized = re.sub(r"(?is)</\s*(p|div|li|tr|table|h[1-6])\s*>", "\n", normalized)
+    normalized = re.sub(r"(?is)<[^>]+>", "", normalized)
+    normalized = html.unescape(normalized)
+    normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")
+    normalized = re.sub(r"\n{3,}", "\n\n", normalized)
+    return normalized.strip()
+
+
+# 抽取邮件body
 def extract_mail_body(mail):
     if mail.is_multipart():
         plain_parts = []
@@ -90,19 +108,35 @@ def extract_mail_body(mail):
         if plain_parts:
             return "\n".join(plain_parts).strip()
         if html_parts:
-            raw_html = "\n".join(html_parts)
-            stripped = re.sub(r"<[^>]+>", "", raw_html)
-            return stripped.strip()
+            return html_to_text("\n".join(html_parts))
         return ""
 
     payload = mail.get_payload(decode=True) or b""
     charset = mail.get_content_charset() or "utf-8"
     try:
-        return payload.decode(charset, errors="replace").strip()
+        text = payload.decode(charset, errors="replace").strip()
     except Exception:
-        return payload.decode("utf-8", errors="replace").strip()
+        text = payload.decode("utf-8", errors="replace").strip()
+    content_type = (mail.get_content_type() or "").lower()
+    if content_type == "text/html":
+        return html_to_text(text)
+    return text
 
 
+# 抽取附件名称
+def extract_mail_files(mail):
+    filenames = []
+    for part in mail.walk():
+        filename = part.get_filename()
+        if not filename:
+            continue
+        decoded = decode_mime_header(filename)
+        if decoded:
+            filenames.append(decoded)
+    return json.dumps(filenames, ensure_ascii=False)
+
+
+# 格式化日期
 def format_mail_datetime(date_header):
     raw = str(date_header or "").strip()
     if not raw:
@@ -214,7 +248,7 @@ def resolve_sendmsg_sync_targets():
     return targets, skipped
 
 
-# 从数据库加载我的邮件，邮件的来源：定时任务
+# 从数据库加载我的邮件，邮件的来源：定时任务、手动刷新
 def list_my_mails_from_db(
     owner_id,
     page=1,
@@ -270,6 +304,38 @@ def list_my_mails_from_db(
 # 用户未读数
 def count_unread_mails_from_db(owner_id):
     return MyMail.objects.filter(owner_id=owner_id, is_unread=True).count()
+
+
+def get_my_mail_detail_from_db(owner_id, mail_id):
+    row = MyMail.objects.filter(owner_id=owner_id, id=mail_id).first()
+    if not row:
+        raise MailToolError("Mail not found", status=404)
+
+    try:
+        files = json.loads(row.files or "[]")
+    except Exception:
+        files = []
+    if not isinstance(files, list):
+        files = []
+
+    return {
+        "id": row.id,
+        "subject": row.subject or "(无标题)",
+        "from": row.from_email or "",
+        "from_email": row.from_email or "",
+        "to": "",
+        "to_email": "",
+        "cc": "",
+        "date": format_received_label(row.received_at),
+        "body": row.body or "",
+        "unread": bool(row.is_unread),
+        "message_id": row.id,
+        "references": "",
+        "in_reply_to": "",
+        "reply_to": "",
+        "reply_to_email": row.from_email or "",
+        "files": files,
+    }
 
 
 # 确保存在用户设置的邮箱信息

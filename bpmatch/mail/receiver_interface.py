@@ -56,5 +56,5 @@ class ReceiverInterface(ABC):
         """验证当前接收协议配置是否可以成功连接并认证。"""
 
     @abstractmethod
-    def sync_mails(self, owner_id, sync_limit=120):
+    def sync_mails(self, owner_id):
         """同步昨天 00:00 到当前时刻的邮件，`sync_limit` 控制最多处理的候选邮件数。"""

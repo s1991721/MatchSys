@@ -188,6 +188,22 @@ class Pop3Receiver(ReceiverInterface):
                 self.mail = None
                 self._uidl_map = None
 
+    def test_connection(self) -> Dict[str, Any]:
+        try:
+            self.login_from_config()
+            client = self._require_mail_client()
+            message_count, mailbox_size = client.stat()
+            return {
+                "message": "连接成功",
+                "protocol": "pop3",
+                "mailbox": "INBOX",
+                "mailbox_email": str(self.pop3_config.get("user") or "").strip(),
+                "message_count": int(message_count or 0),
+                "mailbox_size": int(mailbox_size or 0),
+            }
+        finally:
+            self.logout()
+
     def sync_mails(self, owner_id, sync_limit=120):
         updated = 0
         try:

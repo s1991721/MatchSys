@@ -11,6 +11,7 @@ from .receiver import (
     query_my_mails,
     sync_my_mails,
     sync_today_my_mails_from_imap,
+    test_receive_connection,
 )
 from .pop3_receiver import Pop3Receiver
 from .sender import MailSender, SmtpMailSender, send_mail_by_login, test_smtp_connection
@@ -30,5 +31,6 @@ __all__ = [
     "send_mail_by_login",
     "sync_my_mails",
     "sync_today_my_mails_from_imap",
+    "test_receive_connection",
     "test_smtp_connection",
 ]

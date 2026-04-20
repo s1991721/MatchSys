@@ -64,6 +64,9 @@ class MailReceiver:
     def get_mail_detail(self, mail_id):
         return self.receiver.get_mail_detail(mail_id)
 
+    def test_connection(self):
+        return self.receiver.test_connection()
+
     def _build_receiver(self):
         incoming_protocol = str(self.send_config.get("incoming_protocol") or "").strip().lower()
         if incoming_protocol == "pop3":
@@ -114,6 +117,15 @@ def query_my_mails(send_config, page=1, page_size=20, keyword="", send_date=""):
 def get_my_mail_detail(send_config, mail_id):
     try:
         return MailReceiver(send_config).get_mail_detail(mail_id)
+    except Exception as exc:
+        if isinstance(exc, MailToolError):
+            raise
+        raise MailToolError(str(exc), status=500)
+
+
+def test_receive_connection(send_config):
+    try:
+        return MailReceiver(send_config).test_connection()
     except Exception as exc:
         if isinstance(exc, MailToolError):
             raise

@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bpmatch.authorize_gmail import test_connection
-from bpmatch.mailTool import test_smtp_connection
+from bpmatch.mailTool import test_receive_connection, test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
@@ -852,6 +852,25 @@ def sys_settings_sendmsg_test_api(request):
             username=email,
             password=password,
         )
+    except Exception as exc:
+        return api_error(str(exc))
+
+    return api_success(data=result)
+
+
+@csrf_exempt
+@require_POST
+def sys_settings_sendmsg_receiver_test_api(request):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        return payload_error
+
+    try:
+        result = test_receive_connection(payload or {})
     except Exception as exc:
         return api_error(str(exc))
 

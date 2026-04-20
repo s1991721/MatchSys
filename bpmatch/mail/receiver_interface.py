@@ -50,3 +50,7 @@ class ReceiverInterface(ABC):
     @abstractmethod
     def logout(self):
         """关闭与邮件服务器的会话。"""
+
+    @abstractmethod
+    def test_connection(self) -> Dict[str, Any]:
+        """验证当前接收协议配置是否可以成功连接并认证。"""

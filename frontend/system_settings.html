@@ -1395,6 +1395,32 @@
       });
     };
 
+    const validateReceiverSettings = (settings) => {
+      const protocol = String(settings.incoming_protocol || "imap").toLowerCase();
+      if (protocol === "pop3") {
+        if (!settings.pop3_host || !settings.pop3_port || !settings.pop3_security) {
+          return t("system_settings.sendmsg.pop3_incomplete", "请填写完整的 POP3 配置。");
+        }
+        if (!settings.pop3_use_smtp_auth && (!settings.pop3_user || !settings.pop3_password)) {
+          return t("system_settings.sendmsg.pop3_auth_incomplete", "请填写完整的 POP3 用户名和密码。");
+        }
+        if (settings.pop3_use_smtp_auth && (!settings.email || !settings.password)) {
+          return t("system_settings.sendmsg.smtp_auth_required", "复用 SMTP 认证时，请先填写 SMTP 用户名和密码。");
+        }
+        return "";
+      }
+      if (!settings.imap_host || !settings.imap_port || !settings.imap_security || !settings.imap_folder) {
+        return t("system_settings.sendmsg.imap_incomplete", "请填写完整的 IMAP 配置。");
+      }
+      if (!settings.imap_use_smtp_auth && (!settings.imap_user || !settings.imap_password)) {
+        return t("system_settings.sendmsg.imap_auth_incomplete", "请填写完整的 IMAP 用户名和密码。");
+      }
+      if (settings.imap_use_smtp_auth && (!settings.email || !settings.password)) {
+        return t("system_settings.sendmsg.smtp_auth_required", "复用 SMTP 认证时，请先填写 SMTP 用户名和密码。");
+      }
+      return "";
+    };
+
     const collectLineNotifySettings = () => {
       const nationalityCheckbox = document.getElementById("line-condition-nationality-foreign-allow");
       let nationality = -1;
@@ -2197,12 +2223,26 @@
         if (receiverTestButton) {
           const index = Number(receiverTestButton.getAttribute("data-test-sendmsg-receiver"));
           if (Number.isNaN(index)) return;
-          const protocol = getIncomingProtocol(index);
-          const message = protocol === "pop3"
-            ? t("system_settings.sendmsg.receiver_test_unavailable_pop3", "当前版本后端暂未提供 POP3 收信测试接口，请先保存配置后通过同步功能验证。")
-            : t("system_settings.sendmsg.receiver_test_unavailable_imap", "当前版本后端暂未提供 IMAP 收信测试接口，请先保存配置后通过同步功能验证。");
-          setInlineStatus(`sendmsg-status-${index}`, message, false);
-          notifyError(message);
+          const settings = collectSendmsgConfig(index);
+          const validationMessage = validateReceiverSettings(settings);
+          if (validationMessage) {
+            setInlineStatus(`sendmsg-status-${index}`, validationMessage, false);
+            notifyError(validationMessage);
+            return;
+          }
+          try {
+            const payload = await requestJson(`${apiBase}/sendmsg/receiver-test`, {
+              method: "POST",
+              body: JSON.stringify(settings),
+            });
+            const message = payload.data && payload.data.message ? payload.data.message : t("system_settings.common.connection_success", "连接成功");
+            setInlineStatus(`sendmsg-status-${index}`, message, true);
+            window.alert(message);
+            flashButton(receiverTestButton, t("system_settings.common.success", "成功"));
+          } catch (error) {
+            setInlineStatus(`sendmsg-status-${index}`, error.message || t("system_settings.common.connection_failed", "连接失败"), false);
+            notifyError(error.message);
+          }
         }
       });
 

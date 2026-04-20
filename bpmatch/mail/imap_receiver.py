@@ -187,6 +187,19 @@ class ImapReceiver(ReceiverInterface):
             finally:
                 self.mail = None
 
+    def test_connection(self) -> Dict[str, Any]:
+        try:
+            self.login_from_config()
+            self.open_configured_mailbox()
+            return {
+                "message": "连接成功",
+                "protocol": "imap",
+                "mailbox": str(self.imap_config.get("folder") or ""),
+                "mailbox_email": str(self.imap_config.get("user") or "").strip(),
+            }
+        finally:
+            self.logout()
+
     def sync_mails(self, owner_id, sync_limit=120):
         updated = 0
         try:

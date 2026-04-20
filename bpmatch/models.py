@@ -104,6 +104,8 @@ class MyMail(models.Model):
     owner_id = models.BigIntegerField("员工ID", null=True, blank=True)
     subject = models.CharField("邮件主题", max_length=512, null=True, blank=True)
     from_email = models.CharField("发件人邮箱", max_length=255, null=True, blank=True)
+    body = models.TextField("正文内容", blank=True, default="")
+    files = models.TextField("附件信息", blank=True, default="")
     received_at = models.DateTimeField("接收时间", null=True, blank=True)
     is_unread = models.BooleanField("是否未读", default=False)
 

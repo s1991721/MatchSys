@@ -1,5 +1,6 @@
 import json
 import re
+import threading
 from datetime import timedelta
 
 from django.db import transaction
@@ -16,12 +17,27 @@ from .mailTool import (
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
-    query_my_mails_from_imap,
+    mark_my_mail_as_read,
+    query_my_mails,
     count_unread_mails_from_db,
-    sync_my_mails_from_imap,
-    get_my_mail_detail_from_imap,
+    sync_my_mails,
+    get_my_mail_detail_from_db,
 )
-from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo
+from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo, MyMail
+
+
+def _mark_my_mail_as_read_async(login_id, mail_id):
+    try:
+        try:
+            send_config = ensure_send_config_for_login(login_id)
+        except MailToolError:
+            send_config = None
+        if send_config:
+            mark_my_mail_as_read(send_config, mail_id, owner_id=login_id)
+        else:
+            MyMail.objects.filter(owner_id=login_id, id=mail_id, is_unread=True).update(is_unread=False)
+    except Exception:
+        pass
 
 
 def _normalize_skills(value):
@@ -657,7 +673,7 @@ def send_mail(request):
 
 @csrf_exempt
 @require_GET
-# 我的邮件列表（接口入口在 views，邮件协议细节在 mailTool）
+# 我的邮件列表
 def my_mails_api(request):
     # 1. 检查是否登录
     login_id, error = require_login(request)
@@ -701,7 +717,9 @@ def my_mails_api(request):
 @csrf_exempt
 @require_GET
 # 我的邮件查询（关键字、送信日期）
-# 注意：查询直接走 IMAP 服务器，不落本地 DB。
+# 注意：
+# 查询直接走 IMAP 服务器，不落本地 DB。
+# pop3情况下，查询本地
 def my_mails_query_api(request):
     login_id, error = require_login(request)
     if error:
@@ -727,8 +745,9 @@ def my_mails_query_api(request):
     page_size = max(1, min(page_size, 50))
 
     try:
-        data, meta = query_my_mails_from_imap(
+        data, meta = query_my_mails(
             send_config,
+            owner_id=login_id,
             page=page,
             page_size=page_size,
             keyword=keyword,
@@ -743,14 +762,14 @@ def my_mails_query_api(request):
 
 @csrf_exempt
 @require_POST
-# 我的邮件刷新同步（单独接口）
+# 我的邮件本地DB刷新，与邮件服务器一致
 def my_mails_sync_api(request):
     login_id, error = require_login(request)
     if error:
         return error
     try:
         send_config = ensure_send_config_for_login(login_id)
-        updated = sync_my_mails_from_imap(login_id, send_config)
+        updated = sync_my_mails(login_id, send_config)
         return api_success(data={"updated": int(updated or 0)})
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
@@ -766,9 +785,16 @@ def my_mail_detail_api(request, mail_id):
     if error:
         return error
     try:
-        # 5. 用户点击邮件列表时，按外部唯一标识从 IMAP 获取详情
-        send_config = ensure_send_config_for_login(login_id)
-        data = get_my_mail_detail_from_imap(send_config, mail_id)
+        data = get_my_mail_detail_from_db(login_id, mail_id)
+        if data and data.get("unread"):
+            data["unread"] = False
+            thread = threading.Thread(
+                target=_mark_my_mail_as_read_async,
+                args=(login_id, mail_id),
+                name="mark_my_mail_as_read",
+                daemon=True,
+            )
+            thread.start()
         return api_success(data=data)
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)

@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.conf import settings as django_settings
 from django.db import close_old_connections, connection, transaction
@@ -11,7 +11,7 @@ from django.utils.dateparse import parse_datetime
 
 from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
-from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_today_my_mails_from_imap
+from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_my_mails
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
 from settings.activation_code import is_activation_code_valid
 from settings.mails_arrival_notification import notify_project_ingested
@@ -296,6 +296,10 @@ logger_clean = logging.getLogger("bpmatch.time_to_clean")
 def _clean_expired_mails():
     # 清理过期邮件（含日期为空的记录）
     cutoff = timezone.now() - timedelta(days=_get_cycle_days())
+    my_mail_cutoff = timezone.make_aware(
+        datetime.combine(timezone.localdate() - timedelta(days=1), time.min),
+        timezone.get_current_timezone(),
+    )
     with transaction.atomic():
         saved_deleted, _ = SavedMailInfo.objects.filter(
             Q(date__lt=cutoff) | Q(date__isnull=True)
@@ -307,16 +311,17 @@ def _clean_expired_mails():
             Q(date__lt=cutoff) | Q(date__isnull=True)
         ).delete()
         my_mail_deleted, _ = MyMail.objects.filter(
-            Q(received_at__lt=cutoff) | Q(received_at__isnull=True)
+            Q(received_at__lt=my_mail_cutoff) | Q(received_at__isnull=True)
         ).delete()
 
     logger_clean.info(
-        "time_to_clean mails deleted saved=%s projects=%s technicians=%s my_mail=%s cutoff=%s",
+        "time_to_clean mails deleted saved=%s projects=%s technicians=%s my_mail=%s cutoff=%s my_mail_cutoff=%s",
         saved_deleted,
         project_deleted,
         technician_deleted,
         my_mail_deleted,
         timezone.localtime(cutoff).strftime("%Y-%m-%d %H:%M:%S"),
+        timezone.localtime(my_mail_cutoff).strftime("%Y-%m-%d %H:%M:%S"),
     )
 
 
@@ -409,11 +414,10 @@ def run_time_to_sync_my_mails():
             if not owner_id:
                 continue
             try:
-                inserted = sync_today_my_mails_from_imap(
+                inserted = sync_my_mails(
                     owner_id=owner_id,
                     send_config=send_config,
                     sync_limit=500,
-                    only_new=True,
                 )
                 inserted_total += int(inserted or 0)
                 logger_sync_my_mails.info(

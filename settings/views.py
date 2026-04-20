@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 
 from bpmatch.authorize_gmail import test_connection
-from bpmatch.mailTool import test_smtp_connection
+from bpmatch.mailTool import test_receive_connection, test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
@@ -262,6 +262,20 @@ def _handle_sendmsg(settings_payload, login_id):
         else:
             imap_use_smtp_auth = True
 
+        pop3_use_smtp_auth_raw = item.get("pop3_use_smtp_auth")
+        if isinstance(pop3_use_smtp_auth_raw, bool):
+            pop3_use_smtp_auth = pop3_use_smtp_auth_raw
+        elif isinstance(pop3_use_smtp_auth_raw, str):
+            pop3_use_smtp_auth = pop3_use_smtp_auth_raw.strip().lower() not in ("0", "false", "no", "off")
+        elif isinstance(pop3_use_smtp_auth_raw, (int, float)):
+            pop3_use_smtp_auth = bool(pop3_use_smtp_auth_raw)
+        else:
+            pop3_use_smtp_auth = True
+
+        incoming_protocol = str(item.get("incoming_protocol") or "").strip().lower()
+        if incoming_protocol not in ("imap", "pop3"):
+            incoming_protocol = "pop3" if str(item.get("pop3_host") or "").strip() else "imap"
+
         normalized.append(
             {
                 "email": str(item.get("email") or "").strip(),
@@ -269,6 +283,7 @@ def _handle_sendmsg(settings_payload, login_id):
                 "smtp": str(item.get("smtp") or "").strip(),
                 "port": str(item.get("port") or "").strip(),
                 "user": str(item.get("user") or "").strip(),
+                "incoming_protocol": incoming_protocol,
                 "imap_host": str(item.get("imap_host") or "").strip(),
                 "imap_port": str(item.get("imap_port") or "").strip(),
                 "imap_security": str(item.get("imap_security") or "").strip().lower(),
@@ -276,6 +291,12 @@ def _handle_sendmsg(settings_payload, login_id):
                 "imap_use_smtp_auth": imap_use_smtp_auth,
                 "imap_user": str(item.get("imap_user") or "").strip(),
                 "imap_password": str(item.get("imap_password") or ""),
+                "pop3_host": str(item.get("pop3_host") or "").strip(),
+                "pop3_port": str(item.get("pop3_port") or "").strip(),
+                "pop3_security": str(item.get("pop3_security") or "").strip().lower(),
+                "pop3_use_smtp_auth": pop3_use_smtp_auth,
+                "pop3_user": str(item.get("pop3_user") or "").strip(),
+                "pop3_password": str(item.get("pop3_password") or ""),
             }
         )
     return _save_setting("sendmsg", normalized, login_id)
@@ -831,6 +852,25 @@ def sys_settings_sendmsg_test_api(request):
             username=email,
             password=password,
         )
+    except Exception as exc:
+        return api_error(str(exc))
+
+    return api_success(data=result)
+
+
+@csrf_exempt
+@require_POST
+def sys_settings_sendmsg_receiver_test_api(request):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, payload_error = parse_json_body(request)
+    if payload_error:
+        return payload_error
+
+    try:
+        result = test_receive_connection(payload or {})
     except Exception as exc:
         return api_error(str(exc))
 

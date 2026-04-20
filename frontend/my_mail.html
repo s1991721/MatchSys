@@ -145,6 +145,35 @@
       gap: 4px;
     }
 
+    .mail-item.is-skeleton {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .mail-skeleton-line {
+      height: 12px;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, rgba(241, 245, 249, 0.95) 25%, rgba(226, 232, 240, 0.95) 37%, rgba(241, 245, 249, 0.95) 63%);
+      background-size: 400% 100%;
+      animation: mailShimmer 1.2s ease-in-out infinite;
+    }
+
+    .mail-skeleton-line.subject {
+      width: 58%;
+      height: 14px;
+    }
+
+    .mail-skeleton-line.date {
+      width: 88px;
+      height: 12px;
+      margin-left: auto;
+    }
+
+    .mail-skeleton-line.from {
+      width: 72%;
+    }
+
     .mail-item:hover {
       background: #f3f7ff;
     }
@@ -160,9 +189,13 @@
       justify-content: space-between;
       gap: 8px;
       align-items: center;
+      min-width: 0;
     }
 
     .mail-item-subject {
+      display: block;
+      flex: 1 1 auto;
+      min-width: 0;
       font-size: 14px;
       font-weight: 700;
       color: #101828;
@@ -172,6 +205,7 @@
     }
 
     .mail-item-date {
+      flex: 0 0 auto;
       font-size: 12px;
       color: var(--mail-muted);
       white-space: nowrap;
@@ -229,10 +263,32 @@
 
     .mail-view-body {
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
       overflow: auto;
       line-height: 1.6;
       font-size: 14px;
       flex: 1;
+    }
+
+    .mail-view-body.is-loading {
+      color: var(--mail-muted);
+      background:
+        linear-gradient(90deg, rgba(241, 245, 249, 0.9) 25%, rgba(226, 232, 240, 0.95) 37%, rgba(241, 245, 249, 0.9) 63%);
+      background-size: 400% 100%;
+      animation: mailShimmer 1.2s ease-in-out infinite;
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 240px;
+    }
+
+    @keyframes mailShimmer {
+      0% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0 50%;
+      }
     }
 
     .mail-view-actions {
@@ -435,6 +491,10 @@
       let forwardSearchTimer = null;
       let forwardSearchSeq = 0;
       let forwardSuggestionMap = {};
+      let detailCache = {};
+      let detailRequestSeq = 0;
+      let listRequestSeq = 0;
+      let isListLoading = false;
       let currentFilters = {
         keyword: "",
         send_date: "",
@@ -446,6 +506,25 @@
       const setStatus = (text, isError) => {
         replyStatus.textContent = text || "";
         replyStatus.style.color = isError ? "#dc2626" : "#6f7b8f";
+      };
+
+      const updateComposerActionLabels = () => {
+        if (replyActionBtn) {
+          replyActionBtn.textContent = isReplyExpanded && composeMode === "reply"
+            ? "收起回复"
+            : "回复";
+        }
+        if (forwardActionBtn) {
+          forwardActionBtn.textContent = isReplyExpanded && composeMode === "forward"
+            ? "收起转发"
+            : "转发";
+        }
+      };
+
+      const notifyMailRead = (mailId) => {
+        if (window.top && window.top !== window && typeof window.top.postMessage === "function") {
+          window.top.postMessage({ type: "mail:mark-read", mailId: String(mailId || "") }, "*");
+        }
       };
 
       const escapeHtml = (value) => {
@@ -534,6 +613,18 @@
 
       const renderList = () => {
         if (!mailItems) return;
+        if (isListLoading) {
+          mailItems.innerHTML = Array.from({ length: 6 }).map(() => `
+            <li class="mail-item is-skeleton" aria-hidden="true">
+              <div class="mail-item-top">
+                <span class="mail-skeleton-line subject"></span>
+                <span class="mail-skeleton-line date"></span>
+              </div>
+              <div class="mail-skeleton-line from"></div>
+            </li>
+          `).join("");
+          return;
+        }
         if (!listItems.length) {
           const emptyText = listNoticeMessage || "暂无邮件";
           mailItems.innerHTML = `<li class="mail-empty">${escapeHtml(emptyText)}</li>`;
@@ -553,6 +644,60 @@
         }).join("");
       };
 
+      const setActiveListItem = (mailId) => {
+        const matched = listItems.find((item) => String(item.id) === String(mailId));
+        if (!matched) return null;
+        activeMail = {
+          ...(activeMail || {}),
+          ...matched,
+        };
+        renderList();
+        return activeMail;
+      };
+
+      const markMailAsReadLocally = (mailId) => {
+        if (!mailId) return false;
+        let changed = false;
+        listItems = listItems.map((item) => {
+          if (String(item.id) !== String(mailId) || !item.unread) {
+            return item;
+          }
+          changed = true;
+          return { ...item, unread: false };
+        });
+        if (activeMail && String(activeMail.id) === String(mailId) && activeMail.unread) {
+          activeMail = { ...activeMail, unread: false };
+          changed = true;
+        }
+        if (changed) {
+          renderList();
+        }
+        return changed;
+      };
+
+      const setListLoading = (loading, trigger) => {
+        isListLoading = Boolean(loading);
+        renderList();
+        if (searchBtn) {
+          searchBtn.disabled = isListLoading;
+          searchBtn.textContent = isListLoading && trigger === "search" ? "查询中..." : "查询";
+        }
+        if (listRefreshBtn) {
+          listRefreshBtn.disabled = isListLoading;
+          listRefreshBtn.style.opacity = isListLoading ? "0.65" : "";
+          listRefreshBtn.style.pointerEvents = isListLoading ? "none" : "";
+        }
+      };
+
+      const showDetailLoading = (mail) => {
+        const subjectText = (mail && mail.subject) || "(无标题)";
+        const fromText = (mail && (mail.from || mail.from_email)) || "";
+        const dateText = (mail && mail.date) || "";
+        mailMeta.textContent = `主题: ${subjectText} | 发件人: ${fromText} | 时间: ${dateText}`;
+        mailBody.textContent = "正在加载邮件内容...";
+        mailBody.classList.add("is-loading");
+      };
+
       // 回复区默认折叠，仅在用户需要时展开，减少首屏占用。
       const setReplyExpanded = (expanded) => {
         isReplyExpanded = Boolean(expanded);
@@ -563,10 +708,22 @@
         if (replyPanel) {
           replyPanel.style.display = isReplyExpanded ? "grid" : "none";
         }
+        updateComposerActionLabels();
+      };
+
+      const toggleComposer = (mode) => {
+        const normalizedMode = mode === "forward" ? "forward" : "reply";
+        if (isReplyExpanded && composeMode === normalizedMode) {
+          setReplyExpanded(false);
+          setStatus("", false);
+          return;
+        }
+        openComposer(normalizedMode);
       };
 
       const openComposer = (mode) => {
         setComposerMode(mode);
+        updateComposerActionLabels();
         setReplyExpanded(true);
         if (replyPanel && typeof replyPanel.scrollIntoView === "function") {
           replyPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -582,6 +739,7 @@
           replySubject.value = activeMail.subject && !/^\s*Re:/i.test(activeMail.subject)
             ? `Re: ${activeMail.subject}`
             : (activeMail.subject || "");
+          replyBody.value = "";
           replyBody.focus();
           return;
         }
@@ -605,6 +763,7 @@
 
       const fillDetail = (detail) => {
         activeMail = detail || null;
+        mailBody.classList.remove("is-loading");
         if (!detail) {
           // 顶部信息栏用于说明当前状态，避免出现“只有一条横线”的空白感。
           mailMeta.textContent = "请在左侧选择邮件后查看详情";
@@ -633,6 +792,18 @@
       };
 
       const loadDetail = async (mailId) => {
+        const currentSeq = ++detailRequestSeq;
+        const selected = setActiveListItem(mailId);
+        showDetailLoading(selected);
+        if (detailCache[mailId]) {
+          if (markMailAsReadLocally(mailId)) {
+            notifyMailRead(mailId);
+          }
+          detailCache[mailId].unread = false;
+          fillDetail(detailCache[mailId]);
+          setStatus("", false);
+          return;
+        }
         try {
           setStatus("加载邮件内容...", false);
           const res = await fetchWithAuth(`/api/my-mails/${encodeURIComponent(mailId)}`, { method: "GET" });
@@ -640,9 +811,22 @@
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件失败");
           }
-          fillDetail(payload.data || null);
+          if (currentSeq !== detailRequestSeq) return;
+          const detail = payload.data || null;
+          if (detail) {
+            const changed = markMailAsReadLocally(mailId);
+            detail.unread = false;
+            detailCache[mailId] = detail;
+            if (changed) {
+              notifyMailRead(mailId);
+            }
+          }
+          fillDetail(detail);
           setStatus("", false);
         } catch (error) {
+          if (currentSeq !== detailRequestSeq) return;
+          mailBody.classList.remove("is-loading");
+          mailBody.textContent = "";
           setStatus(error.message || "读取邮件失败", true);
         }
       };
@@ -653,8 +837,10 @@
       );
 
       const loadList = async (forceRefresh = false) => {
+        const currentSeq = ++listRequestSeq;
         try {
           setStatus("加载邮件列表...", false);
+          setListLoading(true, forceRefresh ? "refresh" : "search");
           if (forceRefresh) {
             await fetchWithAuth("/api/my-mails/sync", {
               method: "POST",
@@ -673,6 +859,7 @@
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件列表失败");
           }
+          if (currentSeq !== listRequestSeq) return;
           const data = payload.data || {};
           const meta = payload.meta || {};
           totalPages = Number(meta.total_pages || 1) || 1;
@@ -680,6 +867,7 @@
           currentPage = Number(meta.page || currentPage) || 1;
           listItems = Array.isArray(data.items) ? data.items : [];
           listNoticeMessage = "";
+          detailCache = {};
           mailboxText.textContent = data.mailbox_email ? `邮箱: ${data.mailbox_email}` : "";
           if (paginationSummary) {
             paginationSummary.textContent = `共 ${totalCount} 条 · 第 ${currentPage}/${totalPages} 页`;
@@ -688,22 +876,25 @@
             window.renderPagination(pagination, paginationPages, currentPage, totalPages);
           }
 
+          renderList();
+
           if (listItems.length) {
             // 优先保持当前选中邮件；不存在时选中首封，确保收件人/标题默认值持续可用。
             const activeId = activeMail && activeMail.id ? String(activeMail.id) : "";
             const matched = listItems.find((item) => String(item.id) === activeId);
             const target = matched || listItems[0];
-            await loadDetail(target.id);
+            loadDetail(target.id);
           } else {
             fillDetail(null);
-            renderList();
           }
           setStatus("", false);
         } catch (error) {
+          if (currentSeq !== listRequestSeq) return;
           listItems = [];
           totalPages = 1;
           totalCount = 0;
           currentPage = 1;
+          detailCache = {};
           const rawMessage = String(
             (error && error.payload && error.payload.message) || error.message || ""
           );
@@ -721,6 +912,10 @@
           }
           if (pagination && window.renderPagination) {
             window.renderPagination(pagination, paginationPages, 1, 1);
+          }
+        } finally {
+          if (currentSeq === listRequestSeq) {
+            setListLoading(false, "");
           }
         }
       };
@@ -751,6 +946,21 @@
         });
       }
 
+      [filterKeyword, filterSendDate].forEach((input) => {
+        if (!input) return;
+        input.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          if (isListLoading) return;
+          currentPage = 1;
+          currentFilters = {
+            keyword: (filterKeyword && filterKeyword.value ? filterKeyword.value : "").trim(),
+            send_date: (filterSendDate && filterSendDate.value ? filterSendDate.value : "").trim(),
+          };
+          loadList(false);
+        });
+      });
+
       if (pagination && window.bindPagination) {
         window.bindPagination(pagination, (value) => {
           if (value === "prev") {
@@ -775,13 +985,13 @@
       // 邮件内容区动作按钮：触发展开回复区，并按动作填充默认内容。
       if (replyActionBtn) {
         replyActionBtn.addEventListener("click", () => {
-          openComposer("reply");
+          toggleComposer("reply");
         });
       }
 
       if (forwardActionBtn) {
         forwardActionBtn.addEventListener("click", () => {
-          openComposer("forward");
+          toggleComposer("forward");
         });
       }
 
@@ -864,6 +1074,7 @@
       renderForwardRecipients([]);
       setComposerMode("reply");
       setReplyExpanded(false);
+      updateComposerActionLabels();
       loadList();
     })();
   </script>

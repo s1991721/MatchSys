@@ -7,6 +7,48 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <style>
+    .sendmsg-section-title {
+      grid-column: 1 / -1;
+      margin: 4px 0 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .sendmsg-section-hint {
+      grid-column: 1 / -1;
+      margin: -6px 0 4px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #94a3b8;
+    }
+
+    .sendmsg-protocol-group {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-height: 52px;
+      border: 1px solid #cfd8e3;
+      border-radius: 12px;
+      padding: 0 14px;
+      background: #fff;
+    }
+
+    .sendmsg-protocol-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #4b5563;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 0;
+      white-space: nowrap;
+    }
+
+    .sendmsg-protocol-option input {
+      margin: 0;
+    }
+
     .sendmsg-toggle-field {
       display: flex;
       align-items: center;
@@ -35,6 +77,10 @@
 
     .sendmsg-auth-hidden {
       display: none;
+    }
+
+    .sendmsg-receiver-hidden {
+      display: none !important;
     }
 
     .line-notify-conditions {
@@ -834,13 +880,37 @@
       cancelDeleteButton.addEventListener("click", closeDeleteModal);
     }
 
-    const sendmsgFormHtml = (index, config) => `
+    const resolveIncomingProtocol = (config = {}) => {
+      const raw = String(config.incoming_protocol || "").trim().toLowerCase();
+      if (raw === "imap" || raw === "pop3") return raw;
+      return String(config.pop3_host || "").trim() ? "pop3" : "imap";
+    };
+
+    const receiverCapabilityHint = (protocol) => {
+      if (protocol === "pop3") {
+        return t(
+          "system_settings.sendmsg.pop3_hint",
+          "仅支持收件箱拉取，未读状态和搜索依赖系统本地同步结果。"
+        );
+      }
+      return t(
+        "system_settings.sendmsg.imap_hint",
+        "支持文件夹读取、服务端搜索和未读状态同步。"
+      );
+    };
+
+    const sendmsgFormHtml = (index, config) => {
+      const incomingProtocol = resolveIncomingProtocol(config);
+      const imapUseSmtpAuth = config.imap_use_smtp_auth === false ? "" : "checked";
+      const pop3UseSmtpAuth = config.pop3_use_smtp_auth === false ? "" : "checked";
+      return `
       <li class="config-item">
         <div class="config-head">
           <span class="config-title">${format("system_settings.sendmsg.item_title", { num: String(index + 1).padStart(2, "0") }, `配置 ${String(index + 1).padStart(2, "0")}`)}</span>
           <span class="inline-status" id="sendmsg-status-${index}"></span>
         </div>
         <form class="form-grid">
+          <div class="sendmsg-section-title">${t("system_settings.sendmsg.smtp_section", "发信配置")}</div>
           <div class="form-field">
             <label for="sendmsg-email-${index}">${t("system_settings.sendmsg.smtp_user", "SMTP 用户名")}</label>
             <input id="sendmsg-email-${index}" type="email" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.email_placeholder" value="${config.email || ""}" />
@@ -857,15 +927,44 @@
             <label for="sendmsg-port-${index}">${t("system_settings.sendmsg.smtp_port", "SMTP 端口")}</label>
             <input id="sendmsg-port-${index}" type="number" placeholder="587" data-i18n-placeholder="system_settings.sendmsg.port_placeholder" value="${config.port || ""}" />
           </div>
+          <div class="sendmsg-section-title">${t("system_settings.sendmsg.receiver_section", "收信配置")}</div>
           <div class="form-field">
+            <label>${t("system_settings.sendmsg.incoming_protocol", "接收协议")}</label>
+            <div class="sendmsg-protocol-group">
+              <label class="sendmsg-protocol-option" for="sendmsg-incoming-protocol-imap-${index}">
+                <input
+                  id="sendmsg-incoming-protocol-imap-${index}"
+                  type="radio"
+                  name="sendmsg-incoming-protocol-${index}"
+                  data-sendmsg-protocol="${index}"
+                  value="imap"
+                  ${incomingProtocol === "imap" ? "checked" : ""}
+                />
+                <span>IMAP</span>
+              </label>
+              <label class="sendmsg-protocol-option" for="sendmsg-incoming-protocol-pop3-${index}">
+                <input
+                  id="sendmsg-incoming-protocol-pop3-${index}"
+                  type="radio"
+                  name="sendmsg-incoming-protocol-${index}"
+                  data-sendmsg-protocol="${index}"
+                  value="pop3"
+                  ${incomingProtocol === "pop3" ? "checked" : ""}
+                />
+                <span>POP3</span>
+              </label>
+            </div>
+          </div>
+          <div class="sendmsg-section-hint" id="sendmsg-receiver-hint-${index}">${receiverCapabilityHint(incomingProtocol)}</div>
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap">
             <label for="sendmsg-imap-host-${index}">${t("system_settings.sendmsg.imap_host", "IMAP 服务器")}</label>
             <input id="sendmsg-imap-host-${index}" type="text" placeholder="imap.gmail.com" data-i18n-placeholder="system_settings.sendmsg.imap_host_placeholder" value="${config.imap_host || ""}" />
           </div>
-          <div class="form-field">
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap">
             <label for="sendmsg-imap-port-${index}">${t("system_settings.sendmsg.imap_port", "IMAP 端口")}</label>
             <input id="sendmsg-imap-port-${index}" type="number" placeholder="993" data-i18n-placeholder="system_settings.sendmsg.imap_port_placeholder" value="${config.imap_port || ""}" />
           </div>
-          <div class="form-field">
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap">
             <label for="sendmsg-imap-security-${index}">${t("system_settings.sendmsg.imap_security", "IMAP 加密方式")}</label>
             <select id="sendmsg-imap-security-${index}">
               <option value="ssl" ${String(config.imap_security || "ssl") === "ssl" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_ssl", "SSL/TLS")}</option>
@@ -873,24 +972,55 @@
               <option value="none" ${String(config.imap_security || "") === "none" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_none", "无加密")}</option>
             </select>
           </div>
-          <div class="form-field">
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap">
             <label for="sendmsg-imap-folder-${index}">${t("system_settings.sendmsg.imap_folder", "收件文件夹")}</label>
             <input id="sendmsg-imap-folder-${index}" type="text" placeholder="INBOX" data-i18n-placeholder="system_settings.sendmsg.imap_folder_placeholder" value="${config.imap_folder || "INBOX"}" />
           </div>
-          <div class="form-field full sendmsg-toggle-field">
+          <div class="form-field full sendmsg-toggle-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap">
             <label class="sendmsg-toggle-compact" for="sendmsg-imap-use-smtp-auth-${index}">
-              <input id="sendmsg-imap-use-smtp-auth-${index}" type="checkbox" ${config.imap_use_smtp_auth === false ? "" : "checked"} />
+              <input id="sendmsg-imap-use-smtp-auth-${index}" type="checkbox" ${imapUseSmtpAuth} />
               <span>${t("system_settings.sendmsg.imap_use_smtp_auth", "复用 SMTP 账号密码")}</span>
             </label>
           </div>
-          <div class="form-field" id="sendmsg-imap-user-field-${index}">
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap" id="sendmsg-imap-user-field-${index}">
             <label for="sendmsg-imap-user-${index}">${t("system_settings.sendmsg.imap_user", "IMAP 用户名")}</label>
             <input id="sendmsg-imap-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.imap_user_placeholder" value="${config.imap_user || ""}" />
           </div>
-          <div class="form-field" id="sendmsg-imap-password-field-${index}">
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap" id="sendmsg-imap-password-field-${index}">
             <label for="sendmsg-imap-password-${index}">${t("system_settings.sendmsg.imap_password", "IMAP 密码 / 授权码")}</label>
             <input id="sendmsg-imap-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.imap_password_placeholder" value="${config.imap_password || ""}" />
           </div>
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3">
+            <label for="sendmsg-pop3-host-${index}">${t("system_settings.sendmsg.pop3_host", "POP3 服务器")}</label>
+            <input id="sendmsg-pop3-host-${index}" type="text" placeholder="pop.gmail.com" data-i18n-placeholder="system_settings.sendmsg.pop3_host_placeholder" value="${config.pop3_host || ""}" />
+          </div>
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3">
+            <label for="sendmsg-pop3-port-${index}">${t("system_settings.sendmsg.pop3_port", "POP3 端口")}</label>
+            <input id="sendmsg-pop3-port-${index}" type="number" placeholder="995" data-i18n-placeholder="system_settings.sendmsg.pop3_port_placeholder" value="${config.pop3_port || ""}" />
+          </div>
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3">
+            <label for="sendmsg-pop3-security-${index}">${t("system_settings.sendmsg.pop3_security", "POP3 加密方式")}</label>
+            <select id="sendmsg-pop3-security-${index}">
+              <option value="ssl" ${String(config.pop3_security || "ssl") === "ssl" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_ssl", "SSL/TLS")}</option>
+              <option value="starttls" ${String(config.pop3_security || "") === "starttls" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_starttls", "STARTTLS")}</option>
+              <option value="none" ${String(config.pop3_security || "") === "none" ? "selected" : ""}>${t("system_settings.sendmsg.imap_security_none", "无加密")}</option>
+            </select>
+          </div>
+          <div class="form-field full sendmsg-toggle-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3">
+            <label class="sendmsg-toggle-compact" for="sendmsg-pop3-use-smtp-auth-${index}">
+              <input id="sendmsg-pop3-use-smtp-auth-${index}" type="checkbox" ${pop3UseSmtpAuth} />
+              <span>${t("system_settings.sendmsg.pop3_use_smtp_auth", "复用 SMTP 账号密码")}</span>
+            </label>
+          </div>
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3" id="sendmsg-pop3-user-field-${index}">
+            <label for="sendmsg-pop3-user-${index}">${t("system_settings.sendmsg.pop3_user", "POP3 用户名")}</label>
+            <input id="sendmsg-pop3-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.pop3_user_placeholder" value="${config.pop3_user || ""}" />
+          </div>
+          <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3" id="sendmsg-pop3-password-field-${index}">
+            <label for="sendmsg-pop3-password-${index}">${t("system_settings.sendmsg.pop3_password", "POP3 密码 / 授权码")}</label>
+            <input id="sendmsg-pop3-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.pop3_password_placeholder" value="${config.pop3_password || ""}" />
+          </div>
+          <div class="sendmsg-section-title">${t("system_settings.sendmsg.owner_section", "账号归属")}</div>
           <div class="form-field">
             <label for="sendmsg-user-${index}">${t("system_settings.sendmsg.user", "使用人")}</label>
             <input
@@ -903,13 +1033,15 @@
             />
           </div>
           <div class="form-actions">
-            <button class="c-btn c-btn-secondary" type="button" data-test-sendmsg="${index}">${t("system_settings.common.test", "连接测试")}</button>
+            <button class="c-btn c-btn-secondary" type="button" data-test-sendmsg-smtp="${index}">${t("system_settings.sendmsg.test_smtp", "测试 SMTP")}</button>
+            <button class="c-btn c-btn-secondary" type="button" data-test-sendmsg-receiver="${index}">${t("system_settings.sendmsg.test_receiver", "测试收信")}</button>
             <button class="c-btn c-btn-primary" type="button" data-save-sendmsg="${index}">${t("system_settings.common.save_config", "保存配置")}</button>
             <button class="c-btn c-btn-danger" type="button" data-delete-sendmsg="${index}">${t("system_settings.common.delete", "删除")}</button>
           </div>
         </form>
       </li>
     `;
+    };
 
     const renderSendmsgConfigs = (configs) => {
       if (!sendmsgList) return;
@@ -921,7 +1053,7 @@
       if (i18n) {
         i18n.apply(sendmsgList);
       }
-      syncAllImapAuthFields();
+      syncAllReceiverFields();
     };
 
     const snapshotTaskStatuses = () => {
@@ -1115,6 +1247,30 @@
       aiTestStatus.classList.toggle("success", data.status === "ready");
     };
 
+    const getIncomingProtocol = (index) => {
+      const checked = document.querySelector(`input[name="sendmsg-incoming-protocol-${index}"]:checked`);
+      if (!(checked instanceof HTMLInputElement)) return "imap";
+      return checked.value === "pop3" ? "pop3" : "imap";
+    };
+
+    const syncProtocolFields = (index) => {
+      const protocol = getIncomingProtocol(index);
+      const blocks = sendmsgList
+        ? sendmsgList.querySelectorAll(`[data-sendmsg-protocol-block="${index}"]`)
+        : [];
+      Array.from(blocks).forEach((block) => {
+        if (!(block instanceof HTMLElement)) return;
+        block.classList.toggle(
+          "sendmsg-receiver-hidden",
+          block.getAttribute("data-protocol") !== protocol
+        );
+      });
+      const hint = document.getElementById(`sendmsg-receiver-hint-${index}`);
+      if (hint) {
+        hint.textContent = receiverCapabilityHint(protocol);
+      }
+    };
+
     const syncImapAuthFields = (index) => {
       const useSmtpAuthEl = document.getElementById(`sendmsg-imap-use-smtp-auth-${index}`);
       const imapUserEl = document.getElementById(`sendmsg-imap-user-${index}`);
@@ -1136,31 +1292,107 @@
       }
     };
 
-    const syncAllImapAuthFields = () => {
+    const syncPop3AuthFields = (index) => {
+      const useSmtpAuthEl = document.getElementById(`sendmsg-pop3-use-smtp-auth-${index}`);
+      const pop3UserEl = document.getElementById(`sendmsg-pop3-user-${index}`);
+      const pop3PasswordEl = document.getElementById(`sendmsg-pop3-password-${index}`);
+      const pop3UserFieldEl = document.getElementById(`sendmsg-pop3-user-field-${index}`);
+      const pop3PasswordFieldEl = document.getElementById(`sendmsg-pop3-password-field-${index}`);
+      if (!(useSmtpAuthEl instanceof HTMLInputElement)) return;
+      if (!(pop3UserEl instanceof HTMLInputElement) || !(pop3PasswordEl instanceof HTMLInputElement)) return;
+      const useSmtpAuth = Boolean(useSmtpAuthEl.checked);
+      if (useSmtpAuth) {
+        pop3UserEl.value = getValue(`sendmsg-email-${index}`).trim();
+        pop3PasswordEl.value = getValue(`sendmsg-password-${index}`);
+      }
+      if (pop3UserFieldEl) {
+        pop3UserFieldEl.classList.toggle("sendmsg-auth-hidden", useSmtpAuth);
+      }
+      if (pop3PasswordFieldEl) {
+        pop3PasswordFieldEl.classList.toggle("sendmsg-auth-hidden", useSmtpAuth);
+      }
+    };
+
+    const syncAllReceiverFields = () => {
       if (!sendmsgList) return;
       const items = sendmsgList.querySelectorAll(".config-item");
-      Array.from(items).forEach((_, index) => syncImapAuthFields(index));
+      Array.from(items).forEach((_, index) => {
+        syncProtocolFields(index);
+        syncImapAuthFields(index);
+        syncPop3AuthFields(index);
+      });
+    };
+
+    const sanitizeSendmsgPayload = (settings) => {
+      const protocol = String(settings.incoming_protocol || "imap").toLowerCase();
+      const payload = {
+        email: settings.email || "",
+        password: settings.password || "",
+        smtp: settings.smtp || "",
+        port: settings.port || "",
+        user: settings.user || "",
+        incoming_protocol: protocol === "pop3" ? "pop3" : "imap",
+        imap_host: settings.imap_host || "",
+        imap_port: settings.imap_port || "",
+        imap_security: settings.imap_security || "ssl",
+        imap_folder: settings.imap_folder || "INBOX",
+        imap_use_smtp_auth: Boolean(settings.imap_use_smtp_auth),
+        imap_user: settings.imap_user || "",
+        imap_password: settings.imap_password || "",
+        pop3_host: settings.pop3_host || "",
+        pop3_port: settings.pop3_port || "",
+        pop3_security: settings.pop3_security || "ssl",
+        pop3_use_smtp_auth: Boolean(settings.pop3_use_smtp_auth),
+        pop3_user: settings.pop3_user || "",
+        pop3_password: settings.pop3_password || "",
+      };
+      if (payload.incoming_protocol === "imap") {
+        payload.pop3_host = "";
+        payload.pop3_port = "";
+        payload.pop3_security = "ssl";
+        payload.pop3_use_smtp_auth = true;
+        payload.pop3_user = "";
+        payload.pop3_password = "";
+      } else {
+        payload.imap_host = "";
+        payload.imap_port = "";
+        payload.imap_security = "ssl";
+        payload.imap_folder = "";
+        payload.imap_use_smtp_auth = true;
+        payload.imap_user = "";
+        payload.imap_password = "";
+      }
+      return payload;
     };
 
     const collectSendmsgConfig = (index) => {
       const email = getValue(`sendmsg-email-${index}`).trim();
       const password = getValue(`sendmsg-password-${index}`);
-      const useSmtpAuthEl = document.getElementById(`sendmsg-imap-use-smtp-auth-${index}`);
-      const useSmtpAuth = !(useSmtpAuthEl instanceof HTMLInputElement) || Boolean(useSmtpAuthEl.checked);
-      return {
+      const imapUseSmtpAuthEl = document.getElementById(`sendmsg-imap-use-smtp-auth-${index}`);
+      const pop3UseSmtpAuthEl = document.getElementById(`sendmsg-pop3-use-smtp-auth-${index}`);
+      const imapUseSmtpAuth = !(imapUseSmtpAuthEl instanceof HTMLInputElement) || Boolean(imapUseSmtpAuthEl.checked);
+      const pop3UseSmtpAuth = !(pop3UseSmtpAuthEl instanceof HTMLInputElement) || Boolean(pop3UseSmtpAuthEl.checked);
+      return sanitizeSendmsgPayload({
         email,
         password,
         smtp: getValue(`sendmsg-smtp-${index}`).trim(),
         port: getValue(`sendmsg-port-${index}`),
         user: getValue(`sendmsg-user-${index}`),
+        incoming_protocol: getIncomingProtocol(index),
         imap_host: getValue(`sendmsg-imap-host-${index}`).trim(),
         imap_port: getValue(`sendmsg-imap-port-${index}`),
         imap_security: getValue(`sendmsg-imap-security-${index}`) || "ssl",
         imap_folder: getValue(`sendmsg-imap-folder-${index}`).trim() || "INBOX",
-        imap_use_smtp_auth: useSmtpAuth,
-        imap_user: useSmtpAuth ? email : getValue(`sendmsg-imap-user-${index}`).trim(),
-        imap_password: useSmtpAuth ? password : getValue(`sendmsg-imap-password-${index}`),
-      };
+        imap_use_smtp_auth: imapUseSmtpAuth,
+        imap_user: imapUseSmtpAuth ? email : getValue(`sendmsg-imap-user-${index}`).trim(),
+        imap_password: imapUseSmtpAuth ? password : getValue(`sendmsg-imap-password-${index}`),
+        pop3_host: getValue(`sendmsg-pop3-host-${index}`).trim(),
+        pop3_port: getValue(`sendmsg-pop3-port-${index}`),
+        pop3_security: getValue(`sendmsg-pop3-security-${index}`) || "ssl",
+        pop3_use_smtp_auth: pop3UseSmtpAuth,
+        pop3_user: pop3UseSmtpAuth ? email : getValue(`sendmsg-pop3-user-${index}`).trim(),
+        pop3_password: pop3UseSmtpAuth ? password : getValue(`sendmsg-pop3-password-${index}`),
+      });
     };
 
     const collectLineNotifySettings = () => {
@@ -1911,7 +2143,8 @@
         if (!(target instanceof HTMLElement)) return;
         const deleteButton = target.closest("[data-delete-sendmsg]");
         const saveButton = target.closest("[data-save-sendmsg]");
-        const testButton = target.closest("[data-test-sendmsg]");
+        const smtpTestButton = target.closest("[data-test-sendmsg-smtp]");
+        const receiverTestButton = target.closest("[data-test-sendmsg-receiver]");
         if (deleteButton) {
           const index = Number(deleteButton.getAttribute("data-delete-sendmsg"));
           if (Number.isNaN(index)) return;
@@ -1938,8 +2171,8 @@
           }
           return;
         }
-        if (testButton) {
-          const index = Number(testButton.getAttribute("data-test-sendmsg"));
+        if (smtpTestButton) {
+          const index = Number(smtpTestButton.getAttribute("data-test-sendmsg-smtp"));
           if (Number.isNaN(index)) return;
           const settings = collectSendmsgConfig(index);
           if (!settings.email || !settings.password || !settings.smtp || !settings.port) {
@@ -1954,11 +2187,22 @@
             const message = payload.data && payload.data.message ? payload.data.message : t("system_settings.common.connection_success", "连接成功");
             setInlineStatus(`sendmsg-status-${index}`, message, true);
             window.alert(message);
-            flashButton(testButton, t("system_settings.common.success", "成功"));
+            flashButton(smtpTestButton, t("system_settings.common.success", "成功"));
           } catch (error) {
             setInlineStatus(`sendmsg-status-${index}`, error.message || t("system_settings.common.connection_failed", "连接失败"), false);
             notifyError(error.message);
           }
+          return;
+        }
+        if (receiverTestButton) {
+          const index = Number(receiverTestButton.getAttribute("data-test-sendmsg-receiver"));
+          if (Number.isNaN(index)) return;
+          const protocol = getIncomingProtocol(index);
+          const message = protocol === "pop3"
+            ? t("system_settings.sendmsg.receiver_test_unavailable_pop3", "当前版本后端暂未提供 POP3 收信测试接口，请先保存配置后通过同步功能验证。")
+            : t("system_settings.sendmsg.receiver_test_unavailable_imap", "当前版本后端暂未提供 IMAP 收信测试接口，请先保存配置后通过同步功能验证。");
+          setInlineStatus(`sendmsg-status-${index}`, message, false);
+          notifyError(message);
         }
       });
 
@@ -1976,10 +2220,12 @@
           id.startsWith("sendmsg-email-")
           || id.startsWith("sendmsg-password-")
           || id.startsWith("sendmsg-imap-use-smtp-auth-")
+          || id.startsWith("sendmsg-pop3-use-smtp-auth-")
         ) {
           const index = Number(id.split("-").pop());
           if (!Number.isNaN(index)) {
             syncImapAuthFields(index);
+            syncPop3AuthFields(index);
           }
         }
         if (!target.id.startsWith("sendmsg-user-")) return;
@@ -1989,10 +2235,28 @@
       sendmsgList.addEventListener("change", (event) => {
         const target = event.target;
         if (!(target instanceof HTMLInputElement)) return;
-        if (!target.id.startsWith("sendmsg-imap-use-smtp-auth-")) return;
-        const index = Number(target.id.split("-").pop());
-        if (Number.isNaN(index)) return;
-        syncImapAuthFields(index);
+        const id = target.id || "";
+        const protocolIndex = target.getAttribute("data-sendmsg-protocol");
+        if (protocolIndex != null) {
+          const index = Number(protocolIndex);
+          if (!Number.isNaN(index)) {
+            syncProtocolFields(index);
+          }
+          return;
+        }
+        if (id.startsWith("sendmsg-imap-use-smtp-auth-")) {
+          const index = Number(id.split("-").pop());
+          if (!Number.isNaN(index)) {
+            syncImapAuthFields(index);
+          }
+          return;
+        }
+        if (id.startsWith("sendmsg-pop3-use-smtp-auth-")) {
+          const index = Number(id.split("-").pop());
+          if (!Number.isNaN(index)) {
+            syncPop3AuthFields(index);
+          }
+        }
       });
 
       sendmsgList.addEventListener("focusin", (event) => {

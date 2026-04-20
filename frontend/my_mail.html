@@ -145,6 +145,35 @@
       gap: 4px;
     }
 
+    .mail-item.is-skeleton {
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .mail-skeleton-line {
+      height: 12px;
+      border-radius: 999px;
+      background:
+        linear-gradient(90deg, rgba(241, 245, 249, 0.95) 25%, rgba(226, 232, 240, 0.95) 37%, rgba(241, 245, 249, 0.95) 63%);
+      background-size: 400% 100%;
+      animation: mailShimmer 1.2s ease-in-out infinite;
+    }
+
+    .mail-skeleton-line.subject {
+      width: 58%;
+      height: 14px;
+    }
+
+    .mail-skeleton-line.date {
+      width: 88px;
+      height: 12px;
+      margin-left: auto;
+    }
+
+    .mail-skeleton-line.from {
+      width: 72%;
+    }
+
     .mail-item:hover {
       background: #f3f7ff;
     }
@@ -457,6 +486,8 @@
       let forwardSuggestionMap = {};
       let detailCache = {};
       let detailRequestSeq = 0;
+      let listRequestSeq = 0;
+      let isListLoading = false;
       let currentFilters = {
         keyword: "",
         send_date: "",
@@ -556,6 +587,18 @@
 
       const renderList = () => {
         if (!mailItems) return;
+        if (isListLoading) {
+          mailItems.innerHTML = Array.from({ length: 6 }).map(() => `
+            <li class="mail-item is-skeleton" aria-hidden="true">
+              <div class="mail-item-top">
+                <span class="mail-skeleton-line subject"></span>
+                <span class="mail-skeleton-line date"></span>
+              </div>
+              <div class="mail-skeleton-line from"></div>
+            </li>
+          `).join("");
+          return;
+        }
         if (!listItems.length) {
           const emptyText = listNoticeMessage || "暂无邮件";
           mailItems.innerHTML = `<li class="mail-empty">${escapeHtml(emptyText)}</li>`;
@@ -584,6 +627,20 @@
         };
         renderList();
         return activeMail;
+      };
+
+      const setListLoading = (loading, trigger) => {
+        isListLoading = Boolean(loading);
+        renderList();
+        if (searchBtn) {
+          searchBtn.disabled = isListLoading;
+          searchBtn.textContent = isListLoading && trigger === "search" ? "查询中..." : "查询";
+        }
+        if (listRefreshBtn) {
+          listRefreshBtn.disabled = isListLoading;
+          listRefreshBtn.style.opacity = isListLoading ? "0.65" : "";
+          listRefreshBtn.style.pointerEvents = isListLoading ? "none" : "";
+        }
       };
 
       const showDetailLoading = (mail) => {
@@ -712,8 +769,10 @@
       );
 
       const loadList = async (forceRefresh = false) => {
+        const currentSeq = ++listRequestSeq;
         try {
           setStatus("加载邮件列表...", false);
+          setListLoading(true, forceRefresh ? "refresh" : "search");
           if (forceRefresh) {
             await fetchWithAuth("/api/my-mails/sync", {
               method: "POST",
@@ -732,6 +791,7 @@
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件列表失败");
           }
+          if (currentSeq !== listRequestSeq) return;
           const data = payload.data || {};
           const meta = payload.meta || {};
           totalPages = Number(meta.total_pages || 1) || 1;
@@ -761,6 +821,7 @@
           }
           setStatus("", false);
         } catch (error) {
+          if (currentSeq !== listRequestSeq) return;
           listItems = [];
           totalPages = 1;
           totalCount = 0;
@@ -783,6 +844,10 @@
           }
           if (pagination && window.renderPagination) {
             window.renderPagination(pagination, paginationPages, 1, 1);
+          }
+        } finally {
+          if (currentSeq === listRequestSeq) {
+            setListLoading(false, "");
           }
         }
       };
@@ -812,6 +877,21 @@
           loadList(false);
         });
       }
+
+      [filterKeyword, filterSendDate].forEach((input) => {
+        if (!input) return;
+        input.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") return;
+          event.preventDefault();
+          if (isListLoading) return;
+          currentPage = 1;
+          currentFilters = {
+            keyword: (filterKeyword && filterKeyword.value ? filterKeyword.value : "").trim(),
+            send_date: (filterSendDate && filterSendDate.value ? filterSendDate.value : "").trim(),
+          };
+          loadList(false);
+        });
+      });
 
       if (pagination && window.bindPagination) {
         window.bindPagination(pagination, (value) => {

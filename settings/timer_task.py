@@ -11,7 +11,7 @@ from django.utils.dateparse import parse_datetime
 
 from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
-from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_today_my_mails_from_imap
+from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_my_mails
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
 from settings.activation_code import is_activation_code_valid
 from settings.mails_arrival_notification import notify_project_ingested
@@ -414,11 +414,10 @@ def run_time_to_sync_my_mails():
             if not owner_id:
                 continue
             try:
-                inserted = sync_today_my_mails_from_imap(
+                inserted = sync_my_mails(
                     owner_id=owner_id,
                     send_config=send_config,
                     sync_limit=500,
-                    only_new=True,
                 )
                 inserted_total += int(inserted or 0)
                 logger_sync_my_mails.info(

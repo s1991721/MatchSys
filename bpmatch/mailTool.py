@@ -12,7 +12,6 @@ from .mail import (
     resolve_sendmsg_sync_targets,
     send_mail_by_login,
     sync_my_mails,
-    sync_today_my_mails_from_imap,
     test_receive_connection,
     test_smtp_connection,
 )
@@ -31,7 +30,6 @@ __all__ = [
     "resolve_sendmsg_sync_targets",
     "send_mail_by_login",
     "sync_my_mails",
-    "sync_today_my_mails_from_imap",
     "test_receive_connection",
     "test_smtp_connection",
 ]

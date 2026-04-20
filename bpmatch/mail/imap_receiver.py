@@ -1,5 +1,5 @@
 import imaplib
-from datetime import timezone
+from datetime import datetime, time, timedelta, timezone
 from email import message_from_bytes, policy
 from email.utils import parsedate_to_datetime
 from typing import Any, Dict, List, Optional
@@ -202,10 +202,17 @@ class ImapReceiver(ReceiverInterface):
 
     def sync_mails(self, owner_id, sync_limit=120):
         updated = 0
+        now = django_timezone.now()
+        start_date = django_timezone.localdate() - timedelta(days=1)
+        start_at = django_timezone.make_aware(
+            datetime.combine(start_date, time.min),
+            django_timezone.get_current_timezone(),
+        )
+        since_str = start_date.strftime("%d-%b-%Y")
         try:
             self.login_from_config()
             self.open_configured_mailbox()
-            all_ids = list(reversed(self.list_message_ids({"search_args": ["ALL"]})))
+            all_ids = list(reversed(self.list_message_ids({"search_args": ["SINCE", since_str]})))
             if sync_limit > 0:
                 all_ids = all_ids[:sync_limit]
 
@@ -220,6 +227,13 @@ class ImapReceiver(ReceiverInterface):
                 subject = decode_mime_header(parsed.get("Subject")) or "(无标题)"
                 from_raw = decode_mime_header(parsed.get("From"))
                 received_at = self._parse_received_at(parsed.get("Date"))
+                if not received_at:
+                    continue
+
+                received_local = django_timezone.localtime(received_at)
+                if received_local < start_at or received_local > now:
+                    continue
+
                 unread = b"\\Seen" not in raw_meta
                 MyMail.objects.create(
                     id=uid,

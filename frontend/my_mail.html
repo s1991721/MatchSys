@@ -189,9 +189,13 @@
       justify-content: space-between;
       gap: 8px;
       align-items: center;
+      min-width: 0;
     }
 
     .mail-item-subject {
+      display: block;
+      flex: 1 1 auto;
+      min-width: 0;
       font-size: 14px;
       font-weight: 700;
       color: #101828;
@@ -201,6 +205,7 @@
     }
 
     .mail-item-date {
+      flex: 0 0 auto;
       font-size: 12px;
       color: var(--mail-muted);
       white-space: nowrap;

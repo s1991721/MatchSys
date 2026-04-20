@@ -32,6 +32,10 @@ class ReceiverInterface(ABC):
         """读取邮件状态标记。"""
 
     @abstractmethod
+    def mark_as_read(self, message_id: str, owner_id=None) -> bool:
+        """将邮件标记为已读，返回本次是否发生状态变更。"""
+
+    @abstractmethod
     def get_stable_remote_id(self, message_id: str) -> str:
         """返回可用于去重和增量同步的稳定远端标识。"""
 

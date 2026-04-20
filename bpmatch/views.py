@@ -1,5 +1,6 @@
 import json
 import re
+import threading
 from datetime import timedelta
 
 from django.db import transaction
@@ -16,12 +17,27 @@ from .mailTool import (
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
+    mark_my_mail_as_read,
     query_my_mails,
     count_unread_mails_from_db,
     sync_my_mails,
     get_my_mail_detail_from_db,
 )
-from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo
+from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo, MyMail
+
+
+def _mark_my_mail_as_read_async(login_id, mail_id):
+    try:
+        try:
+            send_config = ensure_send_config_for_login(login_id)
+        except MailToolError:
+            send_config = None
+        if send_config:
+            mark_my_mail_as_read(send_config, mail_id, owner_id=login_id)
+        else:
+            MyMail.objects.filter(owner_id=login_id, id=mail_id, is_unread=True).update(is_unread=False)
+    except Exception:
+        pass
 
 
 def _normalize_skills(value):
@@ -770,6 +786,15 @@ def my_mail_detail_api(request, mail_id):
         return error
     try:
         data = get_my_mail_detail_from_db(login_id, mail_id)
+        if data and data.get("unread"):
+            data["unread"] = False
+            thread = threading.Thread(
+                target=_mark_my_mail_as_read_async,
+                args=(login_id, mail_id),
+                name="mark_my_mail_as_read",
+                daemon=True,
+            )
+            thread.start()
         return api_success(data=data)
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)

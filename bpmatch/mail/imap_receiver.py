@@ -168,6 +168,25 @@ class ImapReceiver(ReceiverInterface):
         raw_meta = header_result.get("flags") or b""
         return {"unread": b"\\Seen" not in raw_meta, "raw": raw_meta}
 
+    def mark_as_read(self, message_id: str, owner_id=None) -> bool:
+        safe_message_id = self.get_stable_remote_id(message_id)
+        changed = False
+        try:
+            self.login_from_config()
+            self.open_configured_mailbox()
+            client = self._require_mail_client()
+            status, _data = client.store(safe_message_id.encode("utf-8"), "+FLAGS", "\\Seen")
+            if status != "OK":
+                raise MailToolError("Failed to mark mail as read", status=500)
+        finally:
+            self.logout()
+
+        filters = {"id": safe_message_id}
+        if owner_id is not None:
+            filters["owner_id"] = owner_id
+        changed = bool(MyMail.objects.filter(**filters, is_unread=True).update(is_unread=False)) or changed
+        return changed
+
     # 校验邮件id
     def get_stable_remote_id(self, message_id: str) -> str:
         safe_message_id = str(message_id or "").strip()

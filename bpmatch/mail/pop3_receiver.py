@@ -166,6 +166,13 @@ class Pop3Receiver(ReceiverInterface):
         unread = bool(local_mail.is_unread) if local_mail else True
         return {"unread": unread, "raw": b""}
 
+    def mark_as_read(self, message_id: str, owner_id=None) -> bool:
+        safe_message_id = self.get_stable_remote_id(message_id)
+        filters = {"id": safe_message_id}
+        if owner_id is not None:
+            filters["owner_id"] = owner_id
+        return bool(MyMail.objects.filter(**filters, is_unread=True).update(is_unread=False))
+
     def get_stable_remote_id(self, message_id: str) -> str:
         safe_message_id = str(message_id or "").strip()
         if not safe_message_id:

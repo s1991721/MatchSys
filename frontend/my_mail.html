@@ -503,6 +503,12 @@
         replyStatus.style.color = isError ? "#dc2626" : "#6f7b8f";
       };
 
+      const notifyMailRead = (mailId) => {
+        if (window.top && window.top !== window && typeof window.top.postMessage === "function") {
+          window.top.postMessage({ type: "mail:mark-read", mailId: String(mailId || "") }, "*");
+        }
+      };
+
       const escapeHtml = (value) => {
         return String(value || "")
           .replace(/&/g, "&amp;")
@@ -631,6 +637,26 @@
         return activeMail;
       };
 
+      const markMailAsReadLocally = (mailId) => {
+        if (!mailId) return false;
+        let changed = false;
+        listItems = listItems.map((item) => {
+          if (String(item.id) !== String(mailId) || !item.unread) {
+            return item;
+          }
+          changed = true;
+          return { ...item, unread: false };
+        });
+        if (activeMail && String(activeMail.id) === String(mailId) && activeMail.unread) {
+          activeMail = { ...activeMail, unread: false };
+          changed = true;
+        }
+        if (changed) {
+          renderList();
+        }
+        return changed;
+      };
+
       const setListLoading = (loading, trigger) => {
         isListLoading = Boolean(loading);
         renderList();
@@ -739,6 +765,10 @@
         const selected = setActiveListItem(mailId);
         showDetailLoading(selected);
         if (detailCache[mailId]) {
+          if (markMailAsReadLocally(mailId)) {
+            notifyMailRead(mailId);
+          }
+          detailCache[mailId].unread = false;
           fillDetail(detailCache[mailId]);
           setStatus("", false);
           return;
@@ -753,7 +783,12 @@
           if (currentSeq !== detailRequestSeq) return;
           const detail = payload.data || null;
           if (detail) {
+            const changed = markMailAsReadLocally(mailId);
+            detail.unread = false;
             detailCache[mailId] = detail;
+            if (changed) {
+              notifyMailRead(mailId);
+            }
           }
           fillDetail(detail);
           setStatus("", false);

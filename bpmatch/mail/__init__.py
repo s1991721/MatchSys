@@ -8,6 +8,7 @@ from .common import (
 )
 from .receiver import (
     MailReceiver,
+    mark_my_mail_as_read,
     query_my_mails,
     sync_my_mails,
     test_receive_connection,
@@ -25,6 +26,7 @@ __all__ = [
     "ensure_send_config_for_login",
     "get_my_mail_detail_from_db",
     "list_my_mails_from_db",
+    "mark_my_mail_as_read",
     "query_my_mails",
     "resolve_sendmsg_sync_targets",
     "send_mail_by_login",

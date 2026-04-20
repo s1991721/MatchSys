@@ -31,6 +31,9 @@ class MailReceiver:
     def get_flags(self, message_id: str):
         return self.receiver.get_flags(message_id)
 
+    def mark_as_read(self, message_id: str, owner_id=None):
+        return self.receiver.mark_as_read(message_id, owner_id=owner_id)
+
     def get_stable_remote_id(self, message_id: str):
         return self.receiver.get_stable_remote_id(message_id)
 
@@ -89,6 +92,15 @@ def query_my_mails(send_config, owner_id=None, page=1, page_size=20, keyword="",
             keyword=keyword,
             send_date=send_date,
         )
+    except Exception as exc:
+        if isinstance(exc, MailToolError):
+            raise
+        raise MailToolError(str(exc), status=500)
+
+
+def mark_my_mail_as_read(send_config, mail_id, owner_id=None):
+    try:
+        return MailReceiver(send_config).mark_as_read(mail_id, owner_id=owner_id)
     except Exception as exc:
         if isinstance(exc, MailToolError):
             raise

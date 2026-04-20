@@ -436,6 +436,17 @@
       const applyUnreadData = (data) => {
         setNoticeBadge(Number((data && data.unread_count) || 0));
       };
+      const readNoticeBadgeCount = () => {
+        if (!noticeBadge || noticeBadge.hidden) return 0;
+        const raw = (noticeBadge.textContent || "").trim();
+        if (!raw) return 0;
+        if (raw === "99+") return 99;
+        const parsed = Number(raw);
+        return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+      };
+      const markNoticeRead = () => {
+        setNoticeBadge(Math.max(0, readNoticeBadgeCount() - 1));
+      };
 
       const readCollapsed = () => {
         try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
@@ -620,22 +631,6 @@
         nav.addEventListener("click", handleRouteClick);
       }
       document.addEventListener("click", handleRouteClick);
-      window.addEventListener("message", (event) => {
-        const data = event.data || {};
-        if (data.type !== "route:change") return;
-        const src = (data.src || "").trim();
-        if (!src || !isAllowedRoute(src)) return;
-        if (location.hash !== "#" + src) {
-          location.hash = src;
-        } else {
-          applyRoute(src);
-        }
-      });
-      window.addEventListener("hashchange", syncFromHash);
-      if (frame) {
-        syncFromHash();
-        frame.addEventListener("load", broadcastLang);
-      }
       // 使用 common.js 统一轮询，每 5 分钟刷新一次未读角标。
       const mailUnreadPolling = window.startMailUnreadPolling
         ? window.startMailUnreadPolling({
@@ -643,6 +638,27 @@
           onData: applyUnreadData,
         })
         : null;
+      window.addEventListener("message", (event) => {
+        const data = event.data || {};
+        if (data.type === "route:change") {
+          const src = (data.src || "").trim();
+          if (!src || !isAllowedRoute(src)) return;
+          if (location.hash !== "#" + src) {
+            location.hash = src;
+          } else {
+            applyRoute(src);
+          }
+          return;
+        }
+        if (data.type === "mail:mark-read") {
+          markNoticeRead();
+        }
+      });
+      window.addEventListener("hashchange", syncFromHash);
+      if (frame) {
+        syncFromHash();
+        frame.addEventListener("load", broadcastLang);
+      }
       loadSystemExpiryStatus();
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {

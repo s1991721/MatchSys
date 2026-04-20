@@ -214,6 +214,32 @@ class Pop3Receiver(ReceiverInterface):
         finally:
             self.logout()
 
+    def _is_likely_sent_mail(self, parsed) -> bool:
+        account_emails = {
+            str(self.pop3_config.get("user") or "").strip().lower(),
+            str(self.pop3_config.get("email") or "").strip().lower(),
+        }
+        account_emails = {item for item in account_emails if item}
+        if not account_emails:
+            return False
+
+        from_email = extract_first_email(decode_mime_header(parsed.get("From"))).lower()
+        sender_email = extract_first_email(decode_mime_header(parsed.get("Sender"))).lower()
+        reply_to_email = extract_first_email(decode_mime_header(parsed.get("Reply-To"))).lower()
+
+        author_emails = {item for item in (from_email, sender_email, reply_to_email) if item}
+        if not author_emails or account_emails.isdisjoint(author_emails):
+            return False
+
+        recipient_emails = set()
+        for header_name in ("To", "Cc", "Bcc", "Delivered-To", "X-Original-To", "Envelope-To"):
+            recipient_email = extract_first_email(decode_mime_header(parsed.get(header_name))).lower()
+            if recipient_email:
+                recipient_emails.add(recipient_email)
+
+        # 发件人是当前账号，且存在一个不是当前账号的收件人时，视为“自己发出的副本”。
+        return bool(recipient_emails and any(item not in account_emails for item in recipient_emails))
+
     # 同步本地邮件
     def sync_mails(self, owner_id):
         updated = 0
@@ -250,6 +276,8 @@ class Pop3Receiver(ReceiverInterface):
                     continue
 
                 from_raw = decode_mime_header(parsed.get("From"))
+                if self._is_likely_sent_mail(parsed):
+                    continue
                 MyMail.objects.create(
                     id=uid,
                     owner_id=owner_id,

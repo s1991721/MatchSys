@@ -16,10 +16,10 @@ from .mailTool import (
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
-    query_my_mails_from_imap,
+    query_my_mails,
     count_unread_mails_from_db,
-    sync_my_mails_from_imap,
-    get_my_mail_detail_from_imap,
+    sync_my_mails,
+    get_my_mail_detail,
 )
 from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo
 
@@ -701,7 +701,9 @@ def my_mails_api(request):
 @csrf_exempt
 @require_GET
 # 我的邮件查询（关键字、送信日期）
-# 注意：查询直接走 IMAP 服务器，不落本地 DB。
+# 注意：
+# 查询直接走 IMAP 服务器，不落本地 DB。
+# pop3情况下，查询本地
 def my_mails_query_api(request):
     login_id, error = require_login(request)
     if error:
@@ -727,7 +729,7 @@ def my_mails_query_api(request):
     page_size = max(1, min(page_size, 50))
 
     try:
-        data, meta = query_my_mails_from_imap(
+        data, meta = query_my_mails(
             send_config,
             page=page,
             page_size=page_size,
@@ -750,7 +752,7 @@ def my_mails_sync_api(request):
         return error
     try:
         send_config = ensure_send_config_for_login(login_id)
-        updated = sync_my_mails_from_imap(login_id, send_config)
+        updated = sync_my_mails(login_id, send_config)
         return api_success(data={"updated": int(updated or 0)})
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)
@@ -768,7 +770,7 @@ def my_mail_detail_api(request, mail_id):
     try:
         # 5. 用户点击邮件列表时，按外部唯一标识从 IMAP 获取详情
         send_config = ensure_send_config_for_login(login_id)
-        data = get_my_mail_detail_from_imap(send_config, mail_id)
+        data = get_my_mail_detail(send_config, mail_id)
         return api_success(data=data)
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)

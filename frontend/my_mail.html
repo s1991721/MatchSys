@@ -508,6 +508,19 @@
         replyStatus.style.color = isError ? "#dc2626" : "#6f7b8f";
       };
 
+      const updateComposerActionLabels = () => {
+        if (replyActionBtn) {
+          replyActionBtn.textContent = isReplyExpanded && composeMode === "reply"
+            ? "收起回复"
+            : "回复";
+        }
+        if (forwardActionBtn) {
+          forwardActionBtn.textContent = isReplyExpanded && composeMode === "forward"
+            ? "收起转发"
+            : "转发";
+        }
+      };
+
       const notifyMailRead = (mailId) => {
         if (window.top && window.top !== window && typeof window.top.postMessage === "function") {
           window.top.postMessage({ type: "mail:mark-read", mailId: String(mailId || "") }, "*");
@@ -695,10 +708,22 @@
         if (replyPanel) {
           replyPanel.style.display = isReplyExpanded ? "grid" : "none";
         }
+        updateComposerActionLabels();
+      };
+
+      const toggleComposer = (mode) => {
+        const normalizedMode = mode === "forward" ? "forward" : "reply";
+        if (isReplyExpanded && composeMode === normalizedMode) {
+          setReplyExpanded(false);
+          setStatus("", false);
+          return;
+        }
+        openComposer(normalizedMode);
       };
 
       const openComposer = (mode) => {
         setComposerMode(mode);
+        updateComposerActionLabels();
         setReplyExpanded(true);
         if (replyPanel && typeof replyPanel.scrollIntoView === "function") {
           replyPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -714,6 +739,7 @@
           replySubject.value = activeMail.subject && !/^\s*Re:/i.test(activeMail.subject)
             ? `Re: ${activeMail.subject}`
             : (activeMail.subject || "");
+          replyBody.value = "";
           replyBody.focus();
           return;
         }
@@ -959,13 +985,13 @@
       // 邮件内容区动作按钮：触发展开回复区，并按动作填充默认内容。
       if (replyActionBtn) {
         replyActionBtn.addEventListener("click", () => {
-          openComposer("reply");
+          toggleComposer("reply");
         });
       }
 
       if (forwardActionBtn) {
         forwardActionBtn.addEventListener("click", () => {
-          openComposer("forward");
+          toggleComposer("forward");
         });
       }
 
@@ -1048,6 +1074,7 @@
       renderForwardRecipients([]);
       setComposerMode("reply");
       setReplyExpanded(false);
+      updateComposerActionLabels();
       loadList();
     })();
   </script>

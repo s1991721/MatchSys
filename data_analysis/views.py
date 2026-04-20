@@ -160,7 +160,7 @@ def _entry_items(today, start_date, end_date):
     entry_items.sort(key=lambda item: item["period_start"])
     return entry_items
 
-
+# todo 应该改为系统当前缓存周期，而非固定两周
 def _two_weeks_count(start_of_two_weeks, now):
     """统计两周内求案件人数。"""
     return MailTechnicianInfo.objects.filter(

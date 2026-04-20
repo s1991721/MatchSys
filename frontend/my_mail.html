@@ -235,6 +235,26 @@
       flex: 1;
     }
 
+    .mail-view-body.is-loading {
+      color: var(--mail-muted);
+      background:
+        linear-gradient(90deg, rgba(241, 245, 249, 0.9) 25%, rgba(226, 232, 240, 0.95) 37%, rgba(241, 245, 249, 0.9) 63%);
+      background-size: 400% 100%;
+      animation: mailShimmer 1.2s ease-in-out infinite;
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 240px;
+    }
+
+    @keyframes mailShimmer {
+      0% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0 50%;
+      }
+    }
+
     .mail-view-actions {
       display: flex;
       justify-content: flex-end;
@@ -435,6 +455,8 @@
       let forwardSearchTimer = null;
       let forwardSearchSeq = 0;
       let forwardSuggestionMap = {};
+      let detailCache = {};
+      let detailRequestSeq = 0;
       let currentFilters = {
         keyword: "",
         send_date: "",
@@ -553,6 +575,26 @@
         }).join("");
       };
 
+      const setActiveListItem = (mailId) => {
+        const matched = listItems.find((item) => String(item.id) === String(mailId));
+        if (!matched) return null;
+        activeMail = {
+          ...(activeMail || {}),
+          ...matched,
+        };
+        renderList();
+        return activeMail;
+      };
+
+      const showDetailLoading = (mail) => {
+        const subjectText = (mail && mail.subject) || "(无标题)";
+        const fromText = (mail && (mail.from || mail.from_email)) || "";
+        const dateText = (mail && mail.date) || "";
+        mailMeta.textContent = `主题: ${subjectText} | 发件人: ${fromText} | 时间: ${dateText}`;
+        mailBody.textContent = "正在加载邮件内容...";
+        mailBody.classList.add("is-loading");
+      };
+
       // 回复区默认折叠，仅在用户需要时展开，减少首屏占用。
       const setReplyExpanded = (expanded) => {
         isReplyExpanded = Boolean(expanded);
@@ -605,6 +647,7 @@
 
       const fillDetail = (detail) => {
         activeMail = detail || null;
+        mailBody.classList.remove("is-loading");
         if (!detail) {
           // 顶部信息栏用于说明当前状态，避免出现“只有一条横线”的空白感。
           mailMeta.textContent = "请在左侧选择邮件后查看详情";
@@ -633,6 +676,14 @@
       };
 
       const loadDetail = async (mailId) => {
+        const currentSeq = ++detailRequestSeq;
+        const selected = setActiveListItem(mailId);
+        showDetailLoading(selected);
+        if (detailCache[mailId]) {
+          fillDetail(detailCache[mailId]);
+          setStatus("", false);
+          return;
+        }
         try {
           setStatus("加载邮件内容...", false);
           const res = await fetchWithAuth(`/api/my-mails/${encodeURIComponent(mailId)}`, { method: "GET" });
@@ -640,9 +691,17 @@
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件失败");
           }
-          fillDetail(payload.data || null);
+          if (currentSeq !== detailRequestSeq) return;
+          const detail = payload.data || null;
+          if (detail) {
+            detailCache[mailId] = detail;
+          }
+          fillDetail(detail);
           setStatus("", false);
         } catch (error) {
+          if (currentSeq !== detailRequestSeq) return;
+          mailBody.classList.remove("is-loading");
+          mailBody.textContent = "";
           setStatus(error.message || "读取邮件失败", true);
         }
       };
@@ -680,6 +739,7 @@
           currentPage = Number(meta.page || currentPage) || 1;
           listItems = Array.isArray(data.items) ? data.items : [];
           listNoticeMessage = "";
+          detailCache = {};
           mailboxText.textContent = data.mailbox_email ? `邮箱: ${data.mailbox_email}` : "";
           if (paginationSummary) {
             paginationSummary.textContent = `共 ${totalCount} 条 · 第 ${currentPage}/${totalPages} 页`;
@@ -688,15 +748,16 @@
             window.renderPagination(pagination, paginationPages, currentPage, totalPages);
           }
 
+          renderList();
+
           if (listItems.length) {
             // 优先保持当前选中邮件；不存在时选中首封，确保收件人/标题默认值持续可用。
             const activeId = activeMail && activeMail.id ? String(activeMail.id) : "";
             const matched = listItems.find((item) => String(item.id) === activeId);
             const target = matched || listItems[0];
-            await loadDetail(target.id);
+            loadDetail(target.id);
           } else {
             fillDetail(null);
-            renderList();
           }
           setStatus("", false);
         } catch (error) {
@@ -704,6 +765,7 @@
           totalPages = 1;
           totalCount = 0;
           currentPage = 1;
+          detailCache = {};
           const rawMessage = String(
             (error && error.payload && error.payload.message) || error.message || ""
           );

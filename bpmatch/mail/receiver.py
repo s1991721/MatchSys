@@ -46,8 +46,8 @@ class MailReceiver:
     def supports_server_flags(self) -> bool:
         return self.receiver.supports_server_flags()
 
-    def sync_mails(self, owner_id, sync_limit=120):
-        return self.receiver.sync_mails(owner_id, sync_limit=sync_limit)
+    def sync_mails(self, owner_id):
+        return self.receiver.sync_mails(owner_id)
 
     def query_mails(self, owner_id=None, page=1, page_size=20, keyword="", send_date=""):
         return self.receiver.query_mails(

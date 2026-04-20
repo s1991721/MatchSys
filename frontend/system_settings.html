@@ -913,7 +913,7 @@
           <div class="sendmsg-section-title">${t("system_settings.sendmsg.smtp_section", "发信配置")}</div>
           <div class="form-field">
             <label for="sendmsg-email-${index}">${t("system_settings.sendmsg.smtp_user", "SMTP 用户名")}</label>
-            <input id="sendmsg-email-${index}" type="email" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.email_placeholder" value="${config.email || ""}" />
+            <input id="sendmsg-email-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.email_placeholder" value="${config.email || ""}" />
           </div>
           <div class="form-field">
             <label for="sendmsg-password-${index}">${t("system_settings.sendmsg.smtp_password", "SMTP 密码 / 授权码")}</label>
@@ -1394,6 +1394,13 @@
         pop3_password: pop3UseSmtpAuth ? password : getValue(`sendmsg-pop3-password-${index}`),
       });
     };
+
+    const collectSmtpTestConfig = (index) => ({
+      email: getValue(`sendmsg-email-${index}`).trim(),
+      password: getValue(`sendmsg-password-${index}`),
+      smtp: getValue(`sendmsg-smtp-${index}`).trim(),
+      port: getValue(`sendmsg-port-${index}`),
+    });
 
     const validateReceiverSettings = (settings) => {
       const protocol = String(settings.incoming_protocol || "imap").toLowerCase();
@@ -2041,8 +2048,11 @@
 
     if (taskList) {
       taskList.addEventListener("change", (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
+        const rawTarget = event.target;
+        const target = rawTarget instanceof Element
+          ? rawTarget
+          : (rawTarget && rawTarget.parentElement ? rawTarget.parentElement : null);
+        if (!target) return;
         if (target.matches("[data-task-frequency]")) {
           const index = Number(target.getAttribute("data-task-frequency"));
           if (Number.isNaN(index)) return;
@@ -2061,8 +2071,11 @@
       });
 
       taskList.addEventListener("click", async (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
+        const rawTarget = event.target;
+        const target = rawTarget instanceof Element
+          ? rawTarget
+          : (rawTarget && rawTarget.parentElement ? rawTarget.parentElement : null);
+        if (!target) return;
         const runButton = target.closest("[data-run-now]");
         const deleteButton = target.closest("[data-delete-task]");
         const saveButton = target.closest("[data-save-task]");
@@ -2165,8 +2178,11 @@
 
     if (sendmsgList) {
       sendmsgList.addEventListener("click", async (event) => {
-        const target = event.target;
-        if (!(target instanceof HTMLElement)) return;
+        const rawTarget = event.target;
+        const target = rawTarget instanceof Element
+          ? rawTarget
+          : (rawTarget && rawTarget.parentElement ? rawTarget.parentElement : null);
+        if (!target) return;
         const deleteButton = target.closest("[data-delete-sendmsg]");
         const saveButton = target.closest("[data-save-sendmsg]");
         const smtpTestButton = target.closest("[data-test-sendmsg-smtp]");
@@ -2200,7 +2216,7 @@
         if (smtpTestButton) {
           const index = Number(smtpTestButton.getAttribute("data-test-sendmsg-smtp"));
           if (Number.isNaN(index)) return;
-          const settings = collectSendmsgConfig(index);
+          const settings = collectSmtpTestConfig(index);
           if (!settings.email || !settings.password || !settings.smtp || !settings.port) {
             notifyError(t("system_settings.sendmsg.smtp_incomplete", "请填写完整的 SMTP 配置。"));
             return;

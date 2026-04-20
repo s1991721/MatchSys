@@ -1,5 +1,5 @@
 import poplib
-from datetime import timezone
+from datetime import datetime, time, timedelta, timezone
 from email import message_from_bytes, policy
 from email.utils import parsedate_to_datetime
 from typing import Any, Dict, List, Optional
@@ -206,6 +206,12 @@ class Pop3Receiver(ReceiverInterface):
 
     def sync_mails(self, owner_id, sync_limit=120):
         updated = 0
+        now = django_timezone.now()
+        start_date = django_timezone.localdate() - timedelta(days=1)
+        start_at = django_timezone.make_aware(
+            datetime.combine(start_date, time.min),
+            django_timezone.get_current_timezone(),
+        )
         try:
             self.login_from_config()
             self.open_configured_mailbox()
@@ -219,45 +225,12 @@ class Pop3Receiver(ReceiverInterface):
                     continue
                 header_result = self.fetch_headers(uid, fields=["SUBJECT", "FROM", "DATE"])
                 parsed = header_result["headers"]
-                from_raw = decode_mime_header(parsed.get("From"))
-                MyMail.objects.create(
-                    id=uid,
-                    owner_id=owner_id,
-                    subject=decode_mime_header(parsed.get("Subject")) or "(无标题)",
-                    from_email=extract_first_email(from_raw),
-                    received_at=self._parse_received_at(parsed.get("Date")),
-                    is_unread=True,
-                )
-                updated += 1
-            return updated
-        finally:
-            self.logout()
-
-    def sync_today_mails(self, owner_id, sync_limit=500, only_new=True):
-        today = django_timezone.localdate()
-        inserted = 0
-        try:
-            self.login_from_config()
-            self.open_configured_mailbox()
-            all_ids = list(reversed(self.list_message_ids({"search_args": ["ALL"]})))
-            if sync_limit > 0:
-                all_ids = all_ids[:sync_limit]
-
-            for uid_bytes in all_ids:
-                uid = uid_bytes.decode("utf-8", errors="ignore")
-                if not uid:
-                    continue
-                if only_new and MyMail.objects.filter(id=uid).exists():
-                    continue
-
-                header_result = self.fetch_headers(uid, fields=["SUBJECT", "FROM", "DATE"])
-                parsed = header_result["headers"]
                 received_at = self._parse_received_at(parsed.get("Date"))
                 if not received_at:
                     continue
-                if django_timezone.localtime(received_at).date() != today:
-                    continue
-                if not only_new and MyMail.objects.filter(id=uid).exists():
+
+                received_local = django_timezone.localtime(received_at)
+                if received_local < start_at or received_local > now:
                     continue
 
                 from_raw = decode_mime_header(parsed.get("From"))
@@ -269,8 +242,8 @@ class Pop3Receiver(ReceiverInterface):
                     received_at=received_at,
                     is_unread=True,
                 )
-                inserted += 1
-            return inserted
+                updated += 1
+            return updated
         finally:
             self.logout()
 

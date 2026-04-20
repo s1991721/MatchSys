@@ -46,12 +46,6 @@ class MailReceiver:
     def sync_mails(self, owner_id, sync_limit=120):
         return self.receiver.sync_mails(owner_id, sync_limit=sync_limit)
 
-    def sync_today_mails(self, owner_id, sync_limit=500, only_new=True):
-        return self.receiver.sync_today_mails(
-            owner_id,
-            sync_limit=sync_limit,
-            only_new=only_new,
-        )
 
     def query_mails(self, page=1, page_size=20, keyword="", send_date=""):
         return self.receiver.query_mails(
@@ -78,22 +72,10 @@ class MailReceiver:
         return ImapReceiver(self.send_config)
 
 
+# 同步我的邮件（昨天-现在）
 def sync_my_mails(owner_id, send_config, sync_limit=120):
     try:
         return MailReceiver(send_config).sync_mails(owner_id, sync_limit=sync_limit)
-    except Exception as exc:
-        if isinstance(exc, MailToolError):
-            raise
-        raise MailToolError(str(exc), status=500)
-
-
-def sync_today_my_mails_from_imap(owner_id, send_config, sync_limit=500, only_new=True):
-    try:
-        return MailReceiver(send_config).sync_today_mails(
-            owner_id,
-            sync_limit=sync_limit,
-            only_new=only_new,
-        )
     except Exception as exc:
         if isinstance(exc, MailToolError):
             raise

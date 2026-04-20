@@ -5,12 +5,12 @@ pip freeze > requirements.txt
 ------------------------------------------------ mysql 镜像
 
 docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.1 --push .
-docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:1.0 .
+docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:1.1 .
 
 docker run --name matchsys-mysql-test \
   -e MYSQL_ROOT_PASSWORD=123456 \
   -p 3306:3306 \
-  -d jef4267/matchsys-mysql:1.0
+  -d jef4267/matchsys-mysql:1.1
 
 ------------------------------------------------ 连接网络
 
@@ -20,24 +20,24 @@ docker network connect matchsys-net matchsys-test
 ------------------------------------------------ Django 镜像
 
 docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.1 --push .
-docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:1.0 .
+docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:1.1 .
 
 docker run --name matchsys-test \
   -p 8000:8000 \
-  -d jef4267/matchsys-web:1.0
+  -d jef4267/matchsys-web:1.1
 
 ------------------------------------------------ 发布 镜像
 
-docker push jef4267/matchsys-mysql:1.0
-docker push jef4267/matchsys-web:1.0
-docker push jef4267/matchsys-nginx:1.0
+docker push jef4267/matchsys-mysql:1.1
+docker push jef4267/matchsys-web:1.1
+docker push jef4267/matchsys-nginx:1.1
 
 ------------------------------------------------ nginx 镜像
 
 docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.1 --push .
-docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:1.0 .
+docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:1.1 .
 
-docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.0
+docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.1
 
 ------------------------------------------------ 服务器部署使用
 docker compose down

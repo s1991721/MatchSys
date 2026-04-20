@@ -258,7 +258,7 @@
             "home.stats.week_match": "本周match数",
             "home.stats.today_match": "今天match数",
             "home.stats.month_entry": "本月入场人数",
-            "home.stats.two_weeks": "两周内求案件人数",
+            "home.stats.two_weeks": "当前求案件人数",
             "home.vs_last_week": "vs 上周",
             "home.vs_last_month": "vs 上月",
             "home.vs_yesterday": "vs 昨天",

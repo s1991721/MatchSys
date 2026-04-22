@@ -30,6 +30,7 @@ except ImportError as exc:  # pragma: no cover - runtime guard
 class ActivationPayload:
     username: str
     email: str
+    system_version: str
     issued_at: str
     expires_at: str
     nonce: str
@@ -41,6 +42,7 @@ class ActivationPayload:
                 "version": self.version,
                 "username": self.username,
                 "email": self.email,
+                "system_version": self.system_version,
                 "issued_at": self.issued_at,
                 "expires_at": self.expires_at,
                 "nonce": self.nonce,
@@ -99,13 +101,21 @@ def _parse_validity(value: str, now: datetime) -> datetime:
         raise ValueError("有效期格式应为天数或 YYYY-MM-DD") from exc
 
 
-def generate_activation_code(username: str, email: str, validity: str) -> tuple[str, str]:
+def generate_activation_code(
+    username: str,
+    email: str,
+    validity: str,
+    system_version: str,
+) -> tuple[str, str]:
     username = username.strip()
     email = email.strip()
+    system_version = system_version.strip()
     if not username:
         raise ValueError("用户名不能为空")
     if not email or "@" not in email:
         raise ValueError("邮箱格式不正确")
+    if not system_version:
+        raise ValueError("系统版本不能为空")
 
     now = datetime.now(timezone.utc)
     expires_at = _parse_validity(validity, now)
@@ -113,6 +123,7 @@ def generate_activation_code(username: str, email: str, validity: str) -> tuple[
     payload = ActivationPayload(
         username=username,
         email=email,
+        system_version=system_version,
         issued_at=now.isoformat(),
         expires_at=expires_at.isoformat(),
         nonce=secrets.token_urlsafe(16),
@@ -181,8 +192,9 @@ def main(argv: Optional[list[str]] = None) -> int:
     try:
         username = input("请输入用户名: ").strip()
         email = input("请输入邮箱: ").strip()
+        system_version = input("请输入系统版本号: ").strip()
         validity = input("请输入有效期(天数或YYYY-MM-DD): ").strip()
-        token, expires_at = generate_activation_code(username, email, validity)
+        token, expires_at = generate_activation_code(username, email, validity, system_version)
     except Exception as exc:
         print(f"错误: {exc}")
         return 1

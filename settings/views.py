@@ -80,6 +80,7 @@ SECTION_DEFAULTS = {
         "expires_at": "",
         "username": "",
         "email": "",
+        "system_version": "",
     },
 }
 
@@ -380,6 +381,7 @@ def _handle_activation(settings_payload, login_id):
         "expires_at": expires_at,
         "username": str(payload.get("username") or ""),
         "email": str(payload.get("email") or ""),
+        "system_version": str(payload.get("system_version") or ""),
     }
     return _save_setting("activation", normalized, login_id)
 
@@ -622,6 +624,7 @@ def activation_status_api(request):
             "expires_at": payload.get("expires_at") if payload else "",
             "username": payload.get("username") if payload else "",
             "email": payload.get("email") if payload else "",
+            "system_version": payload.get("system_version") if payload else "",
         }
     )
 
@@ -643,6 +646,7 @@ def activation_code_api(request):
         "expires_at": str(parsed.get("expires_at") or ""),
         "username": str(parsed.get("username") or ""),
         "email": str(parsed.get("email") or ""),
+        "system_version": str(parsed.get("system_version") or ""),
     }
     return _save_setting("activation", settings_payload, login_id=None)
 
@@ -664,6 +668,7 @@ def activation_validate_api(request):
             "expires_at": str(parsed.get("expires_at") or ""),
             "username": str(parsed.get("username") or ""),
             "email": str(parsed.get("email") or ""),
+            "system_version": str(parsed.get("system_version") or ""),
         }
     )
 

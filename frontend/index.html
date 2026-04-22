@@ -157,7 +157,7 @@
 
       <div class="footer">
         <div class="footer-main-row">
-          <span>v1.0</span>        
+          <span id="systemVersionText">--</span>        
           <div class="system-expiry-inline" id="systemExpiryStatus">
             <span class="system-expiry-label">有效期至</span>
             <span class="system-expiry-date">--</span>
@@ -245,11 +245,13 @@
       const employeeNameText = document.getElementById("employeeNameText");
       const employeeNameLabel = document.getElementById("employeeNameLabel");
       const employeePositionLabel = document.getElementById("employeePositionLabel");
+      const systemVersionText = document.getElementById("systemVersionText");
       const systemExpiryStatus = document.getElementById("systemExpiryStatus");
       const systemExpiryDate = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-date") : null;
       const systemExpiryLabel = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-label") : null;
       const activationSettingsApi = "/api/sys-settings/activation";
       let activationExpiryRaw = "";
+      let activationSystemVersion = "";
 
       const t = (key, fallback) => (
         i18n && typeof i18n.t === "function" ? i18n.t(key) : (fallback || key)
@@ -322,6 +324,11 @@
         return diffDays <= days;
       };
 
+      const renderSystemVersion = () => {
+        if (!systemVersionText) return;
+        systemVersionText.textContent = activationSystemVersion || "--";
+      };
+
       const renderSystemExpiryStatus = () => {
         if (!systemExpiryStatus || !systemExpiryDate || !systemExpiryLabel) return;
         systemExpiryLabel.textContent = t("index.system_validity_label", "系统有效期");
@@ -347,14 +354,20 @@
           const payload = await response.json().catch(() => ({}));
           if (!response.ok || !payload || payload.success === false) {
             activationExpiryRaw = "";
+            activationSystemVersion = "";
+            renderSystemVersion();
             renderSystemExpiryStatus();
             return;
           }
           const settings = payload.data && payload.data.settings ? payload.data.settings : {};
           activationExpiryRaw = settings.expires_at || "";
+          activationSystemVersion = settings.system_version || "";
+          renderSystemVersion();
           renderSystemExpiryStatus();
         } catch (e) {
           activationExpiryRaw = "";
+          activationSystemVersion = "";
+          renderSystemVersion();
           renderSystemExpiryStatus();
         }
       };

@@ -699,19 +699,10 @@
             return;
         }
 
-        let ssPath = currentSsPath;
-        if (ssFileInput && ssFileInput.files && ssFileInput.files.length) {
-            if (currentSsPath) {
-                const confirmed = confirm(t("people.confirm.ss_overwrite"));
-                if (!confirmed) {
-                    return;
-                }
-            }
-            try {
-                const upload = await uploadSsFile(effectiveId, ssFileInput.files[0]);
-                ssPath = upload.path || '';
-            } catch (error) {
-                alert(error.message || t("people.upload_failed"));
+        const selectedSsFile = ssFileInput && ssFileInput.files ? ssFileInput.files[0] : null;
+        if (selectedSsFile && currentSsPath) {
+            const confirmed = confirm(t("people.confirm.ss_overwrite"));
+            if (!confirmed) {
                 return;
             }
         }
@@ -728,12 +719,24 @@
             contract_type: contractLabelToType(formValue.contract),
             spot_contract_deadline: formValue.siteContract || null,
             business_status: Number.isFinite(formValue.businessStatus) ? formValue.businessStatus : 0,
-            ss: ssPath || null,
+            ss: currentSsPath || null,
             remark: formValue.note
         };
 
         try {
-            await savePerson(payload);
+            const saved = await savePerson(payload);
+            const savedItem = saved.item || {};
+            const savedEmployeeId = savedItem.employee_id || effectiveId;
+            if (selectedSsFile) {
+                try {
+                    await uploadSsFile(savedEmployeeId, selectedSsFile);
+                } catch (error) {
+                    closeDialog();
+                    await fetchPeople();
+                    alert(`人员已保存，但 SS 文件上传失败：${error.message || t("people.upload_failed")}`);
+                    return;
+                }
+            }
             closeDialog();
             await fetchPeople();
         } catch (error) {

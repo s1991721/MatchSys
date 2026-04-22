@@ -2184,8 +2184,8 @@ svg {
 }
 .songxin-template-textarea {
   width: 100%;
-  min-height: 180px;
-  padding: 12px 14px;
+  min-height: 340px;
+  padding: 14px 16px;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: #fff;
@@ -2195,6 +2195,39 @@ svg {
   resize: vertical;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.songxin-template-dialog .c-dialog-header {
+  align-items: flex-start;
+  padding: 20px 22px 0;
+}
+.songxin-template-header-text {
+  min-width: 0;
+}
+.songxin-template-dialog .c-dialog-header h3 {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.songxin-template-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+}
+.songxin-template-dialog .c-dialog-close {
+  margin-top: -2px;
+}
+.songxin-template-dialog .c-dialog-body {
+  padding: 8px 20px 8px;
+}
+.songxin-template-dialog .c-dialog-actions {
+  padding: 12px 20px 20px;
+  gap: 14px;
+}
+.songxin-template-dialog .c-dialog-actions .c-btn {
+  min-width: 120px;
+  height: 44px;
+  border-radius: 14px;
 }
 .songxin-template-textarea:focus {
   border-color: var(--primary);

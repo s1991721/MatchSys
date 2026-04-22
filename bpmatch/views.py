@@ -614,24 +614,8 @@ def extract_technician_detail(request):
         "price_block": make_block("【希望単価】", price),
     }
 
-    # todo 根据需求更改模板
-    template = (
-        "いつもお世話になっております。\n"
-        "株式会社の林でございます。\n"
-        "\n"
-        "技術者をご紹介させて頂きます。\n"
-        "ご検討頂けますと幸いです。\n"
-        "\n"
-        "**************************************\n"
-        "{country_block}"
-        "{skills_block}"
-        "{price_block}"
-        "**************************************\n"
-        "\n"
-        "今後とも何卒よろしくお願い申し上げます。\n"
-    )
-
-    formatted_message = template.format(**fields)
+    template = _get_mail_template("technician")
+    formatted_message = template.format_map(_TemplateSafeDict(fields))
     response_payload = {"data": formatted_message, "raw": llm_result}
     return api_success(data=response_payload)
 

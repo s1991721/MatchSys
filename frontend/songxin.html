@@ -88,22 +88,22 @@
         </section>
     </div>
 
-    <dialog id="template-info-dialog" class="c-dialog">
+    <dialog id="template-info-dialog" class="c-dialog songxin-template-dialog">
         <div class="c-dialog-header">
-            <h3 data-i18n="songxin.template.dialog.title">编辑模板信息</h3>
+            <div class="songxin-template-header-text">
+                <h3 data-i18n="songxin.template.dialog.title">编辑模板信息</h3>
+                <p id="template-dialog-subtitle" class="c-card-subtitle songxin-template-subtitle"></p>
+            </div>
             <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
         </div>
         <div class="c-dialog-body">
-            <div class="form-field">
-                <label for="template-content" data-i18n="songxin.template.field.content">模板信息</label>
-                <textarea
-                    id="template-content"
-                    class="songxin-template-textarea"
-                    rows="14"
-                    placeholder="请输入模板信息"
-                    data-i18n-placeholder="songxin.template.placeholder.content"
-                ></textarea>
-            </div>
+            <textarea
+                id="template-content"
+                class="songxin-template-textarea"
+                rows="14"
+                placeholder="请输入模板信息"
+                data-i18n-placeholder="songxin.template.placeholder.content"
+            ></textarea>
         </div>
         <div class="c-dialog-actions">
             <button class="c-btn c-btn-ghost" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
@@ -132,6 +132,7 @@
             const originalTitle = document.querySelector('.songxin-original-card .c-card-title');
             const templateInfoBtn = document.getElementById('btn-template-info');
             const templateInfoDialog = document.getElementById('template-info-dialog');
+            const templateDialogSubtitle = document.getElementById('template-dialog-subtitle');
             const templateContentInput = document.getElementById('template-content');
             const templateSaveBtn = document.getElementById('btn-template-save');
             const loadingMask = document.getElementById('loading-mask');
@@ -153,7 +154,6 @@
             const isMatchFlow = queryParams.get('from') === 'match';
             const sceneParam = (queryParams.get('scene') || '').toLowerCase();
             const templateSection = 'mail-template';
-            const currentTemplateName = 'anjian';
             let loadingTimer = null;
             let currentSelection = null;
             let templateSettingsCache = null;
@@ -365,6 +365,15 @@
                 return firstLine.slice(0, 60);
             };
 
+            const getTemplateNameByScene = (scene) => (scene === 'technician' ? 'technician' : 'anjian');
+
+            const renderTemplateSubtitle = (scene) => {
+                if (!templateDialogSubtitle) return;
+                templateDialogSubtitle.textContent = scene === 'technician'
+                    ? t('songxin.template.subtitle.technician')
+                    : t('songxin.template.subtitle.project');
+            };
+
             const loadTemplateSettings = async (forceRefresh = false) => {
                 if (!forceRefresh && templateSettingsCache) {
                     return templateSettingsCache;
@@ -389,10 +398,12 @@
             };
 
             const openTemplateDialog = async () => {
+                const templateName = getTemplateNameByScene(scene);
                 setLoading(true, { title: t('songxin.template.loading_title'), subtitle: t('songxin.template.loading_sub') });
                 try {
                     const settingsPayload = await loadTemplateSettings(true);
-                    templateContentInput.value = normalizeMultiline(settingsPayload[currentTemplateName] || '');
+                    templateContentInput.value = normalizeMultiline(settingsPayload[templateName] || '');
+                    renderTemplateSubtitle(scene);
                     templateInfoDialog.showModal();
                 } catch (err) {
                     console.error('加载模板失败', err);
@@ -452,12 +463,13 @@
             editor.addEventListener('input', renderPreview);
             templateInfoBtn.addEventListener('click', openTemplateDialog);
             templateSaveBtn.addEventListener('click', async () => {
+                const templateName = getTemplateNameByScene(scene);
                 setLoading(true, { title: t('songxin.template.saving_title'), subtitle: t('songxin.template.saving_sub') });
                 try {
                     const currentSettings = await loadTemplateSettings();
                     const nextSettings = {
                         ...currentSettings,
-                        [currentTemplateName]: normalizeMultiline(templateContentInput.value)
+                        [templateName]: normalizeMultiline(templateContentInput.value)
                     };
                     const res = await fetchWithAuth(`${API_BASE}/api/sys-settings/${templateSection}`, {
                         method: 'POST',
@@ -475,7 +487,7 @@
                     }
                     templateSettingsCache = nextSettings;
                     templateInfoDialog.close();
-                    if (scene === 'project' && originalText) {
+                    if (originalText) {
                         await analyzeByScene(originalText, scene);
                     }
                 } catch (err) {
@@ -605,6 +617,7 @@
             if (originalTitle) {
                 originalTitle.textContent = scene === 'technician' ? '技术者原文' : '案件原文';
             }
+            renderTemplateSubtitle(scene);
             renderOriginal(originalText);
             analyzeByScene(originalText, scene);
             if (window && window.addEventListener) {
@@ -612,9 +625,10 @@
                     if (i18n) {
                         i18n.apply();
                     }
+                    renderTemplateSubtitle(scene);
                     renderAttachments();
                     renderPreview();
-                    renderOriginal(jobText);
+                    renderOriginal(originalText);
                 });
             }
         })();

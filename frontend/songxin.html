@@ -21,7 +21,21 @@
     <div class="page page-wide songxin-page">
         <section class="songxin-grid songxin-grid-half">
             <div class="songxin-editor-card c-card c-card-pad">
-                <div class="c-card-title" data-i18n="songxin.section.editor">内容编辑</div>
+                <div class="songxin-card-head">
+                    <div class="c-card-title" data-i18n="songxin.section.editor">内容编辑</div>
+                    <button
+                        id="btn-template-info"
+                        class="songxin-template-trigger"
+                        type="button"
+                        aria-label="编辑模板信息"
+                        data-i18n-aria="songxin.template.action.edit"
+                        title="编辑模板信息"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6 2h8l5 5v4.25a1 1 0 1 1-2 0V8h-4V4H6v16h5.25a1 1 0 1 1 0 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm9 3.41V7h1.59L15 5.41zm-2.04 9.33 4.83-4.83 2.12 2.12-4.83 4.83-2.54.42.42-2.54zm6.24-6.24.71-.71a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1 0 1.41l-.71.71-2.12-2.12z"/>
+                        </svg>
+                    </button>
+                </div>
                 <textarea id="editor" class="songxin-editor" placeholder="在此编写您要发送的内容，例如项目进度、补充说明或会议纪要等。" aria-label="内容编辑文本域" data-i18n-placeholder="songxin.editor.placeholder" data-i18n-aria="songxin.editor.aria"></textarea>
             </div>
 
@@ -74,6 +88,29 @@
         </section>
     </div>
 
+    <dialog id="template-info-dialog" class="c-dialog">
+        <div class="c-dialog-header">
+            <h3 data-i18n="songxin.template.dialog.title">编辑模板信息</h3>
+            <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+        </div>
+        <div class="c-dialog-body">
+            <div class="form-field">
+                <label for="template-content" data-i18n="songxin.template.field.content">模板信息</label>
+                <textarea
+                    id="template-content"
+                    class="songxin-template-textarea"
+                    rows="14"
+                    placeholder="请输入模板信息"
+                    data-i18n-placeholder="songxin.template.placeholder.content"
+                ></textarea>
+            </div>
+        </div>
+        <div class="c-dialog-actions">
+            <button class="c-btn c-btn-ghost" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+            <button id="btn-template-save" class="c-btn c-btn-primary" type="button" data-i18n="common.save">保存</button>
+        </div>
+    </dialog>
+
     <script src="i18n.js"></script>
     <script src="common.js"></script>
 <script>
@@ -93,6 +130,10 @@
             const attachmentList = document.getElementById('attachment-list');
             const jobOriginal = document.getElementById('job-original');
             const originalTitle = document.querySelector('.songxin-original-card .c-card-title');
+            const templateInfoBtn = document.getElementById('btn-template-info');
+            const templateInfoDialog = document.getElementById('template-info-dialog');
+            const templateContentInput = document.getElementById('template-content');
+            const templateSaveBtn = document.getElementById('btn-template-save');
             const loadingMask = document.getElementById('loading-mask');
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
@@ -100,6 +141,9 @@
             if (i18n) {
                 i18n.init();
                 i18n.apply();
+            }
+            if (window.initDialogCloseBehavior) {
+                window.initDialogCloseBehavior({ dialogs: [templateInfoDialog] });
             }
             const fetchWithAuth = window.fetchWithAuth;
             const attachments = [];
@@ -318,6 +362,11 @@
                 return firstLine.slice(0, 60);
             };
 
+            const openTemplateDialog = () => {
+                templateContentInput.value = editor.value;
+                templateInfoDialog.showModal();
+            };
+
             const renderAttachments = () => {
                 if (!attachments.length) {
                 attachmentList.innerHTML = `<div class="songxin-empty-tip">${t('songxin.attach.empty')}</div>`;
@@ -366,6 +415,13 @@
             });
 
             editor.addEventListener('input', renderPreview);
+            templateInfoBtn.addEventListener('click', openTemplateDialog);
+            templateSaveBtn.addEventListener('click', () => {
+                editor.value = normalizeMultiline(templateContentInput.value);
+                renderPreview();
+                templateInfoDialog.close();
+                editor.focus();
+            });
             uploadBtn.addEventListener('click', () => fileInput.click());
 
             fileInput.addEventListener('change', () => {

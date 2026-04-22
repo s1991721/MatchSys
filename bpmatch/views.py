@@ -11,6 +11,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_json_body, require_login
+from settings.models import SysSettings
 from . import llmsTool
 from .mailTool import (
     MailToolError,
@@ -92,6 +93,21 @@ def _read_payload_text(payload):
     if not text:
         text = payload.get("text")
     return str(text or "")
+
+
+def _get_mail_template(template_name):
+    record = SysSettings.objects.filter(name="mail-template", deleted_at__isnull=True).first()
+    settings_payload = record.settings if record and isinstance(record.settings, dict) else {}
+    template = settings_payload.get(template_name)
+    if template is None:
+        return ""
+    template_str = str(template).strip()
+    return template_str
+
+
+class _TemplateSafeDict(dict):
+    def __missing__(self, key):
+        return ""
 
 
 @csrf_exempt
@@ -539,40 +555,8 @@ def extract_project_detail(request):
         "remark_block": make_block("【備考】", remark),
     }
 
-    # todo 根据需求更改模板
-    template = (
-        "いつもお世話になっております。\n"
-        "株式会社の林でございます。\n"
-        "\n"
-        "技術者をご紹介いただきありがとうございます。\n"
-        "弊社にて対応可能な案件をご紹介させて頂きます。\n"
-        "ご検討頂けますと幸いです。\n"
-        "\n"
-        "**************************************\n"
-        "{project_block}"
-        "{detail_block}"
-        "{requirement_block}"
-        "{skills_must_block}"
-        "{skills_can_block}"
-        "{remark_block}"
-        "**************************************\n"
-        "\n"
-        "今後とも何卒よろしくお願い申し上げます。\n"
-        "＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n"
-        "\n"
-        "株式会社\n"
-        "IT サポート\n"
-        "〒141-2222\n"
-        "東京都品川区東五反田\n"
-        "五反田F\n"
-        "営業共通:sales@.co.jp\n"
-        "TEL: 03-6666-8888　FAX: 03-6666-8888\n"
-        "Web: http://.co.jp\n"
-        "労働者派遣事業許可番号：　派 13-311111\n"
-        "有料職業紹介事業許可番号：　13-ユ-311111\n"
-    )
-
-    formatted_message = template.format(**fields)
+    template = _get_mail_template("anjian")
+    formatted_message = template.format_map(_TemplateSafeDict(fields))
 
     response_payload = {"data": formatted_message, "raw": llm_result}
     return api_success(data=response_payload)

@@ -152,8 +152,11 @@
             const queryParams = new URLSearchParams(window.location.search);
             const isMatchFlow = queryParams.get('from') === 'match';
             const sceneParam = (queryParams.get('scene') || '').toLowerCase();
+            const templateSection = 'mail-template';
+            const currentTemplateName = 'anjian';
             let loadingTimer = null;
             let currentSelection = null;
+            let templateSettingsCache = null;
 
             const readSelection = () => {
                 const raw = localStorage.getItem(selectionKey);
@@ -362,9 +365,41 @@
                 return firstLine.slice(0, 60);
             };
 
-            const openTemplateDialog = () => {
-                templateContentInput.value = editor.value;
-                templateInfoDialog.showModal();
+            const loadTemplateSettings = async (forceRefresh = false) => {
+                if (!forceRefresh && templateSettingsCache) {
+                    return templateSettingsCache;
+                }
+                const res = await fetchWithAuth(`${API_BASE}/api/sys-settings/${templateSection}`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const data = await res.json().catch(() => ({}));
+                const payload = normalizeApiResponse(data);
+                if (!payload.success) {
+                    throw new Error(payload.message || '加载模板失败');
+                }
+                const settingsPayload = payload.data && typeof payload.data.settings === 'object' && payload.data.settings
+                    ? payload.data.settings
+                    : {};
+                templateSettingsCache = settingsPayload;
+                return settingsPayload;
+            };
+
+            const openTemplateDialog = async () => {
+                setLoading(true, { title: t('songxin.template.loading_title'), subtitle: t('songxin.template.loading_sub') });
+                try {
+                    const settingsPayload = await loadTemplateSettings(true);
+                    templateContentInput.value = normalizeMultiline(settingsPayload[currentTemplateName] || '');
+                    templateInfoDialog.showModal();
+                } catch (err) {
+                    console.error('加载模板失败', err);
+                    alert(t('songxin.template.alert.load_failed'));
+                } finally {
+                    setLoading(false);
+                }
             };
 
             const renderAttachments = () => {
@@ -416,11 +451,40 @@
 
             editor.addEventListener('input', renderPreview);
             templateInfoBtn.addEventListener('click', openTemplateDialog);
-            templateSaveBtn.addEventListener('click', () => {
-                editor.value = normalizeMultiline(templateContentInput.value);
-                renderPreview();
-                templateInfoDialog.close();
-                editor.focus();
+            templateSaveBtn.addEventListener('click', async () => {
+                setLoading(true, { title: t('songxin.template.saving_title'), subtitle: t('songxin.template.saving_sub') });
+                try {
+                    const currentSettings = await loadTemplateSettings();
+                    const nextSettings = {
+                        ...currentSettings,
+                        [currentTemplateName]: normalizeMultiline(templateContentInput.value)
+                    };
+                    const res = await fetchWithAuth(`${API_BASE}/api/sys-settings/${templateSection}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ settings: nextSettings })
+                    });
+                    if (!res.ok) {
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+                    const data = await res.json().catch(() => ({}));
+                    const payload = normalizeApiResponse(data);
+                    if (!payload.success) {
+                        throw new Error(payload.message || '保存模板失败');
+                    }
+                    templateSettingsCache = nextSettings;
+                    templateInfoDialog.close();
+                    if (scene === 'project' && originalText) {
+                        await analyzeByScene(originalText, scene);
+                    }
+                } catch (err) {
+                    console.error('保存模板失败', err);
+                    alert(t('songxin.template.alert.save_failed'));
+                } finally {
+                    setLoading(false);
+                    editor.focus();
+                }
             });
             uploadBtn.addEventListener('click', () => fileInput.click());
 

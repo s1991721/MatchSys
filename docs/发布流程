@@ -57,3 +57,9 @@ docker exec -it ollama ollama list
 --单个镜像更新 --Docker pull 其实比对的是 digest（镜像内容哈希）
 docker compose pull web
 docker compose up -d --no-deps --force-recreate web
+
+
+v1.0 投入正式使用测试
+v1.1 自研分类器及邮箱功能修复
+
+v2.0 财务版本

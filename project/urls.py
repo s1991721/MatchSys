@@ -134,6 +134,7 @@ urlpatterns = [
     path("bpmatch.html", TemplateView.as_view(template_name="frontend/bpmatch.html")),
     path("match.html", TemplateView.as_view(template_name="frontend/match.html")),
     path("qiuren.html", TemplateView.as_view(template_name="frontend/qiuren.html")),
+    path("bpsongxin.html", TemplateView.as_view(template_name="frontend/bpsongxin.html")),
     path("songxin.html", TemplateView.as_view(template_name="frontend/songxin.html")),
     path("songxinhistory.html", TemplateView.as_view(template_name="frontend/songxinhistory.html")),
     path("my_mail.html", TemplateView.as_view(template_name="frontend/my_mail.html")),

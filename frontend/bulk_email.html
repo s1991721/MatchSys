@@ -119,6 +119,40 @@
             margin-bottom: 12px;
         }
 
+        .bulk-email-page .group-header-main {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1 1 auto;
+        }
+
+        .bulk-email-page .group-title-wrap {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1 1 auto;
+        }
+
+        .bulk-email-page .group-company-check {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .bulk-email-page .group-company-check input {
+            margin: 0;
+        }
+
+        .bulk-email-page .group-company-email {
+            color: #63708a;
+            font-size: 14px;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
         @media (max-width: 1200px) {
             .bulk-email-page .modal-body {
                 grid-template-columns: minmax(0, 4fr) auto minmax(0, 6fr);
@@ -218,13 +252,15 @@
     let selectedCustomerIdSet = new Set();
     let selectedCustomersSnapshot = [];
     let recipientSourceItems = [];
-    let selectedEmailSet = new Set();
+    let selectedCompanyIdSet = new Set();
+    let selectedContactKeySet = new Set();
     let prefill = null;
     let prefillSource = "";
 
     const extractRecipients = (items) => {
         const groups = [];
         items.forEach((item) => {
+            const companyEmail = String(item.company_email || "").trim();
             const contacts = [];
             const entries = [
                 {index: 1, name: item.contact1_name, email: item.contact1_email},
@@ -238,12 +274,17 @@
                 const label = name
                     ? format("customer.bulk.contact", {index: entry.index, name})
                     : format("customer.bulk.contact_fallback", {index: entry.index, email});
-                contacts.push({label, email});
+                contacts.push({
+                    key: `${String(item.id || "")}:contact:${entry.index}`,
+                    label,
+                    email,
+                });
             });
 
             groups.push({
                 id: String(item.id || ""),
                 company: item.company_name || t("customer.bulk.unnamed"),
+                companyEmail,
                 contacts,
             });
         });
@@ -251,12 +292,8 @@
     };
 
     const updateBulkSelected = () => {
-        const companyIds = new Set();
-        extractRecipients(recipientSourceItems).forEach((group) => {
-            const hit = group.contacts.some((contact) => selectedEmailSet.has(contact.email));
-            if (hit) companyIds.add(group.id);
-        });
-        bulkMailSelected.textContent = format("customer.bulk.selected", {count: companyIds.size});
+        const totalSelected = selectedCompanyIdSet.size + selectedContactKeySet.size;
+        bulkMailSelected.textContent = format("customer.bulk.selected", {count: totalSelected});
     };
 
     const renderBulkRecipients = (items) => {
@@ -268,11 +305,13 @@
         }
         bulkMailRecipients.innerHTML = groups
             .map((group) => {
+                const companyChecked = selectedCompanyIdSet.has(group.id) ? " checked" : "";
+                const companyCheckDisabled = group.companyEmail ? "" : " disabled";
                 const contactsHtml = group.contacts
                     .map(
                         (contact) => `
                         <label class="contact-row">
-                            <input class="contact-check" type="checkbox" data-email="${contact.email}" data-company="${group.id}">
+                            <input class="contact-check" type="checkbox" data-email="${contact.email}" data-company="${group.id}" data-contact-key="${contact.key}"${selectedContactKeySet.has(contact.key) ? " checked" : ""}>
                             <div class="contact-info">
                                 <div class="contact-name">${contact.label}</div>
                                 <div class="contact-email">${contact.email}</div>
@@ -281,20 +320,22 @@
                     `
                     )
                     .join("");
-                const contactsCheckedHtml = contactsHtml.replace(
-                    /class="contact-check" type="checkbox" data-email="([^"]+)"/g,
-                    (match, email) => selectedEmailSet.has(email) ? `${match} checked` : match
-                );
                 const emptyContactHtml = `<div class="contact-row"><div></div><div class="contact-email">无可用邮箱联系人</div></div>`;
                 return `
-                    <div class="group-card" data-group-id="${group.id}">
-                        <div class="group-header">
-                            <button class="group-toggle" type="button" aria-label="折叠/展开" aria-expanded="true">−</button>
-                            <div class="group-name">${group.company}</div>
-                            <button class="group-more" type="button" aria-label="更多">…</button>
+                        <div class="group-card" data-group-id="${group.id}">
+                            <div class="group-header">
+                                <div class="group-header-main">
+                                    <label class="group-company-check" title="${group.companyEmail || t("customer.bulk.company_email_empty")}">
+                                    <input class="company-check" type="checkbox" data-email="${group.companyEmail}" data-company="${group.id}"${companyChecked}${companyCheckDisabled}>
+                                </label>
+                                <div class="group-title-wrap">
+                                    <div class="group-name">${group.company}</div>
+                                    <div class="group-company-email">${group.companyEmail || t("customer.bulk.company_email_empty")}</div>
+                                </div>
+                            </div>
                         </div>
                         <div class="group-body">
-                            ${contactsCheckedHtml || emptyContactHtml}
+                            ${contactsHtml || emptyContactHtml}
                         </div>
                     </div>
                 `;
@@ -304,7 +345,18 @@
     };
 
     const readSelectedEmails = () => {
-        return Array.from(selectedEmailSet);
+        const emailSet = new Set();
+        extractRecipients(recipientSourceItems).forEach((group) => {
+            if (selectedCompanyIdSet.has(group.id) && group.companyEmail) {
+                emailSet.add(group.companyEmail);
+            }
+            group.contacts.forEach((contact) => {
+                if (selectedContactKeySet.has(contact.key) && contact.email) {
+                    emailSet.add(contact.email);
+                }
+            });
+        });
+        return Array.from(emailSet);
     };
 
     const normalizeText = (value) => String(value || "").toLowerCase();
@@ -484,13 +536,19 @@
     };
 
     bulkMailRecipients.addEventListener("change", (event) => {
-        if (event.target.matches(".contact-check")) {
-            const email = event.target.dataset.email || "";
-            if (email) {
+        if (event.target.matches(".company-check, .contact-check")) {
+            const isCompany = event.target.matches(".company-check");
+            const targetKey = isCompany
+                ? String(event.target.dataset.company || "")
+                : String(event.target.dataset.contactKey || "");
+            if (targetKey) {
+                const targetSet = isCompany
+                    ? selectedCompanyIdSet
+                    : selectedContactKeySet;
                 if (event.target.checked) {
-                    selectedEmailSet.add(email);
+                    targetSet.add(targetKey);
                 } else {
-                    selectedEmailSet.delete(email);
+                    targetSet.delete(targetKey);
                 }
             }
             updateBulkSelected();
@@ -502,16 +560,6 @@
             renderFilteredRecipients();
         });
     }
-
-    bulkMailRecipients.addEventListener("click", (event) => {
-        const toggleBtn = event.target.closest(".group-toggle");
-        if (!toggleBtn) return;
-        const card = toggleBtn.closest(".group-card");
-        if (!card) return;
-        const collapsed = card.classList.toggle("is-collapsed");
-        toggleBtn.textContent = collapsed ? "+" : "−";
-        toggleBtn.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    });
 
     bulkMailSend.addEventListener("click", () => {
         const recipients = readSelectedEmails();

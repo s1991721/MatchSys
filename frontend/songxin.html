@@ -186,6 +186,38 @@
                 return 'project';
             };
 
+            const extractEmail = (raw) => {
+                if (!raw) return '';
+                const bracketMatch = raw.match(/<([^>]+)>/);
+                if (bracketMatch && bracketMatch[1]) {
+                    return bracketMatch[1].trim();
+                }
+                const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+                return emailMatch ? emailMatch[0].trim() : '';
+            };
+
+            const getOriginalTextFromSelection = (selection, scene) => {
+                if (!selection || !selection.job) return '';
+                const job = selection.job || {};
+                return normalizeMultiline(job.detail || job.desc || '');
+            };
+
+            const applySelectionMailMeta = (selection) => {
+                if (!selection || !selection.person) return;
+                const person = selection.person || {};
+                const subject = (person.subject || person.title || person.name || '').trim();
+                const replyTo = extractEmail(person.belong || person.from || '');
+
+                if (!subjectInput.value && subject) {
+                    subjectInput.value = subject.startsWith('Re:')
+                        ? subject
+                        : `Re: ${subject}`;
+                }
+                if (!email.value && replyTo) {
+                    email.value = replyTo;
+                }
+            };
+
             const setLoading = (isLoading, options = {}) => {
                 const { title = t('songxin.loading.processing'), subtitle = t('songxin.loading.wait_sub') } =
                     typeof options === 'string'
@@ -213,22 +245,9 @@
 
             const applyRenderedResult = (result = {}) => {
                 const body = normalizeMultiline(result.body || result.data || result.raw || '');
-                const originalText = normalizeMultiline(result.original_text || '');
-                const subject = typeof result.subject === 'string' ? result.subject.trim() : '';
-                const replyTo = typeof result.reply_to === 'string' ? result.reply_to.trim() : '';
 
                 editor.value = body || t('songxin.preview.unavailable');
                 renderPreview();
-                renderOriginal(originalText);
-
-                if (!subjectInput.value && subject) {
-                    subjectInput.value = subject.startsWith('Re:')
-                        ? subject
-                        : `Re: ${subject}`;
-                }
-                if (!email.value && replyTo) {
-                    email.value = replyTo;
-                }
             };
 
             const analyzeByScene = async (selection, scene) => {
@@ -547,10 +566,11 @@
             renderPreview();
             const scene = resolveScene(selection);
             if (originalTitle) {
-                originalTitle.textContent = scene === 'technician' ? '技术者原文' : '案件原文';
+                originalTitle.textContent = '案件原文';
             }
             renderTemplateSubtitle(scene);
-            renderOriginal('');
+            applySelectionMailMeta(selection);
+            renderOriginal(getOriginalTextFromSelection(selection, scene));
             analyzeByScene(selection, scene);
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {

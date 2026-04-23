@@ -570,13 +570,18 @@ def extract_technician_detail(request):
     if error:
         return error
 
+    selection = payload.get("selection") if isinstance(payload, dict) else {}
+    if not isinstance(selection, dict):
+        selection = {}
+    person = selection.get("person") if isinstance(selection.get("person"), dict) else {}
+
     fields = {
-        "person_intro": payload.get("selection").get("person").get("intro"),
+        "person_intro": person.get("intro"),
     }
 
     template = _get_mail_template("technician")
     formatted_message = template.format_map(_TemplateSafeDict(fields))
-    response_payload = {"data": formatted_message}
+    response_payload = {"body": formatted_message}
     return api_success(data=response_payload)
 
 

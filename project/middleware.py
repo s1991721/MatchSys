@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core.cache import cache
 from django.http import HttpResponse
@@ -6,6 +8,8 @@ from django.utils import timezone
 from project.api import api_error
 from settings.activation_code import is_activation_code_valid
 from settings.models import SysSettings
+
+logger = logging.getLogger(__name__)
 
 
 class SessionLoginRequiredMiddleware:
@@ -112,6 +116,7 @@ class ApiExceptionMiddleware:
     def process_exception(self, request, exception):
         if not request.path.startswith("/api/"):
             return None
+        logger.exception("Unhandled API exception on %s", request.path)
         message = "Internal server error"
         if settings.DEBUG:
             message = str(exception)

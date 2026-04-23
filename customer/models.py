@@ -4,6 +4,7 @@ from django.db import models
 class Customer(models.Model):
     company_name = models.CharField(max_length=255)
     company_address = models.CharField(max_length=255, null=True, blank=True)
+    company_email = models.EmailField(max_length=255, null=True, blank=True)
     contract = models.TextField(null=True, blank=True)
     remark = models.TextField(null=True, blank=True)
 
@@ -43,6 +44,7 @@ class Customer(models.Model):
             "id": customer.id,
             "company_name": customer.company_name or "",
             "company_address": customer.company_address or "",
+            "company_email": customer.company_email or "",
             "contract": customer.contract or "",
             "remark": customer.remark or "",
             "contact1_name": customer.contact1_name or "",
@@ -66,6 +68,7 @@ class Customer(models.Model):
     def get_customer_by_payload(customer,payload):
         customer.company_name = (payload.get("company_name") or "").strip()
         customer.company_address = (payload.get("company_address") or "").strip()
+        customer.company_email = (payload.get("company_email") or "").strip()
         customer.remark = (payload.get("remark") or "").strip()
         customer.contact1_name = (payload.get("contact1_name") or "").strip()
         customer.contact1_position = (payload.get("contact1_position") or "").strip()

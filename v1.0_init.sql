@@ -295,6 +295,7 @@ CREATE TABLE IF NOT EXISTS customer
 
     company_name      VARCHAR(255) NOT NULL COMMENT '公司名称',
     company_address   VARCHAR(500)          DEFAULT NULL COMMENT '公司地址',
+    company_email    VARCHAR(255)          DEFAULT NULL COMMENT '公司邮箱',
 
     contract          TEXT                  DEFAULT NULL COMMENT '合同信息',
     remark            TEXT                  DEFAULT NULL COMMENT '备注',

@@ -160,6 +160,10 @@
                 <input id="edit-address" type="text"/>
             </label>
             <label class="c-field">
+                <span>公司邮箱</span>
+                <input id="edit-company-email" type="email"/>
+            </label>
+            <label class="c-field">
                 <span data-i18n="customer.field.contract">契约</span>
                 <input id="edit-contract" type="file"/>
                 <span class="hint" id="contract-hint" data-i18n="customer.contract.empty">未上传</span>
@@ -285,6 +289,7 @@
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),
+        companyEmail: document.getElementById("edit-company-email"),
         contract: document.getElementById("edit-contract"),
         remark: document.getElementById("edit-remark"),
         owner: document.getElementById("edit-owner"),
@@ -407,6 +412,7 @@
         return {
             company_name: String(item?.company_name || "").trim(),
             company_address: String(item?.company_address || "").trim(),
+            company_email: String(item?.company_email || "").trim(),
             remark: String(item?.remark || "").trim(),
             contact1_name: String(item?.contact1_name || "").trim(),
             contact1_position: String(item?.contact1_position || "").trim(),
@@ -436,6 +442,7 @@
     const applyCustomerToEditForm = (item) => {
         editFields.company.value = item?.company_name || "";
         editFields.address.value = item?.company_address || "";
+        editFields.companyEmail.value = item?.company_email || "";
         editFields.contract.value = "";
         currentContract = item?.contract || "";
         contractHint.textContent = currentContract
@@ -862,6 +869,7 @@
         const payload = {
             company_name: editFields.company.value.trim(),
             company_address: editFields.address.value.trim(),
+            company_email: editFields.companyEmail.value.trim(),
             remark: editFields.remark.value.trim(),
             contact1_name: editFields.contact1Name.value.trim(),
             contact1_position: editFields.contact1Position.value.trim(),

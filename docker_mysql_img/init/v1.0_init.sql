@@ -295,6 +295,7 @@ CREATE TABLE IF NOT EXISTS customer
 
     company_name      VARCHAR(255) NOT NULL COMMENT '公司名称',
     company_address   VARCHAR(500)          DEFAULT NULL COMMENT '公司地址',
+    company_email    VARCHAR(255)          DEFAULT NULL COMMENT '公司邮箱',
 
     contract          TEXT                  DEFAULT NULL COMMENT '合同信息',
     remark            TEXT                  DEFAULT NULL COMMENT '备注',
@@ -476,7 +477,9 @@ CREATE TABLE IF NOT EXISTS my_mail
     id               VARCHAR(255) NOT NULL COMMENT '外部邮件唯一标识（如 IMAP UID / Message-ID）',
     owner_id         BIGINT       NULL COMMENT '员工ID，对应 employee.id',
     subject          VARCHAR(512) NULL COMMENT '邮件主题',
-    from_email       VARCHAR(255) NULL COMMENT '发件人邮箱',
+    from_email       VARCHAR(255) NULL COMMENT '发件人',
+    body             TEXT              COMMENT '正文内容',
+    files            TEXT              COMMENT '附件信息',
     received_at      DATETIME     NULL COMMENT '接收时间',
     is_unread        TINYINT(1)   NOT NULL DEFAULT 0 COMMENT '是否未读',
 

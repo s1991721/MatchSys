@@ -1951,7 +1951,11 @@ svg {
   font-size: 14px;
   line-height: 1.7;
   color: #435065;
-  overflow: auto;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .match-page .match-list.jobs {
   max-height: 420px;

@@ -570,53 +570,13 @@ def extract_technician_detail(request):
     if error:
         return error
 
-    text = _read_payload_text(payload)
-    if not text.strip():
-        return api_error("Missing field: body")
-
-    try:
-        llm_result = llmsTool.qiuanjian_detail_analysis(text)
-    except Exception as exc:
-        return api_error(str(exc), status=500)
-
-    try:
-        parsed = json.loads(llm_result)
-    except Exception as exc:
-        print(f"[extract_technician_detail] 解析 LLM JSON 失败: {exc}")
-        parsed = {}
-
-    if not isinstance(parsed, dict):
-        parsed = {}
-
-    def make_block(title: str, value) -> str:
-        if value in (None, "", [], 0):
-            return ""
-        if isinstance(value, list):
-            value = "\n".join(v for v in value if v)
-        value = str(value).strip()
-        if not value:
-            return ""
-        return f"{title}\n{value}\n\n"
-
-    country_value = parsed.get("country")
-    country_label = ""
-    if country_value == 0 or str(country_value) == "0":
-        country_label = "日本籍"
-    elif country_value == 1 or str(country_value) == "1":
-        country_label = "外国籍"
-
-    skills = parsed.get("skills", [])
-    price = parsed.get("price", 0)
-
     fields = {
-        "country_block": make_block("【国籍】", country_label),
-        "skills_block": make_block("【スキル】", skills),
-        "price_block": make_block("【希望単価】", price),
+        "person_intro": payload.get("selection").get("person").get("intro"),
     }
 
     template = _get_mail_template("technician")
     formatted_message = template.format_map(_TemplateSafeDict(fields))
-    response_payload = {"data": formatted_message, "raw": llm_result}
+    response_payload = {"data": formatted_message}
     return api_success(data=response_payload)
 
 

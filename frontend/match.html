@@ -101,6 +101,10 @@
                     <div id="case-detail" class="detail">
                         这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                     </div>
+                    <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
+                    <div id="detail-attachments" class="c-chip-row songxinhistory-attachments">
+                        <div class="songxin-empty-tip" data-i18n="songxinhistory.empty.attachments">暂无附件</div>
+                    </div>
                     <div class="detail-actions">
                         <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send">送信</button>
                     </div>
@@ -119,6 +123,7 @@
 
             const list = document.getElementById('case-list');
             const detail = document.getElementById('case-detail');
+            const detailAttachments = document.getElementById('detail-attachments');
             const senderInput = document.getElementById('sender-input');
             const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
             const viewButtons = Array.from(document.querySelectorAll('.c-toggle[data-view]'));
@@ -171,6 +176,48 @@
                 } catch {
                     return [];
                 }
+            };
+
+            const parseDatasetJSON = (el, key) => {
+                if (!el || !el.dataset) return null;
+                const raw = el.dataset[key];
+                if (!raw) return null;
+                try {
+                    return JSON.parse(raw);
+                } catch {
+                    return null;
+                }
+            };
+
+            const buildAttachmentUrl = (file = {}) => {
+                const messageId = encodeURIComponent(String(file.message_id || '').trim());
+                const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
+                if (!messageId || !attachmentId) return '';
+                const params = new URLSearchParams();
+                const mimeType = String(file.mime_type || '').toLowerCase();
+                if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+                    params.set('disposition', 'inline');
+                }
+                const query = params.toString();
+                return `/api/gmail/messages/${messageId}/attachments/${attachmentId}${query ? `?${query}` : ''}`;
+            };
+
+            const renderAttachments = (files = []) => {
+                if (!detailAttachments) return;
+                if (!Array.isArray(files) || !files.length) {
+                    detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+                    return;
+                }
+                const items = files
+                    .filter(file => file && file.filename && file.attachment_id && file.message_id)
+                    .map((file) => {
+                        const url = buildAttachmentUrl(file);
+                        const name = sanitize(String(file.filename || 'attachment'));
+                        return `<a class="c-chip" href="${sanitize(url)}" target="_blank" rel="noopener noreferrer">${name}</a>`;
+                    });
+                detailAttachments.innerHTML = items.length
+                    ? items.join('')
+                    : `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
             };
 
             const renderDetail = (target, text = '', highlights = []) => {
@@ -329,6 +376,7 @@
                     empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
                     list.appendChild(empty);
                     renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
+                    renderAttachments([]);
                     return;
                 }
 
@@ -338,6 +386,7 @@
                     li.dataset.detail = item.detail;
                     li.dataset.id = item.id;
                     li.dataset.item = JSON.stringify(item);
+                    li.dataset.files = JSON.stringify(item.files || []);
                     if (item.matched_skills && Array.isArray(item.matched_skills)) {
                         li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
                     }
@@ -370,6 +419,7 @@
                 const first = list.querySelector('.item');
                 if (first) {
                     renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
+                    renderAttachments(parseDatasetJSON(first, 'files') || []);
                 }
             };
 
@@ -380,6 +430,7 @@
                 empty.textContent = message;
                 list.appendChild(empty);
                 renderDetail(detail, '');
+                renderAttachments([]);
             };
 
             const fetchCases = async () => {
@@ -424,6 +475,7 @@
                 list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
                 item.classList.add('active');
                 renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
+                renderAttachments(parseDatasetJSON(item, 'files') || []);
             });
 
             dateButtons.forEach(btn => {
@@ -473,17 +525,6 @@
                         alert(t('match.send_tip'));
                         return;
                     }
-
-                    const parseDatasetJSON = (el, key) => {
-                        if (!el || !el.dataset) return null;
-                        const raw = el.dataset[key];
-                        if (!raw) return null;
-                        try {
-                            return JSON.parse(raw);
-                        } catch {
-                            return null;
-                        }
-                    };
 
                     const view = getActiveView();
                     const itemData = parseDatasetJSON(activeItem, 'item') || {};

@@ -476,6 +476,7 @@ def mail_technician_search_api(request):
             "title": row.title or "(无标题)",
             "desc": row.address or "",
             "detail": row.body or "",
+            "files": _load_attachment_items(row.files),
             "date": row.date.isoformat() if row.date else "",
             "sender": row.address or "",
             "country": row.country or "",

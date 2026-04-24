@@ -197,8 +197,12 @@
             };
 
             const getOriginalTextFromSelection = (selection, scene) => {
-                if (!selection || !selection.job) return '';
+                if (!selection) return '';
                 const job = selection.job || {};
+                const person = selection.person || {};
+                if (scene === 'project') {
+                    return normalizeMultiline(person.detail || '');
+                }
                 return normalizeMultiline(job.detail || job.desc || '');
             };
 
@@ -252,6 +256,9 @@
 
             const analyzeByScene = async (selection, scene) => {
                 if (!selection) return;
+                const body = scene === 'project'
+                    ? (selection.job?.detail || selection.job?.desc || '')
+                    : (selection.person?.intro || selection.person?.detail || '');
                 setLoading(true, { title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub') });
                 try {
                     const endpoint = scene === 'technician'
@@ -261,7 +268,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
-                        body: JSON.stringify({ scene, selection })
+                        body: JSON.stringify({ scene, selection, body })
                     });
                     if (!res.ok) {
                         throw new Error(`HTTP ${res.status}`);
@@ -566,7 +573,7 @@
             renderPreview();
             const scene = resolveScene(selection);
             if (originalTitle) {
-                originalTitle.textContent = '案件原文';
+                originalTitle.textContent = scene === 'project' ? '技术者原文' : '案件原文';
             }
             renderTemplateSubtitle(scene);
             applySelectionMailMeta(selection);

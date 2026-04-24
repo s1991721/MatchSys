@@ -86,15 +86,6 @@ def _normalize_country(value):
     return text
 
 
-def _read_payload_text(payload):
-    if not isinstance(payload, dict):
-        return ""
-    text = payload.get("body")
-    if not text:
-        text = payload.get("text")
-    return str(text or "")
-
-
 def _get_mail_template(template_name):
     record = SysSettings.objects.filter(name="mail-template", deleted_at__isnull=True).first()
     settings_payload = record.settings if record and isinstance(record.settings, dict) else {}
@@ -476,9 +467,12 @@ def extract_project_detail(request):
     if error:
         return error
 
-    text = _read_payload_text(payload)
-    if not text.strip():
-        return api_error("Missing field: body")
+    selection = payload.get("selection") if isinstance(payload, dict) else {}
+    if not isinstance(selection, dict):
+        selection = {}
+    job = selection.get("job") if isinstance(selection.get("job"), dict) else {}
+
+    text = str(job.get("detail")).strip()
 
     try:
         llm_result = llmsTool.extract_qiuren_detail(text)
@@ -558,7 +552,7 @@ def extract_project_detail(request):
     template = _get_mail_template("anjian")
     formatted_message = template.format_map(_TemplateSafeDict(fields))
 
-    response_payload = {"data": formatted_message, "raw": llm_result}
+    response_payload = {"body": formatted_message}
     return api_success(data=response_payload)
 
 

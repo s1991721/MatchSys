@@ -634,10 +634,13 @@
                 i18n.init();
                 i18n.apply();
             }
-            const didPrefill = applyPrefill();
             const didRestoreState = applyPageState();
-            if (didPrefill && !didRestoreState) {
+            const didPrefill = applyPrefill();
+            // When arriving from people.html, the latest prefill should win over
+            // any stale state restored from a previous visit to match.html.
+            if (didPrefill) {
                 setView('people');
+                persistPageState();
             } else if (!didRestoreState) {
                 setView(getActiveView());
             }

@@ -133,6 +133,7 @@
             const introInput = document.getElementById('intro');
             const caseInfoInput = document.getElementById('case-info');
             const sendBtn = document.getElementById('send-btn');
+            const pageStateKey = 'match_page_state';
             const filters = {
                 range: 'all'
             };
@@ -211,6 +212,65 @@
                 return localStorage;
             };
 
+            const getSessionStorage = () => {
+                try {
+                    if (window.top && window.top.sessionStorage) {
+                        return window.top.sessionStorage;
+                    }
+                } catch (error) {
+                }
+                return sessionStorage;
+            };
+
+            const readPageState = () => ({
+                view: getActiveView(),
+                range: filters.range || 'all',
+                nation: nationSelect ? nationSelect.value : '',
+                age: ageInput ? ageInput.value : '',
+                price: priceInput ? priceInput.value : '',
+                intro: introInput ? introInput.value : '',
+                caseInfo: caseInfoInput ? caseInfoInput.value : '',
+                sender: senderInput ? senderInput.value : ''
+            });
+
+            const persistPageState = () => {
+                try {
+                    const storage = getSessionStorage();
+                    storage.setItem(pageStateKey, JSON.stringify(readPageState()));
+                } catch (error) {
+                }
+            };
+
+            const applyPageState = () => {
+                let payload = null;
+                try {
+                    const storage = getSessionStorage();
+                    payload = JSON.parse(storage.getItem(pageStateKey) || 'null');
+                } catch (error) {
+                    payload = null;
+                }
+                if (!payload) return false;
+
+                if (nationSelect) nationSelect.value = payload.nation || '';
+                if (ageInput) ageInput.value = payload.age || '';
+                if (priceInput) priceInput.value = payload.price || '';
+                if (introInput) introInput.value = payload.intro || '';
+                if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
+                if (senderInput) senderInput.value = payload.sender || '';
+                filters.range = payload.range || 'all';
+                dateButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.range === filters.range);
+                });
+                if (!dateButtons.some(btn => btn.dataset.range === filters.range)) {
+                    filters.range = 'all';
+                    dateButtons.forEach(btn => {
+                        btn.classList.toggle('active', btn.dataset.range === 'all');
+                    });
+                }
+                setView(payload.view === 'cases' ? 'cases' : 'people');
+                return true;
+            };
+
             const applyPrefill = () => {
                 let payload = null;
                 try {
@@ -256,6 +316,7 @@
                 if (detailTitle) {
                     detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.job_detail');
                 }
+                persistPageState();
             };
 
             const renderList = (items) => {
@@ -370,11 +431,13 @@
                     dateButtons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     filters.range = btn.dataset.range;
+                    persistPageState();
                     fetchCases();
                 });
             });
 
             senderInput.addEventListener('input', () => {
+                persistPageState();
                 if (senderTimer) {
                     window.clearTimeout(senderTimer);
                 }
@@ -392,6 +455,7 @@
                     if (elements[0]) {
                         elements[0].focus();
                     }
+                    persistPageState();
                     fetchCases();
                 });
             });
@@ -503,6 +567,7 @@
                     };
 
                     try {
+                        persistPageState();
                         localStorage.setItem('matchSelection', JSON.stringify(payload));
                     } catch (err) {
                         console.error(t('match.cache_failed') || '保存失败', err);
@@ -519,16 +584,23 @@
                 });
             });
 
+            [nationSelect, ageInput, priceInput, introInput, caseInfoInput].filter(Boolean).forEach((el) => {
+                el.addEventListener('input', persistPageState);
+                el.addEventListener('change', persistPageState);
+            });
+
             if (i18n) {
                 i18n.init();
                 i18n.apply();
             }
             const didPrefill = applyPrefill();
-            const initialView = didPrefill ? 'people' : getActiveView();
-            setView(initialView);
-            if (!didPrefill) {
-                fetchCases();
+            const didRestoreState = applyPageState();
+            if (didPrefill && !didRestoreState) {
+                setView('people');
+            } else if (!didRestoreState) {
+                setView(getActiveView());
             }
+            fetchCases();
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
                     if (i18n) {

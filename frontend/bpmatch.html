@@ -76,6 +76,10 @@
             <div class="detail detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
+            <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
+            <div id="person-attachments" class="c-chip-row songxinhistory-attachments">
+                <div class="songxin-empty-tip" data-i18n="songxinhistory.empty.attachments">暂无附件</div>
+            </div>
             <div class="detail-actions">
                 <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send_to_tech">
                     给技术者提案件
@@ -145,6 +149,7 @@
     const jobList = document.getElementById('job-list');
     const jobDetail = document.getElementById('job-detail');
     const personDetail = document.getElementById('person-detail');
+    const personAttachments = document.getElementById('person-attachments');
     const personList = document.getElementById('person-list');
     const jobSender = document.getElementById('job-sender');
     const jobSearchBtn = document.getElementById('job-search-btn');
@@ -410,6 +415,37 @@
         renderJobList(currentJobItems, {preserveSelection: true});
     };
 
+    const buildAttachmentUrl = (file = {}) => {
+        const messageId = encodeURIComponent(String(file.message_id || '').trim());
+        const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
+        if (!messageId || !attachmentId) return '';
+        const params = new URLSearchParams();
+        const mimeType = String(file.mime_type || '').toLowerCase();
+        if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+            params.set('disposition', 'inline');
+        }
+        const query = params.toString();
+        return `/api/gmail/messages/${messageId}/attachments/${attachmentId}${query ? `?${query}` : ''}`;
+    };
+
+    const renderPersonAttachments = (files = []) => {
+        if (!personAttachments) return;
+        if (!Array.isArray(files) || !files.length) {
+            personAttachments.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+            return;
+        }
+        const items = files
+            .filter(file => file && file.filename && file.attachment_id && file.message_id)
+            .map((file) => {
+                const url = buildAttachmentUrl(file);
+                const name = sanitize(String(file.filename || 'attachment'));
+                return `<a class="c-chip" href="${sanitize(url)}" target="_blank" rel="noopener noreferrer">${name}</a>`;
+            });
+        personAttachments.innerHTML = items.length
+            ? items.join('')
+            : `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+    };
+
     const renderPersonList = (items, options = {}) => {
         const preserveSelection = options.preserveSelection === true;
         currentPersonItems = Array.isArray(items) ? items : [];
@@ -424,6 +460,7 @@
             activePersonId = '';
             currentPersonItems = [];
             renderDetail(personDetail, t("match.empty_person_detail"));
+            renderPersonAttachments([]);
             renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
             return;
         }
@@ -439,6 +476,7 @@
             li.dataset.detail = detail;
             li.dataset.id = personId;
             li.dataset.matchedSkills = JSON.stringify(item.matched_skills || []);
+            li.dataset.files = JSON.stringify(item.files || []);
             li.dataset.item = JSON.stringify({...item, detail});
 
             const main = document.createElement('div');
@@ -507,9 +545,13 @@
             activePersonId = activeItem.dataset.id || '';
             const currentDetail = activeItem.dataset.detail || '';
             const currentHighlights = readMatchedSkills(activeItem);
+            const currentFiles = parseDatasetJSON(activeItem, 'files') || [];
             activeMatchedSkills = currentHighlights;
             renderDetail(personDetail, currentDetail, currentHighlights);
+            renderPersonAttachments(currentFiles);
             renderDetail(jobDetail, activeJobDetail, currentHighlights);
+        } else {
+            renderPersonAttachments([]);
         }
         scheduleFeedbackPlacement(personList);
     }
@@ -894,12 +936,15 @@
                 errorLi.textContent = `${t("match.match_failed")}：${err.message}`;
                 personList.appendChild(errorLi);
                 renderDetail(personDetail, t("match.empty_person_detail"));
+                renderPersonAttachments([]);
             }
         }
     });
     bindListClick('person-list', 'person-detail', (item, highlights) => {
         activePersonId = item.dataset.id || '';
         activeMatchedSkills = highlights || [];
+        const currentFiles = parseDatasetJSON(item, 'files') || [];
+        renderPersonAttachments(currentFiles);
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
     });
 

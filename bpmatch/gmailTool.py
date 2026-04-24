@@ -1,12 +1,13 @@
-from datetime import date, datetime, timedelta, timezone
-from typing import List, Optional, Tuple
-import re
 import base64
-import os.path
-from pathlib import Path
+import re
+from datetime import date, datetime, timedelta, timezone
+from email.header import decode_header
+from email.utils import parsedate_to_datetime
 from html import unescape
 from html.parser import HTMLParser
-from email.utils import parsedate_to_datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -54,13 +55,13 @@ class GmailTool:
         return build("gmail", "v1", credentials=creds)
 
     def fetch_messages(
-        self,
-        query: str = "",
-        page: int = 1,
-        page_size: int = 20,
-        mark_seen: bool = False,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+            self,
+            query: str = "",
+            page: int = 1,
+            page_size: int = 20,
+            mark_seen: bool = False,
+            start_date: Optional[date] = None,
+            end_date: Optional[date] = None,
     ) -> Tuple[List[dict], bool, int]:
         """
         从 Gmail 获取邮件列表（按时间倒序）。分页返回指定页的数据以及是否存在下一页。
@@ -110,13 +111,13 @@ class GmailTool:
         return page_messages, has_next, total_count
 
     def fetch_new_messages(
-        self,
-        query: str = "",
-        page: int = 1,
-        page_size: int = 20,
-        mark_seen: bool = False,
-        start_date: Optional[date] = None,
-        end_date: Optional[date] = None,
+            self,
+            query: str = "",
+            page: int = 1,
+            page_size: int = 20,
+            mark_seen: bool = False,
+            start_date: Optional[date] = None,
+            end_date: Optional[date] = None,
     ) -> Tuple[List[dict], bool, int]:
         """
         从 Gmail 获取邮件列表（按时间倒序），仅返回 SavedMailInfo 中不存在的邮件。
@@ -174,7 +175,7 @@ class GmailTool:
         return page_messages, has_next, total_count
 
     def _compose_query(
-        self, query: str, start_date: Optional[date], end_date: Optional[date]
+            self, query: str, start_date: Optional[date], end_date: Optional[date]
     ) -> str:
         query_parts = [query]
         if start_date:
@@ -197,7 +198,7 @@ class GmailTool:
 
         for start in range(0, len(ids), self.BATCH_LIMIT):
             batch = service.new_batch_http_request()
-            for msg_id in ids[start : start + self.BATCH_LIMIT]:
+            for msg_id in ids[start: start + self.BATCH_LIMIT]:
                 batch.add(
                     service.users()
                     .messages()
@@ -239,6 +240,7 @@ class GmailTool:
         received_headers = get_header_list("Received")
 
         body_text = self._extract_text_from_gmail_msg(msg)
+        attachments = self._extract_attachments_from_gmail_msg(msg)
 
         iso_ts, ts_float = self._parse_dates(
             received_headers, date_header, internal_ts_ms
@@ -256,13 +258,29 @@ class GmailTool:
             "references_header": references_header,
             "internal_ts": ts_float,
             "body": body_text,
+            "files": attachments,
         }
 
+    def fetch_attachment(self, message_id: str, attachment_id: str) -> bytes:
+        if not message_id or not attachment_id:
+            raise ValueError("message_id and attachment_id are required")
+        payload = (
+            self.service.users()
+            .messages()
+            .attachments()
+            .get(userId="me", messageId=message_id, id=attachment_id)
+            .execute()
+        )
+        data = str(payload.get("data") or "").strip()
+        if not data:
+            return b""
+        return self._decode_base64url(data)
+
     def _parse_dates(
-        self,
-        received_headers: List[str],
-        date_header: str,
-        internal_ts_ms: Optional[str],
+            self,
+            received_headers: List[str],
+            date_header: str,
+            internal_ts_ms: Optional[str],
     ) -> Tuple[str, float]:
         iso_ts = ""
         ts_float = float("-inf")
@@ -320,7 +338,7 @@ class GmailTool:
         ids_to_mark = [m.get("id") for m in page_messages if m.get("id")]
         for start in range(0, len(ids_to_mark), self.BATCH_LIMIT):
             mark_batch = service.new_batch_http_request()
-            for msg_id in ids_to_mark[start : start + self.BATCH_LIMIT]:
+            for msg_id in ids_to_mark[start: start + self.BATCH_LIMIT]:
                 mark_batch.add(
                     service.users()
                     .messages()
@@ -405,6 +423,87 @@ class GmailTool:
                     html_text = html_to_text(text)
 
         return (plain_text or html_text).strip()
+
+    def _extract_attachments_from_gmail_msg(self, msg: dict) -> List[Dict[str, object]]:
+        attachments: List[Dict[str, object]] = []
+        payload = msg.get("payload", {}) or {}
+        message_id = str(msg.get("id") or "").strip()
+
+        def walk_parts(part):
+            if not isinstance(part, dict):
+                return
+            children = part.get("parts", []) or []
+            if not children:
+                yield part
+                return
+            for child in children:
+                if isinstance(child, dict) and str(child.get("mimeType") or "").startswith("multipart/"):
+                    yield from walk_parts(child)
+                else:
+                    yield child
+
+        for part in walk_parts(payload):
+            filename = self._decode_header_value(part.get("filename"))
+            body = part.get("body", {}) or {}
+            attachment_id = str(body.get("attachmentId") or "").strip()
+            if not filename and not attachment_id:
+                continue
+            headers = part.get("headers", []) or []
+            content_id = ""
+            disposition = ""
+            for header in headers:
+                if not isinstance(header, dict):
+                    continue
+                name = str(header.get("name") or "").strip().lower()
+                value = self._decode_header_value(header.get("value"))
+                if name == "content-id":
+                    content_id = value
+                elif name == "content-disposition":
+                    disposition = value
+            mime_type = str(part.get("mimeType") or "application/octet-stream").strip() or "application/octet-stream"
+            attachments.append(
+                {
+                    "filename": filename or "attachment",
+                    "mime_type": mime_type,
+                    "size": int(body.get("size") or 0),
+                    "part_id": str(part.get("partId") or "").strip(),
+                    "attachment_id": attachment_id,
+                    "message_id": message_id,
+                    "inline": self._is_inline_part(disposition, content_id),
+                }
+            )
+        return attachments
+
+    def _decode_header_value(self, value) -> str:
+        raw = str(value or "")
+        if not raw:
+            return ""
+        parts = []
+        for chunk, encoding in decode_header(raw):
+            if isinstance(chunk, bytes):
+                enc = encoding or "utf-8"
+                try:
+                    parts.append(chunk.decode(enc, errors="replace"))
+                except Exception:
+                    parts.append(chunk.decode("utf-8", errors="replace"))
+            else:
+                parts.append(str(chunk))
+        return "".join(parts).strip()
+
+    def _is_inline_part(self, disposition: str, content_id: str) -> bool:
+        disposition_text = str(disposition or "").strip().lower()
+        if "inline" in disposition_text:
+            return True
+        return bool(str(content_id or "").strip())
+
+    def _decode_base64url(self, value: str) -> bytes:
+        normalized = str(value or "").strip()
+        if not normalized:
+            return b""
+        padding = (-len(normalized)) % 4
+        if padding:
+            normalized += "=" * padding
+        return base64.urlsafe_b64decode(normalized.encode("utf-8"))
 
 
 # ---------------------------

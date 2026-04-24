@@ -2,8 +2,10 @@ import json
 import re
 import threading
 from datetime import timedelta
+from urllib.parse import quote
 
 from django.db import transaction
+from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
@@ -13,6 +15,7 @@ from project.api import api_error, api_paginated, api_success
 from project.common_tools import parse_json_body, require_login
 from settings.models import SysSettings
 from . import llmsTool
+from .gmailTool import GmailTool
 from .mailTool import (
     MailToolError,
     send_mail_by_login,
@@ -24,7 +27,7 @@ from .mailTool import (
     sync_my_mails,
     get_my_mail_detail_from_db,
 )
-from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo, MyMail
+from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo, MyMail, SavedMailInfo
 
 
 def _mark_my_mail_as_read_async(login_id, mail_id):
@@ -94,6 +97,47 @@ def _get_mail_template(template_name):
         return ""
     template_str = str(template).strip()
     return template_str
+
+
+def _load_attachment_items(value):
+    if not value:
+        return []
+    if isinstance(value, list):
+        raw_list = value
+    elif isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return []
+        try:
+            parsed = json.loads(text)
+        except Exception:
+            return []
+        raw_list = parsed if isinstance(parsed, list) else []
+    else:
+        return []
+
+    normalized = []
+    for item in raw_list:
+        if not isinstance(item, dict):
+            continue
+        filename = str(item.get("filename") or "").strip()
+        attachment_id = str(item.get("attachment_id") or "").strip()
+        message_id = str(item.get("message_id") or "").strip()
+        if not filename or not attachment_id or not message_id:
+            continue
+        normalized.append(
+            {
+                "filename": filename,
+                "mime_type": str(item.get("mime_type") or "application/octet-stream").strip()
+                or "application/octet-stream",
+                "size": int(item.get("size") or 0),
+                "part_id": str(item.get("part_id") or "").strip(),
+                "attachment_id": attachment_id,
+                "message_id": message_id,
+                "inline": bool(item.get("inline")),
+            }
+        )
+    return normalized
 
 
 class _TemplateSafeDict(dict):
@@ -172,6 +216,7 @@ def mail_project_match_api(request):
     scored_items = []
     for tech in tech_queryset:
         tech_skills = _normalize_skills(tech.skills)
+        tech_files = _load_attachment_items(tech.files)
         matched = []
         seen = set()
         for skill in tech_skills:
@@ -191,6 +236,7 @@ def mail_project_match_api(request):
                     "title": tech.title or "",
                     "from": tech.address or "",
                     "body": tech.body or "",
+                    "files": tech_files,
                     "date": tech.date.isoformat() if tech.date else "",
                     "country": tech.country or "",
                     "skills": tech_skills,
@@ -727,6 +773,62 @@ def my_mail_detail_api(request, mail_id):
         return api_error(exc.message, status=exc.status)
     except Exception as exc:
         return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+def gmail_attachment_open_api(request, message_id, attachment_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    message_id = str(message_id or "").strip()
+    attachment_id = str(attachment_id or "").strip()
+    if not message_id or not attachment_id:
+        return api_error("message_id and attachment_id are required")
+
+    exists = (
+        SavedMailInfo.objects.filter(id=message_id).exists()
+        or MailProjectInfo.objects.filter(id=message_id).exists()
+        or MailTechnicianInfo.objects.filter(id=message_id).exists()
+        or WrongMailInfo.objects.filter(id=message_id).exists()
+        or MyMail.objects.filter(id=message_id, owner_id=login_id).exists()
+    )
+    if not exists:
+        return api_error("Attachment not found", status=404)
+
+    attachment_meta = None
+    for source in (
+        MailProjectInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
+        MailTechnicianInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
+        WrongMailInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
+        MyMail.objects.filter(id=message_id, owner_id=login_id).values_list("files", flat=True).first(),
+    ):
+        for item in _load_attachment_items(source):
+            if item.get("attachment_id") == attachment_id:
+                attachment_meta = item
+                break
+        if attachment_meta:
+            break
+    if not attachment_meta:
+        return api_error("Attachment not found", status=404)
+
+    disposition = str(request.GET.get("disposition") or "attachment").strip().lower()
+    if disposition not in ("attachment", "inline"):
+        disposition = "attachment"
+    try:
+        content = GmailTool().fetch_attachment(message_id, attachment_id)
+    except Exception as exc:
+        return api_error(str(exc), status=502)
+
+    filename = str(attachment_meta.get("filename") or "attachment").replace('"', "")
+    content_type = str(attachment_meta.get("mime_type") or "application/octet-stream").strip() or "application/octet-stream"
+    response = HttpResponse(content, content_type=content_type)
+    response["Content-Disposition"] = (
+        f"{disposition}; filename=\"{filename}\"; filename*=UTF-8''{quote(filename)}"
+    )
+    response["Content-Length"] = str(len(content))
+    return response
 
 
 @csrf_exempt

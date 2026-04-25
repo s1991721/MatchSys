@@ -785,6 +785,7 @@
 
     const cacheBulkMailPrefill = (person) => {
         if (!person) return;
+        const ssName = (person.ssPath || '').split('/').pop();
         const bodyLines = [
             `姓名：${person.name || '-'}`,
             `昵称：${person.nickname || '-'}`,
@@ -800,6 +801,12 @@
         const payload = JSON.stringify({
             subject: `技术者推荐：${person.name || ''}`,
             body: bodyLines.join('\n'),
+            intro: person.intro || '',
+            attachments: person.ssUrl ? [{
+                filename: ssName || 'resume',
+                path: person.ssPath || '',
+                content_type: 'application/octet-stream'
+            }] : [],
             mail_type: '1',
             source: 'people',
             updatedAt: Date.now()

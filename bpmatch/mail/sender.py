@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import smtplib
 from datetime import datetime, timezone
 from email.message import EmailMessage
@@ -7,6 +8,7 @@ from email.utils import getaddresses, make_msgid
 from typing import List, Optional
 
 from .common import MailToolError, ensure_send_config_for_login
+from project.common_tools import ss_storage_dir
 
 
 class MailSender:
@@ -207,11 +209,22 @@ def _normalize_attachments(attachments):
     for att in attachments or []:
         if not isinstance(att, dict):
             continue
+        content = att.get("content") or ""
+        path = str(att.get("path") or "").strip()
+        if path and not content:
+            base_dir = os.path.realpath(ss_storage_dir())
+            safe_path = os.path.realpath(os.path.join(base_dir, path))
+            if not safe_path.startswith(base_dir + os.sep):
+                raise MailToolError("Invalid attachment path")
+            if not os.path.exists(safe_path):
+                raise MailToolError("Attachment file not found", status=404)
+            with open(safe_path, "rb") as handle:
+                content = handle.read()
         normalized_atts.append(
             {
                 "filename": att.get("filename") or "attachment",
                 "content_type": att.get("content_type") or "application/octet-stream",
-                "content": att.get("content") or "",
+                "content": content,
             }
         )
     return normalized_atts

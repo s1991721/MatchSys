@@ -1,4 +1,7 @@
 (function () {
+    const MatchSys = window.MatchSys || {};
+    window.MatchSys = MatchSys;
+
     const getI18n = () => window.I18N || null;
     const t = (key, fallback) => {
         const i18n = getI18n();
@@ -15,6 +18,52 @@
     };
     const pad2 = (value) => String(value).padStart(2, "0");
     window.pad2 = pad2;
+
+    const isFreshPayload = (payload, maxAgeMs = 30 * 60 * 1000) => {
+        if (!payload || typeof payload !== "object") return false;
+        const ts = Number(payload.updatedAt);
+        if (!Number.isFinite(ts)) return false;
+        return Math.abs(Date.now() - ts) <= maxAgeMs;
+    };
+
+    const readJSONFromWebStorage = (storage, key, maxAgeMs) => {
+        try {
+            const payload = JSON.parse(storage.getItem(key) || "null");
+            if (isFreshPayload(payload, maxAgeMs)) {
+                return payload;
+            }
+            storage.removeItem(key);
+            return null;
+        } catch {
+            storage.removeItem(key);
+            return null;
+        }
+    };
+
+    const writeJSONToWebStorage = (storage, key, value) => {
+        storage.setItem(key, JSON.stringify(value));
+    };
+
+    MatchSys.writeJSONToSessionStorage = function (key, value) {
+        writeJSONToWebStorage(sessionStorage, key, value);
+    };
+
+    MatchSys.writeJSONToLocalStorage = function (key, value) {
+        writeJSONToWebStorage(localStorage, key, value);
+    };
+
+    MatchSys.readJSONFromSessionStorage = function (key, maxAgeMs) {
+        return readJSONFromWebStorage(sessionStorage, key, maxAgeMs);
+    };
+
+    MatchSys.readJSONFromLocalStorage = function (key, maxAgeMs) {
+        return readJSONFromWebStorage(localStorage, key, maxAgeMs);
+    };
+
+    MatchSys.clearStoredKey = function (key) {
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+    };
 
     window.getAppLocale = function () {
         const i18n = getI18n();

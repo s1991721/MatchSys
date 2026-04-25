@@ -762,11 +762,18 @@
     }
     const cacheMatchPayload = (person) => {
         if (!person) return;
+        const ssName = (person.ssPath || '').split('/').pop();
         const payload = {
             nationality: normalizeNationalityValue(person.nationality),
             age: person.age ?? '',
             price: person.price ?? '',
-            intro: person.intro || ''
+            intro: person.intro || '',
+            resume: person.ssUrl ? {
+                name: ssName || 'resume',
+                path: person.ssPath || '',
+                url: person.ssUrl || '',
+                source: 'people'
+            } : null
         };
         try {
             const storage = getSharedStorage();

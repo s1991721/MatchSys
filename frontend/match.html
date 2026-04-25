@@ -44,7 +44,8 @@
                 </div>
                 <div class="form-field">
                     <label for="resume-file" data-i18n="match.form.resume">技术者简历</label>
-                    <input type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
+                    <input id="resume-file" type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
+                    <div id="resume-source" class="hint" hidden></div>
                 </div>
                 <div class="form-field full">
                     <label for="intro" data-i18n="match.form.intro">介绍文</label>
@@ -139,10 +140,16 @@
             const nationSelect = document.getElementById('nation');
             const ageInput = document.getElementById('age');
             const priceInput = document.getElementById('price');
+            const resumeFileInput = document.getElementById('resume-file');
+            const resumeSource = document.getElementById('resume-source');
             const introInput = document.getElementById('intro');
             const caseInfoInput = document.getElementById('case-info');
             const sendBtn = document.getElementById('send-btn');
             const pageStateKey = 'match_page_state';
+            const resumeState = {
+                prefill: null,
+                manualFile: null
+            };
             const filters = {
                 range: 'all'
             };
@@ -281,7 +288,8 @@
                 price: priceInput ? priceInput.value : '',
                 intro: introInput ? introInput.value : '',
                 caseInfo: caseInfoInput ? caseInfoInput.value : '',
-                sender: senderInput ? senderInput.value : ''
+                sender: senderInput ? senderInput.value : '',
+                resumePrefill: resumeState.prefill || null
             });
 
             const persistPageState = () => {
@@ -308,6 +316,7 @@
                 if (introInput) introInput.value = payload.intro || '';
                 if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
                 if (senderInput) senderInput.value = payload.sender || '';
+                resumeState.prefill = payload.resumePrefill || null;
                 filters.range = payload.range || 'all';
                 dateButtons.forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.range === filters.range);
@@ -320,6 +329,67 @@
                 }
                 setView(payload.view === 'cases' ? 'cases' : 'people');
                 return true;
+            };
+
+            const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result || '';
+                    const base64 = typeof result === 'string' && result.includes(',')
+                        ? result.split(',').pop()
+                        : result;
+                    resolve(base64);
+                };
+                reader.onerror = () => reject(reader.error || new Error('file read failed'));
+                reader.readAsDataURL(file);
+            });
+
+            const getActiveResume = () => {
+                if (resumeState.manualFile) {
+                    return {
+                        source: 'manual',
+                        name: resumeState.manualFile.name,
+                        file: resumeState.manualFile
+                    };
+                }
+                return resumeState.prefill || null;
+            };
+
+            const clearActiveResume = () => {
+                const activeResume = getActiveResume();
+                if (!activeResume) return;
+                if (activeResume.source === 'manual') {
+                    resumeState.manualFile = null;
+                    if (resumeFileInput) {
+                        resumeFileInput.value = '';
+                    }
+                } else {
+                    resumeState.prefill = null;
+                }
+                renderResumeSource();
+                persistPageState();
+            };
+
+            const renderResumeSource = () => {
+                if (!resumeSource) return;
+                const activeResume = getActiveResume();
+                if (!activeResume) {
+                    resumeSource.hidden = true;
+                    resumeSource.innerHTML = '';
+                    return;
+                }
+                resumeSource.hidden = false;
+                if (activeResume.source === 'manual') {
+                    resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
+                    return;
+                }
+                const safeName = sanitize(String(activeResume.name || 'resume'));
+                const safeUrl = sanitize(String(activeResume.url || ''));
+                if (safeUrl) {
+                    resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('match.resume.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
+                    return;
+                }
+                resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
             };
 
             const applyPrefill = () => {
@@ -344,11 +414,13 @@
                 if (ageInput) ageInput.value = payload.age ?? '';
                 if (priceInput) priceInput.value = payload.price ?? '';
                 if (introInput) introInput.value = payload.intro || '';
+                resumeState.prefill = payload.resume && typeof payload.resume === 'object' ? payload.resume : null;
                 try {
                     const storage = getSharedStorage();
                     storage.removeItem('match_prefill');
                 } catch (error) {
                 }
+                renderResumeSource();
                 return true;
             };
 
@@ -508,6 +580,11 @@
                     const ids = viewInputs[view] || [];
                     const elements = ids.map(id => document.getElementById(id)).filter(Boolean);
                     elements.forEach(el => { el.value = ''; });
+                    if (view === 'people' && resumeFileInput) {
+                        resumeFileInput.value = '';
+                        resumeState.manualFile = null;
+                        renderResumeSource();
+                    }
                     if (elements[0]) {
                         elements[0].focus();
                     }
@@ -522,100 +599,142 @@
                 });
             });
 
+            if (resumeFileInput) {
+                resumeFileInput.addEventListener('change', () => {
+                    const file = resumeFileInput.files && resumeFileInput.files[0] ? resumeFileInput.files[0] : null;
+                    resumeState.manualFile = file;
+                    renderResumeSource();
+                    persistPageState();
+                });
+            }
+
+            if (resumeSource) {
+                resumeSource.addEventListener('click', (event) => {
+                    const target = event.target.closest('[data-action="remove-resume"]');
+                    if (!target) return;
+                    clearActiveResume();
+                });
+            }
+
             if (sendBtn) {
-                sendBtn.addEventListener('click', () => {
-                    const activeItem = list?.querySelector('.item.active');
-                    if (!activeItem) {
-                        alert(t('match.send_tip'));
-                        return;
-                    }
-
-                    const view = getActiveView();
-                    const itemData = parseDatasetJSON(activeItem, 'item') || {};
-                    const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
-                    const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
-                    const itemDetail = itemData.detail || activeItem.dataset.detail || '';
-                    const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
-
-                    let jobPayload = {};
-                    let personPayload = {};
-                    let mailType = 2;
-
-                    if (view === 'people') {
-                        const personParts = [];
-                        const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
-                        if (nationSelect && nationSelect.value) {
-                            personParts.push(`国籍：${nationLabel || nationSelect.value}`);
-                        }
-                        if (ageInput && ageInput.value.trim()) {
-                            personParts.push(`年龄：${ageInput.value.trim()}`);
-                        }
-                        if (priceInput && priceInput.value.trim()) {
-                            personParts.push(`金额：${priceInput.value.trim()}`);
-                        }
-                        if (introInput && introInput.value.trim()) {
-                            personParts.push(`介绍文：\n${introInput.value.trim()}`);
-                        }
-                        const personDetail = personParts.join('\n');
-
-                        jobPayload = {
-                            id: itemData.id || activeItem.dataset.id || '',
-                            title: itemTitle,
-                            desc: itemDesc,
-                            detail: itemDetail,
-                            time: itemDate
-                        };
-
-                        personPayload = {
-                            name: '人员信息',
-                            subject: itemTitle || '',
-                            belong: itemDesc || '',
-                            detail: personDetail,
-                            country: nationSelect ? nationSelect.value.trim() : '',
-                            country_label: nationLabel || '',
-                            age: ageInput ? ageInput.value.trim() : '',
-                            price: priceInput ? priceInput.value.trim() : '',
-                            intro: introInput ? introInput.value.trim() : '',
-                            time: ''
-                        };
-
-                        mailType = 1;
-                    } else {
-                        const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
-                        const caseTitle = rawCaseInfo ? rawCaseInfo.split('\n')[0].trim() : '';
-
-                        jobPayload = {
-                            id: '',
-                            title: caseTitle || '案件信息',
-                            desc: '',
-                            detail: rawCaseInfo,
-                            time: ''
-                        };
-
-                        personPayload = {
-                            id: itemData.id || activeItem.dataset.id || '',
-                            name: itemTitle,
-                            subject: itemTitle,
-                            belong: itemDesc,
-                            detail: itemDetail,
-                            time: itemDate
-                        };
-
-                        mailType = 2;
-                    }
-
-                    const payload = {
-                        job: jobPayload,
-                        person: personPayload,
-                        mail_type: mailType,
-                        updatedAt: Date.now()
-                    };
-
+                sendBtn.addEventListener('click', async () => {
                     try {
+                        const activeItem = list?.querySelector('.item.active');
+                        if (!activeItem) {
+                            alert(t('match.send_tip'));
+                            return;
+                        }
+
+                        const view = getActiveView();
+                        const itemData = parseDatasetJSON(activeItem, 'item') || {};
+                        const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
+                        const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
+                        const itemDetail = itemData.detail || activeItem.dataset.detail || '';
+                        const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
+
+                        let jobPayload = {};
+                        let personPayload = {};
+                        let mailType = 2;
+                        let resumeAttachment = null;
+
+                        if (view === 'people') {
+                            const personParts = [];
+                            const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
+                            if (nationSelect && nationSelect.value) {
+                                personParts.push(`国籍：${nationLabel || nationSelect.value}`);
+                            }
+                            if (ageInput && ageInput.value.trim()) {
+                                personParts.push(`年龄：${ageInput.value.trim()}`);
+                            }
+                            if (priceInput && priceInput.value.trim()) {
+                                personParts.push(`金额：${priceInput.value.trim()}`);
+                            }
+                            if (introInput && introInput.value.trim()) {
+                                personParts.push(`介绍文：\n${introInput.value.trim()}`);
+                            }
+                            const personDetail = personParts.join('\n');
+
+                            jobPayload = {
+                                id: itemData.id || activeItem.dataset.id || '',
+                                title: itemTitle,
+                                desc: itemDesc,
+                                detail: itemDetail,
+                                time: itemDate
+                            };
+
+                            personPayload = {
+                                name: '人员信息',
+                                subject: itemTitle || '',
+                                belong: itemDesc || '',
+                                detail: personDetail,
+                                country: nationSelect ? nationSelect.value.trim() : '',
+                                country_label: nationLabel || '',
+                                age: ageInput ? ageInput.value.trim() : '',
+                                price: priceInput ? priceInput.value.trim() : '',
+                                intro: introInput ? introInput.value.trim() : '',
+                                time: ''
+                            };
+
+                            const activeResume = getActiveResume();
+                            if (activeResume) {
+                                if (activeResume.source === 'manual' && activeResume.file) {
+                                    resumeAttachment = {
+                                        source: 'manual',
+                                        filename: activeResume.file.name || 'resume',
+                                        content_type: activeResume.file.type || 'application/octet-stream',
+                                        size: activeResume.file.size || 0,
+                                        base64: await readFileAsBase64(activeResume.file)
+                                    };
+                                } else {
+                                    resumeAttachment = {
+                                        source: 'people',
+                                        filename: activeResume.name || 'resume',
+                                        url: activeResume.url || '',
+                                        path: activeResume.path || '',
+                                        content_type: 'application/octet-stream'
+                                    };
+                                }
+                            }
+
+                            mailType = 1;
+                        } else {
+                            const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
+                            const caseTitle = rawCaseInfo ? rawCaseInfo.split('\n')[0].trim() : '';
+
+                            jobPayload = {
+                                id: '',
+                                title: caseTitle || '案件信息',
+                                desc: '',
+                                detail: rawCaseInfo,
+                                time: ''
+                            };
+
+                            personPayload = {
+                                id: itemData.id || activeItem.dataset.id || '',
+                                name: itemTitle,
+                                subject: itemTitle,
+                                belong: itemDesc,
+                                detail: itemDetail,
+                                time: itemDate
+                            };
+
+                            mailType = 2;
+                        }
+
+                        const payload = {
+                            job: jobPayload,
+                            person: personPayload,
+                            resume_attachment: resumeAttachment,
+                            mail_type: mailType,
+                            updatedAt: Date.now()
+                        };
+
                         persistPageState();
                         localStorage.setItem('matchSelection', JSON.stringify(payload));
                     } catch (err) {
                         console.error(t('match.cache_failed') || '保存失败', err);
+                        alert(err?.message || t('match.cache_failed'));
+                        return;
                     }
 
                     window.location.href = 'songxin.html?from=match';
@@ -640,6 +759,7 @@
             }
             const didRestoreState = applyPageState();
             const didPrefill = applyPrefill();
+            renderResumeSource();
             // When arriving from people.html, the latest prefill should win over
             // any stale state restored from a previous visit to match.html.
             if (didPrefill) {
@@ -654,6 +774,7 @@
                     if (i18n) {
                         i18n.apply();
                     }
+                    renderResumeSource();
                     fetchCases();
                 });
             }

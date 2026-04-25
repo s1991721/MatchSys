@@ -306,6 +306,19 @@
                 reader.readAsDataURL(file);
             });
 
+            const readBlobAsBase64 = (blob) => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const result = reader.result || '';
+                    const base64 = typeof result === 'string' && result.includes(',')
+                        ? result.split(',').pop()
+                        : result;
+                    resolve(base64);
+                };
+                reader.onerror = () => reject(reader.error || new Error(t('songxin.loading.file_failed')));
+                reader.readAsDataURL(blob);
+            });
+
             const normalizeMultiline = (text) => {
                 if (typeof text !== 'string') return '';
                 let clean = text
@@ -388,6 +401,28 @@
                         </div>
                     </div>
                 `).join('');
+            };
+
+            const preloadResumeAttachment = (selection) => {
+                const resumeAttachment = selection && selection.resume_attachment ? selection.resume_attachment : null;
+                if (!resumeAttachment) return;
+                const existingIndex = attachments.findIndex((item) => item.source === 'match-resume');
+                const nextItem = {
+                    source: 'match-resume',
+                    name: resumeAttachment.filename || 'resume',
+                    sizeLabel: t('songxin.attach.prefilled'),
+                    type: resumeAttachment.content_type || 'application/octet-stream',
+                    size: Number(resumeAttachment.size) || 0,
+                    url: resumeAttachment.url || ''
+                };
+                if (resumeAttachment.source === 'manual' && resumeAttachment.base64) {
+                    nextItem.prefilledBase64 = resumeAttachment.base64;
+                }
+                if (existingIndex >= 0) {
+                    attachments.splice(existingIndex, 1, nextItem);
+                } else {
+                    attachments.push(nextItem);
+                }
             };
 
             const renderPreview = () => {
@@ -505,11 +540,35 @@
                 setLoading(true, { title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub') });
                 try {
                     const attachmentsPayload = await Promise.all(
-                        attachments.map(async (att) => ({
-                            filename: att.name,
-                            content_type: att.type,
-                            content: await readFileAsBase64(att.file)
-                        }))
+                        attachments.map(async (att) => {
+                            if (att.file) {
+                                return {
+                                    filename: att.name,
+                                    content_type: att.type,
+                                    content: await readFileAsBase64(att.file)
+                                };
+                            }
+                            if (att.prefilledBase64) {
+                                return {
+                                    filename: att.name,
+                                    content_type: att.type,
+                                    content: att.prefilledBase64
+                                };
+                            }
+                            if (att.url) {
+                                const res = await fetchWithAuth(att.url, { method: 'GET' });
+                                if (!res.ok) {
+                                    throw new Error(`HTTP ${res.status}`);
+                                }
+                                const blob = await res.blob();
+                                return {
+                                    filename: att.name,
+                                    content_type: blob.type || att.type || 'application/octet-stream',
+                                    content: await readBlobAsBase64(blob)
+                                };
+                            }
+                            throw new Error(`Missing attachment source: ${att.name || 'attachment'}`);
+                        })
                     );
 
                     const subject = subjectInput.value.trim() || deriveSubject(content);
@@ -569,6 +628,7 @@
             });
 
             const selection = readSelection();
+            preloadResumeAttachment(selection);
             renderAttachments();
             renderPreview();
             const scene = resolveScene(selection);

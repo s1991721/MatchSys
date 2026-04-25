@@ -354,6 +354,20 @@ body > .page {
   margin-top: 6px;
 }
 
+.c-btn-link {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.c-btn-link:hover {
+  text-decoration: underline;
+}
+
 .c-file-picker-native {
   display: none;
 }

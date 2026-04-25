@@ -18,6 +18,7 @@ from . import llmsTool
 from .gmailTool import GmailTool
 from .mailTool import (
     MailToolError,
+    send_bulk_mail_by_login,
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
@@ -638,6 +639,24 @@ def send_mail(request):
         return error
     try:
         data = send_mail_by_login(login_id, payload)
+        return api_success(data=data)
+    except MailToolError as exc:
+        return api_error(exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+
+@csrf_exempt
+@require_POST
+def send_bulk_mail(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    try:
+        data = send_bulk_mail_by_login(login_id, payload)
         return api_success(data=data)
     except MailToolError as exc:
         return api_error(exc.message, status=exc.status)

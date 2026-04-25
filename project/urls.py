@@ -48,6 +48,7 @@ from bpmatch.views import (
     extract_project_detail,
     extract_technician_detail,
     send_mail,
+    send_bulk_mail,
     send_history,
 )
 from customer.views import (
@@ -220,6 +221,7 @@ urlpatterns = [
         name="gmail-attachment-open",
     ),
     path("api/send-mail", send_mail, name="send_mail"),
+    path("api/send-bulk-mail", send_bulk_mail, name="send_bulk_mail"),
     path("api/send-history", send_history, name="send_history"),
     path("api/home/stats", home_match_stats_api, name="home-match-stats"),
     path("api/analysis/stats", analysis_stats_api, name="analysis-stats"),

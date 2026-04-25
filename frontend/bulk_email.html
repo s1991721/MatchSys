@@ -195,6 +195,9 @@
                     </div>
                     <div class="form-item">
                         <div class="form-label" data-i18n="customer.bulk.body">邮件内容</div>
+                        <div style="margin: 0 0 8px; color: #63708a; font-size: 13px; line-height: 1.5;">
+                            当前编辑的是通用正文。系统发送时会按收件人逐封发送，并自动补全各自抬头；实际发送结果请到【送信历史】查看。
+                        </div>
                         <div class="mail-body-wrap">
                             <textarea class="textarea" id="bulk-mail-body" rows="10" placeholder="请输入邮件内容"
                                       data-i18n-placeholder="customer.bulk.body_placeholder"></textarea>
@@ -278,6 +281,13 @@
                     key: `${String(item.id || "")}:contact:${entry.index}`,
                     label,
                     email,
+                    recipient: {
+                        email,
+                        customer_id: item.id || "",
+                        company_name: item.company_name || "",
+                        contact_name: name,
+                        recipient_type: "contact",
+                    },
                 });
             });
 
@@ -285,6 +295,13 @@
                 id: String(item.id || ""),
                 company: item.company_name || t("customer.bulk.unnamed"),
                 companyEmail,
+                companyRecipient: companyEmail ? {
+                    email: companyEmail,
+                    customer_id: item.id || "",
+                    company_name: item.company_name || "",
+                    contact_name: "",
+                    recipient_type: "company",
+                } : null,
                 contacts,
             });
         });
@@ -344,19 +361,28 @@
         updateBulkSelected();
     };
 
-    const readSelectedEmails = () => {
-        const emailSet = new Set();
+    const readSelectedRecipients = () => {
+        const recipients = [];
+        const seen = new Set();
         extractRecipients(recipientSourceItems).forEach((group) => {
-            if (selectedCompanyIdSet.has(group.id) && group.companyEmail) {
-                emailSet.add(group.companyEmail);
+            if (selectedCompanyIdSet.has(group.id) && group.companyRecipient?.email) {
+                const key = `company:${group.companyRecipient.email.toLowerCase()}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    recipients.push(group.companyRecipient);
+                }
             }
             group.contacts.forEach((contact) => {
-                if (selectedContactKeySet.has(contact.key) && contact.email) {
-                    emailSet.add(contact.email);
+                if (selectedContactKeySet.has(contact.key) && contact.recipient?.email) {
+                    const key = `contact:${contact.key}:${contact.recipient.email.toLowerCase()}`;
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        recipients.push(contact.recipient);
+                    }
                 }
             });
         });
-        return Array.from(emailSet);
+        return recipients;
     };
 
     const normalizeText = (value) => String(value || "").toLowerCase();
@@ -562,7 +588,7 @@
     }
 
     bulkMailSend.addEventListener("click", () => {
-        const recipients = readSelectedEmails();
+        const recipients = readSelectedRecipients();
         const subject = bulkMailSubject.value.trim();
         const body = bulkMailBody.value.trim();
         const mailType = bulkMailType ? bulkMailType.value : "";
@@ -580,14 +606,14 @@
             return;
         }
 
-        fetchWithAuth("/api/send-mail", {
+        fetchWithAuth("/api/send-bulk-mail", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-                to: recipients.join(","),
                 subject,
                 body,
                 mail_type: mailType,
+                recipients,
             }),
         })
             .then(async (response) => {

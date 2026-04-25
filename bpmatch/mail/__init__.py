@@ -14,7 +14,7 @@ from .receiver import (
     test_receive_connection,
 )
 from .pop3_receiver import Pop3Receiver
-from .sender import MailSender, SmtpMailSender, send_mail_by_login, test_smtp_connection
+from .sender import MailSender, SmtpMailSender, send_bulk_mail_by_login, send_mail_by_login, test_smtp_connection
 
 __all__ = [
     "MailToolError",
@@ -29,6 +29,7 @@ __all__ = [
     "mark_my_mail_as_read",
     "query_my_mails",
     "resolve_sendmsg_sync_targets",
+    "send_bulk_mail_by_login",
     "send_mail_by_login",
     "sync_my_mails",
     "test_receive_connection",

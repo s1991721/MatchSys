@@ -193,26 +193,31 @@ def test_smtp_connection(
     return {"message": "连接成功"}
 
 
-# 根据登录ID获取用户的邮箱配置，从而送信
-def send_mail_by_login(login_id, payload):
-    to_addr = (payload.get("to") or "").strip()
-    cc_addr = (payload.get("cc") or "").strip()
-    subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
-    body = payload.get("body") or ""
-    attachments = payload.get("attachments") or []
-    raw_mail_type = payload.get("mail_type")
-    mail_type = None
-    if raw_mail_type not in (None, ""):
-        try:
-            mail_type = int(raw_mail_type)
-        except (TypeError, ValueError):
-            raise MailToolError("Invalid field: mail_type")
+def _parse_mail_type(raw_mail_type):
+    if raw_mail_type in (None, ""):
+        return None
+    try:
+        return int(raw_mail_type)
+    except (TypeError, ValueError):
+        raise MailToolError("Invalid field: mail_type")
 
-    if not to_addr:
-        raise MailToolError("Missing field: to")
-    if not body.strip():
-        raise MailToolError("Missing field: body")
 
+def _normalize_attachments(attachments):
+    normalized_atts = []
+    for att in attachments or []:
+        if not isinstance(att, dict):
+            continue
+        normalized_atts.append(
+            {
+                "filename": att.get("filename") or "attachment",
+                "content_type": att.get("content_type") or "application/octet-stream",
+                "content": att.get("content") or "",
+            }
+        )
+    return normalized_atts
+
+
+def _build_mail_sender(login_id):
     send_config = ensure_send_config_for_login(login_id)
     smtp_host = str(send_config.get("smtp") or "").strip()
     smtp_port_raw = str(send_config.get("port") or "").strip()
@@ -226,25 +231,68 @@ def send_mail_by_login(login_id, payload):
     except (TypeError, ValueError):
         raise MailToolError("Invalid SMTP port")
 
-    normalized_atts = []
-    for att in attachments:
-        if not isinstance(att, dict):
-            continue
-        normalized_atts.append(
-            {
-                "filename": att.get("filename") or "attachment",
-                "content_type": att.get("content_type") or "application/octet-stream",
-                "content": att.get("content") or "",
-            }
-        )
+    sender = MailSender(
+        host=smtp_host,
+        port=smtp_port,
+        username=smtp_user,
+        password=smtp_password,
+    )
+    return sender, smtp_user
+
+
+def _clean_display_name(value):
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    text = text.replace('"', "").replace("'", "")
+    if "<" in text and ">" in text:
+        text = text.split("<", 1)[0].strip()
+    return " ".join(text.split()).strip()
+
+
+def _build_bulk_salutation(recipient):
+    if not isinstance(recipient, dict):
+        return ""
+    company_name = _clean_display_name(recipient.get("company_name"))
+    contact_name = _clean_display_name(recipient.get("contact_name"))
+
+    lines = []
+    if company_name:
+        lines.append(company_name)
+    if contact_name:
+        lines.append(f"{contact_name}様")
+    elif company_name:
+        lines.append("ご担当者様")
+    return "\n".join(lines).strip()
+
+
+def _build_bulk_body(body, recipient):
+    base_body = str(body or "").strip()
+    if not base_body:
+        return ""
+    salutation = _build_bulk_salutation(recipient)
+    if not salutation:
+        return base_body
+    return f"{salutation}\n\n{base_body}"
+
+
+# 根据登录ID获取用户的邮箱配置，从而送信
+def send_mail_by_login(login_id, payload):
+    to_addr = (payload.get("to") or "").strip()
+    cc_addr = (payload.get("cc") or "").strip()
+    subject = (payload.get("subject") or "送信页邮件").strip() or "送信页邮件"
+    body = payload.get("body") or ""
+    attachments = payload.get("attachments") or []
+    mail_type = _parse_mail_type(payload.get("mail_type"))
+
+    if not to_addr:
+        raise MailToolError("Missing field: to")
+    if not body.strip():
+        raise MailToolError("Missing field: body")
+    normalized_atts = _normalize_attachments(attachments)
 
     try:
-        sender = MailSender(
-            host=smtp_host,
-            port=smtp_port,
-            username=smtp_user,
-            password=smtp_password,
-        )
+        sender, smtp_user = _build_mail_sender(login_id)
         message_id = sender.send_message(
             to=to_addr,
             cc=cc_addr or None,
@@ -261,3 +309,54 @@ def send_mail_by_login(login_id, payload):
         raise MailToolError(str(exc), status=500)
 
     return {"message_id": message_id}
+
+
+def send_bulk_mail_by_login(login_id, payload):
+    subject = (payload.get("subject") or "群发邮件").strip() or "群发邮件"
+    body = payload.get("body") or ""
+    cc_addr = (payload.get("cc") or "").strip()
+    recipients = payload.get("recipients") or []
+    attachments = payload.get("attachments") or []
+    mail_type = _parse_mail_type(payload.get("mail_type"))
+
+    if not isinstance(recipients, list) or not recipients:
+        raise MailToolError("Missing field: recipients")
+    if not str(body or "").strip():
+        raise MailToolError("Missing field: body")
+
+    normalized_atts = _normalize_attachments(attachments)
+    try:
+        sender, smtp_user = _build_mail_sender(login_id)
+        items = []
+        for recipient in recipients:
+            if not isinstance(recipient, dict):
+                continue
+            to_addr = str(recipient.get("email") or "").strip()
+            if not to_addr:
+                continue
+            final_body = _build_bulk_body(body, recipient)
+            message_id = sender.send_message(
+                to=to_addr,
+                cc=cc_addr or None,
+                subject=subject,
+                body=final_body,
+                sender=smtp_user,
+                attachments=normalized_atts,
+                mail_type=mail_type,
+                created_by=login_id,
+            )
+            items.append(
+                {
+                    "email": to_addr,
+                    "message_id": message_id,
+                }
+            )
+    except MailToolError:
+        raise
+    except Exception as exc:
+        raise MailToolError(str(exc), status=500)
+
+    if not items:
+        raise MailToolError("Missing valid recipient email")
+
+    return {"items": items, "count": len(items)}

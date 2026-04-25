@@ -143,7 +143,7 @@
             .filter(Boolean)
             .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
             .join('');
-        target.innerHTML = html || `<p style="color:#9aa4b5">${t("match.empty")}</p>`;
+        target.innerHTML = html || `<p class="match-empty-inline">${t("match.empty")}</p>`;
     }
 
     const jobList = document.getElementById('job-list');

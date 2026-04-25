@@ -7,145 +7,8 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="notification.title">通知管理</title>
-  <style>
-* {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-      background: transparent;
-      color: var(--text);
-    }
-
-    .page {
-      padding: 4px 4px 14px;
-    }
-
-    .header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
-    .action-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-
-    .grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .stats {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-.stat-value {
-      font-size: 20px;
-      font-weight: 800;
-      margin: 6px 0 4px;
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .
-.table th,
-    .table td {
-      text-align: left;
-      padding: 10px 8px;
-      border-bottom: 1px solid var(--line);
-      vertical-align: middle;
-    }
-
-    .table th {
-      font-size: 12px;
-      color: var(--muted);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      border: 1px solid transparent;
-    }
-
-    .badge.info {
-      color: var(--primary);
-      border-color: rgba(28, 123, 255, 0.3);
-      background: rgba(28, 123, 255, 0.08);
-    }
-
-    .badge.warn {
-      color: #b45309;
-      border-color: rgba(251, 191, 36, 0.45);
-      background: rgba(251, 191, 36, 0.15);
-    }
-
-    .badge.success {
-      color: var(--success);
-      border-color: rgba(22, 163, 74, 0.3);
-      background: rgba(22, 163, 74, 0.12);
-    }
-
-    .badge.danger {
-      color: var(--danger);
-      border-color: rgba(255, 91, 91, 0.35);
-      background: rgba(255, 91, 91, 0.12);
-    }
-
-    .row-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-
-    .empty {
-      text-align: center;
-      color: var(--muted);
-      padding: 12px 0 2px;
-      font-size: 13px;
-    }
-
-    @media (max-width: 760px) {
-      .header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .table th:nth-child(3),
-      .table td:nth-child(3),
-      .table th:nth-child(5),
-      .table td:nth-child(5) {
-        display: none;
-      }
-    }
-  </style>
 </head>
-<body>
+<body class="notification-page">
   <div class="page">
     <div class="header">
       <div>
@@ -182,7 +45,7 @@
       </div>
     </div>
 
-    <div class="c-card" style="margin-top: 12px;">
+    <div class="c-card notification-table-card">
       <div class="filters">
         <label class="field c-field">
           <span data-i18n="notification.filter.keyword">关键词</span>

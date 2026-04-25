@@ -7,165 +7,6 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="pay.title">请求书管理</title>
-  <style>
-*{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
-                   "Hiragino Sans GB", "Microsoft YaHei", Arial, "Noto Sans";
-      background: var(--bg);
-      color:var(--text);
-    }
-
-    .pay-amount{
-      font-weight:800;
-      color:#1f60d8;
-    }
-    .pay-status .c-pill{
-      font-weight:700;
-    }
-    .pay-request-table .c-table th{
-      font-weight:700;
-    }
-
-    @media (max-width: 900px){
-      .pay-request-table table{
-        min-width:900px;
-      }
-      .pay-total-field{
-        grid-column: 1 / -1;
-        justify-self: stretch;
-        width: 100%;
-        margin-left: 0;
-      }
-      .pay-upload-field,
-      .pay-account-field,
-      .pay-request-date-field{
-        grid-column: 1 / -1;
-      }
-      .pay-bottom-row{
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .c-modal-wide{
-      width: min(1600px, 98vw);
-      max-width: min(1600px, 98vw);
-    }
-    .pay-detail-table-wrap{
-      padding: 8px 12px 12px;
-      overflow-x: auto;
-      background: #fff;
-    }
-    .pay-detail-table{
-      min-width: 1100px;
-      table-layout: auto;
-    }
-    .pay-detail-table th,
-    .pay-detail-table td{
-      padding: 12px 10px;
-      font-size: 13px;
-      white-space: normal;
-      word-break: break-word;
-    }
-    .pay-detail-table th:last-child,
-    .pay-detail-table td:last-child{
-      width: 90px;
-    }
-    .pay-detail-table td .c-input{
-      min-width: 0;
-    }
-    .pay-customer-info{
-      padding: 12px 14px;
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      background: #f8fafc;
-      display: grid;
-      gap: 6px;
-      color: #334155;
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .pay-customer-info span{
-      color: #64748b;
-      font-weight: 700;
-      margin-right: 6px;
-    }
-    .pay-total-field{
-      width: min(420px, 100%);
-      justify-self: end;
-    }
-    .pay-upload-field{
-      flex-direction: column;
-      align-items: stretch;
-      gap: 8px;
-    }
-    .pay-upload-field input[type="file"]{
-      font-size: 13px;
-      font-weight: 600;
-      color: #334155;
-    }
-    .pay-account-card{
-      border: 1px dashed var(--border);
-      border-radius: 12px;
-      background: #f8fafc;
-      padding: 12px 14px;
-      display: grid;
-      gap: 10px;
-      color: #0f172a;
-    }
-    .pay-account-title{
-      text-align: center;
-      font-weight: 900;
-      letter-spacing: 2px;
-      font-size: 16px;
-    }
-    .pay-account-subtitle{
-      text-align: center;
-      font-weight: 800;
-      color: #334155;
-    }
-    .pay-account-grid{
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 10px 24px;
-      font-weight: 800;
-    }
-    .pay-account-label{
-      color: #334155;
-      letter-spacing: 1px;
-    }
-    .pay-account-value{
-      color: #0f172a;
-      text-align: left;
-    }
-    .pay-bottom-row{
-      grid-column: 1 / -1;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      align-items: start;
-    }
-    .pay-side-stack{
-      display: grid;
-      gap: 12px;
-    }
-    .pay-total-display{
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: #f8fafc;
-      color: #0f172a;
-      font-weight: 700;
-    }
-    .pay-column-group{
-      display: grid;
-      gap: 12px;
-    }
-    .pay-upload-field{
-      grid-column: 1 / -1;
-    }
-  </style>
 </head>
 <body class="pay-request-page">
   <div class="page">
@@ -263,12 +104,12 @@
           </div>
         </div>
         <div></div>
-        <div class="c-inline-field c-inline-field-full" style="flex-direction:column; align-items:stretch; gap:10px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div class="c-inline-field c-inline-field-full pay-detail-section">
+          <div class="pay-detail-heading">
             <span data-i18n="pay.field.detail">明细</span>
             <button class="c-btn c-btn-ghost c-btn-sm" type="button" id="detailAddBtn" data-i18n="pay.detail.add">新增明细</button>
           </div>
-          <div class="c-table-wrapper pay-detail-table-wrap" style="border-radius:12px; border:1px solid var(--border);">
+          <div class="c-table-wrapper pay-detail-table-wrap">
             <table class="c-table c-table-hover pay-detail-table" id="detailTable">
               <thead>
               <tr>
@@ -284,9 +125,9 @@
             </table>
           </div>
         </div>
-        <div class="c-inline-field c-inline-field-full" style="flex-direction:column; align-items:stretch; gap:10px;">
+        <div class="c-inline-field c-inline-field-full pay-detail-section">
           <span data-i18n="pay.field.tax_breakdown">税相关</span>
-          <div class="c-table-wrapper pay-detail-table-wrap" style="border-radius:12px; border:1px solid var(--border);">
+          <div class="c-table-wrapper pay-detail-table-wrap">
             <table class="c-table c-table-hover pay-detail-table" id="taxTable">
               <thead>
               <tr>

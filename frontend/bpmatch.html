@@ -15,15 +15,15 @@
             <div class="panel-title c-panel-title" data-i18n="match.jobs">案件列表</div>
             <div class="filters c-filter-grid">
                 <div class="filter-group c-filter-group">
-                    <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
+                    <span class="filter-label c-filter-label" data-i18n="common.field.time">时间</span>
                     <div class="chip-row c-chip-row">
-                        <button class="chip c-chip" data-range="all" type="button" data-i18n="match.range.all">全部
+                        <button class="chip c-chip" data-range="all" type="button" data-i18n="common.all">全部
                         </button>
                         <button class="chip c-chip" data-range="yesterday" type="button"
-                                data-i18n="match.range.yesterday">昨天
+                                data-i18n="common.range.yesterday">昨天
                         </button>
                         <button class="chip c-chip active" data-range="today" type="button"
-                                data-i18n="match.range.today">今天
+                                data-i18n="common.range.today">今天
                         </button>
                     </div>
                 </div>
@@ -78,7 +78,7 @@
             </div>
             <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
             <div id="person-attachments" class="c-chip-row songxinhistory-attachments">
-                <div class="songxin-empty-tip" data-i18n="songxinhistory.empty.attachments">暂无附件</div>
+                <div class="songxin-empty-tip" data-i18n="common.empty.attachments">暂无附件</div>
             </div>
             <div class="detail-actions">
                 <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send_to_tech">
@@ -431,7 +431,7 @@
     const renderPersonAttachments = (files = []) => {
         if (!personAttachments) return;
         if (!Array.isArray(files) || !files.length) {
-            personAttachments.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+            personAttachments.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
             return;
         }
         const items = files
@@ -443,7 +443,7 @@
             });
         personAttachments.innerHTML = items.length
             ? items.join('')
-            : `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+            : `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
     };
 
     const renderPersonList = (items, options = {}) => {
@@ -616,7 +616,7 @@
 
     const updatePaginationUI = () => {
         if (pageSummary) {
-            pageSummary.textContent = format("match.page_summary", {
+            pageSummary.textContent = format("common.summary.page", {
                 count: totalCount,
                 page: currentPage,
                 total: totalPages
@@ -627,7 +627,7 @@
         }
     }
 
-    const showLoading = (message = t("match.loading")) => {
+    const showLoading = (message = t("common.loading")) => {
         jobList.innerHTML = '';
         const loading = document.createElement('li');
         loading.className = 'empty';
@@ -659,7 +659,7 @@
             const data = await res.json();
             const payload = normalizeApiResponse(data);
             if (!payload.success) {
-                throw new Error(payload.message || t("match.failed"));
+                throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};
             const meta = payload.meta || {};
@@ -674,7 +674,7 @@
             jobList.innerHTML = '';
             const errorLi = document.createElement('li');
             errorLi.className = 'empty';
-            errorLi.textContent = `${t("match.failed")}：${err.message}`;
+            errorLi.textContent = `${t("common.load_failed")}：${err.message}`;
             jobList.appendChild(errorLi);
             activeJobId = '';
             jobDetail.textContent = t("match.empty_job_detail");
@@ -777,14 +777,14 @@
                 const data = await res.json();
                 const payload = normalizeApiResponse(data);
                 if (!payload.success) {
-                    throw new Error(payload.message || t("match.failed"));
+                    throw new Error(payload.message || t("common.load_failed"));
                 }
                 const draft = getJobFeedbackDraft(jobId);
                 draft.expectedCategory = selected;
                 draft.submitted = true;
                 removeJobFromCurrentList(jobId);
             } catch (err) {
-                alert(`${t("match.failed")}：${err.message}`);
+                alert(`${t("common.load_failed")}：${err.message}`);
             }
         }
     });
@@ -850,14 +850,14 @@
                 const data = await res.json();
                 const payload = normalizeApiResponse(data);
                 if (!payload.success) {
-                    throw new Error(payload.message || t("match.failed"));
+                    throw new Error(payload.message || t("common.load_failed"));
                 }
                 const draft = getPersonFeedbackDraft(personId);
                 draft.expectedCategory = selected;
                 draft.submitted = true;
                 removePersonFromCurrentList(personId);
             } catch (err) {
-                alert(`${t("match.failed")}：${err.message}`);
+                alert(`${t("common.load_failed")}：${err.message}`);
             }
         }
     });

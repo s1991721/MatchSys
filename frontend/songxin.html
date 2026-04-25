@@ -47,7 +47,7 @@
 
         <section class="songxin-grid">
             <div class="c-card c-card-pad">
-                <div class="c-card-title" data-i18n="songxin.section.preview">预览</div>
+                <div class="c-card-title" data-i18n="common.preview">预览</div>
                 <div id="preview" class="songxin-preview">
                     这里会展示即将发送的正文预览，确认排版、换行和关键内容是否完整。ABCDEFG1234567890不想超出屏幕会自动换行。
                 </div>
@@ -74,7 +74,7 @@
                         <span class="songxin-upload-hint" data-i18n="songxin.attach.hint">支持多文件，建议单个不超过10MB</span>
                     </div>
                     <div id="attachment-list" class="songxin-attachment-list">
-                        <div class="songxin-empty-tip" data-i18n="songxin.attach.empty">暂无附件</div>
+                        <div class="songxin-empty-tip" data-i18n="common.empty.attachments">暂无附件</div>
                     </div>
                 </div>
                 <div class="songxin-send-actions">
@@ -388,7 +388,7 @@
 
             const renderAttachments = () => {
                 if (!attachments.length) {
-                    attachmentList.innerHTML = `<div class="songxin-empty-tip">${t('songxin.attach.empty')}</div>`;
+                    attachmentList.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
                     return;
                 }
 
@@ -397,7 +397,7 @@
                         <div class="songxin-attachment-name">${file.name}</div>
                         <div class="songxin-attachment-meta">
                             <span>${file.sizeLabel}</span>
-                            <span class="songxin-remove-link" data-remove="${idx}">${t('songxin.attach.remove')}</span>
+                            <span class="songxin-remove-link" data-remove="${idx}">${t('common.remove')}</span>
                         </div>
                     </div>
                 `).join('');

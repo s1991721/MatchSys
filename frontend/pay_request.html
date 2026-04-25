@@ -276,8 +276,8 @@
                 <th data-i18n="pay.detail.qty">数量</th>
                 <th data-i18n="pay.detail.price">单价</th>
                 <th data-i18n="pay.detail.subtotal">小计</th>
-                <th data-i18n="pay.detail.note">备注</th>
-                <th data-i18n="pay.detail.action">操作</th>
+                <th data-i18n="common.field.note">备注</th>
+                <th data-i18n="common.field.actions">操作</th>
               </tr>
               </thead>
               <tbody id="detailTableBody"></tbody>
@@ -483,7 +483,7 @@
         const isEditing = btn.dataset.action === "save";
         setRowEditable(row, !isEditing);
         btn.dataset.action = isEditing ? "edit" : "save";
-        btn.textContent = isEditing ? t("pay.detail.edit", "编辑") : t("pay.detail.save", "保存");
+        btn.textContent = isEditing ? t("common.edit", "编辑") : t("pay.detail.save", "保存");
       });
       detailTableBody.addEventListener("input", (event) => {
         const row = event.target.closest("tr");

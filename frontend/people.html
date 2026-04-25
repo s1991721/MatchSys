@@ -22,7 +22,7 @@
                     <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" data-i18n-placeholder="people.filter.age_max_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="people.filter.nationality">国籍</span>
+                    <span data-i18n="common.field.nationality">国籍</span>
                     <select id="filterNationality">
                         <option value="" data-i18n="common.all">全部</option>
                         <option value="0" data-i18n="people.nationality.jp">日本</option>
@@ -34,7 +34,7 @@
                     <input type="number" id="filterPriceMax" min="0" step="0.1" placeholder="最高单价" data-i18n-placeholder="people.filter.price_max_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="people.filter.contract">契约状况</span>
+                    <span data-i18n="common.field.contract_status">契约状况</span>
                     <select id="filterContract">
                         <option value="" data-i18n="common.all">全部</option>
                         <option value="正社员" data-i18n="people.contract.regular">正社员</option>
@@ -43,7 +43,7 @@
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="people.filter.business_status">营业状态</span>
+                    <span data-i18n="common.field.business_status">营业状态</span>
                     <select id="filterBusinessStatus">
                         <option value="" data-i18n="common.all">全部</option>
                         <option value="0" data-i18n="people.business_status.0">营业中</option>
@@ -67,18 +67,18 @@
             <table class="c-table c-table-hover c-table-center" id="peopleTable">
                 <thead>
                 <tr>
-                    <th data-i18n="people.table.name">姓名</th>
+                    <th data-i18n="common.field.name">姓名</th>
                     <th data-i18n="people.table.nickname">昵称</th>
-                    <th data-i18n="people.table.age">年龄</th>
-                    <th data-i18n="people.table.nationality">国籍</th>
+                    <th data-i18n="common.field.age">年龄</th>
+                    <th data-i18n="common.field.nationality">国籍</th>
                     <th data-i18n="people.table.price">单价（万/月）</th>
-                    <th data-i18n="people.table.intro">介绍文</th>
-                    <th data-i18n="people.table.contract">契约状况</th>
-                    <th data-i18n="people.table.business_status">营业状态</th>
+                    <th data-i18n="common.field.intro">介绍文</th>
+                    <th data-i18n="common.field.contract_status">契约状况</th>
+                    <th data-i18n="common.field.business_status">营业状态</th>
                     <th data-i18n="people.table.site_contract">现场契约</th>
-                    <th data-i18n="people.table.note">备注</th>
+                    <th data-i18n="common.field.note">备注</th>
                     <th data-i18n="people.table.ss_file">SS 文件</th>
-                    <th class="c-actions-col" data-i18n="people.table.actions">操作</th>
+                    <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -109,7 +109,7 @@
             <div class="form-grid form-grid-spaced">
                 <input type="hidden" name="employee_id"/>
                 <label>
-                    <span data-i18n="people.field.name">姓名</span>
+                    <span data-i18n="common.field.name">姓名</span>
                     <input type="text" name="name" placeholder="请输入姓名" data-i18n-placeholder="people.placeholder.name" required/>
                 </label>
                 <label>
@@ -117,11 +117,11 @@
                     <input type="text" name="nickname" placeholder="请输入昵称" data-i18n-placeholder="people.placeholder.nickname"/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.birthday">生日</span>
+                    <span data-i18n="common.field.birthday">生日</span>
                     <input type="date" name="birthday" required/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.nationality">国籍</span>
+                    <span data-i18n="common.field.nationality">国籍</span>
                     <select name="nationality" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
                         <option value="0" data-i18n="people.nationality.jp">日本</option>
@@ -133,7 +133,7 @@
                     <input type="number" name="price" min="0" step="1" placeholder="例如 2.5" data-i18n-placeholder="people.placeholder.price" required/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.contract">契约状况</span>
+                    <span data-i18n="common.field.contract_status">契约状况</span>
                     <select name="contract" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
                         <option value="正社员" data-i18n="people.contract.regular">正社员</option>
@@ -146,7 +146,7 @@
                     <input type="date" name="siteContract"/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.business_status">营业状态</span>
+                    <span data-i18n="common.field.business_status">营业状态</span>
                     <select name="businessStatus" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
                         <option value="0" data-i18n="people.business_status.0">营业中</option>
@@ -157,7 +157,7 @@
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="people.field.intro">介绍文</span>
+                    <span data-i18n="common.field.intro">介绍文</span>
                     <textarea name="intro" rows="3" placeholder="输入人员的介绍或履历亮点" data-i18n-placeholder="people.placeholder.intro"></textarea>
                 </label>
                 <label>
@@ -166,7 +166,7 @@
                     <span class="ss-file-name" id="ssFileName"></span>
                 </label>
                 <label>
-                    <span data-i18n="people.field.note">备注</span>
+                    <span data-i18n="common.field.note">备注</span>
                     <textarea name="note" rows="2" placeholder="可填写人员特长、证书等补充信息" data-i18n-placeholder="people.placeholder.note"></textarea>
                 </label>
             </div>
@@ -350,18 +350,18 @@
 
             return `
                 <tr>
-                    <td data-label="${t("people.table.name")}">${person.name}</td>
+                    <td data-label="${t("common.field.name")}">${person.name}</td>
                     <td data-label="${t("people.table.nickname")}">${person.nickname || '-'}</td>
-                    <td data-label="${t("people.table.age")}">${person.age}</td>
-                    <td data-label="${t("people.table.nationality")}">${nationalityLabel(person.nationality)}</td>
+                    <td data-label="${t("common.field.age")}">${person.age}</td>
+                    <td data-label="${t("common.field.nationality")}">${nationalityLabel(person.nationality)}</td>
                     <td data-label="${t("people.table.price")}">${person.price} ${t("people.price_unit")}</td>
-                    <td data-label="${t("people.table.intro")}"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
-                    <td data-label="${t("people.table.contract")}"><span class="${chipClass}">${person.contract}</span></td>
-                    <td data-label="${t("people.table.business_status")}"><span class="${businessClass}">${businessLabel}</span></td>
+                    <td data-label="${t("common.field.intro")}"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
+                    <td data-label="${t("common.field.contract_status")}"><span class="${chipClass}">${person.contract}</span></td>
+                    <td data-label="${t("common.field.business_status")}"><span class="${businessClass}">${businessLabel}</span></td>
                     <td data-label="${t("people.table.site_contract")}"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
-                    <td data-label="${t("people.table.note")}">${person.note || '-'}</td>
-                    <td data-label="${t("people.table.ss_file")}">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">${t("people.action.preview")}</a>` : '-'}</td>
-                    <td data-label="${t("people.table.actions")}">
+                    <td data-label="${t("common.field.note")}">${person.note || '-'}</td>
+                    <td data-label="${t("people.table.ss_file")}">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">${t("common.preview")}</a>` : '-'}</td>
+                    <td data-label="${t("common.field.actions")}">
                         <div class="row-actions c-row-actions c-row-actions-nowrap">
                             <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">${t("common.edit")}</button>
                             <button type="button" class="c-btn c-btn-primary c-btn-sm" data-find-case="${person.id}">找案件</button>

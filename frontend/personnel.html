@@ -163,7 +163,7 @@
                     <input id="searchInput" type="search" placeholder="输入关键字" data-i18n-placeholder="personnel.filter.keyword_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.filter.department">部门</span>
+                    <span data-i18n="common.field.department">部门</span>
                     <select id="deptSelect">
                         <option value="all">全部部门</option>
                     </select>
@@ -188,13 +188,13 @@
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
-                    <th data-i18n="personnel.table.name">姓名</th>
-                    <th data-i18n="personnel.table.department">部门</th>
-                    <th data-i18n="personnel.table.position">职位</th>
-                    <th data-i18n="personnel.table.phone">手机</th>
-                    <th data-i18n="personnel.table.email">邮箱</th>
-                    <th data-i18n="personnel.table.hire_date">入职日期</th>
-                    <th class="c-actions-col" data-i18n="personnel.table.actions">操作</th>
+                    <th data-i18n="common.field.name">姓名</th>
+                    <th data-i18n="common.field.department">部门</th>
+                    <th data-i18n="common.field.position">职位</th>
+                    <th data-i18n="common.field.phone">手机</th>
+                    <th data-i18n="common.field.email">邮箱</th>
+                    <th data-i18n="common.field.hire_date">入职日期</th>
+                    <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -231,27 +231,27 @@
                         <option value="" data-i18n="personnel.gender.unset">未设置</option>
                         <option value="1" data-i18n="personnel.gender.male">男</option>
                         <option value="2" data-i18n="personnel.gender.female">女</option>
-                        <option value="0" data-i18n="personnel.gender.unknown">未知</option>
+                        <option value="0" data-i18n="common.status.unknown">未知</option>
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.birthday">生日</span>
+                    <span data-i18n="common.field.birthday">生日</span>
                     <input id="fieldBirthday" type="date"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.department">部门</span>
+                    <span data-i18n="common.field.department">部门</span>
                     <input id="fieldDepartment" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.position">职位</span>
+                    <span data-i18n="common.field.position">职位</span>
                     <input id="fieldPosition" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.phone">手机</span>
+                    <span data-i18n="common.field.phone">手机</span>
                     <input id="fieldPhone" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.email">邮箱</span>
+                    <span data-i18n="common.field.email">邮箱</span>
                     <input id="fieldEmail" type="email"/>
                 </label>
                 <label>
@@ -271,7 +271,7 @@
                     <input id="fieldEmergencyRelation" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.hire_date">入职日期</span>
+                    <span data-i18n="common.field.hire_date">入职日期</span>
                     <input id="fieldHireDate" type="date"/>
                 </label>
                 <label>
@@ -434,13 +434,13 @@
         const showPermission = isAdminRole();
         tableBody.innerHTML = list.map(item => (
             `<tr>
-          <td data-label="${t("personnel.table.name")}">${item.name}</td>
-          <td data-label="${t("personnel.table.department")}">${item.department_name}</td>
-          <td data-label="${t("personnel.table.position")}">${item.position_name}</td>
-          <td data-label="${t("personnel.table.phone")}">${item.phone}</td>
-          <td data-label="${t("personnel.table.email")}">${item.email}</td>
-          <td data-label="${t("personnel.table.hire_date")}">${formatDate(item.hire_date)}</td>
-          <td data-label="${t("personnel.table.actions")}">
+          <td data-label="${t("common.field.name")}">${item.name}</td>
+          <td data-label="${t("common.field.department")}">${item.department_name}</td>
+          <td data-label="${t("common.field.position")}">${item.position_name}</td>
+          <td data-label="${t("common.field.phone")}">${item.phone}</td>
+          <td data-label="${t("common.field.email")}">${item.email}</td>
+          <td data-label="${t("common.field.hire_date")}">${formatDate(item.hire_date)}</td>
+          <td data-label="${t("common.field.actions")}">
             <div class="row-actions c-row-actions c-row-actions-nowrap">
               <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">${t("personnel.action.edit")}</button>
               <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">${t("personnel.action.tech_edit")}</button>

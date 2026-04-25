@@ -198,10 +198,10 @@
                 <table class="c-table c-table-center" data-template hidden>
                     <thead>
                     <tr>
-                        <th data-i18n="myattendance.table.date">日期</th>
+                        <th data-i18n="common.field.date">日期</th>
                         <th data-i18n="myattendance.table.time">上班</th>
-                        <th data-i18n="myattendance.table.remark">备注</th>
-                        <th data-i18n="myattendance.table.action">操作</th>
+                        <th data-i18n="common.field.note">备注</th>
+                        <th data-i18n="common.field.actions">操作</th>
                     </tr>
                     </thead>
                     <tbody></tbody>
@@ -222,7 +222,7 @@
         <div class="c-modal-body">
             <div class="c-modal-error" id="edit-dialog-error" hidden data-i18n="myattendance.dialog.error.required">备注必填</div>
             <div class="c-modal-field">
-                <label for="edit-date" data-i18n="myattendance.dialog.field.date">日期</label>
+                <label for="edit-date" data-i18n="common.field.date">日期</label>
                 <input id="edit-date" type="text" readonly/>
             </div>
             <div class="c-modal-field">
@@ -234,7 +234,7 @@
                 <input id="edit-end" type="time"/>
             </div>
             <div class="c-modal-field">
-                <label for="edit-remark" data-i18n="myattendance.dialog.field.remark">备注</label>
+                <label for="edit-remark" data-i18n="common.field.note">备注</label>
                 <textarea id="edit-remark" placeholder="填写备注" data-i18n-placeholder="myattendance.dialog.placeholder.remark"></textarea>
             </div>
         </div>
@@ -403,7 +403,7 @@
         if (!records.length) {
             setTemplatesVisible(details, false);
             if (placeholder) {
-                placeholder.textContent = t("myattendance.placeholder.empty");
+                placeholder.textContent = t("common.empty.records");
                 placeholder.classList.remove("hidden");
             }
         } else {
@@ -493,7 +493,7 @@
 
         setTemplatesVisible(details, false);
         if (placeholder) {
-            placeholder.textContent = t("myattendance.placeholder.loading");
+            placeholder.textContent = t("common.loading");
             placeholder.classList.remove("hidden");
         }
         const query = url.includes("?") ? "&" : "?";
@@ -717,10 +717,10 @@
             closeEditDialog();
         } catch (err) {
             if (errorEl) {
-                errorEl.textContent = err.message || t("myattendance.toast.save_failed");
+                errorEl.textContent = err.message || t("common.save_failed");
                 errorEl.hidden = false;
             }
-            showToast(t("myattendance.toast.save_failed"));
+            showToast(t("common.save_failed"));
         }
     });
 

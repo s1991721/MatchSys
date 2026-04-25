@@ -697,7 +697,7 @@
         const firstRes = await fetchWithAuth("/api/customers?page=1&page_size=200", {method: "GET"});
         const firstData = await firstRes.json();
         const firstPayload = normalizeApiResponse(firstData);
-        if (!firstPayload.success) throw new Error(firstPayload.message || t("match.failed"));
+        if (!firstPayload.success) throw new Error(firstPayload.message || t("common.load_failed"));
 
         const firstItems = Array.isArray(firstPayload.data?.items) ? firstPayload.data.items : [];
         const totalPages = Number(firstPayload.meta?.total_pages || 1);
@@ -800,7 +800,7 @@
             return;
         }
         if (!bulkAttachments.length) {
-            bulkAttachmentSource.innerHTML = `<div class="bulk-attachment-empty">${t("customer.bulk.attachment_empty")}</div>`;
+            bulkAttachmentSource.innerHTML = `<div class="bulk-attachment-empty">${t("common.empty.attachments")}</div>`;
             return;
         }
         bulkAttachmentSource.innerHTML = bulkAttachments.map((attachment) => {
@@ -810,7 +810,7 @@
                 ? t("customer.bulk.attachment_source.prefill")
                 : t("customer.bulk.attachment_source.manual");
             const previewHtml = previewUrl
-                ? `<a class="bulk-attachment-link" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">${t("customer.bulk.attachment_preview")}</a>`
+                ? `<a class="bulk-attachment-link" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">${t("common.preview")}</a>`
                 : "";
             return `
                 <div class="bulk-attachment-item" data-attachment-id="${escapeHtml(attachment.id || "")}">
@@ -820,7 +820,7 @@
                     <div class="bulk-attachment-actions">
                         <span class="bulk-attachment-origin">${sourceLabel}</span>
                         ${previewHtml}
-                        <button type="button" class="bulk-attachment-remove" data-action="remove-attachment">${t("customer.bulk.attachment_remove")}</button>
+                        <button type="button" class="bulk-attachment-remove" data-action="remove-attachment">${t("common.remove")}</button>
                     </div>
                 </div>
             `;

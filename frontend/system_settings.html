@@ -319,11 +319,11 @@
             <div class="form-field full">
               <div class="line-notify-conditions">
                 <div class="line-notify-condition-item">
-                  <label for="line-condition-nationality-foreign-allow" data-i18n="system_settings.line_notify.condition_nationality">国籍</label>
+                  <label for="line-condition-nationality-foreign-allow" data-i18n="common.field.nationality">国籍</label>
                   <div class="line-notify-radio-group" id="line-condition-nationality">
                     <label class="line-notify-radio-option" for="line-condition-nationality-foreign-allow">
                       <input id="line-condition-nationality-foreign-allow" type="checkbox" name="line-condition-nationality" value="foreign_allowed" />
-                      <span data-i18n="system_settings.line_notify.condition_nationality_foreign_allowed">外国籍可</span>
+                      <span data-i18n="common.field.nationality_foreign_allowed">外国籍可</span>
                     </label>
                   </div>
                 </div>
@@ -346,8 +346,8 @@
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.password_reset.desc">为账号重置密码并设置有效期（天）。</p>
           <form class="form-grid form-grid-spaced">
             <div class="form-field">
-              <label for="preview-user" data-i18n="system_settings.password_reset.user">账号</label>
-              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" data-i18n-placeholder="system_settings.password_reset.user_placeholder" />
+              <label for="preview-user" data-i18n="common.field.account">账号</label>
+              <input id="preview-user" type="text" placeholder="例如：demo-001" list="user-login-suggestions" data-i18n-placeholder="common.field.account_placeholder" />
               <datalist id="user-login-suggestions"></datalist>
             </div>
             <div class="form-field">
@@ -396,7 +396,7 @@
             </div>
             <div class="form-field">
               <label for="backup-password" data-i18n="system_settings.backup.password">密码</label>
-              <input id="backup-password" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.backup.password_placeholder" />
+              <input id="backup-password" type="password" placeholder="••••••••" data-i18n-placeholder="common.placeholder.password_mask" />
             </div>
             <div class="form-field">
               <label for="backup-ssl" data-i18n="system_settings.backup.ssl">SSL 模式</label>
@@ -407,8 +407,8 @@
               </select>
             </div>
             <div class="form-field full">
-              <label for="backup-note" data-i18n="system_settings.backup.note">备注</label>
-              <textarea id="backup-note" placeholder="例如：与主库保持实时同步" data-i18n-placeholder="system_settings.backup.note_placeholder"></textarea>
+              <label for="backup-note" data-i18n="common.field.note">备注</label>
+              <textarea id="backup-note" placeholder="例如：与主库保持实时同步" data-i18n-placeholder="common.field.note_placeholder"></textarea>
             </div>
             <div class="form-actions">
               <button class="c-btn c-btn-secondary" type="button" id="backup-test" data-i18n="system_settings.common.test">连接测试</button>
@@ -446,7 +446,7 @@
             </div>
             <div class="task-log-actions">
               <button class="c-btn c-btn-secondary" type="button" id="task-log-search" data-i18n="system_settings.task.logs_search">查询</button>
-              <button class="c-btn c-btn-ghost" type="button" id="task-log-reset" data-i18n="system_settings.task.logs_reset">清空</button>
+              <button class="c-btn c-btn-ghost" type="button" id="task-log-reset" data-i18n="common.clear">清空</button>
             </div>
           </div>
           <div class="hint" id="task-log-meta" data-i18n="system_settings.task.logs_hint">选择日期后查询执行情况</div>
@@ -913,11 +913,11 @@
           <div class="sendmsg-section-title">${t("system_settings.sendmsg.smtp_section", "发信配置")}</div>
           <div class="form-field">
             <label for="sendmsg-email-${index}">${t("system_settings.sendmsg.smtp_user", "SMTP 用户名")}</label>
-            <input id="sendmsg-email-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.email_placeholder" value="${config.email || ""}" />
+            <input id="sendmsg-email-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="common.placeholder.staff_email" value="${config.email || ""}" />
           </div>
           <div class="form-field">
             <label for="sendmsg-password-${index}">${t("system_settings.sendmsg.smtp_password", "SMTP 密码 / 授权码")}</label>
-            <input id="sendmsg-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.password_placeholder" value="${config.password || ""}" />
+            <input id="sendmsg-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="common.placeholder.password_mask" value="${config.password || ""}" />
           </div>
           <div class="form-field">
             <label for="sendmsg-smtp-${index}">${t("system_settings.sendmsg.smtp", "SMTP 服务器")}</label>
@@ -984,11 +984,11 @@
           </div>
           <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap" id="sendmsg-imap-user-field-${index}">
             <label for="sendmsg-imap-user-${index}">${t("system_settings.sendmsg.imap_user", "IMAP 用户名")}</label>
-            <input id="sendmsg-imap-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.imap_user_placeholder" value="${config.imap_user || ""}" />
+            <input id="sendmsg-imap-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="common.placeholder.staff_email" value="${config.imap_user || ""}" />
           </div>
           <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="imap" id="sendmsg-imap-password-field-${index}">
             <label for="sendmsg-imap-password-${index}">${t("system_settings.sendmsg.imap_password", "IMAP 密码 / 授权码")}</label>
-            <input id="sendmsg-imap-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.imap_password_placeholder" value="${config.imap_password || ""}" />
+            <input id="sendmsg-imap-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="common.placeholder.password_mask" value="${config.imap_password || ""}" />
           </div>
           <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3">
             <label for="sendmsg-pop3-host-${index}">${t("system_settings.sendmsg.pop3_host", "POP3 服务器")}</label>
@@ -1014,11 +1014,11 @@
           </div>
           <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3" id="sendmsg-pop3-user-field-${index}">
             <label for="sendmsg-pop3-user-${index}">${t("system_settings.sendmsg.pop3_user", "POP3 用户名")}</label>
-            <input id="sendmsg-pop3-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="system_settings.sendmsg.pop3_user_placeholder" value="${config.pop3_user || ""}" />
+            <input id="sendmsg-pop3-user-${index}" type="text" placeholder="staff@company.com" data-i18n-placeholder="common.placeholder.staff_email" value="${config.pop3_user || ""}" />
           </div>
           <div class="form-field sendmsg-receiver-block" data-sendmsg-protocol-block="${index}" data-protocol="pop3" id="sendmsg-pop3-password-field-${index}">
             <label for="sendmsg-pop3-password-${index}">${t("system_settings.sendmsg.pop3_password", "POP3 密码 / 授权码")}</label>
-            <input id="sendmsg-pop3-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="system_settings.sendmsg.pop3_password_placeholder" value="${config.pop3_password || ""}" />
+            <input id="sendmsg-pop3-password-${index}" type="password" placeholder="••••••••" data-i18n-placeholder="common.placeholder.password_mask" value="${config.pop3_password || ""}" />
           </div>
           <div class="sendmsg-section-title">${t("system_settings.sendmsg.owner_section", "账号归属")}</div>
           <div class="form-field">
@@ -1138,7 +1138,7 @@
       }
       if (matchOcrFile) {
         matchOcrAuthCurrent.textContent = format(
-          "system_settings.ocr.selected_with_name",
+          "common.selected_name",
           { name: filename },
           `已选择：${filename}`
         );
@@ -1607,7 +1607,7 @@
       const params = new URLSearchParams({ task_id: String(taskId), limit: "50" });
       if (taskLogStart && taskLogStart.value) params.append("start_date", taskLogStart.value);
       if (taskLogEnd && taskLogEnd.value) params.append("end_date", taskLogEnd.value);
-      taskLogMeta.textContent = t("system_settings.task.logs_loading", "加载中...");
+      taskLogMeta.textContent = t("common.loading", "加载中...");
       taskLogOutput.textContent = "";
       try {
         const payload = await requestJson(`${taskLogsApi}?${params.toString()}`, {
@@ -1617,7 +1617,7 @@
         const entries = Array.isArray(data.entries) ? data.entries : [];
         if (!entries.length) {
           taskLogOutput.textContent = t("system_settings.task.logs_empty", "暂无执行日志。");
-          taskLogMeta.textContent = t("system_settings.task.logs_empty_short", "暂无记录");
+          taskLogMeta.textContent = t("common.empty.records", "暂无记录");
           return;
         }
         taskLogOutput.textContent = entries.map(formatLogLine).join("\n");

@@ -60,9 +60,9 @@
                            data-i18n-placeholder="customer.filter.company_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="customer.filter.owner">负责人</span>
+                    <span data-i18n="common.field.owner">负责人</span>
                     <input id="filter-owner" type="text" list="employee-names" placeholder="请输入负责人"
-                           data-i18n-placeholder="customer.filter.owner_placeholder"/>
+                           data-i18n-placeholder="common.field.owner_placeholder"/>
                 </label>
                 <datalist id="employee-names"></datalist>
             </div>
@@ -99,14 +99,14 @@
                     </th>
                     <th data-i18n="customer.table.company">公司名称</th>
                     <th data-i18n="customer.table.address">公司地址</th>
-                    <th data-i18n="customer.table.remark">备注</th>
+                    <th data-i18n="common.field.note">备注</th>
                     <th data-i18n="customer.table.contact">联系人</th>
-                    <th data-i18n="customer.table.position">职位</th>
-                    <th data-i18n="customer.table.email">邮箱</th>
+                    <th data-i18n="common.field.position">职位</th>
+                    <th data-i18n="common.field.email">邮箱</th>
                     <th data-i18n="customer.table.phone">电话</th>
-                    <th data-i18n="customer.table.owner">负责人</th>
-                    <th data-i18n="customer.table.created_at">创建时间</th>
-                    <th class="c-actions-col" data-i18n="customer.table.actions">操作</th>
+                    <th data-i18n="common.field.owner">负责人</th>
+                    <th data-i18n="common.field.created_at">创建时间</th>
+                    <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="customer-body"></tbody>
@@ -169,11 +169,11 @@
                 <span class="hint" id="contract-hint" data-i18n="customer.contract.empty">未上传</span>
             </label>
             <label class="c-field">
-                <span data-i18n="customer.table.remark">备注</span>
+                <span data-i18n="common.field.note">备注</span>
                 <textarea id="edit-remark"></textarea>
             </label>
             <label class="c-field">
-                <span data-i18n="customer.table.owner">负责人</span>
+                <span data-i18n="common.field.owner">负责人</span>
                 <input id="edit-owner" type="text" list="employee-names"/>
             </label>
             <div class="form-field full">
@@ -751,7 +751,7 @@
                 cardPreviewImage.hidden = false;
             }
             if (cardPreviewEmpty) cardPreviewEmpty.hidden = true;
-            setCardHintFormat("customer.card.selected", {name: file.name}, `已选择：${file.name}`);
+            setCardHintFormat("common.selected_name", {name: file.name}, `已选择：${file.name}`);
         });
     }
 

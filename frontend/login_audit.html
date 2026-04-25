@@ -28,19 +28,19 @@
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-wide">
                 <label>
-                    <span data-i18n="login_audit.filter.user_name">账号</span>
+                    <span data-i18n="common.field.account">账号</span>
                     <input id="userNameInput" type="search" placeholder="输入账号" data-i18n-placeholder="login_audit.placeholder.user_name"/>
                 </label>
                 <label>
-                    <span data-i18n="login_audit.filter.employee_id">员工ID</span>
-                    <input id="employeeIdInput" type="text" inputmode="numeric" placeholder="员工ID" data-i18n-placeholder="login_audit.placeholder.employee_id"/>
+                    <span data-i18n="common.field.employee_id">员工ID</span>
+                    <input id="employeeIdInput" type="text" inputmode="numeric" placeholder="员工ID" data-i18n-placeholder="common.field.employee_id"/>
                 </label>
                 <label>
                     <span data-i18n="login_audit.filter.success">结果</span>
                     <select id="successSelect">
-                        <option value="" data-i18n="login_audit.filter.success.all">全部</option>
+                        <option value="" data-i18n="common.all">全部</option>
                         <option value="1" data-i18n="login_audit.filter.success.success">成功</option>
-                        <option value="0" data-i18n="login_audit.filter.success.failed">失败</option>
+                        <option value="0" data-i18n="common.status.failed">失败</option>
                     </select>
                 </label>
                 <label>
@@ -65,9 +65,9 @@
             <table class="c-table c-table-hover c-table-center login-audit-table">
                 <thead>
                 <tr>
-                    <th data-i18n="login_audit.table.time">时间</th>
-                    <th data-i18n="login_audit.table.user_name">账号</th>
-                    <th data-i18n="login_audit.table.employee_id">员工ID</th>
+                    <th data-i18n="common.field.time">时间</th>
+                    <th data-i18n="common.field.account">账号</th>
+                    <th data-i18n="common.field.employee_id">员工ID</th>
                     <th data-i18n="login_audit.table.result">结果</th>
                     <th data-i18n="login_audit.table.reason">原因</th>
                     <th data-i18n="login_audit.table.ip">IP</th>
@@ -80,7 +80,7 @@
 
         <div class="pagination c-pagination" id="pagination">
             <div class="pagination-summary">
-                <span id="pageSummary" data-i18n="login_audit.summary">共 0 条 · 第 1/1 页</span>
+                <span id="pageSummary" data-i18n="common.summary.page">共 0 条 · 第 1/1 页</span>
             </div>
             <div class="pagination-pages" id="paginationPages"></div>
         </div>
@@ -119,7 +119,7 @@
         let currentItems = [];
 
         const getStatusTag = (success) => {
-            const label = success ? t("login_audit.filter.success.success", "成功") : t("login_audit.filter.success.failed", "失败");
+            const label = success ? t("login_audit.filter.success.success", "成功") : t("common.status.failed", "失败");
             const cls = success ? "c-tag-success" : "c-tag-danger";
             return `<span class="c-tag ${cls}">${label}</span>`;
         };
@@ -132,7 +132,7 @@
 
         const renderTable = (items) => {
             if (!items.length) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("login_audit.empty", "暂无记录")}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.empty.records", "暂无记录")}</td></tr>`;
                 return;
             }
             tableBody.innerHTML = items.map((row) => {
@@ -156,7 +156,7 @@
 
         const updatePagination = () => {
             if (pageSummary) {
-                pageSummary.textContent = format("login_audit.summary", {
+                pageSummary.textContent = format("common.summary.page", {
                     count: totalCount,
                     page: currentPage,
                     total: totalPages

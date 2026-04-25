@@ -91,9 +91,9 @@
             const rawField = missingFieldMatch[1].trim();
             const fieldKeyMap = {
                 name: "personnel.field.name",
-                email: "personnel.field.email",
-                birthday: "personnel.field.birthday",
-                user_name: "login.username",
+                email: "common.field.email",
+                birthday: "common.field.birthday",
+                user_name: "common.field.account",
                 password: "login.password",
             };
             const fieldKey = fieldKeyMap[rawField];
@@ -259,7 +259,7 @@
         prevBtn.type = "button";
         prevBtn.className = "c-btn c-btn-ghost c-btn-sm";
         prevBtn.dataset.page = "prev";
-        prevBtn.textContent = t("pagination.prev", "上一页");
+        prevBtn.textContent = t("common.pagination.prev", "上一页");
         prevBtn.disabled = safeCurrentPage <= 1;
         paginationEl.appendChild(prevBtn);
 
@@ -291,7 +291,7 @@
         nextBtn.type = "button";
         nextBtn.className = "c-btn c-btn-ghost c-btn-sm";
         nextBtn.dataset.page = "next";
-        nextBtn.textContent = t("pagination.next", "下一页");
+        nextBtn.textContent = t("common.pagination.next", "下一页");
         nextBtn.disabled = safeCurrentPage >= safeTotalPages;
         paginationEl.appendChild(nextBtn);
     };

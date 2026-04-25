@@ -27,20 +27,20 @@
             <h2 class="title c-panel-title" data-i18n="match.form.people_title">技术者信息</h2>
             <div class="form-grid form-grid-spaced">
                 <div class="form-field">
-                    <label for="nation" data-i18n="match.form.nation">国籍</label>
+                    <label for="nation" data-i18n="common.field.nationality">国籍</label>
                     <select id="nation">
                         <option value="" data-i18n="common.select">请选择</option>
-                        <option value="0" data-i18n="match.form.nation.jp">日本籍</option>
-                        <option value="1" data-i18n="match.form.nation.other">外国籍</option>
+                        <option value="0" data-i18n="common.field.nationality.jp">日本籍</option>
+                        <option value="1" data-i18n="common.field.nationality.other">外国籍</option>
                     </select>
                 </div>
                 <div class="form-field">
-                    <label for="age" data-i18n="match.form.age">年龄</label>
-                    <input id="age" type="number" placeholder="例如：32" data-i18n-placeholder="match.form.age_placeholder">
+                    <label for="age" data-i18n="common.field.age">年龄</label>
+                    <input id="age" type="number" placeholder="例如：32" data-i18n-placeholder="common.field.age_placeholder">
                 </div>
                 <div class="form-field">
-                    <label for="price" data-i18n="match.form.price">金额</label>
-                    <input id="price" type="text" placeholder="例如：￥50,000" data-i18n-placeholder="match.form.price_placeholder">
+                    <label for="price" data-i18n="common.field.amount">金额</label>
+                    <input id="price" type="text" placeholder="例如：￥50,000" data-i18n-placeholder="common.field.amount_placeholder">
                 </div>
                 <div class="form-field">
                     <label for="resume-file" data-i18n="match.form.resume">技术者简历</label>
@@ -48,14 +48,14 @@
                     <div id="resume-source" class="hint" hidden></div>
                 </div>
                 <div class="form-field full">
-                    <label for="intro" data-i18n="match.form.intro">介绍文</label>
-                    <textarea id="intro" rows="10" placeholder="请输入人员介绍、技能或补充说明。" data-i18n-placeholder="match.form.intro_placeholder"></textarea>
+                    <label for="intro" data-i18n="common.field.intro">介绍文</label>
+                    <textarea id="intro" rows="10" placeholder="请输入人员介绍、技能或补充说明。" data-i18n-placeholder="common.field.intro_placeholder"></textarea>
                 </div>
             </div>
             <div class="c-filter-actions-bar">
                 <div class="c-filter-actions-left"></div>
                 <div class="c-filter-actions-right">
-                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="match.clear">清空</button>
+                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="common.clear">清空</button>
                     <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索</button>
                 </div>
             </div>
@@ -72,7 +72,7 @@
             <div class="c-filter-actions-bar">
                 <div class="c-filter-actions-left"></div>
                 <div class="c-filter-actions-right">
-                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="match.clear">清空</button>
+                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="common.clear">清空</button>
                     <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索</button>
                 </div>
             </div>
@@ -85,11 +85,11 @@
                     <h2 class="title c-panel-title" id="list-title" data-i18n="match.jobs">案件列表</h2>
                     <div class="filters c-filter-grid">
                         <div class="filter-group c-filter-group">
-                            <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
+                            <span class="filter-label c-filter-label" data-i18n="common.field.time">时间</span>
                             <div class="chip-row c-chip-row">
-                                <button class="chip c-chip active" data-range="all" type="button" data-i18n="match.range.all">全部</button>
-                                <button class="chip c-chip" data-range="today" type="button" data-i18n="match.range.today">今天</button>
-                                <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
+                                <button class="chip c-chip active" data-range="all" type="button" data-i18n="common.all">全部</button>
+                                <button class="chip c-chip" data-range="today" type="button" data-i18n="common.range.today">今天</button>
+                                <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="common.range.yesterday">昨天</button>
                             </div>
                         </div>
                         <div class="filter-group c-filter-group sender-group">
@@ -108,7 +108,7 @@
                     </div>
                     <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
                     <div id="detail-attachments" class="c-chip-row songxinhistory-attachments">
-                        <div class="songxin-empty-tip" data-i18n="songxinhistory.empty.attachments">暂无附件</div>
+                        <div class="songxin-empty-tip" data-i18n="common.empty.attachments">暂无附件</div>
                     </div>
                     <div class="detail-actions">
                         <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send">送信</button>
@@ -216,7 +216,7 @@
             const renderAttachments = (files = []) => {
                 if (!detailAttachments) return;
                 if (!Array.isArray(files) || !files.length) {
-                    detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+                    detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
                     return;
                 }
                 const items = files
@@ -228,7 +228,7 @@
                     });
                 detailAttachments.innerHTML = items.length
                     ? items.join('')
-                    : `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+                    : `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
             };
 
             const renderDetail = (target, text = '', highlights = []) => {
@@ -380,16 +380,16 @@
                 }
                 resumeSource.hidden = false;
                 if (activeResume.source === 'manual') {
-                    resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
+                    resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
                     return;
                 }
                 const safeName = sanitize(String(activeResume.name || 'resume'));
                 const safeUrl = sanitize(String(activeResume.url || ''));
                 if (safeUrl) {
-                    resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('match.resume.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
+                    resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('common.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
                     return;
                 }
-                resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
+                resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
             };
 
             const applyPrefill = () => {
@@ -541,7 +541,7 @@
                 renderList(items);
             } catch (err) {
                 console.error('fetch cases failed', err);
-                setLoading(t('match.failed') || '加载失败');
+                setLoading(t('common.load_failed') || '加载失败');
             }
         };
 

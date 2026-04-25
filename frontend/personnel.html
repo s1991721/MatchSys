@@ -443,11 +443,7 @@
 
     const permissionStorageKey = (employeeId) => `personnel_permission_${employeeId || "unknown"}`;
 
-    const requestPermissionJson = async (url, options = {}) => {
-        const response = await fetchWithAuth(url, options);
-        const data = await response.json();
-        return normalizeApiResponse(data);
-    };
+    const requestPermissionJson = window.requestJson;
 
     const fetchPermissionRoles = async () => {
         const res = await requestPermissionJson("/api/roles", {method: "GET"});
@@ -647,12 +643,10 @@
     }
 
     const createEmployee = async (payload) => {
-        const res = await fetchWithAuth(`/api/employees`, {
+        const responsePayload = await window.requestJson(`/api/employees`, {
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
+        if (!responsePayload.success) {
             const message = window.translateApiMessage
                 ? window.translateApiMessage(responsePayload.message)
                 : responsePayload.message;
@@ -662,13 +656,11 @@
     }
 
     const updateEmployee = async (id, payload) => {
-        const res = await fetchWithAuth(`/api/employees/${id}`, {
+        const responsePayload = await window.requestJson(`/api/employees/${id}`, {
             method: "PUT",
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
+        if (!responsePayload.success) {
             const message = window.translateApiMessage
                 ? window.translateApiMessage(responsePayload.message)
                 : responsePayload.message;
@@ -679,10 +671,8 @@
 
     const deleteEmployee = async (id) => {
         try {
-            const res = await fetchWithAuth(`/api/employees/${id}`, {method: "DELETE"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
+            const payload = await window.requestJson(`/api/employees/${id}`, {method: "DELETE"});
+            if (!payload.success) {
                 const message = window.translateApiMessage
                     ? window.translateApiMessage(payload.message)
                     : payload.message;
@@ -697,19 +687,15 @@
     const fetchEmployees = async () => {
         tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.loading")}</td></tr>`;
         try {
-            const params = new URLSearchParams();
-            if (currentFilters.keyword) params.append("keyword", currentFilters.keyword);
-            if (currentFilters.department && currentFilters.department !== "all") {
-                params.append("department", currentFilters.department);
-            }
-            params.append("page", String(currentPage));
-            params.append("page_size", String(pageSize));
-            const query = params.toString();
-            const url = query ? `/api/employees?${query}` : "/api/employees";
-            const res = await fetchWithAuth(url, {method: "GET"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
+            const params = createParams([
+                ["keyword", currentFilters.keyword],
+                ["department", currentFilters.department && currentFilters.department !== "all" ? currentFilters.department : ""],
+                ["page", String(currentPage)],
+                ["page_size", String(pageSize)],
+            ]);
+            const url = buildUrl("/api/employees", params);
+            const payload = await window.requestJson(url, {method: "GET"});
+            if (!payload.success) {
                 throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};
@@ -735,10 +721,8 @@
 
     const fetchDepartments = async () => {
         try {
-            const res = await fetchWithAuth("/api/employees/departments", {method: "GET"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
+            const payload = await window.requestJson("/api/employees/departments", {method: "GET"});
+            if (!payload.success) {
                 throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};

@@ -176,10 +176,8 @@
                     ["end_date", filters.end_date],
                 ]);
                 const url = window.buildUrl("/api/login-audit", params);
-                const res = await fetchWithAuth(url, { method: "GET" });
-                const data = await res.json();
-                const payload = window.normalizeApiResponse(data);
-                if (!res.ok || !payload.success) {
+                const payload = await window.requestJson(url, { method: "GET" });
+                if (!payload.success) {
                     throw new Error(payload.message || t("common.load_failed", "加载失败"));
                 }
                 const result = payload.data || {};

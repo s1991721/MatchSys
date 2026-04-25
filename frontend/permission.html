@@ -149,11 +149,7 @@
   let cachedMenus = [];
   let cachedRoles = [];
 
-  const requestJson = async (url, options = {}) => {
-    const response = await window.fetchWithAuth(url, options);
-    const raw = await response.json();
-    return window.normalizeApiResponse(raw);
-  };
+  const requestJson = window.requestJson;
 
   const getAllMenus = () => {
     return [...cachedMenus].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));

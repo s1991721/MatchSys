@@ -338,7 +338,7 @@
     const format = (key, vars, fallback) => (
       i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
     );
-    const locale = () => (i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN");
+    const locale = () => window.getAppLocale();
     const apiBase = "/api/sys-settings";
     const tasksApi = "/api/sys-tasks";
     const taskLogsApi = "/api/sys-tasks/logs";
@@ -625,7 +625,7 @@
       return `
       <li class="task-item">
         <div class="task-head">
-          <span class="task-title">${format("system_settings.task.title", { num: String(index + 1).padStart(2, "0") }, `任务 ${String(index + 1).padStart(2, "0")}`)}</span>
+          <span class="task-title">${format("system_settings.task.title", { num: window.pad2(index + 1) }, `任务 ${window.pad2(index + 1)}`)}</span>
           <span class="inline-status" id="task-status-${index}">${t("system_settings.task.status.not_run", "未执行")}</span>
         </div>
         <form class="form-grid">
@@ -776,7 +776,7 @@
       return `
       <li class="config-item">
         <div class="config-head">
-          <span class="config-title">${format("system_settings.sendmsg.item_title", { num: String(index + 1).padStart(2, "0") }, `配置 ${String(index + 1).padStart(2, "0")}`)}</span>
+          <span class="config-title">${format("system_settings.sendmsg.item_title", { num: window.pad2(index + 1) }, `配置 ${window.pad2(index + 1)}`)}</span>
           <span class="inline-status" id="sendmsg-status-${index}"></span>
         </div>
         <form class="form-grid">
@@ -1098,12 +1098,7 @@
       }
     };
 
-    const formatDateOnly = (raw) => {
-      if (!raw) return "";
-      const date = new Date(raw);
-      if (Number.isNaN(date.getTime())) return String(raw);
-      return date.toLocaleDateString(locale());
-    };
+    const formatDateOnly = (raw) => window.formatLocaleDate(raw, "");
 
     const setAiTestStatus = (data) => {
       if (!aiTestStatus) return;
@@ -1438,8 +1433,8 @@
       const task = systemTasks[index] || {};
       const fallbackName = format(
         "system_settings.task.title",
-        { num: String(index + 1).padStart(2, "0") },
-        `任务 ${String(index + 1).padStart(2, "0")}`
+        { num: window.pad2(index + 1) },
+        `任务 ${window.pad2(index + 1)}`
       );
       const name = (task.name || "").trim() || fallbackName;
       activeTaskLog = { index, id: task.id || null, name };
@@ -1451,8 +1446,8 @@
       if (taskLogEnd && !taskLogEnd.value) {
         const today = new Date();
         const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, "0");
-        const dd = String(today.getDate()).padStart(2, "0");
+        const mm = window.pad2(today.getMonth() + 1);
+        const dd = window.pad2(today.getDate());
         taskLogEnd.value = `${yyyy}-${mm}-${dd}`;
       }
       taskLogModal.classList.add("show");

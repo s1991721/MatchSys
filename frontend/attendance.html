@@ -243,10 +243,8 @@
         setDetailMessage(wrapper, renderDetailHeader(fallbackName, employeeId), t("attendance.detail.loading"));
 
         try {
-            const response = await fetchWithAuth(url, { method: "GET" });
-            const data = await response.json();
-            const payload = normalizeApiResponse(data);
-            if (!response.ok || !payload.success) {
+            const payload = await window.requestJson(url, { method: "GET" });
+            if (!payload.success) {
                 setDetailMessage(
                     wrapper,
                     renderDetailHeader(fallbackName, employeeId),
@@ -344,10 +342,8 @@
         }
 
         try {
-            const response = await fetchWithAuth(url, { method: "GET" });
-            const data = await response.json();
-            const payload = normalizeApiResponse(data);
-            if (!response.ok || !payload.success) {
+            const payload = await window.requestJson(url, { method: "GET" });
+            if (!payload.success) {
                 attendanceData = [];
                 setNoData(payload.message || t("attendance.failed"));
                 return;

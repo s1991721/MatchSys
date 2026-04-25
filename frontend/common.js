@@ -1,13 +1,32 @@
 (function () {
-    const i18n = window.I18N || null;
-    const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
-    const format = (key, vars, fallback) => (
-        i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
-    );
+    const getI18n = () => window.I18N || null;
+    const t = (key, fallback) => {
+        const i18n = getI18n();
+        return i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback;
+    };
+    const format = (key, vars, fallback) => {
+        const i18n = getI18n();
+        return i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key);
+    };
 
     const resolveLabel = (key, fallback) => {
         const value = t(key, fallback);
         return value === key ? fallback : value;
+    };
+    const pad2 = (value) => String(value).padStart(2, "0");
+    window.pad2 = pad2;
+
+    window.getAppLocale = function () {
+        const i18n = getI18n();
+        return i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN";
+    };
+
+    const redirectTopOrSelf = (target) => {
+        if (window.top && window.top !== window) {
+            window.top.location.href = target;
+        } else {
+            window.location.href = target;
+        }
     };
 
     const LOCALIZED_FILE_SKIP_SELECTOR = [
@@ -100,17 +119,15 @@
             const fieldLabel = fieldKey ? resolveLabel(fieldKey, rawField) : rawField;
             return format("common.error.missing_field", {field: fieldLabel}, `Missing field: ${fieldLabel}`);
         }
-        if (message === "Invalid date") {
-            return resolveLabel("common.error.invalid_date", message);
-        }
-        if (message === "Activation required") {
-            return resolveLabel("common.error.activation_required", message);
-        }
-        if (message === "请先登录") {
-            return resolveLabel("common.error.login_required", message);
-        }
-        if (message === "Internal server error") {
-            return resolveLabel("common.error.internal_server_error", message);
+        const messageKeyMap = {
+            "Invalid date": "common.error.invalid_date",
+            "Activation required": "common.error.activation_required",
+            "请先登录": "common.error.login_required",
+            "Internal server error": "common.error.internal_server_error",
+        };
+        const messageKey = messageKeyMap[message];
+        if (messageKey) {
+            return resolveLabel(messageKey, message);
         }
         return message;
     };
@@ -128,21 +145,11 @@
             const payload = await res.json().catch(() => ({}));
             const message = payload?.message || `HTTP ${res.status}`;
             if (res.status === 401) {
-                const target = "login.html";
-                if (window.top && window.top !== window) {
-                    window.top.location.href = target;
-                } else {
-                    window.location.href = target;
-                }
+                redirectTopOrSelf("login.html");
                 throw new Error("Unauthorized");
             }
             if (res.status === 403) {
-                const target = "login.html?activation=1";
-                if (window.top && window.top !== window) {
-                    window.top.location.href = target;
-                } else {
-                    window.location.href = target;
-                }
+                redirectTopOrSelf("login.html?activation=1");
             }
             const error = new Error(translateApiMessage(message));
             error.payload = payload;
@@ -182,11 +189,23 @@
         };
     };
 
+    window.requestJson = async function (url, options = {}, settings = {}) {
+        const response = await window.fetchWithAuth(url, options);
+        const raw = await response.json();
+        const payload = window.normalizeApiResponse(raw);
+        if (settings.throwOnFailure && !payload.success) {
+            const message = payload.message
+                ? translateApiMessage(payload.message)
+                : (settings.fallbackMessage || t("common.load_failed", "Load failed"));
+            throw new Error(message);
+        }
+        return payload;
+    };
+
     //获取当前月
     window.getCurrentMonth = function () {
         const today = new Date();
-        const month = String(today.getMonth() + 1).padStart(2, "0");
-        return `${today.getFullYear()}-${month}`;
+        return `${today.getFullYear()}-${pad2(today.getMonth() + 1)}`;
     };
 
     // 日期格式化
@@ -195,9 +214,39 @@
         const d = new Date(raw);
         if (Number.isNaN(d.getTime())) return raw;
         const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, "0");
-        const day = String(d.getDate()).padStart(2, "0");
+        const m = pad2(d.getMonth() + 1);
+        const day = pad2(d.getDate());
         return `${y}-${m}-${day}`;
+    };
+
+    window.datePart = function (value) {
+        if (!value) return "";
+        const text = String(value);
+        return text.length >= 10 ? text.slice(0, 10) : text;
+    };
+
+    window.formatLocaleDate = function (raw, fallback = "") {
+        if (!raw) return fallback;
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) return String(raw);
+        return date.toLocaleDateString(window.getAppLocale());
+    };
+
+    window.formatMonthDay = function (raw, fallback = "") {
+        if (!raw) return fallback;
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) return String(raw);
+        return `${date.getMonth() + 1}月${date.getDate()}日`;
+    };
+
+    window.formatMonthDayTime = function (raw, fallback = "") {
+        if (!raw) return fallback;
+        const date = new Date(raw);
+        if (Number.isNaN(date.getTime())) return String(raw);
+        return [
+            `${date.getMonth() + 1}月${date.getDate()}日`,
+            `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`,
+        ].join(" ");
     };
 
     // 根据生日计算年龄
@@ -216,8 +265,6 @@
 
     // 根据契约类型返回字符串
     window.contractTypeToLabel = function (value) {
-        const i18n = window.I18N;
-        const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
         const mapping = {
             1: t("people.contract.regular", "正社员"),
             2: t("people.contract.contract", "契约社员"),
@@ -227,7 +274,7 @@
     };
 
     // 分页页码构建
-    window.buildPageItems = function (totalPages, activePage) {
+    const buildPageItems = (totalPages, activePage) => {
         if (totalPages <= 7) {
             return Array.from({length: totalPages}, (_, i) => i + 1);
         }
@@ -239,6 +286,26 @@
         if (end < totalPages - 1) pages.push("…");
         pages.push(totalPages);
         return pages;
+    };
+
+    const createPaginationButton = (label, page, options = {}) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "c-btn c-btn-ghost c-btn-sm";
+        btn.textContent = String(label);
+        if (page) {
+            btn.dataset.page = String(page);
+        }
+        if (options.disabled) {
+            btn.disabled = true;
+        }
+        if (options.active) {
+            btn.classList.add("is-active");
+        }
+        if (options.ellipsis) {
+            btn.classList.add("is-ellipsis");
+        }
+        return btn;
     };
 
     // 渲染分页
@@ -255,45 +322,31 @@
             paginationEl.appendChild(summaryEl);
         }
 
-        const prevBtn = document.createElement("button");
-        prevBtn.type = "button";
-        prevBtn.className = "c-btn c-btn-ghost c-btn-sm";
-        prevBtn.dataset.page = "prev";
-        prevBtn.textContent = t("common.pagination.prev", "上一页");
-        prevBtn.disabled = safeCurrentPage <= 1;
-        paginationEl.appendChild(prevBtn);
+        paginationEl.appendChild(createPaginationButton(
+            t("common.pagination.prev", "上一页"),
+            "prev",
+            {disabled: safeCurrentPage <= 1}
+        ));
 
         if (!pagesEl) {
             pagesEl = document.createElement("div");
             pagesEl.className = "pagination-pages";
         }
         pagesEl.innerHTML = "";
-        const pageItems = window.buildPageItems(safeTotalPages, safeCurrentPage);
+        const pageItems = buildPageItems(safeTotalPages, safeCurrentPage);
         pagesEl.append(...pageItems.map((page) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "c-btn c-btn-ghost c-btn-sm";
-            btn.textContent = String(page);
             if (page === "…") {
-                btn.disabled = true;
-                btn.classList.add("is-ellipsis");
-                return btn;
+                return createPaginationButton(page, "", {disabled: true, ellipsis: true});
             }
-            btn.dataset.page = String(page);
-            if (page === safeCurrentPage) {
-                btn.classList.add("is-active");
-            }
-            return btn;
+            return createPaginationButton(page, page, {active: page === safeCurrentPage});
         }));
         paginationEl.appendChild(pagesEl);
 
-        const nextBtn = document.createElement("button");
-        nextBtn.type = "button";
-        nextBtn.className = "c-btn c-btn-ghost c-btn-sm";
-        nextBtn.dataset.page = "next";
-        nextBtn.textContent = t("common.pagination.next", "下一页");
-        nextBtn.disabled = safeCurrentPage >= safeTotalPages;
-        paginationEl.appendChild(nextBtn);
+        paginationEl.appendChild(createPaginationButton(
+            t("common.pagination.next", "下一页"),
+            "next",
+            {disabled: safeCurrentPage >= safeTotalPages}
+        ));
     };
 
     // 分页点击绑定（通过钩子处理具体逻辑）

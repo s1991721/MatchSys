@@ -334,9 +334,7 @@
                 ["page_size", String(pageSize)],
             ]);
             const url = window.buildUrl("/api/customers", params);
-            const response = await fetchWithAuth(url, {method: "GET"});
-            const data = await response.json();
-            const payload = normalizeApiResponse(data);
+            const payload = await window.requestJson(url, {method: "GET"});
             if (!payload.success) return null;
 
             const result = payload.data || {};
@@ -526,10 +524,8 @@
             ["page_size", String(pageSize)],
         ]);
         const url = window.buildUrl("/api/customers", params);
-        fetchWithAuth(url, {method: "GET"})
-            .then((response) => response.json())
-            .then((data) => {
-                const payload = normalizeApiResponse(data);
+        window.requestJson(url, {method: "GET"})
+            .then((payload) => {
                 if (!payload.success) {
                     cachedItems = [];
                     renderRows([], 0, 1, 1);
@@ -572,10 +568,8 @@
         bulkEmailButton.disabled = !enabled;
     };
 
-    fetchWithAuth("/api/employees/names", {method: "GET"})
-        .then((response) => response.json())
-        .then((data) => {
-            const payload = normalizeApiResponse(data);
+    window.requestJson("/api/employees/names", {method: "GET"})
+        .then((payload) => {
             if (payload.success && Array.isArray(payload.data?.names)) {
                 renderNames(payload.data?.names);
             }

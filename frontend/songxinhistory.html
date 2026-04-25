@@ -197,12 +197,7 @@
                 isLoading = true;
                 lastQueryKey = queryKey;
                 try {
-                    const resp = await fetchWithAuth(`/api/send-history?${queryKey}`, { method: 'GET' });
-                    if (!resp.ok) {
-                        throw new Error(t('common.load_failed'));
-                    }
-                    const data = await resp.json();
-                    const payload = normalizeApiResponse(data);
+                    const payload = await window.requestJson(window.buildUrl('/api/send-history', params), { method: 'GET' });
                     if (!payload.success) {
                         throw new Error(payload.message || t('common.load_failed'));
                     }

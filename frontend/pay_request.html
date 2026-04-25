@@ -356,14 +356,13 @@
         map.clear();
         return;
       }
-      const params = new URLSearchParams();
-      params.append("company_name", keyword);
-      params.append("page", "1");
-      params.append("page_size", "10");
-      fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" })
-        .then((response) => response.json())
-        .then((data) => {
-          const payload = normalizeApiResponse(data);
+      const params = window.createParams([
+        ["company_name", keyword],
+        ["page", "1"],
+        ["page_size", "10"],
+      ]);
+      window.requestJson(window.buildUrl("/api/customers", params), { method: "GET" })
+        .then((payload) => {
           const result = payload.data || {};
           const items = Array.isArray(result.items) ? result.items : [];
           renderPayCustomerOptions(listEl, map, items);

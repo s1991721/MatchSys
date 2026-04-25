@@ -532,9 +532,7 @@
     const fetchTechnicianById = async (employeeId) => {
         if (!employeeId) return null;
         try {
-            const res = await fetchWithAuth(`/api/technicians/${employeeId}`, {method: 'GET'});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
+            const payload = await window.requestJson(`/api/technicians/${employeeId}`, {method: 'GET'});
             if (!payload.success) return null;
             const result = payload.data || {};
             const item = result.item || {};
@@ -547,20 +545,17 @@
 
     const fetchPeople = async () => {
         try {
-            const params = new URLSearchParams();
-            params.set('page', String(currentPage));
-            params.set('page_size', String(pageSize));
-            if (currentFilters.keyword) params.set('keyword', currentFilters.keyword);
-            if (currentFilters.ageMax !== null) params.set('age_max', String(currentFilters.ageMax));
-            if (currentFilters.nationality) params.set('nationality', currentFilters.nationality);
-            if (currentFilters.priceMax !== null) params.set('price_max', String(currentFilters.priceMax));
-            if (currentFilters.contractType !== null) params.set('contract_type', String(currentFilters.contractType));
-            if (currentFilters.businessStatus !== null) params.set('business_status', String(currentFilters.businessStatus));
-
-
-            const res = await fetchWithAuth(`/api/technicians?${params.toString()}`, {method: 'GET'});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
+            const params = createParams([
+                ['page', String(currentPage)],
+                ['page_size', String(pageSize)],
+                ['keyword', currentFilters.keyword],
+                ['age_max', currentFilters.ageMax !== null ? String(currentFilters.ageMax) : ''],
+                ['nationality', currentFilters.nationality],
+                ['price_max', currentFilters.priceMax !== null ? String(currentFilters.priceMax) : ''],
+                ['contract_type', currentFilters.contractType !== null ? String(currentFilters.contractType) : ''],
+                ['business_status', currentFilters.businessStatus !== null ? String(currentFilters.businessStatus) : ''],
+            ]);
+            const payload = await window.requestJson(buildUrl('/api/technicians', params), {method: 'GET'});
             if (!payload.success) {
                 throw new Error(payload.message || t("common.load_failed"));
             }
@@ -614,10 +609,8 @@
     const prefillFromEmployee = async (employeeId) => {
         if (!employeeId) return;
         try {
-            const res = await fetchWithAuth(`/api/employees/${employeeId}`, {method: 'GET'});
-            if (!res.ok) return;
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
+            const payload = await window.requestJson(`/api/employees/${employeeId}`, {method: 'GET'});
+            if (!payload.success) return;
             const result = payload.data || {};
             const emp = result.item || {};
             personForm.name.value = emp.name || '';

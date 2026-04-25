@@ -366,11 +366,7 @@
         }
         const t = (key) => (i18n ? i18n.t(key) : key);
         const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
-        const formatDateValue = (value) => {
-            if (!value) return "";
-            const text = String(value);
-            return text.length >= 10 ? text.slice(0, 10) : text;
-        };
+        const formatDateValue = window.datePart;
         const readOwnerSelect = (selectEl) => {
             if (!selectEl) return { id: null, name: "" };
             const selected = selectEl.options[selectEl.selectedIndex];
@@ -696,22 +692,21 @@
         }
 
         const fetchOrders = () => {
-            const params = new URLSearchParams();
-            if (filters.orderNo.value.trim()) params.append("order_no", filters.orderNo.value.trim());
-            if (filters.project.value.trim()) params.append("project_name", filters.project.value.trim());
-            if (filters.customerId.value.trim()) params.append("customer_id", filters.customerId.value.trim());
-            if (filters.technician.value.trim()) params.append("technician_name", filters.technician.value.trim());
-            if (filters.status.value && filters.status.value !== "全部") params.append("status", filters.status.value);
-            if (filters.onlySelf && filters.onlySelf.checked) params.append("only_self", "1");
-            if (filters.start.value) params.append("created_start", filters.start.value);
-            if (filters.end.value) params.append("created_end", filters.end.value);
-            params.append("page", String(currentPage));
-            params.append("page_size", String(pageSize));
+            const params = window.createParams([
+                ["order_no", filters.orderNo.value.trim()],
+                ["project_name", filters.project.value.trim()],
+                ["customer_id", filters.customerId.value.trim()],
+                ["technician_name", filters.technician.value.trim()],
+                ["status", filters.status.value && filters.status.value !== "全部" ? filters.status.value : ""],
+                ["only_self", filters.onlySelf && filters.onlySelf.checked ? "1" : ""],
+                ["created_start", filters.start.value],
+                ["created_end", filters.end.value],
+                ["page", String(currentPage)],
+                ["page_size", String(pageSize)],
+            ]);
             const baseUrl = currentView === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            fetchWithAuth(`${baseUrl}?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            window.requestJson(window.buildUrl(baseUrl, params), { method: "GET" })
+                .then((payload) => {
                     if (!payload.success) {
                         currentItems = [];
                         renderRows([], 0, 1, 1);
@@ -906,14 +901,13 @@
                 map.clear();
                 return;
             }
-            const params = new URLSearchParams();
-            if (keyword) params.append("company_name", keyword);
-            params.append("page", "1");
-            params.append("page_size", keyword ? "10" : "5");
-            fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            const params = window.createParams([
+                ["company_name", keyword],
+                ["page", "1"],
+                ["page_size", keyword ? "10" : "5"],
+            ]);
+            window.requestJson(window.buildUrl("/api/customers", params), { method: "GET" })
+                .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
                     renderCustomerOptions(listEl, map, items);
@@ -945,13 +939,12 @@
 
         const loadOwnerSelectOptions = (selectEl, currentValue) => {
             if (!selectEl) return;
-            const params = new URLSearchParams();
-            params.append("role_id", String(TECHNICIAN_ROLE_ID));
-            params.append("exclude", "1");
-            fetchWithAuth(`/api/user-logins/by-role?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            const params = window.createParams([
+                ["role_id", String(TECHNICIAN_ROLE_ID)],
+                ["exclude", "1"],
+            ]);
+            window.requestJson(window.buildUrl("/api/user-logins/by-role", params), { method: "GET" })
+                .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
                     selectEl.innerHTML = "";
@@ -1004,13 +997,12 @@
                 map.clear();
                 return;
             }
-            const params = new URLSearchParams();
-            if (keyword) params.append("keyword", keyword);
-            params.append("page_size", keyword ? "10" : "5");
-            fetchWithAuth(`/api/technicians?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            const params = window.createParams([
+                ["keyword", keyword],
+                ["page_size", keyword ? "10" : "5"],
+            ]);
+            window.requestJson(window.buildUrl("/api/technicians", params), { method: "GET" })
+                .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
                     renderTechnicianOptions(listEl, map, items);

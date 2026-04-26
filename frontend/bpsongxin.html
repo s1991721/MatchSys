@@ -146,7 +146,6 @@
             if (window.initDialogCloseBehavior) {
                 window.initDialogCloseBehavior({ dialogs: [templateInfoDialog] });
             }
-            const fetchWithAuth = window.fetchWithAuth;
             const attachments = [];
             const selectionKey = 'matchSelection';
             const matchMailType = 2;
@@ -290,17 +289,12 @@
                     const endpoint = scene === 'technician'
                         ? `${API_BASE}/api/extract-technician-detail`
                         : `${API_BASE}/api/extract-project-detail`;
-                    const res = await fetchWithAuth(endpoint, {
+                    const payload = await window.requestJson(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ body: jobText })
                     });
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}`);
-                    }
-                    const data = await res.json();
-                    const payload = normalizeApiResponse(data);
                     if (!payload.success) {
                         throw new Error(payload.message || '解析失败');
                     }
@@ -378,15 +372,10 @@
                 if (!forceRefresh && templateSettingsCache) {
                     return templateSettingsCache;
                 }
-                const res = await fetchWithAuth(`${API_BASE}/api/sys-settings/${templateSection}`, {
+                const payload = await window.requestJson(`${API_BASE}/api/sys-settings/${templateSection}`, {
                     method: 'GET',
                     credentials: 'include'
                 });
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-                const data = await res.json().catch(() => ({}));
-                const payload = normalizeApiResponse(data);
                 if (!payload.success) {
                     throw new Error(payload.message || '加载模板失败');
                 }
@@ -471,17 +460,12 @@
                         ...currentSettings,
                         [templateName]: normalizeMultiline(templateContentInput.value)
                     };
-                    const res = await fetchWithAuth(`${API_BASE}/api/sys-settings/${templateSection}`, {
+                    const payload = await window.requestJson(`${API_BASE}/api/sys-settings/${templateSection}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ settings: nextSettings })
                     });
-                    if (!res.ok) {
-                        throw new Error(`HTTP ${res.status}`);
-                    }
-                    const data = await res.json().catch(() => ({}));
-                    const payload = normalizeApiResponse(data);
                     if (!payload.success) {
                         throw new Error(payload.message || '保存模板失败');
                     }
@@ -575,20 +559,12 @@
                         }
                     }
 
-                    const res = await fetchWithAuth(`${API_BASE}/api/send-mail`, {
+                    const responsePayload = await window.requestJson(`${API_BASE}/api/send-mail`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify(payload)
                     });
-
-                    if (!res.ok) {
-                        const err = await res.json().catch(() => ({}));
-                        const errPayload = normalizeApiResponse(err);
-                        throw new Error(errPayload.message || `HTTP ${res.status}`);
-                    }
-                    const data = await res.json().catch(() => ({}));
-                    const responsePayload = normalizeApiResponse(data);
                     if (!responsePayload.success) {
                         throw new Error(responsePayload.message || '发送失败');
                     }

@@ -836,13 +836,11 @@
             if (view === "accept" && !validateAcceptForm()) return;
             const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
             const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            fetchWithAuth(url, {
+            window.requestJson(url, {
                 method: "POST",
                 body: JSON.stringify(payload),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    const responsePayload = normalizeApiResponse(data);
+                .then((responsePayload) => {
                     if (!responsePayload.success) {
                         alert(responsePayload.message || t("order.action.create_failed"));
                         return;
@@ -862,13 +860,11 @@
             const url = currentView === "accept"
                 ? `/api/sales-orders/${currentDetailId}`
                 : `/api/purchase-orders/${currentDetailId}`;
-            fetchWithAuth(url, {
+            window.requestJson(url, {
                 method: "PUT",
                 body: JSON.stringify(payload),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    const responsePayload = normalizeApiResponse(data);
+                .then((responsePayload) => {
                     if (!responsePayload.success) {
                         alert(responsePayload.message || t("common.save_failed"));
                         return;

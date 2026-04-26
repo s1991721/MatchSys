@@ -522,12 +522,10 @@
                     const endpoint = view === 'cases'
                         ? '/api/mail-technicians/search'
                         : '/api/mail-projects/search';
-                    const response = await window.fetchWithAuth(endpoint, {
+                    const result = await window.requestJson(endpoint, {
                         method: 'POST',
                         body: JSON.stringify(payload)
                     });
-                    const raw = await response.json();
-                    const result = window.normalizeApiResponse ? window.normalizeApiResponse(raw) : raw;
                 if (!result || result.success === false) {
                     throw new Error(result?.message || '加载失败');
                 }

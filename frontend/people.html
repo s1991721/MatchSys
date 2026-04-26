@@ -627,13 +627,11 @@
     const savePerson = async (payload) => {
         const method = editingId ? 'PUT' : 'POST';
         const url = editingId ? `/api/technicians/${editingId}` : '/api/technicians';
-        const res = await fetchWithAuth(url, {
+        const responsePayload = await window.requestJson(url, {
             method,
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
+        if (!responsePayload.success) {
             throw new Error(responsePayload.message || t("common.save_failed"));
         }
         return responsePayload.data || {};
@@ -642,13 +640,11 @@
     const uploadSsFile = async (employeeId, file) => {
         const formData = new FormData();
         formData.append('file', file);
-        const res = await fetchWithAuth(`/api/technicians/${employeeId}/ss`, {
+        const responsePayload = await window.requestJson(`/api/technicians/${employeeId}/ss`, {
             headers: {},
             body: formData
         });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
+        if (!responsePayload.success) {
             throw new Error(responsePayload.message || t("people.upload_failed"));
         }
         return responsePayload.data || {};
@@ -841,11 +837,9 @@
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);
             if (target && confirm(format("people.confirm.delete", { name: target.name }))) {
-                fetchWithAuth(`/api/technicians/${deleteId}`, {method: 'DELETE'})
-                    .then(res => res.json().then(data => ({res, data})))
-                    .then(({res, data}) => {
-                        const responsePayload = normalizeApiResponse(data);
-                        if (!res.ok || !responsePayload.success) {
+                window.requestJson(`/api/technicians/${deleteId}`, {method: 'DELETE'})
+                    .then((responsePayload) => {
+                        if (!responsePayload.success) {
                             throw new Error(responsePayload.message || t("people.error.delete_failed"));
                         }
                         return fetchPeople();

@@ -202,8 +202,7 @@
             page_size: "100",
             company_name: keyword,
           });
-          const res = await fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" });
-          const payload = await res.json();
+          const payload = await window.requestJson(`/api/customers?${params.toString()}`, { method: "GET" });
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取客户联系人失败");
           }
@@ -422,8 +421,7 @@
         }
         try {
           setStatus("加载邮件内容...", false);
-          const res = await fetchWithAuth(`/api/my-mails/${encodeURIComponent(mailId)}`, { method: "GET" });
-          const payload = await res.json();
+          const payload = await window.requestJson(`/api/my-mails/${encodeURIComponent(mailId)}`, { method: "GET" });
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件失败");
           }
@@ -458,7 +456,7 @@
           setStatus("加载邮件列表...", false);
           setListLoading(true, forceRefresh ? "refresh" : "search");
           if (forceRefresh) {
-            await fetchWithAuth("/api/my-mails/sync", {
+            await window.requestJson("/api/my-mails/sync", {
               method: "POST",
               body: JSON.stringify({}),
             });
@@ -470,8 +468,7 @@
             if (currentFilters.send_date) params.set("send_date", currentFilters.send_date);
           }
           const endpoint = hasFilters() ? "/api/my-mails/query" : "/api/my-mails";
-          const res = await fetchWithAuth(`${endpoint}?${params.toString()}`, { method: "GET" });
-          const payload = await res.json();
+          const payload = await window.requestJson(`${endpoint}?${params.toString()}`, { method: "GET" });
           if (!payload || payload.success === false) {
             throw new Error((payload && payload.message) || "读取邮件列表失败");
           }
@@ -668,11 +665,10 @@
 
         try {
           setStatus("发送中...", false);
-          const res = await fetchWithAuth("/api/send-mail", {
+          const result = await window.requestJson("/api/send-mail", {
             method: "POST",
             body: JSON.stringify(payload),
           });
-          const result = await res.json();
           if (!result || result.success === false) {
             throw new Error((result && result.message) || "发送失败");
           }

@@ -641,7 +641,11 @@
         } catch (error) {
             console.error("save bulk mail context failed", error);
         }
-        window.location.href = "bulk_email.html";
+        if (window.top && window.top !== window) {
+            window.top.postMessage({type: "route:change", src: "bulk_email.html"}, "*");
+        } else {
+            window.location.href = "bulk_email.html";
+        }
     });
 
     searchButton.addEventListener("click", () => {

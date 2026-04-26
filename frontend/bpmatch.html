@@ -1020,7 +1020,11 @@
             console.error(t("match.cache_failed"), err);
         }
 
-        window.location.href = 'bulk_email.html';
+        if (window.top && window.top !== window) {
+            window.top.postMessage({type: 'route:change', src: 'bulk_email.html'}, '*');
+        } else {
+            window.location.href = 'bulk_email.html';
+        }
     });
 
 </script>

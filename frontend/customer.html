@@ -325,18 +325,14 @@
 
     bulkEmailButton.addEventListener("click", () => {
         if (selectedCustomerIds.size === 0) return;
-        const selectedItems = cachedItems.filter((item) => selectedCustomerIds.has(String(item.id)));
         try {
-            localStorage.removeItem("bulkMailPrefill");
-            sessionStorage.removeItem("bulkMailPrefill");
-            const contextPayload = JSON.stringify({
+            window.MatchSys.clearStoredKey("bulkMailPrefill");
+            const contextPayload = {
                 selected_ids: Array.from(selectedCustomerIds),
-                selected_items: selectedItems,
                 source: "customer",
                 updatedAt: Date.now(),
-            });
-            localStorage.setItem("bulkMailContext", contextPayload);
-            sessionStorage.setItem("bulkMailContext", contextPayload);
+            };
+            window.MatchSys.writeJSONToSessionStorage("bulkMailContext", contextPayload);
         } catch (error) {
             console.error("save bulk mail context failed", error);
         }
@@ -826,9 +822,9 @@
                 const result = payload.data || {};
                 const meta = payload.meta || {};
                 cachedItems = Array.isArray(result.items) ? result.items : [];
-                const total = meta.total
-                const page = meta.page
-                const totalPages = meta.total_pages
+                const total = meta.total;
+                const page = meta.page;
+                const totalPages = meta.total_pages;
                 renderRows(cachedItems, total, page, totalPages);
             })
             .catch(() => {

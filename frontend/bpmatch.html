@@ -981,7 +981,7 @@
         };
 
         try {
-            localStorage.setItem('matchSelection', JSON.stringify(payload));
+            window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
         } catch (err) {
             console.error(t("match.cache_failed"), err);
         }
@@ -1005,11 +1005,8 @@
         };
 
         try {
-            const payload = JSON.stringify(prefill);
-            localStorage.removeItem('bulkMailContext');
-            sessionStorage.removeItem('bulkMailContext');
-            localStorage.setItem('bulkMailPrefill', payload);
-            sessionStorage.setItem('bulkMailPrefill', payload);
+            window.MatchSys.clearStoredKey('bulkMailContext');
+            window.MatchSys.writeJSONToSessionStorage('bulkMailPrefill', prefill);
         } catch (err) {
             console.error(t("match.cache_failed"), err);
         }

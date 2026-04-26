@@ -371,10 +371,11 @@
                 localStorage.setItem("tech_edit_employee_id", String(id));
                 const target = allEmployees.find(item => String(item.id) === String(id));
                 if (target) {
-                    localStorage.setItem(TECH_PREFILL_KEY, JSON.stringify({
+                    window.MatchSys.writeJSONToLocalStorage(TECH_PREFILL_KEY, {
                         name: target.name || "",
-                        birthday: target.birthday || ""
-                    }));
+                        birthday: target.birthday || "",
+                        updatedAt: Date.now()
+                    });
                 }
             } catch (err) {
             }
@@ -565,9 +566,7 @@
 
     const loadSavedPermission = (employeeId) => {
         try {
-            const raw = localStorage.getItem(permissionStorageKey(employeeId));
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
+            const parsed = window.MatchSys.readJSONFromLocalStorage(permissionStorageKey(employeeId));
             if (!parsed || typeof parsed !== "object") return null;
             return parsed;
         } catch (err) {
@@ -600,10 +599,11 @@
             throw new Error(res.message || t("personnel.error.update_failed"));
         }
         try {
-            localStorage.setItem(permissionStorageKey(employeeId), JSON.stringify({
+            window.MatchSys.writeJSONToLocalStorage(permissionStorageKey(employeeId), {
                 roleId: payload.role_id,
-                menuList: payload.menu_list
-            }));
+                menuList: payload.menu_list,
+                updatedAt: Date.now()
+            });
         } catch (err) {
         }
     };

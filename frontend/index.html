@@ -492,16 +492,22 @@
         .split("#")[0]
         .trim();
       const readMenuList = () => {
-        let raw = "";
+        let stored = null;
         try {
-          raw = localStorage.getItem(MENU_KEY) || "";
+          stored = window.MatchSys.readJSONFromLocalStorage(MENU_KEY);
         } catch (e) {
-          raw = "";
+          stored = null;
         }
-        if (!raw && sessionMenuList) {
-          try { localStorage.setItem(MENU_KEY, String(sessionMenuList)); } catch (e) {}
-          raw = String(sessionMenuList);
+        if (!stored && sessionMenuList) {
+          stored = { menuList: sessionMenuList, updatedAt: Date.now() };
+          try { window.MatchSys.writeJSONToLocalStorage(MENU_KEY, stored); } catch (e) {}
         }
+        const rawValue = stored && typeof stored === "object" && "menuList" in stored
+          ? stored.menuList
+          : stored;
+        if (Array.isArray(rawValue)) return rawValue;
+        if (rawValue === "*") return "*";
+        let raw = rawValue == null ? "" : String(rawValue);
         if (!raw) return [];
         if (raw === "*") return "*";
         try {

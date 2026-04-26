@@ -254,26 +254,6 @@
                 return active ? active.dataset.view : 'people';
             };
 
-            const getSharedStorage = () => {
-                try {
-                    if (window.top && window.top.localStorage) {
-                        return window.top.localStorage;
-                    }
-                } catch (error) {
-                }
-                return localStorage;
-            };
-
-            const getSessionStorage = () => {
-                try {
-                    if (window.top && window.top.sessionStorage) {
-                        return window.top.sessionStorage;
-                    }
-                } catch (error) {
-                }
-                return sessionStorage;
-            };
-
             const readPageState = () => ({
                 view: getActiveView(),
                 range: filters.range || 'all',
@@ -283,13 +263,13 @@
                 intro: introInput ? introInput.value : '',
                 caseInfo: caseInfoInput ? caseInfoInput.value : '',
                 sender: senderInput ? senderInput.value : '',
-                resumePrefill: resumeState.prefill || null
+                resumePrefill: resumeState.prefill || null,
+                updatedAt: Date.now()
             });
 
             const persistPageState = () => {
                 try {
-                    const storage = getSessionStorage();
-                    storage.setItem(pageStateKey, JSON.stringify(readPageState()));
+                    window.MatchSys.writeJSONToSessionStorage(pageStateKey, readPageState());
                 } catch (error) {
                 }
             };
@@ -297,8 +277,7 @@
             const applyPageState = () => {
                 let payload = null;
                 try {
-                    const storage = getSessionStorage();
-                    payload = JSON.parse(storage.getItem(pageStateKey) || 'null');
+                    payload = window.MatchSys.readJSONFromSessionStorage(pageStateKey);
                 } catch (error) {
                     payload = null;
                 }
@@ -389,8 +368,7 @@
             const applyPrefill = () => {
                 let payload = null;
                 try {
-                    const storage = getSharedStorage();
-                    payload = JSON.parse(storage.getItem('match_prefill') || 'null');
+                    payload = window.MatchSys.readJSONFromLocalStorage('match_prefill');
                 } catch (error) {
                     payload = null;
                 }
@@ -410,8 +388,7 @@
                 if (introInput) introInput.value = payload.intro || '';
                 resumeState.prefill = payload.resume && typeof payload.resume === 'object' ? payload.resume : null;
                 try {
-                    const storage = getSharedStorage();
-                    storage.removeItem('match_prefill');
+                    window.MatchSys.clearStoredKey('match_prefill');
                 } catch (error) {
                 }
                 renderResumeSource();
@@ -722,7 +699,7 @@
                         };
 
                         persistPageState();
-                        localStorage.setItem('matchSelection', JSON.stringify(payload));
+                        window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
                     } catch (err) {
                         console.error(t('match.cache_failed') || '保存失败', err);
                         alert(err?.message || t('match.cache_failed'));

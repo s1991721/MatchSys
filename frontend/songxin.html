@@ -159,13 +159,8 @@
             let templateSettingsCache = null;
 
             const readSelection = () => {
-                const raw = localStorage.getItem(selectionKey);
-                if (!raw) {
-                    currentSelection = null;
-                    return null;
-                }
                 try {
-                    currentSelection = JSON.parse(raw);
+                    currentSelection = window.MatchSys.readJSONFromLocalStorage(selectionKey);
                 } catch {
                     currentSelection = null;
                 }

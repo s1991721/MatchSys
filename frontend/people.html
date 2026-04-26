@@ -239,22 +239,9 @@
     };
     const TECH_PREFILL_KEY = 'tech_edit_employee_prefill';
 
-    const getSharedStorage = () => {
-        try {
-            if (window.top && window.top.localStorage) {
-                return window.top.localStorage;
-            }
-        } catch (error) {
-        }
-        return localStorage;
-    };
-
     const loadTechPrefill = () => {
         try {
-            const storage = getSharedStorage();
-            const raw = storage.getItem(TECH_PREFILL_KEY);
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
+            const parsed = window.MatchSys.readJSONFromLocalStorage(TECH_PREFILL_KEY);
             if (!parsed || typeof parsed !== 'object') return null;
             return {
                 name: parsed.name || '',
@@ -267,8 +254,7 @@
 
     const clearTechPrefill = () => {
         try {
-            const storage = getSharedStorage();
-            storage.removeItem(TECH_PREFILL_KEY);
+            window.MatchSys.clearStoredKey(TECH_PREFILL_KEY);
         } catch (error) {
         }
     };
@@ -765,8 +751,7 @@
             } : null
         };
         try {
-            const storage = getSharedStorage();
-            storage.setItem('match_prefill', JSON.stringify(payload));
+            window.MatchSys.writeJSONToLocalStorage('match_prefill', payload);
         } catch (error) {
             console.warn('match_prefill 缓存失败', error);
         }
@@ -787,7 +772,7 @@
             `介绍文：${person.intro || '-'}`,
             `备注：${person.note || '-'}`
         ];
-        const payload = JSON.stringify({
+        const payload = {
             subject: `技术者推荐：${person.name || ''}`,
             body: bodyLines.join('\n'),
             intro: person.intro || '',
@@ -799,13 +784,10 @@
             mail_type: '1',
             source: 'people',
             updatedAt: Date.now()
-        });
+        };
         try {
-            const storage = getSharedStorage();
-            storage.removeItem('bulkMailContext');
-            sessionStorage.removeItem('bulkMailContext');
-            storage.setItem('bulkMailPrefill', payload);
-            sessionStorage.setItem('bulkMailPrefill', payload);
+            window.MatchSys.clearStoredKey('bulkMailContext');
+            window.MatchSys.writeJSONToSessionStorage('bulkMailPrefill', payload);
         } catch (error) {
             console.warn('bulkMailPrefill 缓存失败', error);
         }

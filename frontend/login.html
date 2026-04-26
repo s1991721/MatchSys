@@ -260,11 +260,10 @@
                             localStorage.removeItem(ROLE_KEY);
                         }
                         if (menuList !== "" && menuList !== null && menuList !== undefined) {
-                            if (Array.isArray(menuList)) {
-                                localStorage.setItem(MENU_KEY, JSON.stringify(menuList));
-                            } else {
-                                localStorage.setItem(MENU_KEY, String(menuList));
-                            }
+                            window.MatchSys.writeJSONToLocalStorage(MENU_KEY, {
+                                menuList,
+                                updatedAt: Date.now()
+                            });
                         } else {
                             localStorage.removeItem(MENU_KEY);
                         }

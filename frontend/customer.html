@@ -221,6 +221,7 @@
     }
     const t = (key) => (i18n ? i18n.t(key) : key);
     const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
+    const escapeHtml = window.escapeHtml;
 
     const nameList = document.getElementById("employee-names");
     const tableBody = document.getElementById("customer-body");
@@ -370,6 +371,7 @@
             company_name: String(item?.company_name || "").trim(),
             company_address: String(item?.company_address || "").trim(),
             company_email: String(item?.company_email || "").trim(),
+            contract: String(item?.contract || "").trim(),
             remark: String(item?.remark || "").trim(),
             contact1_name: String(item?.contact1_name || "").trim(),
             contact1_position: String(item?.contact1_position || "").trim(),
@@ -459,7 +461,7 @@
 
     const renderNames = (names) => {
         nameList.innerHTML = names
-            .map((name) => `<option value="${name}"></option>`)
+            .map((name) => `<option value="${escapeHtml(name)}"></option>`)
             .join("");
     };
 
@@ -473,12 +475,8 @@
         if (pageSummary) {
             pageSummary.textContent = format("customer.summary", {count, page: currentPage});
         }
-        const idsOnPage = new Set(items.map((item) => String(item.id)));
-        selectedCustomerIds = new Set(
-            Array.from(selectedCustomerIds).filter((id) => idsOnPage.has(id))
-        );
         if (!items.length) {
-            tableBody.innerHTML = `<tr><td colspan="11" class="c-empty">${t("common.no_data")}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="11" class="c-empty">${escapeHtml(t("common.no_data"))}</td></tr>`;
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
                 selectAllCheckbox.indeterminate = false;
@@ -492,20 +490,20 @@
                 (item) => `
             <tr>
               <td>
-                <input class="row-select" type="checkbox" data-id="${item.id}" ${selectedCustomerIds.has(String(item.id)) ? "checked" : ""}/>
+                <input class="row-select" type="checkbox" data-id="${escapeHtml(item.id)}" ${selectedCustomerIds.has(String(item.id)) ? "checked" : ""}/>
               </td>
-              <td>${item.company_name || "-"}</td>
-              <td>${item.company_address || "-"}</td>
-              <td>${item.remark || "-"}</td>
-              <td>${item.contact1_name || "-"}</td>
-              <td>${item.contact1_position || "-"}</td>
-              <td>${item.contact1_email || "-"}</td>
-              <td>${item.contact1_phone || "-"}</td>
-              <td>${item.person_in_charge || "-"}</td>
-              <td>${item.created_at || "-"}</td>
+              <td>${escapeHtml(item.company_name || "-")}</td>
+              <td>${escapeHtml(item.company_address || "-")}</td>
+              <td>${escapeHtml(item.remark || "-")}</td>
+              <td>${escapeHtml(item.contact1_name || "-")}</td>
+              <td>${escapeHtml(item.contact1_position || "-")}</td>
+              <td>${escapeHtml(item.contact1_email || "-")}</td>
+              <td>${escapeHtml(item.contact1_phone || "-")}</td>
+              <td>${escapeHtml(item.person_in_charge || "-")}</td>
+              <td>${escapeHtml(item.created_at || "-")}</td>
               <td>
                 <div class="row-actions c-row-actions c-row-actions-nowrap">
-                  <button class="edit-btn c-btn c-btn-secondary c-btn-sm" type="button" data-id="${item.id}">${t("common.edit")}</button>
+                  <button class="edit-btn c-btn c-btn-secondary c-btn-sm" type="button" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.edit"))}</button>
                 </div>
               </td>
             </tr>

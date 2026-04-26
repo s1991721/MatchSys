@@ -455,12 +455,7 @@
         return items;
     };
 
-    const escapeHtml = (value) => String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+    const escapeHtml = window.escapeHtml;
 
     const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
         const reader = new FileReader();

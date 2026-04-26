@@ -19,6 +19,15 @@
     const pad2 = (value) => String(value).padStart(2, "0");
     window.pad2 = pad2;
 
+    window.escapeHtml = function (value) {
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+
     const isFreshPayload = (payload, maxAgeMs = 30 * 60 * 1000) => {
         if (!payload || typeof payload !== "object") return false;
         const ts = Number(payload.updatedAt);

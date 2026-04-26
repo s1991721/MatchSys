@@ -159,13 +159,7 @@
             };
             let senderTimer = null;
             const formatDisplayDate = (raw) => (window.formatDate ? window.formatDate(raw) : raw || '');
-            const sanitize = (str = '') =>
-                str
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
+            const sanitize = window.escapeHtml;
             const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
             const stripCssNoise = (text = '') => {

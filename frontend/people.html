@@ -830,21 +830,13 @@
             const person = people.find(item => String(item.id) === findCaseId);
             if (person) {
                 cacheBulkMailPrefill(person);
-                if (window.top && window.top !== window) {
-                    window.top.postMessage({ type: 'route:change', src: 'bulk_email.html' }, '*');
-                } else {
-                    window.location.href = 'bulk_email.html';
-                }
+                window.navigateAppRoute('bulk_email.html');
             }
         } else if (matchId) {
             const person = people.find(item => String(item.id) === matchId);
             if (person) {
                 cacheMatchPayload(person);
-                if (window.top && window.top !== window) {
-                    window.top.postMessage({ type: 'route:change', src: 'match.html' }, '*');
-                } else {
-                    window.location.href = 'match.html';
-                }
+                window.navigateAppRoute('match.html');
             }
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);

@@ -614,11 +614,7 @@
                     }
 
                     alert(t('songxin.alert.sent'));
-                    if (window.top && window.top !== window) {
-                        window.top.location.hash = 'songxinhistory.html';
-                    } else {
-                        window.location.href = 'songxinhistory.html';
-                    }
+                    window.navigateAppRoute('songxinhistory.html');
                 } catch (err) {
                     console.error('发送邮件失败', err);
                     alert(format('songxin.alert.send_failed', { error: err.message || err }));

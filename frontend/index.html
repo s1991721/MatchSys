@@ -488,6 +488,8 @@
       const normalizeMenuItem = (value) => (value || "")
         .replace(/^#/, "")
         .replace(/^\//, "")
+        .split("?")[0]
+        .split("#")[0]
         .trim();
       const readMenuList = () => {
         let raw = "";
@@ -536,13 +538,14 @@
       const allowedMenuSet = buildAllowedMenuSet();
       const fallbackRoute = "profile.html";
       const bulkMailRoute = "bulk_email.html";
+      const workflowRoutes = new Set([bulkMailRoute, "songxin.html", "bpsongxin.html"]);
       const isAllowedRoute = (src) => {
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
         if (normalized === fallbackRoute) return true;
         // “我的邮件”通过顶部入口访问，不依赖左侧菜单权限列表。
         if (normalized === noticeRoute) return true;
-        if (normalized === bulkMailRoute) return true;
+        if (workflowRoutes.has(normalized)) return true;
         return allowedMenuSet.has(normalized);
       };
       const applyMenuFilter = () => {
@@ -560,22 +563,27 @@
       };
 
       const setActive = (src) => {
+        const route = normalizeMenuItem(src);
         for (const a of links) {
-          a.classList.toggle("active", (a.getAttribute("data-src") || "") === src);
+          a.classList.toggle("active", (a.getAttribute("data-src") || "") === route);
         }
       };
 
       const setSubtitle = (src) => {
         if (!pageSubtitle) return;
-        const match = links.find((a) => (a.getAttribute("data-src") || "") === src);
+        const route = normalizeMenuItem(src);
+        const match = links.find((a) => (a.getAttribute("data-src") || "") === route);
         let label = match
           ? (match.getAttribute("data-title") || match.getAttribute("title") || match.textContent).trim()
           : (i18n ? i18n.t("nav.home") : "主页");
-        if (!match && src === noticeRoute) {
+        if (!match && route === noticeRoute) {
           label = "我的邮件";
         }
-        if (!match && src === bulkMailRoute) {
+        if (!match && route === bulkMailRoute) {
           label = i18n ? i18n.t("customer.bulk.title") : "群发邮件";
+        }
+        if (!match && (route === "songxin.html" || route === "bpsongxin.html")) {
+          label = i18n ? i18n.t("songxin.title") : "送信页";
         }
         pageSubtitle.textContent = `· ${label}`;
         return label;
@@ -599,8 +607,7 @@
       const resolveFromHash = () => {
         const raw = (location.hash || "").replace(/^#/, "").trim();
         if (!raw) return null;
-        const src = raw.split("?")[0].split("#")[0];
-        return src || null;
+        return raw || null;
       };
 
       const syncFromHash = () => {

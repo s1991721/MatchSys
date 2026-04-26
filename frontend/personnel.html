@@ -376,13 +376,9 @@
                         birthday: target.birthday || ""
                     }));
                 }
-                if (window.parent && window.parent !== window) {
-                    window.parent.location.hash = "people.html";
-                    return;
-                }
             } catch (err) {
             }
-            window.location.href = "people.html";
+            window.navigateAppRoute("people.html");
         } else if (action === "permission") {
             openPermissionModal(id);
         } else if (action === "attendance-setting") {

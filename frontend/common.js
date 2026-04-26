@@ -78,6 +78,17 @@
         }
     };
 
+    MatchSys.navigateAppRoute = function (src) {
+        const route = String(src || "").trim();
+        if (!route) return;
+        if (window.top && window.top !== window) {
+            window.top.postMessage({type: "route:change", src: route}, "*");
+        } else {
+            window.location.href = route;
+        }
+    };
+    window.navigateAppRoute = MatchSys.navigateAppRoute;
+
     const LOCALIZED_FILE_SKIP_SELECTOR = [
         ".songxin-upload-bar",
         ".file-picker",

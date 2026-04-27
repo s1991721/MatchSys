@@ -326,13 +326,6 @@
         return '-';
     };
 
-    const normalizeDateInput = (value) => {
-        if (!value) return '';
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return '';
-        return date.toISOString().slice(0, 10);
-    };
-
     const businessStatusLabel = (value) => {
         const option = BUSINESS_STATUS_OPTIONS.find((item) => item.value === Number(value));
         return option ? t(option.key) : '-';
@@ -419,7 +412,7 @@
             nationality: formData.get('nationality') || '',
             price: Number(formData.get('price')),
             contract: formData.get('contract'),
-            siteContract: normalizeDateInput(formData.get('siteContract')),
+            siteContract: datePart(formData.get('siteContract')),
             businessStatus: formData.get('businessStatus') === '' ? null : Number(formData.get('businessStatus')),
             intro: (formData.get('intro') || '').trim(),
             note: (formData.get('note') || '').trim()
@@ -537,7 +530,7 @@
             nationality: normalizeNationalityValue(item.nationality),
             price: item.price ? Number(item.price) : 0,
             contractType: normalizeContractType(item.contract_type),
-            contract: contractTypeToLabel(item.contract_type),
+            contract: contractLabel(item.contract_type),
             siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
             businessStatus: item.business_status ?? 0,
             intro: item.introduction || '',
@@ -550,8 +543,11 @@
     const fetchTechnicianById = async (employeeId) => {
         if (!employeeId) return null;
         try {
-            const payload = await window.requestJson(`/api/technicians/${employeeId}`, {method: 'GET'});
-            if (!payload.success) return null;
+            const payload = await window.requestJson(
+                `/api/technicians/${employeeId}`,
+                {method: 'GET'},
+                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+            );
             const result = payload.data || {};
             const item = result.item || {};
             if (!item.employee_id) return null;
@@ -574,10 +570,11 @@
                 ['contract_type', currentFilters.contractType !== null ? String(currentFilters.contractType) : ''],
                 ['business_status', currentFilters.businessStatus !== null ? String(currentFilters.businessStatus) : ''],
             ]);
-            const payload = await window.requestJson(buildUrl('/api/technicians', params), {method: 'GET'});
-            if (!payload.success) {
-                throw new Error(payload.message || t("common.load_failed"));
-            }
+            const payload = await window.requestJson(
+                buildUrl('/api/technicians', params),
+                {method: 'GET'},
+                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+            );
             const result = payload.data || {};
             const meta = payload.meta || {};
             const items = Array.isArray(result.items) ? result.items : [];
@@ -628,8 +625,11 @@
     const prefillFromEmployee = async (employeeId) => {
         if (!employeeId) return;
         try {
-            const payload = await window.requestJson(`/api/employees/${employeeId}`, {method: 'GET'});
-            if (!payload.success) return;
+            const payload = await window.requestJson(
+                `/api/employees/${employeeId}`,
+                {method: 'GET'},
+                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+            );
             const result = payload.data || {};
             const emp = result.item || {};
             personForm.name.value = emp.name || '';
@@ -650,10 +650,7 @@
         const responsePayload = await window.requestJson(url, {
             method,
             body: JSON.stringify(payload)
-        });
-        if (!responsePayload.success) {
-            throw new Error(responsePayload.message || t("common.save_failed"));
-        }
+        }, {throwOnFailure: true, fallbackMessage: t("common.save_failed")});
         return responsePayload.data || {};
     };
 
@@ -663,10 +660,7 @@
         const responsePayload = await window.requestJson(`/api/technicians/${employeeId}/ss`, {
             headers: {},
             body: formData
-        });
-        if (!responsePayload.success) {
-            throw new Error(responsePayload.message || t("people.upload_failed"));
-        }
+        }, {throwOnFailure: true, fallbackMessage: t("people.upload_failed")});
         return responsePayload.data || {};
     };
 
@@ -859,11 +853,12 @@
         } else if (deleteId) {
             const target = people.find(item => String(item.id) === deleteId);
             if (target && confirm(format("people.confirm.delete", { name: target.name }))) {
-                window.requestJson(`/api/technicians/${deleteId}`, {method: 'DELETE'})
-                    .then((responsePayload) => {
-                        if (!responsePayload.success) {
-                            throw new Error(responsePayload.message || t("people.error.delete_failed"));
-                        }
+                window.requestJson(
+                    `/api/technicians/${deleteId}`,
+                    {method: 'DELETE'},
+                    {throwOnFailure: true, fallbackMessage: t("people.error.delete_failed")}
+                )
+                    .then(() => {
                         return fetchPeople();
                     })
                     .catch((error) => {

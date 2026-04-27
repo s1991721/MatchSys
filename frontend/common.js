@@ -332,16 +332,6 @@
         return age;
     };
 
-    // 根据契约类型返回字符串
-    window.contractTypeToLabel = function (value) {
-        const mapping = {
-            1: t("people.contract.regular", "正社员"),
-            2: t("people.contract.contract", "契约社员"),
-            3: t("people.contract.freelance", "フリーランス")
-        };
-        return mapping[value] || t("people.contract.unknown", "未定");
-    };
-
     // 分页页码构建
     const buildPageItems = (totalPages, activePage) => {
         if (totalPages <= 7) {

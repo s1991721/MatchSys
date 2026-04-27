@@ -76,7 +76,9 @@
             <div class="detail detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
-            <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
+            <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">
+                附件
+            </div>
             <div id="person-attachments" class="c-chip-row songxinhistory-attachments">
                 <div class="songxin-empty-tip" data-i18n="common.empty.attachments">暂无附件</div>
             </div>
@@ -104,15 +106,198 @@
 
     const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-    const stripCssNoise = (text = '') => {
-        if (!text) return '';
-        const firstGap = text.indexOf('\n\n');
-        const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
-        if (firstGap >= 0 && hasBraces) {
-            return text.slice(firstGap + 2);
-        }
-        return text;
+    const jobList = document.getElementById('job-list');
+    const jobDetail = document.getElementById('job-detail');
+    const personDetail = document.getElementById('person-detail');
+    const personAttachments = document.getElementById('person-attachments');
+    const personList = document.getElementById('person-list');
+    const jobSender = document.getElementById('job-sender');
+    const jobSearchBtn = document.getElementById('job-search-btn');
+    const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
+    const pagination = document.getElementById('job-pagination');
+    const paginationPages = document.getElementById('job-pagination-pages');
+    const pageSummary = document.getElementById('page-summary');
+    const sendBtn = document.getElementById('send-btn');
+    const sendBpBtn = document.getElementById('send-bp-btn');
+
+    let activeJobDetail = '';
+    let activeJobId = '';
+    let activePersonId = '';
+    let activeMatchedSkills = [];
+    let openJobFeedbackId = '';
+    let openPersonFeedbackId = '';
+    let currentJobItems = [];
+    let currentPersonItems = [];
+
+    let currentPage = 1;
+    let hasNextPage = false;
+    let totalPages = 1;
+    let totalCount = 0;
+
+    const filters = {
+        range: 'today'
     };
+
+    dateButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            dateButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filters.range = btn.dataset.range;
+            openJobFeedbackId = '';
+            openPersonFeedbackId = '';
+            fetchJobs(1);
+        });
+    });
+
+    jobSearchBtn.addEventListener('click', () => {
+        openJobFeedbackId = '';
+        openPersonFeedbackId = '';
+        fetchJobs(1);
+    });
+
+    const rerenderJobList = () => {
+        renderJobList(currentJobItems, {preserveSelection: true});
+    };
+
+    const removeJobFromCurrentList = (jobId) => {
+        const removedActive = String(activeJobId) === String(jobId);
+        currentJobItems = currentJobItems.filter((item) => String(item.id) !== String(jobId));
+        totalCount = Math.max(0, totalCount - 1);
+        totalPages = Math.max(1, Math.ceil(totalCount / 50));
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+
+        if (removedActive) {
+            activeJobId = '';
+            activeJobDetail = '';
+            activeMatchedSkills = [];
+            openJobFeedbackId = '';
+            openPersonFeedbackId = '';
+            currentPersonItems = [];
+            activePersonId = '';
+            renderPersonList([]);
+            renderJobList(currentJobItems, {preserveSelection: true});
+        } else {
+            renderJobList(currentJobItems, {preserveSelection: true});
+        }
+        updatePaginationUI();
+    };
+
+    jobList.addEventListener('click', async (event) => {
+        const toggleBtn = event.target.closest('[data-feedback-toggle]');
+        if (toggleBtn) {
+            event.stopPropagation();
+            const jobId = String(toggleBtn.dataset.jobId || '');
+            openJobFeedbackId = openJobFeedbackId === jobId ? '' : jobId;
+            rerenderJobList();
+            return;
+        }
+
+        const cancelBtn = event.target.closest('[data-feedback-cancel]');
+        if (cancelBtn) {
+            event.stopPropagation();
+            openJobFeedbackId = '';
+            rerenderJobList();
+            return;
+        }
+
+        const submitBtn = event.target.closest('[data-feedback-submit]');
+        if (submitBtn) {
+            event.stopPropagation();
+            const wrapper = submitBtn.closest('.mail-feedback-control');
+            const item = submitBtn.closest('.item');
+            const jobId = String(item?.dataset?.id || '');
+            const selected = wrapper?.querySelector('input[type="radio"]:checked')?.value || '';
+            if (!selected) {
+                alert(t('match.feedback.select_expected'));
+                return;
+            }
+            try {
+                await window.requestJson('/api/wrong-mails', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        id: jobId,
+                        wrong_label: 0,
+                        correct_label: Number(selected)
+                    })
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: t("common.load_failed")
+                });
+                removeJobFromCurrentList(jobId);
+            } catch (err) {
+                alert(`${t("common.load_failed")}：${err.message}`);
+            }
+        }
+    });
+
+    const parseDatasetJSON = (el, key) => {
+        if (!el || !el.dataset) return null;
+        const raw = el.dataset[key];
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
+
+    const buildActivePayloads = () => {
+        const activeJob = jobList?.querySelector('.item.active');
+        const activePerson = personList?.querySelector('.item.active');
+
+        const jobData = parseDatasetJSON(activeJob, 'item') || {};
+        const personData = parseDatasetJSON(activePerson, 'item') || {};
+
+        const jobPayload = {
+            id: jobData.id || activeJob?.dataset?.id || '',
+            title: jobData.title || activeJob?.querySelector('.item-title')?.textContent.trim() || '',
+            desc: jobData.desc || activeJob?.querySelector('.item-desc')?.textContent.trim() || '',
+            detail: jobData.detail || activeJob?.dataset?.detail || '',
+            time: jobData.date || activeJob?.querySelector('.item-time')?.textContent.trim() || ''
+        };
+
+        const personPayload = {
+            id: personData.id || activePerson?.dataset?.id || '',
+            name: personData.title || activePerson?.querySelector('.person-name')?.textContent.trim() || '',
+            belong: personData.from || activePerson?.querySelector('.person-belong')?.textContent.trim() || '',
+            detail: personData.body || activePerson?.dataset?.detail || '',
+            time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || ''
+        };
+
+        return {
+            activeJob,
+            activePerson,
+            jobPayload,
+            personPayload
+        };
+    };
+
+    sendBpBtn.addEventListener('click', () => {
+        const {activeJob, jobPayload} = buildActivePayloads();
+        if (!activeJob) {
+            alert(t("match.send_bp_tip"));
+            return;
+        }
+
+        const prefill = {
+            subject: jobPayload.title,
+            body: jobPayload.detail || jobPayload.desc || '',
+            mail_type: '2',
+            source: 'bpmatch',
+            updatedAt: Date.now()
+        };
+
+        try {
+            window.MatchSys.clearStoredKey('bulkMailContext');
+            window.MatchSys.writeJSONToSessionStorage('bulkMailPrefill', prefill);
+        } catch (err) {
+            console.error(t("match.cache_failed"), err);
+        }
+
+        window.navigateAppRoute('bulk_email.html');
+    });
 
     const renderDetail = (target, text = '', highlights = []) => {
         if (!target) return;
@@ -139,267 +324,6 @@
         target.innerHTML = html || `<p class="match-empty-inline">${t("match.empty")}</p>`;
     }
 
-    const jobList = document.getElementById('job-list');
-    const jobDetail = document.getElementById('job-detail');
-    const personDetail = document.getElementById('person-detail');
-    const personAttachments = document.getElementById('person-attachments');
-    const personList = document.getElementById('person-list');
-    const jobSender = document.getElementById('job-sender');
-    const jobSearchBtn = document.getElementById('job-search-btn');
-    const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
-    const pagination = document.getElementById('job-pagination');
-    const paginationPages = document.getElementById('job-pagination-pages');
-    const pageSummary = document.getElementById('page-summary');
-    const sendBtn = document.getElementById('send-btn');
-    const sendBpBtn = document.getElementById('send-bp-btn');
-
-    let activeJobDetail = '';
-    let activeJobId = '';
-    let activePersonId = '';
-    let activeMatchedSkills = [];
-    const jobFeedbackState = new Map();
-    const personFeedbackState = new Map();
-    let openJobFeedbackId = '';
-    let openPersonFeedbackId = '';
-    let currentJobItems = [];
-    let currentPersonItems = [];
-
-    let currentPage = 1;
-    let hasNextPage = false;
-    let totalPages = 1;
-    let totalCount = 0;
-
-    const filters = {
-        range: 'today'
-    };
-
-    const getFeedbackDraft = (state, id) => {
-        const key = String(id || '');
-        if (!key) {
-            return {expectedCategory: '', submitted: false};
-        }
-        if (!state.has(key)) {
-            state.set(key, {
-                expectedCategory: '',
-                submitted: false
-            });
-        }
-        return state.get(key);
-    };
-
-    const getJobFeedbackDraft = (jobId) => {
-        return getFeedbackDraft(jobFeedbackState, jobId);
-    };
-
-    const getPersonFeedbackDraft = (personId) => {
-        return getFeedbackDraft(personFeedbackState, personId);
-    };
-
-    // 公共函数：给列表加点击事件
-    const bindListClick = (listId, detailId, onSelect) => {
-        const list = document.getElementById(listId);
-        const detail = document.getElementById(detailId);
-
-        if (!list || !detail) return;
-
-        list.addEventListener('click', function (e) {
-            if (e.target.closest('.mail-feedback-control')) {
-                return;
-            }
-            const item = e.target.closest('.item');
-            if (!item) return;
-
-            list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
-            item.classList.add('active');
-
-            const text = item.getAttribute('data-detail') || '';
-            const highlights = readMatchedSkills(item);
-            renderDetail(detail, text, highlights);
-
-            if (typeof onSelect === 'function') {
-                try {
-                    onSelect(item, highlights);
-                } catch (err) {
-                    console.error('handleSelect failed', err);
-                }
-            }
-        });
-    }
-
-    const readMatchedSkills = (item) => {
-        const raw = item?.dataset?.matchedSkills;
-        if (!raw) return [];
-        try {
-            const parsed = JSON.parse(raw);
-            return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
-        } catch {
-            return [];
-        }
-    };
-
-    const scheduleFeedbackPlacement = (listEl) => {
-        if (!listEl) return;
-        requestAnimationFrame(() => {
-            const visibleControls = Array.from(listEl.querySelectorAll('.mail-feedback-control'))
-                .filter((control) => control.querySelector('.mail-feedback-popover.is-visible'));
-
-            visibleControls.forEach((control) => {
-                control.classList.remove('is-dropup');
-                const popover = control.querySelector('.mail-feedback-popover');
-                if (!popover) return;
-
-                const controlRect = control.getBoundingClientRect();
-                const listRect = listEl.getBoundingClientRect();
-                const popoverRect = popover.getBoundingClientRect();
-                const availableBelow = listRect.bottom - controlRect.bottom;
-                const availableAbove = controlRect.top - listRect.top;
-                const requiredSpace = popoverRect.height + 12;
-
-                if (requiredSpace > availableBelow && availableAbove > availableBelow) {
-                    control.classList.add('is-dropup');
-                }
-
-                const button = control.querySelector('.mail-feedback-btn');
-                if (!button) return;
-                const buttonRect = button.getBoundingClientRect();
-                const viewportGap = 12;
-                const popoverWidth = Math.min(280, window.innerWidth - viewportGap * 2);
-                const left = Math.max(
-                    viewportGap,
-                    Math.min(buttonRect.right - popoverWidth, window.innerWidth - popoverWidth - viewportGap)
-                );
-                const placeAbove = control.classList.contains('is-dropup');
-                const top = placeAbove
-                    ? Math.max(viewportGap, buttonRect.top - popoverRect.height - 8)
-                    : Math.min(buttonRect.bottom + 8, window.innerHeight - popoverRect.height - viewportGap);
-
-                popover.style.left = `${left}px`;
-                popover.style.top = `${top}px`;
-                popover.style.width = `${popoverWidth}px`;
-            });
-        });
-    };
-
-    const bindPopoverScrollForwarding = (listEl) => {
-        if (!listEl) return;
-        listEl.addEventListener('wheel', (event) => {
-            if (!event.target.closest('.mail-feedback-popover')) return;
-            event.preventDefault();
-            listEl.scrollTop += event.deltaY;
-            scheduleFeedbackPlacement(listEl);
-        }, {passive: false});
-
-        listEl.addEventListener('scroll', () => {
-            scheduleFeedbackPlacement(listEl);
-        });
-    };
-
-    const renderJobList = (items, options = {}) => {
-        const preserveSelection = options.preserveSelection === true;
-        currentJobItems = Array.isArray(items) ? items : [];
-        jobList.innerHTML = '';
-
-        if (!items.length) {
-            const empty = document.createElement('li');
-            empty.className = 'empty';
-            empty.textContent = t("match.empty_jobs");
-            jobList.appendChild(empty);
-            renderDetail(jobDetail, t("match.empty_job_detail"));
-            activeJobId = '';
-            activeJobDetail = '';
-            return;
-        }
-
-        items.forEach((item) => {
-            const li = document.createElement('li');
-            const detail = item.detail || '';
-            const id = item.id || '';
-            li.className = `item${preserveSelection && String(id) === String(activeJobId) ? ' active' : ''}`;
-            li.dataset.detail = detail;
-            li.dataset.id = id;
-            li.dataset.item = JSON.stringify({...item, detail, id});
-
-            const main = document.createElement('div');
-            main.className = 'item-main';
-
-            const title = document.createElement('div');
-            title.className = 'item-title';
-            title.textContent = item.title;
-
-            const desc = document.createElement('div');
-            desc.className = 'item-desc';
-            desc.textContent = item.desc;
-
-            const time = document.createElement('div');
-            time.className = 'item-time';
-            time.textContent = formatDisplayDate(item.date);
-
-            const feedbackDraft = getJobFeedbackDraft(id);
-            const feedbackControl = document.createElement('div');
-            feedbackControl.className = `mail-feedback-control${openJobFeedbackId === String(id) ? ' is-open' : ''}`;
-
-            const feedbackButton = document.createElement('button');
-            feedbackButton.type = 'button';
-            feedbackButton.className = `mail-feedback-btn${feedbackDraft.submitted ? ' is-submitted' : ''}`;
-            feedbackButton.dataset.feedbackToggle = '1';
-            feedbackButton.dataset.jobId = id;
-            feedbackButton.title = feedbackDraft.submitted
-                ? t('match.feedback.submitted')
-                : t('match.feedback.trigger');
-            feedbackButton.setAttribute('aria-label', feedbackButton.title);
-            feedbackButton.innerHTML = feedbackDraft.submitted ? '&#10003;' : '!';
-
-            const feedbackPopover = document.createElement('div');
-            feedbackPopover.className = `mail-feedback-popover${openJobFeedbackId === String(id) ? ' is-visible' : ''}`;
-            feedbackPopover.dataset.feedbackPopover = '1';
-            feedbackPopover.innerHTML = `
-                <div class="mail-feedback-title">${sanitize(t('match.feedback.title'))}</div>
-                <div class="mail-feedback-desc">${sanitize(t('match.feedback.desc'))}</div>
-                <label class="mail-feedback-option">
-                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="1" ${String(feedbackDraft.expectedCategory) === '1' ? 'checked' : ''}>
-                    <span>${sanitize(t('match.feedback.option.technician'))}</span>
-                </label>
-                <label class="mail-feedback-option">
-                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="-1" ${String(feedbackDraft.expectedCategory) === '-1' ? 'checked' : ''}>
-                    <span>${sanitize(t('match.feedback.option.other'))}</span>
-                </label>
-                <div class="mail-feedback-actions">
-                    <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-feedback-cancel="1">${sanitize(t('common.cancel'))}</button>
-                    <button class="c-btn c-btn-primary c-btn-sm" type="button" data-feedback-submit="1" ${feedbackDraft.submitted ? 'disabled' : ''}>${sanitize(t('match.feedback.submit'))}</button>
-                </div>
-            `;
-
-            main.appendChild(title);
-            main.appendChild(desc);
-            li.appendChild(main);
-            feedbackControl.appendChild(time);
-            feedbackControl.appendChild(feedbackButton);
-            feedbackControl.appendChild(feedbackPopover);
-            li.appendChild(feedbackControl);
-            jobList.appendChild(li);
-        });
-
-        if (preserveSelection && activeJobId) {
-            const activeJob = Array.from(jobList.querySelectorAll('.item')).find((item) => item.dataset.id === String(activeJobId));
-            if (activeJob) {
-                activeJobDetail = activeJob.getAttribute('data-detail') || '';
-                renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
-                scheduleFeedbackPlacement(jobList);
-                return;
-            }
-        }
-
-        activeJobId = '';
-        activeMatchedSkills = [];
-        activeJobDetail = '';
-        renderDetail(jobDetail, t("match.empty_job_detail"));
-        scheduleFeedbackPlacement(jobList);
-    }
-
-    const rerenderJobList = () => {
-        renderJobList(currentJobItems, {preserveSelection: true});
-    };
-
     const buildAttachmentUrl = (file = {}) => {
         const messageId = encodeURIComponent(String(file.message_id || '').trim());
         const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
@@ -414,7 +338,6 @@
     };
 
     const renderPersonAttachments = (files = []) => {
-        if (!personAttachments) return;
         if (!Array.isArray(files) || !files.length) {
             personAttachments.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
             return;
@@ -434,7 +357,6 @@
     const renderPersonList = (items, options = {}) => {
         const preserveSelection = options.preserveSelection === true;
         currentPersonItems = Array.isArray(items) ? items : [];
-        if (!personList) return;
         personList.innerHTML = '';
 
         if (!items.length) {
@@ -473,26 +395,23 @@
 
             const time = document.createElement('div');
             time.className = 'item-time';
-            time.textContent = formatDisplayDate(item.date);
+            time.textContent = window.formatMonthDayTime(item.date, '');
 
             const desc = document.createElement('div');
             desc.className = 'item-desc';
             desc.textContent = item.belong || item.from || '';
 
-            const feedbackDraft = getPersonFeedbackDraft(personId);
             const feedbackControl = document.createElement('div');
             feedbackControl.className = `mail-feedback-control${openPersonFeedbackId === String(personId) ? ' is-open' : ''}`;
 
             const feedbackButton = document.createElement('button');
             feedbackButton.type = 'button';
-            feedbackButton.className = `mail-feedback-btn${feedbackDraft.submitted ? ' is-submitted' : ''}`;
+            feedbackButton.className = `mail-feedback-btn`;
             feedbackButton.dataset.personFeedbackToggle = '1';
             feedbackButton.dataset.personId = personId;
-            feedbackButton.title = feedbackDraft.submitted
-                ? t('match.feedback.submitted')
-                : t('match.feedback.trigger');
+            feedbackButton.title = t('match.feedback.trigger');
             feedbackButton.setAttribute('aria-label', feedbackButton.title);
-            feedbackButton.innerHTML = feedbackDraft.submitted ? '&#10003;' : '!';
+            feedbackButton.innerHTML = '!';
 
             const feedbackPopover = document.createElement('div');
             feedbackPopover.className = `mail-feedback-popover${openPersonFeedbackId === String(personId) ? ' is-visible' : ''}`;
@@ -500,16 +419,16 @@
                 <div class="mail-feedback-title">${sanitize(t('match.feedback.title'))}</div>
                 <div class="mail-feedback-desc">${sanitize(t('match.feedback.person_desc'))}</div>
                 <label class="mail-feedback-option">
-                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="0" ${String(feedbackDraft.expectedCategory) === '0' ? 'checked' : ''}>
+                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="0" >
                     <span>${sanitize(t('match.feedback.option.project'))}</span>
                 </label>
                 <label class="mail-feedback-option">
-                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="-1" ${String(feedbackDraft.expectedCategory) === '-1' ? 'checked' : ''}>
+                    <input type="radio" name="person-feedback-category-${sanitize(String(personId))}" value="-1" >
                     <span>${sanitize(t('match.feedback.option.other'))}</span>
                 </label>
                 <div class="mail-feedback-actions">
                     <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-person-feedback-cancel="1">${sanitize(t('common.cancel'))}</button>
-                    <button class="c-btn c-btn-primary c-btn-sm" type="button" data-person-feedback-submit="1" ${feedbackDraft.submitted ? 'disabled' : ''}>${sanitize(t('match.feedback.submit'))}</button>
+                    <button class="c-btn c-btn-primary c-btn-sm" type="button" data-person-feedback-submit="1" >${sanitize(t('match.feedback.submit'))}</button>
                 </div>
             `;
 
@@ -545,31 +464,6 @@
         renderPersonList(currentPersonItems, {preserveSelection: true});
     };
 
-    const removeJobFromCurrentList = (jobId) => {
-        const removedActive = String(activeJobId) === String(jobId);
-        currentJobItems = currentJobItems.filter((item) => String(item.id) !== String(jobId));
-        totalCount = Math.max(0, totalCount - 1);
-        totalPages = Math.max(1, Math.ceil(totalCount / 50));
-        if (currentPage > totalPages) {
-            currentPage = totalPages;
-        }
-
-        if (removedActive) {
-            activeJobId = '';
-            activeJobDetail = '';
-            activeMatchedSkills = [];
-            openJobFeedbackId = '';
-            openPersonFeedbackId = '';
-            currentPersonItems = [];
-            activePersonId = '';
-            renderPersonList([]);
-            renderJobList(currentJobItems, {preserveSelection: true});
-        } else {
-            renderJobList(currentJobItems, {preserveSelection: true});
-        }
-        updatePaginationUI();
-    };
-
     const removePersonFromCurrentList = (personId) => {
         currentPersonItems = currentPersonItems.filter((item) => String(item.id) !== String(personId));
         if (String(activePersonId) === String(personId)) {
@@ -579,206 +473,11 @@
         renderPersonList(currentPersonItems, {preserveSelection: true});
     };
 
-    const formatDisplayDate = (raw) => window.formatMonthDayTime(raw, '');
-
-    const currentFilterDate = () => {
-        const today = formatDate(new Date());
-        const yesterdayDate = new Date();
-        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-        const yesterday = formatDate(yesterdayDate);
-
-        return filters.range === 'today'
-            ? today
-            : filters.range === 'yesterday'
-                ? yesterday
-                : '';
-    }
-
-    const updatePaginationUI = () => {
-        if (pageSummary) {
-            pageSummary.textContent = format("common.summary.page", {
-                count: totalCount,
-                page: currentPage,
-                total: totalPages
-            });
-        }
-        if (pagination && window.renderPagination) {
-            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
-        }
-    }
-
-    const showLoading = (message = t("common.loading")) => {
-        jobList.innerHTML = '';
-        const loading = document.createElement('li');
-        loading.className = 'empty';
-        loading.textContent = message;
-        jobList.appendChild(loading);
-        hasNextPage = false;
-        updatePaginationUI();
-    }
-
-    const fetchJobs = async (page = 1) => {
-        currentPage = page;
-        const sender = jobSender ? jobSender.value.trim() : '';
-        const targetDate = currentFilterDate();
-        const params = createParams([
-            ['sender', sender],
-            ['date', targetDate],
-            ['page', String(currentPage)],
-            ['page_size', String(50)],
-        ]);
-        const url = buildUrl('/api/mail-projects', params);
-        showLoading(t("match.loading_jobs"));
-
-        try {
-            const payload = await window.requestJson(url, {method: 'GET'}, {
-                throwOnFailure: true,
-                fallbackMessage: t("common.load_failed")
-            });
-            const result = payload.data || {};
-            const meta = payload.meta || {};
-            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
-            totalCount = Number.isFinite(meta.total) ? meta.total : totalCount;
-            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : totalPages;
-            hasNextPage = currentPage < totalPages;
-            renderJobList(result.items || []);
-            updatePaginationUI();
-        } catch (err) {
-            currentJobItems = [];
-            jobList.innerHTML = '';
-            const errorLi = document.createElement('li');
-            errorLi.className = 'empty';
-            errorLi.textContent = `${t("common.load_failed")}：${err.message}`;
-            jobList.appendChild(errorLi);
-            activeJobId = '';
-            jobDetail.textContent = t("match.empty_job_detail");
-            hasNextPage = false;
-            totalPages = currentPage;
-            updatePaginationUI();
-        }
-    }
-
-    const setPersonLoading = (message = t("match.loading_match")) => {
-        if (!personList) return;
-        personList.innerHTML = '';
-        const loading = document.createElement('li');
-        loading.className = 'empty';
-        loading.innerHTML = `<span class="loading-row"><span class="spinner" aria-hidden="true"></span>${sanitize(message)}</span>`;
-        personList.appendChild(loading);
-    }
-
-    dateButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            dateButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            filters.range = btn.dataset.range;
-            openJobFeedbackId = '';
-            openPersonFeedbackId = '';
-            fetchJobs(1);
-        });
-    });
-
-    jobSearchBtn.addEventListener('click', () => {
-        openJobFeedbackId = '';
-        openPersonFeedbackId = '';
-        fetchJobs(1);
-    });
-
-
-    window.bindPagination(pagination, (value) => {
-        if (value === 'prev') {
-            openJobFeedbackId = '';
-            openPersonFeedbackId = '';
-            if (currentPage > 1) fetchJobs(currentPage - 1);
-            return;
-        }
-        if (value === 'next') {
-            openJobFeedbackId = '';
-            openPersonFeedbackId = '';
-            if (hasNextPage) fetchJobs(currentPage + 1);
-            return;
-        }
-        const page = Number(value);
-        if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
-            openJobFeedbackId = '';
-            openPersonFeedbackId = '';
-            fetchJobs(page);
-        }
-    });
-
-    jobList.addEventListener('click', async (event) => {
-        const toggleBtn = event.target.closest('[data-feedback-toggle]');
-        if (toggleBtn) {
-            event.stopPropagation();
-            const jobId = String(toggleBtn.dataset.jobId || '');
-            const draft = getJobFeedbackDraft(jobId);
-            if (draft.submitted) {
-                return;
-            }
-            openJobFeedbackId = openJobFeedbackId === jobId ? '' : jobId;
-            rerenderJobList();
-            return;
-        }
-
-        const cancelBtn = event.target.closest('[data-feedback-cancel]');
-        if (cancelBtn) {
-            event.stopPropagation();
-            openJobFeedbackId = '';
-            rerenderJobList();
-            return;
-        }
-
-        const submitBtn = event.target.closest('[data-feedback-submit]');
-        if (submitBtn) {
-            event.stopPropagation();
-            const wrapper = submitBtn.closest('.mail-feedback-control');
-            const item = submitBtn.closest('.item');
-            const jobId = String(item?.dataset?.id || '');
-            const selected = wrapper?.querySelector('input[type="radio"]:checked')?.value || '';
-            if (!selected) {
-                alert(t('match.feedback.select_expected'));
-                return;
-            }
-            try {
-                await window.requestJson('/api/wrong-mails', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        id: jobId,
-                        wrong_label: 0,
-                        correct_label: Number(selected)
-                    })
-                }, {
-                    throwOnFailure: true,
-                    fallbackMessage: t("common.load_failed")
-                });
-                const draft = getJobFeedbackDraft(jobId);
-                draft.expectedCategory = selected;
-                draft.submitted = true;
-                removeJobFromCurrentList(jobId);
-            } catch (err) {
-                alert(`${t("common.load_failed")}：${err.message}`);
-            }
-        }
-    });
-
-    jobList.addEventListener('change', (event) => {
-        const radio = event.target.closest('.mail-feedback-control input[type="radio"]');
-        if (!radio) return;
-        const item = radio.closest('.item');
-        const jobId = String(item?.dataset?.id || '');
-        const draft = getJobFeedbackDraft(jobId);
-        draft.expectedCategory = radio.value;
-    });
-
     personList.addEventListener('click', async (event) => {
         const toggleBtn = event.target.closest('[data-person-feedback-toggle]');
         if (toggleBtn) {
             event.stopPropagation();
             const personId = String(toggleBtn.dataset.personId || '');
-            const draft = getPersonFeedbackDraft(personId);
-            if (draft.submitted) {
-                return;
-            }
             openPersonFeedbackId = openPersonFeedbackId === personId ? '' : personId;
             rerenderPersonList();
             return;
@@ -815,9 +514,6 @@
                     throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
-                const draft = getPersonFeedbackDraft(personId);
-                draft.expectedCategory = selected;
-                draft.submitted = true;
                 removePersonFromCurrentList(personId);
             } catch (err) {
                 alert(`${t("common.load_failed")}：${err.message}`);
@@ -825,13 +521,54 @@
         }
     });
 
-    personList.addEventListener('change', (event) => {
-        const radio = event.target.closest('.mail-feedback-control input[type="radio"]');
-        if (!radio) return;
-        const item = radio.closest('.item');
-        const personId = String(item?.dataset?.id || '');
-        const draft = getPersonFeedbackDraft(personId);
-        draft.expectedCategory = radio.value;
+    sendBtn.addEventListener('click', () => {
+        const {activeJob, activePerson, jobPayload, personPayload} = buildActivePayloads();
+
+        if (!activeJob || !activePerson) {
+            alert(t("match.send_tip"));
+            return;
+        }
+
+        const payload = {
+            job: jobPayload,
+            person: personPayload,
+            mail_type: 0,
+            updatedAt: Date.now()
+        };
+
+        try {
+            window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
+        } catch (err) {
+            console.error(t("match.cache_failed"), err);
+        }
+
+        window.navigateAppRoute('bpsongxin.html?from=match');
+    });
+
+    window.addEventListener('resize', () => {
+        scheduleFeedbackPlacement(jobList);
+        scheduleFeedbackPlacement(personList);
+    });
+
+    window.bindPagination(pagination, (value) => {
+        if (value === 'prev') {
+            openJobFeedbackId = '';
+            openPersonFeedbackId = '';
+            if (currentPage > 1) fetchJobs(currentPage - 1);
+            return;
+        }
+        if (value === 'next') {
+            openJobFeedbackId = '';
+            openPersonFeedbackId = '';
+            if (hasNextPage) fetchJobs(currentPage + 1);
+            return;
+        }
+        const page = Number(value);
+        if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
+            openJobFeedbackId = '';
+            openPersonFeedbackId = '';
+            fetchJobs(page);
+        }
     });
 
     document.addEventListener('click', (event) => {
@@ -846,19 +583,73 @@
         }
     });
 
+    const bindPopoverScrollForwarding = (listEl) => {
+        if (!listEl) return;
+        listEl.addEventListener('wheel', (event) => {
+            if (!event.target.closest('.mail-feedback-popover')) return;
+            event.preventDefault();
+            listEl.scrollTop += event.deltaY;
+            scheduleFeedbackPlacement(listEl);
+        }, {passive: false});
+
+        listEl.addEventListener('scroll', () => {
+            scheduleFeedbackPlacement(listEl);
+        });
+    };
+
     bindPopoverScrollForwarding(jobList);
     bindPopoverScrollForwarding(personList);
-    window.addEventListener('resize', () => {
-        scheduleFeedbackPlacement(jobList);
-        scheduleFeedbackPlacement(personList);
-    });
 
+    const readMatchedSkills = (item) => {
+        const raw = item?.dataset?.matchedSkills;
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
+        } catch {
+            return [];
+        }
+    };
 
-    // 先把静态文案按新格式渲染，再绑定事件和拉取接口
-    renderDetail(jobDetail, jobDetail.textContent.trim());
-    renderDetail(personDetail, personDetail.textContent.trim());
+    const bindListClick = (listId, detailId, onSelect) => {
+        const list = document.getElementById(listId);
+        const detail = document.getElementById(detailId);
 
-    fetchJobs(1);
+        if (!list || !detail) return;
+
+        list.addEventListener('click', function (e) {
+            if (e.target.closest('.mail-feedback-control')) {
+                return;
+            }
+            const item = e.target.closest('.item');
+            if (!item) return;
+
+            list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
+            item.classList.add('active');
+
+            const text = item.getAttribute('data-detail') || '';
+            const highlights = readMatchedSkills(item);
+            renderDetail(detail, text, highlights);
+
+            if (typeof onSelect === 'function') {
+                try {
+                    onSelect(item, highlights);
+                } catch (err) {
+                    console.error('handleSelect failed', err);
+                }
+            }
+        });
+    }
+
+    const setPersonLoading = (message = t("match.loading_match")) => {
+        if (!personList) return;
+        personList.innerHTML = '';
+        const loading = document.createElement('li');
+        loading.className = 'empty';
+        loading.innerHTML = `<span class="loading-row"><span class="spinner" aria-hidden="true"></span>${sanitize(message)}</span>`;
+        personList.appendChild(loading);
+    }
+
     bindListClick('job-list', 'job-detail', async (item) => {
         activeJobId = item.dataset.id || '';
         activeJobDetail = item.getAttribute('data-detail') || '';
@@ -911,97 +702,234 @@
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
     });
 
-    const parseDatasetJSON = (el, key) => {
-        if (!el || !el.dataset) return null;
-        const raw = el.dataset[key];
-        if (!raw) return null;
-        try {
-            return JSON.parse(raw);
-        } catch {
-            return null;
+    const scheduleFeedbackPlacement = (listEl) => {
+        if (!listEl) return;
+        requestAnimationFrame(() => {
+            const visibleControls = Array.from(listEl.querySelectorAll('.mail-feedback-control'))
+                .filter((control) => control.querySelector('.mail-feedback-popover.is-visible'));
+
+            visibleControls.forEach((control) => {
+                control.classList.remove('is-dropup');
+                const popover = control.querySelector('.mail-feedback-popover');
+                if (!popover) return;
+
+                const controlRect = control.getBoundingClientRect();
+                const listRect = listEl.getBoundingClientRect();
+                const popoverRect = popover.getBoundingClientRect();
+                const availableBelow = listRect.bottom - controlRect.bottom;
+                const availableAbove = controlRect.top - listRect.top;
+                const requiredSpace = popoverRect.height + 12;
+
+                if (requiredSpace > availableBelow && availableAbove > availableBelow) {
+                    control.classList.add('is-dropup');
+                }
+
+                const button = control.querySelector('.mail-feedback-btn');
+                if (!button) return;
+                const buttonRect = button.getBoundingClientRect();
+                const viewportGap = 12;
+                const popoverWidth = Math.min(280, window.innerWidth - viewportGap * 2);
+                const left = Math.max(
+                    viewportGap,
+                    Math.min(buttonRect.right - popoverWidth, window.innerWidth - popoverWidth - viewportGap)
+                );
+                const placeAbove = control.classList.contains('is-dropup');
+                const top = placeAbove
+                    ? Math.max(viewportGap, buttonRect.top - popoverRect.height - 8)
+                    : Math.min(buttonRect.bottom + 8, window.innerHeight - popoverRect.height - viewportGap);
+
+                popover.style.left = `${left}px`;
+                popover.style.top = `${top}px`;
+                popover.style.width = `${popoverWidth}px`;
+            });
+        });
+    };
+
+    const stripCssNoise = (text = '') => {
+        if (!text) return '';
+        const firstGap = text.indexOf('\n\n');
+        const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
+        if (firstGap >= 0 && hasBraces) {
+            return text.slice(firstGap + 2);
         }
+        return text;
     };
 
-    const buildActivePayloads = () => {
-        const activeJob = jobList?.querySelector('.item.active');
-        const activePerson = personList?.querySelector('.item.active');
 
-        const jobData = parseDatasetJSON(activeJob, 'item') || {};
-        const personData = parseDatasetJSON(activePerson, 'item') || {};
+    const renderJobList = (items, options = {}) => {
+        const preserveSelection = options.preserveSelection === true;
+        currentJobItems = Array.isArray(items) ? items : [];
+        jobList.innerHTML = '';
 
-        const jobPayload = {
-            id: jobData.id || activeJob?.dataset?.id || '',
-            title: jobData.title || activeJob?.querySelector('.item-title')?.textContent.trim() || '',
-            desc: jobData.desc || activeJob?.querySelector('.item-desc')?.textContent.trim() || '',
-            detail: jobData.detail || activeJob?.dataset?.detail || '',
-            time: jobData.date || activeJob?.querySelector('.item-time')?.textContent.trim() || ''
-        };
-
-        const personPayload = {
-            id: personData.id || activePerson?.dataset?.id || '',
-            name: personData.title || activePerson?.querySelector('.person-name')?.textContent.trim() || '',
-            belong: personData.from || activePerson?.querySelector('.person-belong')?.textContent.trim() || '',
-            detail: personData.body || activePerson?.dataset?.detail || '',
-            time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || ''
-        };
-
-        return {
-            activeJob,
-            activePerson,
-            jobPayload,
-            personPayload
-        };
-    };
-
-    // 将当前选中的求人与人员信息存入本地并跳转到送信页
-    sendBtn.addEventListener('click', () => {
-        const {activeJob, activePerson, jobPayload, personPayload} = buildActivePayloads();
-
-        if (!activeJob || !activePerson) {
-            alert(t("match.send_tip"));
+        if (!items.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = t("match.empty_jobs");
+            jobList.appendChild(empty);
+            renderDetail(jobDetail, t("match.empty_job_detail"));
+            activeJobId = '';
+            activeJobDetail = '';
             return;
         }
 
-        const payload = {
-            job: jobPayload,
-            person: personPayload,
-            mail_type: 0,
-            updatedAt: Date.now()
-        };
+        items.forEach((item) => {
+            const li = document.createElement('li');
+            const detail = item.detail || '';
+            const id = item.id || '';
+            li.className = `item${preserveSelection && String(id) === String(activeJobId) ? ' active' : ''}`;
+            li.dataset.detail = detail;
+            li.dataset.id = id;
+            li.dataset.item = JSON.stringify({...item, detail, id});
+
+            const main = document.createElement('div');
+            main.className = 'item-main';
+
+            const title = document.createElement('div');
+            title.className = 'item-title';
+            title.textContent = item.title;
+
+            const desc = document.createElement('div');
+            desc.className = 'item-desc';
+            desc.textContent = item.desc;
+
+            const time = document.createElement('div');
+            time.className = 'item-time';
+            time.textContent = window.formatMonthDayTime(item.date, '');
+
+            const feedbackControl = document.createElement('div');
+            feedbackControl.className = `mail-feedback-control${openJobFeedbackId === String(id) ? ' is-open' : ''}`;
+
+            const feedbackButton = document.createElement('button');
+            feedbackButton.type = 'button';
+            feedbackButton.className = `mail-feedback-btn`;
+            feedbackButton.dataset.feedbackToggle = '1';
+            feedbackButton.dataset.jobId = id;
+            feedbackButton.title = t('match.feedback.trigger');
+            feedbackButton.setAttribute('aria-label', feedbackButton.title);
+            feedbackButton.innerHTML = '!';
+
+            const feedbackPopover = document.createElement('div');
+            feedbackPopover.className = `mail-feedback-popover${openJobFeedbackId === String(id) ? ' is-visible' : ''}`;
+            feedbackPopover.dataset.feedbackPopover = '1';
+            feedbackPopover.innerHTML = `
+                <div class="mail-feedback-title">${sanitize(t('match.feedback.title'))}</div>
+                <div class="mail-feedback-desc">${sanitize(t('match.feedback.desc'))}</div>
+                <label class="mail-feedback-option">
+                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="1" >
+                    <span>${sanitize(t('match.feedback.option.technician'))}</span>
+                </label>
+                <label class="mail-feedback-option">
+                    <input type="radio" name="feedback-category-${sanitize(String(id))}" value="-1" >
+                    <span>${sanitize(t('match.feedback.option.other'))}</span>
+                </label>
+                <div class="mail-feedback-actions">
+                    <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-feedback-cancel="1">${sanitize(t('common.cancel'))}</button>
+                    <button class="c-btn c-btn-primary c-btn-sm" type="button" data-feedback-submit="1" >${sanitize(t('match.feedback.submit'))}</button>
+                </div>
+            `;
+
+            main.appendChild(title);
+            main.appendChild(desc);
+            li.appendChild(main);
+            feedbackControl.appendChild(time);
+            feedbackControl.appendChild(feedbackButton);
+            feedbackControl.appendChild(feedbackPopover);
+            li.appendChild(feedbackControl);
+            jobList.appendChild(li);
+        });
+
+        if (preserveSelection && activeJobId) {
+            const activeJob = Array.from(jobList.querySelectorAll('.item')).find((item) => item.dataset.id === String(activeJobId));
+            if (activeJob) {
+                activeJobDetail = activeJob.getAttribute('data-detail') || '';
+                renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
+                scheduleFeedbackPlacement(jobList);
+                return;
+            }
+        }
+
+        activeJobId = '';
+        activeMatchedSkills = [];
+        activeJobDetail = '';
+        renderDetail(jobDetail, t("match.empty_job_detail"));
+        scheduleFeedbackPlacement(jobList);
+    }
+
+
+    const updatePaginationUI = () => {
+        pageSummary.textContent = format("common.summary.page", {
+            count: totalCount,
+            page: currentPage,
+            total: totalPages
+        });
+        window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+    }
+
+    const showLoading = (message = t("common.loading")) => {
+        jobList.innerHTML = '';
+        const loading = document.createElement('li');
+        loading.className = 'empty';
+        loading.textContent = message;
+        jobList.appendChild(loading);
+        hasNextPage = false;
+        updatePaginationUI();
+    }
+
+    const currentFilterDate = () => {
+        const today = formatDate(new Date());
+        const yesterdayDate = new Date();
+        yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+        const yesterday = formatDate(yesterdayDate);
+
+        return filters.range === 'today'
+            ? today
+            : filters.range === 'yesterday'
+                ? yesterday
+                : '';
+    }
+
+    const fetchJobs = async (page = 1) => {
+        currentPage = page;
+        const sender = jobSender.value.trim();
+        const targetDate = currentFilterDate();
+        const params = createParams([
+            ['sender', sender],
+            ['date', targetDate],
+            ['page', String(currentPage)],
+            ['page_size', String(50)],
+        ]);
+        const url = buildUrl('/api/mail-projects', params);
+        showLoading(t("match.loading_jobs"));
 
         try {
-            window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
+            const payload = await window.requestJson(url, {method: 'GET'}, {
+                throwOnFailure: true,
+                fallbackMessage: t("common.load_failed")
+            });
+            const result = payload.data || {};
+            const meta = payload.meta || {};
+            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+            totalCount = Number.isFinite(meta.total) ? meta.total : totalCount;
+            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : totalPages;
+            hasNextPage = currentPage < totalPages;
+            renderJobList(result.items || []);
+            updatePaginationUI();
         } catch (err) {
-            console.error(t("match.cache_failed"), err);
+            currentJobItems = [];
+            jobList.innerHTML = '';
+            const errorLi = document.createElement('li');
+            errorLi.className = 'empty';
+            errorLi.textContent = `${t("common.load_failed")}：${err.message}`;
+            jobList.appendChild(errorLi);
+            activeJobId = '';
+            jobDetail.textContent = t("match.empty_job_detail");
+            hasNextPage = false;
+            totalPages = currentPage;
+            updatePaginationUI();
         }
+    }
 
-        window.navigateAppRoute('bpsongxin.html?from=match');
-    });
-
-    sendBpBtn.addEventListener('click', () => {
-        const {activeJob, jobPayload} = buildActivePayloads();
-        if (!activeJob) {
-            alert(t("match.send_bp_tip"));
-            return;
-        }
-
-        const prefill = {
-            subject: jobPayload.title || jobPayload.desc || '',
-            body: jobPayload.detail || jobPayload.desc || '',
-            mail_type: '2',
-            source: 'bpmatch',
-            updatedAt: Date.now()
-        };
-
-        try {
-            window.MatchSys.clearStoredKey('bulkMailContext');
-            window.MatchSys.writeJSONToSessionStorage('bulkMailPrefill', prefill);
-        } catch (err) {
-            console.error(t("match.cache_failed"), err);
-        }
-
-        window.navigateAppRoute('bulk_email.html');
-    });
+    fetchJobs(1);
 
 </script>
 </body>

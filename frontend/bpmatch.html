@@ -117,8 +117,7 @@
     const renderDetail = (target, text = '', highlights = []) => {
         if (!target) return;
         const cleaned = stripCssNoise(text || '');
-        const masked = cleaned;
-        const normalized = masked
+        const normalized = cleaned
             .replace(/\r\n/g, '\n')
             .replace(/\n{3,}/g, '\n\n')
             .trim();
@@ -174,34 +173,26 @@
         range: 'today'
     };
 
-    const getJobFeedbackDraft = (jobId) => {
-        const key = String(jobId || '');
+    const getFeedbackDraft = (state, id) => {
+        const key = String(id || '');
         if (!key) {
-            return {expectedCategory: '', note: '', submitted: false};
+            return {expectedCategory: '', submitted: false};
         }
-        if (!jobFeedbackState.has(key)) {
-            jobFeedbackState.set(key, {
+        if (!state.has(key)) {
+            state.set(key, {
                 expectedCategory: '',
-                note: '',
                 submitted: false
             });
         }
-        return jobFeedbackState.get(key);
+        return state.get(key);
+    };
+
+    const getJobFeedbackDraft = (jobId) => {
+        return getFeedbackDraft(jobFeedbackState, jobId);
     };
 
     const getPersonFeedbackDraft = (personId) => {
-        const key = String(personId || '');
-        if (!key) {
-            return {expectedCategory: '', note: '', submitted: false};
-        }
-        if (!personFeedbackState.has(key)) {
-            personFeedbackState.set(key, {
-                expectedCategory: '',
-                note: '',
-                submitted: false
-            });
-        }
-        return personFeedbackState.get(key);
+        return getFeedbackDraft(personFeedbackState, personId);
     };
 
     // 公共函数：给列表加点击事件
@@ -640,10 +631,10 @@
         showLoading(t("match.loading_jobs"));
 
         try {
-            const payload = await window.requestJson(url, {method: 'GET'});
-            if (!payload.success) {
-                throw new Error(payload.message || t("common.load_failed"));
-            }
+            const payload = await window.requestJson(url, {method: 'GET'}, {
+                throwOnFailure: true,
+                fallbackMessage: t("common.load_failed")
+            });
             const result = payload.data || {};
             const meta = payload.meta || {};
             currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
@@ -749,17 +740,17 @@
                 return;
             }
             try {
-                const payload = await window.requestJson('/api/wrong-mails', {
+                await window.requestJson('/api/wrong-mails', {
                     method: 'POST',
                     body: JSON.stringify({
                         id: jobId,
                         wrong_label: 0,
                         correct_label: Number(selected)
                     })
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: t("common.load_failed")
                 });
-                if (!payload.success) {
-                    throw new Error(payload.message || t("common.load_failed"));
-                }
                 const draft = getJobFeedbackDraft(jobId);
                 draft.expectedCategory = selected;
                 draft.submitted = true;
@@ -777,13 +768,6 @@
         const jobId = String(item?.dataset?.id || '');
         const draft = getJobFeedbackDraft(jobId);
         draft.expectedCategory = radio.value;
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!openJobFeedbackId) return;
-        if (event.target.closest('.mail-feedback-control')) return;
-        openJobFeedbackId = '';
-        rerenderJobList();
     });
 
     personList.addEventListener('click', async (event) => {
@@ -820,17 +804,17 @@
                 return;
             }
             try {
-                const payload = await window.requestJson('/api/wrong-mails', {
+                await window.requestJson('/api/wrong-mails', {
                     method: 'POST',
                     body: JSON.stringify({
                         id: personId,
                         wrong_label: 1,
                         correct_label: Number(selected)
                     })
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: t("common.load_failed")
                 });
-                if (!payload.success) {
-                    throw new Error(payload.message || t("common.load_failed"));
-                }
                 const draft = getPersonFeedbackDraft(personId);
                 draft.expectedCategory = selected;
                 draft.submitted = true;
@@ -851,10 +835,15 @@
     });
 
     document.addEventListener('click', (event) => {
-        if (!openPersonFeedbackId) return;
         if (event.target.closest('.mail-feedback-control')) return;
-        openPersonFeedbackId = '';
-        rerenderPersonList();
+        if (openJobFeedbackId) {
+            openJobFeedbackId = '';
+            rerenderJobList();
+        }
+        if (openPersonFeedbackId) {
+            openPersonFeedbackId = '';
+            rerenderPersonList();
+        }
     });
 
     bindPopoverScrollForwarding(jobList);
@@ -886,10 +875,10 @@
         try {
             const projectId = payload?.id || '';
             const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
-            const responsePayload = await window.requestJson(url, {method: 'GET'});
-            if (!responsePayload.success) {
-                throw new Error(responsePayload.message || t("match.match_failed"));
-            }
+            const responsePayload = await window.requestJson(url, {method: 'GET'}, {
+                throwOnFailure: true,
+                fallbackMessage: t("match.match_failed")
+            });
             const result = responsePayload.data || {};
             const rawMatches = (result && result.matches) || [];
             const matchItems = Array.isArray(rawMatches)

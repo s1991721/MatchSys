@@ -368,7 +368,10 @@
             if (target) openModal("edit", target);
         } else if (action === "tech-edit") {
             try {
-                localStorage.setItem("tech_edit_employee_id", String(id));
+                window.MatchSys.writeJSONToLocalStorage("tech_edit_employee_id", {
+                    id: String(id),
+                    updatedAt: Date.now()
+                });
                 const target = allEmployees.find(item => String(item.id) === String(id));
                 if (target) {
                     window.MatchSys.writeJSONToLocalStorage(TECH_PREFILL_KEY, {

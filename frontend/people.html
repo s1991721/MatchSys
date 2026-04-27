@@ -37,20 +37,12 @@
                     <span data-i18n="common.field.contract_status">契约状况</span>
                     <select id="filterContract">
                         <option value="" data-i18n="common.all">全部</option>
-                        <option value="正社员" data-i18n="people.contract.regular">正社员</option>
-                        <option value="契约社员" data-i18n="people.contract.contract">契约社员</option>
-                        <option value="フリーランス" data-i18n="people.contract.freelance">フリーランス</option>
                     </select>
                 </label>
                 <label>
                     <span data-i18n="common.field.business_status">营业状态</span>
                     <select id="filterBusinessStatus">
                         <option value="" data-i18n="common.all">全部</option>
-                        <option value="0" data-i18n="people.business_status.0">营业中</option>
-                        <option value="1" data-i18n="people.business_status.1">营业中1/2等待</option>
-                        <option value="2" data-i18n="people.business_status.2">营业中结果等待</option>
-                        <option value="3" data-i18n="people.business_status.3">现场中</option>
-                        <option value="4" data-i18n="people.business_status.4">现场已确定</option>
                     </select>
                 </label>
             </div>
@@ -136,9 +128,6 @@
                     <span data-i18n="common.field.contract_status">契约状况</span>
                     <select name="contract" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
-                        <option value="正社员" data-i18n="people.contract.regular">正社员</option>
-                        <option value="契约社员" data-i18n="people.contract.contract">契约社员</option>
-                        <option value="フリーランス" data-i18n="people.contract.freelance">フリーランス</option>
                     </select>
                 </label>
                 <label>
@@ -149,11 +138,6 @@
                     <span data-i18n="common.field.business_status">营业状态</span>
                     <select name="businessStatus" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
-                        <option value="0" data-i18n="people.business_status.0">营业中</option>
-                        <option value="1" data-i18n="people.business_status.1">营业中1/2等待</option>
-                        <option value="2" data-i18n="people.business_status.2">营业中结果等待</option>
-                        <option value="3" data-i18n="people.business_status.3">现场中</option>
-                        <option value="4" data-i18n="people.business_status.4">现场已确定</option>
                     </select>
                 </label>
                 <label>
@@ -238,6 +222,44 @@
         businessStatus: null
     };
     const TECH_PREFILL_KEY = 'tech_edit_employee_prefill';
+    const CONTRACT_OPTIONS = [
+        { value: 1, key: "people.contract.regular", className: "c-pill c-pill-success" },
+        { value: 2, key: "people.contract.contract", className: "c-pill" },
+        { value: 3, key: "people.contract.freelance", className: "c-pill c-pill-danger" }
+    ];
+    const BUSINESS_STATUS_OPTIONS = [
+        { value: 0, key: "people.business_status.0", className: "c-pill c-pill-success" },
+        { value: 1, key: "people.business_status.1", className: "c-pill c-pill-warn" },
+        { value: 2, key: "people.business_status.2", className: "c-pill c-pill-info" },
+        { value: 3, key: "people.business_status.3", className: "c-pill c-pill-primary" },
+        { value: 4, key: "people.business_status.4", className: "c-pill c-pill-danger" }
+    ];
+    const h = (value) => window.escapeHtml ? window.escapeHtml(value) : String(value == null ? '' : value);
+
+    const fillSelectOptions = (select, options) => {
+        if (!select) return;
+        const currentValue = select.value;
+        const firstOption = select.querySelector('option[value=""]');
+        select.innerHTML = '';
+        if (firstOption) {
+            select.appendChild(firstOption);
+        }
+        options.forEach((item) => {
+            const option = document.createElement('option');
+            option.value = String(item.value);
+            option.textContent = t(item.key);
+            option.setAttribute('data-i18n', item.key);
+            select.appendChild(option);
+        });
+        select.value = currentValue;
+    };
+
+    const fillOptionSelects = () => {
+        fillSelectOptions(filterContract, CONTRACT_OPTIONS);
+        fillSelectOptions(personForm.contract, CONTRACT_OPTIONS);
+        fillSelectOptions(filterBusinessStatus, BUSINESS_STATUS_OPTIONS);
+        fillSelectOptions(personForm.businessStatus, BUSINESS_STATUS_OPTIONS);
+    };
 
     const loadTechPrefill = () => {
         try {
@@ -248,6 +270,7 @@
                 birthday: parsed.birthday || ''
             };
         } catch (error) {
+            console.warn('读取技术者预填信息失败。', error);
             return null;
         }
     };
@@ -256,19 +279,35 @@
         try {
             window.MatchSys.clearStoredKey(TECH_PREFILL_KEY);
         } catch (error) {
+            console.warn('清理技术者预填信息失败。', error);
         }
     };
 
-    const contractLabelToType = (label) => {
+    const normalizeContractType = (value) => {
+        if (value === null || value === undefined || value === '') return 0;
+        const numericValue = Number(value);
+        if (CONTRACT_OPTIONS.some((item) => item.value === numericValue)) return numericValue;
         const mapping = {
             [t("people.contract.regular")]: 1,
             [t("people.contract.contract")]: 2,
             [t("people.contract.freelance")]: 3,
             '正社员': 1,
+            '正社員': 1,
             '契约社员': 2,
+            '契約社員': 2,
             'フリーランス': 3
         };
-        return mapping[label] ?? 0;
+        return mapping[value] ?? 0;
+    };
+
+    const contractLabel = (value) => {
+        const option = CONTRACT_OPTIONS.find((item) => item.value === normalizeContractType(value));
+        return option ? t(option.key) : t("people.contract.unknown");
+    };
+
+    const contractClass = (value) => {
+        const option = CONTRACT_OPTIONS.find((item) => item.value === normalizeContractType(value));
+        return option ? option.className : 'c-pill';
     };
 
     const normalizeNationalityValue = (value) => {
@@ -295,25 +334,13 @@
     };
 
     const businessStatusLabel = (value) => {
-        const mapping = {
-            0: t("people.business_status.0"),
-            1: t("people.business_status.1"),
-            2: t("people.business_status.2"),
-            3: t("people.business_status.3"),
-            4: t("people.business_status.4")
-        };
-        return mapping[value] ?? '-';
+        const option = BUSINESS_STATUS_OPTIONS.find((item) => item.value === Number(value));
+        return option ? t(option.key) : '-';
     };
 
     const businessStatusClass = (value) => {
-        const mapping = {
-            0: 'c-pill c-pill-success',
-            1: 'c-pill c-pill-warn',
-            2: 'c-pill c-pill-info',
-            3: 'c-pill c-pill-primary',
-            4: 'c-pill c-pill-danger'
-        };
-        return mapping[value] ?? 'c-pill';
+        const option = BUSINESS_STATUS_OPTIONS.find((item) => item.value === Number(value));
+        return option ? option.className : 'c-pill';
     };
 
     const renderPagination = () => {
@@ -327,32 +354,35 @@
         }
 
         peopleTableBody.innerHTML = list.map((person) => {
-            const chipClass = person.contract === '正社员' ? 'c-pill c-pill-success'
-                : person.contract === 'フリーランス' ? 'c-pill c-pill-danger'
-                    : 'c-pill';
+            const contractValue = person.contractType || person.contract;
+            const chipClass = contractClass(contractValue);
+            const contractText = contractLabel(contractValue);
             const siteContractClass = person.siteContract ? 'c-pill c-pill-success' : 'c-pill';
             const businessLabel = businessStatusLabel(person.businessStatus);
             const businessClass = businessStatusClass(person.businessStatus);
+            const ssLink = person.ssUrl
+                ? `<a class="c-file-link" href="${h(person.ssUrl)}" target="_blank" rel="noopener">${h(t("common.preview"))}</a>`
+                : '-';
 
             return `
                 <tr>
-                    <td data-label="${t("common.field.name")}">${person.name}</td>
-                    <td data-label="${t("people.table.nickname")}">${person.nickname || '-'}</td>
-                    <td data-label="${t("common.field.age")}">${person.age}</td>
-                    <td data-label="${t("common.field.nationality")}">${nationalityLabel(person.nationality)}</td>
-                    <td data-label="${t("people.table.price")}">${person.price} ${t("people.price_unit")}</td>
-                    <td data-label="${t("common.field.intro")}"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
-                    <td data-label="${t("common.field.contract_status")}"><span class="${chipClass}">${person.contract}</span></td>
-                    <td data-label="${t("common.field.business_status")}"><span class="${businessClass}">${businessLabel}</span></td>
-                    <td data-label="${t("people.table.site_contract")}"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
-                    <td data-label="${t("common.field.note")}">${person.note || '-'}</td>
-                    <td data-label="${t("people.table.ss_file")}">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">${t("common.preview")}</a>` : '-'}</td>
-                    <td data-label="${t("common.field.actions")}">
+                    <td data-label="${h(t("common.field.name"))}">${h(person.name || '-')}</td>
+                    <td data-label="${h(t("people.table.nickname"))}">${h(person.nickname || '-')}</td>
+                    <td data-label="${h(t("common.field.age"))}">${h(person.age ?? '-')}</td>
+                    <td data-label="${h(t("common.field.nationality"))}">${h(nationalityLabel(person.nationality))}</td>
+                    <td data-label="${h(t("people.table.price"))}">${h(person.price ?? '-')} ${h(t("people.price_unit"))}</td>
+                    <td data-label="${h(t("common.field.intro"))}"><span class="truncate c-truncate" title="${h(person.intro || '')}">${h(person.intro || '-')}</span></td>
+                    <td data-label="${h(t("common.field.contract_status"))}"><span class="${h(chipClass)}">${h(contractText)}</span></td>
+                    <td data-label="${h(t("common.field.business_status"))}"><span class="${h(businessClass)}">${h(businessLabel)}</span></td>
+                    <td data-label="${h(t("people.table.site_contract"))}"><span class="${h(siteContractClass)}">${h(person.siteContract || '-')}</span></td>
+                    <td data-label="${h(t("common.field.note"))}">${h(person.note || '-')}</td>
+                    <td data-label="${h(t("people.table.ss_file"))}">${ssLink}</td>
+                    <td data-label="${h(t("common.field.actions"))}">
                         <div class="row-actions c-row-actions c-row-actions-nowrap">
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">${t("common.edit")}</button>
-                            <button type="button" class="c-btn c-btn-primary c-btn-sm" data-find-case="${person.id}">找案件</button>
-                            <button type="button" class="c-btn c-btn-warn-lite c-btn-sm" data-match="${person.id}">匹配案件</button>
-                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">${t("common.delete")}</button>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${h(person.id)}">${h(t("common.edit"))}</button>
+                            <button type="button" class="c-btn c-btn-primary c-btn-sm" data-find-case="${h(person.id)}">${h(t("people.action.find_case"))}</button>
+                            <button type="button" class="c-btn c-btn-warn-lite c-btn-sm" data-match="${h(person.id)}">${h(t("people.action.match_case"))}</button>
+                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${h(person.id)}">${h(t("common.delete"))}</button>
                         </div>
                     </td>
                 </tr>
@@ -404,7 +434,7 @@
         const nationalityValue = normalizeNationalityValue(person.nationality);
         personForm.nationality.value = nationalityValue === '' ? '' : String(nationalityValue);
         personForm.price.value = person.price;
-        personForm.contract.value = person.contract;
+        personForm.contract.value = String(normalizeContractType(person.contractType || person.contract) || '');
         personForm.siteContract.value = person.siteContract || '';
         personForm.businessStatus.value = person.businessStatus ?? '';
         personForm.intro.value = person.intro || '';
@@ -492,6 +522,7 @@
             }
             return '';
         } catch (error) {
+            console.warn('读取自动编辑员工 ID 失败。', error);
             return '';
         }
     };
@@ -505,6 +536,7 @@
             age: calcAge(item.birthday),
             nationality: normalizeNationalityValue(item.nationality),
             price: item.price ? Number(item.price) : 0,
+            contractType: normalizeContractType(item.contract_type),
             contract: contractTypeToLabel(item.contract_type),
             siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
             businessStatus: item.business_status ?? 0,
@@ -525,6 +557,7 @@
             if (!item.employee_id) return null;
             return mapTechnicianItem(item);
         } catch (error) {
+            console.warn('获取技术者详情失败。', error);
             return null;
         }
     };
@@ -607,6 +640,7 @@
             personForm.nickname.value = personForm.nickname.value || '';
             personForm.nationality.value = personForm.nationality.value || '';
         } catch (error) {
+            console.warn('根据员工信息预填技术者表单失败。', error);
         }
     };
 
@@ -648,7 +682,7 @@
             ageMax,
             priceMax,
             nationality: nationalityValue,
-            contractType: contractValue ? contractLabelToType(contractValue) : null,
+            contractType: contractValue === '' ? null : normalizeContractType(contractValue),
             businessStatus: businessStatusValue === '' ? null : Number(businessStatusValue)
         };
         currentPage = 1;
@@ -657,6 +691,7 @@
 
     personForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (submitBtn.disabled) return;
         const formValue = getFormData();
 
         if (!formValue.name) {
@@ -691,13 +726,14 @@
             nationality: nationalityValue === '' ? null : nationalityValue,
             price: Number.isFinite(formValue.price) ? formValue.price : null,
             introduction: formValue.intro || '',
-            contract_type: contractLabelToType(formValue.contract),
+            contract_type: normalizeContractType(formValue.contract),
             spot_contract_deadline: formValue.siteContract || null,
             business_status: Number.isFinite(formValue.businessStatus) ? formValue.businessStatus : 0,
             ss: currentSsPath || null,
             remark: formValue.note
         };
 
+        submitBtn.disabled = true;
         try {
             const saved = await savePerson(payload);
             const savedItem = saved.item || {};
@@ -716,6 +752,8 @@
             await fetchPeople();
         } catch (error) {
             alert(error.message || t("common.save_failed"));
+        } finally {
+            submitBtn.disabled = false;
         }
     });
 
@@ -766,7 +804,7 @@
             `年龄：${person.age ?? '-'}`,
             `国籍：${nationalityLabel(person.nationality) || '-'}`,
             `单价（万/月）：${person.price ?? '-'}`,
-            `契约状况：${person.contract || '-'}`,
+            `契约状况：${contractLabel(person.contractType || person.contract) || '-'}`,
             `营业状态：${businessStatusLabel(person.businessStatus) || '-'}`,
             `现场契约：${person.siteContract || '-'}`,
             `介绍文：${person.intro || '-'}`,
@@ -794,10 +832,12 @@
     };
 
     peopleTableBody.addEventListener('click', (event) => {
-        const editId = event.target.getAttribute('data-edit');
-        const deleteId = event.target.getAttribute('data-delete');
-        const matchId = event.target.getAttribute('data-match');
-        const findCaseId = event.target.getAttribute('data-find-case');
+        const actionButton = event.target.closest('[data-edit], [data-delete], [data-match], [data-find-case]');
+        if (!actionButton || !peopleTableBody.contains(actionButton)) return;
+        const editId = actionButton.dataset.edit;
+        const deleteId = actionButton.dataset.delete;
+        const matchId = actionButton.dataset.match;
+        const findCaseId = actionButton.dataset.findCase;
 
         if (editId) {
             const person = people.find(item => String(item.id) === editId);
@@ -856,11 +896,13 @@
         fetchPeople();
     });
 
+    fillOptionSelects();
     fetchPeople();
     const refreshI18n = () => {
         if (i18n) {
             i18n.apply();
         }
+        fillOptionSelects();
         if (personDialog && personDialog.open) {
             dialogTitle.textContent = editingId ? t("people.dialog.edit") : t("people.dialog.create");
             submitBtn.textContent = editingId ? t("people.action.save") : t("people.action.create");

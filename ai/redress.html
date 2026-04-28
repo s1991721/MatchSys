@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CSV Reclamation Tool</title>
+  <title>CSV Redress Tool</title>
   <style>
     :root {
       --bg: #f4f6f2;
@@ -313,7 +313,7 @@
       </div>
       <div class="subtext">
         读取 CSV 后展示 <code>id</code>、<code>Subject</code>、<code>Body</code>，并把可编辑结果写回 <code>ai_result</code> 列。
-        当前版本不调用 AI 接口，空结果会自动填入临时占位分析。
+        当 <code>ai_result</code> 为空时，会根据 <code>label</code> 自动分析正文：<code>0</code> 调案件分析，<code>1</code> 调技术者分析。
       </div>
       <div class="toolbar-meta">
         <div id="status" class="status">请选择 CSV 文件。</div>
@@ -351,7 +351,7 @@
             <div class="field fill">
               <span class="label">AI Result</span>
               <textarea id="ai-result-input" class="result-input" spellcheck="false"></textarea>
-              <div class="hint">切换到结果为空的记录时会自动填入占位分析；已有结果不会被覆盖。</div>
+              <div class="hint">切换到结果为空的记录时会自动分析正文；已有结果和人工编辑内容不会被覆盖。</div>
             </div>
             <div class="actions">
               <button id="prev-btn" class="ghost">上一条</button>
@@ -373,8 +373,16 @@
       currentIndex: -1,
       fileHandle: null,
       fileName: "data.csv",
-      sourceText: ""
+      sourceText: "",
+      analysisSeq: 0,
+      loginPromise: null
     };
+
+    const API_BASE = "http://localhost:8000";
+    const LOGIN_ENDPOINT = API_BASE + "/api/login";
+    const ANALYZE_ENDPOINT = API_BASE + "/api/redress/analyze";
+    const MOCK_LOGIN_USER = "admin";
+    const MOCK_LOGIN_PASSWORD = "admin";
 
     const statusEl = document.getElementById("status");
     const progressEl = document.getElementById("progress");
@@ -517,7 +525,7 @@
     }
 
     function getStorageKey() {
-      return "reclamation-tool-current-id:" + (state.fileName || "data.csv");
+      return "redress-tool-current-id:" + (state.fileName || "data.csv");
     }
 
     function saveCurrentId() {
@@ -536,33 +544,146 @@
       return state.rows.findIndex((row) => Number(row.id) === Number(targetId));
     }
 
-    function buildMockAnalysis(row) {
-      const subject = String(row.Subject || "").trim();
-      const body = String(row.Body || "").trim();
-      const bodyPreview = body.length > 420 ? body.slice(0, 420) + "..." : body;
-      return [
-        "【临时AI分析结果】",
-        "id: " + (row.id || ""),
-        "subject: " + subject,
-        "",
-        "summary:",
-        bodyPreview || "暂无正文内容。",
-        "",
-        "note: 当前版本未接入AI接口，请在此处人工校正后保存。"
-      ].join("\n");
-    }
-
-    function ensureAiResult(row) {
-      if (!String(row.ai_result || "").trim()) {
-        row.ai_result = buildMockAnalysis(row);
-      }
-    }
-
     function updateNavButtons() {
       prevBtn.disabled = state.currentIndex <= 0;
       nextBtn.disabled = state.currentIndex < 0 || state.currentIndex >= state.rows.length - 1;
       saveBtn.disabled = state.currentIndex < 0;
       saveNextBtn.disabled = state.currentIndex < 0;
+    }
+
+    function getAnalysisType(label) {
+      if (String(label) === "0") {
+        return "案件";
+      }
+      if (String(label) === "1") {
+        return "技术者";
+      }
+      return "";
+    }
+
+    function formatJsonForDisplay(value) {
+      const text = String(value || "").trim();
+      if (!text) {
+        return "";
+      }
+
+      try {
+        return JSON.stringify(JSON.parse(text), null, 2);
+      } catch (error) {
+        return value;
+      }
+    }
+
+    async function ensureBackendLogin() {
+      if (state.loginPromise) {
+        return state.loginPromise;
+      }
+
+      state.loginPromise = (async () => {
+        const response = await fetch(LOGIN_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            user_name: MOCK_LOGIN_USER,
+            password: MOCK_LOGIN_PASSWORD
+          })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.success === false) {
+          throw new Error(payload.message || "模拟登录失败。");
+        }
+        return payload.data || {};
+      })();
+
+      try {
+        return await state.loginPromise;
+      } catch (error) {
+        state.loginPromise = null;
+        throw error;
+      }
+    }
+
+    async function requestAnalysis(payload, retryOnUnauthorized = true) {
+      await ensureBackendLogin();
+      const response = await fetch(ANALYZE_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401 && retryOnUnauthorized) {
+        state.loginPromise = null;
+        return requestAnalysis(payload, false);
+      }
+      return { response, data };
+    }
+
+    async function analyzeRowIfNeeded(row) {
+      if (!row || String(row.ai_result || "").trim() || row._analysisRequested || row._analysisSkipped) {
+        return;
+      }
+
+      const label = String(row.label || "").trim();
+      const analysisType = getAnalysisType(label);
+      if (!analysisType) {
+        row._analysisSkipped = true;
+        setStatus("当前 label 不需要 AI 分析。", "success");
+        return;
+      }
+
+      const body = String(row.Body || "").trim();
+      if (!body) {
+        row._analysisSkipped = true;
+        setStatus("当前记录 Body 为空，无法分析。", "error");
+        return;
+      }
+
+      row._analysisRequested = true;
+      const seq = ++state.analysisSeq;
+      const targetId = String(row.id || "");
+      setStatus("正在分析当前正文（" + analysisType + "）...", "");
+
+      try {
+        const { response, data: payload } = await requestAnalysis({
+          id: targetId,
+          label,
+          body
+        });
+        if (!response.ok || payload.success === false) {
+          throw new Error(payload.message || "AI 分析请求失败。");
+        }
+
+        const data = payload.data || {};
+        if (data.skipped) {
+          row._analysisSkipped = true;
+          setStatus("当前 label 不需要 AI 分析。", "success");
+          return;
+        }
+
+        const result = String(data.ai_result || "").trim();
+        if (!result) {
+          setStatus("AI 未返回可用结果。", "error");
+          return;
+        }
+
+        const currentRow = getCurrentRow();
+        if (seq !== state.analysisSeq || currentRow !== row || String(currentRow.id || "") !== targetId) {
+          return;
+        }
+        if (row._manualEdited || String(row.ai_result || "").trim()) {
+          return;
+        }
+
+        row.ai_result = formatJsonForDisplay(result);
+        aiResultInput.value = row.ai_result;
+        setStatus("AI 分析完成，可人工校正后保存。", "success");
+      } catch (error) {
+        console.error(error);
+        row._analysisRequested = false;
+        setStatus("AI 分析失败：" + error.message, "error");
+      }
     }
 
     function render() {
@@ -576,7 +697,6 @@
         return;
       }
 
-      ensureAiResult(row);
       recordEl.hidden = false;
       emptyEl.hidden = true;
       idInput.value = row.id || "";
@@ -585,11 +705,13 @@
       subjectEl.textContent = row.Subject || "";
       bodyEl.textContent = row.Body || "";
       bodyEl.scrollTop = 0;
-      aiResultInput.value = row.ai_result || "";
+      row.ai_result = formatJsonForDisplay(row.ai_result || "");
+      aiResultInput.value = row.ai_result;
       saveCurrentId();
       updateNavButtons();
 
       progressEl.textContent = "第 " + (state.currentIndex + 1) + " / " + state.rows.length + " 条，当前 id = " + row.id;
+      analyzeRowIfNeeded(row);
     }
 
     function persistEditorToRow() {
@@ -780,6 +902,15 @@
 
     saveNextBtn.addEventListener("click", async () => {
       await saveAndMove(state.currentIndex + 1);
+    });
+
+    aiResultInput.addEventListener("input", () => {
+      const row = getCurrentRow();
+      if (!row) {
+        return;
+      }
+      row.ai_result = aiResultInput.value;
+      row._manualEdited = true;
     });
 
     prevBtn.addEventListener("click", () => {

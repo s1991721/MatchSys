@@ -606,6 +606,39 @@ def extract_project_detail(request):
 
 @csrf_exempt
 @require_POST
+def redress_analyze_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    label = str(payload.get("label") or "").strip()
+    body = str(payload.get("body") or "").strip()
+
+    if not body:
+        return api_error("Body is empty", status=400)
+
+    try:
+        if label == "0":
+            ai_result = llmsTool.qiuanjian_detail_analysis(body)
+        elif label == "1":
+            ai_result = llmsTool.qiuren_detail_analysis(body)
+        else:
+            return api_success(data={
+                "ai_result": "",
+                "skipped": True,
+                "reason": "Unsupported label",
+            })
+    except Exception as exc:
+        return api_error(str(exc), status=500)
+
+    return api_success(data={
+        "ai_result": str(ai_result or "").strip(),
+        "skipped": False,
+    })
+
+
+@csrf_exempt
+@require_POST
 # 抽取技术者信息，生成送信模板
 def extract_technician_detail(request):
     payload, error = parse_json_body(request)

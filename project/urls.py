@@ -46,6 +46,7 @@ from bpmatch.views import (
     my_mails_unread_count_api,
     gmail_attachment_open_api,
     extract_project_detail,
+    redress_analyze_api,
     extract_technician_detail,
     send_mail,
     send_bulk_mail,
@@ -152,6 +153,7 @@ urlpatterns = [
     path("notification.html", TemplateView.as_view(template_name="frontend/notification.html")),
     path("analysis.html", TemplateView.as_view(template_name="frontend/analysis.html")),
     path("system_settings.html", TemplateView.as_view(template_name="frontend/system_settings.html")),
+    path("redress.html", static_serve, {"document_root": settings.BASE_DIR / "ai", "path": "redress.html"}),
     # -------------------------------common-------------------------------
     path(
         "common.css",
@@ -209,6 +211,7 @@ urlpatterns = [
     path("api/wrong-mails", wrong_mail_info_api, name="wrong-mails"),
     path("api/mail-technicians/search", mail_technician_search_api, name="mail-technicians-search"),
     path("api/extract-project-detail", extract_project_detail, name="extract_project_detail"),
+    path("api/redress/analyze", redress_analyze_api, name="redress_analyze"),
     path("api/extract-technician-detail", extract_technician_detail, name="extract_technician_detail"),
     path("api/my-mails", my_mails_api, name="my-mails"),
     path("api/my-mails/query", my_mails_query_api, name="my-mails-query"),

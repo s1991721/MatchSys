@@ -268,7 +268,8 @@
                 path: person.ssPath,
                 url: person.ssUrl ,
                 source: 'people'
-            } : null
+            } : null,
+            updatedAt: Date.now()
         };
         try {
             window.MatchSys.clearStoredKey('match_prefill');

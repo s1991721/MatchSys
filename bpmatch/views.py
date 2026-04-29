@@ -330,7 +330,6 @@ def mail_project_search_api(request):
     parsed = {}
     if intro.strip():
         try:
-            # todo 直接数据库查找，不用llm
             llm_result = llmsTool.qiuanjian_detail_analysis(intro)
         except Exception as exc:
             return api_error(str(exc), status=500)
@@ -425,7 +424,6 @@ def mail_technician_search_api(request):
     parsed = {}
     if intro.strip():
         try:
-            # todo 直接数据库查找，不用llm
             llm_result = llmsTool.qiuren_detail_analysis(intro)
         except Exception as exc:
             return api_error(str(exc), status=500)

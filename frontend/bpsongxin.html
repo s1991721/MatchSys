@@ -6,26 +6,6 @@
   <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
-  <style>
-    .bpsongxin-source-grid {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 1fr);
-    }
-
-    .bpsongxin-source-grid .songxin-editor-card,
-    .bpsongxin-source-grid .songxin-original-card {
-      min-height: 620px;
-    }
-
-    .bpsongxin-source-grid .songxin-editor {
-      min-height: 500px;
-    }
-
-    @media (max-width: 1280px) {
-      .bpsongxin-source-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-  </style>
   <title data-i18n="songxin.title">送信页</title>
 </head>
 <body>
@@ -39,7 +19,7 @@
         </div>
     </div>
     <div class="page page-wide songxin-page">
-        <section class="songxin-grid bpsongxin-source-grid">
+        <section class="songxin-grid c-grid-3">
             <div class="c-card c-card-pad songxin-original-card">
                 <div class="c-card-title">案件原文</div>
                 <textarea id="job-original" class="songxin-editor songxin-editor-readonly" readonly aria-label="案件原文"></textarea>
@@ -163,7 +143,7 @@
             const loadingMask = document.getElementById('loading-mask');
             const loadingText = document.getElementById('loading-text');
             const loadingSub = document.getElementById('loading-sub');
-            const API_BASE = '';
+            const escapeHtml = window.escapeHtml;
             if (i18n) {
                 i18n.init();
                 i18n.apply();
@@ -307,17 +287,17 @@
                 setLoading(true, { title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub') });
                 try {
                     const endpoint = scene === 'technician'
-                        ? `${API_BASE}/api/extract-technician-detail`
-                        : `${API_BASE}/api/extract-project-detail`;
+                        ? '/api/extract-technician-detail'
+                        : '/api/extract-project-detail';
                     const payload = await window.requestJson(endpoint, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ body: jobText })
+                    }, {
+                        throwOnFailure: true,
+                        fallbackMessage: t('songxin.error.analyze_failed')
                     });
-                    if (!payload.success) {
-                        throw new Error(payload.message || '解析失败');
-                    }
                     const result = payload.data || {};
                     const message = typeof result.body === 'string'
                         ? result.body.trim()
@@ -394,13 +374,13 @@
                 if (!forceRefresh && templateSettingsCache) {
                     return templateSettingsCache;
                 }
-                const payload = await window.requestJson(`${API_BASE}/api/sys-settings/${templateSection}`, {
+                const payload = await window.requestJson(`/api/sys-settings/${templateSection}`, {
                     method: 'GET',
                     credentials: 'include'
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: t('songxin.error.template_load_failed')
                 });
-                if (!payload.success) {
-                    throw new Error(payload.message || '加载模板失败');
-                }
                 const settingsPayload = payload.data && typeof payload.data.settings === 'object' && payload.data.settings
                     ? payload.data.settings
                     : {};
@@ -426,15 +406,15 @@
 
             const renderAttachments = () => {
                 if (!attachments.length) {
-                attachmentList.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
+                    attachmentList.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
                     return;
                 }
 
                 attachmentList.innerHTML = attachments.map((file, idx) => `
-                    <div class="songxin-attachment-item" data-idx="${idx}">
-                        <div class="songxin-attachment-name">${file.name}</div>
+                    <div class="songxin-attachment-item">
+                        <div class="songxin-attachment-name">${escapeHtml(file.name)}</div>
                         <div class="songxin-attachment-meta">
-                            <span>${file.sizeLabel}</span>
+                            <span>${escapeHtml(file.sizeLabel)}</span>
                             <span class="songxin-remove-link" data-remove="${idx}">${t('common.remove')}</span>
                         </div>
                     </div>
@@ -487,15 +467,15 @@
                         ...currentSettings,
                         [templateName]: normalizeMultiline(templateContentInput.value)
                     };
-                    const payload = await window.requestJson(`${API_BASE}/api/sys-settings/${templateSection}`, {
+                    await window.requestJson(`/api/sys-settings/${templateSection}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify({ settings: nextSettings })
+                    }, {
+                        throwOnFailure: true,
+                        fallbackMessage: t('songxin.error.template_save_failed')
                     });
-                    if (!payload.success) {
-                        throw new Error(payload.message || '保存模板失败');
-                    }
                     templateSettingsCache = nextSettings;
                     templateInfoDialog.close();
                     if (originalText) {
@@ -517,8 +497,7 @@
                     file: f,
                     name: f.name,
                     sizeLabel: formatSize(f.size),
-                    type: f.type || 'application/octet-stream',
-                    size: f.size
+                    type: f.type || 'application/octet-stream'
                 }));
                 fileInput.value = '';
                 renderAttachments();
@@ -586,15 +565,15 @@
                         }
                     }
 
-                    const responsePayload = await window.requestJson(`${API_BASE}/api/send-mail`, {
+                    await window.requestJson('/api/send-mail', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         body: JSON.stringify(payload)
+                    }, {
+                        throwOnFailure: true,
+                        fallbackMessage: t('songxin.error.send_failed')
                     });
-                    if (!responsePayload.success) {
-                        throw new Error(responsePayload.message || '发送失败');
-                    }
 
                     alert(t('songxin.alert.sent'));
                     window.navigateAppRoute('songxinhistory.html');

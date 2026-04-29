@@ -122,632 +122,627 @@
     <script src="i18n.js"></script>
     <script src="common.js"></script>
     <script>
-        (function () {
-            const i18n = window.I18N;
-            const t = (key, fallback) => (i18n ? i18n.t(key) : (fallback || key));
+    const i18n = window.I18N;
+    const t = (key, fallback) => (i18n ? i18n.t(key) : (fallback || key));
 
-            const list = document.getElementById('case-list');
-            const detail = document.getElementById('case-detail');
-            const detailAttachments = document.getElementById('detail-attachments');
-            const senderInput = document.getElementById('sender-input');
-            const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
-            const viewButtons = Array.from(document.querySelectorAll('.c-toggle[data-view]'));
-            const views = Array.from(document.querySelectorAll('.match-view'));
-            const resetButtons = Array.from(document.querySelectorAll('.js-reset'));
-            const searchButtons = Array.from(document.querySelectorAll('.js-search'));
-            const listTitle = document.getElementById('list-title');
-            const detailTitle = document.getElementById('detail-title');
-            const nationSelect = document.getElementById('nation');
-            const ageInput = document.getElementById('age');
-            const priceInput = document.getElementById('price');
-            const resumeFileInput = document.getElementById('resume-file');
-            const resumeSource = document.getElementById('resume-source');
-            const introInput = document.getElementById('intro');
-            const caseInfoInput = document.getElementById('case-info');
-            const sendBtn = document.getElementById('send-btn');
-            const pageStateKey = 'match_page_state';
-            const resumeState = {
-                prefill: null,
-                manualFile: null
-            };
-            const filters = {
-                range: 'all'
-            };
-            const viewInputs = {
-                people: ['nation', 'age', 'price', 'intro'],
-                cases: ['case-info']
-            };
-            let senderTimer = null;
-            const formatDisplayDate = (raw) => (window.formatDate ? window.formatDate(raw) : raw || '');
-            const sanitize = window.escapeHtml;
-            const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const list = document.getElementById('case-list');
+    const detail = document.getElementById('case-detail');
+    const detailAttachments = document.getElementById('detail-attachments');
+    const senderInput = document.getElementById('sender-input');
+    const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
+    const viewButtons = Array.from(document.querySelectorAll('.c-toggle[data-view]'));
+    const views = Array.from(document.querySelectorAll('.match-view'));
+    const resetButtons = Array.from(document.querySelectorAll('.js-reset'));
+    const searchButtons = Array.from(document.querySelectorAll('.js-search'));
+    const listTitle = document.getElementById('list-title');
+    const detailTitle = document.getElementById('detail-title');
+    const nationSelect = document.getElementById('nation');
+    const ageInput = document.getElementById('age');
+    const priceInput = document.getElementById('price');
+    const resumeFileInput = document.getElementById('resume-file');
+    const resumeSource = document.getElementById('resume-source');
+    const introInput = document.getElementById('intro');
+    const caseInfoInput = document.getElementById('case-info');
+    const sendBtn = document.getElementById('send-btn');
+    const pageStateKey = 'match_page_state';
+    const resumeState = {
+        prefill: null,
+        manualFile: null
+    };
+    const filters = {
+        range: 'all'
+    };
+    const viewInputs = {
+        people: ['nation', 'age', 'price', 'intro'],
+        cases: ['case-info']
+    };
+    let senderTimer = null;
+    const formatDisplayDate = (raw) => (window.formatDate ? window.formatDate(raw) : raw || '');
+    const sanitize = window.escapeHtml;
+    const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-            const stripCssNoise = (text = '') => {
-                if (!text) return '';
-                const firstGap = text.indexOf('\n\n');
-                const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
-                if (firstGap >= 0 && hasBraces) {
-                    return text.slice(firstGap + 2);
-                }
-                return text;
-            };
+    const stripCssNoise = (text = '') => {
+        if (!text) return '';
+        const firstGap = text.indexOf('\n\n');
+        const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
+        if (firstGap >= 0 && hasBraces) {
+            return text.slice(firstGap + 2);
+        }
+        return text;
+    };
 
-            const readMatchedSkills = (item) => {
-                const raw = item?.dataset?.matchedSkills;
-                if (!raw) return [];
-                try {
-                    const parsed = JSON.parse(raw);
-                    return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
-                } catch {
-                    return [];
-                }
-            };
+    const readMatchedSkills = (item) => {
+        const raw = item?.dataset?.matchedSkills;
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
+        } catch {
+            return [];
+        }
+    };
 
-            const parseDatasetJSON = (el, key) => {
-                if (!el || !el.dataset) return null;
-                const raw = el.dataset[key];
-                if (!raw) return null;
-                try {
-                    return JSON.parse(raw);
-                } catch {
-                    return null;
-                }
-            };
+    const parseDatasetJSON = (el, key) => {
+        if (!el || !el.dataset) return null;
+        const raw = el.dataset[key];
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
 
-            const buildAttachmentUrl = (file = {}) => {
-                const messageId = encodeURIComponent(String(file.message_id || '').trim());
-                const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
-                if (!messageId || !attachmentId) return '';
-                const params = new URLSearchParams();
-                const mimeType = String(file.mime_type || '').toLowerCase();
-                if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
-                    params.set('disposition', 'inline');
-                }
-                const query = params.toString();
-                return `/api/gmail/messages/${messageId}/attachments/${attachmentId}${query ? `?${query}` : ''}`;
-            };
+    const buildAttachmentUrl = (file = {}) => {
+        const messageId = encodeURIComponent(String(file.message_id || '').trim());
+        const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
+        if (!messageId || !attachmentId) return '';
+        const params = new URLSearchParams();
+        const mimeType = String(file.mime_type || '').toLowerCase();
+        if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+            params.set('disposition', 'inline');
+        }
+        const query = params.toString();
+        return `/api/gmail/messages/${messageId}/attachments/${attachmentId}${query ? `?${query}` : ''}`;
+    };
 
-            const renderAttachments = (files = []) => {
-                if (!detailAttachments) return;
-                if (!Array.isArray(files) || !files.length) {
-                    detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
-                    return;
-                }
-                const items = files
-                    .filter(file => file && file.filename && file.attachment_id && file.message_id)
-                    .map((file) => {
-                        const url = buildAttachmentUrl(file);
-                        const name = sanitize(String(file.filename || 'attachment'));
-                        return `<a class="c-chip" href="${sanitize(url)}" target="_blank" rel="noopener noreferrer">${name}</a>`;
-                    });
-                detailAttachments.innerHTML = items.length
-                    ? items.join('')
-                    : `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
-            };
-
-            const renderDetail = (target, text = '', highlights = []) => {
-                if (!target) return;
-                const cleaned = stripCssNoise(text || '');
-                const normalized = cleaned
-                    .replace(/\r\n/g, '\n')
-                    .replace(/\n{3,}/g, '\n\n')
-                    .trim();
-                const escapedHighlights = (Array.isArray(highlights) ? highlights : [])
-                    .filter(Boolean)
-                    .map(v => sanitize(String(v)))
-                    .map(escapeRegExp);
-                const highlightRegex = escapedHighlights.length
-                    ? new RegExp(`(${escapedHighlights.join('|')})`, 'gi')
-                    : null;
-                const applyHighlight = (val) =>
-                    highlightRegex ? val.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>') : val;
-                const html = sanitize(normalized)
-                    .split(/\n{2,}/)
-                    .filter(Boolean)
-                    .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
-                    .join('');
-                target.innerHTML = html || `<p class="match-empty-inline">${t('match.empty')}</p>`;
-            };
-
-            const getActiveView = () => {
-                const active = document.querySelector('.match-view:not(.hidden)');
-                return active ? active.dataset.view : 'people';
-            };
-
-            const readPageState = () => ({
-                view: getActiveView(),
-                range: filters.range || 'all',
-                nation: nationSelect ? nationSelect.value : '',
-                age: ageInput ? ageInput.value : '',
-                price: priceInput ? priceInput.value : '',
-                intro: introInput ? introInput.value : '',
-                caseInfo: caseInfoInput ? caseInfoInput.value : '',
-                sender: senderInput ? senderInput.value : '',
-                resumePrefill: resumeState.prefill || null,
-                updatedAt: Date.now()
+    const renderAttachments = (files = []) => {
+        if (!detailAttachments) return;
+        if (!Array.isArray(files) || !files.length) {
+            detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
+            return;
+        }
+        const items = files
+            .filter(file => file && file.filename && file.attachment_id && file.message_id)
+            .map((file) => {
+                const url = buildAttachmentUrl(file);
+                const name = sanitize(String(file.filename || 'attachment'));
+                return `<a class="c-chip" href="${sanitize(url)}" target="_blank" rel="noopener noreferrer">${name}</a>`;
             });
+        detailAttachments.innerHTML = items.length
+            ? items.join('')
+            : `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
+    };
 
-            const persistPageState = () => {
-                try {
-                    window.MatchSys.writeJSONToSessionStorage(pageStateKey, readPageState());
-                } catch (error) {
-                }
-            };
+    const renderDetail = (target, text = '', highlights = []) => {
+        if (!target) return;
+        const cleaned = stripCssNoise(text || '');
+        const normalized = cleaned
+            .replace(/\r\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        const escapedHighlights = (Array.isArray(highlights) ? highlights : [])
+            .filter(Boolean)
+            .map(v => sanitize(String(v)))
+            .map(escapeRegExp);
+        const highlightRegex = escapedHighlights.length
+            ? new RegExp(`(${escapedHighlights.join('|')})`, 'gi')
+            : null;
+        const applyHighlight = (val) =>
+            highlightRegex ? val.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>') : val;
+        const html = sanitize(normalized)
+            .split(/\n{2,}/)
+            .filter(Boolean)
+            .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
+            .join('');
+        target.innerHTML = html || `<p class="match-empty-inline">${t('match.empty')}</p>`;
+    };
 
-            const applyPageState = () => {
-                let payload = null;
-                try {
-                    payload = window.MatchSys.readJSONFromSessionStorage(pageStateKey);
-                } catch (error) {
-                    payload = null;
-                }
-                if (!payload) return false;
+    const getActiveView = () => {
+        const active = document.querySelector('.match-view:not(.hidden)');
+        return active ? active.dataset.view : 'people';
+    };
 
-                if (nationSelect) nationSelect.value = payload.nation || '';
-                if (ageInput) ageInput.value = payload.age || '';
-                if (priceInput) priceInput.value = payload.price || '';
-                if (introInput) introInput.value = payload.intro || '';
-                if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
-                if (senderInput) senderInput.value = payload.sender || '';
-                resumeState.prefill = payload.resumePrefill || null;
-                filters.range = payload.range || 'all';
-                dateButtons.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.range === filters.range);
-                });
-                if (!dateButtons.some(btn => btn.dataset.range === filters.range)) {
-                    filters.range = 'all';
-                    dateButtons.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.range === 'all');
-                    });
-                }
-                setView(payload.view === 'cases' ? 'cases' : 'people');
-                return true;
-            };
+    const readPageState = () => ({
+        view: getActiveView(),
+        range: filters.range || 'all',
+        nation: nationSelect ? nationSelect.value : '',
+        age: ageInput ? ageInput.value : '',
+        price: priceInput ? priceInput.value : '',
+        intro: introInput ? introInput.value : '',
+        caseInfo: caseInfoInput ? caseInfoInput.value : '',
+        sender: senderInput ? senderInput.value : '',
+        resumePrefill: resumeState.prefill || null,
+        updatedAt: Date.now()
+    });
 
-            const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const result = reader.result || '';
-                    const base64 = typeof result === 'string' && result.includes(',')
-                        ? result.split(',').pop()
-                        : result;
-                    resolve(base64);
-                };
-                reader.onerror = () => reject(reader.error || new Error('file read failed'));
-                reader.readAsDataURL(file);
+    const persistPageState = () => {
+        try {
+            window.MatchSys.writeJSONToSessionStorage(pageStateKey, readPageState());
+        } catch (error) {
+        }
+    };
+
+    const applyPageState = () => {
+        let payload = null;
+        try {
+            payload = window.MatchSys.readJSONFromSessionStorage(pageStateKey);
+        } catch (error) {
+            payload = null;
+        }
+        if (!payload) return false;
+
+        if (nationSelect) nationSelect.value = payload.nation || '';
+        if (ageInput) ageInput.value = payload.age || '';
+        if (priceInput) priceInput.value = payload.price || '';
+        if (introInput) introInput.value = payload.intro || '';
+        if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
+        if (senderInput) senderInput.value = payload.sender || '';
+        resumeState.prefill = payload.resumePrefill || null;
+        filters.range = payload.range || 'all';
+        dateButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.range === filters.range);
+        });
+        if (!dateButtons.some(btn => btn.dataset.range === filters.range)) {
+            filters.range = 'all';
+            dateButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === 'all');
             });
+        }
+        setView(payload.view === 'cases' ? 'cases' : 'people');
+        return true;
+    };
 
-            const getActiveResume = () => {
-                if (resumeState.manualFile) {
-                    return {
-                        source: 'manual',
-                        name: resumeState.manualFile.name,
-                        file: resumeState.manualFile
-                    };
-                }
-                return resumeState.prefill || null;
+    const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result || '';
+            const base64 = typeof result === 'string' && result.includes(',')
+                ? result.split(',').pop()
+                : result;
+            resolve(base64);
+        };
+        reader.onerror = () => reject(reader.error || new Error('file read failed'));
+        reader.readAsDataURL(file);
+    });
+
+    const getActiveResume = () => {
+        if (resumeState.manualFile) {
+            return {
+                source: 'manual',
+                name: resumeState.manualFile.name,
+                file: resumeState.manualFile
             };
+        }
+        return resumeState.prefill || null;
+    };
 
-            const clearActiveResume = () => {
-                const activeResume = getActiveResume();
-                if (!activeResume) return;
-                if (activeResume.source === 'manual') {
-                    resumeState.manualFile = null;
-                    if (resumeFileInput) {
-                        resumeFileInput.value = '';
-                    }
-                } else {
-                    resumeState.prefill = null;
-                }
-                renderResumeSource();
-                persistPageState();
-            };
-
-            const renderResumeSource = () => {
-                if (!resumeSource) return;
-                const activeResume = getActiveResume();
-                if (!activeResume) {
-                    resumeSource.hidden = true;
-                    resumeSource.innerHTML = '';
-                    return;
-                }
-                resumeSource.hidden = false;
-                if (activeResume.source === 'manual') {
-                    resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
-                    return;
-                }
-                const safeName = sanitize(String(activeResume.name || 'resume'));
-                const safeUrl = sanitize(String(activeResume.url || ''));
-                if (safeUrl) {
-                    resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('common.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
-                    return;
-                }
-                resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
-            };
-
-            const applyPrefill = () => {
-                let payload = null;
-                try {
-                    payload = window.MatchSys.readJSONFromLocalStorage('match_prefill');
-                } catch (error) {
-                    payload = null;
-                }
-                if (!payload) return false;
-
-                if (nationSelect) {
-                    let nationalityValue = '';
-                    if (payload.nationality === 0 || payload.nationality === '0' || payload.nationality === '日本') {
-                        nationalityValue = '0';
-                    } else if (payload.nationality === 1 || payload.nationality === '1' || payload.nationality === '其他') {
-                        nationalityValue = '1';
-                    }
-                    nationSelect.value = nationalityValue;
-                }
-                if (ageInput) ageInput.value = payload.age ?? '';
-                if (priceInput) priceInput.value = payload.price ?? '';
-                if (introInput) introInput.value = payload.intro || '';
-                resumeState.prefill = payload.resume && typeof payload.resume === 'object' ? payload.resume : null;
-                try {
-                    window.MatchSys.clearStoredKey('match_prefill');
-                } catch (error) {
-                }
-                renderResumeSource();
-                return true;
-            };
-
-            const setView = (view) => {
-                views.forEach(section => {
-                    section.classList.toggle('hidden', section.dataset.view !== view);
-                });
-                viewButtons.forEach(btn => {
-                    const isActive = btn.dataset.view === view;
-                    btn.classList.toggle('is-active', isActive);
-                    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                });
-                if (listTitle) {
-                    listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
-                }
-                if (detailTitle) {
-                    detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.job_detail');
-                }
-                persistPageState();
-            };
-
-            const renderList = (items) => {
-                list.innerHTML = '';
-                const view = getActiveView();
-
-                if (!items.length) {
-                    const empty = document.createElement('li');
-                    empty.className = 'empty';
-                    empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
-                    list.appendChild(empty);
-                    renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
-                    renderAttachments([]);
-                    return;
-                }
-
-                items.forEach((item, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'item' + (index === 0 ? ' active' : '');
-                    li.dataset.detail = item.detail;
-                    li.dataset.id = item.id;
-                    li.dataset.item = JSON.stringify(item);
-                    li.dataset.files = JSON.stringify(item.files || []);
-                    if (item.matched_skills && Array.isArray(item.matched_skills)) {
-                        li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
-                    }
-                    if (item.matched_skills && Array.isArray(item.matched_skills)) {
-                        li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
-                    }
-
-                    const main = document.createElement('div');
-                    main.className = 'item-main';
-
-                    const title = document.createElement('div');
-                    title.className = 'item-title';
-                    title.textContent = item.title;
-
-                    const desc = document.createElement('div');
-                    desc.className = 'item-desc';
-                    desc.textContent = item.desc;
-
-                    const time = document.createElement('div');
-                    time.className = 'item-time';
-                    time.textContent = formatDisplayDate(item.date);
-
-                    main.appendChild(title);
-                    main.appendChild(desc);
-                    li.appendChild(main);
-                    li.appendChild(time);
-                    list.appendChild(li);
-                });
-
-                const first = list.querySelector('.item');
-                if (first) {
-                    renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
-                    renderAttachments(parseDatasetJSON(first, 'files') || []);
-                }
-            };
-
-            const setLoading = (message) => {
-                list.innerHTML = '';
-                const empty = document.createElement('li');
-                empty.className = 'empty';
-                empty.textContent = message;
-                list.appendChild(empty);
-                renderDetail(detail, '');
-                renderAttachments([]);
-            };
-
-            const fetchCases = async () => {
-                if (!list || !detail) return;
-                const view = getActiveView();
-                const introText = view === 'cases'
-                    ? (caseInfoInput ? caseInfoInput.value.trim() : '')
-                    : (introInput ? introInput.value.trim() : '');
-                const payload = {
-                    intro: introText,
-                    date_range: filters.range || 'all',
-                    sender: senderInput ? senderInput.value.trim() : ''
-                };
-                if (view === 'people') {
-                    payload.country = nationSelect ? nationSelect.value.trim() : '';
-                }
-                setLoading(t('common.loading') || '加载中...');
-                try {
-                    const endpoint = view === 'cases'
-                        ? '/api/mail-technicians/search'
-                        : '/api/mail-projects/search';
-                    const result = await window.requestJson(endpoint, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-                if (!result || result.success === false) {
-                    throw new Error(result?.message || '加载失败');
-                }
-                const items = Array.isArray(result.data?.items) ? result.data.items : [];
-                renderList(items);
-            } catch (err) {
-                console.error('fetch cases failed', err);
-                setLoading(t('common.load_failed') || '加载失败');
+    const clearActiveResume = () => {
+        const activeResume = getActiveResume();
+        if (!activeResume) return;
+        if (activeResume.source === 'manual') {
+            resumeState.manualFile = null;
+            if (resumeFileInput) {
+                resumeFileInput.value = '';
             }
+        } else {
+            resumeState.prefill = null;
+        }
+        renderResumeSource();
+        persistPageState();
+    };
+
+    const renderResumeSource = () => {
+        if (!resumeSource) return;
+        const activeResume = getActiveResume();
+        if (!activeResume) {
+            resumeSource.hidden = true;
+            resumeSource.innerHTML = '';
+            return;
+        }
+        resumeSource.hidden = false;
+        if (activeResume.source === 'manual') {
+            resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
+            return;
+        }
+        const safeName = sanitize(String(activeResume.name || 'resume'));
+        const safeUrl = sanitize(String(activeResume.url || ''));
+        if (safeUrl) {
+            resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('common.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
+            return;
+        }
+        resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
+    };
+
+    const applyPrefill = () => {
+        let payload = null;
+        try {
+            payload = window.MatchSys.readJSONFromLocalStorage('match_prefill');
+        } catch (error) {
+            payload = null;
+        }
+        if (!payload) return false;
+
+        if (nationSelect) {
+            let nationalityValue = '';
+            if (payload.nationality === 0 || payload.nationality === '0' || payload.nationality === '日本') {
+                nationalityValue = '0';
+            } else if (payload.nationality === 1 || payload.nationality === '1' || payload.nationality === '其他') {
+                nationalityValue = '1';
+            }
+            nationSelect.value = nationalityValue;
+        }
+        if (ageInput) ageInput.value = payload.age ?? '';
+        if (priceInput) priceInput.value = payload.price ?? '';
+        if (introInput) introInput.value = payload.intro || '';
+        resumeState.prefill = payload.resume && typeof payload.resume === 'object' ? payload.resume : null;
+        try {
+            window.MatchSys.clearStoredKey('match_prefill');
+        } catch (error) {
+        }
+        renderResumeSource();
+        return true;
+    };
+
+    const setView = (view) => {
+        views.forEach(section => {
+            section.classList.toggle('hidden', section.dataset.view !== view);
+        });
+        viewButtons.forEach(btn => {
+            const isActive = btn.dataset.view === view;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+        if (listTitle) {
+            listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
+        }
+        if (detailTitle) {
+            detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.job_detail');
+        }
+        persistPageState();
+    };
+
+    const renderList = (items) => {
+        list.innerHTML = '';
+        const view = getActiveView();
+
+        if (!items.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
+            list.appendChild(empty);
+            renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
+            renderAttachments([]);
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'item' + (index === 0 ? ' active' : '');
+            li.dataset.detail = item.detail;
+            li.dataset.id = item.id;
+            li.dataset.item = JSON.stringify(item);
+            li.dataset.files = JSON.stringify(item.files || []);
+            if (item.matched_skills && Array.isArray(item.matched_skills)) {
+                li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
+            }
+
+            const main = document.createElement('div');
+            main.className = 'item-main';
+
+            const title = document.createElement('div');
+            title.className = 'item-title';
+            title.textContent = item.title;
+
+            const desc = document.createElement('div');
+            desc.className = 'item-desc';
+            desc.textContent = item.desc;
+
+            const time = document.createElement('div');
+            time.className = 'item-time';
+            time.textContent = formatDisplayDate(item.date);
+
+            main.appendChild(title);
+            main.appendChild(desc);
+            li.appendChild(main);
+            li.appendChild(time);
+            list.appendChild(li);
+        });
+
+        const first = list.querySelector('.item');
+        if (first) {
+            renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
+            renderAttachments(parseDatasetJSON(first, 'files') || []);
+        }
+    };
+
+    const setLoading = (message) => {
+        list.innerHTML = '';
+        const empty = document.createElement('li');
+        empty.className = 'empty';
+        empty.textContent = message;
+        list.appendChild(empty);
+        renderDetail(detail, '');
+        renderAttachments([]);
+    };
+
+    const fetchCases = async () => {
+        if (!list || !detail) return;
+        const view = getActiveView();
+        const introText = view === 'cases'
+            ? (caseInfoInput ? caseInfoInput.value.trim() : '')
+            : (introInput ? introInput.value.trim() : '');
+        const payload = {
+            intro: introText,
+            date_range: filters.range || 'all',
+            sender: senderInput ? senderInput.value.trim() : ''
+        };
+        if (view === 'people') {
+            payload.country = nationSelect ? nationSelect.value.trim() : '';
+        }
+        setLoading(t('common.loading') || '加载中...');
+        try {
+            const endpoint = view === 'cases'
+                ? '/api/mail-technicians/search'
+                : '/api/mail-projects/search';
+            const result = await window.requestJson(endpoint, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        if (!result || result.success === false) {
+            throw new Error(result?.message || '加载失败');
+        }
+        const items = Array.isArray(result.data?.items) ? result.data.items : [];
+        renderList(items);
+    } catch (err) {
+        console.error('fetch cases failed', err);
+        setLoading(t('common.load_failed') || '加载失败');
+    }
         };
 
-            list.addEventListener('click', (e) => {
-                const item = e.target.closest('.item');
-                if (!item) return;
-                list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
-                item.classList.add('active');
-                renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
-                renderAttachments(parseDatasetJSON(item, 'files') || []);
-            });
+    list.addEventListener('click', (e) => {
+        const item = e.target.closest('.item');
+        if (!item) return;
+        list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
+        item.classList.add('active');
+        renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
+        renderAttachments(parseDatasetJSON(item, 'files') || []);
+    });
 
-            dateButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    dateButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    filters.range = btn.dataset.range;
-                    persistPageState();
-                    fetchCases();
-                });
-            });
+    dateButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            dateButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filters.range = btn.dataset.range;
+            persistPageState();
+            fetchCases();
+        });
+    });
 
-            senderInput.addEventListener('input', () => {
-                persistPageState();
-                if (senderTimer) {
-                    window.clearTimeout(senderTimer);
+    senderInput.addEventListener('input', () => {
+        persistPageState();
+        if (senderTimer) {
+            window.clearTimeout(senderTimer);
+        }
+        senderTimer = window.setTimeout(() => {
+            fetchCases();
+        }, 400);
+    });
+
+    resetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = getActiveView();
+            const ids = viewInputs[view] || [];
+            const elements = ids.map(id => document.getElementById(id)).filter(Boolean);
+            elements.forEach(el => { el.value = ''; });
+            if (view === 'people' && resumeFileInput) {
+                resumeFileInput.value = '';
+                resumeState.manualFile = null;
+                renderResumeSource();
+            }
+            if (elements[0]) {
+                elements[0].focus();
+            }
+            persistPageState();
+            fetchCases();
+        });
+    });
+
+    searchButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            fetchCases();
+        });
+    });
+
+    if (resumeFileInput) {
+        resumeFileInput.addEventListener('change', () => {
+            const file = resumeFileInput.files && resumeFileInput.files[0] ? resumeFileInput.files[0] : null;
+            resumeState.manualFile = file;
+            renderResumeSource();
+            persistPageState();
+        });
+    }
+
+    if (resumeSource) {
+        resumeSource.addEventListener('click', (event) => {
+            const target = event.target.closest('[data-action="remove-resume"]');
+            if (!target) return;
+            clearActiveResume();
+        });
+    }
+
+    if (sendBtn) {
+        sendBtn.addEventListener('click', async () => {
+            try {
+                const activeItem = list?.querySelector('.item.active');
+                if (!activeItem) {
+                    alert(t('match.send_tip'));
+                    return;
                 }
-                senderTimer = window.setTimeout(() => {
-                    fetchCases();
-                }, 400);
-            });
 
-            resetButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const view = getActiveView();
-                    const ids = viewInputs[view] || [];
-                    const elements = ids.map(id => document.getElementById(id)).filter(Boolean);
-                    elements.forEach(el => { el.value = ''; });
-                    if (view === 'people' && resumeFileInput) {
-                        resumeFileInput.value = '';
-                        resumeState.manualFile = null;
-                        renderResumeSource();
+                const view = getActiveView();
+                const itemData = parseDatasetJSON(activeItem, 'item') || {};
+                const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
+                const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
+                const itemDetail = itemData.detail || activeItem.dataset.detail || '';
+                const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
+
+                let jobPayload = {};
+                let personPayload = {};
+                let mailType = 2;
+                let resumeAttachment = null;
+
+                if (view === 'people') {
+                    const personParts = [];
+                    const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
+                    if (nationSelect && nationSelect.value) {
+                        personParts.push(`国籍：${nationLabel || nationSelect.value}`);
                     }
-                    if (elements[0]) {
-                        elements[0].focus();
+                    if (ageInput && ageInput.value.trim()) {
+                        personParts.push(`年龄：${ageInput.value.trim()}`);
                     }
-                    persistPageState();
-                    fetchCases();
-                });
-            });
+                    if (priceInput && priceInput.value.trim()) {
+                        personParts.push(`金额：${priceInput.value.trim()}`);
+                    }
+                    if (introInput && introInput.value.trim()) {
+                        personParts.push(`介绍文：\n${introInput.value.trim()}`);
+                    }
+                    const personDetail = personParts.join('\n');
 
-            searchButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    fetchCases();
-                });
-            });
+                    jobPayload = {
+                        id: itemData.id || activeItem.dataset.id || '',
+                        title: itemTitle,
+                        desc: itemDesc,
+                        detail: itemDetail,
+                        time: itemDate
+                    };
 
-            if (resumeFileInput) {
-                resumeFileInput.addEventListener('change', () => {
-                    const file = resumeFileInput.files && resumeFileInput.files[0] ? resumeFileInput.files[0] : null;
-                    resumeState.manualFile = file;
-                    renderResumeSource();
-                    persistPageState();
-                });
-            }
+                    personPayload = {
+                        name: '人员信息',
+                        subject: itemTitle || '',
+                        belong: itemDesc || '',
+                        detail: personDetail,
+                        country: nationSelect ? nationSelect.value.trim() : '',
+                        country_label: nationLabel || '',
+                        age: ageInput ? ageInput.value.trim() : '',
+                        price: priceInput ? priceInput.value.trim() : '',
+                        intro: introInput ? introInput.value.trim() : '',
+                        time: ''
+                    };
 
-            if (resumeSource) {
-                resumeSource.addEventListener('click', (event) => {
-                    const target = event.target.closest('[data-action="remove-resume"]');
-                    if (!target) return;
-                    clearActiveResume();
-                });
-            }
-
-            if (sendBtn) {
-                sendBtn.addEventListener('click', async () => {
-                    try {
-                        const activeItem = list?.querySelector('.item.active');
-                        if (!activeItem) {
-                            alert(t('match.send_tip'));
-                            return;
-                        }
-
-                        const view = getActiveView();
-                        const itemData = parseDatasetJSON(activeItem, 'item') || {};
-                        const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
-                        const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
-                        const itemDetail = itemData.detail || activeItem.dataset.detail || '';
-                        const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
-
-                        let jobPayload = {};
-                        let personPayload = {};
-                        let mailType = 2;
-                        let resumeAttachment = null;
-
-                        if (view === 'people') {
-                            const personParts = [];
-                            const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
-                            if (nationSelect && nationSelect.value) {
-                                personParts.push(`国籍：${nationLabel || nationSelect.value}`);
-                            }
-                            if (ageInput && ageInput.value.trim()) {
-                                personParts.push(`年龄：${ageInput.value.trim()}`);
-                            }
-                            if (priceInput && priceInput.value.trim()) {
-                                personParts.push(`金额：${priceInput.value.trim()}`);
-                            }
-                            if (introInput && introInput.value.trim()) {
-                                personParts.push(`介绍文：\n${introInput.value.trim()}`);
-                            }
-                            const personDetail = personParts.join('\n');
-
-                            jobPayload = {
-                                id: itemData.id || activeItem.dataset.id || '',
-                                title: itemTitle,
-                                desc: itemDesc,
-                                detail: itemDetail,
-                                time: itemDate
+                    const activeResume = getActiveResume();
+                    if (activeResume) {
+                        if (activeResume.source === 'manual' && activeResume.file) {
+                            resumeAttachment = {
+                                source: 'manual',
+                                filename: activeResume.file.name || 'resume',
+                                content_type: activeResume.file.type || 'application/octet-stream',
+                                size: activeResume.file.size || 0,
+                                base64: await readFileAsBase64(activeResume.file)
                             };
-
-                            personPayload = {
-                                name: '人员信息',
-                                subject: itemTitle || '',
-                                belong: itemDesc || '',
-                                detail: personDetail,
-                                country: nationSelect ? nationSelect.value.trim() : '',
-                                country_label: nationLabel || '',
-                                age: ageInput ? ageInput.value.trim() : '',
-                                price: priceInput ? priceInput.value.trim() : '',
-                                intro: introInput ? introInput.value.trim() : '',
-                                time: ''
-                            };
-
-                            const activeResume = getActiveResume();
-                            if (activeResume) {
-                                if (activeResume.source === 'manual' && activeResume.file) {
-                                    resumeAttachment = {
-                                        source: 'manual',
-                                        filename: activeResume.file.name || 'resume',
-                                        content_type: activeResume.file.type || 'application/octet-stream',
-                                        size: activeResume.file.size || 0,
-                                        base64: await readFileAsBase64(activeResume.file)
-                                    };
-                                } else {
-                                    resumeAttachment = {
-                                        source: 'people',
-                                        filename: activeResume.name || 'resume',
-                                        url: activeResume.url || '',
-                                        path: activeResume.path || '',
-                                        content_type: 'application/octet-stream'
-                                    };
-                                }
-                            }
-
-                            mailType = 1;
                         } else {
-                            const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
-                            const caseTitle = rawCaseInfo ? rawCaseInfo.split('\n')[0].trim() : '';
-
-                            jobPayload = {
-                                id: '',
-                                title: caseTitle || '案件信息',
-                                desc: '',
-                                detail: rawCaseInfo,
-                                time: ''
+                            resumeAttachment = {
+                                source: 'people',
+                                filename: activeResume.name || 'resume',
+                                url: activeResume.url || '',
+                                path: activeResume.path || '',
+                                content_type: 'application/octet-stream'
                             };
-
-                            personPayload = {
-                                id: itemData.id || activeItem.dataset.id || '',
-                                name: itemTitle,
-                                subject: itemTitle,
-                                belong: itemDesc,
-                                detail: itemDetail,
-                                time: itemDate
-                            };
-
-                            mailType = 2;
                         }
-
-                        const payload = {
-                            job: jobPayload,
-                            person: personPayload,
-                            resume_attachment: resumeAttachment,
-                            mail_type: mailType,
-                            updatedAt: Date.now()
-                        };
-
-                        persistPageState();
-                        window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
-                    } catch (err) {
-                        console.error(t('match.cache_failed') || '保存失败', err);
-                        alert(err?.message || t('match.cache_failed'));
-                        return;
                     }
 
-                    window.navigateAppRoute('songxin.html?from=match');
-                });
+                    mailType = 1;
+                } else {
+                    const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
+                    const caseTitle = rawCaseInfo ? rawCaseInfo.split('\n')[0].trim() : '';
+
+                    jobPayload = {
+                        id: '',
+                        title: caseTitle || '案件信息',
+                        desc: '',
+                        detail: rawCaseInfo,
+                        time: ''
+                    };
+
+                    personPayload = {
+                        id: itemData.id || activeItem.dataset.id || '',
+                        name: itemTitle,
+                        subject: itemTitle,
+                        belong: itemDesc,
+                        detail: itemDetail,
+                        time: itemDate
+                    };
+
+                    mailType = 2;
+                }
+
+                const payload = {
+                    job: jobPayload,
+                    person: personPayload,
+                    resume_attachment: resumeAttachment,
+                    mail_type: mailType,
+                    updatedAt: Date.now()
+                };
+
+                persistPageState();
+                window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
+            } catch (err) {
+                console.error(t('match.cache_failed') || '保存失败', err);
+                alert(err?.message || t('match.cache_failed'));
+                return;
             }
 
-            viewButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    setView(btn.dataset.view);
-                    fetchCases();
-                });
-            });
+            window.navigateAppRoute('songxin.html?from=match');
+        });
+    }
 
-            [nationSelect, ageInput, priceInput, introInput, caseInfoInput].filter(Boolean).forEach((el) => {
-                el.addEventListener('input', persistPageState);
-                el.addEventListener('change', persistPageState);
-            });
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setView(btn.dataset.view);
+            fetchCases();
+        });
+    });
 
+    [nationSelect, ageInput, priceInput, introInput, caseInfoInput].filter(Boolean).forEach((el) => {
+        el.addEventListener('input', persistPageState);
+        el.addEventListener('change', persistPageState);
+    });
+
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
+    const didRestoreState = applyPageState();
+    const didPrefill = applyPrefill();
+    renderResumeSource();
+    // When arriving from people.html, the latest prefill should win over
+    // any stale state restored from a previous visit to match.html.
+    if (didPrefill) {
+        setView('people');
+        persistPageState();
+    } else if (!didRestoreState) {
+        setView(getActiveView());
+    }
+    fetchCases();
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", () => {
             if (i18n) {
-                i18n.init();
                 i18n.apply();
             }
-            const didRestoreState = applyPageState();
-            const didPrefill = applyPrefill();
             renderResumeSource();
-            // When arriving from people.html, the latest prefill should win over
-            // any stale state restored from a previous visit to match.html.
-            if (didPrefill) {
-                setView('people');
-                persistPageState();
-            } else if (!didRestoreState) {
-                setView(getActiveView());
-            }
             fetchCases();
-            if (window && window.addEventListener) {
-                window.addEventListener("i18n:change", () => {
-                    if (i18n) {
-                        i18n.apply();
-                    }
-                    renderResumeSource();
-                    fetchCases();
-                });
-            }
-        })();
+        });
+    }
     </script>
 </body>
 </html>

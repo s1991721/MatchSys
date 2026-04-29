@@ -48,11 +48,11 @@
                 </div>
                 <datalist id="filter-customer-list"></datalist>
                 <div class="c-inline-field">
-                    <span data-i18n="order.filter.technician">技术者</span>
-                    <input id="filter-technician" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name"/>
+                    <span data-i18n="common.field.technician">技术者</span>
+                    <input id="filter-technician" type="text" placeholder="姓名" data-i18n-placeholder="common.field.name"/>
                 </div>
                 <div class="c-inline-field">
-                    <span data-i18n="order.filter.status">状态</span>
+                    <span data-i18n="common.field.status">状态</span>
                     <select id="statusFilter"
                             data-issue-options="承认中,已受注,拒绝,已取消"
                             data-accept-options="已受注,拒绝,已取消"
@@ -100,17 +100,17 @@
                         data-i18n-issue="order.table.project_customer_issue"
                         data-i18n-accept="order.table.project_customer_accept">案件名 / 取引先（下请）
                     </th>
-                    <th data-i18n="order.table.technician">技术者</th>
+                    <th data-i18n="common.field.technician">技术者</th>
                     <th data-i18n="order.table.price">契约单价</th>
                     <th data-i18n="order.table.hours">契约工时</th>
                     <th data-i18n="order.table.period">契约期间</th>
-                    <th data-i18n="order.table.created_at">创建时间</th>
+                    <th data-i18n="common.field.created_at">创建时间</th>
                     <th data-i18n="order.table.created_by">创建人</th>
-                    <th data-i18n="order.table.owner">负责人</th>
+                    <th data-i18n="common.field.owner">负责人</th>
                     <th data-i18n="order.table.updated_at">修改时间</th>
                     <th data-i18n="order.table.updated_by">修改人</th>
-                    <th data-i18n="order.table.status">状态</th>
-                    <th data-i18n="order.table.actions">操作</th>
+                    <th data-i18n="common.field.status">状态</th>
+                    <th data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="order-body"></tbody>
@@ -148,13 +148,13 @@
             <datalist id="issue-customer-list"></datalist>
             <input id="issue-customer-id" type="hidden"/>
             <label class="c-inline-field">
-                <span data-i18n="order.field.technician">技术者</span>
-                <input id="issue-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name"/>
+                <span data-i18n="common.field.technician">技术者</span>
+                <input id="issue-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="common.field.name"/>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.status">状态</span>
+                <span data-i18n="common.field.status">状态</span>
                 <select id="issue-status">
-                    <option value="请选择状态" data-i18n="order.filter.status_select">请选择状态</option>
+                    <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
                     <option value="承认中" selected data-i18n="order.status.approving">承认中</option>
                     <option value="已受注" data-i18n="order.status.accepted">已受注</option>
                     <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
@@ -178,11 +178,11 @@
                 </div>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.owner">负责人</span>
+                <span data-i18n="common.field.owner">负责人</span>
                 <select id="issue-owner"></select>
             </label>
             <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
-                <span data-i18n="order.field.remark">备注</span>
+                <span data-i18n="common.field.note">备注</span>
                 <textarea id="issue-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
             </label>
         </div>
@@ -219,15 +219,15 @@
             <datalist id="accept-customer-list"></datalist>
             <input id="accept-customer-id" type="hidden"/>
             <label class="c-inline-field">
-                <span data-i18n="order.field.technician">技术者</span>
-                <input id="accept-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="order.placeholder.name" list="accept-technician-list"/>
+                <span data-i18n="common.field.technician">技术者</span>
+                <input id="accept-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="common.field.name" list="accept-technician-list"/>
             </label>
             <datalist id="accept-technician-list"></datalist>
             <input id="accept-technician-id" type="hidden"/>
             <label class="c-inline-field">
-                <span data-i18n="order.field.status">状态</span>
+                <span data-i18n="common.field.status">状态</span>
                 <select id="accept-status">
-                    <option value="请选择状态" data-i18n="order.filter.status_select">请选择状态</option>
+                    <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
                     <option value="已受注" selected data-i18n="order.status.accepted">已受注</option>
                     <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
                     <option value="已取消" data-i18n="order.status.canceled">已取消</option>
@@ -250,11 +250,11 @@
                 </div>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.owner">负责人</span>
+                <span data-i18n="common.field.owner">负责人</span>
                 <select id="accept-owner"></select>
             </label>
             <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
-                <span data-i18n="order.field.remark">备注</span>
+                <span data-i18n="common.field.note">备注</span>
                 <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
             </label>
         </div>
@@ -293,15 +293,15 @@
                 <input type="text" data-field="client"/>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.technician">技术者</span>
+                <span data-i18n="common.field.technician">技术者</span>
                 <input type="text" data-field="engineer"/>
             </label>
             <label class="c-inline-field" data-accept-only>
-                <span data-i18n="order.field.technician_id">技术人员ID</span>
+                <span data-i18n="common.field.technician_id">技术人员ID</span>
                 <input type="number" data-field="technicianId"/>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.status">状态</span>
+                <span data-i18n="common.field.status">状态</span>
                 <select data-field="status"
                         data-issue-options="承认中,已受注,拒绝,已取消"
                         data-accept-options="已受注,拒绝,已取消"
@@ -325,7 +325,7 @@
                 </div>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.created_at">创建时间</span>
+                <span data-i18n="common.field.created_at">创建时间</span>
                 <input type="date" data-field="createdAt"/>
             </label>
             <label class="c-inline-field">
@@ -333,11 +333,11 @@
                 <input type="text" data-field="creator"/>
             </label>
             <label class="c-inline-field">
-                <span data-i18n="order.field.owner">负责人</span>
+                <span data-i18n="common.field.owner">负责人</span>
                 <select data-field="owner"></select>
             </label>
             <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
-                <span data-i18n="order.field.remark">备注</span>
+                <span data-i18n="common.field.note">备注</span>
                 <textarea data-field="remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
             </label>
             <label class="c-inline-field">
@@ -366,11 +366,7 @@
         }
         const t = (key) => (i18n ? i18n.t(key) : key);
         const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
-        const formatDateValue = (value) => {
-            if (!value) return "";
-            const text = String(value);
-            return text.length >= 10 ? text.slice(0, 10) : text;
-        };
+        const formatDateValue = window.datePart;
         const readOwnerSelect = (selectEl) => {
             if (!selectEl) return { id: null, name: "" };
             const selected = selectEl.options[selectEl.selectedIndex];
@@ -480,7 +476,7 @@
             tableInfo.textContent = format("order.table.info", { count: 0, page: 1 });
         }
         if (pageSummary) {
-            pageSummary.textContent = format("order.table.summary", { count: 0, page: 1, total: 1 });
+            pageSummary.textContent = format("common.summary.page", { count: 0, page: 1, total: 1 });
         }
 
         const statusClass = {
@@ -492,7 +488,7 @@
             "拒绝": "c-tag-danger"
         };
         const statusLabelMap = {
-            "草稿": "order.status.draft",
+            "草稿": "common.status.draft",
             "承认中": "order.status.approving",
             "已送付": "order.status.sent",
             "已受注": "order.status.accepted",
@@ -517,7 +513,7 @@
         const renderActions = (container) => {
             container.innerHTML = "";
             [
-                { key: "order.action.edit", action: "edit", primary: false },
+                { key: "common.edit", action: "edit", primary: false },
                 { key: "order.action.view", action: "view", primary: true }
             ].forEach((item) => {
                 const btn = document.createElement("button");
@@ -543,11 +539,11 @@
                 const opt = document.createElement("option");
                 opt.value = defaultOption;
                 if (defaultOption === "全部") {
-                    opt.textContent = t("order.filter.status_all");
-                    opt.dataset.i18n = "order.filter.status_all";
+                    opt.textContent = t("common.all");
+                    opt.dataset.i18n = "common.all";
                 } else if (defaultOption === "请选择状态") {
-                    opt.textContent = t("order.filter.status_select");
-                    opt.dataset.i18n = "order.filter.status_select";
+                    opt.textContent = t("common.field.status_select");
+                    opt.dataset.i18n = "common.field.status_select";
                 } else {
                     opt.textContent = defaultOption;
                 }
@@ -645,7 +641,7 @@
             currentPage = Number.isFinite(page) ? page : 1;
             window.renderPagination(pagination, paginationPages, currentPage, totalPages);
             if (pageSummary) {
-                pageSummary.textContent = format("order.table.summary", {
+                pageSummary.textContent = format("common.summary.page", {
                     count,
                     page: currentPage,
                     total: totalPages
@@ -696,22 +692,21 @@
         }
 
         const fetchOrders = () => {
-            const params = new URLSearchParams();
-            if (filters.orderNo.value.trim()) params.append("order_no", filters.orderNo.value.trim());
-            if (filters.project.value.trim()) params.append("project_name", filters.project.value.trim());
-            if (filters.customerId.value.trim()) params.append("customer_id", filters.customerId.value.trim());
-            if (filters.technician.value.trim()) params.append("technician_name", filters.technician.value.trim());
-            if (filters.status.value && filters.status.value !== "全部") params.append("status", filters.status.value);
-            if (filters.onlySelf && filters.onlySelf.checked) params.append("only_self", "1");
-            if (filters.start.value) params.append("created_start", filters.start.value);
-            if (filters.end.value) params.append("created_end", filters.end.value);
-            params.append("page", String(currentPage));
-            params.append("page_size", String(pageSize));
+            const params = window.createParams([
+                ["order_no", filters.orderNo.value.trim()],
+                ["project_name", filters.project.value.trim()],
+                ["customer_id", filters.customerId.value.trim()],
+                ["technician_name", filters.technician.value.trim()],
+                ["status", filters.status.value && filters.status.value !== "全部" ? filters.status.value : ""],
+                ["only_self", filters.onlySelf && filters.onlySelf.checked ? "1" : ""],
+                ["created_start", filters.start.value],
+                ["created_end", filters.end.value],
+                ["page", String(currentPage)],
+                ["page_size", String(pageSize)],
+            ]);
             const baseUrl = currentView === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            fetchWithAuth(`${baseUrl}?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            window.requestJson(window.buildUrl(baseUrl, params), { method: "GET" })
+                .then((payload) => {
                     if (!payload.success) {
                         currentItems = [];
                         renderRows([], 0, 1, 1);
@@ -822,9 +817,9 @@
             const customer = acceptForm.customerName.value.trim();
             if (!customer) return showMissingField(t("order.field.customer_accept"), acceptForm.customerName), false;
             const technician = acceptForm.technicianName.value.trim();
-            if (!technician) return showMissingField(t("order.field.technician"), acceptForm.technicianName), false;
+            if (!technician) return showMissingField(t("common.field.technician"), acceptForm.technicianName), false;
             const status = acceptForm.status.value;
-            if (!status || status === "请选择状态") return showMissingField(t("order.field.status"), acceptForm.status), false;
+            if (!status || status === "请选择状态") return showMissingField(t("common.field.status"), acceptForm.status), false;
             const price = acceptForm.price.value.trim();
             if (!price) return showMissingField(t("order.field.price"), acceptForm.price), false;
             const hours = acceptForm.hours.value.trim();
@@ -833,7 +828,7 @@
             const end = acceptForm.end.value;
             if (!start || !end) return showMissingField(t("order.field.period"), acceptForm.start), false;
             const owner = readOwnerSelect(acceptForm.owner);
-            if (!owner.id) return showMissingField(t("order.field.owner"), acceptForm.owner), false;
+            if (!owner.id) return showMissingField(t("common.field.owner"), acceptForm.owner), false;
             return true;
         };
 
@@ -841,13 +836,11 @@
             if (view === "accept" && !validateAcceptForm()) return;
             const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
             const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            fetchWithAuth(url, {
+            window.requestJson(url, {
                 method: "POST",
                 body: JSON.stringify(payload),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    const responsePayload = normalizeApiResponse(data);
+                .then((responsePayload) => {
                     if (!responsePayload.success) {
                         alert(responsePayload.message || t("order.action.create_failed"));
                         return;
@@ -867,22 +860,20 @@
             const url = currentView === "accept"
                 ? `/api/sales-orders/${currentDetailId}`
                 : `/api/purchase-orders/${currentDetailId}`;
-            fetchWithAuth(url, {
+            window.requestJson(url, {
                 method: "PUT",
                 body: JSON.stringify(payload),
             })
-                .then((response) => response.json())
-                .then((data) => {
-                    const responsePayload = normalizeApiResponse(data);
+                .then((responsePayload) => {
                     if (!responsePayload.success) {
-                        alert(responsePayload.message || t("order.action.save_failed"));
+                        alert(responsePayload.message || t("common.save_failed"));
                         return;
                     }
                     if (detailDialog) detailDialog.close();
                     fetchOrders();
                 })
                 .catch(() => {
-                    alert(t("order.action.save_failed_retry"));
+                    alert(t("common.save_failed_retry"));
                 });
         }
 
@@ -906,14 +897,13 @@
                 map.clear();
                 return;
             }
-            const params = new URLSearchParams();
-            if (keyword) params.append("company_name", keyword);
-            params.append("page", "1");
-            params.append("page_size", keyword ? "10" : "5");
-            fetchWithAuth(`/api/customers?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            const params = window.createParams([
+                ["company_name", keyword],
+                ["page", "1"],
+                ["page_size", keyword ? "10" : "5"],
+            ]);
+            window.requestJson(window.buildUrl("/api/customers", params), { method: "GET" })
+                .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
                     renderCustomerOptions(listEl, map, items);
@@ -945,13 +935,12 @@
 
         const loadOwnerSelectOptions = (selectEl, currentValue) => {
             if (!selectEl) return;
-            const params = new URLSearchParams();
-            params.append("role_id", String(TECHNICIAN_ROLE_ID));
-            params.append("exclude", "1");
-            fetchWithAuth(`/api/user-logins/by-role?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            const params = window.createParams([
+                ["role_id", String(TECHNICIAN_ROLE_ID)],
+                ["exclude", "1"],
+            ]);
+            window.requestJson(window.buildUrl("/api/user-logins/by-role", params), { method: "GET" })
+                .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
                     selectEl.innerHTML = "";
@@ -1004,13 +993,12 @@
                 map.clear();
                 return;
             }
-            const params = new URLSearchParams();
-            if (keyword) params.append("keyword", keyword);
-            params.append("page_size", keyword ? "10" : "5");
-            fetchWithAuth(`/api/technicians?${params.toString()}`, { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => {
-                    const payload = normalizeApiResponse(data);
+            const params = window.createParams([
+                ["keyword", keyword],
+                ["page_size", keyword ? "10" : "5"],
+            ]);
+            window.requestJson(window.buildUrl("/api/technicians", params), { method: "GET" })
+                .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
                     renderTechnicianOptions(listEl, map, items);

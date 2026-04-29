@@ -28,7 +28,7 @@
                         <span class="c-filter-label" data-i18n="songxinhistory.search.label">收件人</span>
                         <div class="songxinhistory-search-row">
                             <input id="search" class="c-input" type="search" placeholder="搜索收件人" data-i18n-placeholder="songxinhistory.search.placeholder">
-                            <button id="search-btn" class="c-btn c-btn-primary" type="button" data-i18n="songxinhistory.search.button">搜索</button>
+                            <button id="search-btn" class="c-btn c-btn-primary" type="button" data-i18n="common.search">搜索</button>
                         </div>
                     </div>
                 </div>
@@ -92,7 +92,7 @@
 
             const renderAttachments = (files) => {
                 if (!files || !files.length) {
-                    attachEl.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
+                    attachEl.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
                     return;
                 }
                 attachEl.innerHTML = files.map(f => `<span class="c-chip">${f}</span>`).join('');
@@ -112,7 +112,7 @@
                     format('songxinhistory.meta.time', { value: record.time }),
                     format(
                         'songxinhistory.meta.status',
-                        { value: typeMap[record.mail_type]?.text || t('songxinhistory.type.unknown') }
+                        { value: typeMap[record.mail_type]?.text || t('common.status.unknown') }
                     )
                 ];
                 metaEl.innerHTML = meta.map(m => `<span>${m}</span>`).join('');
@@ -157,7 +157,7 @@
                         </div>
                         <div class="songxinhistory-time">
                             <div class="c-tag ${typeMap[item.mail_type]?.cls || 'c-tag-neutral'}">
-                                ${typeMap[item.mail_type]?.text || t('songxinhistory.type.unknown')}
+                                ${typeMap[item.mail_type]?.text || t('common.status.unknown')}
                             </div>
                             <div>${item.time}</div>
                         </div>
@@ -170,7 +170,7 @@
 
             const updatePaginationUI = () => {
                 if (pageSummary) {
-                    pageSummary.textContent = format('songxinhistory.page_summary', {
+                    pageSummary.textContent = format('common.summary.page', {
                         count: totalCount,
                         page: currentPage,
                         total: totalPages
@@ -197,14 +197,9 @@
                 isLoading = true;
                 lastQueryKey = queryKey;
                 try {
-                    const resp = await fetchWithAuth(`/api/send-history?${queryKey}`, { method: 'GET' });
-                    if (!resp.ok) {
-                        throw new Error(t('songxinhistory.error.load_failed'));
-                    }
-                    const data = await resp.json();
-                    const payload = normalizeApiResponse(data);
+                    const payload = await window.requestJson(window.buildUrl('/api/send-history', params), { method: 'GET' });
                     if (!payload.success) {
-                        throw new Error(payload.message || t('songxinhistory.error.load_failed'));
+                        throw new Error(payload.message || t('common.load_failed'));
                     }
                     const result = payload.data || {};
                     const meta = payload.meta || {};

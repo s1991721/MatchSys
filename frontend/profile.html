@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="profile.title">个人信息</title>
-    <style></style>
 </head>
 <body>
 <div class="page page-gap-compact">
@@ -38,7 +37,7 @@
             <form id="employeeForm" autocomplete="off">
                 <div class="form-grid">
                     <div class="form-field">
-                        <label for="empName" data-i18n="profile.field.name">姓名</label>
+                        <label for="empName" data-i18n="common.field.name">姓名</label>
                         <input id="empName" name="name" type="text" required/>
                     </div>
                     <div class="form-field">
@@ -47,31 +46,31 @@
                             <option value="" data-i18n="personnel.gender.unset">未设置</option>
                             <option value="1" data-i18n="personnel.gender.male">男</option>
                             <option value="2" data-i18n="personnel.gender.female">女</option>
-                            <option value="0" data-i18n="personnel.gender.unknown">未知</option>
+                            <option value="0" data-i18n="common.status.unknown">未知</option>
                         </select>
                     </div>
                     <div class="form-field">
-                        <label for="empBirthday" data-i18n="profile.field.birthday">生日</label>
+                        <label for="empBirthday" data-i18n="common.field.birthday">生日</label>
                         <input id="empBirthday" name="birthday" type="date"/>
                     </div>
                     <div class="form-field">
-                        <label for="empPhone" data-i18n="profile.field.phone">手机</label>
+                        <label for="empPhone" data-i18n="common.field.phone">手机</label>
                         <input id="empPhone" name="phone" type="text"/>
                     </div>
                     <div class="form-field">
-                        <label for="empEmail" data-i18n="profile.field.email">邮箱</label>
+                        <label for="empEmail" data-i18n="common.field.email">邮箱</label>
                         <input id="empEmail" name="email" type="email"/>
                     </div>
                     <div class="form-field">
-                        <label for="empHireDate" data-i18n="profile.field.hire_date">入职日期</label>
+                        <label for="empHireDate" data-i18n="common.field.hire_date">入职日期</label>
                         <input id="empHireDate" name="hire_date" type="date" readonly/>
                     </div>
                     <div class="form-field">
-                        <label for="empDepartment" data-i18n="profile.field.department">部门</label>
+                        <label for="empDepartment" data-i18n="common.field.department">部门</label>
                         <input id="empDepartment" name="department_name" type="text" readonly/>
                     </div>
                     <div class="form-field">
-                        <label for="empPosition" data-i18n="profile.field.position">职位</label>
+                        <label for="empPosition" data-i18n="common.field.position">职位</label>
                         <input id="empPosition" name="position_name" type="text" readonly/>
                     </div>
                     <div class="form-field full">
@@ -186,12 +185,10 @@
             return;
         }
         try {
-            const res = await fetchWithAuth(`${API_BASE}/api/employees/${employeeId}`, {
+            const payload = await window.requestJson(`${API_BASE}/api/employees/${employeeId}`, {
                 method: "GET",
             });
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) throw new Error(payload.message || t("common.load_failed"));
+            if (!payload.success) throw new Error(payload.message || t("common.load_failed"));
             const result = payload.data || {};
             const item = result.item || {};
             document.getElementById("empName").value = item.name || "";
@@ -246,13 +243,11 @@
                 emergency_contact_phone: document.getElementById("empEmergencyPhone").value.trim(),
                 emergency_contact_relationship: document.getElementById("empEmergencyRelation").value.trim(),
             };
-            const res = await fetchWithAuth(`${API_BASE}/api/employees/${employeeId}`, {
+            const responsePayload = await window.requestJson(`${API_BASE}/api/employees/${employeeId}`, {
                 method: "PUT",
                 body: JSON.stringify(payload),
             });
-            const data = await res.json();
-            const responsePayload = normalizeApiResponse(data);
-            if (!res.ok || !responsePayload.success) {
+            if (!responsePayload.success) {
                 throw new Error(responsePayload.message || t("common.save_failed"));
             }
             alert(t("profile.alert.profile_updated"));
@@ -305,15 +300,13 @@
         }
 
         try {
-            const res = await fetchWithAuth(`${API_BASE}/api/change-password`, {
+            const responsePayload = await window.requestJson(`${API_BASE}/api/change-password`, {
                 body: JSON.stringify({
                     old_password: oldPassword,
                     new_password: newPassword,
                 }),
             });
-            const data = await res.json();
-            const responsePayload = normalizeApiResponse(data);
-            if (!res.ok || !responsePayload.success) {
+            if (!responsePayload.success) {
                 throw new Error(responsePayload.message || t("profile.alert.password_failed"));
             }
             alert(t("profile.alert.password_updated"));
@@ -326,10 +319,8 @@
 
     logoutBtn.addEventListener("click", async () => {
         try {
-            const res = await fetchWithAuth(`${API_BASE}/api/logout`, {});
-            const data = await res.json();
-            const responsePayload = normalizeApiResponse(data);
-            if (!res.ok || !responsePayload.success) {
+            const responsePayload = await window.requestJson(`${API_BASE}/api/logout`, {});
+            if (!responsePayload.success) {
                 throw new Error(responsePayload.message || t("profile.alert.logout_failed"));
             }
             const target = "login.html".replace(/^\//, "");

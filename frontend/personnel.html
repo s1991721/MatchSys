@@ -7,151 +7,6 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="personnel.title">社内人员管理</title>
-    <style>
-        .permission-editor {
-            display: grid;
-            grid-template-columns: minmax(200px, 0.9fr) minmax(320px, 1.6fr);
-            gap: 16px;
-            align-items: start;
-        }
-
-        @media (max-width: 900px) {
-            .permission-editor {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .permission-section {
-            border: 1px solid #e4e9f4;
-            border-radius: 18px;
-            padding: 16px;
-            background: #f6f8ff;
-        }
-
-        .permission-section-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 10px;
-        }
-
-        .permission-section-title {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 800;
-        }
-
-        .permission-section-note {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .permission-role-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-
-        .permission-role-option {
-            position: relative;
-            border-radius: 16px;
-            border: 1px solid #dfe6f5;
-            background: #fff;
-            padding: 22px 16px 16px;
-            cursor: pointer;
-        }
-
-        .permission-role-option input {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
-
-        .permission-role-meta strong {
-            display: block;
-            font-size: 15px;
-            font-weight: 700;
-        }
-
-        .permission-role-meta span {
-            display: block;
-            color: var(--muted);
-            font-size: 12px;
-            margin-top: 4px;
-        }
-
-        .permission-section .c-dialog-count {
-            display: inline-flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            gap: 8px;
-            white-space: nowrap;
-            line-height: 1;
-            flex-wrap: nowrap;
-        }
-
-        .permission-section .c-dialog-count span,
-        .permission-section .c-dialog-count strong {
-            display: inline-flex;
-        }
-
-        .permission-count-inline {
-            display: inline-flex !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            gap: 8px;
-        }
-
-        .permission-section .c-dialog-count input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
-
-        .permission-section .c-card-compact {
-            background: #fff;
-        }
-
-        .permission-section .role-menu-checklist {
-            gap: 10px;
-            max-height: 420px;
-            overflow-y: auto;
-            padding-right: 6px;
-        }
-
-        .permission-section .role-menu-check {
-            display: grid;
-            grid-template-columns: 18px 1fr;
-            align-items: center;
-            padding: 10px 12px;
-            border-radius: 12px;
-            min-height: 44px;
-        }
-
-        .permission-section .role-menu-text {
-            display: flex;
-            align-items: baseline;
-            gap: 10px;
-            min-width: 0;
-            flex-wrap: wrap;
-        }
-
-        .permission-section .role-menu-text strong {
-            font-size: 14px;
-            font-weight: 700;
-        }
-
-        .permission-section .role-menu-text span {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-    </style>
 </head>
 <body class="c-form-page personnel-page">
 <div class="page">
@@ -163,7 +18,7 @@
                     <input id="searchInput" type="search" placeholder="输入关键字" data-i18n-placeholder="personnel.filter.keyword_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.filter.department">部门</span>
+                    <span data-i18n="common.field.department">部门</span>
                     <select id="deptSelect">
                         <option value="all">全部部门</option>
                     </select>
@@ -188,13 +43,13 @@
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
-                    <th data-i18n="personnel.table.name">姓名</th>
-                    <th data-i18n="personnel.table.department">部门</th>
-                    <th data-i18n="personnel.table.position">职位</th>
-                    <th data-i18n="personnel.table.phone">手机</th>
-                    <th data-i18n="personnel.table.email">邮箱</th>
-                    <th data-i18n="personnel.table.hire_date">入职日期</th>
-                    <th class="c-actions-col" data-i18n="personnel.table.actions">操作</th>
+                    <th data-i18n="common.field.name">姓名</th>
+                    <th data-i18n="common.field.department">部门</th>
+                    <th data-i18n="common.field.position">职位</th>
+                    <th data-i18n="common.field.phone">手机</th>
+                    <th data-i18n="common.field.email">邮箱</th>
+                    <th data-i18n="common.field.hire_date">入职日期</th>
+                    <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -231,27 +86,27 @@
                         <option value="" data-i18n="personnel.gender.unset">未设置</option>
                         <option value="1" data-i18n="personnel.gender.male">男</option>
                         <option value="2" data-i18n="personnel.gender.female">女</option>
-                        <option value="0" data-i18n="personnel.gender.unknown">未知</option>
+                        <option value="0" data-i18n="common.status.unknown">未知</option>
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.birthday">生日</span>
+                    <span data-i18n="common.field.birthday">生日</span>
                     <input id="fieldBirthday" type="date"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.department">部门</span>
+                    <span data-i18n="common.field.department">部门</span>
                     <input id="fieldDepartment" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.position">职位</span>
+                    <span data-i18n="common.field.position">职位</span>
                     <input id="fieldPosition" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.phone">手机</span>
+                    <span data-i18n="common.field.phone">手机</span>
                     <input id="fieldPhone" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.email">邮箱</span>
+                    <span data-i18n="common.field.email">邮箱</span>
                     <input id="fieldEmail" type="email"/>
                 </label>
                 <label>
@@ -271,7 +126,7 @@
                     <input id="fieldEmergencyRelation" type="text"/>
                 </label>
                 <label>
-                    <span data-i18n="personnel.field.hire_date">入职日期</span>
+                    <span data-i18n="common.field.hire_date">入职日期</span>
                     <input id="fieldHireDate" type="date"/>
                 </label>
                 <label>
@@ -434,13 +289,13 @@
         const showPermission = isAdminRole();
         tableBody.innerHTML = list.map(item => (
             `<tr>
-          <td data-label="${t("personnel.table.name")}">${item.name}</td>
-          <td data-label="${t("personnel.table.department")}">${item.department_name}</td>
-          <td data-label="${t("personnel.table.position")}">${item.position_name}</td>
-          <td data-label="${t("personnel.table.phone")}">${item.phone}</td>
-          <td data-label="${t("personnel.table.email")}">${item.email}</td>
-          <td data-label="${t("personnel.table.hire_date")}">${formatDate(item.hire_date)}</td>
-          <td data-label="${t("personnel.table.actions")}">
+          <td data-label="${t("common.field.name")}">${item.name}</td>
+          <td data-label="${t("common.field.department")}">${item.department_name}</td>
+          <td data-label="${t("common.field.position")}">${item.position_name}</td>
+          <td data-label="${t("common.field.phone")}">${item.phone}</td>
+          <td data-label="${t("common.field.email")}">${item.email}</td>
+          <td data-label="${t("common.field.hire_date")}">${formatDate(item.hire_date)}</td>
+          <td data-label="${t("common.field.actions")}">
             <div class="row-actions c-row-actions c-row-actions-nowrap">
               <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">${t("personnel.action.edit")}</button>
               <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">${t("personnel.action.tech_edit")}</button>
@@ -513,21 +368,21 @@
             if (target) openModal("edit", target);
         } else if (action === "tech-edit") {
             try {
-                localStorage.setItem("tech_edit_employee_id", String(id));
+                window.MatchSys.writeJSONToLocalStorage("tech_edit_employee_id", {
+                    id: String(id),
+                    updatedAt: Date.now()
+                });
                 const target = allEmployees.find(item => String(item.id) === String(id));
                 if (target) {
-                    localStorage.setItem(TECH_PREFILL_KEY, JSON.stringify({
+                    window.MatchSys.writeJSONToLocalStorage(TECH_PREFILL_KEY, {
                         name: target.name || "",
-                        birthday: target.birthday || ""
-                    }));
-                }
-                if (window.parent && window.parent !== window) {
-                    window.parent.location.hash = "people.html";
-                    return;
+                        birthday: target.birthday || "",
+                        updatedAt: Date.now()
+                    });
                 }
             } catch (err) {
             }
-            window.location.href = "people.html";
+            window.navigateAppRoute("people.html");
         } else if (action === "permission") {
             openPermissionModal(id);
         } else if (action === "attendance-setting") {
@@ -588,11 +443,7 @@
 
     const permissionStorageKey = (employeeId) => `personnel_permission_${employeeId || "unknown"}`;
 
-    const requestPermissionJson = async (url, options = {}) => {
-        const response = await fetchWithAuth(url, options);
-        const data = await response.json();
-        return normalizeApiResponse(data);
-    };
+    const requestPermissionJson = window.requestJson;
 
     const fetchPermissionRoles = async () => {
         const res = await requestPermissionJson("/api/roles", {method: "GET"});
@@ -718,9 +569,7 @@
 
     const loadSavedPermission = (employeeId) => {
         try {
-            const raw = localStorage.getItem(permissionStorageKey(employeeId));
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
+            const parsed = window.MatchSys.readJSONFromLocalStorage(permissionStorageKey(employeeId));
             if (!parsed || typeof parsed !== "object") return null;
             return parsed;
         } catch (err) {
@@ -753,10 +602,11 @@
             throw new Error(res.message || t("personnel.error.update_failed"));
         }
         try {
-            localStorage.setItem(permissionStorageKey(employeeId), JSON.stringify({
+            window.MatchSys.writeJSONToLocalStorage(permissionStorageKey(employeeId), {
                 roleId: payload.role_id,
-                menuList: payload.menu_list
-            }));
+                menuList: payload.menu_list,
+                updatedAt: Date.now()
+            });
         } catch (err) {
         }
     };
@@ -792,12 +642,10 @@
     }
 
     const createEmployee = async (payload) => {
-        const res = await fetchWithAuth(`/api/employees`, {
+        const responsePayload = await window.requestJson(`/api/employees`, {
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
+        if (!responsePayload.success) {
             const message = window.translateApiMessage
                 ? window.translateApiMessage(responsePayload.message)
                 : responsePayload.message;
@@ -807,13 +655,11 @@
     }
 
     const updateEmployee = async (id, payload) => {
-        const res = await fetchWithAuth(`/api/employees/${id}`, {
+        const responsePayload = await window.requestJson(`/api/employees/${id}`, {
             method: "PUT",
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
+        if (!responsePayload.success) {
             const message = window.translateApiMessage
                 ? window.translateApiMessage(responsePayload.message)
                 : responsePayload.message;
@@ -824,10 +670,8 @@
 
     const deleteEmployee = async (id) => {
         try {
-            const res = await fetchWithAuth(`/api/employees/${id}`, {method: "DELETE"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
+            const payload = await window.requestJson(`/api/employees/${id}`, {method: "DELETE"});
+            if (!payload.success) {
                 const message = window.translateApiMessage
                     ? window.translateApiMessage(payload.message)
                     : payload.message;
@@ -842,19 +686,15 @@
     const fetchEmployees = async () => {
         tableBody.innerHTML = `<tr><td colspan="7" class="empty c-empty">${t("common.loading")}</td></tr>`;
         try {
-            const params = new URLSearchParams();
-            if (currentFilters.keyword) params.append("keyword", currentFilters.keyword);
-            if (currentFilters.department && currentFilters.department !== "all") {
-                params.append("department", currentFilters.department);
-            }
-            params.append("page", String(currentPage));
-            params.append("page_size", String(pageSize));
-            const query = params.toString();
-            const url = query ? `/api/employees?${query}` : "/api/employees";
-            const res = await fetchWithAuth(url, {method: "GET"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
+            const params = createParams([
+                ["keyword", currentFilters.keyword],
+                ["department", currentFilters.department && currentFilters.department !== "all" ? currentFilters.department : ""],
+                ["page", String(currentPage)],
+                ["page_size", String(pageSize)],
+            ]);
+            const url = buildUrl("/api/employees", params);
+            const payload = await window.requestJson(url, {method: "GET"});
+            if (!payload.success) {
                 throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};
@@ -880,10 +720,8 @@
 
     const fetchDepartments = async () => {
         try {
-            const res = await fetchWithAuth("/api/employees/departments", {method: "GET"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!res.ok || !payload.success) {
+            const payload = await window.requestJson("/api/employees/departments", {method: "GET"});
+            if (!payload.success) {
                 throw new Error(payload.message || t("common.load_failed"));
             }
             const result = payload.data || {};

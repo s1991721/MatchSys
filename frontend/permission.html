@@ -7,32 +7,8 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="permission.title">权限管理</title>
-    <style>
-        body {
-            background: transparent;
-        }
-
-        .permission-grid {
-            display: grid;
-            grid-template-columns: minmax(280px, 0.9fr) minmax(520px, 1.6fr);
-            gap: 16px;
-            align-items: start;
-        }
-
-        @media (max-width: 1100px) {
-            .permission-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .permission-subtitle {
-            margin: 6px 0 0;
-            color: var(--muted);
-            font-size: 13px;
-        }
-    </style>
 </head>
-<body>
+<body class="permission-page-body">
 <div class="page page-wide permission-page">
     <div class="permission-grid">
         <section class="c-card">
@@ -49,7 +25,7 @@
                     <tr>
                         <th data-i18n="permission.role.table.role">角色</th>
                         <th data-i18n="permission.role.table.desc">角色描述</th>
-                        <th class="c-actions-col" data-i18n="permission.role.table.action">操作</th>
+                        <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                     </tr>
                     </thead>
                     <tbody id="role-body"></tbody>
@@ -72,7 +48,7 @@
                         <th data-i18n="permission.menu.table.name">菜单名</th>
                         <th data-i18n="permission.menu.table.page">页面文件</th>
                         <th data-i18n="permission.menu.table.sort">排序</th>
-                        <th class="c-actions-col" data-i18n="permission.menu.table.action">操作</th>
+                        <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                     </tr>
                     </thead>
                     <tbody id="menu-body"></tbody>
@@ -173,11 +149,7 @@
   let cachedMenus = [];
   let cachedRoles = [];
 
-  const requestJson = async (url, options = {}) => {
-    const response = await window.fetchWithAuth(url, options);
-    const raw = await response.json();
-    return window.normalizeApiResponse(raw);
-  };
+  const requestJson = window.requestJson;
 
   const getAllMenus = () => {
     return [...cachedMenus].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));

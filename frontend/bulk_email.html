@@ -7,347 +7,11 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="customer.bulk.title">群发邮件</title>
-    <style>
-        .bulk-email-page .page {
-            padding: 16px 18px 20px;
-        }
-
-        .bulk-email-page .bulk-email-shell {
-            width: 100%;
-            max-width: none;
-            padding: 0;
-            overflow: hidden;
-            min-height: calc(100vh - 46px);
-        }
-
-        .bulk-email-page .modal {
-            height: 100%;
-            min-height: calc(100vh - 46px);
-            border-radius: 0;
-        }
-
-        .bulk-email-page .modal-body {
-            flex: 1 1 auto;
-            grid-template-columns: minmax(0, 3fr) auto minmax(0, 7fr);
-            align-items: stretch;
-        }
-
-        .bulk-email-page .recipients {
-            order: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .bulk-email-page .modal-divider {
-            order: 2;
-        }
-
-        .bulk-email-page .mail-editor {
-            order: 3;
-            align-content: start;
-        }
-
-        .bulk-email-page .mail-submit-row {
-            display: flex;
-            justify-content: flex-end;
-            align-items: flex-end;
-        }
-
-        .bulk-email-page .bulk-mail-footer {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 16px;
-            align-items: end;
-            margin-top: 8px;
-        }
-
-        .bulk-email-page .bulk-mail-footer .form-item {
-            margin: 0;
-        }
-
-        .bulk-email-page .bulk-mail-footer .mail-submit-row {
-            margin: 0;
-            align-self: end;
-        }
-
-        .bulk-email-page #bulk-mail-send:disabled {
-            cursor: not-allowed;
-            opacity: 0.72;
-            background: #8fb2f7;
-            border-color: #8fb2f7;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .bulk-email-page #bulk-mail-send:disabled:hover,
-        .bulk-email-page #bulk-mail-send:disabled:active {
-            transform: none;
-            box-shadow: none;
-        }
-
-        .bulk-email-page .mail-body-wrap {
-            position: relative;
-        }
-
-        .bulk-email-page .mail-body-mask {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: rgba(22, 32, 55, 0.52);
-            border: 1px solid #d8dfec;
-            border-radius: 10px;
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.15s ease;
-            z-index: 2;
-        }
-
-        .bulk-email-page .mail-body-mask.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .bulk-email-page .mail-body-mask::before {
-            content: "";
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            border-top-color: #ffffff;
-            animation: bulk-email-spin 0.8s linear infinite;
-        }
-
-        .bulk-email-page #bulk-mail-body.is-processing {
-            filter: blur(0.5px);
-        }
-
-        @keyframes bulk-email-spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .bulk-email-page #bulk-mail-body {
-            min-height: 420px;
-        }
-
-        .bulk-email-page .recipients-list {
-            max-height: none;
-            flex: 1 1 auto;
-            min-height: 0;
-        }
-
-        .bulk-email-page .recipients-filter {
-            margin-bottom: 12px;
-        }
-
-        .bulk-email-page .group-header-main {
-            min-width: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1 1 auto;
-        }
-
-        .bulk-email-page .group-title-wrap {
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            flex: 1 1 auto;
-        }
-
-        .bulk-email-page .group-company-check {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 auto;
-        }
-
-        .bulk-email-page .group-company-check input {
-            margin: 0;
-        }
-
-        .bulk-email-page .group-company-email {
-            color: #63708a;
-            font-size: 14px;
-            line-height: 1.4;
-            word-break: break-all;
-        }
-
-        .bulk-email-page .bulk-attachment-hint {
-            color: #5f6f8f;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        .bulk-email-page .bulk-attachment-input {
-            margin-top: 4px;
-        }
-
-        .bulk-email-page .bulk-mail-footer-main {
-            display: grid;
-            gap: 14px;
-        }
-
-        .bulk-email-page .bulk-cc-input {
-            width: 100%;
-        }
-
-        .bulk-email-page .bulk-upload-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .bulk-email-page .bulk-attachment-input {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            padding: 0;
-            margin: -1px;
-            overflow: hidden;
-            clip: rect(0, 0, 0, 0);
-            white-space: nowrap;
-            border: 0;
-        }
-
-        .bulk-email-page .bulk-attachment-list {
-            display: grid;
-            gap: 10px;
-        }
-
-        .bulk-email-page .bulk-attachment-empty {
-            border: 1px dashed #d8dfec;
-            border-radius: 14px;
-            padding: 12px 14px;
-            color: #7d8aa5;
-            font-size: 14px;
-            background: #fbfcfe;
-        }
-
-        .bulk-email-page .bulk-attachment-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 12px 14px;
-            border: 1px solid #d8dfec;
-            border-radius: 14px;
-            background: #f8faff;
-        }
-
-        .bulk-email-page .bulk-attachment-main {
-            min-width: 0;
-            flex: 1 1 auto;
-        }
-
-        .bulk-email-page .bulk-attachment-name {
-            color: #24324a;
-            font-size: 14px;
-            line-height: 1.5;
-            word-break: break-all;
-        }
-
-        .bulk-email-page .bulk-attachment-actions {
-            display: inline-flex;
-            align-items: center;
-            gap: 14px;
-            flex: 0 0 auto;
-            white-space: nowrap;
-        }
-
-        .bulk-email-page .bulk-attachment-origin {
-            color: #5f6f8f;
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .bulk-email-page .bulk-attachment-link,
-        .bulk-email-page .bulk-attachment-remove {
-            font-size: 13px;
-            line-height: 1.4;
-            text-decoration: none;
-        }
-
-        .bulk-email-page .bulk-attachment-link {
-            color: #2c6bed;
-        }
-
-        .bulk-email-page .bulk-attachment-remove {
-            border: 0;
-            background: transparent;
-            color: #e14b54;
-            padding: 0;
-            cursor: pointer;
-        }
-
-        .bulk-email-page #bulk-mail-send {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            min-width: 118px;
-            min-height: 40px;
-            padding: 0 18px;
-            border-radius: 14px;
-            font-weight: 700;
-            box-shadow: 0 10px 22px rgba(28, 123, 255, 0.24);
-        }
-
-        .bulk-email-page .bulk-send-icon {
-            width: 12px;
-            height: 12px;
-            display: block;
-            flex: 0 0 auto;
-        }
-
-        @media (max-width: 1200px) {
-            .bulk-email-page .modal-body {
-                grid-template-columns: minmax(0, 4fr) auto minmax(0, 6fr);
-            }
-        }
-
-        @media (max-width: 920px) {
-            .bulk-email-page .bulk-email-shell {
-                min-height: auto;
-            }
-
-            .bulk-email-page .modal {
-                min-height: auto;
-            }
-
-            .bulk-email-page .bulk-mail-footer {
-                grid-template-columns: 1fr;
-            }
-
-            .bulk-email-page .bulk-attachment-item {
-                align-items: flex-start;
-                flex-direction: column;
-            }
-
-            .bulk-email-page .bulk-attachment-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-    </style>
 </head>
 <body class="c-form-page bulk-email-page">
 <div class="page">
     <section class="c-card c-bulk-dialog bulk-email-shell">
-        <div class="modal" role="main" aria-label="群发邮件">
+        <div class="modal" role="main" aria-label="群发邮件" data-i18n-aria="customer.bulk.title">
             <div class="modal-header">
                 <div class="modal-title" data-i18n="customer.bulk.title">群发邮件</div>
             </div>
@@ -359,36 +23,43 @@
                                data-i18n-placeholder="customer.bulk.subject_placeholder"/>
                     </div>
                     <div class="form-item">
-                        <div class="form-label">送信类型</div>
+                        <div class="form-label" data-i18n="customer.bulk.mail_type">送信类型</div>
                         <select class="input" id="bulk-mail-type">
-                            <option value="-1">其他</option>
+                            <option value="-1" data-i18n="customer.bulk.mail_type.other">其他</option>
                             <option value="0">BP</option>
-                            <option value="1">技术者送信</option>
-                            <option value="2">案件送信</option>
+                            <option value="1" data-i18n="customer.bulk.mail_type.technician">技术者送信</option>
+                            <option value="2" data-i18n="customer.bulk.mail_type.project">案件送信</option>
                         </select>
                     </div>
                     <div class="form-item">
                         <div class="form-label" data-i18n="customer.bulk.body">邮件内容</div>
-                        <div style="margin: 0 0 8px; color: #63708a; font-size: 13px; line-height: 1.5;">
+                        <div class="bulk-body-hint"
+                             data-i18n="customer.bulk.body_hint">
                             当前编辑的是通用正文。系统发送时会按收件人逐封发送，并自动补全各自抬头；实际发送结果请到【送信历史】查看。
                         </div>
                         <div class="mail-body-wrap">
                             <textarea class="textarea" id="bulk-mail-body" rows="10" placeholder="请输入邮件内容"
                                       data-i18n-placeholder="customer.bulk.body_placeholder"></textarea>
-                            <div class="mail-body-mask" id="bulk-mail-body-mask">邮件内容处理中，请稍候...</div>
+                            <div class="mail-body-mask" id="bulk-mail-body-mask"
+                                 data-i18n="customer.bulk.status.body_processing">邮件内容处理中，请稍候...
+                            </div>
                         </div>
                     </div>
                     <div class="bulk-mail-footer">
                         <div class="bulk-mail-footer-main">
                             <div class="form-item">
-                                <div class="form-label">抄送（可选）</div>
-                                <input class="input bulk-cc-input" id="bulk-mail-cc" type="email" placeholder="cc@example.com"/>
+                                <div class="form-label" data-i18n="customer.bulk.cc">抄送（可选）</div>
+                                <input class="input bulk-cc-input" id="bulk-mail-cc" type="email"
+                                       placeholder="cc@example.com"/>
                             </div>
                             <div class="form-item">
-                                <div class="form-label">上传附件</div>
+                                <div class="form-label" data-i18n="customer.bulk.attachments">上传附件</div>
                                 <div class="bulk-upload-bar">
-                                    <input class="bulk-attachment-input" id="bulk-attachment-file" type="file" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx" multiple/>
-                                    <div class="bulk-attachment-hint">支持多文件，建议单个不超过10MB</div>
+                                    <input class="bulk-attachment-input" id="bulk-attachment-file" type="file"
+                                           accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx" multiple/>
+                                    <div class="bulk-attachment-hint" data-i18n="customer.bulk.attachment_hint">
+                                        支持多文件，建议单个不超过10MB
+                                    </div>
                                 </div>
                                 <div id="bulk-attachment-source" class="bulk-attachment-list"></div>
                             </div>
@@ -413,9 +84,14 @@
                         <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
                     </div>
                     <div class="recipients-filter">
-                        <input class="input" id="bulk-recipient-filter" type="search" placeholder="按公司名过滤"/>
+                        <input class="input" id="bulk-recipient-filter" type="search" placeholder="按公司名过滤"
+                               data-i18n-placeholder="customer.bulk.filter_placeholder"/>
                     </div>
                     <div class="recipients-list" id="bulk-mail-recipients"></div>
+                    <div class="pagination c-pagination hidden" id="bulk-recipient-pagination">
+                        <div class="pagination-summary" id="bulk-recipient-pagination-summary">共 0 条 · 第 1/1 页</div>
+                        <div class="pagination-pages" id="bulk-recipient-pagination-pages"></div>
+                    </div>
                 </aside>
             </div>
         </div>
@@ -441,27 +117,178 @@
     const bulkMailBodyMask = document.getElementById("bulk-mail-body-mask");
     const bulkMailSend = document.getElementById("bulk-mail-send");
     const bulkMailCc = document.getElementById("bulk-mail-cc");
-    let bulkAttachmentFile = document.getElementById("bulk-attachment-file");
+    const bulkAttachmentFile = document.getElementById("bulk-attachment-file");
     const bulkAttachmentSource = document.getElementById("bulk-attachment-source");
     const bulkMailSendText = bulkMailSend ? bulkMailSend.querySelector(".bulk-send-text") : null;
+    const bulkRecipientPagination = document.getElementById("bulk-recipient-pagination");
+    const bulkRecipientPaginationPages = document.getElementById("bulk-recipient-pagination-pages");
+    const bulkRecipientPaginationSummary = document.getElementById("bulk-recipient-pagination-summary");
 
     const CONTEXT_KEY = "bulkMailContext";
     const PREFILL_KEY = "bulkMailPrefill";
-    const TEMPLATE_SECTION = "mail-template";
+    const CUSTOMER_PAGE_SIZE = 10;
 
-    let customers = [];
     let selectedCustomerIdSet = new Set();
-    let selectedCustomersSnapshot = [];
     let recipientSourceItems = [];
-    let selectedCompanyIdSet = new Set();
-    let selectedContactKeySet = new Set();
+    let recipientOptionMap = new Map();
+    let selectedRecipientMap = new Map();
     let prefill = null;
-    let prefillSource = "";
-    let prefillIntro = "";
-    let prefillAttachments = [];
     let bulkAttachments = [];
-    let templateSettingsCache = null;
     let isSendingBulkMail = false;
+    let customerPagination = {
+        page: 1,
+        totalPages: 1,
+        totalCount: 0,
+    };
+
+    bulkMailRecipients.addEventListener("change", (event) => {
+        if (event.target.matches(".company-check, .contact-check")) {
+            const isCompany = event.target.matches(".company-check");
+            const targetKey = isCompany
+                ? String(event.target.dataset.company || "")
+                : String(event.target.dataset.contactKey || "");
+            if (targetKey) {
+                const selectionKey = `${isCompany ? "company" : "contact"}:${targetKey}`;
+                if (event.target.checked) {
+                    const recipient = recipientOptionMap.get(selectionKey);
+                    if (recipient) {
+                        selectedRecipientMap.set(selectionKey, recipient);
+                    }
+                } else {
+                    selectedRecipientMap.delete(selectionKey);
+                }
+            }
+            updateBulkSelected();
+        }
+    });
+
+    bulkRecipientFilter.addEventListener("input", () => {
+        renderFilteredRecipients();
+    });
+
+    bulkAttachmentSource.addEventListener("click", (event) => {
+        const target = event.target.closest('[data-action="remove-attachment"]');
+        if (!target) {
+            return;
+        }
+        const row = target.closest("[data-attachment-id]");
+        const attachmentId = row ? String(row.dataset.attachmentId || "") : "";
+        bulkAttachments = bulkAttachments.filter((attachment) => String(attachment.id || "") !== attachmentId);
+        renderAttachmentSource();
+    });
+
+    bulkMailSend.addEventListener("click", async () => {
+        if (isSendingBulkMail) {
+            return;
+        }
+        const recipients = readSelectedRecipients();
+        const subject = bulkMailSubject.value.trim();
+        const body = bulkMailBody.value.trim();
+        const mailType = bulkMailType ? bulkMailType.value : "";
+        const cc = bulkMailCc ? bulkMailCc.value.trim() : "";
+
+        if (!recipients.length) {
+            alert(t("customer.bulk.alert.recipient_required"));
+            return;
+        }
+        if (!subject) {
+            alert(t("customer.bulk.alert.subject_required"));
+            return;
+        }
+        if (!body) {
+            alert(t("customer.bulk.alert.body_required"));
+            return;
+        }
+
+        setBulkSendingState(true);
+        try {
+            const attachmentsPayload = await Promise.all(
+                bulkAttachments.map(async (attachment) => {
+                    if (attachment.source === "manual" && attachment.file) {
+                        return {
+                            filename: attachment.filename || "attachment",
+                            content_type: attachment.file.type || "application/octet-stream",
+                            content: await readFileAsBase64(attachment.file),
+                        };
+                    }
+                    return {
+                        filename: attachment.filename || "attachment",
+                        path: attachment.path || "",
+                        content_type: attachment.content_type || "application/octet-stream",
+                    };
+                })
+            );
+            const payload = await window.requestJson("/api/send-bulk-mail", {
+                body: JSON.stringify({
+                    subject,
+                    body,
+                    cc,
+                    mail_type: mailType,
+                    recipients,
+                    attachments: attachmentsPayload,
+                }),
+            });
+            if (!payload.success) {
+                throw new Error(payload.message || t("customer.bulk.alert.send_failed"));
+            }
+            alert(t("customer.bulk.alert.sent"));
+            window.MatchSys.clearStoredKey(CONTEXT_KEY);
+            window.MatchSys.clearStoredKey(PREFILL_KEY);
+            window.navigateAppRoute("customer.html");
+        } catch (error) {
+            alert(error.message || t("customer.bulk.alert.send_failed"));
+        } finally {
+            setBulkSendingState(false);
+        }
+    });
+
+    bulkAttachmentFile.addEventListener("change", () => {
+        const files = Array.from(bulkAttachmentFile.files || []);
+        files.forEach((file, index) => {
+            bulkAttachments.push({
+                id: `manual-${Date.now()}-${index}-${file.name}`,
+                source: "manual",
+                filename: file.name || "attachment",
+                file,
+            });
+        });
+        renderAttachmentSource();
+        bulkAttachmentFile.value = "";
+    });
+
+    window.bindPagination(bulkRecipientPagination, (value) => {
+        if (selectedCustomerIdSet.size) return;
+        let nextPage = customerPagination.page;
+        if (value === "prev") {
+            nextPage = Math.max(1, customerPagination.page - 1);
+        } else if (value === "next") {
+            nextPage = Math.min(customerPagination.totalPages, customerPagination.page + 1);
+        } else {
+            nextPage = Number(value) || customerPagination.page;
+        }
+        if (nextPage === customerPagination.page) return;
+        loadCustomers(nextPage)
+            .catch((error) => {
+                console.error("load customers failed", error);
+                recipientSourceItems = [];
+                renderFilteredRecipients();
+                setRecipientPaginationVisible(false);
+            });
+    });
+
+    const setBulkSendingState = (isSending) => {
+        isSendingBulkMail = Boolean(isSending);
+        setBodyBusyState({
+            busy: isSending,
+            message: t("customer.bulk.status.sending"),
+            disableSend: isSending,
+        });
+        if (bulkMailSendText) {
+            bulkMailSendText.textContent = isSending
+                ? t("customer.bulk.status.sending_short")
+                : t("customer.bulk.send");
+        }
+    };
 
     const extractRecipients = (items) => {
         const groups = [];
@@ -512,12 +339,22 @@
     };
 
     const updateBulkSelected = () => {
-        const totalSelected = selectedCompanyIdSet.size + selectedContactKeySet.size;
-        bulkMailSelected.textContent = format("customer.bulk.selected", {count: totalSelected});
+        bulkMailSelected.textContent = format("customer.bulk.selected", {count: selectedRecipientMap.size});
     };
 
     const renderBulkRecipients = (items) => {
         const groups = extractRecipients(items);
+        recipientOptionMap = new Map();
+        groups.forEach((group) => {
+            if (group.companyRecipient?.email) {
+                recipientOptionMap.set(`company:${group.id}`, group.companyRecipient);
+            }
+            group.contacts.forEach((contact) => {
+                if (contact.recipient?.email) {
+                    recipientOptionMap.set(`contact:${contact.key}`, contact.recipient);
+                }
+            });
+        });
         if (!groups.length) {
             bulkMailRecipients.innerHTML = `<div class="c-empty">${t("customer.bulk.empty")}</div>`;
             updateBulkSelected();
@@ -525,13 +362,13 @@
         }
         bulkMailRecipients.innerHTML = groups
             .map((group) => {
-                const companyChecked = selectedCompanyIdSet.has(group.id) ? " checked" : "";
+                const companyChecked = selectedRecipientMap.has(`company:${group.id}`) ? " checked" : "";
                 const companyCheckDisabled = group.companyEmail ? "" : " disabled";
                 const contactsHtml = group.contacts
                     .map(
                         (contact) => `
                         <label class="contact-row">
-                            <input class="contact-check" type="checkbox" data-email="${contact.email}" data-company="${group.id}" data-contact-key="${contact.key}"${selectedContactKeySet.has(contact.key) ? " checked" : ""}>
+                            <input class="contact-check" type="checkbox" data-contact-key="${contact.key}"${selectedRecipientMap.has(`contact:${contact.key}`) ? " checked" : ""}>
                             <div class="contact-info">
                                 <div class="contact-name">${contact.label}</div>
                                 <div class="contact-email">${contact.email}</div>
@@ -540,13 +377,13 @@
                     `
                     )
                     .join("");
-                const emptyContactHtml = `<div class="contact-row"><div></div><div class="contact-email">无可用邮箱联系人</div></div>`;
+                const emptyContactHtml = `<div class="contact-row"><div></div><div class="contact-email">${t("customer.bulk.contact_empty")}</div></div>`;
                 return `
                         <div class="group-card" data-group-id="${group.id}">
                             <div class="group-header">
                                 <div class="group-header-main">
                                     <label class="group-company-check" title="${group.companyEmail || t("customer.bulk.company_email_empty")}">
-                                    <input class="company-check" type="checkbox" data-email="${group.companyEmail}" data-company="${group.id}"${companyChecked}${companyCheckDisabled}>
+                                    <input class="company-check" type="checkbox" data-company="${group.id}"${companyChecked}${companyCheckDisabled}>
                                 </label>
                                 <div class="group-title-wrap">
                                     <div class="group-name">${group.company}</div>
@@ -567,191 +404,54 @@
     const readSelectedRecipients = () => {
         const recipients = [];
         const seen = new Set();
-        extractRecipients(recipientSourceItems).forEach((group) => {
-            if (selectedCompanyIdSet.has(group.id) && group.companyRecipient?.email) {
-                const key = `company:${group.companyRecipient.email.toLowerCase()}`;
-                if (!seen.has(key)) {
-                    seen.add(key);
-                    recipients.push(group.companyRecipient);
-                }
-            }
-            group.contacts.forEach((contact) => {
-                if (selectedContactKeySet.has(contact.key) && contact.recipient?.email) {
-                    const key = `contact:${contact.key}:${contact.recipient.email.toLowerCase()}`;
-                    if (!seen.has(key)) {
-                        seen.add(key);
-                        recipients.push(contact.recipient);
-                    }
-                }
-            });
+        selectedRecipientMap.forEach((recipient) => {
+            if (!recipient?.email) return;
+            const key = `${recipient.recipient_type || "recipient"}:${String(recipient.email).toLowerCase()}`;
+            if (seen.has(key)) return;
+            seen.add(key);
+            recipients.push(recipient);
         });
         return recipients;
     };
 
-    const normalizeText = (value) => String(value || "").toLowerCase();
-
     const renderFilteredRecipients = () => {
-        const keyword = normalizeText(bulkRecipientFilter ? bulkRecipientFilter.value.trim() : "");
+        const keyword = String(bulkRecipientFilter ? bulkRecipientFilter.value.trim() : "").toLowerCase();
         const items = keyword
-            ? recipientSourceItems.filter((item) => normalizeText(item.company_name || item.company).includes(keyword))
+            ? recipientSourceItems.filter((item) => String(item.company_name || "").toLowerCase().includes(keyword))
             : recipientSourceItems;
         renderBulkRecipients(items);
     };
 
-    const readJSONFromStorage = (key) => {
-        try {
-            const fromSession = sessionStorage.getItem(key);
-            if (fromSession) return JSON.parse(fromSession);
-            return JSON.parse(localStorage.getItem(key) || "null");
-        } catch {
-            return null;
-        }
+    const consumeStoredSessionPayload = (key) => {
+        const payload = window.MatchSys.readJSONFromSessionStorage(key);
+        window.MatchSys.clearStoredKey(key);
+        return payload;
     };
 
-    const isFreshPayload = (payload, maxAgeMs = 30 * 60 * 1000) => {
-        if (!payload || typeof payload !== "object") return false;
-        const ts = Number(payload.updatedAt);
-        if (!Number.isFinite(ts)) return false;
-        return Math.abs(Date.now() - ts) <= maxAgeMs;
+    const setRecipientPaginationVisible = (visible) => {
+        bulkRecipientPagination.classList.toggle("hidden", !visible);
     };
 
-    const clearStoredPayloads = () => {
-        sessionStorage.removeItem(CONTEXT_KEY);
-        sessionStorage.removeItem(PREFILL_KEY);
-        localStorage.removeItem(CONTEXT_KEY);
-        localStorage.removeItem(PREFILL_KEY);
+    const fetchCustomersPage = async (page = 1) => {
+        const params = window.createParams([
+            ["page", String(page)],
+            ["page_size", String(CUSTOMER_PAGE_SIZE)],
+        ]);
+        const payload = await window.requestJson(window.buildUrl("/api/customers", params), {method: "GET"});
+        if (!payload.success) {
+            throw new Error(payload.message || t("common.load_failed"));
+        }
+        const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+        const meta = payload.meta || {};
+        customerPagination = {
+            page: Number(meta.page || page) || 1,
+            totalPages: Number(meta.total_pages || 1) || 1,
+            totalCount: Number(meta.total || items.length) || 0,
+        };
+        return items;
     };
 
-    const clearStoredKey = (key) => {
-        sessionStorage.removeItem(key);
-        localStorage.removeItem(key);
-    };
-
-    const applyContextAndPrefill = () => {
-        const contextRaw = readJSONFromStorage(CONTEXT_KEY);
-        const prefillRaw = readJSONFromStorage(PREFILL_KEY);
-
-        const hasFreshCustomerContext = Boolean(
-            contextRaw
-            && contextRaw.source === "customer"
-            && isFreshPayload(contextRaw)
-        );
-        const hasFreshPrefill = Boolean(
-            prefillRaw
-            && typeof prefillRaw === "object"
-            && isFreshPayload(prefillRaw)
-        );
-
-        if (contextRaw && !hasFreshCustomerContext) {
-            clearStoredKey(CONTEXT_KEY);
-        }
-        if (prefillRaw && !hasFreshPrefill) {
-            clearStoredKey(PREFILL_KEY);
-        }
-
-        const context = hasFreshCustomerContext ? contextRaw : null;
-        const prefillCandidate = hasFreshPrefill ? prefillRaw : null;
-
-        if (context && Array.isArray(context.selected_ids)) {
-            selectedCustomerIdSet = new Set(context.selected_ids.map((id) => String(id)));
-        }
-        if (context && Array.isArray(context.selected_items)) {
-            selectedCustomersSnapshot = context.selected_items;
-        }
-
-        // customer 入口不应继承其他入口的邮件内容
-        if (context && prefillCandidate && String(prefillCandidate.source || "") !== "customer") {
-            clearStoredKey(PREFILL_KEY);
-            prefill = null;
-            prefillSource = "";
-            prefillIntro = "";
-            prefillAttachments = [];
-            return;
-        }
-
-        // 带 prefill 的入口（people / bpmatch）不应继承 customer 的收件人筛选上下文
-        if (!context && prefillCandidate) {
-            clearStoredKey(CONTEXT_KEY);
-        }
-
-        if (prefillCandidate) {
-            prefillSource = String(prefillCandidate.source || "");
-            prefill = {
-                subject: String(prefillCandidate.subject || ""),
-                body: String(prefillCandidate.body || ""),
-                mailType: String(prefillCandidate.mail_type || "-1"),
-            };
-            prefillIntro = String(prefillCandidate.intro || "");
-            prefillAttachments = Array.isArray(prefillCandidate.attachments) ? prefillCandidate.attachments : [];
-            bulkAttachments = prefillAttachments.map((attachment, index) => ({
-                ...attachment,
-                source: "prefill",
-                id: `prefill-${index}-${String(attachment.filename || "attachment")}`,
-            }));
-            return;
-        }
-
-        prefill = null;
-        prefillSource = "";
-        prefillIntro = "";
-        prefillAttachments = [];
-        bulkAttachments = [];
-    };
-
-    const fetchAllCustomers = async () => {
-        const firstRes = await fetchWithAuth("/api/customers?page=1&page_size=200", {method: "GET"});
-        const firstData = await firstRes.json();
-        const firstPayload = normalizeApiResponse(firstData);
-        if (!firstPayload.success) throw new Error(firstPayload.message || t("match.failed"));
-
-        const firstItems = Array.isArray(firstPayload.data?.items) ? firstPayload.data.items : [];
-        const totalPages = Number(firstPayload.meta?.total_pages || 1);
-        if (totalPages <= 1) {
-            return firstItems;
-        }
-
-        const all = [...firstItems];
-        for (let page = 2; page <= totalPages; page += 1) {
-            const res = await fetchWithAuth(`/api/customers?page=${page}&page_size=200`, {method: "GET"});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) continue;
-            const items = Array.isArray(payload.data?.items) ? payload.data.items : [];
-            all.push(...items);
-        }
-        return all;
-    };
-
-    const pickRenderCustomers = () => {
-        if (Array.isArray(selectedCustomersSnapshot) && selectedCustomersSnapshot.length > 0) {
-            return selectedCustomersSnapshot;
-        }
-        if (!selectedCustomerIdSet.size) return customers;
-        return customers.filter((item) => selectedCustomerIdSet.has(String(item.id)));
-    };
-
-    const applyPrefillToForm = () => {
-        if (!prefill) {
-            bulkMailSubject.value = "";
-            bulkMailBody.value = "";
-            if (bulkMailType) bulkMailType.value = "-1";
-            resetAttachmentInput();
-            return;
-        }
-        bulkMailSubject.value = prefill.subject || "";
-        bulkMailBody.value = prefill.body || "";
-        if (bulkMailType) bulkMailType.value = prefill.mailType || "-1";
-        if (bulkAttachmentFile) {
-            resetAttachmentInput();
-        }
-    };
-
-    const escapeHtml = (value) => String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
+    const escapeHtml = window.escapeHtml;
 
     const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -762,35 +462,9 @@
                 : result;
             resolve(base64);
         };
-        reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
+        reader.onerror = () => reject(reader.error || new Error(t("customer.bulk.error.file_read_failed")));
         reader.readAsDataURL(file);
     });
-
-    const bindAttachmentInput = () => {
-        if (!bulkAttachmentFile) {
-            return;
-        }
-        bulkAttachmentFile.addEventListener("change", () => {
-            const files = Array.from(bulkAttachmentFile.files || []);
-            files.forEach((file, index) => {
-                bulkAttachments.push({
-                    id: `manual-${Date.now()}-${index}-${file.name}`,
-                    source: "manual",
-                    filename: file.name || "attachment",
-                    file,
-                });
-            });
-            renderAttachmentSource();
-            resetAttachmentInput();
-        });
-    };
-
-    const resetAttachmentInput = () => {
-        if (!bulkAttachmentFile) {
-            return;
-        }
-        bulkAttachmentFile.value = "";
-    };
 
     const buildAttachmentPreviewUrl = (attachment) => {
         const path = String(attachment?.path || "").trim();
@@ -800,39 +474,37 @@
         return `/api/ss/${encodeURIComponent(path)}`;
     };
 
-    const renderAttachmentSource = () => {
-        if (!bulkAttachmentSource) {
-            return;
+
+    const renderRecipientPagination = () => {
+        if (!bulkRecipientPagination || !window.renderPagination) return;
+        setRecipientPaginationVisible(!selectedCustomerIdSet.size);
+        if (bulkRecipientPaginationSummary) {
+            bulkRecipientPaginationSummary.textContent = `共 ${customerPagination.totalCount} 条 · 第 ${customerPagination.page}/${customerPagination.totalPages} 页`;
         }
-        if (!bulkAttachments.length) {
-            bulkAttachmentSource.innerHTML = `<div class="bulk-attachment-empty">暂无附件</div>`;
-            return;
-        }
-        bulkAttachmentSource.innerHTML = bulkAttachments.map((attachment) => {
-            const safeName = escapeHtml(attachment.filename || "attachment");
-            const previewUrl = buildAttachmentPreviewUrl(attachment);
-            const sourceLabel = attachment.source === "prefill" ? "预带附件" : "手动上传";
-            const previewHtml = previewUrl
-                ? `<a class="bulk-attachment-link" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">预览</a>`
-                : "";
-            return `
-                <div class="bulk-attachment-item" data-attachment-id="${escapeHtml(attachment.id || "")}">
-                    <div class="bulk-attachment-main">
-                        <div class="bulk-attachment-name">${safeName}</div>
-                    </div>
-                    <div class="bulk-attachment-actions">
-                        <span class="bulk-attachment-origin">${sourceLabel}</span>
-                        ${previewHtml}
-                        <button type="button" class="bulk-attachment-remove" data-action="remove-attachment">移除</button>
-                    </div>
-                </div>
-            `;
-        }).join("");
+        window.renderPagination(
+            bulkRecipientPagination,
+            bulkRecipientPaginationPages,
+            customerPagination.page,
+            customerPagination.totalPages
+        );
     };
 
-    const setBodyBusyState = ({ busy, message, disableSend }) => {
+
+    const fetchSelectedCustomers = async () => {
+        const ids = Array.from(selectedCustomerIdSet);
+        const items = await Promise.all(ids.map(async (id) => {
+            const payload = await window.requestJson(`/api/customers/${encodeURIComponent(id)}`, {method: "GET"});
+            if (!payload.success) {
+                throw new Error(payload.message || t("common.load_failed"));
+            }
+            return payload.data?.item || null;
+        }));
+        return items.filter(Boolean);
+    };
+
+    const setBodyBusyState = ({busy, message, disableSend}) => {
         if (bulkMailBodyMask) {
-            bulkMailBodyMask.textContent = message || "邮件内容处理中，请稍候...";
+            bulkMailBodyMask.textContent = message || t("customer.bulk.status.body_processing");
             bulkMailBodyMask.classList.toggle("show", Boolean(busy));
         }
         if (bulkMailBody) {
@@ -843,90 +515,105 @@
         }
     };
 
-    const setBulkSendingState = (isSending) => {
-        isSendingBulkMail = Boolean(isSending);
-        setBodyBusyState({
-            busy: isSending,
-            message: "邮件发送中，请稍候...",
-            disableSend: isSending,
-        });
-        if (bulkMailSendText) {
-            bulkMailSendText.textContent = isSending ? "发送中..." : "发送";
+    const applyContextAndPrefill = () => {
+        const contextRaw = consumeStoredSessionPayload(CONTEXT_KEY);
+        const prefillRaw = consumeStoredSessionPayload(PREFILL_KEY);
+
+        const context = Boolean(contextRaw && contextRaw.source === "customer") ? contextRaw : null;
+        const prefillCandidate = Boolean(prefillRaw && typeof prefillRaw === "object") ? prefillRaw : null;
+
+        if (context && Array.isArray(context.selected_ids)) {
+            selectedCustomerIdSet = new Set(context.selected_ids.map((id) => String(id)));
+        }
+
+        if (prefillCandidate) {
+            prefill = {
+                subject: String(prefillCandidate.subject || ""),
+                body: String(prefillCandidate.body || ""),
+                mailType: String(prefillCandidate.mail_type || "-1"),
+                source: String(prefillCandidate.source || ""),
+                intro: String(prefillCandidate.intro || ""),
+            };
+            const attachments = Array.isArray(prefillCandidate.attachments) ? prefillCandidate.attachments : [];
+            bulkAttachments = attachments.map((attachment, index) => ({
+                ...attachment,
+                source: "prefill",
+                id: `prefill-${index}-${String(attachment.filename || "attachment")}`,
+            }));
         }
     };
 
-    const getTemplateNameByMailType = (mailType) => {
-        const normalized = String(mailType || "").trim();
-        if (normalized === "1") return "technician";
-        if (normalized === "2") return "anjian";
-        return "";
+    const loadCustomers = async (page = 1) => {
+        if (selectedCustomerIdSet.size) {
+            recipientSourceItems = await fetchSelectedCustomers();
+            customerPagination = {
+                page: 1,
+                totalPages: 1,
+                totalCount: recipientSourceItems.length,
+            };
+            setRecipientPaginationVisible(false);
+        } else {
+            recipientSourceItems = await fetchCustomersPage(page);
+            renderRecipientPagination();
+        }
+        renderFilteredRecipients();
     };
 
-    const loadTemplateSettings = async () => {
-        if (templateSettingsCache) {
-            return templateSettingsCache;
+    const applyPrefillToForm = () => {
+        if (!prefill) {
+            bulkMailSubject.value = "";
+            bulkMailBody.value = "";
+            if (bulkMailType) bulkMailType.value = "-1";
+        } else {
+            bulkMailSubject.value = prefill.subject || "";
+            bulkMailBody.value = prefill.body || "";
+            if (bulkMailType) bulkMailType.value = prefill.mailType || "-1";
         }
-        const res = await fetchWithAuth(`/api/sys-settings/${TEMPLATE_SECTION}`, {
-            method: "GET",
-            credentials: "include",
-        });
-        if (!res.ok) {
-            throw new Error(`HTTP ${res.status}`);
-        }
-        const data = await res.json().catch(() => ({}));
-        const payload = normalizeApiResponse(data);
-        if (!payload.success) {
-            throw new Error(payload.message || "加载模板失败");
-        }
-        templateSettingsCache = payload.data && typeof payload.data.settings === "object" && payload.data.settings
-            ? payload.data.settings
-            : {};
-        return templateSettingsCache;
+        bulkAttachmentFile.value = "";
     };
 
-    const applyInitialTemplateByMailType = async () => {
-        if (!bulkMailBody || bulkMailBody.value.trim()) {
+    const renderAttachmentSource = () => {
+        if (!bulkAttachments.length) {
+            bulkAttachmentSource.innerHTML = `<div class="bulk-attachment-empty">${t("common.empty.attachments")}</div>`;
             return;
         }
-        const templateName = getTemplateNameByMailType(bulkMailType ? bulkMailType.value : "");
-        if (!templateName) {
-            return;
-        }
-        setBodyBusyState({
-            busy: true,
-            message: "邮件模板加载中，请稍候...",
-            disableSend: true,
-        });
-        try {
-            const settingsPayload = await loadTemplateSettings();
-            const templateContent = String(settingsPayload[templateName] || "").trim();
-            if (templateContent && !bulkMailBody.value.trim()) {
-                bulkMailBody.value = templateContent;
-            }
-        } catch (error) {
-            console.error("load bulk mail template failed", error);
-        } finally {
-            setBodyBusyState({
-                busy: false,
-                message: "邮件内容处理中，请稍候...",
-                disableSend: false,
-            });
-        }
+        bulkAttachmentSource.innerHTML = bulkAttachments.map((attachment) => {
+            const safeName = escapeHtml(attachment.filename || "attachment");
+            const previewUrl = buildAttachmentPreviewUrl(attachment);
+            const sourceLabel = attachment.source === "prefill"
+                ? t("customer.bulk.attachment_source.prefill")
+                : t("customer.bulk.attachment_source.manual");
+            const previewHtml = previewUrl
+                ? `<a class="bulk-attachment-link" href="${escapeHtml(previewUrl)}" target="_blank" rel="noopener noreferrer">${t("common.preview")}</a>`
+                : "";
+            return `
+                <div class="bulk-attachment-item" data-attachment-id="${escapeHtml(attachment.id || "")}">
+                    <div class="bulk-attachment-main">
+                        <div class="bulk-attachment-name">${safeName}</div>
+                    </div>
+                    <div class="bulk-attachment-actions">
+                        <span class="bulk-attachment-origin">${sourceLabel}</span>
+                        ${previewHtml}
+                        <button type="button" class="bulk-attachment-remove" data-action="remove-attachment">${t("common.remove")}</button>
+                    </div>
+                </div>
+            `;
+        }).join("");
     };
 
-    const enrichPrefillFromProjectDetail = async () => {
+    const enrichPrefillFromDetail = async () => {
         if (!prefill) return;
         const extractApiBySource = {
             bpmatch: "/api/extract-project-detail",
             people: "/api/extract-technician-detail",
         };
-        const extractApi = extractApiBySource[prefillSource];
+        const extractApi = extractApiBySource[prefill.source];
         if (!extractApi) return;
-        const sourceText = prefillSource === "people"
-            ? String(prefillIntro || "").trim()
+        const sourceText = prefill.source === "people"
+            ? String(prefill.intro || "").trim()
             : String(prefill.body || "").trim();
         if (!sourceText) return;
-        const requestBody = prefillSource === "people"
+        const requestBody = prefill.source === "people"
             ? {
                 selection: {
                     person: {
@@ -943,17 +630,13 @@
             };
         setBodyBusyState({
             busy: true,
-            message: "邮件内容处理中，请稍候...",
+            message: t("customer.bulk.status.body_processing"),
             disableSend: true,
         });
         try {
-            const res = await fetchWithAuth(extractApi, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
+            const payload = await window.requestJson(extractApi, {
                 body: JSON.stringify(requestBody),
             });
-            const data = await res.json().catch(() => ({}));
-            const payload = normalizeApiResponse(data);
             if (!payload.success) return;
             const formatted = String(payload.data?.body || "").trim();
             if (!formatted) return;
@@ -964,150 +647,29 @@
         } finally {
             setBodyBusyState({
                 busy: false,
-                message: "邮件内容处理中，请稍候...",
+                message: t("customer.bulk.status.body_processing"),
                 disableSend: false,
             });
         }
     };
 
-    bulkMailRecipients.addEventListener("change", (event) => {
-        if (event.target.matches(".company-check, .contact-check")) {
-            const isCompany = event.target.matches(".company-check");
-            const targetKey = isCompany
-                ? String(event.target.dataset.company || "")
-                : String(event.target.dataset.contactKey || "");
-            if (targetKey) {
-                const targetSet = isCompany
-                    ? selectedCompanyIdSet
-                    : selectedContactKeySet;
-                if (event.target.checked) {
-                    targetSet.add(targetKey);
-                } else {
-                    targetSet.delete(targetKey);
-                }
-            }
-            updateBulkSelected();
-        }
-    });
-
-    if (bulkRecipientFilter) {
-        bulkRecipientFilter.addEventListener("input", () => {
-            renderFilteredRecipients();
-        });
-    }
-
-    if (bulkAttachmentSource) {
-        bulkAttachmentSource.addEventListener("click", (event) => {
-            const target = event.target.closest('[data-action="remove-attachment"]');
-            if (!target) {
-                return;
-            }
-            const row = target.closest("[data-attachment-id]");
-            const attachmentId = row ? String(row.dataset.attachmentId || "") : "";
-            bulkAttachments = bulkAttachments.filter((attachment) => String(attachment.id || "") !== attachmentId);
-            prefillAttachments = bulkAttachments
-                .filter((attachment) => attachment.source === "prefill")
-                .map(({ id, source, ...attachment }) => attachment);
-            renderAttachmentSource();
-        });
-    }
-
-    bindAttachmentInput();
-
-    bulkMailSend.addEventListener("click", async () => {
-        if (isSendingBulkMail) {
-            return;
-        }
-        const recipients = readSelectedRecipients();
-        const subject = bulkMailSubject.value.trim();
-        const body = bulkMailBody.value.trim();
-        const mailType = bulkMailType ? bulkMailType.value : "";
-        const cc = bulkMailCc ? bulkMailCc.value.trim() : "";
-
-        if (!recipients.length) {
-            alert(t("customer.bulk.alert.recipient_required"));
-            return;
-        }
-        if (!subject) {
-            alert(t("customer.bulk.alert.subject_required"));
-            return;
-        }
-        if (!body) {
-            alert(t("customer.bulk.alert.body_required"));
-            return;
-        }
-
-        setBulkSendingState(true);
-        try {
-            const attachmentsPayload = await Promise.all(
-                bulkAttachments.map(async (attachment) => {
-                    if (attachment.source === "manual" && attachment.file) {
-                        return {
-                            filename: attachment.filename || "attachment",
-                            content_type: attachment.file.type || "application/octet-stream",
-                            content: await readFileAsBase64(attachment.file),
-                        };
-                    }
-                    return {
-                        filename: attachment.filename || "attachment",
-                        path: attachment.path || "",
-                        content_type: attachment.content_type || "application/octet-stream",
-                    };
-                })
-            );
-            const response = await fetchWithAuth("/api/send-bulk-mail", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    subject,
-                    body,
-                    cc,
-                    mail_type: mailType,
-                    recipients,
-                    attachments: attachmentsPayload,
-                }),
-            });
-            const data = await response.json().catch(() => ({}));
-            const payload = normalizeApiResponse(data);
-            if (!response.ok || !payload.success) {
-                throw new Error(payload.message || t("customer.bulk.alert.send_failed"));
-            }
-            alert(t("customer.bulk.alert.sent"));
-            clearStoredPayloads();
-            window.location.href = "customer.html";
-        } catch (error) {
-            alert(error.message || t("customer.bulk.alert.send_failed"));
-        } finally {
-            setBulkSendingState(false);
-        }
-    });
-
     applyContextAndPrefill();
-    if (selectedCustomersSnapshot.length > 0) {
-        recipientSourceItems = selectedCustomersSnapshot;
-        renderFilteredRecipients();
-        applyPrefillToForm();
-        renderAttachmentSource();
-    }
-    fetchAllCustomers()
-        .then((items) => {
-            customers = Array.isArray(items) ? items : [];
-            recipientSourceItems = pickRenderCustomers();
-            renderFilteredRecipients();
+
+    loadCustomers(1)
+        .then(() => {
             applyPrefillToForm();
             renderAttachmentSource();
         })
         .catch((error) => {
             console.error("load customers failed", error);
-            customers = [];
             recipientSourceItems = [];
             renderFilteredRecipients();
+            setRecipientPaginationVisible(false);
             applyPrefillToForm();
             renderAttachmentSource();
         });
-    Promise.resolve()
-        .then(() => enrichPrefillFromProjectDetail())
-        .then(() => applyInitialTemplateByMailType());
+
+    enrichPrefillFromDetail();
 </script>
 </body>
 </html>

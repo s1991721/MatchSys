@@ -1,82 +1,93 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
 
     <meta charset="UTF-8">
     <link rel="stylesheet" href="common.css">
-  <link rel="stylesheet" href="components.css">
-  <title data-i18n="match.title">Match</title>
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="match.title">Match</title>
 </head>
 <body>
-    <div class="page page-wide c-stack match-page">
-        <div class="c-page-head-grid">
-            <div class="c-page-head-spacer" aria-hidden="true"></div>
-            <div class="c-switch-wrap order-page">
-                <div class="c-switcher-group" role="tablist" aria-label="模式切换" data-i18n-aria="match.view_switch">
-                    <button class="c-toggle is-active" type="button" role="tab" aria-selected="true" data-view="people" data-i18n="match.tab.people">找案件</button>
-                    <button class="c-toggle" type="button" role="tab" aria-selected="false" data-view="cases" data-i18n="match.tab.cases">找人</button>
-                </div>
+<div class="page page-wide c-stack match-page">
+    <div class="c-page-head-grid">
+        <div class="c-page-head-spacer" aria-hidden="true"></div>
+        <div class="c-switch-wrap order-page">
+            <div class="c-switcher-group" role="tablist" aria-label="模式切换" data-i18n-aria="match.view_switch">
+                <button class="c-toggle is-active" type="button" role="tab" aria-selected="true" data-view="people"
+                        data-i18n="match.tab.people">找案件
+                </button>
+                <button class="c-toggle" type="button" role="tab" aria-selected="false" data-view="cases"
+                        data-i18n="match.tab.cases">找人
+                </button>
             </div>
-            <div class="c-page-head-spacer" aria-hidden="true"></div>
         </div>
+        <div class="c-page-head-spacer" aria-hidden="true"></div>
+    </div>
 
-        <div class="content-grid">
+    <div class="content-grid">
         <div class="match-sticky-column">
-        <section class="c-card c-card-pad match-view" data-view="people">
-            <h2 class="title c-panel-title" data-i18n="match.form.people_title">技术者信息</h2>
-            <div class="form-grid form-grid-spaced">
-                <div class="form-field">
-                    <label for="nation" data-i18n="match.form.nation">国籍</label>
-                    <select id="nation">
-                        <option value="" data-i18n="common.select">请选择</option>
-                        <option value="0" data-i18n="match.form.nation.jp">日本籍</option>
-                        <option value="1" data-i18n="match.form.nation.other">外国籍</option>
-                    </select>
+            <section class="c-card c-card-pad match-view" data-view="people">
+                <h2 class="title c-panel-title" data-i18n="match.form.people_title">技术者信息</h2>
+                <div class="form-grid form-grid-spaced">
+                    <div class="form-field">
+                        <label for="nation" data-i18n="common.field.nationality">国籍</label>
+                        <select id="nation">
+                            <option value="" data-i18n="common.select">请选择</option>
+                            <option value="0" data-i18n="common.field.nationality.jp">日本籍</option>
+                            <option value="1" data-i18n="common.field.nationality.other">外国籍</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="age" data-i18n="common.field.age">年龄</label>
+                        <input id="age" type="number" placeholder="例如：32"
+                               data-i18n-placeholder="common.field.age_placeholder">
+                    </div>
+                    <div class="form-field">
+                        <label for="price" data-i18n="common.field.amount">金额</label>
+                        <input id="price" type="text" placeholder="例如：￥50,000"
+                               data-i18n-placeholder="common.field.amount_placeholder">
+                    </div>
+                    <div class="form-field">
+                        <label for="resume-file" data-i18n="match.form.resume">技术者简历</label>
+                        <input id="resume-file" type="file" name="ssFile"
+                               accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
+                        <div id="resume-source" class="hint" hidden></div>
+                    </div>
+                    <div class="form-field full">
+                        <label for="intro" data-i18n="common.field.intro">介绍文</label>
+                        <textarea id="intro" rows="10" placeholder="请输入人员介绍、技能或补充说明。"
+                                  data-i18n-placeholder="common.field.intro_placeholder"></textarea>
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label for="age" data-i18n="match.form.age">年龄</label>
-                    <input id="age" type="number" placeholder="例如：32" data-i18n-placeholder="match.form.age_placeholder">
+                <div class="c-filter-actions-bar">
+                    <div class="c-filter-actions-left"></div>
+                    <div class="c-filter-actions-right">
+                        <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="common.clear">清空</button>
+                        <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索
+                        </button>
+                    </div>
                 </div>
-                <div class="form-field">
-                    <label for="price" data-i18n="match.form.price">金额</label>
-                    <input id="price" type="text" placeholder="例如：￥50,000" data-i18n-placeholder="match.form.price_placeholder">
-                </div>
-                <div class="form-field">
-                    <label for="resume-file" data-i18n="match.form.resume">技术者简历</label>
-                    <input id="resume-file" type="file" name="ssFile" accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
-                    <div id="resume-source" class="hint" hidden></div>
-                </div>
-                <div class="form-field full">
-                    <label for="intro" data-i18n="match.form.intro">介绍文</label>
-                    <textarea id="intro" rows="10" placeholder="请输入人员介绍、技能或补充说明。" data-i18n-placeholder="match.form.intro_placeholder"></textarea>
-                </div>
-            </div>
-            <div class="c-filter-actions-bar">
-                <div class="c-filter-actions-left"></div>
-                <div class="c-filter-actions-right">
-                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="match.clear">清空</button>
-                    <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索</button>
-                </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="c-card c-card-pad match-view hidden" data-view="cases">
-            <h2 class="title c-panel-title" data-i18n="match.form.case_title">案件信息</h2>
-            <div class="form-grid form-grid-single form-grid-spaced">
-                <div class="form-field">
-                    <label for="case-info" data-i18n="match.form.case_info">案件信息</label>
-                    <textarea id="case-info" rows="10" placeholder="请输入案件信息。" data-i18n-placeholder="match.form.case_info_placeholder"></textarea>
+            <section class="c-card c-card-pad match-view hidden" data-view="cases">
+                <h2 class="title c-panel-title" data-i18n="match.form.case_title">案件信息</h2>
+                <div class="form-grid form-grid-single form-grid-spaced">
+                    <div class="form-field">
+                        <label for="case-info" data-i18n="match.form.case_info">案件信息</label>
+                        <textarea id="case-info" rows="10" placeholder="请输入案件信息。"
+                                  data-i18n-placeholder="match.form.case_info_placeholder"></textarea>
+                    </div>
                 </div>
-            </div>
-            <div class="c-filter-actions-bar">
-                <div class="c-filter-actions-left"></div>
-                <div class="c-filter-actions-right">
-                    <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="match.clear">清空</button>
-                    <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索</button>
+                <div class="c-filter-actions-bar">
+                    <div class="c-filter-actions-left"></div>
+                    <div class="c-filter-actions-right">
+                        <button class="c-btn c-btn-ghost js-reset" type="button" data-i18n="common.clear">清空</button>
+                        <button class="c-btn c-btn-primary js-search" type="button" data-i18n="common.search">搜索
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
         </div>
 
         <section class="c-card c-card-pad">
@@ -85,16 +96,23 @@
                     <h2 class="title c-panel-title" id="list-title" data-i18n="match.jobs">案件列表</h2>
                     <div class="filters c-filter-grid">
                         <div class="filter-group c-filter-group">
-                            <span class="filter-label c-filter-label" data-i18n="match.time">时间</span>
+                            <span class="filter-label c-filter-label" data-i18n="common.field.time">时间</span>
                             <div class="chip-row c-chip-row">
-                                <button class="chip c-chip active" data-range="all" type="button" data-i18n="match.range.all">全部</button>
-                                <button class="chip c-chip" data-range="today" type="button" data-i18n="match.range.today">今天</button>
-                                <button class="chip c-chip" data-range="yesterday" type="button" data-i18n="match.range.yesterday">昨天</button>
+                                <button class="chip c-chip active" data-range="all" type="button"
+                                        data-i18n="common.all">全部
+                                </button>
+                                <button class="chip c-chip" data-range="today" type="button"
+                                        data-i18n="common.range.today">今天
+                                </button>
+                                <button class="chip c-chip" data-range="yesterday" type="button"
+                                        data-i18n="common.range.yesterday">昨天
+                                </button>
                             </div>
                         </div>
                         <div class="filter-group c-filter-group sender-group">
                             <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
-                            <input id="sender-input" class="input c-input" type="search" placeholder="搜索发件人" data-i18n-placeholder="match.sender_placeholder">
+                            <input id="sender-input" class="input c-input" type="search" placeholder="搜索发件人"
+                                   data-i18n-placeholder="match.sender_placeholder">
                         </div>
                     </div>
                     <ul id="case-list" class="list c-list match-list">
@@ -106,679 +124,595 @@
                     <div id="case-detail" class="detail">
                         这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                     </div>
-                    <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
+                    <div class="c-page-subtitle songxinhistory-section-title"
+                         data-i18n="songxinhistory.detail.attachments">附件
+                    </div>
                     <div id="detail-attachments" class="c-chip-row songxinhistory-attachments">
-                        <div class="songxin-empty-tip" data-i18n="songxinhistory.empty.attachments">暂无附件</div>
+                        <div class="songxin-empty-tip" data-i18n="common.empty.attachments">暂无附件</div>
                     </div>
                     <div class="detail-actions">
-                        <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send">送信</button>
+                        <button class="c-btn c-btn-primary" type="button" id="send-btn" data-i18n="match.send">送信
+                        </button>
                     </div>
                 </div>
             </div>
         </section>
-        </div>
     </div>
+</div>
 
-    <script src="i18n.js"></script>
-    <script src="common.js"></script>
-    <script>
-        (function () {
-            const i18n = window.I18N;
-            const t = (key, fallback) => (i18n ? i18n.t(key) : (fallback || key));
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script>
+    const i18n = window.I18N;
+    const t = (key, fallback) => (i18n ? i18n.t(key) : (fallback || key));
 
-            const list = document.getElementById('case-list');
-            const detail = document.getElementById('case-detail');
-            const detailAttachments = document.getElementById('detail-attachments');
-            const senderInput = document.getElementById('sender-input');
-            const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
-            const viewButtons = Array.from(document.querySelectorAll('.c-toggle[data-view]'));
-            const views = Array.from(document.querySelectorAll('.match-view'));
-            const resetButtons = Array.from(document.querySelectorAll('.js-reset'));
-            const searchButtons = Array.from(document.querySelectorAll('.js-search'));
-            const listTitle = document.getElementById('list-title');
-            const detailTitle = document.getElementById('detail-title');
-            const nationSelect = document.getElementById('nation');
-            const ageInput = document.getElementById('age');
-            const priceInput = document.getElementById('price');
-            const resumeFileInput = document.getElementById('resume-file');
-            const resumeSource = document.getElementById('resume-source');
-            const introInput = document.getElementById('intro');
-            const caseInfoInput = document.getElementById('case-info');
-            const sendBtn = document.getElementById('send-btn');
-            const pageStateKey = 'match_page_state';
-            const resumeState = {
-                prefill: null,
-                manualFile: null
-            };
-            const filters = {
-                range: 'all'
-            };
-            const viewInputs = {
-                people: ['nation', 'age', 'price', 'intro'],
-                cases: ['case-info']
-            };
-            let senderTimer = null;
-            const formatDisplayDate = (raw) => (window.formatDate ? window.formatDate(raw) : raw || '');
-            const sanitize = (str = '') =>
-                str
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#39;');
-            const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const list = document.getElementById('case-list');
+    const detail = document.getElementById('case-detail');
+    const detailAttachments = document.getElementById('detail-attachments');
+    const senderInput = document.getElementById('sender-input');
+    const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
+    const viewButtons = Array.from(document.querySelectorAll('.c-toggle[data-view]'));
+    const views = Array.from(document.querySelectorAll('.match-view'));
+    const resetButtons = Array.from(document.querySelectorAll('.js-reset'));
+    const searchButtons = Array.from(document.querySelectorAll('.js-search'));
+    const listTitle = document.getElementById('list-title');
+    const detailTitle = document.getElementById('detail-title');
+    const nationSelect = document.getElementById('nation');
+    const ageInput = document.getElementById('age');
+    const priceInput = document.getElementById('price');
+    const resumeFileInput = document.getElementById('resume-file');
+    const resumeSource = document.getElementById('resume-source');
+    const introInput = document.getElementById('intro');
+    const caseInfoInput = document.getElementById('case-info');
+    const sendBtn = document.getElementById('send-btn');
+    const pageStateKey = 'match_page_state';
+    const resumeState = {
+        prefill: null,
+        manualFile: null
+    };
+    const filters = {
+        range: 'all'
+    };
+    const viewInputs = {
+        people: ['nation', 'age', 'price', 'intro'],
+        cases: ['case-info']
+    };
+    let senderTimer = null;
+    const sanitize = window.escapeHtml;
 
-            const stripCssNoise = (text = '') => {
-                if (!text) return '';
-                const firstGap = text.indexOf('\n\n');
-                const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
-                if (firstGap >= 0 && hasBraces) {
-                    return text.slice(firstGap + 2);
-                }
-                return text;
-            };
+    viewButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            setView(btn.dataset.view);
+            fetchCases();
+        });
+    });
 
-            const readMatchedSkills = (item) => {
-                const raw = item?.dataset?.matchedSkills;
-                if (!raw) return [];
-                try {
-                    const parsed = JSON.parse(raw);
-                    return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
-                } catch {
-                    return [];
-                }
-            };
+    resumeFileInput.addEventListener('change', () => {
+        const file = resumeFileInput.files && resumeFileInput.files[0] ? resumeFileInput.files[0] : null;
+        resumeState.manualFile = file;
+        renderResumeSource();
+    });
 
-            const parseDatasetJSON = (el, key) => {
-                if (!el || !el.dataset) return null;
-                const raw = el.dataset[key];
-                if (!raw) return null;
-                try {
-                    return JSON.parse(raw);
-                } catch {
-                    return null;
-                }
-            };
-
-            const buildAttachmentUrl = (file = {}) => {
-                const messageId = encodeURIComponent(String(file.message_id || '').trim());
-                const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
-                if (!messageId || !attachmentId) return '';
-                const params = new URLSearchParams();
-                const mimeType = String(file.mime_type || '').toLowerCase();
-                if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
-                    params.set('disposition', 'inline');
-                }
-                const query = params.toString();
-                return `/api/gmail/messages/${messageId}/attachments/${attachmentId}${query ? `?${query}` : ''}`;
-            };
-
-            const renderAttachments = (files = []) => {
-                if (!detailAttachments) return;
-                if (!Array.isArray(files) || !files.length) {
-                    detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
-                    return;
-                }
-                const items = files
-                    .filter(file => file && file.filename && file.attachment_id && file.message_id)
-                    .map((file) => {
-                        const url = buildAttachmentUrl(file);
-                        const name = sanitize(String(file.filename || 'attachment'));
-                        return `<a class="c-chip" href="${sanitize(url)}" target="_blank" rel="noopener noreferrer">${name}</a>`;
-                    });
-                detailAttachments.innerHTML = items.length
-                    ? items.join('')
-                    : `<div class="songxin-empty-tip">${t('songxinhistory.empty.attachments')}</div>`;
-            };
-
-            const renderDetail = (target, text = '', highlights = []) => {
-                if (!target) return;
-                const cleaned = stripCssNoise(text || '');
-                const normalized = cleaned
-                    .replace(/\r\n/g, '\n')
-                    .replace(/\n{3,}/g, '\n\n')
-                    .trim();
-                const escapedHighlights = (Array.isArray(highlights) ? highlights : [])
-                    .filter(Boolean)
-                    .map(v => sanitize(String(v)))
-                    .map(escapeRegExp);
-                const highlightRegex = escapedHighlights.length
-                    ? new RegExp(`(${escapedHighlights.join('|')})`, 'gi')
-                    : null;
-                const applyHighlight = (val) =>
-                    highlightRegex ? val.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>') : val;
-                const html = sanitize(normalized)
-                    .split(/\n{2,}/)
-                    .filter(Boolean)
-                    .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
-                    .join('');
-                target.innerHTML = html || `<p style="color:#9aa4b5">${t('match.empty')}</p>`;
-            };
-
-            const getActiveView = () => {
-                const active = document.querySelector('.match-view:not(.hidden)');
-                return active ? active.dataset.view : 'people';
-            };
-
-            const getSharedStorage = () => {
-                try {
-                    if (window.top && window.top.localStorage) {
-                        return window.top.localStorage;
-                    }
-                } catch (error) {
-                }
-                return localStorage;
-            };
-
-            const getSessionStorage = () => {
-                try {
-                    if (window.top && window.top.sessionStorage) {
-                        return window.top.sessionStorage;
-                    }
-                } catch (error) {
-                }
-                return sessionStorage;
-            };
-
-            const readPageState = () => ({
-                view: getActiveView(),
-                range: filters.range || 'all',
-                nation: nationSelect ? nationSelect.value : '',
-                age: ageInput ? ageInput.value : '',
-                price: priceInput ? priceInput.value : '',
-                intro: introInput ? introInput.value : '',
-                caseInfo: caseInfoInput ? caseInfoInput.value : '',
-                sender: senderInput ? senderInput.value : '',
-                resumePrefill: resumeState.prefill || null
-            });
-
-            const persistPageState = () => {
-                try {
-                    const storage = getSessionStorage();
-                    storage.setItem(pageStateKey, JSON.stringify(readPageState()));
-                } catch (error) {
-                }
-            };
-
-            const applyPageState = () => {
-                let payload = null;
-                try {
-                    const storage = getSessionStorage();
-                    payload = JSON.parse(storage.getItem(pageStateKey) || 'null');
-                } catch (error) {
-                    payload = null;
-                }
-                if (!payload) return false;
-
-                if (nationSelect) nationSelect.value = payload.nation || '';
-                if (ageInput) ageInput.value = payload.age || '';
-                if (priceInput) priceInput.value = payload.price || '';
-                if (introInput) introInput.value = payload.intro || '';
-                if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
-                if (senderInput) senderInput.value = payload.sender || '';
-                resumeState.prefill = payload.resumePrefill || null;
-                filters.range = payload.range || 'all';
-                dateButtons.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.range === filters.range);
-                });
-                if (!dateButtons.some(btn => btn.dataset.range === filters.range)) {
-                    filters.range = 'all';
-                    dateButtons.forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.range === 'all');
-                    });
-                }
-                setView(payload.view === 'cases' ? 'cases' : 'people');
-                return true;
-            };
-
-            const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const result = reader.result || '';
-                    const base64 = typeof result === 'string' && result.includes(',')
-                        ? result.split(',').pop()
-                        : result;
-                    resolve(base64);
-                };
-                reader.onerror = () => reject(reader.error || new Error('file read failed'));
-                reader.readAsDataURL(file);
-            });
-
-            const getActiveResume = () => {
-                if (resumeState.manualFile) {
-                    return {
-                        source: 'manual',
-                        name: resumeState.manualFile.name,
-                        file: resumeState.manualFile
-                    };
-                }
-                return resumeState.prefill || null;
-            };
-
-            const clearActiveResume = () => {
-                const activeResume = getActiveResume();
-                if (!activeResume) return;
-                if (activeResume.source === 'manual') {
-                    resumeState.manualFile = null;
-                    if (resumeFileInput) {
-                        resumeFileInput.value = '';
-                    }
-                } else {
-                    resumeState.prefill = null;
-                }
-                renderResumeSource();
-                persistPageState();
-            };
-
-            const renderResumeSource = () => {
-                if (!resumeSource) return;
-                const activeResume = getActiveResume();
-                if (!activeResume) {
-                    resumeSource.hidden = true;
-                    resumeSource.innerHTML = '';
-                    return;
-                }
-                resumeSource.hidden = false;
-                if (activeResume.source === 'manual') {
-                    resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
-                    return;
-                }
-                const safeName = sanitize(String(activeResume.name || 'resume'));
-                const safeUrl = sanitize(String(activeResume.url || ''));
-                if (safeUrl) {
-                    resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('match.resume.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
-                    return;
-                }
-                resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('match.resume.remove')}</button>`;
-            };
-
-            const applyPrefill = () => {
-                let payload = null;
-                try {
-                    const storage = getSharedStorage();
-                    payload = JSON.parse(storage.getItem('match_prefill') || 'null');
-                } catch (error) {
-                    payload = null;
-                }
-                if (!payload) return false;
-
-                if (nationSelect) {
-                    let nationalityValue = '';
-                    if (payload.nationality === 0 || payload.nationality === '0' || payload.nationality === '日本') {
-                        nationalityValue = '0';
-                    } else if (payload.nationality === 1 || payload.nationality === '1' || payload.nationality === '其他') {
-                        nationalityValue = '1';
-                    }
-                    nationSelect.value = nationalityValue;
-                }
-                if (ageInput) ageInput.value = payload.age ?? '';
-                if (priceInput) priceInput.value = payload.price ?? '';
-                if (introInput) introInput.value = payload.intro || '';
-                resumeState.prefill = payload.resume && typeof payload.resume === 'object' ? payload.resume : null;
-                try {
-                    const storage = getSharedStorage();
-                    storage.removeItem('match_prefill');
-                } catch (error) {
-                }
-                renderResumeSource();
-                return true;
-            };
-
-            const setView = (view) => {
-                views.forEach(section => {
-                    section.classList.toggle('hidden', section.dataset.view !== view);
-                });
-                viewButtons.forEach(btn => {
-                    const isActive = btn.dataset.view === view;
-                    btn.classList.toggle('is-active', isActive);
-                    btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
-                });
-                if (listTitle) {
-                    listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
-                }
-                if (detailTitle) {
-                    detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.job_detail');
-                }
-                persistPageState();
-            };
-
-            const renderList = (items) => {
-                list.innerHTML = '';
-                const view = getActiveView();
-
-                if (!items.length) {
-                    const empty = document.createElement('li');
-                    empty.className = 'empty';
-                    empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
-                    list.appendChild(empty);
-                    renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
-                    renderAttachments([]);
-                    return;
-                }
-
-                items.forEach((item, index) => {
-                    const li = document.createElement('li');
-                    li.className = 'item' + (index === 0 ? ' active' : '');
-                    li.dataset.detail = item.detail;
-                    li.dataset.id = item.id;
-                    li.dataset.item = JSON.stringify(item);
-                    li.dataset.files = JSON.stringify(item.files || []);
-                    if (item.matched_skills && Array.isArray(item.matched_skills)) {
-                        li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
-                    }
-                    if (item.matched_skills && Array.isArray(item.matched_skills)) {
-                        li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
-                    }
-
-                    const main = document.createElement('div');
-                    main.className = 'item-main';
-
-                    const title = document.createElement('div');
-                    title.className = 'item-title';
-                    title.textContent = item.title;
-
-                    const desc = document.createElement('div');
-                    desc.className = 'item-desc';
-                    desc.textContent = item.desc;
-
-                    const time = document.createElement('div');
-                    time.className = 'item-time';
-                    time.textContent = formatDisplayDate(item.date);
-
-                    main.appendChild(title);
-                    main.appendChild(desc);
-                    li.appendChild(main);
-                    li.appendChild(time);
-                    list.appendChild(li);
-                });
-
-                const first = list.querySelector('.item');
-                if (first) {
-                    renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
-                    renderAttachments(parseDatasetJSON(first, 'files') || []);
-                }
-            };
-
-            const setLoading = (message) => {
-                list.innerHTML = '';
-                const empty = document.createElement('li');
-                empty.className = 'empty';
-                empty.textContent = message;
-                list.appendChild(empty);
-                renderDetail(detail, '');
-                renderAttachments([]);
-            };
-
-            const fetchCases = async () => {
-                if (!list || !detail) return;
-                const view = getActiveView();
-                const introText = view === 'cases'
-                    ? (caseInfoInput ? caseInfoInput.value.trim() : '')
-                    : (introInput ? introInput.value.trim() : '');
-                const payload = {
-                    intro: introText,
-                    date_range: filters.range || 'all',
-                    sender: senderInput ? senderInput.value.trim() : ''
-                };
-                if (view === 'people') {
-                    payload.country = nationSelect ? nationSelect.value.trim() : '';
-                }
-                setLoading(t('common.loading') || '加载中...');
-                try {
-                    const endpoint = view === 'cases'
-                        ? '/api/mail-technicians/search'
-                        : '/api/mail-projects/search';
-                    const response = await window.fetchWithAuth(endpoint, {
-                        method: 'POST',
-                        body: JSON.stringify(payload)
-                    });
-                    const raw = await response.json();
-                    const result = window.normalizeApiResponse ? window.normalizeApiResponse(raw) : raw;
-                if (!result || result.success === false) {
-                    throw new Error(result?.message || '加载失败');
-                }
-                const items = Array.isArray(result.data?.items) ? result.data.items : [];
-                renderList(items);
-            } catch (err) {
-                console.error('fetch cases failed', err);
-                setLoading(t('match.failed') || '加载失败');
-            }
-        };
-
-            list.addEventListener('click', (e) => {
-                const item = e.target.closest('.item');
-                if (!item) return;
-                list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
-                item.classList.add('active');
-                renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
-                renderAttachments(parseDatasetJSON(item, 'files') || []);
-            });
-
-            dateButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    dateButtons.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    filters.range = btn.dataset.range;
-                    persistPageState();
-                    fetchCases();
-                });
-            });
-
-            senderInput.addEventListener('input', () => {
-                persistPageState();
-                if (senderTimer) {
-                    window.clearTimeout(senderTimer);
-                }
-                senderTimer = window.setTimeout(() => {
-                    fetchCases();
-                }, 400);
-            });
-
-            resetButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const view = getActiveView();
-                    const ids = viewInputs[view] || [];
-                    const elements = ids.map(id => document.getElementById(id)).filter(Boolean);
-                    elements.forEach(el => { el.value = ''; });
-                    if (view === 'people' && resumeFileInput) {
-                        resumeFileInput.value = '';
-                        resumeState.manualFile = null;
-                        renderResumeSource();
-                    }
-                    if (elements[0]) {
-                        elements[0].focus();
-                    }
-                    persistPageState();
-                    fetchCases();
-                });
-            });
-
-            searchButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    fetchCases();
-                });
-            });
-
+    const clearActiveResume = () => {
+        const activeResume = getActiveResume();
+        if (!activeResume) return;
+        if (activeResume.source === 'manual') {
+            resumeState.manualFile = null;
             if (resumeFileInput) {
-                resumeFileInput.addEventListener('change', () => {
-                    const file = resumeFileInput.files && resumeFileInput.files[0] ? resumeFileInput.files[0] : null;
-                    resumeState.manualFile = file;
-                    renderResumeSource();
-                    persistPageState();
-                });
+                resumeFileInput.value = '';
             }
+        } else {
+            resumeState.prefill = null;
+        }
+        renderResumeSource();
+    };
 
-            if (resumeSource) {
-                resumeSource.addEventListener('click', (event) => {
-                    const target = event.target.closest('[data-action="remove-resume"]');
-                    if (!target) return;
-                    clearActiveResume();
-                });
-            }
+    resumeSource.addEventListener('click', (event) => {
+        const target = event.target.closest('[data-action="remove-resume"]');
+        if (!target) return;
+        clearActiveResume();
+    });
 
-            if (sendBtn) {
-                sendBtn.addEventListener('click', async () => {
-                    try {
-                        const activeItem = list?.querySelector('.item.active');
-                        if (!activeItem) {
-                            alert(t('match.send_tip'));
-                            return;
-                        }
-
-                        const view = getActiveView();
-                        const itemData = parseDatasetJSON(activeItem, 'item') || {};
-                        const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
-                        const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
-                        const itemDetail = itemData.detail || activeItem.dataset.detail || '';
-                        const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
-
-                        let jobPayload = {};
-                        let personPayload = {};
-                        let mailType = 2;
-                        let resumeAttachment = null;
-
-                        if (view === 'people') {
-                            const personParts = [];
-                            const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
-                            if (nationSelect && nationSelect.value) {
-                                personParts.push(`国籍：${nationLabel || nationSelect.value}`);
-                            }
-                            if (ageInput && ageInput.value.trim()) {
-                                personParts.push(`年龄：${ageInput.value.trim()}`);
-                            }
-                            if (priceInput && priceInput.value.trim()) {
-                                personParts.push(`金额：${priceInput.value.trim()}`);
-                            }
-                            if (introInput && introInput.value.trim()) {
-                                personParts.push(`介绍文：\n${introInput.value.trim()}`);
-                            }
-                            const personDetail = personParts.join('\n');
-
-                            jobPayload = {
-                                id: itemData.id || activeItem.dataset.id || '',
-                                title: itemTitle,
-                                desc: itemDesc,
-                                detail: itemDetail,
-                                time: itemDate
-                            };
-
-                            personPayload = {
-                                name: '人员信息',
-                                subject: itemTitle || '',
-                                belong: itemDesc || '',
-                                detail: personDetail,
-                                country: nationSelect ? nationSelect.value.trim() : '',
-                                country_label: nationLabel || '',
-                                age: ageInput ? ageInput.value.trim() : '',
-                                price: priceInput ? priceInput.value.trim() : '',
-                                intro: introInput ? introInput.value.trim() : '',
-                                time: ''
-                            };
-
-                            const activeResume = getActiveResume();
-                            if (activeResume) {
-                                if (activeResume.source === 'manual' && activeResume.file) {
-                                    resumeAttachment = {
-                                        source: 'manual',
-                                        filename: activeResume.file.name || 'resume',
-                                        content_type: activeResume.file.type || 'application/octet-stream',
-                                        size: activeResume.file.size || 0,
-                                        base64: await readFileAsBase64(activeResume.file)
-                                    };
-                                } else {
-                                    resumeAttachment = {
-                                        source: 'people',
-                                        filename: activeResume.name || 'resume',
-                                        url: activeResume.url || '',
-                                        path: activeResume.path || '',
-                                        content_type: 'application/octet-stream'
-                                    };
-                                }
-                            }
-
-                            mailType = 1;
-                        } else {
-                            const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
-                            const caseTitle = rawCaseInfo ? rawCaseInfo.split('\n')[0].trim() : '';
-
-                            jobPayload = {
-                                id: '',
-                                title: caseTitle || '案件信息',
-                                desc: '',
-                                detail: rawCaseInfo,
-                                time: ''
-                            };
-
-                            personPayload = {
-                                id: itemData.id || activeItem.dataset.id || '',
-                                name: itemTitle,
-                                subject: itemTitle,
-                                belong: itemDesc,
-                                detail: itemDetail,
-                                time: itemDate
-                            };
-
-                            mailType = 2;
-                        }
-
-                        const payload = {
-                            job: jobPayload,
-                            person: personPayload,
-                            resume_attachment: resumeAttachment,
-                            mail_type: mailType,
-                            updatedAt: Date.now()
-                        };
-
-                        persistPageState();
-                        localStorage.setItem('matchSelection', JSON.stringify(payload));
-                    } catch (err) {
-                        console.error(t('match.cache_failed') || '保存失败', err);
-                        alert(err?.message || t('match.cache_failed'));
-                        return;
-                    }
-
-                    window.location.href = 'songxin.html?from=match';
-                });
-            }
-
-            viewButtons.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    setView(btn.dataset.view);
-                    fetchCases();
-                });
+    resetButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const view = getActiveView();
+            const ids = viewInputs[view];
+            const elements = ids.map(id => document.getElementById(id)).filter(Boolean);
+            elements.forEach(el => {
+                el.value = '';
             });
-
-            [nationSelect, ageInput, priceInput, introInput, caseInfoInput].filter(Boolean).forEach((el) => {
-                el.addEventListener('input', persistPageState);
-                el.addEventListener('change', persistPageState);
-            });
-
-            if (i18n) {
-                i18n.init();
-                i18n.apply();
+            if (view === 'people' && resumeFileInput) {
+                resumeFileInput.value = '';
+                resumeState.manualFile = null;
+                renderResumeSource();
             }
-            const didRestoreState = applyPageState();
-            const didPrefill = applyPrefill();
-            renderResumeSource();
-            // When arriving from people.html, the latest prefill should win over
-            // any stale state restored from a previous visit to match.html.
-            if (didPrefill) {
-                setView('people');
-                persistPageState();
-            } else if (!didRestoreState) {
-                setView(getActiveView());
+            if (elements[0]) {
+                elements[0].focus();
             }
             fetchCases();
-            if (window && window.addEventListener) {
-                window.addEventListener("i18n:change", () => {
-                    if (i18n) {
-                        i18n.apply();
-                    }
-                    renderResumeSource();
-                    fetchCases();
-                });
+        });
+    });
+
+    searchButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            fetchCases();
+        });
+    });
+
+    dateButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            dateButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            filters.range = btn.dataset.range;
+            fetchCases();
+        });
+    });
+
+    senderInput.addEventListener('input', () => {
+        if (senderTimer) {
+            window.clearTimeout(senderTimer);
+        }
+        senderTimer = window.setTimeout(() => {
+            fetchCases();
+        }, 400);
+    });
+
+    const readMatchedSkills = (item) => {
+        const raw = item?.dataset?.matchedSkills;
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed.map((v) => String(v)) : [];
+        } catch {
+            return [];
+        }
+    };
+
+    const parseDatasetJSON = (el, key) => {
+        if (!el || !el.dataset) return null;
+        const raw = el.dataset[key];
+        if (!raw) return null;
+        try {
+            return JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    };
+
+    const buildAttachmentUrl = (file = {}) => {
+        const messageId = encodeURIComponent(String(file.message_id || '').trim());
+        const attachmentId = encodeURIComponent(String(file.attachment_id || '').trim());
+        if (!messageId || !attachmentId) return '';
+        const params = new URLSearchParams();
+        const mimeType = String(file.mime_type || '').toLowerCase();
+        if (mimeType === 'application/pdf' || mimeType.startsWith('image/')) {
+            params.set('disposition', 'inline');
+        }
+        const query = params.toString();
+        return `/api/gmail/messages/${messageId}/attachments/${attachmentId}${query ? `?${query}` : ''}`;
+    };
+
+    const renderAttachments = (files = []) => {
+        if (!detailAttachments) return;
+        if (!Array.isArray(files) || !files.length) {
+            detailAttachments.innerHTML = `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
+            return;
+        }
+        const items = files
+            .filter(file => file && file.filename && file.attachment_id && file.message_id)
+            .map((file) => {
+                const url = buildAttachmentUrl(file);
+                const name = sanitize(String(file.filename || 'attachment'));
+                return `<a class="c-chip" href="${sanitize(url)}" target="_blank" rel="noopener noreferrer">${name}</a>`;
+            });
+        detailAttachments.innerHTML = items.length
+            ? items.join('')
+            : `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
+    };
+
+    list.addEventListener('click', (e) => {
+        const item = e.target.closest('.item');
+        if (!item) return;
+        list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
+        item.classList.add('active');
+        renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
+        renderAttachments(parseDatasetJSON(item, 'files') || []);
+    });
+
+    const getActiveView = () => {
+        const active = document.querySelector('.match-view:not(.hidden)');
+        return active ? active.dataset.view : 'people';
+    };
+
+    const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result || '';
+            const base64 = typeof result === 'string' && result.includes(',')
+                ? result.split(',').pop()
+                : result;
+            resolve(base64);
+        };
+        reader.onerror = () => reject(reader.error || new Error('file read failed'));
+        reader.readAsDataURL(file);
+    });
+
+    const readPageState = () => ({
+        view: getActiveView(),
+        range: filters.range || 'all',
+        nation: nationSelect ? nationSelect.value : '',
+        age: ageInput ? ageInput.value : '',
+        price: priceInput ? priceInput.value : '',
+        intro: introInput ? introInput.value : '',
+        caseInfo: caseInfoInput ? caseInfoInput.value : '',
+        sender: senderInput ? senderInput.value : '',
+        resumePrefill: resumeState.prefill || null,
+        updatedAt: Date.now()
+    });
+
+    const persistPageState = () => {
+        try {
+            window.MatchSys.writeJSONToSessionStorage(pageStateKey, readPageState());
+        } catch (error) {
+        }
+    };
+
+    sendBtn.addEventListener('click', async () => {
+        try {
+            const activeItem = list?.querySelector('.item.active');
+            if (!activeItem) {
+                alert(t('match.send_tip'));
+                return;
             }
-        })();
-    </script>
+
+            const view = getActiveView();
+            const itemData = parseDatasetJSON(activeItem, 'item') || {};
+            const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
+            const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
+            const itemDetail = itemData.detail || activeItem.dataset.detail || '';
+            const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
+
+            let jobPayload = {};
+            let personPayload = {};
+            let mailType = 2;
+            let resumeAttachment = null;
+
+            if (view === 'people') {
+                const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
+
+                jobPayload = {
+                    id: itemData.id || activeItem.dataset.id || '',
+                    title: itemTitle,
+                    desc: itemDesc,
+                    detail: itemDetail,
+                    time: itemDate
+                };
+
+                personPayload = {
+                    country: nationSelect ? nationSelect.value.trim() : '',
+                    country_label: nationLabel || '',
+                    age: ageInput ? ageInput.value.trim() : '',
+                    price: priceInput ? priceInput.value.trim() : '',
+                    intro: introInput ? introInput.value.trim() : '',
+                };
+
+                const activeResume = getActiveResume();
+                if (activeResume) {
+                    if (activeResume.source === 'manual' && activeResume.file) {
+                        resumeAttachment = {
+                            source: 'manual',
+                            filename: activeResume.file.name || 'resume',
+                            content_type: activeResume.file.type || 'application/octet-stream',
+                            size: activeResume.file.size || 0,
+                            base64: await readFileAsBase64(activeResume.file)
+                        };
+                    } else {
+                        resumeAttachment = {
+                            source: 'people',
+                            filename: activeResume.name || 'resume',
+                            url: activeResume.url || '',
+                            path: activeResume.path || '',
+                            content_type: 'application/octet-stream'
+                        };
+                    }
+                }
+
+                mailType = 1;
+            } else {
+                const rawCaseInfo = caseInfoInput ? caseInfoInput.value.trim() : '';
+
+                jobPayload = {
+                    detail: rawCaseInfo,
+                };
+
+                personPayload = {
+                    id: itemData.id || activeItem.dataset.id || '',
+                    name: itemTitle,
+                    subject: itemTitle,
+                    belong: itemDesc,
+                    detail: itemDetail,
+                    time: itemDate
+                };
+
+                mailType = 2;
+            }
+
+            const payload = {
+                job: jobPayload,
+                person: personPayload,
+                resume_attachment: resumeAttachment,
+                mail_type: mailType,
+                updatedAt: Date.now()
+            };
+
+            persistPageState();
+            window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
+        } catch (err) {
+            console.error(t('match.cache_failed') || '保存失败', err);
+            alert(err?.message || t('match.cache_failed'));
+            return;
+        }
+
+        window.navigateAppRoute('songxin.html?from=match');
+    });
+
+    if (i18n) {
+        i18n.init();
+        i18n.apply();
+    }
+
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", () => {
+            if (i18n) {
+                i18n.apply();
+            }
+            renderResumeSource();
+        });
+    }
+
+    const escapeRegExp = (str = '') => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    const stripCssNoise = (text = '') => {
+        if (!text) return '';
+        const firstGap = text.indexOf('\n\n');
+        const hasBraces = text.slice(0, Math.max(firstGap, 120)).includes('{');
+        if (firstGap >= 0 && hasBraces) {
+            return text.slice(firstGap + 2);
+        }
+        return text;
+    };
+
+    const renderDetail = (target, text = '', highlights = []) => {
+        if (!target) return;
+        const cleaned = stripCssNoise(text || '');
+        const normalized = cleaned
+            .replace(/\r\n/g, '\n')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
+        const escapedHighlights = (Array.isArray(highlights) ? highlights : [])
+            .filter(Boolean)
+            .map(v => sanitize(String(v)))
+            .map(escapeRegExp);
+        const highlightRegex = escapedHighlights.length
+            ? new RegExp(`(${escapedHighlights.join('|')})`, 'gi')
+            : null;
+        const applyHighlight = (val) =>
+            highlightRegex ? val.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>') : val;
+        const html = sanitize(normalized)
+            .split(/\n{2,}/)
+            .filter(Boolean)
+            .map(block => `<p>${applyHighlight(block.replace(/\n/g, '<br>'))}</p>`)
+            .join('');
+        target.innerHTML = html || `<p class="match-empty-inline">${t('match.empty')}</p>`;
+    };
+
+    const renderList = (items) => {
+        list.innerHTML = '';
+        const view = getActiveView();
+
+        if (!items.length) {
+            const empty = document.createElement('li');
+            empty.className = 'empty';
+            empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
+            list.appendChild(empty);
+            renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
+            renderAttachments([]);
+            return;
+        }
+
+        items.forEach((item, index) => {
+            const li = document.createElement('li');
+            li.className = 'item' + (index === 0 ? ' active' : '');
+            li.dataset.detail = item.detail;
+            li.dataset.id = item.id;
+            li.dataset.item = JSON.stringify(item);
+            li.dataset.files = JSON.stringify(item.files || []);
+            if (item.matched_skills && Array.isArray(item.matched_skills)) {
+                li.dataset.matchedSkills = JSON.stringify(item.matched_skills);
+            }
+
+            const main = document.createElement('div');
+            main.className = 'item-main';
+
+            const title = document.createElement('div');
+            title.className = 'item-title';
+            title.textContent = item.title;
+
+            const desc = document.createElement('div');
+            desc.className = 'item-desc';
+            desc.textContent = item.desc;
+
+            const time = document.createElement('div');
+            time.className = 'item-time';
+            time.textContent = window.formatDate(item.date);
+
+            main.appendChild(title);
+            main.appendChild(desc);
+            li.appendChild(main);
+            li.appendChild(time);
+            list.appendChild(li);
+        });
+
+        const first = list.querySelector('.item');
+        if (first) {
+            renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
+            renderAttachments(parseDatasetJSON(first, 'files') || []);
+        }
+    };
+
+    const setLoading = (message) => {
+        list.innerHTML = '';
+        const empty = document.createElement('li');
+        empty.className = 'empty';
+        empty.textContent = message;
+        list.appendChild(empty);
+        renderDetail(detail, '');
+        renderAttachments([]);
+    };
+
+    const fetchCases = async () => {
+        const view = getActiveView();
+        const introText = view === 'cases'
+            ? (caseInfoInput ? caseInfoInput.value.trim() : '')
+            : (introInput ? introInput.value.trim() : '');
+        const payload = {
+            intro: introText,
+            date_range: filters.range || 'all',
+            sender: senderInput ? senderInput.value.trim() : ''
+        };
+        if (view === 'people') {
+            payload.country = nationSelect ? nationSelect.value.trim() : '';
+        }
+        setLoading(t('common.loading'));
+        try {
+            const endpoint = view === 'cases'
+                ? '/api/mail-technicians/search'
+                : '/api/mail-projects/search';
+            const result = await window.requestJson(endpoint, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            }, {
+                throwOnFailure: true,
+                fallbackMessage: t("common.load_failed")
+            });
+
+            const items = Array.isArray(result.data?.items) ? result.data.items : [];
+            renderList(items);
+        } catch (err) {
+            console.error('fetch cases failed', err);
+            setLoading(t('common.load_failed'));
+        }
+    };
+
+    const setView = (view) => {
+        views.forEach(section => {
+            section.classList.toggle('hidden', section.dataset.view !== view);
+        });
+        viewButtons.forEach(btn => {
+            const isActive = btn.dataset.view === view;
+            btn.classList.toggle('is-active', isActive);
+            btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        });
+
+        listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
+        detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.job_detail');
+    };
+
+    const applyPageState = () => {
+        let payload = window.MatchSys.readJSONFromSessionStorage(pageStateKey);
+
+        if (!payload) return;
+
+        if (nationSelect) nationSelect.value = payload.nation || '';
+        if (ageInput) ageInput.value = payload.age || '';
+        if (priceInput) priceInput.value = payload.price || '';
+        if (introInput) introInput.value = payload.intro || '';
+        if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
+        if (senderInput) senderInput.value = payload.sender || '';
+        resumeState.prefill = payload.resumePrefill || null;
+        filters.range = payload.range || 'all';
+        dateButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.range === filters.range);
+        });
+        if (!dateButtons.some(btn => btn.dataset.range === filters.range)) {
+            filters.range = 'all';
+            dateButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.range === 'all');
+            });
+        }
+        setView(payload.view === 'cases' ? 'cases' : 'people');
+    };
+
+    const getActiveResume = () => {
+        if (resumeState.manualFile) {
+            return {
+                source: 'manual',
+                name: resumeState.manualFile.name,
+                file: resumeState.manualFile
+            };
+        }
+        return resumeState.prefill || null;
+    };
+
+    const renderResumeSource = () => {
+        const activeResume = getActiveResume();
+        if (!activeResume) {
+            resumeSource.hidden = true;
+            resumeSource.innerHTML = '';
+            return;
+        }
+        resumeSource.hidden = false;
+        if (activeResume.source === 'manual') {
+            resumeSource.innerHTML = `${sanitize(t('match.resume.manual_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
+            return;
+        }
+        const safeName = sanitize(String(activeResume.name || 'resume'));
+        const safeUrl = sanitize(String(activeResume.url || ''));
+        if (safeUrl) {
+            resumeSource.innerHTML = `${t('match.resume.prefill_active').replace('{name}', safeName)} <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${t('common.preview')}</a> <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
+            return;
+        }
+        resumeSource.innerHTML = `${sanitize(t('match.resume.prefill_active').replace('{name}', activeResume.name || ''))} <button type="button" class="c-btn-link" data-action="remove-resume">${t('common.remove')}</button>`;
+    };
+
+    const applyPrefill = () => {
+        let payload = window.MatchSys.readJSONFromLocalStorage('match_prefill');
+
+        if (nationSelect) {
+            let nationalityValue = '';
+            if (payload.nationality === 0 || payload.nationality === '0' || payload.nationality === '日本') {
+                nationalityValue = '0';
+            } else if (payload.nationality === 1 || payload.nationality === '1' || payload.nationality === '其他') {
+                nationalityValue = '1';
+            }
+            nationSelect.value = nationalityValue;
+        }
+        if (ageInput) ageInput.value = payload.age ?? '';
+        if (priceInput) priceInput.value = payload.price ?? '';
+        if (introInput) introInput.value = payload.intro || '';
+        resumeState.prefill = payload.resume && typeof payload.resume === 'object' ? payload.resume : null;
+        try {
+            window.MatchSys.clearStoredKey('match_prefill');
+        } catch (error) {
+        }
+        renderResumeSource();
+    };
+
+    const init = () => {
+        let payload = window.MatchSys.readJSONFromLocalStorage('match_prefill');
+        if (payload) {
+            setView('people');
+            applyPrefill();
+            return
+        }
+        payload = window.MatchSys.readJSONFromLocalStorage(pageStateKey);
+        if (payload) {
+            applyPageState();
+        }
+    }
+
+    init();
+    fetchCases();
+</script>
 </body>
 </html>

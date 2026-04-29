@@ -6,14 +6,6 @@
     <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
-    <style>
-        .c-panel-title-actions {
-            width: 100%;
-        }
-        .c-panel-title-spacer {
-            flex: 1;
-        }
-    </style>
     <title data-i18n="attendance.title">考勤管理</title>
 </head>
 <body class="c-form-page">
@@ -22,11 +14,11 @@
         <div class="filters c-filter-panel">
             <div class="filter-grid c-filter-grid-wide">
                 <label>
-                    <span data-i18n="attendance.filter.name">姓名</span>
-                    <input type="search" id="name-filter" placeholder="输入姓名" data-i18n-placeholder="attendance.filter.name_placeholder" />
+                    <span data-i18n="common.field.name">姓名</span>
+                    <input type="search" id="name-filter" placeholder="输入姓名" data-i18n-placeholder="common.field.name_placeholder" />
                 </label>
                 <label>
-                    <span data-i18n="attendance.filter.month">月份</span>
+                    <span data-i18n="common.field.month">月份</span>
                     <input type="month" id="month-filter" />
                 </label>
             </div>
@@ -42,12 +34,12 @@
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
-                    <th data-i18n="attendance.table.name">姓名</th>
-                    <th data-i18n="attendance.table.month">月份</th>
+                    <th data-i18n="common.field.name">姓名</th>
+                    <th data-i18n="common.field.month">月份</th>
                     <th data-i18n="attendance.table.attendance_days">出勤日</th>
                     <th data-i18n="attendance.table.absence_days">缺勤日</th>
                     <th data-i18n="attendance.table.annual_leave">剩余年休</th>
-                    <th data-i18n="attendance.table.status">状态</th>
+                    <th data-i18n="common.field.status">状态</th>
                 </tr>
                 </thead>
                 <tbody id="summary-body">
@@ -151,7 +143,7 @@
                 <td>${person.annual_leave}</td>
                 <td>
                     <span class="${statusMap[person.status]?.className || "c-pill"}">
-                        ${statusMap[person.status]?.label || t("attendance.status.unknown")}
+                        ${statusMap[person.status]?.label || t("common.status.unknown")}
                     </span>
                 </td>
             `;
@@ -180,7 +172,7 @@
         totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
         currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
         if (pageSummary) {
-            pageSummary.textContent = format("attendance.page_summary", {
+            pageSummary.textContent = format("common.summary.page", {
                 count: totalCount,
                 page: currentPage,
                 total: totalPages
@@ -210,11 +202,11 @@
             <table class="c-table c-table-compact c-table-center">
                 <thead>
                     <tr>
-                        <th>${t("attendance.detail.date")}</th>
+                        <th>${t("common.field.date")}</th>
                         <th>${t("attendance.detail.weekday")}</th>
                         <th>${t("attendance.detail.clock_in")}</th>
                         <th>${t("attendance.detail.clock_out")}</th>
-                        <th>${t("attendance.detail.note")}</th>
+                        <th>${t("common.field.note")}</th>
                     </tr>
                 </thead>
                 <tbody>${rows}</tbody>
@@ -251,10 +243,8 @@
         setDetailMessage(wrapper, renderDetailHeader(fallbackName, employeeId), t("attendance.detail.loading"));
 
         try {
-            const response = await fetchWithAuth(url, { method: "GET" });
-            const data = await response.json();
-            const payload = normalizeApiResponse(data);
-            if (!response.ok || !payload.success) {
+            const payload = await window.requestJson(url, { method: "GET" });
+            if (!payload.success) {
                 setDetailMessage(
                     wrapper,
                     renderDetailHeader(fallbackName, employeeId),
@@ -352,10 +342,8 @@
         }
 
         try {
-            const response = await fetchWithAuth(url, { method: "GET" });
-            const data = await response.json();
-            const payload = normalizeApiResponse(data);
-            if (!response.ok || !payload.success) {
+            const payload = await window.requestJson(url, { method: "GET" });
+            if (!payload.success) {
                 attendanceData = [];
                 setNoData(payload.message || t("attendance.failed"));
                 return;

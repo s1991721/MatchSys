@@ -22,7 +22,7 @@
                     <input type="number" id="filterAgeMax" min="18" max="80" placeholder="最大岁数" data-i18n-placeholder="people.filter.age_max_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="people.filter.nationality">国籍</span>
+                    <span data-i18n="common.field.nationality">国籍</span>
                     <select id="filterNationality">
                         <option value="" data-i18n="common.all">全部</option>
                         <option value="0" data-i18n="people.nationality.jp">日本</option>
@@ -34,23 +34,15 @@
                     <input type="number" id="filterPriceMax" min="0" step="0.1" placeholder="最高单价" data-i18n-placeholder="people.filter.price_max_placeholder"/>
                 </label>
                 <label>
-                    <span data-i18n="people.filter.contract">契约状况</span>
+                    <span data-i18n="common.field.contract_status">契约状况</span>
                     <select id="filterContract">
                         <option value="" data-i18n="common.all">全部</option>
-                        <option value="正社员" data-i18n="people.contract.regular">正社员</option>
-                        <option value="契约社员" data-i18n="people.contract.contract">契约社员</option>
-                        <option value="フリーランス" data-i18n="people.contract.freelance">フリーランス</option>
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="people.filter.business_status">营业状态</span>
+                    <span data-i18n="common.field.business_status">营业状态</span>
                     <select id="filterBusinessStatus">
                         <option value="" data-i18n="common.all">全部</option>
-                        <option value="0" data-i18n="people.business_status.0">营业中</option>
-                        <option value="1" data-i18n="people.business_status.1">营业中1/2等待</option>
-                        <option value="2" data-i18n="people.business_status.2">营业中结果等待</option>
-                        <option value="3" data-i18n="people.business_status.3">现场中</option>
-                        <option value="4" data-i18n="people.business_status.4">现场已确定</option>
                     </select>
                 </label>
             </div>
@@ -67,18 +59,18 @@
             <table class="c-table c-table-hover c-table-center" id="peopleTable">
                 <thead>
                 <tr>
-                    <th data-i18n="people.table.name">姓名</th>
+                    <th data-i18n="common.field.name">姓名</th>
                     <th data-i18n="people.table.nickname">昵称</th>
-                    <th data-i18n="people.table.age">年龄</th>
-                    <th data-i18n="people.table.nationality">国籍</th>
+                    <th data-i18n="common.field.age">年龄</th>
+                    <th data-i18n="common.field.nationality">国籍</th>
                     <th data-i18n="people.table.price">单价（万/月）</th>
-                    <th data-i18n="people.table.intro">介绍文</th>
-                    <th data-i18n="people.table.contract">契约状况</th>
-                    <th data-i18n="people.table.business_status">营业状态</th>
+                    <th data-i18n="common.field.intro">介绍文</th>
+                    <th data-i18n="common.field.contract_status">契约状况</th>
+                    <th data-i18n="common.field.business_status">营业状态</th>
                     <th data-i18n="people.table.site_contract">现场契约</th>
-                    <th data-i18n="people.table.note">备注</th>
+                    <th data-i18n="common.field.note">备注</th>
                     <th data-i18n="people.table.ss_file">SS 文件</th>
-                    <th class="c-actions-col" data-i18n="people.table.actions">操作</th>
+                    <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -109,7 +101,7 @@
             <div class="form-grid form-grid-spaced">
                 <input type="hidden" name="employee_id"/>
                 <label>
-                    <span data-i18n="people.field.name">姓名</span>
+                    <span data-i18n="common.field.name">姓名</span>
                     <input type="text" name="name" placeholder="请输入姓名" data-i18n-placeholder="people.placeholder.name" required/>
                 </label>
                 <label>
@@ -117,11 +109,11 @@
                     <input type="text" name="nickname" placeholder="请输入昵称" data-i18n-placeholder="people.placeholder.nickname"/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.birthday">生日</span>
+                    <span data-i18n="common.field.birthday">生日</span>
                     <input type="date" name="birthday" required/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.nationality">国籍</span>
+                    <span data-i18n="common.field.nationality">国籍</span>
                     <select name="nationality" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
                         <option value="0" data-i18n="people.nationality.jp">日本</option>
@@ -133,12 +125,9 @@
                     <input type="number" name="price" min="0" step="1" placeholder="例如 2.5" data-i18n-placeholder="people.placeholder.price" required/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.contract">契约状况</span>
+                    <span data-i18n="common.field.contract_status">契约状况</span>
                     <select name="contract" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
-                        <option value="正社员" data-i18n="people.contract.regular">正社员</option>
-                        <option value="契约社员" data-i18n="people.contract.contract">契约社员</option>
-                        <option value="フリーランス" data-i18n="people.contract.freelance">フリーランス</option>
                     </select>
                 </label>
                 <label>
@@ -146,18 +135,13 @@
                     <input type="date" name="siteContract"/>
                 </label>
                 <label>
-                    <span data-i18n="people.field.business_status">营业状态</span>
+                    <span data-i18n="common.field.business_status">营业状态</span>
                     <select name="businessStatus" required>
                         <option value="" data-i18n="people.option.select">请选择</option>
-                        <option value="0" data-i18n="people.business_status.0">营业中</option>
-                        <option value="1" data-i18n="people.business_status.1">营业中1/2等待</option>
-                        <option value="2" data-i18n="people.business_status.2">营业中结果等待</option>
-                        <option value="3" data-i18n="people.business_status.3">现场中</option>
-                        <option value="4" data-i18n="people.business_status.4">现场已确定</option>
                     </select>
                 </label>
                 <label>
-                    <span data-i18n="people.field.intro">介绍文</span>
+                    <span data-i18n="common.field.intro">介绍文</span>
                     <textarea name="intro" rows="3" placeholder="输入人员的介绍或履历亮点" data-i18n-placeholder="people.placeholder.intro"></textarea>
                 </label>
                 <label>
@@ -166,7 +150,7 @@
                     <span class="ss-file-name" id="ssFileName"></span>
                 </label>
                 <label>
-                    <span data-i18n="people.field.note">备注</span>
+                    <span data-i18n="common.field.note">备注</span>
                     <textarea name="note" rows="2" placeholder="可填写人员特长、证书等补充信息" data-i18n-placeholder="people.placeholder.note"></textarea>
                 </label>
             </div>
@@ -208,20 +192,6 @@
     const ssFileName = document.getElementById('ssFileName');
     let forcedEmployeeId = '';
 
-    const showDialogModal = () => {
-        if (typeof personDialog.showModal === 'function') {
-            if (!personDialog.open) {
-                try {
-                    personDialog.showModal();
-                    return;
-                } catch (error) {
-                    console.warn('showModal 调用失败，使用 open 属性回退。', error);
-                }
-            }
-        }
-        personDialog.setAttribute('open', '');
-    };
-
     let editingId = null;
     let people = [];
     let currentSsPath = '';
@@ -238,176 +208,122 @@
         businessStatus: null
     };
     const TECH_PREFILL_KEY = 'tech_edit_employee_prefill';
+    const CONTRACT_OPTIONS = [
+        { value: 1, key: "people.contract.regular", className: "c-pill c-pill-success" },
+        { value: 2, key: "people.contract.contract", className: "c-pill" },
+        { value: 3, key: "people.contract.freelance", className: "c-pill c-pill-danger" }
+    ];
+    const BUSINESS_STATUS_OPTIONS = [
+        { value: 0, key: "people.business_status.0", className: "c-pill c-pill-success" },
+        { value: 1, key: "people.business_status.1", className: "c-pill c-pill-warn" },
+        { value: 2, key: "people.business_status.2", className: "c-pill c-pill-info" },
+        { value: 3, key: "people.business_status.3", className: "c-pill c-pill-primary" },
+        { value: 4, key: "people.business_status.4", className: "c-pill c-pill-danger" }
+    ];
+    const h = (value) => window.escapeHtml ? window.escapeHtml(value) : String(value == null ? '' : value);
 
-    const getSharedStorage = () => {
+    const getNumberValue = (value) => value === '' ? null : Number(value);
+
+    const applyFilters = () => {
+        const keywordValue = (filterKeyword.value || '').trim();
+        const ageMax = getNumberValue(filterAgeMax.value);
+        const priceMax = getNumberValue(filterPriceMax.value);
+        const nationalityValue = filterNationality.value;
+        const contractValue = filterContract.value;
+        const businessStatusValue = filterBusinessStatus.value;
+        currentFilters = {
+            keyword: keywordValue,
+            ageMax,
+            priceMax,
+            nationality: nationalityValue,
+            contractType: contractValue === '' ? null : normalizeContractType(contractValue),
+            businessStatus: businessStatusValue === '' ? null : Number(businessStatusValue)
+        };
+        currentPage = 1;
+        fetchPeople();
+    };
+
+    filterResetBtn.addEventListener('click', () => {
+        filterAgeMax.value = ''
+        filterPriceMax.value = ''
+        filterKeyword.value = '';
+        filterNationality.value = '';
+        filterContract.value = '';
+        filterBusinessStatus.value = '';
+        applyFilters();
+    });
+
+    applyFilterBtn.addEventListener('click', applyFilters);
+
+    const cacheMatchPayload = (person) => {
+        if (!person) return;
+        const ssName = (person.ssPath || '').split('/').pop();
+        const payload = {
+            nationality: normalizeNationalityValue(person.nationality),
+            age: person.age ?? '',
+            price: person.price ?? '',
+            intro: person.intro || '',
+            resume: person.ssUrl ? {
+                name: ssName,
+                path: person.ssPath,
+                url: person.ssUrl ,
+                source: 'people'
+            } : null,
+            updatedAt: Date.now()
+        };
         try {
-            if (window.top && window.top.localStorage) {
-                return window.top.localStorage;
+            window.MatchSys.clearStoredKey('match_prefill');
+            window.MatchSys.writeJSONToLocalStorage('match_prefill', payload);
+        } catch (error) {
+            console.warn('match_prefill 缓存失败', error);
+        }
+    };
+
+    const cacheBulkMailPrefill = (person) => {
+        if (!person) return;
+        const ssName = (person.ssPath || '').split('/').pop();
+        const payload = {
+            subject: `技术者推荐：${person.name || ''}`,
+            intro: person.intro || '',
+            attachments: person.ssUrl ? [{
+                filename: ssName || 'resume',
+                path: person.ssPath || '',
+                content_type: 'application/octet-stream'
+            }] : [],
+            mail_type: '1',
+            source: 'people',
+            updatedAt: Date.now()
+        };
+        try {
+            window.MatchSys.clearStoredKey('bulkMailContext');
+            window.MatchSys.writeJSONToSessionStorage('bulkMailPrefill', payload);
+        } catch (error) {
+            console.warn('bulkMailPrefill 缓存失败', error);
+        }
+    };
+
+    const showDialogModal = () => {
+        if (typeof personDialog.showModal === 'function') {
+            if (!personDialog.open) {
+                try {
+                    personDialog.showModal();
+                    return;
+                } catch (error) {
+                    console.warn('showModal 调用失败，使用 open 属性回退。', error);
+                }
             }
-        } catch (error) {
         }
-        return localStorage;
+        personDialog.setAttribute('open', '');
     };
 
-    const loadTechPrefill = () => {
-        try {
-            const storage = getSharedStorage();
-            const raw = storage.getItem(TECH_PREFILL_KEY);
-            if (!raw) return null;
-            const parsed = JSON.parse(raw);
-            if (!parsed || typeof parsed !== 'object') return null;
-            return {
-                name: parsed.name || '',
-                birthday: parsed.birthday || ''
-            };
-        } catch (error) {
-            return null;
-        }
-    };
-
-    const clearTechPrefill = () => {
-        try {
-            const storage = getSharedStorage();
-            storage.removeItem(TECH_PREFILL_KEY);
-        } catch (error) {
-        }
-    };
-
-    const contractLabelToType = (label) => {
-        const mapping = {
-            [t("people.contract.regular")]: 1,
-            [t("people.contract.contract")]: 2,
-            [t("people.contract.freelance")]: 3,
-            '正社员': 1,
-            '契约社员': 2,
-            'フリーランス': 3
-        };
-        return mapping[label] ?? 0;
-    };
-
-    const normalizeNationalityValue = (value) => {
-        if (value === null || value === undefined || value === '') return '';
-        if (value === 0 || value === '0') return 0;
-        if (value === 1 || value === '1') return 1;
-        if (value === '日本') return 0;
-        if (value === '其他') return 1;
-        return '';
-    };
-
-    const nationalityLabel = (value) => {
-        const normalized = normalizeNationalityValue(value);
-        if (normalized === 0) return t("people.nationality.jp");
-        if (normalized === 1) return t("people.nationality.other");
-        return '-';
-    };
-
-    const normalizeDateInput = (value) => {
-        if (!value) return '';
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return '';
-        return date.toISOString().slice(0, 10);
-    };
-
-    const businessStatusLabel = (value) => {
-        const mapping = {
-            0: t("people.business_status.0"),
-            1: t("people.business_status.1"),
-            2: t("people.business_status.2"),
-            3: t("people.business_status.3"),
-            4: t("people.business_status.4")
-        };
-        return mapping[value] ?? '-';
-    };
-
-    const businessStatusClass = (value) => {
-        const mapping = {
-            0: 'c-pill c-pill-success',
-            1: 'c-pill c-pill-warn',
-            2: 'c-pill c-pill-info',
-            3: 'c-pill c-pill-primary',
-            4: 'c-pill c-pill-danger'
-        };
-        return mapping[value] ?? 'c-pill';
-    };
-
-    const renderPagination = () => {
-        window.renderPagination(pagination, paginationPages, currentPage, totalPages);
-    };
-
-    const renderPeople = (list) => {
-        if (!list.length) {
-            peopleTableBody.innerHTML = `<tr><td colspan="12" class="empty c-empty">${t("people.empty_filtered")}</td></tr>`;
+    const updateSsFileName = (path, file) => {
+        if (!ssFileName) return;
+        if (file) {
+            ssFileName.textContent = format("people.ss_uploading", { name: file.name });
             return;
         }
-
-        peopleTableBody.innerHTML = list.map((person) => {
-            const chipClass = person.contract === '正社员' ? 'c-pill c-pill-success'
-                : person.contract === 'フリーランス' ? 'c-pill c-pill-danger'
-                    : 'c-pill';
-            const siteContractClass = person.siteContract ? 'c-pill c-pill-success' : 'c-pill';
-            const businessLabel = businessStatusLabel(person.businessStatus);
-            const businessClass = businessStatusClass(person.businessStatus);
-
-            return `
-                <tr>
-                    <td data-label="${t("people.table.name")}">${person.name}</td>
-                    <td data-label="${t("people.table.nickname")}">${person.nickname || '-'}</td>
-                    <td data-label="${t("people.table.age")}">${person.age}</td>
-                    <td data-label="${t("people.table.nationality")}">${nationalityLabel(person.nationality)}</td>
-                    <td data-label="${t("people.table.price")}">${person.price} ${t("people.price_unit")}</td>
-                    <td data-label="${t("people.table.intro")}"><span class="truncate c-truncate" title="${person.intro || ''}">${person.intro || '-'}</span></td>
-                    <td data-label="${t("people.table.contract")}"><span class="${chipClass}">${person.contract}</span></td>
-                    <td data-label="${t("people.table.business_status")}"><span class="${businessClass}">${businessLabel}</span></td>
-                    <td data-label="${t("people.table.site_contract")}"><span class="${siteContractClass}">${person.siteContract || '-'}</span></td>
-                    <td data-label="${t("people.table.note")}">${person.note || '-'}</td>
-                    <td data-label="${t("people.table.ss_file")}">${person.ssUrl ? `<a class="c-file-link" href="${person.ssUrl}" target="_blank" rel="noopener">${t("people.action.preview")}</a>` : '-'}</td>
-                    <td data-label="${t("people.table.actions")}">
-                        <div class="row-actions c-row-actions c-row-actions-nowrap">
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${person.id}">${t("common.edit")}</button>
-                            <button type="button" class="c-btn c-btn-primary c-btn-sm" data-find-case="${person.id}">找案件</button>
-                            <button type="button" class="c-btn c-btn-warn-lite c-btn-sm" data-match="${person.id}">匹配案件</button>
-                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${person.id}">${t("common.delete")}</button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-    };
-
-    const renderPage = () => {
-        const safeTotalPages = Math.max(1, totalPages);
-        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
-        renderPeople(people);
-        renderPagination();
-        if (summaryText) {
-            if (totalCount === 0) {
-                summaryText.textContent = t("people.summary_empty");
-            } else {
-                summaryText.textContent = format("people.summary", {
-                    count: totalCount,
-                    page: currentPage,
-                    total: safeTotalPages
-                });
-            }
-        }
-    };
-
-    const getFormData = () => {
-        const formData = new FormData(personForm);
-        return {
-            employee_id: Number(formData.get('employee_id')) || null,
-            name: (formData.get('name') || '').trim(),
-            nickname: (formData.get('nickname') || '').trim(),
-            birthday: formData.get('birthday') || '',
-            nationality: formData.get('nationality') || '',
-            price: Number(formData.get('price')),
-            contract: formData.get('contract'),
-            siteContract: normalizeDateInput(formData.get('siteContract')),
-            businessStatus: formData.get('businessStatus') === '' ? null : Number(formData.get('businessStatus')),
-            intro: (formData.get('intro') || '').trim(),
-            note: (formData.get('note') || '').trim()
-        };
+        const name = (path || '').split('/').pop();
+        ssFileName.textContent = name ? format("people.ss_exists", { name }) : '';
     };
 
     const setFormData = (person) => {
@@ -418,28 +334,11 @@
         const nationalityValue = normalizeNationalityValue(person.nationality);
         personForm.nationality.value = nationalityValue === '' ? '' : String(nationalityValue);
         personForm.price.value = person.price;
-        personForm.contract.value = person.contract;
+        personForm.contract.value = String(normalizeContractType(person.contractType || person.contract) || '');
         personForm.siteContract.value = person.siteContract || '';
         personForm.businessStatus.value = person.businessStatus ?? '';
         personForm.intro.value = person.intro || '';
         personForm.note.value = person.note || '';
-    };
-
-    const openCreateDialog = () => {
-        editingId = null;
-        dialogTitle.textContent = t("people.dialog.create");
-        submitBtn.textContent = t("people.action.create");
-        personForm.reset();
-        currentSsPath = '';
-        updateSsFileName('', null);
-        if (forcedEmployeeId) {
-            personForm.employee_id.value = forcedEmployeeId;
-            personForm.name.setAttribute('readonly', 'readonly');
-        } else {
-            personForm.name.removeAttribute('readonly');
-        }
-        personDialog.style.animation = '';
-        showDialogModal();
     };
 
     const openEditDialog = (person) => {
@@ -454,234 +353,89 @@
         showDialogModal();
     };
 
-    const closeDialog = () => {
-        personDialog.style.animation = 'fadeOut 0.25s ease forwards';
+    peopleTableBody.addEventListener('click', (event) => {
+        const actionButton = event.target.closest('[data-edit], [data-delete], [data-match], [data-find-case]');
+        if (!actionButton || !peopleTableBody.contains(actionButton)) return;
+        const editId = actionButton.dataset.edit;
+        const deleteId = actionButton.dataset.delete;
+        const matchId = actionButton.dataset.match;
+        const findCaseId = actionButton.dataset.findCase;
 
-        const finalizeClose = () => {
-            personDialog.style.animation = '';
-            try {
-                if (typeof personDialog.close === 'function') {
-                    personDialog.close();
-                }
-            } catch (error) {
-                console.warn('close 调用失败，移除 open 属性回退。', error);
+        if (editId) {
+            const person = people.find(item => String(item.id) === editId);
+            if (person) {
+                openEditDialog(person);
             }
-            personDialog.removeAttribute('open');
-            personForm.reset();
-            if (personForm.ssFile) {
-                personForm.ssFile.value = '';
+        } else if (findCaseId) {
+            const person = people.find(item => String(item.id) === findCaseId);
+            if (person) {
+                cacheBulkMailPrefill(person);
+                window.navigateAppRoute('bulk_email.html');
             }
-            personForm.employee_id.value = '';
-            editingId = null;
-            dialogTitle.textContent = t("people.dialog.create");
-            submitBtn.textContent = t("people.action.create");
-            currentSsPath = '';
-            updateSsFileName('', null);
-            personForm.name.removeAttribute('readonly');
-            personDialog.removeEventListener('animationend', finalizeClose);
-        };
-
-        personDialog.addEventListener('animationend', finalizeClose);
-    };
-
-    const getNumberValue = (value) => value === '' ? null : Number(value);
-
-    const updateSsFileName = (path, file) => {
-        if (!ssFileName) return;
-        if (file) {
-            ssFileName.textContent = format("people.ss_uploading", { name: file.name });
-            return;
+        } else if (matchId) {
+            const person = people.find(item => String(item.id) === matchId);
+            if (person) {
+                cacheMatchPayload(person);
+                window.navigateAppRoute('match.html');
+            }
+        } else if (deleteId) {
+            const target = people.find(item => String(item.id) === deleteId);
+            if (target && confirm(format("people.confirm.delete", {name: target.name}))) {
+                window.requestJson(
+                    `/api/technicians/${deleteId}`,
+                    {method: 'DELETE'},
+                    {throwOnFailure: true, fallbackMessage: t("people.error.delete_failed")}
+                )
+                    .then(() => {
+                        return fetchPeople();
+                    })
+                    .catch((error) => {
+                        alert(error.message || t("people.error.delete_failed"));
+                    });
+            }
         }
-        const name = (path || '').split('/').pop();
-        ssFileName.textContent = name ? format("people.ss_exists", { name }) : '';
-    };
+    });
 
-    // 员工页跳转编辑时，获取员工信息
-    const getAutoEditId = () => {
-        try {
-            const cached = localStorage.getItem("tech_edit_employee_id") || "";
-            if (cached) {
-                localStorage.removeItem("tech_edit_employee_id");
-                return cached;
-            }
-            return '';
-        } catch (error) {
-            return '';
-        }
-    };
-
-    const mapTechnicianItem = (item) => {
-        return {
-            id: item.employee_id,
-            name: item.name || '',
-            nickname: item.name_mask,
-            birthday: item.birthday || '',
-            age: calcAge(item.birthday),
-            nationality: normalizeNationalityValue(item.nationality),
-            price: item.price ? Number(item.price) : 0,
-            contract: contractTypeToLabel(item.contract_type),
-            siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
-            businessStatus: item.business_status ?? 0,
-            intro: item.introduction || '',
-            note: item.remark || '',
-            ssPath: item.ss || '',
-            ssUrl: item.ss_url || ''
-        };
-    };
-
-    const fetchTechnicianById = async (employeeId) => {
-        if (!employeeId) return null;
-        try {
-            const res = await fetchWithAuth(`/api/technicians/${employeeId}`, {method: 'GET'});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) return null;
-            const result = payload.data || {};
-            const item = result.item || {};
-            if (!item.employee_id) return null;
-            return mapTechnicianItem(item);
-        } catch (error) {
-            return null;
-        }
-    };
-
-    const fetchPeople = async () => {
-        try {
-            const params = new URLSearchParams();
-            params.set('page', String(currentPage));
-            params.set('page_size', String(pageSize));
-            if (currentFilters.keyword) params.set('keyword', currentFilters.keyword);
-            if (currentFilters.ageMax !== null) params.set('age_max', String(currentFilters.ageMax));
-            if (currentFilters.nationality) params.set('nationality', currentFilters.nationality);
-            if (currentFilters.priceMax !== null) params.set('price_max', String(currentFilters.priceMax));
-            if (currentFilters.contractType !== null) params.set('contract_type', String(currentFilters.contractType));
-            if (currentFilters.businessStatus !== null) params.set('business_status', String(currentFilters.businessStatus));
-
-
-            const res = await fetchWithAuth(`/api/technicians?${params.toString()}`, {method: 'GET'});
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            if (!payload.success) {
-                throw new Error(payload.message || t("common.load_failed"));
-            }
-            const result = payload.data || {};
-            const meta = payload.meta || {};
-            const items = Array.isArray(result.items) ? result.items : [];
-            people = items.map(mapTechnicianItem);
-            totalCount = Number.isFinite(meta.total) ? meta.total : people.length;
-            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
-            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
-            renderPage();
-            const targetId = getAutoEditId();
-            if (targetId) {
-                forcedEmployeeId = targetId;
-                const target = people.find(item => String(item.id) === String(targetId));
-                if (target) {
-                    clearTechPrefill();
-                    openEditDialog(target);
-                } else {
-                    const remote = await fetchTechnicianById(targetId);
-                    if (remote) {
-                        clearTechPrefill();
-                        openEditDialog(remote);
-                    } else {
-                        openCreateDialog();
-                        const prefill = loadTechPrefill();
-                        if (prefill) {
-                            personForm.name.value = prefill.name || '';
-                            if (personForm.name.value) {
-                                personForm.name.setAttribute('readonly', 'readonly');
-                            }
-                            personForm.birthday.value = prefill.birthday || '';
-                            clearTechPrefill();
-                        } else {
-                            await prefillFromEmployee(targetId);
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            peopleTableBody.innerHTML = `<tr><td colspan="12" class="empty c-empty">${t("common.load_failed")}</td></tr>`;
-            summaryText.textContent = t("people.summary_empty");
-            people = [];
-            totalCount = 0;
-            totalPages = 1;
-            currentPage = 1;
-            renderPagination();
-        }
-    };
-
-    const prefillFromEmployee = async (employeeId) => {
-        if (!employeeId) return;
-        try {
-            const res = await fetchWithAuth(`/api/employees/${employeeId}`, {method: 'GET'});
-            if (!res.ok) return;
-            const data = await res.json();
-            const payload = normalizeApiResponse(data);
-            const result = payload.data || {};
-            const emp = result.item || {};
-            personForm.name.value = emp.name || '';
-            if (personForm.name.value) {
-                personForm.name.setAttribute('readonly', 'readonly');
-            }
-            personForm.birthday.value = emp.birthday || '';
-            personForm.nickname.value = personForm.nickname.value || '';
-            personForm.nationality.value = personForm.nationality.value || '';
-        } catch (error) {
-        }
+    const uploadSsFile = async (employeeId, file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const responsePayload = await window.requestJson(`/api/technicians/${employeeId}/ss`, {
+            headers: {},
+            body: formData
+        }, {throwOnFailure: true, fallbackMessage: t("people.upload_failed")});
+        return responsePayload.data || {};
     };
 
     const savePerson = async (payload) => {
         const method = editingId ? 'PUT' : 'POST';
         const url = editingId ? `/api/technicians/${editingId}` : '/api/technicians';
-        const res = await fetchWithAuth(url, {
+        const responsePayload = await window.requestJson(url, {
             method,
             body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || t("common.save_failed"));
-        }
+        }, {throwOnFailure: true, fallbackMessage: t("common.save_failed")});
         return responsePayload.data || {};
     };
 
-    const uploadSsFile = async (employeeId, file) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        const res = await fetchWithAuth(`/api/technicians/${employeeId}/ss`, {
-            headers: {},
-            body: formData
-        });
-        const data = await res.json();
-        const responsePayload = normalizeApiResponse(data);
-        if (!res.ok || !responsePayload.success) {
-            throw new Error(responsePayload.message || t("people.upload_failed"));
-        }
-        return responsePayload.data || {};
-    };
-
-    const applyFilters = () => {
-        const keywordValue = (filterKeyword.value || '').trim();
-        const ageMax = getNumberValue(filterAgeMax.value);
-        const priceMax = getNumberValue(filterPriceMax.value);
-        const nationalityValue = filterNationality.value;
-        const contractValue = filterContract.value;
-        const businessStatusValue = filterBusinessStatus.value;
-        currentFilters = {
-            keyword: keywordValue,
-            ageMax,
-            priceMax,
-            nationality: nationalityValue,
-            contractType: contractValue ? contractLabelToType(contractValue) : null,
-            businessStatus: businessStatusValue === '' ? null : Number(businessStatusValue)
+    const getFormData = () => {
+        const formData = new FormData(personForm);
+        return {
+            employee_id: Number(formData.get('employee_id')) || null,
+            name: (formData.get('name') || '').trim(),
+            nickname: (formData.get('nickname') || '').trim(),
+            birthday: formData.get('birthday') || '',
+            nationality: formData.get('nationality') || '',
+            price: Number(formData.get('price')),
+            contract: formData.get('contract'),
+            siteContract: datePart(formData.get('siteContract')),
+            businessStatus: formData.get('businessStatus') === '' ? null : Number(formData.get('businessStatus')),
+            intro: (formData.get('intro') || '').trim(),
+            note: (formData.get('note') || '').trim()
         };
-        currentPage = 1;
-        fetchPeople();
     };
 
     personForm.addEventListener('submit', async (event) => {
         event.preventDefault();
+        if (submitBtn.disabled) return;
         const formValue = getFormData();
 
         if (!formValue.name) {
@@ -716,13 +470,14 @@
             nationality: nationalityValue === '' ? null : nationalityValue,
             price: Number.isFinite(formValue.price) ? formValue.price : null,
             introduction: formValue.intro || '',
-            contract_type: contractLabelToType(formValue.contract),
+            contract_type: normalizeContractType(formValue.contract),
             spot_contract_deadline: formValue.siteContract || null,
             business_status: Number.isFinite(formValue.businessStatus) ? formValue.businessStatus : 0,
             ss: currentSsPath || null,
             remark: formValue.note
         };
 
+        submitBtn.disabled = true;
         try {
             const saved = await savePerson(payload);
             const savedItem = saved.item || {};
@@ -741,147 +496,24 @@
             await fetchPeople();
         } catch (error) {
             alert(error.message || t("common.save_failed"));
+        } finally {
+            submitBtn.disabled = false;
         }
     });
 
-    if (ssFileInput) {
-        ssFileInput.addEventListener('change', (event) => {
-            const file = event.target.files && event.target.files[0];
-            updateSsFileName(currentSsPath, file || null);
-        });
-    }
+    ssFileInput.addEventListener('change', (event) => {
+        const file = event.target.files && event.target.files[0];
+        updateSsFileName(currentSsPath, file || null);
+    });
 
-    if (window.initDialogCloseBehavior) {
-        window.initDialogCloseBehavior({
-            dialogs: [personDialog],
-            onClose: () => {
-                closeDialog();
-                return false;
-            }
-        });
-    }
-    const cacheMatchPayload = (person) => {
-        if (!person) return;
-        const ssName = (person.ssPath || '').split('/').pop();
-        const payload = {
-            nationality: normalizeNationalityValue(person.nationality),
-            age: person.age ?? '',
-            price: person.price ?? '',
-            intro: person.intro || '',
-            resume: person.ssUrl ? {
-                name: ssName || 'resume',
-                path: person.ssPath || '',
-                url: person.ssUrl || '',
-                source: 'people'
-            } : null
-        };
-        try {
-            const storage = getSharedStorage();
-            storage.setItem('match_prefill', JSON.stringify(payload));
-        } catch (error) {
-            console.warn('match_prefill 缓存失败', error);
-        }
-    };
-
-    const cacheBulkMailPrefill = (person) => {
-        if (!person) return;
-        const ssName = (person.ssPath || '').split('/').pop();
-        const bodyLines = [
-            `姓名：${person.name || '-'}`,
-            `昵称：${person.nickname || '-'}`,
-            `年龄：${person.age ?? '-'}`,
-            `国籍：${nationalityLabel(person.nationality) || '-'}`,
-            `单价（万/月）：${person.price ?? '-'}`,
-            `契约状况：${person.contract || '-'}`,
-            `营业状态：${businessStatusLabel(person.businessStatus) || '-'}`,
-            `现场契约：${person.siteContract || '-'}`,
-            `介绍文：${person.intro || '-'}`,
-            `备注：${person.note || '-'}`
-        ];
-        const payload = JSON.stringify({
-            subject: `技术者推荐：${person.name || ''}`,
-            body: bodyLines.join('\n'),
-            intro: person.intro || '',
-            attachments: person.ssUrl ? [{
-                filename: ssName || 'resume',
-                path: person.ssPath || '',
-                content_type: 'application/octet-stream'
-            }] : [],
-            mail_type: '1',
-            source: 'people',
-            updatedAt: Date.now()
-        });
-        try {
-            const storage = getSharedStorage();
-            storage.removeItem('bulkMailContext');
-            sessionStorage.removeItem('bulkMailContext');
-            storage.setItem('bulkMailPrefill', payload);
-            sessionStorage.setItem('bulkMailPrefill', payload);
-        } catch (error) {
-            console.warn('bulkMailPrefill 缓存失败', error);
-        }
-    };
-
-    peopleTableBody.addEventListener('click', (event) => {
-        const editId = event.target.getAttribute('data-edit');
-        const deleteId = event.target.getAttribute('data-delete');
-        const matchId = event.target.getAttribute('data-match');
-        const findCaseId = event.target.getAttribute('data-find-case');
-
-        if (editId) {
-            const person = people.find(item => String(item.id) === editId);
-            if (person) {
-                openEditDialog(person);
-            }
-        } else if (findCaseId) {
-            const person = people.find(item => String(item.id) === findCaseId);
-            if (person) {
-                cacheBulkMailPrefill(person);
-                if (window.top && window.top !== window) {
-                    window.top.postMessage({ type: 'route:change', src: 'bulk_email.html' }, '*');
-                } else {
-                    window.location.href = 'bulk_email.html';
-                }
-            }
-        } else if (matchId) {
-            const person = people.find(item => String(item.id) === matchId);
-            if (person) {
-                cacheMatchPayload(person);
-                if (window.top && window.top !== window) {
-                    window.top.postMessage({ type: 'route:change', src: 'match.html' }, '*');
-                } else {
-                    window.location.href = 'match.html';
-                }
-            }
-        } else if (deleteId) {
-            const target = people.find(item => String(item.id) === deleteId);
-            if (target && confirm(format("people.confirm.delete", { name: target.name }))) {
-                fetchWithAuth(`/api/technicians/${deleteId}`, {method: 'DELETE'})
-                    .then(res => res.json().then(data => ({res, data})))
-                    .then(({res, data}) => {
-                        const responsePayload = normalizeApiResponse(data);
-                        if (!res.ok || !responsePayload.success) {
-                            throw new Error(responsePayload.message || t("people.error.delete_failed"));
-                        }
-                        return fetchPeople();
-                    })
-                    .catch((error) => {
-                        alert(error.message || t("people.error.delete_failed"));
-                    });
-            }
+    window.initDialogCloseBehavior({
+        dialogs: [personDialog],
+        onClose: () => {
+            closeDialog();
+            return false;
         }
     });
 
-    const filterInputs = [filterAgeMax, filterPriceMax];
-    applyFilterBtn.addEventListener('click', applyFilters);
-    filterResetBtn.addEventListener('click', () => {
-        filterInputs.forEach(input => input.value = '');
-        filterKeyword.value = '';
-        filterNationality.value = '';
-        filterContract.value = '';
-        filterBusinessStatus.value = '';
-        applyFilters();
-    });
     window.bindPagination(pagination, (value) => {
         const safeTotalPages = Math.max(1, totalPages);
         if (value === 'prev') {
@@ -895,20 +527,352 @@
         fetchPeople();
     });
 
-    fetchPeople();
     const refreshI18n = () => {
-        if (i18n) {
-            i18n.apply();
-        }
+        fillOptionSelects();
         if (personDialog && personDialog.open) {
             dialogTitle.textContent = editingId ? t("people.dialog.edit") : t("people.dialog.create");
             submitBtn.textContent = editingId ? t("people.action.save") : t("people.action.create");
         }
         fetchPeople();
     };
+
     if (window && window.addEventListener) {
         window.addEventListener("i18n:change", refreshI18n);
     }
+
+    const nationalityLabel = (value) => {
+        const normalized = normalizeNationalityValue(value);
+        if (normalized === 0) return t("people.nationality.jp");
+        if (normalized === 1) return t("people.nationality.other");
+        return '-';
+    };
+
+    const closeDialog = () => {
+        personDialog.style.animation = 'fadeOut 0.25s ease forwards';
+
+        const finalizeClose = () => {
+            personDialog.style.animation = '';
+            try {
+                if (typeof personDialog.close === 'function') {
+                    personDialog.close();
+                }
+            } catch (error) {
+                console.warn('close 调用失败，移除 open 属性回退。', error);
+            }
+            personDialog.removeAttribute('open');
+            personForm.reset();
+            if (personForm.ssFile) {
+                personForm.ssFile.value = '';
+            }
+            personForm.employee_id.value = '';
+            editingId = null;
+            dialogTitle.textContent = t("people.dialog.create");
+            submitBtn.textContent = t("people.action.create");
+            currentSsPath = '';
+            updateSsFileName('', null);
+            personForm.name.removeAttribute('readonly');
+            personDialog.removeEventListener('animationend', finalizeClose);
+        };
+
+        personDialog.addEventListener('animationend', finalizeClose);
+    };
+
+    const getAutoEditId = () => {
+        try {
+            const cached = window.MatchSys.readJSONFromLocalStorage("tech_edit_employee_id");
+            if (cached) {
+                const cachedId = cached.id;
+                window.MatchSys.clearStoredKey("tech_edit_employee_id");
+                return cachedId;
+            }
+            return '';
+        } catch (error) {
+            console.warn('读取自动编辑员工 ID 失败。', error);
+            return '';
+        }
+    };
+
+    // 员工页跳转编辑时，获取员工信息
+    const fetchTechnicianById = async (employeeId) => {
+        if (!employeeId) return null;
+        try {
+            const payload = await window.requestJson(
+                `/api/technicians/${employeeId}`,
+                {method: 'GET'},
+                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+            );
+            const result = payload.data || {};
+            const item = result.item || {};
+            if (!item.employee_id) return null;
+            return mapTechnicianItem(item);
+        } catch (error) {
+            console.warn('获取技术者详情失败。', error);
+            return null;
+        }
+    };
+
+    const openCreateDialog = () => {
+        editingId = null;
+        dialogTitle.textContent = t("people.dialog.create");
+        submitBtn.textContent = t("people.action.create");
+        personForm.reset();
+        currentSsPath = '';
+        updateSsFileName('', null);
+        if (forcedEmployeeId) {
+            personForm.employee_id.value = forcedEmployeeId;
+            personForm.name.setAttribute('readonly', 'readonly');
+        } else {
+            personForm.name.removeAttribute('readonly');
+        }
+        personDialog.style.animation = '';
+        showDialogModal();
+    };
+
+    const loadTechPrefill = () => {
+        try {
+            const parsed = window.MatchSys.readJSONFromLocalStorage(TECH_PREFILL_KEY);
+            return {
+                name: parsed.name || '',
+                birthday: parsed.birthday || ''
+            };
+        } catch (error) {
+            console.warn('读取技术者预填信息失败。', error);
+            return null;
+        }
+    };
+
+    const prefillFromEmployee = async (employeeId) => {
+        if (!employeeId) return;
+        try {
+            const payload = await window.requestJson(
+                `/api/employees/${employeeId}`,
+                {method: 'GET'},
+                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+            );
+            const result = payload.data || {};
+            const emp = result.item || {};
+            personForm.name.value = emp.name || '';
+            if (personForm.name.value) {
+                personForm.name.setAttribute('readonly', 'readonly');
+            }
+            personForm.birthday.value = emp.birthday || '';
+            personForm.nickname.value = personForm.nickname.value || '';
+            personForm.nationality.value = personForm.nationality.value || '';
+        } catch (error) {
+            console.warn('根据员工信息预填技术者表单失败。', error);
+        }
+    };
+
+    const renderPagination = () => {
+        window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+    };
+
+    const businessStatusClass = (value) => {
+        const option = BUSINESS_STATUS_OPTIONS.find((item) => item.value === Number(value));
+        return option ? option.className : 'c-pill';
+    };
+
+    const businessStatusLabel = (value) => {
+        const option = BUSINESS_STATUS_OPTIONS.find((item) => item.value === Number(value));
+        return option ? t(option.key) : '-';
+    };
+
+    const contractClass = (value) => {
+        const option = CONTRACT_OPTIONS.find((item) => item.value === normalizeContractType(value));
+        return option ? option.className : 'c-pill';
+    };
+
+    const renderPeople = (list) => {
+        if (!list.length) {
+            peopleTableBody.innerHTML = `<tr><td colspan="12" class="empty c-empty">${t("people.empty_filtered")}</td></tr>`;
+            return;
+        }
+
+        peopleTableBody.innerHTML = list.map((person) => {
+            const contractValue = person.contractType || person.contract;
+            const chipClass = contractClass(contractValue);
+            const contractText = contractLabel(contractValue);
+            const siteContractClass = person.siteContract ? 'c-pill c-pill-success' : 'c-pill';
+            const businessLabel = businessStatusLabel(person.businessStatus);
+            const businessClass = businessStatusClass(person.businessStatus);
+            const ssLink = person.ssUrl
+                ? `<a class="c-file-link" href="${h(person.ssUrl)}" target="_blank" rel="noopener">${h(t("common.preview"))}</a>`
+                : '-';
+
+            return `
+                <tr>
+                    <td data-label="${h(t("common.field.name"))}">${h(person.name || '-')}</td>
+                    <td data-label="${h(t("people.table.nickname"))}">${h(person.nickname || '-')}</td>
+                    <td data-label="${h(t("common.field.age"))}">${h(person.age ?? '-')}</td>
+                    <td data-label="${h(t("common.field.nationality"))}">${h(nationalityLabel(person.nationality))}</td>
+                    <td data-label="${h(t("people.table.price"))}">${h(person.price ?? '-')} ${h(t("people.price_unit"))}</td>
+                    <td data-label="${h(t("common.field.intro"))}"><span class="truncate c-truncate" title="${h(person.intro || '')}">${h(person.intro || '-')}</span></td>
+                    <td data-label="${h(t("common.field.contract_status"))}"><span class="${h(chipClass)}">${h(contractText)}</span></td>
+                    <td data-label="${h(t("common.field.business_status"))}"><span class="${h(businessClass)}">${h(businessLabel)}</span></td>
+                    <td data-label="${h(t("people.table.site_contract"))}"><span class="${h(siteContractClass)}">${h(person.siteContract || '-')}</span></td>
+                    <td data-label="${h(t("common.field.note"))}">${h(person.note || '-')}</td>
+                    <td data-label="${h(t("people.table.ss_file"))}">${ssLink}</td>
+                    <td data-label="${h(t("common.field.actions"))}">
+                        <div class="row-actions c-row-actions c-row-actions-nowrap">
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-edit="${h(person.id)}">${h(t("common.edit"))}</button>
+                            <button type="button" class="c-btn c-btn-primary c-btn-sm" data-find-case="${h(person.id)}">${h(t("people.action.find_case"))}</button>
+                            <button type="button" class="c-btn c-btn-warn-lite c-btn-sm" data-match="${h(person.id)}">${h(t("people.action.match_case"))}</button>
+                            <button type="button" class="c-btn c-btn-danger c-btn-sm" data-delete="${h(person.id)}">${h(t("common.delete"))}</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    };
+
+    const renderPage = () => {
+        const safeTotalPages = Math.max(1, totalPages);
+        if (currentPage > safeTotalPages) currentPage = safeTotalPages;
+        renderPeople(people);
+        renderPagination();
+        if (summaryText) {
+            if (totalCount === 0) {
+                summaryText.textContent = t("people.summary_empty");
+            } else {
+                summaryText.textContent = format("people.summary", {
+                    count: totalCount,
+                    page: currentPage,
+                    total: safeTotalPages
+                });
+            }
+        }
+    };
+
+    const contractLabel = (value) => {
+        const option = CONTRACT_OPTIONS.find((item) => item.value === normalizeContractType(value));
+        return option ? t(option.key) : t("people.contract.unknown");
+    };
+
+    const normalizeContractType = (value) => {
+        const numericValue = Number(value);
+        if (CONTRACT_OPTIONS.some((item) => item.value === numericValue)) return numericValue;
+        return numericValue;
+    };
+
+    const normalizeNationalityValue = (value) => {
+        if (value === 0 || value === '0') return 0;
+        if (value === 1 || value === '1') return 1;
+        return '';
+    };
+
+    const mapTechnicianItem = (item) => {
+        return {
+            id: item.employee_id,
+            name: item.name || '',
+            nickname: item.name_mask,
+            birthday: item.birthday || '',
+            age: calcAge(item.birthday),
+            nationality: normalizeNationalityValue(item.nationality),
+            price: item.price ? Number(item.price) : 0,
+            contractType: normalizeContractType(item.contract_type),
+            contract: contractLabel(item.contract_type),
+            siteContract: item.spot_contract_deadline ? formatDate(item.spot_contract_deadline) : '',
+            businessStatus: item.business_status ?? 0,
+            intro: item.introduction || '',
+            note: item.remark || '',
+            ssPath: item.ss || '',
+            ssUrl: item.ss_url || ''
+        };
+    };
+
+    const fetchPeople = async () => {
+        try {
+            const params = createParams([
+                ['page', String(currentPage)],
+                ['page_size', String(pageSize)],
+                ['keyword', currentFilters.keyword],
+                ['age_max', currentFilters.ageMax !== null ? String(currentFilters.ageMax) : ''],
+                ['nationality', currentFilters.nationality],
+                ['price_max', currentFilters.priceMax !== null ? String(currentFilters.priceMax) : ''],
+                ['contract_type', currentFilters.contractType !== null ? String(currentFilters.contractType) : ''],
+                ['business_status', currentFilters.businessStatus !== null ? String(currentFilters.businessStatus) : ''],
+            ]);
+            const payload = await window.requestJson(
+                buildUrl('/api/technicians', params),
+                {method: 'GET'},
+                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+            );
+            const result = payload.data || {};
+            const meta = payload.meta || {};
+            const items = Array.isArray(result.items) ? result.items : [];
+            people = items.map(mapTechnicianItem);
+            totalCount = Number.isFinite(meta.total) ? meta.total : people.length;
+            totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : 1;
+            currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+            renderPage();
+            const targetId = getAutoEditId();
+            if (targetId) {
+                forcedEmployeeId = targetId;
+                const target = people.find(item => String(item.id) === String(targetId));
+                if (target) {
+                    window.MatchSys.clearStoredKey(TECH_PREFILL_KEY);
+                    openEditDialog(target);
+                } else {
+                    const remote = await fetchTechnicianById(targetId);
+                    if (remote) {
+                        window.MatchSys.clearStoredKey(TECH_PREFILL_KEY);
+                        openEditDialog(remote);
+                    } else {
+                        openCreateDialog();
+                        const prefill = loadTechPrefill();
+                        if (prefill) {
+                            personForm.name.value = prefill.name || '';
+                            if (personForm.name.value) {
+                                personForm.name.setAttribute('readonly', 'readonly');
+                            }
+                            personForm.birthday.value = prefill.birthday || '';
+                            window.MatchSys.clearStoredKey(TECH_PREFILL_KEY);
+                        } else {
+                            await prefillFromEmployee(targetId);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            peopleTableBody.innerHTML = `<tr><td colspan="12" class="empty c-empty">${t("common.load_failed")}</td></tr>`;
+            summaryText.textContent = t("people.summary_empty");
+            people = [];
+            totalCount = 0;
+            totalPages = 1;
+            currentPage = 1;
+            renderPagination();
+        }
+    };
+
+    const fillSelectOptions = (select, options) => {
+        const currentValue = select.value;
+        const firstOption = select.querySelector('option[value=""]');
+        select.innerHTML = '';
+        if (firstOption) {
+            select.appendChild(firstOption);
+        }
+        options.forEach((item) => {
+            const option = document.createElement('option');
+            option.value = String(item.value);
+            option.textContent = t(item.key);
+            option.setAttribute('data-i18n', item.key);
+            select.appendChild(option);
+        });
+        select.value = currentValue;
+    };
+
+    const fillOptionSelects = () => {
+        fillSelectOptions(filterContract, CONTRACT_OPTIONS);
+        fillSelectOptions(personForm.contract, CONTRACT_OPTIONS);
+        fillSelectOptions(filterBusinessStatus, BUSINESS_STATUS_OPTIONS);
+        fillSelectOptions(personForm.businessStatus, BUSINESS_STATUS_OPTIONS);
+    };
+
+    fillOptionSelects();
+
+    fetchPeople();
+
 </script>
 </body>
 </html>

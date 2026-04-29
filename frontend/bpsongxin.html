@@ -6,6 +6,26 @@
   <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
+  <style>
+    .bpsongxin-source-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr) minmax(0, 1fr);
+    }
+
+    .bpsongxin-source-grid .songxin-editor-card,
+    .bpsongxin-source-grid .songxin-original-card {
+      min-height: 620px;
+    }
+
+    .bpsongxin-source-grid .songxin-editor {
+      min-height: 500px;
+    }
+
+    @media (max-width: 1280px) {
+      .bpsongxin-source-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+  </style>
   <title data-i18n="songxin.title">送信页</title>
 </head>
 <body>
@@ -19,7 +39,12 @@
         </div>
     </div>
     <div class="page page-wide songxin-page">
-        <section class="songxin-grid songxin-grid-half">
+        <section class="songxin-grid bpsongxin-source-grid">
+            <div class="c-card c-card-pad songxin-original-card">
+                <div class="c-card-title">案件原文</div>
+                <textarea id="job-original" class="songxin-editor songxin-editor-readonly" readonly aria-label="案件原文"></textarea>
+            </div>
+
             <div class="songxin-editor-card c-card c-card-pad">
                 <div class="songxin-card-head">
                     <div class="c-card-title" data-i18n="songxin.section.editor">内容编辑</div>
@@ -40,8 +65,8 @@
             </div>
 
             <div class="c-card c-card-pad songxin-original-card">
-                <div class="c-card-title">案件原文</div>
-                <textarea id="job-original" class="songxin-editor songxin-editor-readonly" readonly aria-label="案件原文"></textarea>
+                <div class="c-card-title">技术者原文</div>
+                <textarea id="person-original" class="songxin-editor songxin-editor-readonly" readonly aria-label="技术者原文"></textarea>
             </div>
         </section>
 
@@ -129,7 +154,7 @@
             const fileInput = document.getElementById('file-input');
             const attachmentList = document.getElementById('attachment-list');
             const jobOriginal = document.getElementById('job-original');
-            const originalTitle = document.querySelector('.songxin-original-card .c-card-title');
+            const personOriginal = document.getElementById('person-original');
             const templateInfoBtn = document.getElementById('btn-template-info');
             const templateInfoDialog = document.getElementById('template-info-dialog');
             const templateDialogSubtitle = document.getElementById('template-dialog-subtitle');
@@ -294,7 +319,9 @@
                         throw new Error(payload.message || '解析失败');
                     }
                     const result = payload.data || {};
-                    const message = typeof result.data === 'string' ? result.data.trim() : '';
+                    const message = typeof result.body === 'string'
+                        ? result.body.trim()
+                        : (typeof result.data === 'string' ? result.data.trim() : '');
                     let formatted = message;
                     if (!formatted) {
                         if (result.data) {
@@ -426,10 +453,15 @@
                 preview.textContent = content;
             };
 
-            const renderOriginal = (text) => {
-                const content = (text || '').trim();
-                jobOriginal.value = content || '';
-                jobOriginal.scrollTop = 0;
+            const renderOriginal = (jobText, personText) => {
+                if (jobOriginal) {
+                    jobOriginal.value = (jobText || '').trim();
+                    jobOriginal.scrollTop = 0;
+                }
+                if (personOriginal) {
+                    personOriginal.value = (personText || '').trim();
+                    personOriginal.scrollTop = 0;
+                }
             };
 
             clearBtn.addEventListener('click', () => {
@@ -440,7 +472,7 @@
                 attachments.length = 0;
                 renderAttachments();
                 renderPreview();
-                renderOriginal('');
+                renderOriginal('', '');
                 editor.focus();
             });
 
@@ -581,11 +613,8 @@
             const jobText = selectionPayload?.jobText || '';
             const personText = selectionPayload?.personText || '';
             const originalText = scene === 'technician' ? personText : jobText;
-            if (originalTitle) {
-                originalTitle.textContent = scene === 'technician' ? '技术者原文' : '案件原文';
-            }
             renderTemplateSubtitle(scene);
-            renderOriginal(originalText);
+            renderOriginal(jobText, personText);
             analyzeByScene(originalText, scene);
             if (window && window.addEventListener) {
                 window.addEventListener("i18n:change", () => {
@@ -595,7 +624,7 @@
                     renderTemplateSubtitle(scene);
                     renderAttachments();
                     renderPreview();
-                    renderOriginal(originalText);
+                    renderOriginal(jobText, personText);
                 });
             }
         })();

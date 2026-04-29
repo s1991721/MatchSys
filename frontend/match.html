@@ -589,7 +589,6 @@
                 ? '/api/mail-technicians/search'
                 : '/api/mail-projects/search';
             const result = await window.requestJson(endpoint, {
-                method: 'POST',
                 body: JSON.stringify(payload)
             }, {
                 throwOnFailure: true,

@@ -175,99 +175,17 @@
     let currentSelection = null;
     let templateSettingsCache = null;
 
-    const readSelection = () => {
-        try {
-            currentSelection = window.MatchSys.readJSONFromLocalStorage(selectionKey);
-        } catch {
-            currentSelection = null;
+    const normalizeMultiline = (text) => {
+        if (typeof text !== 'string') return '';
+        let clean = text
+            .replace(/\r\n/g, '\n')
+            .replace(/\\n/g, '\n')
+            .replace(/\t/g, '    ');
+        const trimmed = clean.trim();
+        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+            clean = trimmed.slice(1, -1);
         }
-        return currentSelection;
-    };
-
-    const resolveScene = (selection) => {
-        if (sceneParam === 'technician' || sceneParam === 'tech' || sceneParam === 'person') {
-            return 'technician';
-        }
-        if (sceneParam === 'project' || sceneParam === 'job') {
-            return 'project';
-        }
-        const mailType = Number(selection?.mail_type);
-        if (Number.isFinite(mailType)) {
-            return mailType === 1 ? 'technician' : 'project';
-        }
-        return 'project';
-    };
-
-    const extractEmail = (raw) => {
-        if (!raw) return '';
-        const bracketMatch = raw.match(/<([^>]+)>/);
-        if (bracketMatch && bracketMatch[1]) {
-            return bracketMatch[1].trim();
-        }
-        const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-        return emailMatch ? emailMatch[0].trim() : '';
-    };
-
-    const applySelectionFromMatch = () => {
-        const data = readSelection();
-        if (!data || !data.job || !data.person) return null;
-
-        const job = data.job || {};
-        const person = data.person || {};
-
-        const jobLines = [
-            t('songxin.job_info'),
-            job.title ? `${t('songxin.label.title')}：${job.title}` : null,
-            job.desc ? `${t('songxin.label.desc')}：${job.desc}` : null,
-            job.time ? `${t('songxin.label.time')}：${job.time}` : null,
-            job.detail ? `${t('songxin.label.detail')}：\n${job.detail}` : null
-        ].filter(Boolean).join('\n');
-
-        const countryLabel = person.country_label || person.country || '';
-        const personMetaLines = [
-            countryLabel ? `国籍：${countryLabel}` : null,
-            person.age ? `年龄：${person.age}` : null,
-            person.price ? `金额：${person.price}` : null,
-            person.intro ? `介绍文：\n${person.intro}` : null
-        ].filter(Boolean);
-
-        const personLines = [
-            t('songxin.person_info'),
-            person.name ? `${t('songxin.label.name')}：${person.name}` : null,
-            person.belong ? `${t('songxin.label.belong')}：${person.belong}` : null,
-            person.time ? `${t('songxin.label.time')}：${person.time}` : null,
-            person.detail ? `${t('songxin.label.detail')}：\n${person.detail}` : null,
-            personMetaLines.length ? personMetaLines.join('\n') : null
-        ].filter(Boolean).join('\n');
-
-        const combined = [jobLines, personLines].filter(Boolean).join('\n\n');
-
-        if (combined) {
-            editor.value = combined;
-        }
-
-        const personSubject = person.subject || person.title || person.name || '';
-        if (personSubject) {
-            subjectInput.value = personSubject.startsWith('Re:')
-                ? personSubject
-                : `Re: ${personSubject}`;
-        } else {
-            subjectInput.value = deriveSubject(combined);
-        }
-
-        if (!email.value) {
-            const replyTo = extractEmail(person.belong || person.from || '');
-            if (replyTo) {
-                email.value = replyTo;
-            }
-        }
-
-        return {
-            jobText: job.detail || job.desc || jobLines || '',
-            personText: person.detail || personLines || '',
-            job,
-            person
-        };
+        return clean;
     };
 
     const setLoading = (isLoading, options = {}) => {
@@ -295,93 +213,22 @@
         loadingMask.setAttribute('aria-busy', 'false');
     };
 
-    const analyzeByScene = async (jobText, scene) => {
-        if (!jobText) return;
-        setLoading(true, {title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub')});
+    const openTemplateDialog = async () => {
+        const templateName = 'anjian';
+        setLoading(true, {title: t('songxin.template.loading_title'), subtitle: t('songxin.template.loading_sub')});
         try {
-            const endpoint = scene === 'technician'
-                ? '/api/extract-technician-detail'
-                : '/api/extract-project-detail';
-            const payload = await window.requestJson(endpoint, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-                body: JSON.stringify({body: jobText})
-            }, {
-                throwOnFailure: true,
-                fallbackMessage: t('songxin.error.analyze_failed')
-            });
-            const result = payload.data || {};
-            const message = typeof result.body === 'string'
-                ? result.body.trim()
-                : (typeof result.data === 'string' ? result.data.trim() : '');
-            let formatted = message;
-            if (!formatted) {
-                if (result.data) {
-                    formatted = JSON.stringify(result.data, null, 2);
-                } else if (typeof result.raw === 'string') {
-                    formatted = result.raw;
-                } else {
-                    formatted = '';
-                }
-            }
-            const normalized = normalizeMultiline(formatted);
-            editor.value = normalized || t('songxin.preview.unavailable');
-            renderPreview();
+            const settingsPayload = await loadTemplateSettings(true);
+            templateContentInput.value = normalizeMultiline(settingsPayload[templateName] || '');
+            templateInfoDialog.showModal();
         } catch (err) {
-            console.error('调用 extract_qiuren_detail 失败', err);
-            alert(t('songxin.alert.ai_unavailable'));
+            console.error('加载模板失败', err);
+            alert(t('songxin.template.alert.load_failed'));
         } finally {
             setLoading(false);
         }
     };
 
-    const formatSize = (bytes) => {
-        if (bytes < 1024) return bytes + 'B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
-        return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
-    };
-
-    const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result || '';
-            const base64 = typeof result === 'string' && result.includes(',')
-                ? result.split(',').pop()
-                : result;
-            resolve(base64);
-        };
-        reader.onerror = () => reject(reader.error || new Error(t('songxin.loading.file_failed')));
-        reader.readAsDataURL(file);
-    });
-
-    const normalizeMultiline = (text) => {
-        if (typeof text !== 'string') return '';
-        let clean = text
-            .replace(/\r\n/g, '\n')
-            .replace(/\\n/g, '\n')
-            .replace(/\t/g, '    ');
-        const trimmed = clean.trim();
-        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-            clean = trimmed.slice(1, -1);
-        }
-        return clean;
-    };
-
-    const deriveSubject = (text) => {
-        const firstLine = (text || '').split('\n').map(t => t.trim()).find(Boolean);
-        if (!firstLine) return t('songxin.subject.default');
-        return firstLine.slice(0, 60);
-    };
-
-    const getTemplateNameByScene = (scene) => (scene === 'technician' ? 'technician' : 'anjian');
-
-    const renderTemplateSubtitle = (scene) => {
-        if (!templateDialogSubtitle) return;
-        templateDialogSubtitle.textContent = scene === 'technician'
-            ? t('songxin.template.subtitle.technician')
-            : t('songxin.template.subtitle.project');
-    };
+    templateInfoBtn.addEventListener('click', openTemplateDialog);
 
     const loadTemplateSettings = async (forceRefresh = false) => {
         if (!forceRefresh && templateSettingsCache) {
@@ -401,21 +248,32 @@
         return settingsPayload;
     };
 
-    const openTemplateDialog = async () => {
-        const templateName = getTemplateNameByScene(scene);
-        setLoading(true, {title: t('songxin.template.loading_title'), subtitle: t('songxin.template.loading_sub')});
+    templateSaveBtn.addEventListener('click', async () => {
+        const templateName = 'anjian';
+        setLoading(true, {title: t('songxin.template.saving_title'), subtitle: t('songxin.template.saving_sub')});
         try {
-            const settingsPayload = await loadTemplateSettings(true);
-            templateContentInput.value = normalizeMultiline(settingsPayload[templateName] || '');
-            renderTemplateSubtitle(scene);
-            templateInfoDialog.showModal();
+            const currentSettings = await loadTemplateSettings();
+            const nextSettings = {
+                ...currentSettings,
+                [templateName]: normalizeMultiline(templateContentInput.value)
+            };
+            await window.requestJson(`/api/sys-settings/${templateSection}`, {
+                body: JSON.stringify({settings: nextSettings})
+            }, {
+                throwOnFailure: true,
+                fallbackMessage: t('songxin.error.template_save_failed')
+            });
+            templateSettingsCache = nextSettings;
+            templateInfoDialog.close();
+            await analyzeByScene(currentSelection.job.detail);
         } catch (err) {
-            console.error('加载模板失败', err);
-            alert(t('songxin.template.alert.load_failed'));
+            console.error('保存模板失败', err);
+            alert(t('songxin.template.alert.save_failed'));
         } finally {
             setLoading(false);
+            editor.focus();
         }
-    };
+    });
 
     const renderAttachments = () => {
         if (!attachments.length) {
@@ -446,17 +304,6 @@
         preview.textContent = content;
     };
 
-    const renderOriginal = (jobText, personText) => {
-        if (jobOriginal) {
-            jobOriginal.value = (jobText || '').trim();
-            jobOriginal.scrollTop = 0;
-        }
-        if (personOriginal) {
-            personOriginal.value = (personText || '').trim();
-            personOriginal.scrollTop = 0;
-        }
-    };
-
     clearBtn.addEventListener('click', () => {
         editor.value = '';
         email.value = '';
@@ -465,44 +312,18 @@
         attachments.length = 0;
         renderAttachments();
         renderPreview();
-        renderOriginal('', '');
         editor.focus();
     });
 
     editor.addEventListener('input', renderPreview);
-    templateInfoBtn.addEventListener('click', openTemplateDialog);
-    templateSaveBtn.addEventListener('click', async () => {
-        const templateName = getTemplateNameByScene(scene);
-        setLoading(true, {title: t('songxin.template.saving_title'), subtitle: t('songxin.template.saving_sub')});
-        try {
-            const currentSettings = await loadTemplateSettings();
-            const nextSettings = {
-                ...currentSettings,
-                [templateName]: normalizeMultiline(templateContentInput.value)
-            };
-            await window.requestJson(`/api/sys-settings/${templateSection}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
-                body: JSON.stringify({settings: nextSettings})
-            }, {
-                throwOnFailure: true,
-                fallbackMessage: t('songxin.error.template_save_failed')
-            });
-            templateSettingsCache = nextSettings;
-            templateInfoDialog.close();
-            if (originalText) {
-                await analyzeByScene(originalText, scene);
-            }
-        } catch (err) {
-            console.error('保存模板失败', err);
-            alert(t('songxin.template.alert.save_failed'));
-        } finally {
-            setLoading(false);
-            editor.focus();
-        }
-    });
+
     uploadBtn.addEventListener('click', () => fileInput.click());
+
+    const formatSize = (bytes) => {
+        if (bytes < 1024) return bytes + 'B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + 'KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+    };
 
     fileInput.addEventListener('change', () => {
         const files = Array.from(fileInput.files || []);
@@ -523,6 +344,25 @@
         renderAttachments();
     });
 
+    const readFileAsBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+            const result = reader.result || '';
+            const base64 = typeof result === 'string' && result.includes(',')
+                ? result.split(',').pop()
+                : result;
+            resolve(base64);
+        };
+        reader.onerror = () => reject(reader.error || new Error(t('songxin.loading.file_failed')));
+        reader.readAsDataURL(file);
+    });
+
+    const deriveSubject = (text) => {
+        const firstLine = (text || '').split('\n').map(t => t.trim()).find(Boolean);
+        if (!firstLine) return t('songxin.subject.default');
+        return firstLine.slice(0, 60);
+    };
+
     sendBtn.addEventListener('click', async () => {
         const target = email.value.trim();
         if (!target) {
@@ -537,7 +377,7 @@
             return;
         }
 
-        const selection = currentSelection || readSelection();
+        const selection = currentSelection;
         const personMeta = selection?.person || null;
         const rawMailType = selection?.mail_type;
         const mailType = Number.isFinite(Number(rawMailType))
@@ -579,9 +419,6 @@
             }
 
             await window.requestJson('/api/send-mail', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                credentials: 'include',
                 body: JSON.stringify(payload)
             }, {
                 throwOnFailure: true,
@@ -598,27 +435,90 @@
         }
     });
 
-    const selectionPayload = applySelectionFromMatch();
-    renderAttachments();
-    renderPreview();
-    const scene = resolveScene(currentSelection || readSelection());
-    const jobText = selectionPayload?.jobText || '';
-    const personText = selectionPayload?.personText || '';
-    const originalText = scene === 'technician' ? personText : jobText;
-    renderTemplateSubtitle(scene);
-    renderOriginal(jobText, personText);
-    analyzeByScene(originalText, scene);
     if (window && window.addEventListener) {
         window.addEventListener("i18n:change", () => {
             if (i18n) {
                 i18n.apply();
             }
-            renderTemplateSubtitle(scene);
             renderAttachments();
             renderPreview();
-            renderOriginal(jobText, personText);
         });
     }
+
+    const analyzeByScene = async (jobText) => {
+        if (!jobText) return;
+        setLoading(true, {title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub')});
+        try {
+            const endpoint = '/api/extract-project-detail';
+            const payload = await window.requestJson(endpoint, {
+                body: JSON.stringify({body: jobText})
+            }, {
+                throwOnFailure: true,
+                fallbackMessage: t('songxin.error.analyze_failed')
+            });
+            const result = payload.data || {};
+            const formatted = typeof result.body === 'string'
+                ? result.body.trim()
+                : (typeof result.data === 'string' ? result.data.trim() : '');
+            const normalized = normalizeMultiline(formatted);
+            editor.value = normalized || t('songxin.preview.unavailable');
+            renderPreview();
+        } catch (err) {
+            console.error('调用 extract_qiuren_detail 失败', err);
+            alert(t('songxin.alert.ai_unavailable'));
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const renderOriginal = (jobText, personText) => {
+        if (jobOriginal) {
+            jobOriginal.value = (jobText || '').trim();
+            jobOriginal.scrollTop = 0;
+        }
+        if (personOriginal) {
+            personOriginal.value = (personText || '').trim();
+            personOriginal.scrollTop = 0;
+        }
+    };
+
+    const extractEmail = (raw) => {
+        if (!raw) return '';
+        const bracketMatch = raw.match(/<([^>]+)>/);
+        if (bracketMatch && bracketMatch[1]) {
+            return bracketMatch[1].trim();
+        }
+        const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+        return emailMatch ? emailMatch[0].trim() : '';
+    };
+
+    const applySelectionFromMatch = () => {
+        currentSelection = window.MatchSys.readJSONFromLocalStorage(selectionKey);
+        if (!currentSelection || !currentSelection.job || !currentSelection.person) return;
+
+        const person = currentSelection.person || {};
+
+        const personSubject = person.subject || person.title || person.name || '';
+        if (personSubject) {
+            subjectInput.value = personSubject.startsWith('Re:')
+                ? personSubject
+                : `Re: ${personSubject}`;
+        }
+
+        if (!email.value) {
+            const replyTo = extractEmail(person.belong || person.from || '');
+            if (replyTo) {
+                email.value = replyTo;
+            }
+        }
+
+        templateDialogSubtitle.textContent = t('songxin.template.subtitle.project');
+    };
+
+    applySelectionFromMatch();
+    renderOriginal(currentSelection.job.detail, currentSelection.person.detail)
+    analyzeByScene(currentSelection.job.detail);
+
 </script>
 </body>
 </html>

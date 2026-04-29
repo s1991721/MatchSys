@@ -14,6 +14,10 @@ from bpmatch.models import SentEmailLog, MailTechnicianInfo
 from order.models import PurchaseOrder, SalesOrder
 from project.api import api_success
 from project.common_tools import require_login, shift_month
+from settings.models import SysSettings
+
+
+DEFAULT_MATCH_CYCLE_DAYS = 14
 
 
 def _add_months(value: date, months: int) -> date:
@@ -160,11 +164,23 @@ def _entry_items(today, start_date, end_date):
     entry_items.sort(key=lambda item: item["period_start"])
     return entry_items
 
-# todo 应该改为系统当前缓存周期，而非固定两周
-def _two_weeks_count(start_of_two_weeks, now):
-    """统计两周内求案件人数。"""
+
+def _get_match_cycle_days():
+    """获取 Match 配置的业务周期天数。"""
+    record = SysSettings.objects.filter(name="match", deleted_at__isnull=True).first()
+    if not record or not isinstance(record.settings, dict):
+        return DEFAULT_MATCH_CYCLE_DAYS
+    try:
+        cycle_days = int(record.settings.get("cycle_days", DEFAULT_MATCH_CYCLE_DAYS))
+    except (TypeError, ValueError):
+        return DEFAULT_MATCH_CYCLE_DAYS
+    return cycle_days if cycle_days > 0 else DEFAULT_MATCH_CYCLE_DAYS
+
+
+def _cycle_days_count(start_of_cycle, now):
+    """统计业务周期内求案件人数。"""
     return MailTechnicianInfo.objects.filter(
-        date__gte=start_of_two_weeks,
+        date__gte=start_of_cycle,
         date__lte=now,
     ).count()
 
@@ -451,7 +467,8 @@ def home_match_stats_api(request):
     start_of_last_week = start_of_week - timedelta(days=7)
     start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
     start_of_yesterday = start_of_today - timedelta(days=1)
-    start_of_two_weeks = now - timedelta(days=14)
+    match_cycle_days = _get_match_cycle_days()
+    start_of_cycle = now - timedelta(days=match_cycle_days)
     today = now.date()
     start_date = today - timedelta(days=1)
     end_date = _add_months(today, 1)
@@ -472,7 +489,8 @@ def home_match_stats_api(request):
         _month_entry_stats(start_of_month, start_of_next_month, start_of_last_month)
     )
     payload["monthly_sales_techs"] = _monthly_sales_techs(start_of_next_month)
-    payload["two_weeks_count"] = _two_weeks_count(start_of_two_weeks, now)
+    payload["two_weeks_count"] = _cycle_days_count(start_of_cycle, now)
+    payload["match_cycle_days"] = match_cycle_days
     payload["entry_items"] = _entry_items(today, start_date, end_date)
     payload["next_month_sales_techs"] = _next_month_sales_techs(
         start_of_next_month, start_of_month_after_next

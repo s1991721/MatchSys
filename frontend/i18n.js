@@ -1133,7 +1133,7 @@
             "home.stats.week_match": "今週のマッチ数",
             "home.stats.today_match": "本日のマッチ数",
             "home.stats.month_entry": "今月の入場人数",
-            "home.stats.two_weeks": "直近2週間の求案件人数",
+            "home.stats.two_weeks": "現在の求案件人数",
             "home.vs_last_week": "先週比",
             "home.vs_last_month": "先月比",
             "home.vs_yesterday": "昨日比",

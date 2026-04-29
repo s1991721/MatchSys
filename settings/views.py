@@ -22,6 +22,7 @@ from settings.LINE import (
 from settings.activation_code import is_activation_code_valid
 from settings.llm_check import check_cloud_model, check_local_model
 from settings.models import ScheduledTask, SysSettings
+from settings.task_scheduler import invalidate_scheduled_tasks_cache
 from settings.timer_task import (
     run_time_to_save,
     run_time_to_save_day,
@@ -466,6 +467,7 @@ def _handle_tasks(settings_payload, login_id):
             task.deleted_at = timezone.now()
             task.save(update_fields=["deleted_at"])
 
+    invalidate_scheduled_tasks_cache()
     return api_success(
         data={"name": "tasks", "settings": [_serialize_task(task) for task in saved_tasks]}
     )

@@ -21,6 +21,7 @@ _scheduler_lock = threading.Lock()
 _scheduler_process_lock_file = None
 _scheduler = None
 _logger = None
+_scheduled_tasks_cache = None
 
 
 def _get_logger():
@@ -240,12 +241,25 @@ def _run_task(task: ScheduledTask, timeout=10):
         return False, str(exc)
 
 
-# todo 将tasks进行缓存，新增和编辑定时任务时，缓存失效
+def invalidate_scheduled_tasks_cache():
+    global _scheduled_tasks_cache
+    _scheduled_tasks_cache = None
+
+
+def _get_enabled_tasks_from_cache():
+    global _scheduled_tasks_cache
+    if _scheduled_tasks_cache is None:
+        _scheduled_tasks_cache = list(
+            ScheduledTask.objects.filter(deleted_at__isnull=True, enabled=True)
+        )
+    return list(_scheduled_tasks_cache)
+
+
 def _scan_and_run():
     logger = _get_logger()
     now = timezone.localtime(timezone.now())
-    tasks = ScheduledTask.objects.filter(deleted_at__isnull=True, enabled=True)
-    logger.info("scan started tasks=%s", tasks.count())
+    tasks = _get_enabled_tasks_from_cache()
+    logger.info("scan started tasks=%s", len(tasks))
     for task in tasks:
         cron_expr = _resolve_cron_expr(task)
         if not cron_expr:

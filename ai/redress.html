@@ -654,6 +654,35 @@
       return "";
     }
 
+    function normalizeSkillList(skills) {
+      return Array.from(new Set(
+        (Array.isArray(skills) ? skills : [])
+          .map((skill) => String(skill || "").trim())
+          .filter(Boolean)
+      ));
+    }
+
+    function extractSkillsFromPartialJson(text) {
+      const skillsMatch = String(text || "").match(/"skills"\s*:\s*\[([\s\S]*?)(?:\]|$)/);
+      if (!skillsMatch) {
+        return [];
+      }
+
+      const skills = [];
+      const skillText = skillsMatch[1] || "";
+      const stringRegex = /"((?:\\.|[^"\\])*)"/g;
+      let match = stringRegex.exec(skillText);
+      while (match) {
+        try {
+          skills.push(JSON.parse("\"" + match[1] + "\""));
+        } catch (error) {
+          skills.push(match[1]);
+        }
+        match = stringRegex.exec(skillText);
+      }
+      return normalizeSkillList(skills);
+    }
+
     function extractSkillsFromAiResult(value) {
       const text = String(value || "").trim();
       if (!text) {
@@ -663,13 +692,9 @@
       try {
         const parsed = JSON.parse(text);
         const skills = Array.isArray(parsed && parsed.skills) ? parsed.skills : [];
-        return Array.from(new Set(
-          skills
-            .map((skill) => String(skill || "").trim())
-            .filter(Boolean)
-        ));
+        return normalizeSkillList(skills);
       } catch (error) {
-        return [];
+        return extractSkillsFromPartialJson(text);
       }
     }
 

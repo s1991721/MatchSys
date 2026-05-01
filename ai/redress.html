@@ -176,6 +176,14 @@
       padding-right: 6px;
     }
 
+    .body-preview .skill-highlight {
+      background: #ffe59e;
+      color: #8a4b00;
+      padding: 0 4px;
+      border-radius: 6px;
+      box-shadow: 0 0 0 1px #f3c763 inset;
+    }
+
     .result-input {
       width: 100%;
       min-height: 360px;
@@ -466,6 +474,19 @@
       statusEl.className = "status" + (type ? " " + type : "");
     }
 
+    function sanitize(str = "") {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeRegExp(str = "") {
+      return String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
     function setAnalysisLoading(isLoading, message = "AI 分析中，请稍候...") {
       if (!analysisLoadingEl) {
         return;
@@ -633,6 +654,49 @@
       return "";
     }
 
+    function extractSkillsFromAiResult(value) {
+      const text = String(value || "").trim();
+      if (!text) {
+        return [];
+      }
+
+      try {
+        const parsed = JSON.parse(text);
+        const skills = Array.isArray(parsed && parsed.skills) ? parsed.skills : [];
+        return Array.from(new Set(
+          skills
+            .map((skill) => String(skill || "").trim())
+            .filter(Boolean)
+        ));
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function renderBody(text = "", skills = []) {
+      const escapedSkills = (Array.isArray(skills) ? skills : [])
+        .filter(Boolean)
+        .sort((a, b) => String(b).length - String(a).length)
+        .map((skill) => escapeRegExp(sanitize(skill)));
+      const highlightRegex = escapedSkills.length
+        ? new RegExp("(" + escapedSkills.join("|") + ")", "gi")
+        : null;
+      const safeBody = sanitize(text || "").replace(/\r\n/g, "\n");
+      const highlightedBody = highlightRegex
+        ? safeBody.replace(highlightRegex, '<mark class="skill-highlight">$1</mark>')
+        : safeBody;
+      bodyEl.innerHTML = highlightedBody.replace(/\n/g, "<br>");
+    }
+
+    function renderBodyForCurrentRow() {
+      const row = getCurrentRow();
+      if (!row) {
+        bodyEl.textContent = "";
+        return;
+      }
+      renderBody(row.Body || "", extractSkillsFromAiResult(row.ai_result || ""));
+    }
+
     function formatJsonForDisplay(value) {
       const text = String(value || "").trim();
       if (!text) {
@@ -759,6 +823,7 @@
 
         row.ai_result = formatJsonForDisplay(result);
         aiResultInput.value = row.ai_result;
+        renderBodyForCurrentRow();
         setStatus("AI 分析完成，可人工校正后保存。", "success");
       } catch (error) {
         console.error(error);
@@ -787,10 +852,10 @@
       labelValueEl.textContent = row.label || "-";
       labelValueEl.classList.toggle("empty-value", !String(row.label || "").trim());
       subjectEl.textContent = row.Subject || "";
-      bodyEl.textContent = row.Body || "";
-      bodyEl.scrollTop = 0;
       row.ai_result = formatJsonForDisplay(row.ai_result || "");
       aiResultInput.value = row.ai_result;
+      renderBodyForCurrentRow();
+      bodyEl.scrollTop = 0;
       setAnalysisLoading(Boolean(row._analysisPending));
       saveCurrentId();
       updateNavButtons();
@@ -996,6 +1061,7 @@
       }
       row.ai_result = aiResultInput.value;
       row._manualEdited = true;
+      renderBodyForCurrentRow();
     });
 
     prevBtn.addEventListener("click", () => {

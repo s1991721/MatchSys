@@ -191,6 +191,59 @@
       outline: none;
     }
 
+    .result-panel {
+      position: relative;
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 360px;
+    }
+
+    .result-panel .result-input {
+      min-height: 100%;
+    }
+
+    .analysis-loading {
+      position: absolute;
+      inset: 1px;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      border-radius: 12px;
+      background: rgba(251, 253, 248, 0.82);
+      color: var(--accent-strong);
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .analysis-loading[hidden] {
+      display: none;
+    }
+
+    .analysis-loading::before {
+      content: "";
+      width: 22px;
+      height: 22px;
+      margin-bottom: 10px;
+      border: 3px solid rgba(63, 127, 95, 0.22);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .analysis-loading-inner {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     .result-input:focus,
     .id-input:focus {
       border-color: var(--accent);
@@ -350,7 +403,14 @@
           <div class="column">
             <div class="field fill">
               <span class="label">AI Result</span>
-              <textarea id="ai-result-input" class="result-input" spellcheck="false"></textarea>
+              <div class="result-panel">
+                <textarea id="ai-result-input" class="result-input" spellcheck="false"></textarea>
+                <div id="analysis-loading" class="analysis-loading" hidden>
+                  <div class="analysis-loading-inner">
+                    <span id="analysis-loading-text">AI 分析中，请稍候...</span>
+                  </div>
+                </div>
+              </div>
               <div class="hint">切换到结果为空的记录时会自动分析正文；已有结果和人工编辑内容不会被覆盖。</div>
             </div>
             <div class="actions">
@@ -378,7 +438,7 @@
       loginPromise: null
     };
 
-    const API_BASE = "http://localhost:8000";
+    const API_BASE = "";
     const LOGIN_ENDPOINT = API_BASE + "/api/login";
     const ANALYZE_ENDPOINT = API_BASE + "/api/redress/analyze";
     const MOCK_LOGIN_USER = "admin";
@@ -393,6 +453,8 @@
     const subjectEl = document.getElementById("subject-value");
     const bodyEl = document.getElementById("body-value");
     const aiResultInput = document.getElementById("ai-result-input");
+    const analysisLoadingEl = document.getElementById("analysis-loading");
+    const analysisLoadingTextEl = document.getElementById("analysis-loading-text");
     const pickFileBtn = document.getElementById("pick-file-btn");
     const prevBtn = document.getElementById("prev-btn");
     const saveBtn = document.getElementById("save-btn");
@@ -402,6 +464,16 @@
     function setStatus(message, type = "") {
       statusEl.textContent = message;
       statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function setAnalysisLoading(isLoading, message = "AI 分析中，请稍候...") {
+      if (!analysisLoadingEl) {
+        return;
+      }
+      if (analysisLoadingTextEl) {
+        analysisLoadingTextEl.textContent = message;
+      }
+      analysisLoadingEl.hidden = !isLoading;
     }
 
     function detectUnsupportedSpreadsheet(text) {
@@ -641,9 +713,11 @@
       }
 
       row._analysisRequested = true;
+      row._analysisPending = true;
       const seq = ++state.analysisSeq;
       const targetId = String(row.id || "");
       setStatus("正在分析当前正文（" + analysisType + "）...", "");
+      setAnalysisLoading(true, "AI 正在分析当前正文（" + analysisType + "），请稍候...");
 
       try {
         const { response, data: payload } = await requestAnalysis({
@@ -658,20 +732,27 @@
         const data = payload.data || {};
         if (data.skipped) {
           row._analysisSkipped = true;
+          row._analysisPending = false;
+          setAnalysisLoading(false);
           setStatus("当前 label 不需要 AI 分析。", "success");
           return;
         }
 
         const result = String(data.ai_result || "").trim();
         if (!result) {
+          row._analysisPending = false;
+          setAnalysisLoading(false);
           setStatus("AI 未返回可用结果。", "error");
           return;
         }
 
         const currentRow = getCurrentRow();
         if (seq !== state.analysisSeq || currentRow !== row || String(currentRow.id || "") !== targetId) {
+          row._analysisPending = false;
           return;
         }
+        row._analysisPending = false;
+        setAnalysisLoading(false);
         if (row._manualEdited || String(row.ai_result || "").trim()) {
           return;
         }
@@ -682,6 +763,8 @@
       } catch (error) {
         console.error(error);
         row._analysisRequested = false;
+        row._analysisPending = false;
+        setAnalysisLoading(false);
         setStatus("AI 分析失败：" + error.message, "error");
       }
     }
@@ -690,6 +773,7 @@
       const row = getCurrentRow();
 
       if (!row) {
+        setAnalysisLoading(false);
         recordEl.hidden = true;
         emptyEl.hidden = false;
         progressEl.textContent = state.rows.length ? "全部记录已处理完。" : "";
@@ -707,6 +791,7 @@
       bodyEl.scrollTop = 0;
       row.ai_result = formatJsonForDisplay(row.ai_result || "");
       aiResultInput.value = row.ai_result;
+      setAnalysisLoading(Boolean(row._analysisPending));
       saveCurrentId();
       updateNavButtons();
 

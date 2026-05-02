@@ -253,7 +253,8 @@
     }
 
     .result-input:focus,
-    .id-input:focus {
+    .id-input:focus,
+    .filter-select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(63, 127, 95, 0.14);
     }
@@ -276,27 +277,21 @@
       outline: none;
     }
 
-    .id-panel {
-      display: grid;
-      gap: 14px;
-    }
-
-    .label-value {
-      min-height: 44px;
+    .filter-select {
+      width: 100%;
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 10px 12px;
-      color: var(--text);
-      background: #fffefb;
       font-size: 18px;
       font-weight: 700;
-      line-height: 1.35;
-      word-break: break-word;
+      color: var(--text);
+      background: #fffefb;
+      outline: none;
     }
 
-    .label-value.empty-value {
-      color: var(--muted);
-      font-weight: 600;
+    .id-panel {
+      display: grid;
+      gap: 14px;
     }
 
     .status,
@@ -373,7 +368,7 @@
         </div>
       </div>
       <div class="subtext">
-        读取 CSV 后展示 <code>id</code>、<code>Subject</code>、<code>Body</code>，并把可编辑结果写回 <code>ai_result</code> 列。
+        读取 CSV 后展示 <code>id</code>、<code>Subject</code>、<code>Body</code>，可按 <code>label</code> 过滤，并把可编辑结果写回 <code>ai_result</code> 列。
         当 <code>ai_result</code> 为空时，会根据 <code>label</code> 自动分析正文：<code>0</code> 调案件分析，<code>1</code> 调技术者分析。
       </div>
       <div class="toolbar-meta">
@@ -394,7 +389,11 @@
                 </div>
                 <div>
                   <span class="label">Label</span>
-                  <div id="label-value" class="label-value empty-value"></div>
+                  <select id="label-filter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
                 </div>
               </div>
               <div class="field">
@@ -436,9 +435,11 @@
 
   <script>
     const state = {
+      allRows: [],
       rows: [],
       headers: [],
       currentIndex: -1,
+      labelFilter: "all",
       fileHandle: null,
       fileName: "data.csv",
       sourceText: "",
@@ -457,7 +458,7 @@
     const recordEl = document.getElementById("record");
     const emptyEl = document.getElementById("empty");
     const idInput = document.getElementById("id-input");
-    const labelValueEl = document.getElementById("label-value");
+    const labelFilterEl = document.getElementById("label-filter");
     const subjectEl = document.getElementById("subject-value");
     const bodyEl = document.getElementById("body-value");
     const aiResultInput = document.getElementById("ai-result-input");
@@ -615,6 +616,51 @@
 
     function getCurrentRow() {
       return state.rows[state.currentIndex] || null;
+    }
+
+    function applyLabelFilter() {
+      if (state.labelFilter === "all") {
+        state.rows = state.allRows;
+        return;
+      }
+
+      state.rows = state.allRows.filter((row) => (
+        String(row.label || "").trim() === state.labelFilter
+      ));
+    }
+
+    function getAiResultStats(rows = state.rows) {
+      return {
+        total: rows.length,
+        completed: rows.filter((row) => String(row.ai_result || "").trim()).length
+      };
+    }
+
+    function getFilterLabelText() {
+      return state.labelFilter === "all" ? "全部" : state.labelFilter;
+    }
+
+    function updateProgressText() {
+      const row = getCurrentRow();
+      const stats = getAiResultStats();
+
+      if (!row) {
+        progressEl.textContent = state.allRows.length
+          ? "当前 Label = " + getFilterLabelText() + "，已存在 AI Result：" + stats.completed + " / " + stats.total
+          : "";
+        return;
+      }
+
+      progressEl.textContent = "第 " + (state.currentIndex + 1) + " / " + state.rows.length
+        + " 条，当前 id = " + row.id
+        + "，Label = " + getFilterLabelText()
+        + "，已存在 AI Result：" + stats.completed + " / " + stats.total;
+    }
+
+    function updateEmptyText() {
+      emptyEl.textContent = state.allRows.length
+        ? "当前 Label 条件下暂无可展示内容。"
+        : "暂无可展示内容。";
     }
 
     function getStorageKey() {
@@ -849,6 +895,7 @@
         row.ai_result = formatJsonForDisplay(result);
         aiResultInput.value = row.ai_result;
         renderBodyForCurrentRow();
+        updateProgressText();
         setStatus("AI 分析完成，可人工校正后保存。", "success");
       } catch (error) {
         console.error(error);
@@ -861,12 +908,14 @@
 
     function render() {
       const row = getCurrentRow();
+      labelFilterEl.value = state.labelFilter;
 
       if (!row) {
         setAnalysisLoading(false);
         recordEl.hidden = true;
         emptyEl.hidden = false;
-        progressEl.textContent = state.rows.length ? "全部记录已处理完。" : "";
+        updateEmptyText();
+        updateProgressText();
         updateNavButtons();
         return;
       }
@@ -874,8 +923,6 @@
       recordEl.hidden = false;
       emptyEl.hidden = true;
       idInput.value = row.id || "";
-      labelValueEl.textContent = row.label || "-";
-      labelValueEl.classList.toggle("empty-value", !String(row.label || "").trim());
       subjectEl.textContent = row.Subject || "";
       row.ai_result = formatJsonForDisplay(row.ai_result || "");
       aiResultInput.value = row.ai_result;
@@ -885,7 +932,7 @@
       saveCurrentId();
       updateNavButtons();
 
-      progressEl.textContent = "第 " + (state.currentIndex + 1) + " / " + state.rows.length + " 条，当前 id = " + row.id;
+      updateProgressText();
       analyzeRowIfNeeded(row);
     }
 
@@ -900,7 +947,7 @@
 
     function rebuildCsvText() {
       const table = [state.headers];
-      for (const row of state.rows) {
+      for (const row of state.allRows) {
         table.push(state.headers.map((header) => row[header] ?? ""));
       }
       return stringifyCsv(table);
@@ -935,7 +982,7 @@
     }
 
     async function saveCsv(showSuccess = true) {
-      if (!state.rows.length) {
+      if (!state.allRows.length) {
         setStatus("没有可保存的数据。", "error");
         return false;
       }
@@ -981,6 +1028,24 @@
 
       const index = state.rows.findIndex((row) => Number(row.id) === 1);
       state.currentIndex = index >= 0 ? index : (state.rows.length ? 0 : -1);
+    }
+
+    function changeLabelFilter(nextFilter) {
+      const currentRow = getCurrentRow();
+      const currentId = currentRow ? currentRow.id : "";
+      persistEditorToRow();
+      state.labelFilter = nextFilter;
+      applyLabelFilter();
+
+      const currentIndex = currentId ? findIndexById(currentId) : -1;
+      if (currentIndex >= 0) {
+        state.currentIndex = currentIndex;
+      } else {
+        locateStartIndex();
+      }
+
+      render();
+      setStatus("已切换 Label 过滤条件：" + getFilterLabelText() + "。", "success");
     }
 
     function jumpToIndex(index) {
@@ -1032,13 +1097,14 @@
       const table = parseCsv(text);
       const normalized = normalizeRows(table);
       state.headers = normalized.headers;
-      state.rows = normalized.rows;
+      state.allRows = normalized.rows;
+      applyLabelFilter();
       state.fileHandle = fileHandle;
       state.fileName = fileName;
       state.sourceText = text;
       locateStartIndex();
       render();
-      setStatus("CSV 已加载，共 " + state.rows.length + " 条记录。", "success");
+      setStatus("CSV 已加载，共 " + state.allRows.length + " 条记录。", "success");
     }
 
     async function pickCsvFile() {
@@ -1070,6 +1136,10 @@
 
     pickFileBtn.addEventListener("click", pickCsvFile);
 
+    labelFilterEl.addEventListener("change", () => {
+      changeLabelFilter(labelFilterEl.value);
+    });
+
     saveBtn.addEventListener("click", async () => {
       await saveCsv(true);
       render();
@@ -1087,6 +1157,7 @@
       row.ai_result = aiResultInput.value;
       row._manualEdited = true;
       renderBodyForCurrentRow();
+      updateProgressText();
     });
 
     prevBtn.addEventListener("click", () => {

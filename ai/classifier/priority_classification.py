@@ -443,7 +443,7 @@ if __name__ == "__main__":
 
 # if __name__ == "__main__":
 #     base_dir = Path(__file__).resolve().parent
-#     csv_path = base_dir.parent / "data" / "data_cleand.csv"
+#     csv_path = base_dir.parent / "data" / "data_classify_v1.csv"
 #     model_output_path = base_dir / "email_title_classifier_two_stage.joblib"
 #
 #     df = load_data(str(csv_path))

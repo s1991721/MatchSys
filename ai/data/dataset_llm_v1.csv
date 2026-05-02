@@ -434,7 +434,7 @@ https://pz63.asp.cuenote.jp/u/X8lPLUDik3G51v8XTL
     ""TypeScript"",
     ""AWS"",
     ""Docker"",
-    ""PostgreSQL""，
+    ""PostgreSQL"",
     ""Java"",
     ""Spring"",
     ""PostgreSQL""
@@ -790,8 +790,8 @@ https://pz63.asp.cuenote.jp/u/X8eHJYb6y2l312i6Bq
   ""country"": 1,
   ""skills"": [
     ""PMO"",
-    ""Web""，
-    ""SaaS""，
+    ""Web"",
+    ""SaaS"",
     ""WBS""
   ],
   ""price"": 680000
@@ -967,9 +967,9 @@ https://pz63.asp.cuenote.jp/u/X85sTPmQPAZj2hwpcK
     ""SQL Server"",
     ""Oracle"",
     ""PostgreSQL"",
-    ""MySQL""，
-    ""ASP.NET""，
-    ""WebForm""，
+    ""MySQL"",
+    ""ASP.NET"",
+    ""WebForm""
   ],
   ""price"": 780000
 }"
@@ -1141,7 +1141,7 @@ https://pz63.asp.cuenote.jp/u/X8dJzQn4bAwP3ETofl
     ""PMO"",
     ""Excel"",
     ""PowerPoint"",
-    ""Word
+    ""Word""
   ],
   ""price"": 980000
 }"
@@ -2005,7 +2005,7 @@ https://pz63.asp.cuenote.jp/u/X8mlFbHxhA3L3hyO6U
     ""B-shell"",
     ""Hinemos"",
     ""bash"",
-    ""VMware""，
+    ""VMware"",
     ""SQL"",
     ""Oracle""
   ],
@@ -2275,12 +2275,12 @@ https://pz63.asp.cuenote.jp/u/X84acpJOPklA1Dpzby
     ""Ruby"",
     ""SQL"",
     ""HTML"",
-    ""aws""，
-    ""Azure""，
-    ""MySQL""，
-    ""PostgreSQL""，
-    ""Django""，
-    ""Laravel""，
+    ""aws"",
+    ""Azure"",
+    ""MySQL"",
+    ""PostgreSQL"",
+    ""Django"",
+    ""Laravel""
   ],
   ""price"": 880000
 }"
@@ -2460,7 +2460,7 @@ https://pz63.asp.cuenote.jp/u/X89UbJwF1FqH02C1Ep
     ""Java"",
     ""Struts"",
     ""Oracle"",
-    ""MySQL""，
+    ""MySQL"",
     ""Spring""
   ],
   ""price"": 710000
@@ -2731,9 +2731,9 @@ https://pz63.asp.cuenote.jp/u/X8VZr2NXnsmQ27Bluk
     ""objective-c"",
     ""vb.net"",
     ""pl/sql"",
-    ""oracle""，
-    ""Node.js""，
-    ""Vue.js""，
+    ""oracle"",
+    ""Node.js"",
+    ""Vue.js"",
     ""React""
   ],
   ""price"": 980000
@@ -2909,8 +2909,8 @@ https://pz63.asp.cuenote.jp/u/X8RgODzeJlN93IuWCZ
     ""Python"",
     ""Shell"",
     ""Java"",
-    ""PHP""，
-    ""Linux""，
+    ""PHP"",
+    ""Linux""
   ],
   ""price"": 680000
 }"
@@ -3373,7 +3373,8 @@ https://pz63.asp.cuenote.jp/u/X8iNpbNDEPf719zU3R
     ""PM"",
     ""PMO"",
     ""Salesforce"",
-    ""HTML/CSS,
+    ""HTML"",
+    ""CSS"",
     ""JavaScript""
   ],
   ""price"": 880000
@@ -3562,13 +3563,13 @@ https://pz63.asp.cuenote.jp/u/X8864vcRRO0Y1RoYJL
     ""C"",
     ""C++"",
     ""COBOL"",
-    ""AWS""，
-    ""Google Cloud Platform""，
-    ""MySQL""，
-    ""PostgreSQL""，
-    ""SQL Server""，
-    ""SQLite""，
-    ""Docker""，
+    ""AWS"",
+    ""Google Cloud Platform"",
+    ""MySQL"",
+    ""PostgreSQL"",
+    ""SQL Server"",
+    ""SQLite"",
+    ""Docker"",
     ""GCP""
   ],
   ""price"": 70
@@ -3840,9 +3841,9 @@ https://pz63.asp.cuenote.jp/u/X82h8qKYA95P1D5wqV
     ""React.js"",
     ""AWS"",
     ""PostgreSQL"",
-    ""MySQL""，
-    ""Docker""，
-    ""CI/CD""，
+    ""MySQL"",
+    ""Docker"",
+    ""CI/CD"",
     ""SQL""
   ],
   ""price"": 980000
@@ -4296,7 +4297,7 @@ https://pz63.asp.cuenote.jp/u/X87ONGJdS9D23kLpDv
     ""Google Cloud"",
     ""GCP"",
     ""Azure"",
-    ""Docker""，
+    ""Docker"",
     ""LangChain""
   ],
   ""price"": 630000
@@ -4377,7 +4378,7 @@ https://pz63.asp.cuenote.jp/u/X8rIBk0CZylr11TdAX
 このディスカッションを表示するには、https://groups.google.com/a/baroworld.jp/d/msgid/sales/fc68e55d-e05f-4f32-ac0e-aadea4ac8e60%40pz63.asp.cuenote.jp にアクセスしてください。",1,"{
   ""country"": 1,
   ""skills"": [
-    ""Linux"",
+    ""Linux""
   ],
   ""price"": 540000
 }"
@@ -4881,7 +4882,7 @@ https://pz63.asp.cuenote.jp/u/X8Ukn4tLhsW93HHYBI
     ""PM"",
     ""PMO"",
     ""azure"",
-    ""aws""，
+    ""aws"",
     ""SSO""
   ],
   ""price"": 1080000
@@ -5418,13 +5419,13 @@ https://pz63.asp.cuenote.jp/u/X8XMClzbWGbO4CjlGF
     ""Oracle"",
     ""PostgreSQL"",
     ""docker"",
-    ""aws""，
-    ""Eclipse""，
-    ""Slack""，
-    ""CVS""，
-    ""Git""，
-    ""Gradle""，
-    ""Teams""，
+    ""aws"",
+    ""Eclipse"",
+    ""Slack"",
+    ""CVS"",
+    ""Git"",
+    ""Gradle"",
+    ""Teams"",
     ""SVN""
   ],
   ""price"": 107
@@ -5506,7 +5507,7 @@ https://pz63.asp.cuenote.jp/u/X8Q81yjAiG4u0cOEeX
   ""country"": 1,
   ""skills"": [
     ""AWS"",
-    ""Linux""，
+    ""Linux"",
     ""Android""
   ],
   ""price"": 680000
@@ -6022,8 +6023,8 @@ https://pz63.asp.cuenote.jp/u/X8PcKkwNOzM61BBPxE
   ""country"": 1,
   ""skills"": [
     ""web"",
-    ""SEO""，
-    ""Excel""，
+    ""SEO"",
+    ""Excel"",
     ""PowerPoint""
   ],
   ""price"": 880000
@@ -6269,10 +6270,10 @@ https://pz63.asp.cuenote.jp/u/X8eHJyG6y2l31gykHB
     ""Java"",
     ""Struts"",
     ""Spring"",
-    ""AWS""，
-    ""Oracle""，
-    ""SQL Server""，
-    ""MySQL""，
+    ""AWS"",
+    ""Oracle"",
+    ""SQL Server"",
+    ""MySQL"",
     ""Git""
   ],
   ""price"": 840000
@@ -16293,7 +16294,7 @@ https://gy53.asp.cuenote.jp/u/X8TdyXw1DVnN2Q9Bzn
     ""MySQL"",
     ""Git"",
     ""Slack"",
-    ""aws""，
+    ""aws"",
     ""Terraform""
   ],
   ""price"": 55
@@ -33834,7 +33835,7 @@ WeChatID：wangjingdong2013
     ""VBA"",
     ""Java"",
     ""Oracle"",
-    ""DBA"",
+    ""DBA""
   ],
   ""price"": 55
 }"
@@ -44660,7 +44661,7 @@ https://gy53.asp.cuenote.jp/u/X8mlcdkxUx3L2xyAWW
     ""JBoss"",
     ""IIS"",
     ""WebSphere"",
-    ""DB2"",
+    ""DB2""
   ],
   ""price"": 65
 }"

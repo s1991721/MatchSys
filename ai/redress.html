@@ -188,15 +188,16 @@
       width: 100%;
       min-height: 360px;
       flex: 1 1 auto;
-      border: 1px solid var(--border);
-      border-radius: 12px;
       padding: 12px 14px;
       resize: vertical;
+      border: 0;
       color: var(--text);
       background: #fffefb;
-      font: inherit;
+      font: 15px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
       line-height: 1.7;
       outline: none;
+      white-space: pre;
+      overflow: auto;
     }
 
     .result-panel {
@@ -204,10 +205,28 @@
       display: flex;
       flex: 1 1 auto;
       min-height: 360px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fffefb;
     }
 
     .result-panel .result-input {
       min-height: 100%;
+    }
+
+    .line-numbers {
+      flex: 0 0 auto;
+      min-width: 48px;
+      padding: 12px 10px;
+      border-right: 1px solid rgba(198, 210, 189, 0.8);
+      background: rgba(228, 236, 221, 0.45);
+      color: var(--muted);
+      font: 15px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+      white-space: pre;
     }
 
     .analysis-loading {
@@ -252,7 +271,7 @@
       }
     }
 
-    .result-input:focus,
+    .result-panel:focus-within,
     .id-input:focus,
     .filter-select:focus {
       border-color: var(--accent);
@@ -309,6 +328,21 @@
 
     .status.error {
       color: var(--danger);
+    }
+
+    .json-error {
+      color: var(--danger);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.5;
+      padding: 10px 12px;
+      border: 1px solid rgba(184, 66, 58, 0.35);
+      border-radius: 10px;
+      background: rgba(184, 66, 58, 0.08);
+    }
+
+    .json-error[hidden] {
+      display: none;
     }
 
     .hint {
@@ -411,7 +445,8 @@
             <div class="field fill">
               <span class="label">AI Result</span>
               <div class="result-panel">
-                <textarea id="ai-result-input" class="result-input" spellcheck="false"></textarea>
+                <div id="ai-result-lines" class="line-numbers" aria-hidden="true">1</div>
+                <textarea id="ai-result-input" class="result-input" spellcheck="false" wrap="off"></textarea>
                 <div id="analysis-loading" class="analysis-loading" hidden>
                   <div class="analysis-loading-inner">
                     <span id="analysis-loading-text">AI 分析中，请稍候...</span>
@@ -420,6 +455,7 @@
               </div>
               <div class="hint">切换到结果为空的记录时会自动分析正文；已有结果和人工编辑内容不会被覆盖。</div>
             </div>
+            <div id="json-error" class="json-error" hidden></div>
             <div class="actions">
               <button id="prev-btn" class="ghost">上一条</button>
               <button id="save-btn">保存当前</button>
@@ -461,7 +497,9 @@
     const labelFilterEl = document.getElementById("label-filter");
     const subjectEl = document.getElementById("subject-value");
     const bodyEl = document.getElementById("body-value");
+    const aiResultLinesEl = document.getElementById("ai-result-lines");
     const aiResultInput = document.getElementById("ai-result-input");
+    const jsonErrorEl = document.getElementById("json-error");
     const analysisLoadingEl = document.getElementById("analysis-loading");
     const analysisLoadingTextEl = document.getElementById("analysis-loading-text");
     const pickFileBtn = document.getElementById("pick-file-btn");
@@ -473,6 +511,23 @@
     function setStatus(message, type = "") {
       statusEl.textContent = message;
       statusEl.className = "status" + (type ? " " + type : "");
+    }
+
+    function setJsonError(message = "") {
+      if (!jsonErrorEl) {
+        return;
+      }
+      jsonErrorEl.textContent = message;
+      jsonErrorEl.hidden = !message;
+    }
+
+    function updateAiResultLineNumbers() {
+      if (!aiResultLinesEl || !aiResultInput) {
+        return;
+      }
+      const lineCount = Math.max(1, String(aiResultInput.value || "").split(/\r\n|\r|\n/).length);
+      aiResultLinesEl.textContent = Array.from({ length: lineCount }, (_, index) => index + 1).join("\n");
+      aiResultLinesEl.scrollTop = aiResultInput.scrollTop;
     }
 
     function sanitize(str = "") {
@@ -781,6 +836,35 @@
       }
     }
 
+    function getLineColumnFromPosition(text, position) {
+      const before = String(text || "").slice(0, Math.max(0, position));
+      const lines = before.split(/\r\n|\r|\n/);
+      return {
+        line: lines.length,
+        column: lines[lines.length - 1].length + 1
+      };
+    }
+
+    function getJsonValidationError(value) {
+      const text = String(value || "").trim();
+      if (!text) {
+        return "";
+      }
+
+      try {
+        JSON.parse(text);
+        return "";
+      } catch (error) {
+        const message = error && error.message ? error.message : "JSON 格式错误。";
+        const positionMatch = message.match(/position\s+(\d+)/i);
+        if (positionMatch) {
+          const location = getLineColumnFromPosition(text, Number(positionMatch[1]));
+          return "JSON 格式错误：第 " + location.line + " 行，第 " + location.column + " 列附近。" + message;
+        }
+        return "JSON 格式错误：" + message;
+      }
+    }
+
     async function ensureBackendLogin() {
       if (state.loginPromise) {
         return state.loginPromise;
@@ -894,6 +978,7 @@
 
         row.ai_result = formatJsonForDisplay(result);
         aiResultInput.value = row.ai_result;
+        updateAiResultLineNumbers();
         renderBodyForCurrentRow();
         updateProgressText();
         setStatus("AI 分析完成，可人工校正后保存。", "success");
@@ -922,10 +1007,12 @@
 
       recordEl.hidden = false;
       emptyEl.hidden = true;
+      setJsonError("");
       idInput.value = row.id || "";
       subjectEl.textContent = row.Subject || "";
       row.ai_result = formatJsonForDisplay(row.ai_result || "");
       aiResultInput.value = row.ai_result;
+      updateAiResultLineNumbers();
       renderBodyForCurrentRow();
       bodyEl.scrollTop = 0;
       setAnalysisLoading(Boolean(row._analysisPending));
@@ -986,6 +1073,14 @@
         setStatus("没有可保存的数据。", "error");
         return false;
       }
+
+      const jsonError = getJsonValidationError(aiResultInput.value);
+      if (jsonError) {
+        setJsonError(jsonError);
+        aiResultInput.focus();
+        return false;
+      }
+      setJsonError("");
 
       persistEditorToRow();
       const content = rebuildCsvText();
@@ -1141,8 +1236,10 @@
     });
 
     saveBtn.addEventListener("click", async () => {
-      await saveCsv(true);
-      render();
+      const saved = await saveCsv(true);
+      if (saved) {
+        render();
+      }
     });
 
     saveNextBtn.addEventListener("click", async () => {
@@ -1156,9 +1253,13 @@
       }
       row.ai_result = aiResultInput.value;
       row._manualEdited = true;
+      setJsonError("");
+      updateAiResultLineNumbers();
       renderBodyForCurrentRow();
       updateProgressText();
     });
+
+    aiResultInput.addEventListener("scroll", updateAiResultLineNumbers);
 
     prevBtn.addEventListener("click", () => {
       if (jumpToIndex(state.currentIndex - 1)) {

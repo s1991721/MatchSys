@@ -1833,6 +1833,20 @@ svg {
   gap: 8px;
   margin-top: 10px;
 }
+.match-page .detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.match-page .detail-title-row > span {
+  min-width: 0;
+}
+.match-page .detail-feedback-control {
+  flex-direction: row;
+  align-items: center;
+  margin-left: auto;
+}
 .match-page .detail {
   border: 1px solid var(--line);
   border-radius: 10px;

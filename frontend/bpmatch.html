@@ -60,7 +60,33 @@
     <!-- 下半部分：详情 -->
     <div class="c-split-grid-wide">
         <div class="panel-left c-card c-card-pad">
-            <div class="panel-title" data-i18n="match.case_detail">案件详情</div>
+            <div class="panel-title detail-title-row">
+                <span data-i18n="match.case_detail">案件详情</span>
+                <div class="mail-feedback-control detail-feedback-control" id="job-detail-feedback-control">
+                    <button class="mail-feedback-btn" type="button" id="job-detail-feedback-btn"
+                            data-detail-feedback-toggle="job" data-i18n-title="match.feedback.trigger"
+                            data-i18n-aria="match.feedback.trigger" title="提交错误" aria-label="提交错误">
+                        !
+                    </button>
+                    <div class="mail-feedback-popover" id="job-detail-feedback-popover">
+                        <div class="mail-feedback-title" data-i18n="match.detail_feedback.title">识别内容错误</div>
+                        <label class="mail-feedback-option">
+                            <input type="radio" name="job-detail-feedback-category" value="keyword_missing">
+                            <span data-i18n="match.detail_feedback.option.keyword_missing">识别关键词缺失</span>
+                        </label>
+                        <label class="mail-feedback-option">
+                            <input type="radio" name="job-detail-feedback-category" value="country_wrong">
+                            <span data-i18n="match.detail_feedback.option.country_wrong">识别国籍错误</span>
+                        </label>
+                        <div class="mail-feedback-actions">
+                            <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-detail-feedback-cancel="job"
+                                    data-i18n="common.cancel">取消</button>
+                            <button class="c-btn c-btn-primary c-btn-sm" type="button"
+                                    data-detail-feedback-submit="job" data-i18n="match.feedback.submit">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="detail detail-text" id="job-detail">
                 这是求人1的详细说明……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
@@ -72,7 +98,33 @@
         </div>
 
         <div class="panel-right c-card c-card-pad">
-            <div class="panel-title" data-i18n="match.person_detail">技术者详情</div>
+            <div class="panel-title detail-title-row">
+                <span data-i18n="match.person_detail">技术者详情</span>
+                <div class="mail-feedback-control detail-feedback-control" id="person-detail-feedback-control">
+                    <button class="mail-feedback-btn" type="button" id="person-detail-feedback-btn"
+                            data-detail-feedback-toggle="person" data-i18n-title="match.feedback.trigger"
+                            data-i18n-aria="match.feedback.trigger" title="提交错误" aria-label="提交错误">
+                        !
+                    </button>
+                    <div class="mail-feedback-popover" id="person-detail-feedback-popover">
+                        <div class="mail-feedback-title" data-i18n="match.detail_feedback.title">识别内容错误</div>
+                        <label class="mail-feedback-option">
+                            <input type="radio" name="person-detail-feedback-category" value="keyword_missing">
+                            <span data-i18n="match.detail_feedback.option.keyword_missing">识别关键词缺失</span>
+                        </label>
+                        <label class="mail-feedback-option">
+                            <input type="radio" name="person-detail-feedback-category" value="country_wrong">
+                            <span data-i18n="match.detail_feedback.option.country_wrong">识别国籍错误</span>
+                        </label>
+                        <div class="mail-feedback-actions">
+                            <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-detail-feedback-cancel="person"
+                                    data-i18n="common.cancel">取消</button>
+                            <button class="c-btn c-btn-primary c-btn-sm" type="button"
+                                    data-detail-feedback-submit="person" data-i18n="match.feedback.submit">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="detail detail-text" id="person-detail">
                 这是技术者A的详细信息……ABCDEFG1234567890不想超出屏幕想自动换行。
             </div>
@@ -126,8 +178,26 @@
     let activeMatchedSkills = [];
     let openJobFeedbackId = '';
     let openPersonFeedbackId = '';
+    let openDetailFeedbackType = '';
     let currentJobItems = [];
     let currentPersonItems = [];
+
+    const detailFeedbackTargets = {
+        job: {
+            control: document.getElementById('job-detail-feedback-control'),
+            button: document.getElementById('job-detail-feedback-btn'),
+            getId: () => String(activeJobId || ''),
+            emptyMessage: () => t("match.send_bp_tip"),
+            submitted: new Set()
+        },
+        person: {
+            control: document.getElementById('person-detail-feedback-control'),
+            button: document.getElementById('person-detail-feedback-btn'),
+            getId: () => String(activePersonId || ''),
+            emptyMessage: () => t("match.send_tip"),
+            submitted: new Set()
+        }
+    };
 
     let currentPage = 1;
     let hasNextPage = false;
@@ -241,6 +311,62 @@
         } catch {
             return null;
         }
+    };
+
+    const getDetailFeedbackTarget = (type) => detailFeedbackTargets[type] || null;
+
+    const setDetailFeedbackOpen = (type = '') => {
+        openDetailFeedbackType = type;
+        Object.entries(detailFeedbackTargets).forEach(([targetType, target]) => {
+            const control = target.control;
+            if (!control) return;
+            const isOpen = type === targetType;
+            control.classList.toggle('is-open', isOpen);
+            control.querySelector('.mail-feedback-popover')?.classList.toggle('is-visible', isOpen);
+            if (isOpen) {
+                scheduleFeedbackControlPlacement(control);
+            }
+        });
+    };
+
+    const updateDetailFeedbackButtonState = (type) => {
+        const target = getDetailFeedbackTarget(type);
+        if (!target) return;
+        const id = target.getId();
+        const isSubmitted = Boolean(id && target.submitted.has(id));
+        target.button?.classList.toggle('is-submitted', isSubmitted);
+        if (target.button) {
+            const label = isSubmitted ? t('match.detail_feedback.submitted') : t('match.feedback.trigger');
+            target.button.title = label;
+            target.button.setAttribute('aria-label', label);
+        }
+    };
+
+    const updateDetailFeedbackStates = () => {
+        Object.keys(detailFeedbackTargets).forEach(updateDetailFeedbackButtonState);
+    };
+
+    const submitDetailFeedback = (type) => {
+        const target = getDetailFeedbackTarget(type);
+        if (!target) return;
+        const id = target.getId();
+        if (!id) {
+            alert(target.emptyMessage());
+            return;
+        }
+
+        const selected = target.control?.querySelector('input[type="radio"]:checked')?.value || '';
+        if (!selected) {
+            alert(t('match.detail_feedback.select_reason'));
+            return;
+        }
+
+        target.submitted.add(id);
+        target.control?.querySelectorAll('input[type="radio"]').forEach((input) => {
+            input.checked = false;
+        });
+        setDetailFeedbackOpen('');
+        updateDetailFeedbackButtonState(type);
     };
 
     const buildActivePayloads = () => {
@@ -369,6 +495,7 @@
             renderDetail(personDetail, t("match.empty_person_detail"));
             renderPersonAttachments([]);
             renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
+            updateDetailFeedbackStates();
             return;
         }
 
@@ -457,6 +584,7 @@
         } else {
             renderPersonAttachments([]);
         }
+        updateDetailFeedbackStates();
         scheduleFeedbackPlacement(personList);
     }
 
@@ -548,6 +676,9 @@
     window.addEventListener('resize', () => {
         scheduleFeedbackPlacement(jobList);
         scheduleFeedbackPlacement(personList);
+        if (openDetailFeedbackType) {
+            scheduleFeedbackControlPlacement(getDetailFeedbackTarget(openDetailFeedbackType)?.control);
+        }
     });
 
     window.bindPagination(pagination, (value) => {
@@ -580,6 +711,38 @@
         if (openPersonFeedbackId) {
             openPersonFeedbackId = '';
             rerenderPersonList();
+        }
+        if (openDetailFeedbackType) {
+            setDetailFeedbackOpen('');
+        }
+    });
+
+    document.addEventListener('click', (event) => {
+        const detailToggle = event.target.closest('[data-detail-feedback-toggle]');
+        if (detailToggle) {
+            event.stopPropagation();
+            const type = detailToggle.dataset.detailFeedbackToggle || '';
+            const target = getDetailFeedbackTarget(type);
+            if (!target) return;
+            if (!target.getId()) {
+                alert(target.emptyMessage());
+                return;
+            }
+            setDetailFeedbackOpen(openDetailFeedbackType === type ? '' : type);
+            return;
+        }
+
+        const detailCancel = event.target.closest('[data-detail-feedback-cancel]');
+        if (detailCancel) {
+            event.stopPropagation();
+            setDetailFeedbackOpen('');
+            return;
+        }
+
+        const detailSubmit = event.target.closest('[data-detail-feedback-submit]');
+        if (detailSubmit) {
+            event.stopPropagation();
+            submitDetailFeedback(detailSubmit.dataset.detailFeedbackSubmit || '');
         }
     });
 
@@ -626,6 +789,7 @@
 
             list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
             item.classList.add('active');
+            setDetailFeedbackOpen('');
 
             const text = item.getAttribute('data-detail') || '';
             const highlights = readMatchedSkills(item);
@@ -655,6 +819,8 @@
         activeJobDetail = item.getAttribute('data-detail') || '';
         activeMatchedSkills = [];
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
+        activePersonId = '';
+        updateDetailFeedbackStates();
         const raw = item?.dataset?.item || '{}';
         let payload;
         try {
@@ -691,6 +857,7 @@
                 personList.appendChild(errorLi);
                 renderDetail(personDetail, t("match.empty_person_detail"));
                 renderPersonAttachments([]);
+                updateDetailFeedbackStates();
             }
         }
     });
@@ -700,7 +867,48 @@
         const currentFiles = parseDatasetJSON(item, 'files') || [];
         renderPersonAttachments(currentFiles);
         renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
+        updateDetailFeedbackStates();
     });
+
+    const scheduleFeedbackControlPlacement = (control, boundaryEl = null) => {
+        if (!control) return;
+        const popover = control.querySelector('.mail-feedback-popover.is-visible');
+        if (!popover) return;
+
+        control.classList.remove('is-dropup');
+        const button = control.querySelector('.mail-feedback-btn');
+        if (!button) return;
+
+        const buttonRect = button.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const viewportGap = 12;
+        const requiredSpace = popoverRect.height + 12;
+        const boundaryRect = boundaryEl?.getBoundingClientRect?.();
+        const availableBelow = boundaryRect
+            ? boundaryRect.bottom - buttonRect.bottom
+            : window.innerHeight - buttonRect.bottom;
+        const availableAbove = boundaryRect
+            ? buttonRect.top - boundaryRect.top
+            : buttonRect.top;
+
+        if (requiredSpace > availableBelow && availableAbove > availableBelow) {
+            control.classList.add('is-dropup');
+        }
+
+        const popoverWidth = Math.min(280, window.innerWidth - viewportGap * 2);
+        const left = Math.max(
+            viewportGap,
+            Math.min(buttonRect.right - popoverWidth, window.innerWidth - popoverWidth - viewportGap)
+        );
+        const placeAbove = control.classList.contains('is-dropup');
+        const top = placeAbove
+            ? Math.max(viewportGap, buttonRect.top - popoverRect.height - 8)
+            : Math.min(buttonRect.bottom + 8, window.innerHeight - popoverRect.height - viewportGap);
+
+        popover.style.left = `${left}px`;
+        popover.style.top = `${top}px`;
+        popover.style.width = `${popoverWidth}px`;
+    };
 
     const scheduleFeedbackPlacement = (listEl) => {
         if (!listEl) return;
@@ -709,38 +917,7 @@
                 .filter((control) => control.querySelector('.mail-feedback-popover.is-visible'));
 
             visibleControls.forEach((control) => {
-                control.classList.remove('is-dropup');
-                const popover = control.querySelector('.mail-feedback-popover');
-                if (!popover) return;
-
-                const controlRect = control.getBoundingClientRect();
-                const listRect = listEl.getBoundingClientRect();
-                const popoverRect = popover.getBoundingClientRect();
-                const availableBelow = listRect.bottom - controlRect.bottom;
-                const availableAbove = controlRect.top - listRect.top;
-                const requiredSpace = popoverRect.height + 12;
-
-                if (requiredSpace > availableBelow && availableAbove > availableBelow) {
-                    control.classList.add('is-dropup');
-                }
-
-                const button = control.querySelector('.mail-feedback-btn');
-                if (!button) return;
-                const buttonRect = button.getBoundingClientRect();
-                const viewportGap = 12;
-                const popoverWidth = Math.min(280, window.innerWidth - viewportGap * 2);
-                const left = Math.max(
-                    viewportGap,
-                    Math.min(buttonRect.right - popoverWidth, window.innerWidth - popoverWidth - viewportGap)
-                );
-                const placeAbove = control.classList.contains('is-dropup');
-                const top = placeAbove
-                    ? Math.max(viewportGap, buttonRect.top - popoverRect.height - 8)
-                    : Math.min(buttonRect.bottom + 8, window.innerHeight - popoverRect.height - viewportGap);
-
-                popover.style.left = `${left}px`;
-                popover.style.top = `${top}px`;
-                popover.style.width = `${popoverWidth}px`;
+                scheduleFeedbackControlPlacement(control, listEl);
             });
         });
     };
@@ -769,6 +946,8 @@
             renderDetail(jobDetail, t("match.empty_job_detail"));
             activeJobId = '';
             activeJobDetail = '';
+            activePersonId = '';
+            updateDetailFeedbackStates();
             return;
         }
 
@@ -843,6 +1022,7 @@
             if (activeJob) {
                 activeJobDetail = activeJob.getAttribute('data-detail') || '';
                 renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
+                updateDetailFeedbackStates();
                 scheduleFeedbackPlacement(jobList);
                 return;
             }
@@ -852,6 +1032,7 @@
         activeMatchedSkills = [];
         activeJobDetail = '';
         renderDetail(jobDetail, t("match.empty_job_detail"));
+        updateDetailFeedbackStates();
         scheduleFeedbackPlacement(jobList);
     }
 

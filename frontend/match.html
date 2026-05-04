@@ -120,7 +120,33 @@
                 </div>
 
                 <div>
-                    <h2 class="title c-panel-title" id="detail-title" data-i18n="match.case_detail">案件详情</h2>
+                    <div class="title c-panel-title detail-title-row">
+                        <span id="detail-title" data-i18n="match.case_detail">案件详情</span>
+                        <div class="mail-feedback-control detail-feedback-control" id="detail-feedback-control">
+                            <button class="mail-feedback-btn" type="button" id="detail-feedback-btn"
+                                    data-detail-feedback-toggle="1" data-i18n-title="match.feedback.trigger"
+                                    data-i18n-aria="match.feedback.trigger" title="提交错误" aria-label="提交错误">
+                                !
+                            </button>
+                            <div class="mail-feedback-popover" id="detail-feedback-popover">
+                                <div class="mail-feedback-title" data-i18n="match.detail_feedback.title">识别内容错误</div>
+                                <label class="mail-feedback-option">
+                                    <input type="radio" name="detail-feedback-category" value="keyword_missing">
+                                    <span data-i18n="match.detail_feedback.option.keyword_missing">识别关键词缺失</span>
+                                </label>
+                                <label class="mail-feedback-option">
+                                    <input type="radio" name="detail-feedback-category" value="country_wrong">
+                                    <span data-i18n="match.detail_feedback.option.country_wrong">识别国籍错误</span>
+                                </label>
+                                <div class="mail-feedback-actions">
+                                    <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-detail-feedback-cancel="1"
+                                            data-i18n="common.cancel">取消</button>
+                                    <button class="c-btn c-btn-primary c-btn-sm" type="button"
+                                            data-detail-feedback-submit="1" data-i18n="match.feedback.submit">提交</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="case-detail" class="detail">
                         这是案件1的详细说明……ABCDEFG1234567890不想超出屏幕会自动换行。
                     </div>
@@ -157,6 +183,8 @@
     const searchButtons = Array.from(document.querySelectorAll('.js-search'));
     const listTitle = document.getElementById('list-title');
     const detailTitle = document.getElementById('detail-title');
+    const detailFeedbackControl = document.getElementById('detail-feedback-control');
+    const detailFeedbackButton = document.getElementById('detail-feedback-btn');
     const nationSelect = document.getElementById('nation');
     const ageInput = document.getElementById('age');
     const priceInput = document.getElementById('price');
@@ -178,10 +206,23 @@
         cases: ['case-info']
     };
     let senderTimer = null;
+    let openFeedbackId = '';
+    let detailFeedbackOpen = false;
+    let currentItems = [];
+    const detailFeedbackSubmitted = {
+        people: new Set(),
+        cases: new Set()
+    };
+    const detailFeedbackWrongTypes = {
+        country_wrong: 2,
+        keyword_missing: 3
+    };
     const sanitize = window.escapeHtml;
 
     viewButtons.forEach(btn => {
         btn.addEventListener('click', () => {
+            openFeedbackId = '';
+            setDetailFeedbackOpen(false);
             setView(btn.dataset.view);
             fetchCases();
         });
@@ -244,6 +285,8 @@
             dateButtons.forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             filters.range = btn.dataset.range;
+            openFeedbackId = '';
+            setDetailFeedbackOpen(false);
             fetchCases();
         });
     });
@@ -310,13 +353,61 @@
             : `<div class="songxin-empty-tip">${t('common.empty.attachments')}</div>`;
     };
 
-    list.addEventListener('click', (e) => {
+    list.addEventListener('click', async (e) => {
+        const toggleBtn = e.target.closest('[data-feedback-toggle]');
+        if (toggleBtn) {
+            e.stopPropagation();
+            const itemId = String(toggleBtn.dataset.itemId || '');
+            openFeedbackId = openFeedbackId === itemId ? '' : itemId;
+            renderList(currentItems, {preserveSelection: true});
+            return;
+        }
+
+        const cancelBtn = e.target.closest('[data-feedback-cancel]');
+        if (cancelBtn) {
+            e.stopPropagation();
+            openFeedbackId = '';
+            renderList(currentItems, {preserveSelection: true});
+            return;
+        }
+
+        const submitBtn = e.target.closest('[data-feedback-submit]');
+        if (submitBtn) {
+            e.stopPropagation();
+            const wrapper = submitBtn.closest('.mail-feedback-control');
+            const item = submitBtn.closest('.item');
+            const itemId = String(item?.dataset?.id || '');
+            const selected = wrapper?.querySelector('input[type="radio"]:checked')?.value || '';
+            if (!selected) {
+                alert(t('match.feedback.select_expected'));
+                return;
+            }
+            try {
+                await window.requestJson('/api/wrong-mails', {
+                    body: JSON.stringify({
+                        id: itemId,
+                        wrong_label: getCurrentWrongLabel(),
+                        correct_label: Number(selected)
+                    })
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: t("common.load_failed")
+                });
+                removeItemFromCurrentList(itemId);
+            } catch (err) {
+                alert(`${t("common.load_failed")}：${err.message}`);
+            }
+            return;
+        }
+
         const item = e.target.closest('.item');
         if (!item) return;
         list.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
         item.classList.add('active');
         renderDetail(detail, item.dataset.detail || '', readMatchedSkills(item));
         renderAttachments(parseDatasetJSON(item, 'files') || []);
+        setDetailFeedbackOpen(false);
+        updateDetailFeedbackState();
     });
 
     const getActiveView = () => {
@@ -467,6 +558,7 @@
                 i18n.apply();
             }
             renderResumeSource();
+            updateDetailFeedbackState();
         });
     }
 
@@ -506,25 +598,111 @@
         target.innerHTML = html || `<p class="match-empty-inline">${t('match.empty')}</p>`;
     };
 
-    const renderList = (items) => {
+    const getCurrentWrongLabel = () => getActiveView() === 'cases' ? 1 : 0;
+
+    const getCurrentFeedbackOptions = () => getActiveView() === 'cases'
+        ? [
+            {value: 0, label: t('match.feedback.option.project')},
+            {value: -1, label: t('match.feedback.option.other')}
+        ]
+        : [
+            {value: 1, label: t('match.feedback.option.technician')},
+            {value: -1, label: t('match.feedback.option.other')}
+        ];
+
+    const getActiveItemId = () => String(list?.querySelector('.item.active')?.dataset?.id || '');
+
+    const setDetailFeedbackOpen = (isOpen) => {
+        detailFeedbackOpen = Boolean(isOpen);
+        detailFeedbackControl?.classList.toggle('is-open', detailFeedbackOpen);
+        detailFeedbackControl?.querySelector('.mail-feedback-popover')?.classList.toggle('is-visible', detailFeedbackOpen);
+        if (detailFeedbackOpen) {
+            scheduleFeedbackControlPlacement(detailFeedbackControl);
+        }
+    };
+
+    const updateDetailFeedbackState = () => {
+        const view = getActiveView();
+        const activeId = getActiveItemId();
+        const isSubmitted = Boolean(activeId && detailFeedbackSubmitted[view]?.has(activeId));
+        detailFeedbackButton?.classList.toggle('is-submitted', isSubmitted);
+        if (detailFeedbackButton) {
+            const label = isSubmitted ? t('match.detail_feedback.submitted') : t('match.feedback.trigger');
+            detailFeedbackButton.title = label;
+            detailFeedbackButton.setAttribute('aria-label', label);
+        }
+    };
+
+    const submitDetailFeedback = async () => {
+        const itemId = getActiveItemId();
+        if (!itemId) {
+            alert(getActiveView() === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
+            return;
+        }
+
+        const selected = detailFeedbackControl?.querySelector('input[type="radio"]:checked')?.value || '';
+        const wrongType = detailFeedbackWrongTypes[selected];
+        if (!wrongType) {
+            alert(t('match.detail_feedback.select_reason'));
+            return;
+        }
+
+        try {
+            await window.requestJson('/api/wrong-mails-detail', {
+                body: JSON.stringify({
+                    id: itemId,
+                    wrong_label: getCurrentWrongLabel(),
+                    wrong_type: wrongType
+                })
+            }, {
+                throwOnFailure: true,
+                fallbackMessage: t("common.load_failed")
+            });
+            detailFeedbackSubmitted[getActiveView()].add(itemId);
+            detailFeedbackControl?.querySelectorAll('input[type="radio"]').forEach((input) => {
+                input.checked = false;
+            });
+            setDetailFeedbackOpen(false);
+            updateDetailFeedbackState();
+        } catch (err) {
+            alert(`${t("common.load_failed")}：${err.message}`);
+        }
+    };
+
+    const removeItemFromCurrentList = (itemId) => {
+        currentItems = currentItems.filter((item) => String(item.id) !== String(itemId));
+        openFeedbackId = '';
+        setDetailFeedbackOpen(false);
+        renderList(currentItems);
+    };
+
+    const renderList = (items, options = {}) => {
+        const preserveSelection = options.preserveSelection === true;
+        const previousActiveId = preserveSelection ? getActiveItemId() : '';
+        currentItems = Array.isArray(items) ? items : [];
         list.innerHTML = '';
         const view = getActiveView();
 
-        if (!items.length) {
+        if (!currentItems.length) {
             const empty = document.createElement('li');
             empty.className = 'empty';
             empty.textContent = view === 'cases' ? t('match.empty_people') : t('match.empty_jobs');
             list.appendChild(empty);
             renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
             renderAttachments([]);
+            updateDetailFeedbackState();
             return;
         }
 
-        items.forEach((item, index) => {
+        currentItems.forEach((item, index) => {
             const li = document.createElement('li');
-            li.className = 'item' + (index === 0 ? ' active' : '');
+            const itemId = item.id || '';
+            const isActive = preserveSelection
+                ? String(itemId) === String(previousActiveId)
+                : index === 0;
+            li.className = 'item' + (isActive ? ' active' : '');
             li.dataset.detail = item.detail;
-            li.dataset.id = item.id;
+            li.dataset.id = itemId;
             li.dataset.item = JSON.stringify(item);
             li.dataset.files = JSON.stringify(item.files || []);
             if (item.matched_skills && Array.isArray(item.matched_skills)) {
@@ -546,18 +724,60 @@
             time.className = 'item-time';
             time.textContent = window.formatDate(item.date);
 
+            const feedbackControl = document.createElement('div');
+            feedbackControl.className = `mail-feedback-control${openFeedbackId === String(itemId) ? ' is-open' : ''}`;
+
+            const feedbackButton = document.createElement('button');
+            feedbackButton.type = 'button';
+            feedbackButton.className = 'mail-feedback-btn';
+            feedbackButton.dataset.feedbackToggle = '1';
+            feedbackButton.dataset.itemId = itemId;
+            feedbackButton.title = t('match.feedback.trigger');
+            feedbackButton.setAttribute('aria-label', feedbackButton.title);
+            feedbackButton.innerHTML = '!';
+
+            const feedbackDesc = view === 'cases'
+                ? t('match.feedback.person_desc')
+                : t('match.feedback.desc');
+            const feedbackOptions = getCurrentFeedbackOptions()
+                .map((option) => `
+                    <label class="mail-feedback-option">
+                        <input type="radio" name="feedback-category-${sanitize(String(itemId))}" value="${option.value}">
+                        <span>${sanitize(option.label)}</span>
+                    </label>
+                `)
+                .join('');
+
+            const feedbackPopover = document.createElement('div');
+            feedbackPopover.className = `mail-feedback-popover${openFeedbackId === String(itemId) ? ' is-visible' : ''}`;
+            feedbackPopover.innerHTML = `
+                <div class="mail-feedback-title">${sanitize(t('match.feedback.title'))}</div>
+                <div class="mail-feedback-desc">${sanitize(feedbackDesc)}</div>
+                ${feedbackOptions}
+                <div class="mail-feedback-actions">
+                    <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-feedback-cancel="1">${sanitize(t('common.cancel'))}</button>
+                    <button class="c-btn c-btn-primary c-btn-sm" type="button" data-feedback-submit="1">${sanitize(t('match.feedback.submit'))}</button>
+                </div>
+            `;
+
             main.appendChild(title);
             main.appendChild(desc);
             li.appendChild(main);
-            li.appendChild(time);
+            feedbackControl.appendChild(time);
+            feedbackControl.appendChild(feedbackButton);
+            feedbackControl.appendChild(feedbackPopover);
+            li.appendChild(feedbackControl);
             list.appendChild(li);
         });
 
-        const first = list.querySelector('.item');
-        if (first) {
-            renderDetail(detail, first.dataset.detail || '', readMatchedSkills(first));
-            renderAttachments(parseDatasetJSON(first, 'files') || []);
+        const active = list.querySelector('.item.active') || list.querySelector('.item');
+        if (active) {
+            active.classList.add('active');
+            renderDetail(detail, active.dataset.detail || '', readMatchedSkills(active));
+            renderAttachments(parseDatasetJSON(active, 'files') || []);
         }
+        updateDetailFeedbackState();
+        scheduleFeedbackPlacement(list);
     };
 
     const setLoading = (message) => {
@@ -568,7 +788,114 @@
         list.appendChild(empty);
         renderDetail(detail, '');
         renderAttachments([]);
+        updateDetailFeedbackState();
     };
+
+    const scheduleFeedbackControlPlacement = (control, boundaryEl = null) => {
+        if (!control) return;
+        const popover = control.querySelector('.mail-feedback-popover.is-visible');
+        if (!popover) return;
+
+        control.classList.remove('is-dropup');
+        const button = control.querySelector('.mail-feedback-btn');
+        if (!button) return;
+
+        const buttonRect = button.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const viewportGap = 12;
+        const requiredSpace = popoverRect.height + 12;
+        const boundaryRect = boundaryEl?.getBoundingClientRect?.();
+        const availableBelow = boundaryRect
+            ? boundaryRect.bottom - buttonRect.bottom
+            : window.innerHeight - buttonRect.bottom;
+        const availableAbove = boundaryRect
+            ? buttonRect.top - boundaryRect.top
+            : buttonRect.top;
+
+        if (requiredSpace > availableBelow && availableAbove > availableBelow) {
+            control.classList.add('is-dropup');
+        }
+
+        const popoverWidth = Math.min(280, window.innerWidth - viewportGap * 2);
+        const left = Math.max(
+            viewportGap,
+            Math.min(buttonRect.right - popoverWidth, window.innerWidth - popoverWidth - viewportGap)
+        );
+        const placeAbove = control.classList.contains('is-dropup');
+        const top = placeAbove
+            ? Math.max(viewportGap, buttonRect.top - popoverRect.height - 8)
+            : Math.min(buttonRect.bottom + 8, window.innerHeight - popoverRect.height - viewportGap);
+
+        popover.style.left = `${left}px`;
+        popover.style.top = `${top}px`;
+        popover.style.width = `${popoverWidth}px`;
+    };
+
+    const scheduleFeedbackPlacement = (listEl) => {
+        if (!listEl) return;
+        requestAnimationFrame(() => {
+            const visibleControls = Array.from(listEl.querySelectorAll('.mail-feedback-control'))
+                .filter((control) => control.querySelector('.mail-feedback-popover.is-visible'));
+            visibleControls.forEach((control) => {
+                scheduleFeedbackControlPlacement(control, listEl);
+            });
+        });
+    };
+
+    list.addEventListener('scroll', () => {
+        scheduleFeedbackPlacement(list);
+    });
+
+    list.addEventListener('wheel', (event) => {
+        if (!event.target.closest('.mail-feedback-popover')) return;
+        event.preventDefault();
+        list.scrollTop += event.deltaY;
+        scheduleFeedbackPlacement(list);
+    }, {passive: false});
+
+    document.addEventListener('click', (event) => {
+        const detailToggle = event.target.closest('[data-detail-feedback-toggle]');
+        if (detailToggle) {
+            event.stopPropagation();
+            if (!getActiveItemId()) {
+                alert(getActiveView() === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
+                return;
+            }
+            setDetailFeedbackOpen(!detailFeedbackOpen);
+            return;
+        }
+
+        const detailCancel = event.target.closest('[data-detail-feedback-cancel]');
+        if (detailCancel) {
+            event.stopPropagation();
+            setDetailFeedbackOpen(false);
+            return;
+        }
+
+        const detailSubmit = event.target.closest('[data-detail-feedback-submit]');
+        if (detailSubmit) {
+            event.stopPropagation();
+            submitDetailFeedback();
+            return;
+        }
+
+        if (!event.target.closest('.mail-feedback-control')) {
+            if (openFeedbackId) {
+                openFeedbackId = '';
+                renderList(currentItems, {preserveSelection: true});
+            }
+            if (detailFeedbackOpen) {
+                setDetailFeedbackOpen(false);
+            }
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        scheduleFeedbackPlacement(list);
+        if (detailFeedbackOpen) {
+            scheduleFeedbackControlPlacement(detailFeedbackControl);
+        }
+    });
 
     const fetchCases = async () => {
         const view = getActiveView();
@@ -615,6 +942,7 @@
 
         listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
         detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.case_detail');
+        updateDetailFeedbackState();
     };
 
     const applyPageState = () => {

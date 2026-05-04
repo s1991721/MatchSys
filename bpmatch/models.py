@@ -77,6 +77,7 @@ class WrongMailInfo(models.Model):
     country = models.CharField("国家", max_length=100, blank=True, default="")
     skills = models.CharField("技能要求", max_length=500, blank=True, default="")
     price = models.DecimalField("价格", max_digits=10, decimal_places=2, null=True, blank=True)
+    wrong_type = models.SmallIntegerField("错误类型", null=True, blank=True)
     wrong_label = models.SmallIntegerField("错误分类", null=True, blank=True)
     correct_label = models.SmallIntegerField("正确分类", null=True, blank=True)
 

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS wrong_mail_info (
     skills          VARCHAR(500)  COMMENT '技能要求',
     price           DECIMAL(10, 2) COMMENT '价格',
 
+    wrong_type      TINYINT(1)    COMMENT '错误类型 1=邮件分类错误 2=国籍识别错误 3=关键词识别错误',
     wrong_label     TINYINT(1)    COMMENT '错误分类',
     correct_label   TINYINT(1)    COMMENT '正确分类'
 )

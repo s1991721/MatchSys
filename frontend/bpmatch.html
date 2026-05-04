@@ -187,6 +187,7 @@
             control: document.getElementById('job-detail-feedback-control'),
             button: document.getElementById('job-detail-feedback-btn'),
             getId: () => String(activeJobId || ''),
+            wrongLabel: 0,
             emptyMessage: () => t("match.send_bp_tip"),
             submitted: new Set()
         },
@@ -194,9 +195,15 @@
             control: document.getElementById('person-detail-feedback-control'),
             button: document.getElementById('person-detail-feedback-btn'),
             getId: () => String(activePersonId || ''),
+            wrongLabel: 1,
             emptyMessage: () => t("match.send_tip"),
             submitted: new Set()
         }
+    };
+
+    const detailFeedbackWrongTypes = {
+        country_wrong: 2,
+        keyword_missing: 3
     };
 
     let currentPage = 1;
@@ -346,7 +353,7 @@
         Object.keys(detailFeedbackTargets).forEach(updateDetailFeedbackButtonState);
     };
 
-    const submitDetailFeedback = (type) => {
+    const submitDetailFeedback = async (type) => {
         const target = getDetailFeedbackTarget(type);
         if (!target) return;
         const id = target.getId();
@@ -361,12 +368,32 @@
             return;
         }
 
-        target.submitted.add(id);
-        target.control?.querySelectorAll('input[type="radio"]').forEach((input) => {
-            input.checked = false;
-        });
-        setDetailFeedbackOpen('');
-        updateDetailFeedbackButtonState(type);
+        const wrongType = detailFeedbackWrongTypes[selected];
+        if (!wrongType) {
+            alert(t('match.detail_feedback.select_reason'));
+            return;
+        }
+
+        try {
+            await window.requestJson('/api/wrong-mails-detail', {
+                body: JSON.stringify({
+                    id,
+                    wrong_label: target.wrongLabel,
+                    wrong_type: wrongType
+                })
+            }, {
+                throwOnFailure: true,
+                fallbackMessage: t("common.load_failed")
+            });
+            target.submitted.add(id);
+            target.control?.querySelectorAll('input[type="radio"]').forEach((input) => {
+                input.checked = false;
+            });
+            setDetailFeedbackOpen('');
+            updateDetailFeedbackButtonState(type);
+        } catch (err) {
+            alert(`${t("common.load_failed")}：${err.message}`);
+        }
     };
 
     const buildActivePayloads = () => {

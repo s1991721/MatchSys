@@ -262,6 +262,31 @@ def mail_project_match_api(request):
     return api_success(data=payload)
 
 
+def _get_wrong_mail_source(mail_id, wrong_label):
+    if wrong_label == 1:
+        return MailTechnicianInfo.objects.filter(id=mail_id).first(), None
+    if wrong_label == 0:
+        return MailProjectInfo.objects.filter(id=mail_id).first(), None
+    return None, api_error("Invalid field: wrong_label")
+
+
+def _build_wrong_mail_defaults(source_obj, wrong_label, wrong_type, correct_label=None):
+    return {
+        "title": source_obj.title,
+        "address": source_obj.address,
+        "body": source_obj.body,
+        "files": source_obj.files,
+        "date": source_obj.date,
+        "remark": source_obj.remark,
+        "country": source_obj.country,
+        "skills": source_obj.skills,
+        "price": source_obj.price,
+        "wrong_type": wrong_type,
+        "wrong_label": wrong_label,
+        "correct_label": correct_label,
+    }
+
+
 # 提交被错误分类的邮件
 @csrf_exempt
 @require_POST
@@ -280,29 +305,19 @@ def wrong_mail_info_api(request):
 
     correct_label = payload.get("correct_label")
 
-    if wrong_label == 1:
-        source_obj = MailTechnicianInfo.objects.filter(id=mail_id).first()
-    elif wrong_label == 0:
-        source_obj = MailProjectInfo.objects.filter(id=mail_id).first()
-    else:
-        return api_error("Invalid field: wrong_label")
+    source_obj, label_error = _get_wrong_mail_source(mail_id, wrong_label)
+    if label_error:
+        return label_error
 
     if source_obj is None:
         return api_error("Mail not found", status=404)
 
-    defaults = {
-        "title": source_obj.title,
-        "address": source_obj.address,
-        "body": source_obj.body,
-        "files": source_obj.files,
-        "date": source_obj.date,
-        "remark": source_obj.remark,
-        "country": source_obj.country,
-        "skills": source_obj.skills,
-        "price": source_obj.price,
-        "wrong_label": wrong_label,
-        "correct_label": correct_label,
-    }
+    defaults = _build_wrong_mail_defaults(
+        source_obj,
+        wrong_label=wrong_label,
+        wrong_type=1,
+        correct_label=correct_label,
+    )
 
     with transaction.atomic():
         WrongMailInfo.objects.update_or_create(
@@ -310,6 +325,50 @@ def wrong_mail_info_api(request):
             defaults=defaults,
         )
         source_obj.delete()
+
+    return api_success()
+
+
+# 提交详情识别错误的邮件
+@csrf_exempt
+@require_POST
+def wrong_mail_detail_api(request):
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+
+    mail_id = str(payload.get("id") or "").strip()
+    if not mail_id:
+        return api_error("Missing field: id")
+
+    wrong_label = payload.get("wrong_label")
+    if wrong_label is None:
+        return api_error("Missing field: wrong_label")
+
+    wrong_type = payload.get("wrong_type")
+    if wrong_type is None:
+        return api_error("Missing field: wrong_type")
+    if wrong_type not in (2, 3):
+        return api_error("Invalid field: wrong_type")
+
+    source_obj, label_error = _get_wrong_mail_source(mail_id, wrong_label)
+    if label_error:
+        return label_error
+
+    if source_obj is None:
+        return api_error("Mail not found", status=404)
+
+    defaults = _build_wrong_mail_defaults(
+        source_obj,
+        wrong_label=wrong_label,
+        wrong_type=wrong_type,
+        correct_label=None,
+    )
+
+    WrongMailInfo.objects.update_or_create(
+        id=mail_id,
+        defaults=defaults,
+    )
 
     return api_success()
 

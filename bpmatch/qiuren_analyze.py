@@ -77,4 +77,83 @@ def extract_all_fields(email_text, llm_func):
     if country == 0:
         llm_result["country"] = country
 
+    llm_result["skills"] = _normalize_skills(
+        llm_result.get("skills"),
+        email_text
+    )
+
     return json.dumps(llm_result)
+
+
+def _normalize_skills(llm_skills, text):
+    if not isinstance(llm_skills, list):
+        llm_skills = []
+
+    # 小写 + 去空
+    llm_skills = [s.strip().lower() for s in llm_skills if s]
+
+    # 从原文补充
+    rule_skills = _extract_skills_from_text(text)
+
+    # 合并
+    all_skills = set(llm_skills) | set(rule_skills)
+
+    return list(all_skills)
+
+
+SKILLS = [
+    ".net", "access", "adobe", "alpine.js", "android", "angular", "apex", "api", "as400", "asp.net", "aurora", "aws",
+    "azure",
+    "bash", "batch", "bi", "bigquery",
+    "c#", "c++", "chatwork", "ci/cd", "cobol", "css", "cursor",
+    "dart", "db", "dba", "devops", "django", "docker", "dreamweaver",
+    "ec2", "eclipse", "ecs", "erp", "excel", "express",
+    "fastapi", "figma", "flask",
+    "gcp", "git", "go", "gradle", "graphql",
+    "hadoop", "hinemos", "hive", "html",
+    "iis", "illustrator", "idea", "intra-mart", "ios", "iot",
+    "java", "javascript", "jboss", "jdk", "jenkins", "jira", "jp1", "jquery", "jsp", "junit",
+    "kintone", "kubernetes",
+    "lambda", "lamp", "langchain", "laravel", "linux", "llm",
+    "mac", "mariadb", "maven", "mcafee", "mongodb", "mvc", "mybatis", "mysql",
+    "next.js", "nginx", "node.js", "nuxt.js",
+    "objective-c", "opencv", "oracle",
+    "perl", "photoshop", "php", "pl/sql", "pm", "pmo", "postgresql", "powerpoint", "powershell", "ppt", "python",
+    "react", "redhat", "rpa", "ruby",
+    "saas", "salesforce", "sap", "scala", "selenium", "seo", "servicenow", "shell", "slack", "snowflake", "spark",
+    "spring", "springboot", "sql", "sqlite", "sre", "sso", "struts", "subversion", "svn", "sybase",
+    "teams", "terraform", "thymeleaf", "typescript",
+    "ubuntu", "uml", "unity",
+    "vb", "vba", "vbs", "vmware", "vscode", "vue",
+    "web", "webapi", "webform", "weblogic", "websphere", "windows", "word", "wordpress",
+    "zabbix", "アセンブラ", "バッチ", "英語"
+]
+
+
+def _contains_skill(text, skill):
+    text = text.lower()
+    skill = skill.lower()
+
+    # 日文技能直接包含匹配
+    if re.search(r"[\u3040-\u30ff\u4e00-\u9fff]", skill):
+        return skill in text
+
+    # 含特殊符号的技能，比如 .net, c#, c++, node.js, pl/sql, ci/cd
+    if re.search(r"[^a-z0-9]", skill):
+        return skill in text
+
+    # 普通英文/数字技能：用边界匹配，避免 java 命中 javascript
+    pattern = r"(?<![a-z0-9])" + re.escape(skill) + r"(?![a-z0-9])"
+    return re.search(pattern, text) is not None
+
+
+# 从候选列表抽取关键词
+def _extract_skills_from_text(text):
+    found = set()
+
+    for skill in SKILLS:
+        skill = skill.lower()
+        if _contains_skill(text, skill):
+            found.add(skill)
+
+    return found

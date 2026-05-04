@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
 from ai.classifier.priority_classification import predict_subject
+from bpmatch.qiuren_analyze import extract_all_fields
 from settings.models import SysSettings
 
 # ---------------------------
@@ -137,88 +138,85 @@ def title_analysis(text: str) -> str:
     return str(label)
 
 
-# ---------------------------
-#  分析求人邮件内容 返回json
-# ---------------------------
-def qiuren_detail_analysis(text: str) -> str:
+def llm_func(text: str)->str:
     messages = [
         SystemMessage(
             content=(
                 """
                 あなたは「情報抽出モデル」です。
                 対象は【日本語で書かれた「求案件（人材側）」のメール本文】です。
-                
+
                 以下のルールに従い、JSON オブジェクトのみを出力してください。
                 説明文、理由、注釈、コードブロック、見出し、箇条書き、改行を含む補足文は一切出力してはいけません。
                 出力は必ず 1 行の JSON のみとしてください。
-                
+
                 抽出フィールドは country、skills、price のみです。
                 この 3 フィールド以外を出力してはいけません。
-                
+
                 ====================
                 【共通ルール】
                 - 推測・補完・一般的判断は禁止
                 - 本文中に文字として存在しない情報は使用禁止
                 - 出力形式違反は重大な誤りとみなす
                 ====================
-                
+
                 【1. country（整数・必須）】
-                
+
                 country は「抽出」ではなく「必須分類項目」である。
-                
+
                 判定ルール：
                 - 0：日本国籍限定が明確に記載されている場合  
                   （例：日本国籍のみ、外国籍不可、日本人限定）
                 - 1：国籍不問が明確に記載されている場合  
                   （例：国籍不問、外国籍可、非日本籍可）
                 - 1：本文中に国籍条件の明示がない、または判断できない場合
-                
+
                 補足規則：
                 - 国籍に関する記載が一切ない場合も country = 1
                 - 判断不能・不明・記載なしの場合も country = 1
-                
+
                 出力制約：
                 - country は必ず整数で出力すること
                 - 出力可能な値は 0 または 1 のみ
                 - null、未定義、空は禁止
-                
+
                 --------------------
-                
+
                 【2. skills（文字列配列）】
                 本文中に【文字として明示的に出現している】技術名のみを抽出する。
-                
+
                 ルール：
                 - プログラミング言語、フレームワーク、クラウド名などの固有技術名のみ
                 - 「等」「など」「を中心とした」からの補完は禁止
                 - 技術エコシステムの連想は禁止（例：Java → Spring）
                 - 小文字の英語表記に正規化し、重複を除去
-                
+
                 以下の語は抽出禁止：
                 業務系、Web系、基盤系、設計、開発、保守、経験、スキル、SE、PG
-                
+
                 該当なしの場合は空配列 [] を返す。
-                
+
                 --------------------
-                
+
                 【3. price（整数）】
                 報酬・単価として【明確に確定している金額】のみを抽出する。
-                
+
                 条件：
                 - 「単価」「月額」「時給」「年収」「報酬」「円」「万円」「万」
                   のいずれかと同一文または直近文に出現している数値のみ対象
                 - 本文中で最初に出現する確定金額を抽出する
-                
+
                 金額形式：
                 - 「60万」「60万円」→ 60
                 - 「600000円」→ 600000
-                
+
                 以下の場合は必ず price = 0：
                 - 応相談、未定、スキル見合い、前後、程度
                 - 金額が範囲表現（例：60〜80万、〜90万）
                 - 人数、期間、稼働率、年齢など金額以外の数値
-                
+
                 --------------------
-                
+
                 【出力例】
                 {"country":2,"skills":["java","aws"],"price":60}
                 """
@@ -228,6 +226,13 @@ def qiuren_detail_analysis(text: str) -> str:
     ]
     ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
+
+# ---------------------------
+#  分析求人邮件内容 返回json
+# ---------------------------
+def qiuren_detail_analysis(text: str) -> str:
+    return extract_all_fields(text, llm_func)
+
 
 
 # ---------------------------

@@ -619,9 +619,9 @@ def redress_analyze_api(request):
 
     try:
         if label == "0":
-            ai_result = llmsTool.qiuanjian_detail_analysis(body)
-        elif label == "1":
             ai_result = llmsTool.qiuren_detail_analysis(body)
+        elif label == "1":
+            ai_result = llmsTool.qiuanjian_detail_analysis(body)
         else:
             return api_success(data={
                 "ai_result": "",

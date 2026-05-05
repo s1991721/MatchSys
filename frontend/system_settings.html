@@ -7,6 +7,101 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="nav.system_settings">系统设置</title>
+  <style>
+    .wrong-mail-panel {
+      display: grid;
+      gap: 16px;
+    }
+
+    .wrong-mail-summary {
+      display: grid;
+      grid-template-columns: minmax(110px, 0.8fr) minmax(0, 1.2fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .wrong-mail-total {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 112px;
+      padding: 16px;
+      border: 1px solid #d8e0eb;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .wrong-mail-total-label {
+      color: #64748b;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .wrong-mail-total-value {
+      margin-top: 8px;
+      color: #0f172a;
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .wrong-mail-breakdown {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .wrong-mail-type {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 32px;
+      padding: 0 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #fff;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .wrong-mail-type-count {
+      color: #0f172a;
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .wrong-mail-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .wrong-mail-status {
+      min-height: 20px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .wrong-mail-status.error {
+      color: #b42318;
+    }
+
+    .wrong-mail-status.success {
+      color: #047857;
+    }
+
+    @media (max-width: 720px) {
+      .wrong-mail-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body class="system-settings">
   <div class="page">
@@ -245,6 +340,37 @@
         </section>
 
         <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title">错误邮件统计</h2>
+          <p class="c-card-subtitle settings-desc">统计尚未下载的错误邮件数据，下载 CSV 后会从有效统计中移除。</p>
+          <div class="wrong-mail-panel">
+            <div class="wrong-mail-summary">
+              <div class="wrong-mail-total">
+                <span class="wrong-mail-total-label">有效数据总数</span>
+                <strong class="wrong-mail-total-value" id="wrong-mail-total">--</strong>
+              </div>
+              <div class="wrong-mail-breakdown" id="wrong-mail-breakdown">
+                <div class="wrong-mail-type">
+                  <span>邮件分类错误</span>
+                  <span class="wrong-mail-type-count">--</span>
+                </div>
+                <div class="wrong-mail-type">
+                  <span>国籍识别错误</span>
+                  <span class="wrong-mail-type-count">--</span>
+                </div>
+                <div class="wrong-mail-type">
+                  <span>关键词识别错误</span>
+                  <span class="wrong-mail-type-count">--</span>
+                </div>
+              </div>
+            </div>
+            <div class="wrong-mail-actions">
+              <div class="wrong-mail-status" id="wrong-mail-status">正在读取统计...</div>
+              <button class="c-btn c-btn-primary" type="button" id="wrong-mail-download" disabled>下载 CSV</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title" data-i18n="system_settings.backup.title">数据备份</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.backup.desc">填写备用数据库连接信息，用于备份与灾备切换。</p>
           <form class="form-grid form-grid-spaced">
@@ -344,6 +470,8 @@
     const taskLogsApi = "/api/sys-tasks/logs";
     const activationValidateApi = "/api/activation/validate";
     const lineNotifyTestApi = "/api/sys-settings/line-notify/test";
+    const wrongMailStatsApi = "/api/wrong-mails/stats";
+    const wrongMailExportApi = "/api/wrong-mails/export";
     const sections = {
       businessEmail: "business-email",
       match: "match",
@@ -389,9 +517,17 @@
     const lineNotifySaveButton = document.getElementById("line-notify-save");
     const lineNotifyTestButton = document.getElementById("line-notify-test");
     const userLoginSuggestions = document.getElementById("user-login-suggestions");
+    const wrongMailTotal = document.getElementById("wrong-mail-total");
+    const wrongMailBreakdown = document.getElementById("wrong-mail-breakdown");
+    const wrongMailStatus = document.getElementById("wrong-mail-status");
+    const wrongMailDownloadButton = document.getElementById("wrong-mail-download");
     let pendingDelete = null;
     let systemTasks = [];
     let sendmsgConfigs = [];
+    let wrongMailStatsState = {
+      total: 0,
+      by_wrong_type: [],
+    };
     let activationMeta = {
       expires_at: "",
       username: "",
@@ -458,6 +594,121 @@
         }
         return payload;
       });
+
+    const wrongMailTypeLabels = {
+      1: "邮件分类错误",
+      2: "国籍识别错误",
+      3: "关键词识别错误",
+    };
+
+    const setWrongMailStatus = (message, state) => {
+      if (!wrongMailStatus) return;
+      wrongMailStatus.textContent = message || "";
+      wrongMailStatus.classList.toggle("error", state === "error");
+      wrongMailStatus.classList.toggle("success", state === "success");
+    };
+
+    const normalizeWrongMailStats = (data) => {
+      const rawItems = Array.isArray(data && data.by_wrong_type) ? data.by_wrong_type : [];
+      const counts = { 1: 0, 2: 0, 3: 0 };
+      rawItems.forEach((item) => {
+        const type = Number(item && item.wrong_type);
+        if (Object.prototype.hasOwnProperty.call(counts, type)) {
+          counts[type] = Number(item.count || 0);
+        }
+      });
+      const total = Number(data && data.total);
+      return {
+        total: Number.isFinite(total) ? total : counts[1] + counts[2] + counts[3],
+        by_wrong_type: [1, 2, 3].map((type) => ({
+          wrong_type: type,
+          label: wrongMailTypeLabels[type],
+          count: counts[type],
+        })),
+      };
+    };
+
+    const renderWrongMailStats = (stats) => {
+      const normalized = normalizeWrongMailStats(stats || wrongMailStatsState);
+      wrongMailStatsState = normalized;
+      if (wrongMailTotal) {
+        wrongMailTotal.textContent = String(normalized.total);
+      }
+      if (wrongMailBreakdown) {
+        wrongMailBreakdown.innerHTML = normalized.by_wrong_type.map((item) => `
+          <div class="wrong-mail-type">
+            <span>${item.label}</span>
+            <span class="wrong-mail-type-count">${item.count}</span>
+          </div>
+        `).join("");
+      }
+      if (wrongMailDownloadButton) {
+        wrongMailDownloadButton.disabled = normalized.total <= 0;
+      }
+    };
+
+    const loadWrongMailStats = async () => {
+      if (wrongMailDownloadButton) {
+        wrongMailDownloadButton.disabled = true;
+      }
+      setWrongMailStatus("正在读取统计...", "");
+      try {
+        const payload = await requestJson(wrongMailStatsApi, { method: "GET" });
+        renderWrongMailStats(payload.data || {});
+        setWrongMailStatus(
+          wrongMailStatsState.total > 0 ? "统计已更新" : "暂无可下载的有效数据",
+          wrongMailStatsState.total > 0 ? "success" : ""
+        );
+      } catch (error) {
+        renderWrongMailStats({ total: 0, by_wrong_type: [] });
+        setWrongMailStatus(error.message || "统计读取失败", "error");
+      }
+    };
+
+    const resolveDownloadFilename = (response, fallback) => {
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const filenameStarMatch = disposition.match(/filename\*=(?:UTF-8'')?([^;]+)/i);
+      const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+      if (filenameStarMatch && filenameStarMatch[1]) {
+        return decodeURIComponent(filenameStarMatch[1].replace(/^"|"$/g, "").trim());
+      }
+      if (filenameMatch && filenameMatch[1]) {
+        return filenameMatch[1].replace(/^"|"$/g, "").trim();
+      }
+      return fallback;
+    };
+
+    const downloadWrongMailCsv = async () => {
+      if (!wrongMailDownloadButton || wrongMailDownloadButton.disabled) return;
+      wrongMailDownloadButton.disabled = true;
+      setWrongMailStatus("正在生成 CSV...", "");
+      try {
+        const response = await fetch(wrongMailExportApi, {
+          method: "GET",
+          credentials: "same-origin",
+        });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.message || "CSV 下载失败");
+        }
+        const blob = await response.blob();
+        const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
+        const filename = resolveDownloadFilename(response, `wrong_mails_${stamp}.csv`);
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(blobUrl);
+        setWrongMailStatus("CSV 已下载，正在刷新统计...", "success");
+        await loadWrongMailStats();
+      } catch (error) {
+        setWrongMailStatus(error.message || "CSV 下载失败", "error");
+        renderWrongMailStats(wrongMailStatsState);
+      }
+    };
 
     const resolveAuthName = (config) => {
       if (!config) return "";
@@ -2195,6 +2446,10 @@
       });
     }
 
+    if (wrongMailDownloadButton) {
+      wrongMailDownloadButton.addEventListener("click", downloadWrongMailCsv);
+    }
+
     const loadSettings = async () => {
       businessEmailConfig = await fetchSettings(sections.businessEmail, businessEmailConfig);
       updateBusinessEmailHints();
@@ -2285,6 +2540,7 @@
     };
 
     loadSettings();
+    loadWrongMailStats();
 
     const refreshI18n = () => {
       if (i18n) {

@@ -80,6 +80,7 @@ class WrongMailInfo(models.Model):
     wrong_type = models.SmallIntegerField("错误类型", null=True, blank=True)
     wrong_label = models.SmallIntegerField("错误分类", null=True, blank=True)
     correct_label = models.SmallIntegerField("正确分类", null=True, blank=True)
+    deleted_at = models.DateTimeField("下载标记时间", null=True, blank=True)
 
     class Meta:
         db_table = "wrong_mail_info"

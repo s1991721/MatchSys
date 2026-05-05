@@ -1,10 +1,13 @@
+import csv
 import json
 import re
 import threading
 from datetime import timedelta
+from io import StringIO
 from urllib.parse import quote
 
 from django.db import transaction
+from django.db.models import Count
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -382,6 +385,102 @@ def wrong_mail_detail_api(request):
     )
 
     return api_success()
+
+
+WRONG_MAIL_TYPE_LABELS = {
+    1: "邮件分类错误",
+    2: "国籍识别错误",
+    3: "关键词识别错误",
+}
+
+
+@csrf_exempt
+@require_GET
+def wrong_mail_stats_api(request):
+    queryset = WrongMailInfo.objects.filter(deleted_at__isnull=True)
+    total = queryset.count()
+    counts = {
+        item["wrong_type"]: item["count"]
+        for item in queryset.values("wrong_type").annotate(count=Count("id"))
+    }
+    by_wrong_type = [
+        {
+            "wrong_type": wrong_type,
+            "label": label,
+            "count": counts.get(wrong_type, 0),
+        }
+        for wrong_type, label in WRONG_MAIL_TYPE_LABELS.items()
+    ]
+
+    return api_success(
+        {
+            "total": total,
+            "by_wrong_type": by_wrong_type,
+        }
+    )
+
+
+@csrf_exempt
+@require_GET
+def wrong_mail_export_api(request):
+    fields = [
+        "id",
+        "title",
+        "address",
+        "body",
+        "files",
+        "date",
+        "remark",
+        "country",
+        "skills",
+        "price",
+        "wrong_type",
+        "wrong_label",
+        "correct_label",
+    ]
+
+    with transaction.atomic():
+        rows = list(
+            WrongMailInfo.objects.filter(deleted_at__isnull=True)
+            .order_by("-date", "-id")
+            .values(*fields)
+        )
+        row_ids = [row["id"] for row in rows]
+        if row_ids:
+            WrongMailInfo.objects.filter(id__in=row_ids, deleted_at__isnull=True).update(
+                deleted_at=timezone.now()
+            )
+
+    buffer = StringIO()
+    buffer.write("\ufeff")
+    writer = csv.writer(buffer)
+    writer.writerow(fields)
+    for row in rows:
+        writer.writerow(
+            [
+                row["id"] or "",
+                row["title"] or "",
+                row["address"] or "",
+                row["body"] or "",
+                row["files"] or "",
+                row["date"].isoformat() if row["date"] else "",
+                row["remark"] or "",
+                row["country"] or "",
+                row["skills"] or "",
+                row["price"] if row["price"] is not None else "",
+                row["wrong_type"] if row["wrong_type"] is not None else "",
+                row["wrong_label"] if row["wrong_label"] is not None else "",
+                row["correct_label"] if row["correct_label"] is not None else "",
+            ]
+        )
+
+    timestamp = timezone.localtime().strftime("%Y%m%d%H%M%S")
+    filename = f"wrong_mails_{timestamp}.csv"
+    response = HttpResponse(buffer.getvalue(), content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = (
+        f"attachment; filename=\"{filename}\"; filename*=UTF-8''{quote(filename)}"
+    )
+    return response
 
 
 @csrf_exempt

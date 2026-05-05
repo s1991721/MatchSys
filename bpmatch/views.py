@@ -33,6 +33,13 @@ from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMail
 
 def _mark_my_mail_as_read_async(login_id, mail_id):
     try:
+        if str(mail_id or "").startswith("system:"):
+            MyMail.objects.filter(
+                owner_id=login_id,
+                id=mail_id,
+                is_unread=True,
+            ).update(is_unread=False)
+            return
         try:
             send_config = ensure_send_config_for_login(login_id)
         except MailToolError:

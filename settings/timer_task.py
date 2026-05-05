@@ -13,6 +13,8 @@ from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
 from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_my_mails
 from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
+from employee.models import UserLogin
+from permission.models import Role
 from settings.activation_code import is_activation_code_valid
 from settings.mails_arrival_notification import notify_project_ingested
 from settings.models import SysSettings
@@ -126,6 +128,100 @@ def _parse_detail(value: str):
     return ("" if country is None else str(country), skills_text, price_value)
 
 
+def _format_summary_country_label(value):
+    raw = str(value or "").strip()
+    if raw == "1":
+        return "外国籍可"
+    if raw == "0":
+        return "仅日籍"
+    return raw or "-"
+
+
+def _build_classified_mails_summary(project_items, technician_count):
+    project_count = len(project_items)
+    summary_parts = [f"收到案件{project_count}条，技术者{technician_count}条。\n\n"]
+    project_parts = []
+    for index, item in enumerate(project_items, start=1):
+        title = str(item.get("title") or "").strip() or "（无标题）"
+        country = _format_summary_country_label(item.get("country"))
+        project_parts.append(f"案件{index}: {title}\n，{country}\n\n")
+
+    if project_parts:
+        summary_parts.append("".join(project_parts))
+
+    return "{''.join(summary_parts)}"
+
+
+def _get_business_owner_ids():
+    business_role_ids = list(
+        Role.objects.filter(
+            role_name="营业",
+            deleted_at__isnull=True,
+        ).values_list("id", flat=True)
+    )
+    if not business_role_ids:
+        return []
+    return list(
+        UserLogin.objects.filter(
+            role_id__in=business_role_ids,
+            deleted_at__isnull=True,
+        )
+        .order_by("employee_id")
+        .values_list("employee_id", flat=True)
+        .distinct()
+    )
+
+
+def _save_classified_mails_summary_to_my_mail(
+        task_name: str,
+        logger: logging.Logger,
+        project_items,
+        technician_count,
+):
+    if not project_items and not technician_count:
+        return
+
+    summary_text = _build_classified_mails_summary(project_items, technician_count)
+    subject = f"营业邮件入库提醒: 案件{len(project_items)}条，技术者{technician_count}条"
+    now = timezone.now()
+
+    try:
+        owner_ids = _get_business_owner_ids()
+    except Exception:
+        logger.exception(
+            "%s my_mail summary skipped: failed to resolve business owners",
+            task_name,
+        )
+        return
+
+    if not owner_ids:
+        logger.warning("%s my_mail summary skipped: no business owners", task_name)
+        return
+
+    id_stamp = timezone.localtime(now).strftime("%Y%m%d%H%M%S%f")
+    rows = [
+        MyMail(
+            id=f"system:{task_name}:classified-summary:{id_stamp}:{owner_id}",
+            owner_id=owner_id,
+            subject=subject,
+            from_email="system",
+            body=summary_text,
+            files="[]",
+            received_at=now,
+            is_unread=True,
+        )
+        for owner_id in owner_ids
+    ]
+    MyMail.objects.bulk_create(rows, ignore_conflicts=True)
+    logger.info(
+        "%s my_mail summary inserted owners=%s projects=%s technicians=%s",
+        task_name,
+        len(rows),
+        len(project_items),
+        technician_count,
+    )
+
+
 # 邮件获取及分类
 def _fetch_and_classify_mails(task_name: str, logger: logging.Logger, start_date, end_date):
     gmail = GmailTool()
@@ -171,6 +267,9 @@ def _fetch_and_classify_mails(task_name: str, logger: logging.Logger, start_date
 
 # 邮件落库
 def _save_classified_mails(task_name: str, logger: logging.Logger, project_list, technician_list):
+    saved_project_items = []
+    saved_technician_count = 0
+
     # 案件邮件落库
     for mail in project_list:
         try:
@@ -198,6 +297,12 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                         _mail, _country, _skills, _price
                     )
                 )
+            saved_project_items.append(
+                {
+                    "title": mail.get("subject") or "",
+                    "country": country,
+                }
+            )
         except Exception:
             logger.exception(
                 "%s project failed from:%s subject:%s",
@@ -228,6 +333,7 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                     id=mail.get("id"),
                     date=mail.get("date"),
                 )
+            saved_technician_count += 1
         except Exception:
             logger.exception(
                 "%s technician failed from:%s subject:%s",
@@ -235,6 +341,13 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                 mail.get("from"),
                 mail.get("subject"),
             )
+
+    _save_classified_mails_summary_to_my_mail(
+        task_name,
+        logger,
+        saved_project_items,
+        saved_technician_count,
+    )
 
 
 # 根据时间范围处理营业邮件
@@ -287,6 +400,7 @@ def run_time_to_save_day():
         start_date,
         start_date,
     )
+
 
 # -------------------------------------清理过期邮件
 logger_clean = logging.getLogger("bpmatch.time_to_clean")

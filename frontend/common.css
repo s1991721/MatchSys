@@ -3302,6 +3302,11 @@ body.home-page {
       line-height: 1.6;
       font-size: 14px;
       flex: 1;
+    }.mail-page .mail-body-link {
+      color: #2563eb;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }.mail-page .mail-view-body.is-loading {
       color: var(--mail-muted);
       background:

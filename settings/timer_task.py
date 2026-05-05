@@ -143,13 +143,15 @@ def _build_classified_mails_summary(project_items, technician_count):
     project_parts = []
     for index, item in enumerate(project_items, start=1):
         title = str(item.get("title") or "").strip() or "（无标题）"
+        mail_id = str(item.get("id") or "").strip()
+        mail_id_link = f" [bpmatch:{mail_id}]" if mail_id else ""
         country = _format_summary_country_label(item.get("country"))
-        project_parts.append(f"案件{index}: {title}\n，{country}\n\n")
+        project_parts.append(f"案件{index}: {title}{mail_id_link}\n，{country}\n\n")
 
     if project_parts:
         summary_parts.append("".join(project_parts))
 
-    return "{''.join(summary_parts)}"
+    return "".join(summary_parts)
 
 
 def _get_business_owner_ids():
@@ -299,6 +301,7 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                 )
             saved_project_items.append(
                 {
+                    "id": mail.get("id") or "",
                     "title": mail.get("subject") or "",
                     "country": country,
                 }

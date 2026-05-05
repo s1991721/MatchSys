@@ -157,6 +157,7 @@ class _TemplateSafeDict(dict):
 @require_GET
 # 获取案件列表
 def mail_projects_api(request):
+    project_id = request.GET.get("id", "").strip()
     sender = request.GET.get("sender", "").strip()
     date_str = request.GET.get("date", "").strip()
     page_str = request.GET.get("page", "1").strip()
@@ -166,6 +167,9 @@ def mail_projects_api(request):
     page_size = int(page_size_str)
 
     queryset = MailProjectInfo.objects.all()
+
+    if project_id:
+        queryset = queryset.filter(id=project_id)
 
     if sender:
         queryset = queryset.filter(address__icontains=sender)

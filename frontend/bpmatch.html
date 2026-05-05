@@ -214,6 +214,14 @@
     const filters = {
         range: 'today'
     };
+    const entryParams = new URLSearchParams(window.location.search);
+    const initialMailId = (entryParams.get('mail_id') || '').trim();
+
+    const clearEntryMailId = () => {
+        if (!initialMailId || !window.history || typeof window.history.replaceState !== 'function') return;
+        const cleanedUrl = `${window.location.pathname}${window.location.hash || ''}`;
+        window.history.replaceState(null, '', cleanedUrl);
+    };
 
     dateButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1096,16 +1104,21 @@
                 : '';
     }
 
-    const fetchJobs = async (page = 1) => {
+    const fetchJobs = async (page = 1, options = {}) => {
         currentPage = page;
-        const sender = jobSender.value.trim();
-        const targetDate = currentFilterDate();
-        const params = createParams([
-            ['sender', sender],
-            ['date', targetDate],
-            ['page', String(currentPage)],
-            ['page_size', String(50)],
-        ]);
+        const targetMailId = String(options.mailId || '').trim();
+        const params = targetMailId
+            ? createParams([
+                ['id', targetMailId],
+                ['page', String(currentPage)],
+                ['page_size', String(1)],
+            ])
+            : createParams([
+                ['sender', jobSender.value.trim()],
+                ['date', currentFilterDate()],
+                ['page', String(currentPage)],
+                ['page_size', String(50)],
+            ]);
         const url = buildUrl('/api/mail-projects', params);
         showLoading(t("match.loading_jobs"));
 
@@ -1121,6 +1134,35 @@
             totalPages = Number.isFinite(meta.total_pages) ? meta.total_pages : totalPages;
             hasNextPage = currentPage < totalPages;
             renderJobList(result.items || []);
+            if (targetMailId) {
+                const targetItem = Array.from(jobList.querySelectorAll('.item'))
+                    .find((item) => String(item.dataset.id || '') === targetMailId);
+                if (targetItem) {
+                    targetItem.click();
+                } else {
+                    jobList.innerHTML = '';
+                    const emptyLi = document.createElement('li');
+                    emptyLi.className = 'empty';
+                    emptyLi.textContent = '未找到对应案件';
+                    jobList.appendChild(emptyLi);
+                    activeJobId = '';
+                    activeJobDetail = '';
+                    activePersonId = '';
+                    currentPersonItems = [];
+                    renderDetail(jobDetail, '未找到对应案件');
+                    if (personList) {
+                        personList.innerHTML = '';
+                        const personEmpty = document.createElement('li');
+                        personEmpty.className = 'empty';
+                        personEmpty.textContent = t("match.empty_people");
+                        personList.appendChild(personEmpty);
+                    }
+                    renderDetail(personDetail, t("match.empty_person_detail"));
+                    renderPersonAttachments([]);
+                    updateDetailFeedbackStates();
+                }
+                clearEntryMailId();
+            }
             updatePaginationUI();
         } catch (err) {
             currentJobItems = [];
@@ -1134,10 +1176,13 @@
             hasNextPage = false;
             totalPages = currentPage;
             updatePaginationUI();
+            if (targetMailId) {
+                clearEntryMailId();
+            }
         }
     }
 
-    fetchJobs(1);
+    fetchJobs(1, initialMailId ? {mailId: initialMailId} : {});
 
 </script>
 </body>

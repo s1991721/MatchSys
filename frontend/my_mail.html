@@ -152,6 +152,21 @@
 
       const escapeHtml = window.escapeHtml;
 
+      const renderBodyWithBpmatchLinks = (text) => {
+        const source = String(text || "");
+        const escaped = escapeHtml(source);
+        const linked = escaped.replace(
+          /\[bpmatch:([^\]\s]+)\]/g,
+          (match, rawId) => {
+            const mailId = String(rawId || "").trim();
+            if (!mailId) return match;
+            const href = `bpmatch.html?mail_id=${encodeURIComponent(mailId)}`;
+            return `<a class="mail-body-link" href="${escapeHtml(href)}">${escapeHtml(mailId)}</a>`;
+          }
+        );
+        return linked.replace(/\r\n|\r|\n/g, "<br>");
+      };
+
       const buildForwardRecipientOptions = (customers) => {
         const options = [];
         (customers || []).forEach((item) => {
@@ -382,7 +397,7 @@
         if (!detail) {
           // 顶部信息栏用于说明当前状态，避免出现“只有一条横线”的空白感。
           mailMeta.textContent = "请在左侧选择邮件后查看详情";
-          mailBody.textContent = "";
+          mailBody.innerHTML = "";
           replyTo.value = "";
           if (forwardRecipientInput) forwardRecipientInput.value = "";
           replySubject.value = "";
@@ -393,7 +408,7 @@
 
         const subjectText = detail.subject || "(无标题)";
         mailMeta.textContent = `主题: ${subjectText} | 发件人: ${detail.from || ""} | 时间: ${detail.date || ""}`;
-        mailBody.textContent = detail.body || "";
+        mailBody.innerHTML = renderBodyWithBpmatchLinks(detail.body || "");
 
         const toEmail = detail.from_email || "";
         replyTo.value = toEmail;
@@ -440,7 +455,7 @@
         } catch (error) {
           if (currentSeq !== detailRequestSeq) return;
           mailBody.classList.remove("is-loading");
-          mailBody.textContent = "";
+          mailBody.innerHTML = "";
           setStatus(error.message || "读取邮件失败", true);
         }
       };

@@ -130,7 +130,7 @@ def _load_attachment_items(value):
             {
                 "filename": filename,
                 "mime_type": str(item.get("mime_type") or "application/octet-stream").strip()
-                or "application/octet-stream",
+                             or "application/octet-stream",
                 "size": int(item.get("size") or 0),
                 "part_id": str(item.get("part_id") or "").strip(),
                 "attachment_id": attachment_id,
@@ -733,10 +733,12 @@ def my_mails_api(request):
         return error
 
     # 2. 检查当前登录用户是否配置了邮箱信息
+    mailbox = ''
     try:
         send_config = ensure_send_config_for_login(login_id)
-    except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        mailbox = str(send_config.get("email") or "").strip()
+    except MailToolError :
+        print("没有邮箱配置")
 
     page = request.GET.get("page", 1)
     page_size = request.GET.get("page_size", 20)
@@ -757,7 +759,7 @@ def my_mails_api(request):
             login_id,
             page=page,
             page_size=page_size,
-            mailbox_email=str(send_config.get("email") or "").strip(),
+            mailbox_email=mailbox,
         )
         return api_success(data=data, meta=meta)
     except MailToolError as exc:
@@ -867,21 +869,21 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
         return api_error("message_id and attachment_id are required")
 
     exists = (
-        SavedMailInfo.objects.filter(id=message_id).exists()
-        or MailProjectInfo.objects.filter(id=message_id).exists()
-        or MailTechnicianInfo.objects.filter(id=message_id).exists()
-        or WrongMailInfo.objects.filter(id=message_id).exists()
-        or MyMail.objects.filter(id=message_id, owner_id=login_id).exists()
+            SavedMailInfo.objects.filter(id=message_id).exists()
+            or MailProjectInfo.objects.filter(id=message_id).exists()
+            or MailTechnicianInfo.objects.filter(id=message_id).exists()
+            or WrongMailInfo.objects.filter(id=message_id).exists()
+            or MyMail.objects.filter(id=message_id, owner_id=login_id).exists()
     )
     if not exists:
         return api_error("Attachment not found", status=404)
 
     attachment_meta = None
     for source in (
-        MailProjectInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
-        MailTechnicianInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
-        WrongMailInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
-        MyMail.objects.filter(id=message_id, owner_id=login_id).values_list("files", flat=True).first(),
+            MailProjectInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
+            MailTechnicianInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
+            WrongMailInfo.objects.filter(id=message_id).values_list("files", flat=True).first(),
+            MyMail.objects.filter(id=message_id, owner_id=login_id).values_list("files", flat=True).first(),
     ):
         for item in _load_attachment_items(source):
             if item.get("attachment_id") == attachment_id:
@@ -901,7 +903,8 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
         return api_error(str(exc), status=502)
 
     filename = str(attachment_meta.get("filename") or "attachment").replace('"', "")
-    content_type = str(attachment_meta.get("mime_type") or "application/octet-stream").strip() or "application/octet-stream"
+    content_type = str(
+        attachment_meta.get("mime_type") or "application/octet-stream").strip() or "application/octet-stream"
     response = HttpResponse(content, content_type=content_type)
     response["Content-Disposition"] = (
         f"{disposition}; filename=\"{filename}\"; filename*=UTF-8''{quote(filename)}"

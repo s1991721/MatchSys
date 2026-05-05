@@ -7,7 +7,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 
 from ai.classifier.priority_classification import predict_subject
-from bpmatch.qiuren_analyze import extract_all_fields
+from bpmatch.qiuanjian_analyze import extract_all_fields as extract_qiuanjian_all_fields
+from bpmatch.qiuren_analyze import extract_all_fields as extract_qiuren_all_fields
 from settings.models import SysSettings
 
 # ---------------------------
@@ -138,7 +139,7 @@ def title_analysis(text: str) -> str:
     return str(label)
 
 
-def llm_func(text: str)->str:
+def qiuren_llm_func(text: str)->str:
     messages = [
         SystemMessage(
             content=(
@@ -231,14 +232,14 @@ def llm_func(text: str)->str:
 #  分析求人邮件内容 返回json
 # ---------------------------
 def qiuren_detail_analysis(text: str) -> str:
-    return extract_all_fields(text, llm_func)
+    return extract_qiuren_all_fields(text, qiuren_llm_func)
 
 
 
 # ---------------------------
 #  分析求案件邮件内容 返回json
 # ---------------------------
-def qiuanjian_detail_analysis(text: str) -> str:
+def qiuanjian_llm_func(text: str) -> str:
     messages = [
         SystemMessage(
             content=(
@@ -360,6 +361,13 @@ def qiuanjian_detail_analysis(text: str) -> str:
     ]
     ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
+
+
+# ---------------------------
+#  分析求案件邮件内容 返回json
+# ---------------------------
+def qiuanjian_detail_analysis(text: str) -> str:
+    return extract_qiuanjian_all_fields(text, qiuanjian_llm_func)
 
 
 # -----------------------------

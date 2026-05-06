@@ -12,7 +12,13 @@ from django.utils.dateparse import parse_datetime
 from bpmatch import llmsTool
 from bpmatch.gmailTool import GmailTool
 from bpmatch.mailTool import resolve_sendmsg_sync_targets, sync_my_mails
-from bpmatch.models import SavedMailInfo, MailTechnicianInfo, MailProjectInfo, MyMail
+from bpmatch.models import (
+    SavedMailInfo,
+    MailTechnicianInfo,
+    MailProjectInfo,
+    MyMail,
+    WrongMailInfo,
+)
 from employee.models import UserLogin
 from permission.models import Role
 from settings.activation_code import is_activation_code_valid
@@ -430,13 +436,17 @@ def _clean_expired_mails():
         my_mail_deleted, _ = MyMail.objects.filter(
             Q(received_at__lt=my_mail_cutoff) | Q(received_at__isnull=True)
         ).delete()
+        wrong_mail_deleted, _ = WrongMailInfo.objects.filter(
+            deleted_at__isnull=False,
+        ).delete()
 
     logger_clean.info(
-        "time_to_clean mails deleted saved=%s projects=%s technicians=%s my_mail=%s cutoff=%s my_mail_cutoff=%s",
+        "time_to_clean mails deleted saved=%s projects=%s technicians=%s my_mail=%s wrong_mail=%s cutoff=%s my_mail_cutoff=%s",
         saved_deleted,
         project_deleted,
         technician_deleted,
         my_mail_deleted,
+        wrong_mail_deleted,
         timezone.localtime(cutoff).strftime("%Y-%m-%d %H:%M:%S"),
         timezone.localtime(my_mail_cutoff).strftime("%Y-%m-%d %H:%M:%S"),
     )

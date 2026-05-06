@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS wrong_mail_info (
 
     wrong_type      TINYINT(1)    COMMENT '错误类型 1=邮件分类错误 2=国籍识别错误 3=关键词识别错误',
     wrong_label     TINYINT(1)    COMMENT '错误分类',
-    correct_label   TINYINT(1)    COMMENT '正确分类'
+    correct_label   TINYINT(1)    COMMENT '正确分类',
+    deleted_at      DATETIME      COMMENT '下载标记时间（软删除）'
 )
 COMMENT = '错误邮件记录表';
 

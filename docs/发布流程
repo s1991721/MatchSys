@@ -1,16 +1,17 @@
 
 --项目依赖
 pip freeze > requirements.txt
+pipreqs . --force --ignore .venv,venv,__pycache__,migrations --encoding=utf-8
 
 ------------------------------------------------ mysql 镜像
 
-docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.1 --push .
-docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:1.1 .
+docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.2 --push .
+docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:1.2 .
 
 docker run --name matchsys-mysql-test \
   -e MYSQL_ROOT_PASSWORD=123456 \
   -p 3306:3306 \
-  -d jef4267/matchsys-mysql:1.1
+  -d jef4267/matchsys-mysql:1.2
 
 ------------------------------------------------ 连接网络
 
@@ -19,25 +20,25 @@ docker network connect matchsys-net matchsys-mysql-test
 docker network connect matchsys-net matchsys-test
 ------------------------------------------------ Django 镜像
 
-docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.1 --push .
-docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:1.1 .
+docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:1.2 --push .
+docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:1.2 .
 
 docker run --name matchsys-test \
   -p 8000:8000 \
-  -d jef4267/matchsys-web:1.1
+  -d jef4267/matchsys-web:1.2
 
 ------------------------------------------------ 发布 镜像
 
-docker push jef4267/matchsys-mysql:1.1
-docker push jef4267/matchsys-web:1.1
-docker push jef4267/matchsys-nginx:1.1
+docker push jef4267/matchsys-mysql:1.2
+docker push jef4267/matchsys-web:1.2
+docker push jef4267/matchsys-nginx:1.2
 
 ------------------------------------------------ nginx 镜像
 
-docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.1 --push .
-docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:1.1 .
+docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.2 --push .
+docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:1.2 .
 
-docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.1
+docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.2
 
 ------------------------------------------------ 服务器部署使用
 docker compose down
@@ -61,6 +62,6 @@ docker compose up -d --no-deps --force-recreate web
 
 v1.0 投入正式使用测试
 v1.1 自研分类器及邮箱功能修复
-v1.2 邮箱收发信、编辑、附件功能 & code clean & 案件（国籍判别、技能识别）功能
+v1.2 邮箱收发信、编辑、附件功能 & code clean & 案件（国籍判别、技能识别）功能 & 错误邮件回收功能
 
 v2.0 财务版本

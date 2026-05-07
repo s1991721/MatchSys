@@ -452,7 +452,9 @@
     const renderOriginalTitle = () => {
         if (!originalTitle) return;
         const key = sceneParam === 'project' ? 'songxin.original.project' : 'songxin.original.technician';
+        originalTitle.setAttribute('data-i18n', key);
         originalTitle.textContent = t(key);
+        jobOriginal.setAttribute('data-i18n-aria', key);
         jobOriginal.setAttribute('aria-label', t(key));
     };
 

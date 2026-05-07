@@ -162,7 +162,7 @@
     const matchMailType = 2;
     const queryParams = new URLSearchParams(window.location.search);
     const isMatchFlow = queryParams.get('from') === 'match';
-    const sceneParam = (queryParams.get('scene') || '').toLowerCase();
+    let sceneParam = 'project';
     const templateSection = 'mail-template';
     let loadingTimer = null;
     let currentSelection = null;
@@ -408,6 +408,8 @@
         } catch {
             currentSelection = null;
         }
+        const mailType = Number(currentSelection?.mail_type);
+        sceneParam = mailType === 1 ? 'technician' : 'project';
         return currentSelection;
     };
 

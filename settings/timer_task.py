@@ -312,6 +312,13 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                     "country": country,
                 }
             )
+            logger.info(
+                "%s project inserted id=%s from:%s subject:%s",
+                task_name,
+                mail.get("id"),
+                mail.get("from"),
+                mail.get("subject"),
+            )
         except Exception:
             logger.exception(
                 "%s project failed from:%s subject:%s",
@@ -343,6 +350,13 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                     date=mail.get("date"),
                 )
             saved_technician_count += 1
+            logger.info(
+                "%s technician inserted id=%s from:%s subject:%s",
+                task_name,
+                mail.get("id"),
+                mail.get("from"),
+                mail.get("subject"),
+            )
         except Exception:
             logger.exception(
                 "%s technician failed from:%s subject:%s",

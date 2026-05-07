@@ -1,6 +1,5 @@
 import csv
 import json
-import re
 import threading
 from datetime import timedelta
 from io import StringIO
@@ -684,86 +683,13 @@ def extract_project_detail(request):
     if error:
         return error
 
-    selection = payload.get("selection") if isinstance(payload, dict) else {}
-    if not isinstance(selection, dict):
-        selection = {}
-    job = selection.get("job") if isinstance(selection.get("job"), dict) else {}
-
-    text = str(job.get("detail")).strip()
-
-    try:
-        llm_result = llmsTool.extract_qiuren_detail(text)
-    except Exception as exc:
-        return api_error(str(exc), status=500)
-
-    def _safe_parse_llm_json(raw_text: str) -> dict:
-        """
-        尝试解析 LLM 返回的 JSON。
-        兜底策略：
-        1) 直接 json.loads
-        2) 提取首个 { ... } 片段再解析
-        3) 失败则返回 {}
-        """
-        if not raw_text:
-            return {}
-        text = str(raw_text).strip()
-        if not text:
-            return {}
-        try:
-            parsed_obj = json.loads(text)
-            return parsed_obj if isinstance(parsed_obj, dict) else {}
-        except Exception:
-            pass
-
-        # 尝试从文本中提取第一个 JSON 对象
-        match = re.search(r"\{.*\}", text, flags=re.S)
-        if match:
-            try:
-                parsed_obj = json.loads(match.group(0))
-                return parsed_obj if isinstance(parsed_obj, dict) else {}
-            except Exception:
-                return {}
-        return {}
-
-    parsed = _safe_parse_llm_json(llm_result)
-    if not parsed:
-        print("[extract_qiuren_detail] 解析 LLM JSON 失败或为空")
-
-    if not isinstance(parsed, dict):
-        parsed = {}
-
-    def make_block(title: str, value) -> str:
-        """
-        生成一个「标题 + 内容 + 空行」的区块
-        - value 为空 / None / 空列表 / 空字符串 → 返回空字符串
-        - value 为 list → 自动换行拼接
-        """
-        if not value:
-            return ""
-
-        if isinstance(value, list):
-            value = "\n".join(v for v in value if v)
-
-        value = str(value).strip()
-        if not value:
-            return ""
-
-        return f"{title}\n{value}\n\n"
-
-    project_name = parsed.get("project_name")
-    project_detail = parsed.get("project_detail")
-    requirement = parsed.get("requirement", [])
-    skills_must = parsed.get("skills_must", [])
-    skills_can = parsed.get("skills_can", [])
-    remark = parsed.get("remark")
-
     fields = {
-        "project_block": make_block("【案件名】", project_name),
-        "detail_block": make_block("【業務概要】", project_detail),
-        "requirement_block": make_block("【条件】", requirement),
-        "skills_must_block": make_block("【必須スキル】", skills_must),
-        "skills_can_block": make_block("【尚可スキル】", skills_can),
-        "remark_block": make_block("【備考】", remark),
+        "project_block": "",
+        "detail_block": "",
+        "requirement_block": "",
+        "skills_must_block": "",
+        "skills_can_block": "",
+        "remark_block": "",
     }
 
     template = _get_mail_template("anjian")

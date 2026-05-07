@@ -55,7 +55,10 @@ def _judge_technician_country_by_rule(text):
 # 抽取全部内容
 def extract_all_fields(email_text, llm_func):
     llm_result = llm_func(email_text)
-    llm_result = json.loads(llm_result)
+    try:
+        llm_result = json.loads(llm_result)
+    except Exception:
+        llm_result = {"country": 1, "skills": [], "price": 0}
     country = _judge_technician_country_by_rule(_extract_country_context(email_text))
     if country != llm_result["country"] and country == 0:
         llm_result["country"] = country

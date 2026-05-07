@@ -71,7 +71,10 @@ def _judge_country_by_rule(context):
 # 抽取全部内容
 def extract_all_fields(email_text, llm_func):
     llm_result = llm_func(email_text)
-    llm_result = json.loads(llm_result)
+    try:
+        llm_result = json.loads(llm_result)
+    except Exception:
+        llm_result = {"country": 1, "skills": [], "price": 0}
     country = _judge_country_by_rule(_extract_country_context(email_text))
     # 如果明文判定为仅日籍则0
     if country == 0:

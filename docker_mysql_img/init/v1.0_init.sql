@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS technician
     birthday               DATE           NULL COMMENT '生日',
 
     nationality            TINYINT        NULL COMMENT '国籍：0-日本 1-其他',
-    price                  DECIMAL(10, 2) NULL COMMENT '单价/报价',
+    price                  DECIMAL(12, 2) NULL COMMENT '单价/报价',
     introduction           TEXT           NULL COMMENT '简介',
 
     contract_type          TINYINT        NOT NULL DEFAULT 0 COMMENT '合同类型：0-正社员 1-契约社员 2-フリーランス ',
@@ -448,7 +448,7 @@ CREATE TABLE IF NOT EXISTS mail_project_info
     remark  VARCHAR(500) COMMENT '备注',
     country VARCHAR(100) COMMENT '国家 0=日本籍 1=日本籍以外',
     skills  VARCHAR(500) COMMENT '技能要求',
-    price   DECIMAL(10, 2) COMMENT '价格'
+    price   DECIMAL(12, 2) COMMENT '价格'
 ) COMMENT ='邮件案件表';
 
 CREATE TABLE IF NOT EXISTS mail_technician_info
@@ -462,7 +462,7 @@ CREATE TABLE IF NOT EXISTS mail_technician_info
     remark  VARCHAR(500) COMMENT '备注',
     country VARCHAR(100) COMMENT '国家',
     skills  VARCHAR(500) COMMENT '技能要求',
-    price   DECIMAL(10, 2) COMMENT '价格'
+    price   DECIMAL(12, 2) COMMENT '价格'
 ) COMMENT ='邮件技术者表';
 
 CREATE TABLE IF NOT EXISTS saved_mail_info

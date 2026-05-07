@@ -3,6 +3,12 @@
 pip freeze > requirements.txt
 pipreqs . --force --ignore .venv,venv,__pycache__,migrations --encoding=utf-8
 
+------------------------------------------------ ollama 镜像
+docker exec -it ollama ollama ps
+查看是否使用GPU
+PROCESSOR
+100% GPU
+
 ------------------------------------------------ mysql 镜像
 
 docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:1.2 --push .
@@ -50,16 +56,13 @@ docker compose up -d
 docker compose up -d --force-recreate
 
 
---因为ollama耗时，所以需要查看
-docker compose logs -f ollama
-docker ps
-docker exec -it ollama ollama list
-
 --单个镜像更新 --Docker pull 其实比对的是 digest（镜像内容哈希）
 docker compose pull web
 docker compose up -d --no-deps --force-recreate web
 
 
+
+------------------------------------------------ 版本信息
 v1.0 投入正式使用测试
 v1.1 自研分类器及邮箱功能修复
 v1.2 邮箱收发信、编辑、附件功能 & code clean & 案件（国籍判别、技能识别）功能 & 错误邮件回收功能

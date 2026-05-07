@@ -210,12 +210,14 @@
     let hasNextPage = false;
     let totalPages = 1;
     let totalCount = 0;
+    let jobRequestSeq = 0;
 
     const filters = {
         range: 'today'
     };
     const entryParams = new URLSearchParams(window.location.search);
     const initialMailId = (entryParams.get('mail_id') || '').trim();
+    let isEntryMailLoading = Boolean(initialMailId);
 
     const clearEntryMailId = () => {
         if (!initialMailId || !window.history || typeof window.history.replaceState !== 'function') return;
@@ -849,7 +851,11 @@
         personList.appendChild(loading);
     }
 
-    bindListClick('job-list', 'job-detail', async (item) => {
+    const selectJobItem = async (item) => {
+        if (!item) return;
+        jobList.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
+        item.classList.add('active');
+        setDetailFeedbackOpen('');
         activeJobId = item.dataset.id || '';
         activeJobDetail = item.getAttribute('data-detail') || '';
         activeMatchedSkills = [];
@@ -895,7 +901,9 @@
                 updateDetailFeedbackStates();
             }
         }
-    });
+    };
+
+    bindListClick('job-list', 'job-detail', selectJobItem);
     bindListClick('person-list', 'person-detail', (item, highlights) => {
         activePersonId = item.dataset.id || '';
         activeMatchedSkills = highlights || [];
@@ -1105,8 +1113,12 @@
     }
 
     const fetchJobs = async (page = 1, options = {}) => {
-        currentPage = page;
         const targetMailId = String(options.mailId || '').trim();
+        if (isEntryMailLoading && !targetMailId) {
+            return;
+        }
+        const requestSeq = ++jobRequestSeq;
+        currentPage = page;
         const params = targetMailId
             ? createParams([
                 ['id', targetMailId],
@@ -1127,6 +1139,7 @@
                 throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
+            if (requestSeq !== jobRequestSeq) return;
             const result = payload.data || {};
             const meta = payload.meta || {};
             currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
@@ -1138,7 +1151,7 @@
                 const targetItem = Array.from(jobList.querySelectorAll('.item'))
                     .find((item) => String(item.dataset.id || '') === targetMailId);
                 if (targetItem) {
-                    targetItem.click();
+                    await selectJobItem(targetItem);
                 } else {
                     jobList.innerHTML = '';
                     const emptyLi = document.createElement('li');
@@ -1162,9 +1175,11 @@
                     updateDetailFeedbackStates();
                 }
                 clearEntryMailId();
+                isEntryMailLoading = false;
             }
             updatePaginationUI();
         } catch (err) {
+            if (requestSeq !== jobRequestSeq) return;
             currentJobItems = [];
             jobList.innerHTML = '';
             const errorLi = document.createElement('li');
@@ -1178,6 +1193,7 @@
             updatePaginationUI();
             if (targetMailId) {
                 clearEntryMailId();
+                isEntryMailLoading = false;
             }
         }
     }

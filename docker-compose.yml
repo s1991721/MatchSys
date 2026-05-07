@@ -62,8 +62,8 @@ services:
     container_name: ollama
     restart: unless-stopped
     environment:
-      OLLAMA_NUM_THREADS: "10"    #提升效率使用机器的核心数线程
-      OLLAMA_NUM_PARALLEL: "4"   #提升并发
+      OLLAMA_NUM_THREADS: "6"    #提升效率使用机器的核心数线程
+      OLLAMA_NUM_PARALLEL: "2"   #提升并发
     ports:
       - "11434:11434"
     volumes:
@@ -73,8 +73,16 @@ services:
     entrypoint:
       - /bin/sh
       - -c
-      - >
-        ollama serve & sleep 2 && ollama pull llama3.2:3b-instruct-q4_K_M && wait
+      - |
+        ollama serve &
+    
+        until ollama list > /dev/null 2>&1; do
+          sleep 1
+        done
+    
+        ollama pull llama3.2:3b-instruct-q4_K_M
+    
+        wait
 
       
 

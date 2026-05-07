@@ -707,13 +707,10 @@ def extract_technician_detail(request):
     if error:
         return error
 
-    selection = payload.get("selection") if isinstance(payload, dict) else {}
-    if not isinstance(selection, dict):
-        selection = {}
-    person = selection.get("person") if isinstance(selection.get("person"), dict) else {}
+    body = payload.get("body") if isinstance(payload, dict) else {}
 
     fields = {
-        "person_intro": person.get("intro"),
+        "person_intro": body,
     }
 
     template = _get_mail_template("technician")

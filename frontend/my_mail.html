@@ -167,6 +167,15 @@
         return linked.replace(/\r\n|\r|\n/g, "<br>");
       };
 
+      if (mailBody) {
+        mailBody.addEventListener("click", (event) => {
+          const link = event.target.closest("a.mail-body-link");
+          if (!link) return;
+          event.preventDefault();
+          window.navigateAppRoute(link.getAttribute("href") || "");
+        });
+      }
+
       const buildForwardRecipientOptions = (customers) => {
         const options = [];
         (customers || []).forEach((item) => {

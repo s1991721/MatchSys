@@ -751,9 +751,9 @@ def sys_task_logs_api(request):
     if task and task.api:
         api = task.api.strip()
         if "time-to-save-day" in api:
-            log_glob = "time_to_save_day_*.log"
+            log_glob = "time_to_save_day_????-??-??.log"
         elif "time-to-save" in api:
-            log_glob = "time_to_save_*.log"
+            log_glob = "time_to_save_????-??-??.log"
         elif "time-to-clean" in api:
             log_glob = "time_to_clean_*.log"
         elif "time-to-backup" in api:
@@ -986,7 +986,7 @@ def time_to_save(request):
 def time_to_save_day(request):
     thread = threading.Thread(
         target=run_time_to_save_day,
-        name="time_to_save",
+        name="time_to_save_day",
         daemon=True,
     )
     thread.start()

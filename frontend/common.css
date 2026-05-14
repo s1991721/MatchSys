@@ -3505,9 +3505,6 @@ body.pay-request-page {
       }.pay-request-page .pay-bottom-row {
         grid-template-columns: 1fr;
       }
-    }.pay-request-page .c-modal-wide {
-      width: min(1600px, 98vw);
-      max-width: min(1600px, 98vw);
     }.pay-request-page .pay-detail-table-wrap {
       padding: 8px 12px 12px;
       overflow-x: auto;

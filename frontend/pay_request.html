@@ -69,95 +69,100 @@
     </section>
   </div>
 
-  <dialog class="c-modal c-modal-wide" id="createPayDialog" aria-labelledby="createPayTitle">
-    <h3 id="createPayTitle" data-i18n="pay.dialog.create.title">新建请求书</h3>
-    <p data-i18n="pay.dialog.create.subtitle">请填写请求书基础信息。</p>
-    <div class="c-modal-form">
-      <div class="c-modal-grid">
-        <div class="pay-column-group">
-          <label class="c-inline-field">
-            <span data-i18n="pay.field.request_no">请求书编号</span>
-            <input type="text" placeholder="PR-2024-XXX"/>
-          </label>
-          <label class="c-inline-field">
-            <span data-i18n="pay.field.order_no">对应注文书编号</span>
-            <input type="text" placeholder="PO-2024-XXX"/>
-          </label>
-          <label class="c-inline-field">
-            <span>状态</span>
-            <select id="pay-status-select">
-              <option value="pending">待付款</option>
-              <option value="paid">已付款</option>
-            </select>
-          </label>
-        </div>
-        <div class="pay-column-group">
-          <label class="c-inline-field">
-            <span data-i18n="pay.field.target">请求对象</span>
-            <input id="pay-customer-name" type="text" placeholder="客户名称" data-i18n-placeholder="pay.placeholder.customer" list="pay-customer-list"/>
-          </label>
-          <datalist id="pay-customer-list"></datalist>
-          <input id="pay-customer-id" type="hidden"/>
-          <div class="c-inline-field pay-customer-info" id="payCustomerInfo" hidden>
-            <div><span data-i18n="pay.customer.name">客户名称</span><strong id="payCustomerName">-</strong></div>
-            <div><span data-i18n="pay.customer.address">客户地址</span><strong id="payCustomerAddress">-</strong></div>
+  <dialog class="c-dialog pay-dialog" id="createPayDialog" aria-labelledby="createPayTitle">
+    <div class="c-dialog-header">
+      <div>
+        <h3 id="createPayTitle" data-i18n="pay.dialog.create.title">新建请求书</h3>
+        <p class="c-card-subtitle" data-i18n="pay.dialog.create.subtitle">请填写请求书基础信息。</p>
+      </div>
+      <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+      <div class="c-modal-form">
+        <div class="c-modal-grid">
+          <div class="pay-column-group">
+            <label class="c-inline-field">
+              <span data-i18n="pay.field.request_no">请求书编号</span>
+              <input type="text" placeholder="PR-2024-XXX"/>
+            </label>
+            <label class="c-inline-field">
+              <span data-i18n="pay.field.order_no">对应注文书编号</span>
+              <input type="text" placeholder="PO-2024-XXX"/>
+            </label>
+            <label class="c-inline-field">
+              <span>状态</span>
+              <select id="pay-status-select">
+                <option value="pending">待付款</option>
+                <option value="paid">已付款</option>
+              </select>
+            </label>
           </div>
-        </div>
-        <div></div>
-        <div class="c-inline-field c-inline-field-full pay-detail-section">
-          <div class="pay-detail-heading">
-            <span data-i18n="pay.field.detail">明细</span>
-            <button class="c-btn c-btn-ghost c-btn-sm" type="button" id="detailAddBtn" data-i18n="pay.detail.add">新增明细</button>
+          <div class="pay-column-group">
+            <label class="c-inline-field">
+              <span data-i18n="pay.field.target">请求对象</span>
+              <input id="pay-customer-name" type="text" placeholder="客户名称" data-i18n-placeholder="pay.placeholder.customer" list="pay-customer-list"/>
+            </label>
+            <datalist id="pay-customer-list"></datalist>
+            <input id="pay-customer-id" type="hidden"/>
+            <div class="c-inline-field pay-customer-info" id="payCustomerInfo" hidden>
+              <div><span data-i18n="pay.customer.name">客户名称</span><strong id="payCustomerName">-</strong></div>
+              <div><span data-i18n="pay.customer.address">客户地址</span><strong id="payCustomerAddress">-</strong></div>
+            </div>
           </div>
-          <div class="c-table-wrapper pay-detail-table-wrap">
-            <table class="c-table c-table-hover pay-detail-table" id="detailTable">
-              <thead>
-              <tr>
-                <th data-i18n="pay.detail.item">项目</th>
-                <th data-i18n="pay.detail.qty">数量</th>
-                <th data-i18n="pay.detail.price">单价</th>
-                <th data-i18n="pay.detail.subtotal">小计</th>
-                <th data-i18n="common.field.note">备注</th>
-                <th data-i18n="common.field.actions">操作</th>
-              </tr>
-              </thead>
-              <tbody id="detailTableBody"></tbody>
-            </table>
+          <div></div>
+          <div class="c-inline-field c-inline-field-full pay-detail-section">
+            <div class="pay-detail-heading">
+              <span data-i18n="pay.field.detail">明细</span>
+              <button class="c-btn c-btn-ghost c-btn-sm" type="button" id="detailAddBtn" data-i18n="pay.detail.add">新增明细</button>
+            </div>
+            <div class="c-table-wrapper pay-detail-table-wrap">
+              <table class="c-table c-table-hover pay-detail-table" id="detailTable">
+                <thead>
+                <tr>
+                  <th data-i18n="pay.detail.item">项目</th>
+                  <th data-i18n="pay.detail.qty">数量</th>
+                  <th data-i18n="pay.detail.price">单价</th>
+                  <th data-i18n="pay.detail.subtotal">小计</th>
+                  <th data-i18n="common.field.note">备注</th>
+                  <th data-i18n="common.field.actions">操作</th>
+                </tr>
+                </thead>
+                <tbody id="detailTableBody"></tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        <div class="c-inline-field c-inline-field-full pay-detail-section">
-          <span data-i18n="pay.field.tax_breakdown">税相关</span>
-          <div class="c-table-wrapper pay-detail-table-wrap">
-            <table class="c-table c-table-hover pay-detail-table" id="taxTable">
-              <thead>
-              <tr>
-                <th data-i18n="pay.tax.category">区分</th>
-                <th data-i18n="pay.tax.amount_excl">対象額（税抜）</th>
-                <th data-i18n="pay.tax.value">消費税</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr>
-                <td data-i18n="pay.tax.rate_10">10%対象</td>
-                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-              </tr>
-              <tr>
-                <td data-i18n="pay.tax.rate_8">8%対象（※）</td>
-                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-                <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-              </tr>
-              <tr>
-                <td data-i18n="pay.tax.subtotal">小计</td>
-                <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
-                <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
-              </tr>
-              </tbody>
-            </table>
+          <div class="c-inline-field c-inline-field-full pay-detail-section">
+            <span data-i18n="pay.field.tax_breakdown">税相关</span>
+            <div class="c-table-wrapper pay-detail-table-wrap">
+              <table class="c-table c-table-hover pay-detail-table" id="taxTable">
+                <thead>
+                <tr>
+                  <th data-i18n="pay.tax.category">区分</th>
+                  <th data-i18n="pay.tax.amount_excl">対象額（税抜）</th>
+                  <th data-i18n="pay.tax.value">消費税</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td data-i18n="pay.tax.rate_10">10%対象</td>
+                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+                </tr>
+                <tr>
+                  <td data-i18n="pay.tax.rate_8">8%対象（※）</td>
+                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
+                </tr>
+                <tr>
+                  <td data-i18n="pay.tax.subtotal">小计</td>
+                  <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
+                  <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-        <div class="pay-bottom-row">
-          
+          <div class="pay-bottom-row">
             <div class="pay-account-card">
               <div class="pay-account-title">振込先</div>
               <div class="pay-account-subtitle">○○銀行○○支店</div>
@@ -170,25 +175,26 @@
                 <div class="pay-account-value">タナカ イチロウ</div>
               </div>
             </div>
-          
-          <div class="pay-side-stack">
-            <label class="c-inline-field pay-total-field">
-              <span data-i18n="pay.field.total">总价</span>
-              <span class="pay-total-display" aria-live="polite">¥ 0</span>
-            </label>
-            <label class="c-inline-field pay-request-date-field">
-              <span>最迟支付日</span>
-              <input type="date"/>
-            </label>
-            <label class="c-inline-field pay-upload-field">
-              <span>附件上传</span>
-              <input type="file" multiple />
-            </label>
+
+            <div class="pay-side-stack">
+              <label class="c-inline-field pay-total-field">
+                <span data-i18n="pay.field.total">总价</span>
+                <span class="pay-total-display" aria-live="polite">¥ 0</span>
+              </label>
+              <label class="c-inline-field pay-request-date-field">
+                <span>最迟支付日</span>
+                <input type="date"/>
+              </label>
+              <label class="c-inline-field pay-upload-field">
+                <span>附件上传</span>
+                <input type="file" multiple />
+              </label>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="c-modal-actions">
+    <div class="c-dialog-actions">
       <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
       <button class="c-btn c-btn-primary" type="button" id="payDialogSubmitBtn" data-i18n="common.create">开始创建</button>
     </div>

@@ -43,6 +43,7 @@
                            data-accept-placeholder="客户公司"
                            data-i18n-issue-placeholder="order.filter.customer_issue_placeholder"
                            data-i18n-accept-placeholder="order.filter.customer_accept_placeholder"
+                           autocomplete="off"
                            list="filter-customer-list"/>
                     <input id="filter-customer-id" type="hidden"/>
                 </div>
@@ -149,6 +150,7 @@
                 <span data-i18n="order.field.customer">取引先（下请公司）</span>
                 <input id="issue-customer-name" type="text" placeholder="下请公司"
                        data-i18n-placeholder="order.filter.customer_issue_placeholder"
+                       autocomplete="off"
                        list="issue-customer-list"/>
             </label>
             <datalist id="issue-customer-list"></datalist>
@@ -227,6 +229,7 @@
                 <span data-i18n="order.field.customer_accept">取引先（客户公司）</span>
                 <input id="accept-customer-name" type="text" placeholder="客户公司"
                        data-i18n-placeholder="order.filter.customer_accept_placeholder"
+                       autocomplete="off"
                        list="accept-customer-list"/>
             </label>
             <datalist id="accept-customer-list"></datalist>
@@ -921,7 +924,7 @@
             const params = window.createParams([
                 ["company_name", keyword],
                 ["page", "1"],
-                ["page_size", keyword ? "10" : "5"],
+                ["page_size", "5"],
             ]);
             window.requestJson(window.buildUrl("/api/customers", params), { method: "GET" })
                 .then((payload) => {
@@ -1124,9 +1127,9 @@
             });
         }
 
-        bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap);
+        bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap, { enableDefault: true });
         bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap, { enableDefault: true });
-        bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap);
+        bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap, { enableDefault: true });
         loadOwnerSelectOptions(issueForm.owner);
         loadOwnerSelectOptions(acceptForm.owner);
         bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap, { enableDefault: true });

@@ -1,3 +1,4 @@
+import calendar
 import json
 import logging
 import os
@@ -19,7 +20,7 @@ from bpmatch.models import (
     MyMail,
     WrongMailInfo,
 )
-from employee.models import UserLogin
+from employee.models import LoginAudit, UserLogin
 from permission.models import Role
 from settings.activation_code import is_activation_code_valid
 from settings.mails_arrival_notification import notify_project_ingested
@@ -466,6 +467,33 @@ def _clean_expired_mails():
     )
 
 
+def _months_ago(value, months):
+    target_month = value.month - months
+    target_year = value.year
+    while target_month <= 0:
+        target_month += 12
+        target_year -= 1
+    last_day = calendar.monthrange(target_year, target_month)[1]
+    return value.replace(
+        year=target_year,
+        month=target_month,
+        day=min(value.day, last_day),
+    )
+
+
+# 清理6个月以前的登录日志
+def _clean_expired_login_audits():
+    cutoff = _months_ago(timezone.now(), 6)
+    with transaction.atomic():
+        deleted_count, _ = LoginAudit.objects.filter(created_at__lt=cutoff).delete()
+
+    logger_clean.info(
+        "time_to_clean login_audits deleted=%s cutoff=%s",
+        deleted_count,
+        timezone.localtime(cutoff).strftime("%Y-%m-%d %H:%M:%S"),
+    )
+
+
 # 删除上个月及之前的考勤分表
 def _drop_expired_attendance_tables():
     today = timezone.localdate()
@@ -514,6 +542,7 @@ def run_time_to_clean():
     )
     try:
         _clean_expired_mails()
+        _clean_expired_login_audits()
         _drop_expired_attendance_tables()
         logger_clean.info(
             "time_to_clean finished duration_s=%.2f",

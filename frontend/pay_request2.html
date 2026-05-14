@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
+  <title data-i18n="pay.title">请求书（入）</title>
+  <style>
+*{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "PingFang SC",
+                   "Hiragino Sans GB", "Microsoft YaHei", Arial, "Noto Sans";
+      background: var(--bg);
+      color:var(--text);
+    }
+
+    .pay-amount{
+      font-weight:800;
+      color:#1f60d8;
+    }
+    .pay-status .c-pill{
+      font-weight:700;
+    }
+    .pay-request-table .c-table th{
+      font-weight:700;
+    }
+
+    @media (max-width: 900px){
+      .pay-request-table table{
+        min-width:900px;
+      }
+      .pay-total-field{
+        grid-column: 1 / -1;
+        justify-self: stretch;
+        width: 100%;
+        margin-left: 0;
+      }
+      .pay-upload-field,
+      .pay-account-field,
+      .pay-request-date-field{
+        grid-column: 1 / -1;
+      }
+      .pay-bottom-row{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .c-modal-wide{
+      width: min(1600px, 98vw);
+      max-width: min(1600px, 98vw);
+    }
+    .pay-detail-table-wrap{
+      padding: 8px 12px 12px;
+      overflow-x: auto;
+      background: #fff;
+    }
+    .pay-detail-table{
+      min-width: 1100px;
+      table-layout: auto;
+    }
+    .pay-detail-table th,
+    .pay-detail-table td{
+      padding: 12px 10px;
+      font-size: 13px;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .pay-detail-table th{
+      text-align: center;
+    }
+    .pay-detail-table th:last-child,
+    .pay-detail-table td:last-child{
+      width: 90px;
+      text-align: center;
+    }
+    .pay-detail-table th:first-child,
+    .pay-detail-table td:first-child{
+      width: 54px;
+      text-align: center;
+    }
+    .pay-detail-table th:nth-child(3),
+    .pay-detail-table td:nth-child(3){
+      width: 72px;
+      text-align: center;
+    }
+    .pay-detail-table th:nth-child(4),
+    .pay-detail-table td:nth-child(4),
+    .pay-detail-table th:nth-child(6),
+    .pay-detail-table td:nth-child(6){
+      width: 140px;
+    }
+    .pay-detail-table td .c-input{
+      min-width: 0;
+    }
+    .pay-detail-add{
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .pay-customer-info{
+      padding: 12px 14px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      display: grid;
+      gap: 6px;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .pay-customer-info span{
+      color: #64748b;
+      font-weight: 700;
+      margin-right: 6px;
+    }
+    .pay-total-field{
+      width: min(420px, 100%);
+      justify-self: end;
+    }
+    .pay-upload-field{
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+    .pay-upload-field input[type="file"]{
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+    .pay-account-card{
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      background: #f8fafc;
+      padding: 12px 14px;
+      display: grid;
+      gap: 10px;
+      color: #0f172a;
+    }
+    .pay-account-title{
+      text-align: center;
+      font-weight: 900;
+      letter-spacing: 2px;
+      font-size: 16px;
+    }
+    .pay-account-subtitle{
+      text-align: center;
+      font-weight: 800;
+      color: #334155;
+    }
+    .pay-account-grid{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 10px 24px;
+      font-weight: 800;
+    }
+    .pay-account-label{
+      color: #334155;
+      letter-spacing: 1px;
+    }
+    .pay-account-value{
+      color: #0f172a;
+      text-align: left;
+    }
+    .pay-bottom-row{
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      align-items: start;
+    }
+    .pay-side-stack{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .pay-total-display{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .pay-column-group{
+      display: grid;
+      gap: 12px;
+    }
+    .pay-upload-field{
+      grid-column: 1 / -1;
+    }
+    .pay-side-stack .pay-upload-field,
+    .pay-side-stack .pay-request-date-field{
+      grid-column: auto;
+    }
+    .pay-tax-card{
+      padding: 0;
+      background: transparent;
+    }
+    .pay-tax-summary{
+      margin-top: 16px;
+      border-radius: 12px;
+      background: #f7f3f1;
+      padding: 16px 18px;
+      display: grid;
+      gap: 10px;
+      color: #3b3b3b;
+      font-weight: 700;
+    }
+    .pay-tax-summary-row{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .pay-tax-summary-label{
+      color: #444444;
+    }
+    .pay-tax-summary-amount{
+      min-width: 140px;
+      text-align: right;
+      letter-spacing: 0.5px;
+    }
+    .pay-tax-summary-sub{
+      display: grid;
+      gap: 6px;
+      font-weight: 600;
+      color: #666666;
+      margin-left: auto;
+      width: min(360px, 100%);
+    }
+    .pay-tax-total{
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+    }
+    .pay-modal-layout{
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 20px;
+      align-items: start;
+      margin-top: 16px;
+    }
+    .pay-modal-header{
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .pay-editor-panel{
+      border-radius: 16px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+      padding: 16px 16px 10px;
+    }
+    .pay-preview-panel{
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      min-height: 520px;
+    }
+    .pay-preview-canvas{
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+    }
+    .pay-preview-page{
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      border: 1px solid #cbd5f5;
+      border-radius: 6px;
+      background: #ffffff;
+      display: grid;
+      gap: 12px;
+      padding: 28px;
+      font-size: 12px;
+      color: #2f2f2f;
+    }
+    .pay-preview-title{
+      text-align: center;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-top: 8px;
+    }
+    .pay-preview-meta{
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px 20px;
+      justify-items: end;
+      align-items: start;
+    }
+    .pay-preview-meta-group{
+      display: grid;
+      gap: 6px;
+      justify-items: end;
+      text-align: right;
+    }
+    .pay-preview-meta-label{
+      color: #4b5563;
+      font-weight: 600;
+    }
+    .pay-preview-meta-value{
+      color: #111827;
+      font-weight: 600;
+    }
+    .pay-preview-top{
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 36%;
+      gap: 16px;
+      align-items: start;
+    }
+    .pay-preview-customer{
+      text-align: center;
+      font-weight: 700;
+      color: #111827;
+      margin: 6px 0 4px;
+    }
+    .pay-preview-company{
+      min-height: 160px;
+    }
+    .pay-preview-note{
+      color: #111827;
+    }
+    .pay-preview-subject{
+      display: grid;
+      gap: 6px;
+    }
+    .pay-preview-subject-label{
+      font-weight: 700;
+      color: #111827;
+    }
+    .pay-preview-subject-value{
+      min-height: 18px;
+      border-bottom: 1px solid #111827;
+    }
+    .pay-preview-summary{
+      width: 55%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+    .pay-preview-summary th,
+    .pay-preview-summary td{
+      border: 1px solid #222222;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .pay-preview-summary th{
+      width: 33.333%;
+    }
+    .pay-preview-summary .pay-preview-summary-total{
+      font-size: 16px;
+      font-weight: 800;
+      text-align: right;
+    }
+    .pay-preview-summary tbody td{
+      text-align: right;
+    }
+    .pay-preview-summary td:last-child{
+      text-align: right;
+    }
+    .pay-preview-bank{
+      width: 55%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-top: 6px;
+      table-layout: fixed;
+    }
+    .pay-preview-bank th,
+    .pay-preview-bank td{
+      border: 1px solid #222222;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .pay-preview-bank th:first-child,
+    .pay-preview-bank td:first-child{
+      width: 33.333%;
+    }
+    .pay-preview-bank tbody td{
+      text-align: left;
+    }
+    .pay-preview-detail{
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .pay-preview-detail th,
+    .pay-preview-detail td{
+      border: 1px solid #222222;
+      padding: 6px 8px;
+      text-align: center;
+      height: 22px;
+    }
+    .pay-preview-remark{
+      border: 1px solid #222222;
+      min-height: 70px;
+      padding: 6px 8px;
+      display: grid;
+      gap: 6px;
+    }
+    @media (max-width: 1100px){
+      .pay-modal-layout{
+        grid-template-columns: 1fr;
+      }
+      .pay-side-stack{
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="pay-request-page">
+  <div class="page">
+    <section class="c-card">
+      <div class="filters c-filter-panel">
+        <div class="filter-grid c-filter-grid-wide">
+          <label class="c-field">
+            <span>客户名称</span>
+            <input type="text" placeholder="输入客户名称" />
+          </label>
+          <label class="c-field">
+            <span>月份</span>
+            <select>
+              <option>2024-07</option>
+              <option>2024-06</option>
+              <option>2024-05</option>
+            </select>
+          </label>
+        </div>
+        <div class="filter-actions c-filter-actions-bar">
+          <div class="filter-actions-left c-filter-actions-left">
+            <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createPayBtn" type="button">+ 新增请求书</button>
+          </div>
+          <div class="filter-actions-right c-filter-actions-group">
+            <button class="c-btn c-btn-primary" type="button">搜索</button>
+            <button class="c-btn c-btn-warn" type="button">重置</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-actions c-table-actions"></div>
+
+      <div class="table-wrapper c-table-wrapper pay-request-table">
+        <table class="c-table c-table-hover c-table-center">
+          <thead>
+          <tr>
+            <th>请求书编号</th>
+            <th>客户名称</th>
+            <th>总价</th>
+            <th>状态</th>
+            <th>请求书日期</th>
+            <th class="c-actions-col">操作</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+            <td>PR-2024-118</td>
+            <td>海月科技</td>
+            <td class="pay-amount">¥ 68,000</td>
+            <td class="pay-status"><span class="c-pill c-pill-warn">待审批</span></td>
+            <td>2024-07-18</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-121</td>
+            <td>北斗系统</td>
+            <td class="pay-amount">¥ 40,000</td>
+            <td class="pay-status"><span class="c-pill c-pill-info">审批中</span></td>
+            <td>2024-07-16</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-109</td>
+            <td>辰曜咨询</td>
+            <td class="pay-amount">¥ 120,000</td>
+            <td class="pay-status"><span class="c-pill c-pill-success">已付款</span></td>
+            <td>2024-07-10</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-105</td>
+            <td>凌云数据</td>
+            <td class="pay-amount">¥ 32,500</td>
+            <td class="pay-status"><span class="c-pill c-pill-danger">退回</span></td>
+            <td>2024-07-04</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>PR-2024-102</td>
+            <td>恒星贸易</td>
+            <td class="pay-amount">¥ 88,900</td>
+            <td class="pay-status"><span class="c-pill c-pill-primary">已提交</span></td>
+            <td>2024-07-01</td>
+            <td>
+              <div class="c-row-actions c-row-actions-nowrap">
+                <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view">详情</button>
+                <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit">编辑</button>
+              </div>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination c-pagination">
+        <div class="pagination-summary">共 5 条 · 第 1/1 页</div>
+        <div class="pagination-pages">
+          <button class="c-btn c-btn-sm" type="button">上一页</button>
+          <button class="c-btn c-btn-sm is-active" type="button">1</button>
+          <button class="c-btn c-btn-sm" type="button">下一页</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <dialog class="c-modal c-modal-wide" id="createPayDialog" aria-labelledby="createPayTitle">
+    <div class="pay-modal-layout">
+      <div class="pay-editor-panel">
+        <div class="c-modal-form">
+          <div class="c-modal-grid">
+            <div class="pay-column-group">
+              <label class="c-inline-field">
+                <span data-i18n="pay.field.request_no">请求书编号</span>
+                <input id="pay-request-no" type="text" placeholder="PR-2024-XXX"/>
+              </label>
+              <label class="c-inline-field">
+                <span data-i18n="pay.field.order_no">对应注文书编号</span>
+                <input type="text" placeholder="PO-2024-XXX"/>
+              </label>
+            </div>
+            <div class="pay-column-group">
+              <label class="c-inline-field">
+                <span data-i18n="pay.field.target">请求对象</span>
+                <input id="pay-customer-name" type="text" placeholder="客户名称" data-i18n-placeholder="pay.placeholder.customer" list="pay-customer-list"/>
+              </label>
+              <datalist id="pay-customer-list"></datalist>
+              <input id="pay-customer-id" type="hidden"/>
+              <label class="c-inline-field">
+                <span>担当者</span>
+                <input type="text" placeholder="担当者"/>
+              </label>
+            </div>
+            <div></div>
+            <div class="pay-side-stack c-inline-field-full">
+              <label class="c-inline-field pay-request-date-field">
+                <span>入金日</span>
+                <input id="pay-request-date" type="date"/>
+              </label>
+              <label class="c-inline-field pay-upload-field">
+                <span>附件上传</span>
+                <input type="file" multiple />
+              </label>
+            </div>
+            <div class="c-inline-field c-inline-field-full" style="flex-direction:column; align-items:stretch; gap:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                <span data-i18n="pay.field.detail">明细</span>
+              </div>
+            <div class="c-table-wrapper pay-detail-table-wrap" style="border-radius:12px; border:1px solid var(--border);">
+              <table class="c-table c-table-hover pay-detail-table" id="detailTable">
+                <thead>
+                <tr>
+                  <th></th>
+                  <th data-i18n="pay.detail.item">项目</th>
+                  <th data-i18n="pay.detail.qty">数量</th>
+                  <th data-i18n="pay.detail.price">单价</th>
+                  <th>税率</th>
+                  <th data-i18n="pay.detail.subtotal">金额</th>
+                  <th data-i18n="pay.detail.note">备注</th>
+                  <th data-i18n="pay.detail.action">操作</th>
+                  </tr>
+                  </thead>
+                  <tbody id="detailTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="c-inline-field c-inline-field-full" style="flex-direction:column; align-items:stretch; gap:10px;">
+              <div class="pay-tax-card">
+                <div class="pay-tax-summary">
+                  <div class="pay-tax-summary-row">
+                    <span class="pay-tax-summary-label">小计</span>
+                    <span class="pay-tax-summary-amount" id="taxSubtotalAmount">¥ 0</span>
+                  </div>
+                  <div class="pay-tax-summary-row">
+                    <span class="pay-tax-summary-label">消费税</span>
+                    <span class="pay-tax-summary-amount" id="taxTotalAmount">¥ 0</span>
+                  </div>
+                  <div class="pay-tax-summary-sub">
+                    <div class="pay-tax-summary-row">
+                      <span class="pay-tax-summary-label">10%対象</span>
+                      <span class="pay-tax-summary-amount" id="tax10BaseAmount">¥ 0</span>
+                    </div>
+                    <div class="pay-tax-summary-row">
+                      <span class="pay-tax-summary-label">消费税</span>
+                      <span class="pay-tax-summary-amount" id="tax10Amount">¥ 0</span>
+                    </div>
+                    <div class="pay-tax-summary-row">
+                      <span class="pay-tax-summary-label">8%（軽減税率）対象</span>
+                      <span class="pay-tax-summary-amount" id="tax8ReducedBaseAmount">¥ 0</span>
+                    </div>
+                    <div class="pay-tax-summary-row">
+                      <span class="pay-tax-summary-label">消费税</span>
+                      <span class="pay-tax-summary-amount" id="tax8ReducedAmount">¥ 0</span>
+                    </div>
+                    <div class="pay-tax-summary-row">
+                      <span class="pay-tax-summary-label">8%対象</span>
+                      <span class="pay-tax-summary-amount" id="tax8BaseAmount">¥ 0</span>
+                    </div>
+                    <div class="pay-tax-summary-row">
+                      <span class="pay-tax-summary-label">消费税</span>
+                      <span class="pay-tax-summary-amount" id="tax8Amount">¥ 0</span>
+                    </div>
+                  </div>
+                  <div class="pay-tax-summary-row">
+                    <span class="pay-tax-total">合计</span>
+                    <span class="pay-tax-total pay-tax-summary-amount" id="taxGrandTotalAmount">¥ 0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pay-bottom-row">
+              <div class="pay-side-stack"></div>
+            </div>
+            <label class="c-inline-field c-inline-field-full">
+              <span>备注</span>
+              <textarea class="c-input" rows="4" placeholder="填写备注内容"></textarea>
+            </label>
+          </div>
+        </div>
+      </div>
+      <aside class="pay-preview-panel" aria-label="PDF预览">
+        <div class="pay-preview-canvas">
+          <div class="pay-preview-page" id="payPreviewPage">
+            <div class="pay-preview-title">請求書</div>
+            <div class="pay-preview-meta">
+              <div class="pay-preview-meta-group">
+                <div class="pay-preview-meta-label">請求日</div>
+                <div class="pay-preview-meta-label">請求書番号</div>
+              </div>
+              <div class="pay-preview-meta-group">
+                <div class="pay-preview-meta-value" id="previewRequestDate">-</div>
+                <div class="pay-preview-meta-value" id="previewRequestNo">-</div>
+              </div>
+            </div>
+            <div class="pay-preview-top">
+              <div>
+                <div class="pay-preview-customer" id="previewCustomerName">-</div>
+                <div class="pay-preview-note">下記の通りご請求申し上げます。</div>
+                <div class="pay-preview-subject">
+                  <div class="pay-preview-subject-label">件名</div>
+                  <div class="pay-preview-subject-value" id="previewSubject"></div>
+                </div>
+              </div>
+              <div class="pay-preview-company"></div>
+            </div>
+            <table class="pay-preview-summary">
+              <thead>
+                <tr>
+                  <th>小計</th>
+                  <th>消費税</th>
+                  <th>請求金額</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id="previewSubtotal">0円</td>
+                  <td id="previewTax">0円</td>
+                  <td class="pay-preview-summary-total" id="previewTotal">0円</td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="pay-preview-bank">
+              <thead>
+                <tr>
+                  <th>入金期日</th>
+                  <th>振込先</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td id="previewPayDate"></td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <table class="pay-preview-detail">
+              <thead>
+                <tr>
+                  <th style="width:55%;">摘要</th>
+                  <th style="width:12%;">数量</th>
+                  <th style="width:13%;">単価</th>
+                  <th style="width:20%;">明細金額</th>
+                </tr>
+              </thead>
+              <tbody id="previewDetailBody"></tbody>
+            </table>
+            <div class="pay-preview-remark">
+              <div>備考</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <div class="c-modal-actions">
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+      <button class="c-btn c-btn-primary" type="button" id="payDialogSubmitBtn" data-i18n="common.create">开始创建</button>
+    </div>
+  </dialog>
+
+  <script src="i18n.js"></script>
+  <script src="common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script>
+    const i18n = window.I18N || null;
+    const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
+    if (i18n) {
+      i18n.init();
+      i18n.apply();
+    }
+    const createPayBtn = document.getElementById("createPayBtn");
+    const createPayDialog = document.getElementById("createPayDialog");
+    const createPayTitle = document.getElementById("createPayTitle");
+    const payDialogSubmitBtn = document.getElementById("payDialogSubmitBtn");
+    const dialogCloseButtons = Array.from(document.querySelectorAll("[data-dialog-close]"));
+    const detailTableBody = document.getElementById("detailTableBody");
+    const payCustomerNameInput = document.getElementById("pay-customer-name");
+    const payCustomerIdInput = document.getElementById("pay-customer-id");
+    const payCustomerList = document.getElementById("pay-customer-list");
+    const payRequestTable = document.querySelector(".pay-request-table");
+    const payRequestNoInput = document.getElementById("pay-request-no");
+    const payRequestDateInput = document.getElementById("pay-request-date");
+    const taxSubtotalAmount = document.getElementById("taxSubtotalAmount");
+    const taxTotalAmount = document.getElementById("taxTotalAmount");
+    const tax10BaseAmount = document.getElementById("tax10BaseAmount");
+    const tax10Amount = document.getElementById("tax10Amount");
+    const tax8ReducedBaseAmount = document.getElementById("tax8ReducedBaseAmount");
+    const tax8ReducedAmount = document.getElementById("tax8ReducedAmount");
+    const tax8BaseAmount = document.getElementById("tax8BaseAmount");
+    const tax8Amount = document.getElementById("tax8Amount");
+    const taxGrandTotalAmount = document.getElementById("taxGrandTotalAmount");
+    const previewRequestDate = document.getElementById("previewRequestDate");
+    const previewRequestNo = document.getElementById("previewRequestNo");
+    const previewCustomerName = document.getElementById("previewCustomerName");
+    const previewSubtotal = document.getElementById("previewSubtotal");
+    const previewTax = document.getElementById("previewTax");
+    const previewTotal = document.getElementById("previewTotal");
+    const previewPayDate = document.getElementById("previewPayDate");
+    const previewDetailBody = document.getElementById("previewDetailBody");
+    const payPreviewPage = document.getElementById("payPreviewPage");
+
+    const setDialogReadonly = (readonly) => {
+      if (!createPayDialog) return;
+      const fields = createPayDialog.querySelectorAll("input, select, textarea");
+      fields.forEach((field) => {
+        if (field.type === "hidden") return;
+        if (!readonly && field.hasAttribute("data-always-disabled")) return;
+        field.disabled = readonly;
+      });
+      if (detailTableBody) {
+        detailTableBody.querySelectorAll("button").forEach((btn) => {
+          btn.disabled = readonly;
+        });
+      }
+    };
+
+    const setDialogMode = (mode) => {
+      if (!createPayDialog) return;
+      createPayDialog.dataset.mode = mode;
+      if (createPayTitle) {
+        createPayTitle.textContent = mode === "edit" ? "编辑请求书" : mode === "view" ? "请求书详情" : "新建请求书";
+      }
+      if (payDialogSubmitBtn) {
+        payDialogSubmitBtn.textContent = mode === "edit" ? "保存修改" : mode === "view" ? "关闭" : "开始创建";
+      }
+      setDialogReadonly(mode === "view");
+    };
+
+    if (createPayBtn && createPayDialog) {
+      createPayBtn.addEventListener("click", () => {
+        setDialogMode("create");
+        createPayDialog.showModal();
+      });
+    }
+
+    dialogCloseButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const dialog = button.closest("dialog");
+        if (dialog) dialog.close();
+      });
+    });
+
+    const buildPdfFileName = () => {
+      const rawNo = payRequestNoInput?.value?.trim() || "";
+      const normalized = rawNo.replace(/[\\/:*?"<>|]/g, "_");
+      if (normalized) return `${normalized}.pdf`;
+      const now = new Date();
+      const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+      return `pay_request_${stamp}.pdf`;
+    };
+
+    const exportPreviewPdf = async () => {
+      if (!payPreviewPage) {
+        throw new Error("未找到预览区域");
+      }
+      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error("PDF导出依赖未加载");
+      }
+
+      const clone = payPreviewPage.cloneNode(true);
+      clone.style.width = `${payPreviewPage.offsetWidth}px`;
+      clone.style.maxWidth = `${payPreviewPage.offsetWidth}px`;
+      clone.style.background = "#ffffff";
+
+      const stage = document.createElement("div");
+      stage.style.position = "fixed";
+      stage.style.left = "-100000px";
+      stage.style.top = "0";
+      stage.style.zIndex = "-1";
+      stage.appendChild(clone);
+      document.body.appendChild(stage);
+
+      try {
+        const canvas = await window.html2canvas(clone, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          useCORS: true,
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "pt", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 20;
+        const maxWidth = pageWidth - margin * 2;
+        const maxHeight = pageHeight - margin * 2;
+        const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+        const drawWidth = canvas.width * scale;
+        const drawHeight = canvas.height * scale;
+        const x = (pageWidth - drawWidth) / 2;
+        const y = (pageHeight - drawHeight) / 2;
+
+        // 预览为单页时，导出保持单页，不再自动分页。
+        pdf.addImage(imgData, "PNG", x, y, drawWidth, drawHeight, undefined, "FAST");
+
+        pdf.save(buildPdfFileName());
+      } finally {
+        stage.remove();
+      }
+    };
+
+    if (payDialogSubmitBtn && createPayDialog) {
+      payDialogSubmitBtn.addEventListener("click", async () => {
+        if (createPayDialog.dataset.mode === "view") {
+          createPayDialog.close();
+          return;
+        }
+        const originalText = payDialogSubmitBtn.textContent;
+        payDialogSubmitBtn.disabled = true;
+        payDialogSubmitBtn.textContent = "PDF生成中...";
+        try {
+          await exportPreviewPdf();
+          createPayDialog.close();
+        } catch (err) {
+          const message = (err && err.message) ? err.message : "PDF导出失败";
+          window.alert(message);
+        } finally {
+          payDialogSubmitBtn.disabled = false;
+          payDialogSubmitBtn.textContent = originalText || "开始创建";
+        }
+      });
+    }
+
+    const buildDetailRow = () => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>
+          <button class="c-btn c-btn-lite c-btn-sm pay-detail-add" type="button" data-action="add" aria-label="新增行">+</button>
+        </td>
+        <td><input class="c-input" type="text" placeholder="服务/物料" data-field="item"/></td>
+        <td><input class="c-input" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="1" data-field="qty"/></td>
+        <td><input class="c-input" type="text" placeholder="¥ 0" data-field="price"/></td>
+        <td>
+          <select class="c-input" data-field="tax">
+            <option value="10">10%</option>
+            <option value="8r">8%（軽減）</option>
+            <option value="8">8%</option>
+            <option value="0">0%</option>
+          </select>
+        </td>
+        <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled data-field="amount"/></td>
+        <td><input class="c-input" type="text" placeholder="备注" data-field="note"/></td>
+        <td>
+          <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-action="delete">删除</button>
+        </td>
+      `;
+      return row;
+    };
+
+    const setRowEditable = (row, editable) => {
+      row.querySelectorAll("input, select").forEach((field) => {
+        if (field.hasAttribute("data-always-disabled")) return;
+        field.disabled = !editable;
+      });
+    };
+
+    const updateRowSubtotal = (row) => {
+      const qtyField = row.querySelector('[data-field="qty"]');
+      const priceField = row.querySelector('[data-field="price"]');
+      const amountField = row.querySelector('[data-field="amount"]');
+      if (!amountField) return;
+      const qty = Number(qtyField ? qtyField.value : 0) || 0;
+      const priceRaw = priceField ? priceField.value : "";
+      const price = Number(String(priceRaw).replace(/[^\d.]/g, "")) || 0;
+      amountField.value = `¥ ${qty * price}`;
+    };
+
+    const formatCurrency = (value) => `¥ ${Number(value || 0).toLocaleString()}`;
+    const formatYen = (value) => `${Number(value || 0).toLocaleString()}円`;
+
+    const renderPreviewDetails = () => {
+      if (!previewDetailBody || !detailTableBody) return;
+      const rows = [];
+      detailTableBody.querySelectorAll("tr").forEach((row) => {
+        const item = row.querySelector('[data-field="item"]')?.value || "";
+        const qty = row.querySelector('[data-field="qty"]')?.value || "";
+        const priceRaw = row.querySelector('[data-field="price"]')?.value || "";
+        const amountRaw = row.querySelector('[data-field="amount"]')?.value || "";
+        const price = Number(String(priceRaw).replace(/[^\d.]/g, "")) || 0;
+        const amount = Number(String(amountRaw).replace(/[^\d.]/g, "")) || 0;
+        rows.push({
+          item: item.trim(),
+          qty: qty.trim(),
+          price: price ? formatYen(price) : "",
+          amount: amount ? formatYen(amount) : ""
+        });
+      });
+      previewDetailBody.innerHTML = "";
+      const minRows = 16;
+      const totalRows = Math.max(rows.length, minRows);
+      for (let i = 0; i < totalRows; i += 1) {
+        const data = rows[i] || { item: "", qty: "", price: "", amount: "" };
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td style="text-align:left;">${data.item}</td>
+          <td>${data.qty}</td>
+          <td style="text-align:right;">${data.price}</td>
+          <td style="text-align:right;">${data.amount}</td>
+        `;
+        previewDetailBody.appendChild(tr);
+      }
+    };
+
+    const updateTaxSummary = () => {
+      if (!detailTableBody) return;
+      let totalBase = 0;
+      let totalTax = 0;
+      let base10 = 0;
+      let base8Reduced = 0;
+      let base8 = 0;
+
+      detailTableBody.querySelectorAll("tr").forEach((row) => {
+        const amountField = row.querySelector('[data-field="amount"]');
+        const taxField = row.querySelector('[data-field="tax"]');
+        const raw = amountField ? amountField.value : "";
+        const amount = Number(String(raw).replace(/[^\d.]/g, "")) || 0;
+        if (!amount) return;
+        const taxRate = taxField ? taxField.value : "0";
+        totalBase += amount;
+        if (taxRate === "10") {
+          base10 += amount;
+        } else if (taxRate === "8r") {
+          base8Reduced += amount;
+        } else if (taxRate === "8") {
+          base8 += amount;
+        }
+      });
+
+      const tax10 = Math.round(base10 * 0.1);
+      const tax8 = Math.round(base8 * 0.08);
+      const tax8Reduced = Math.round(base8Reduced * 0.08);
+      totalTax = tax10 + tax8 + tax8Reduced;
+      const grandTotal = totalBase + totalTax;
+
+      if (taxSubtotalAmount) taxSubtotalAmount.textContent = formatCurrency(totalBase);
+      if (taxTotalAmount) taxTotalAmount.textContent = formatCurrency(totalTax);
+      if (tax10BaseAmount) tax10BaseAmount.textContent = formatCurrency(base10);
+      if (tax10Amount) tax10Amount.textContent = formatCurrency(tax10);
+      if (tax8ReducedBaseAmount) tax8ReducedBaseAmount.textContent = formatCurrency(base8Reduced);
+      if (tax8ReducedAmount) tax8ReducedAmount.textContent = formatCurrency(tax8Reduced);
+      if (tax8BaseAmount) tax8BaseAmount.textContent = formatCurrency(base8);
+      if (tax8Amount) tax8Amount.textContent = formatCurrency(tax8);
+      if (taxGrandTotalAmount) taxGrandTotalAmount.textContent = formatCurrency(grandTotal);
+
+      if (previewSubtotal) previewSubtotal.textContent = formatYen(totalBase);
+      if (previewTax) previewTax.textContent = formatYen(totalTax);
+      if (previewTotal) previewTotal.textContent = formatYen(grandTotal);
+    };
+
+    if (detailTableBody) {
+      const initialRow = buildDetailRow();
+      setRowEditable(initialRow, true);
+      detailTableBody.appendChild(initialRow);
+      updateRowSubtotal(initialRow);
+      updateTaxSummary();
+      renderPreviewDetails();
+    }
+
+    if (detailTableBody) {
+      detailTableBody.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-action]");
+        if (!btn) return;
+        const row = btn.closest("tr");
+        if (!row) return;
+        if (btn.dataset.action === "add") {
+          const newRow = buildDetailRow();
+          setRowEditable(newRow, true);
+          row.insertAdjacentElement("afterend", newRow);
+          updateRowSubtotal(newRow);
+          updateTaxSummary();
+          renderPreviewDetails();
+          return;
+        }
+        if (btn.dataset.action === "delete") {
+          row.remove();
+          updateTaxSummary();
+          renderPreviewDetails();
+        }
+      });
+      detailTableBody.addEventListener("input", (event) => {
+        const row = event.target.closest("tr");
+        if (!row) return;
+        updateRowSubtotal(row);
+        updateTaxSummary();
+        renderPreviewDetails();
+      });
+      detailTableBody.addEventListener("change", (event) => {
+        const row = event.target.closest("tr");
+        if (!row) return;
+        if (event.target && event.target.matches('select[data-field="tax"]')) {
+          updateTaxSummary();
+          renderPreviewDetails();
+        }
+      });
+    }
+
+    const updatePreviewHeader = () => {
+      if (previewRequestNo && payRequestNoInput) {
+        previewRequestNo.textContent = payRequestNoInput.value.trim() || "-";
+      }
+      if (previewCustomerName && payCustomerNameInput) {
+        previewCustomerName.textContent = payCustomerNameInput.value.trim() || "-";
+      }
+      if (previewPayDate && payRequestDateInput) {
+        previewPayDate.textContent = payRequestDateInput.value || "";
+      }
+    };
+
+    const initPreviewDate = () => {
+      if (!previewRequestDate) return;
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      previewRequestDate.textContent = `${yyyy}-${mm}-${dd}`;
+    };
+
+    initPreviewDate();
+    updatePreviewHeader();
+
+    if (payRequestNoInput) {
+      payRequestNoInput.addEventListener("input", updatePreviewHeader);
+    }
+    if (payCustomerNameInput) {
+      payCustomerNameInput.addEventListener("input", updatePreviewHeader);
+      payCustomerNameInput.addEventListener("change", updatePreviewHeader);
+    }
+    if (payRequestDateInput) {
+      payRequestDateInput.addEventListener("change", updatePreviewHeader);
+      payRequestDateInput.addEventListener("input", updatePreviewHeader);
+    }
+
+    const payCustomerMap = new Map();
+    const renderPayCustomerOptions = (listEl, map, items) => {
+      map.clear();
+      listEl.innerHTML = "";
+      items.forEach((item) => {
+        if (!item || !item.company_name) return;
+        map.set(item.company_name, {
+          id: item.id,
+          address: item.company_address || ""
+        });
+        const opt = document.createElement("option");
+        opt.value = item.company_name;
+        listEl.appendChild(opt);
+      });
+    };
+
+    const fetchPayCustomerOptions = (inputEl, listEl, map) => {
+      const keyword = inputEl.value.trim();
+      if (!keyword) {
+        listEl.innerHTML = "";
+        map.clear();
+        return;
+      }
+      const params = new URLSearchParams();
+      params.append("company_name", keyword);
+      params.append("page", "1");
+      params.append("page_size", "10");
+      apiGet("/api/customers", params)
+        .then((result) => {
+          const payloadData = result || {};
+          const items = Array.isArray(payloadData.items) ? payloadData.items : [];
+          renderPayCustomerOptions(listEl, map, items);
+        })
+        .catch(() => {
+          listEl.innerHTML = "";
+          map.clear();
+        });
+    };
+
+    const updatePayCustomerInfo = (name) => {
+      const info = payCustomerMap.get(name);
+      if (!info) {
+        if (payCustomerIdInput) payCustomerIdInput.value = "";
+        return;
+      }
+      if (payCustomerIdInput) payCustomerIdInput.value = info.id ? String(info.id) : "";
+    };
+
+    if (payCustomerNameInput && payCustomerList) {
+      payCustomerNameInput.addEventListener("input", () => {
+        fetchPayCustomerOptions(payCustomerNameInput, payCustomerList, payCustomerMap);
+        updatePayCustomerInfo("");
+      });
+      payCustomerNameInput.addEventListener("change", () => {
+        updatePayCustomerInfo(payCustomerNameInput.value.trim());
+      });
+    }
+
+    if (payRequestTable && createPayDialog) {
+      payRequestTable.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-action]");
+        if (!btn) return;
+        const mode = btn.dataset.action === "edit" ? "edit" : "view";
+        setDialogMode(mode);
+        createPayDialog.showModal();
+      });
+    }
+  </script>
+</body>
+</html>

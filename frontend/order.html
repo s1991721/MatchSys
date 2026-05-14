@@ -78,9 +78,9 @@
             <div class="c-filter-actions-bar">
                 <div class="c-filter-actions-left">
                     <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createBtn" type="button"
-                            data-issue="新建注文书" data-accept="新建受注"
+                            data-issue="新建发注" data-accept="新建受注"
                             data-i18n-issue="order.action.create_issue"
-                            data-i18n-accept="order.action.create_accept">＋ 新建注文书
+                            data-i18n-accept="order.action.create_accept">＋ 新建发注
                     </button>
                 </div>
                 <div class="c-filter-actions-right c-filter-actions-group">
@@ -126,9 +126,15 @@
     </div>
 </div>
 
-<dialog class="c-modal" id="createDialogIssue" aria-labelledby="createTitleIssue">
-    <h3 id="createTitleIssue" data-i18n="order.dialog.issue.title">新建注文书</h3>
-    <p data-i18n="order.dialog.issue.subtitle">请根据注文书字段填写基础信息。</p>
+<dialog class="c-dialog" id="createDialogIssue" aria-labelledby="createTitleIssue">
+    <div class="c-dialog-header">
+        <div>
+            <h3 id="createTitleIssue" data-i18n="order.dialog.issue.title">新建注文书</h3>
+            <p class="c-card-subtitle" data-i18n="order.dialog.issue.subtitle">请根据注文书字段填写基础信息。</p>
+        </div>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
     <div class="c-modal-form">
         <div class="c-modal-grid">
             <label class="c-inline-field">
@@ -187,15 +193,22 @@
             </label>
         </div>
     </div>
-    <div class="c-modal-actions">
+    </div>
+    <div class="c-dialog-actions">
         <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
         <button class="c-btn c-btn-primary" type="button" id="issue-create-submit" data-i18n="common.create">开始创建</button>
     </div>
 </dialog>
 
-<dialog class="c-modal" id="createDialogAccept" aria-labelledby="createTitleAccept">
-    <h3 id="createTitleAccept" data-i18n="order.dialog.accept.title">新建受注</h3>
-    <p data-i18n="order.dialog.accept.subtitle">请根据受注字段填写基础信息。</p>
+<dialog class="c-dialog" id="createDialogAccept" aria-labelledby="createTitleAccept">
+    <div class="c-dialog-header">
+        <div>
+            <h3 id="createTitleAccept" data-i18n="order.dialog.accept.title">新建受注</h3>
+            <p class="c-card-subtitle" data-i18n="order.dialog.accept.subtitle">请根据受注字段填写基础信息。</p>
+        </div>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
     <div class="c-modal-form">
         <div class="c-modal-grid">
             <label class="c-inline-field">
@@ -259,15 +272,22 @@
             </label>
         </div>
     </div>
-    <div class="c-modal-actions">
+    </div>
+    <div class="c-dialog-actions">
         <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
         <button class="c-btn c-btn-primary" type="button" id="accept-create-submit" data-i18n="common.create">开始创建</button>
     </div>
 </dialog>
 
-<dialog class="c-modal" id="detailDialog" aria-labelledby="detailTitle">
-    <h3 id="detailTitle" data-i18n="order.dialog.detail.title">查看注文书</h3>
-    <p id="detailSubtitle" data-i18n="order.dialog.detail.subtitle_view">查看订单详情</p>
+<dialog class="c-dialog" id="detailDialog" aria-labelledby="detailTitle">
+    <div class="c-dialog-header">
+        <div>
+            <h3 id="detailTitle" data-i18n="order.dialog.detail.title">查看注文书</h3>
+            <p class="c-card-subtitle" id="detailSubtitle" data-i18n="order.dialog.detail.subtitle_view">查看订单详情</p>
+        </div>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
     <div class="c-modal-form">
         <div class="c-modal-grid">
             <label class="c-inline-field">
@@ -350,7 +370,8 @@
             </label>
         </div>
     </div>
-    <div class="c-modal-actions">
+    </div>
+    <div class="c-dialog-actions">
         <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.close">关闭</button>
         <button class="c-btn c-btn-primary" type="button" data-dialog-close id="detailSave" data-i18n="common.save">保存</button>
     </div>
@@ -931,13 +952,12 @@
             });
         }
 
-        const TECHNICIAN_ROLE_ID = 1;
+        const BUSINESS_ROLE_ID = 2;
 
         const loadOwnerSelectOptions = (selectEl, currentValue) => {
             if (!selectEl) return;
             const params = window.createParams([
-                ["role_id", String(TECHNICIAN_ROLE_ID)],
-                ["exclude", "1"],
+                ["role_id", String(BUSINESS_ROLE_ID)],
             ]);
             window.requestJson(window.buildUrl("/api/user-logins/by-role", params), { method: "GET" })
                 .then((payload) => {

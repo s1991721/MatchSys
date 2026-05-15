@@ -688,8 +688,9 @@
             <tr data-id="${item.id}">
               <td>${item.order_no || "-"}</td>
               <td>
-                <div class="c-truncate" title="${item.project_name || ""}">${item.project_name || "-"}</div>
-                <div class="c-truncate" title="${item.customer_name || ""}">${item.customer_name || "-"}</div>
+                <div class="c-truncate" title="${item.project_name || ""} / ${item.customer_name || ""}">
+                    ${item.project_name || "-"} / ${item.customer_name || "-"}
+                </div>
               </td>
               <td>${item.technician_name || "-"}</td>
               <td>${formatPrice(item.price)}</td>

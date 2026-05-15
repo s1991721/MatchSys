@@ -833,6 +833,90 @@
             }
         };
 
+        const orderFieldLabelMap = {
+            order_no: () => t("order.field.order_no"),
+            project_name: () => t("order.field.project"),
+            customer_id: () => t(currentView === "accept" ? "order.field.customer_accept" : "order.field.customer"),
+            customer_name: () => t(currentView === "accept" ? "order.field.customer_accept" : "order.field.customer"),
+            technician_id: () => t("common.field.technician_id"),
+            technician_name: () => t("common.field.technician"),
+            status: () => t("common.field.status"),
+            price: () => t("order.field.price"),
+            working_hours: () => t("order.field.hours"),
+            period_start: () => t("order.field.period"),
+            period_end: () => t("order.field.period"),
+            person_in_charge: () => t("common.field.owner"),
+            person_in_charge_id: () => t("common.field.owner"),
+            purchase_id: () => t("order.field.purchase_id"),
+        };
+
+        const getOrderFieldLabel = (field) => {
+            const resolver = orderFieldLabelMap[field];
+            return resolver ? resolver() : field;
+        };
+
+        const formatOrderApiError = (message, fallback) => {
+            const raw = String(message || "").trim();
+            if (!raw) return fallback;
+
+            const missingMatch = raw.match(/^(?:Missing field|缺少字段)[:：]\s*(.+)$/);
+            if (missingMatch) {
+                const field = missingMatch[1].trim();
+                return format("common.error.missing_field", {
+                    field: getOrderFieldLabel(field)
+                });
+            }
+
+            const invalidNumberMatch = raw.match(/^Invalid number:\s*(.+)$/);
+            if (invalidNumberMatch) {
+                const label = getOrderFieldLabel(invalidNumberMatch[1].trim());
+                return `${label}格式不正确`;
+            }
+
+            const invalidDateMatch = raw.match(/^Invalid date:\s*(.+)$/);
+            if (invalidDateMatch) {
+                const field = invalidDateMatch[1].trim();
+                if (field === "period_start") return "契约开始日期格式不正确";
+                if (field === "period_end") return "契约结束日期格式不正确";
+                return `${getOrderFieldLabel(field)}格式不正确`;
+            }
+
+            if (raw === "Unauthorized") {
+                return "登录已过期，请重新登录";
+            }
+            return raw;
+        };
+
+        const getRequestErrorMessage = (error, fallback) => {
+            const raw = error && error.payload && error.payload.message
+                ? error.payload.message
+                : (error && error.message);
+            return formatOrderApiError(raw, fallback);
+        };
+
+        const validateIssueForm = () => {
+            const orderNo = issueForm.orderNo.value.trim();
+            if (!orderNo) return showMissingField(t("order.field.order_no"), issueForm.orderNo), false;
+            const project = issueForm.projectName.value.trim();
+            if (!project) return showMissingField(t("order.field.project"), issueForm.projectName), false;
+            const customer = issueForm.customerName.value.trim();
+            if (!customer) return showMissingField(t("order.field.customer"), issueForm.customerName), false;
+            const technician = issueForm.technicianName.value.trim();
+            if (!technician) return showMissingField(t("common.field.technician"), issueForm.technicianName), false;
+            const status = issueForm.status.value;
+            if (!status || status === "请选择状态") return showMissingField(t("common.field.status"), issueForm.status), false;
+            const price = issueForm.price.value.trim();
+            if (!price) return showMissingField(t("order.field.price"), issueForm.price), false;
+            const hours = issueForm.hours.value.trim();
+            if (!hours) return showMissingField(t("order.field.hours"), issueForm.hours), false;
+            const start = issueForm.start.value;
+            const end = issueForm.end.value;
+            if (!start || !end) return showMissingField(t("order.field.period"), issueForm.start), false;
+            const owner = readOwnerSelect(issueForm.owner);
+            if (!owner.id) return showMissingField(t("common.field.owner"), issueForm.owner), false;
+            return true;
+        };
+
         const validateAcceptForm = () => {
             const orderNo = acceptForm.orderNo.value.trim();
             if (!orderNo) return showMissingField(t("order.field.order_no"), acceptForm.orderNo), false;
@@ -857,6 +941,7 @@
         };
 
         const submitCreate = (view) => {
+            if (view === "issue" && !validateIssueForm()) return;
             if (view === "accept" && !validateAcceptForm()) return;
             const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
             const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
@@ -866,15 +951,15 @@
             })
                 .then((responsePayload) => {
                     if (!responsePayload.success) {
-                        alert(responsePayload.message || t("order.action.create_failed"));
+                        alert(formatOrderApiError(responsePayload.message, t("order.action.create_failed")));
                         return;
                     }
                     if (view === "accept" && createDialogAccept) createDialogAccept.close();
                     if (view === "issue" && createDialogIssue) createDialogIssue.close();
                     fetchOrders();
                 })
-                .catch(() => {
-                    alert(t("order.action.create_failed_retry"));
+                .catch((error) => {
+                    alert(getRequestErrorMessage(error, t("order.action.create_failed_retry")));
                 });
         }
 
@@ -890,14 +975,14 @@
             })
                 .then((responsePayload) => {
                     if (!responsePayload.success) {
-                        alert(responsePayload.message || t("common.save_failed"));
+                        alert(formatOrderApiError(responsePayload.message, t("common.save_failed")));
                         return;
                     }
                     if (detailDialog) detailDialog.close();
                     fetchOrders();
                 })
-                .catch(() => {
-                    alert(t("common.save_failed_retry"));
+                .catch((error) => {
+                    alert(getRequestErrorMessage(error, t("common.save_failed_retry")));
                 });
         }
 

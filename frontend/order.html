@@ -7,6 +7,357 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="order.title">注文书管理</title>
+    <style>
+        .order-dialog-wide {
+            width: min(1600px, 98vw);
+            max-width: min(1600px, 98vw);
+            height: 94vh;
+            max-height: 94vh;
+            overflow: hidden;
+        }
+        .order-dialog-wide[open] {
+            display: flex;
+            flex-direction: column;
+        }
+        .order-dialog-wide .c-dialog-header,
+        .order-dialog-wide .c-dialog-actions {
+            flex: 0 0 auto;
+        }
+        .order-dialog-wide .c-dialog-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+        }
+        .order-modal-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+            gap: 20px;
+            align-items: start;
+            height: 100%;
+            max-height: 100%;
+            min-height: 0;
+        }
+        .order-editor-panel,
+        .order-preview-panel {
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: #ffffff;
+            box-shadow: 0 8px 28px rgba(15, 23, 42, 0.06);
+        }
+        .order-editor-panel {
+            padding: 16px;
+            align-self: start;
+            position: sticky;
+            top: 0;
+            max-height: 100%;
+            overflow-y: auto;
+        }
+        .order-preview-panel {
+            background: #f8fafc;
+            padding: 16px;
+            display: block;
+            min-height: 0;
+            height: 100%;
+            max-height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        .order-preview-canvas {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+            overflow: auto;
+        }
+        .order-pdf-page {
+            width: min(100%, 595px);
+            aspect-ratio: 595 / 842;
+            background: #ffffff;
+            color: #111111;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+            padding: 28px 18px 22px;
+            font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.35;
+            display: grid;
+            grid-template-rows: auto auto auto auto 1fr auto;
+            gap: 12px;
+        }
+        .order-pdf-title {
+            background: #666666;
+            color: #ffffff;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            padding: 6px 12px;
+        }
+        .order-pdf-top {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 232px;
+            gap: 36px;
+            align-items: start;
+        }
+        .order-pdf-customer {
+            display: grid;
+            gap: 14px;
+            padding-top: 22px;
+        }
+        .order-pdf-customer-name {
+            border-bottom: 3px double #222222;
+            min-height: 24px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 800;
+            padding-bottom: 2px;
+        }
+        .order-pdf-note {
+            margin-top: 4px;
+        }
+        .order-pdf-info {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 11px;
+        }
+        .order-pdf-info th,
+        .order-pdf-info td {
+            border: 1px solid #222222;
+            height: 21px;
+            padding: 3px 6px;
+            text-align: center;
+        }
+        .order-pdf-info th {
+            width: 40%;
+            font-weight: 700;
+            background: #f8f8f8;
+        }
+        .order-pdf-lines {
+            display: grid;
+            gap: 5px;
+        }
+        .order-pdf-line {
+            display: grid;
+            grid-template-columns: 78px minmax(0, 1fr);
+            align-items: end;
+            gap: 8px;
+            min-height: 18px;
+        }
+        .order-pdf-line span:first-child {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .order-pdf-line-value {
+            border-bottom: 1px solid #222222;
+            min-height: 17px;
+            padding: 0 4px;
+            word-break: break-word;
+        }
+        .order-pdf-company {
+            display: grid;
+            gap: 5px;
+            padding-top: 18px;
+        }
+        .order-pdf-company-name {
+            font-size: 14px;
+            font-weight: 800;
+            min-height: 22px;
+        }
+        .order-pdf-stamp-row {
+            display: grid;
+            grid-template-columns: 1fr 70px 70px;
+            justify-content: end;
+            margin-top: 6px;
+        }
+        .order-pdf-stamp {
+            height: 58px;
+            border: 1px solid #222222;
+        }
+        .order-pdf-total {
+            width: 260px;
+            min-height: 40px;
+            display: grid;
+            grid-template-columns: 84px minmax(0, 1fr);
+            align-items: center;
+            background: linear-gradient(90deg, #666666 0, #666666 84px, #f5f5f5 84px, #ffffff 100%);
+        }
+        .order-pdf-total-label {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 900;
+            padding-left: 8px;
+        }
+        .order-pdf-total-value {
+            text-align: right;
+            font-size: 17px;
+            font-weight: 900;
+            padding-right: 14px;
+        }
+        .order-pdf-detail {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 10px;
+        }
+        .order-pdf-detail th,
+        .order-pdf-detail td {
+            border: 1px solid #222222;
+            height: 25px;
+            padding: 3px 5px;
+            text-align: center;
+            vertical-align: middle;
+            word-break: break-word;
+        }
+        .order-pdf-detail th {
+            background: #eeeeee;
+            font-weight: 700;
+        }
+        .order-pdf-detail tbody tr:nth-child(even) td {
+            background: #f2f2f2;
+        }
+        .order-pdf-summary {
+            width: 185px;
+            margin-left: auto;
+            margin-top: -1px;
+            border-collapse: collapse;
+            table-layout: fixed;
+            font-size: 10px;
+        }
+        .order-pdf-summary th,
+        .order-pdf-summary td {
+            border: 1px solid #222222;
+            height: 20px;
+            padding: 3px 6px;
+        }
+        .order-pdf-summary th {
+            width: 46px;
+            text-align: center;
+            font-weight: 700;
+        }
+        .order-pdf-summary td {
+            text-align: right;
+        }
+        .order-pdf-remark {
+            border: 1px solid #222222;
+            min-height: 64px;
+            padding: 4px 6px;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 4px;
+        }
+        .order-pdf-remark-title {
+            font-weight: 700;
+        }
+        .order-accept-preview-frame {
+            width: 100%;
+            min-height: 560px;
+            height: calc(94vh - 194px);
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #ffffff;
+        }
+        .order-accept-preview-empty {
+            min-height: 560px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 10px;
+            background: #ffffff;
+            display: grid;
+            place-items: center;
+            color: #64748b;
+            font-weight: 800;
+            text-align: center;
+            padding: 24px;
+        }
+        .order-upload-field {
+            grid-column: 1 / -1;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+        .order-upload-field input[type="file"] {
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+        }
+        .order-issue-items {
+            grid-column: 1 / -1;
+            display: grid;
+            gap: 10px;
+        }
+        .order-issue-items-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .order-issue-items-title {
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .order-issue-item-list {
+            display: grid;
+            gap: 10px;
+        }
+        .order-issue-item-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr)) 40px;
+            gap: 10px;
+            align-items: end;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+        .order-issue-item-remove {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 10px;
+            font-size: 18px;
+            line-height: 1;
+            justify-self: center;
+            align-self: center;
+        }
+        .order-issue-item-row:first-child .order-issue-item-remove {
+            visibility: hidden;
+            pointer-events: none;
+        }
+        @media (max-width: 1180px) {
+            .order-modal-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+                max-height: none;
+                overflow: auto;
+            }
+            .order-dialog-wide .c-dialog-body {
+                max-height: calc(94vh - 128px);
+                overflow: auto;
+            }
+            .order-editor-panel {
+                position: static;
+                max-height: none;
+            }
+            .order-preview-panel {
+                min-height: auto;
+                height: auto;
+                max-height: none;
+            }
+            .order-accept-preview-frame {
+                height: min(72vh, 760px);
+            }
+            .order-issue-item-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .order-issue-item-remove {
+                justify-self: end;
+            }
+        }
+    </style>
 </head>
 <body class="order-page">
 <div class="page">
@@ -127,74 +478,186 @@
     </div>
 </div>
 
-<dialog class="c-dialog" id="createDialogIssue" aria-labelledby="createTitleIssue">
+<dialog class="c-dialog order-dialog-wide" id="createDialogIssue" aria-labelledby="createTitleIssue">
     <div class="c-dialog-header">
         <div>
-            <h3 id="createTitleIssue" data-i18n="order.dialog.issue.title">新建注文书</h3>
+            <h3 id="createTitleIssue" data-i18n="order.action.create_issue">新建发注</h3>
             <p class="c-card-subtitle" data-i18n="order.dialog.issue.subtitle">请根据注文书字段填写基础信息。</p>
         </div>
         <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-    <div class="c-modal-form">
-        <div class="c-modal-grid">
-            <label class="c-inline-field">
-                <span data-i18n="order.field.order_no">注文No</span>
-                <input id="issue-order-no" type="text" placeholder="PO-2024-XXX"/>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.project">案件名</span>
-                <input id="issue-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
-            </label>
-            <label class="c-inline-field c-inline-field-full">
-                <span data-i18n="order.field.customer">取引先（下请公司）</span>
-                <input id="issue-customer-name" type="text" placeholder="下请公司"
-                       data-i18n-placeholder="order.filter.customer_issue_placeholder"
-                       autocomplete="off"
-                       list="issue-customer-list"/>
-            </label>
-            <datalist id="issue-customer-list"></datalist>
-            <input id="issue-customer-id" type="hidden"/>
-            <label class="c-inline-field">
-                <span data-i18n="common.field.technician">技术者</span>
-                <input id="issue-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="common.field.name"/>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="common.field.status">状态</span>
-                <select id="issue-status">
-                    <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
-                    <option value="承认中" selected data-i18n="order.status.approving">承认中</option>
-                    <option value="已受注" data-i18n="order.status.accepted">已受注</option>
-                    <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
-                    <option value="已取消" data-i18n="order.status.canceled">已取消</option>
-                </select>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.price">契约单价</span>
-                <input id="issue-price" type="text" placeholder="¥ 0"/>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.hours">契约工时</span>
-                <input id="issue-hours" type="text" placeholder="160h"/>
-            </label>
-            <label class="c-inline-field c-inline-field-full">
-                <span data-i18n="order.field.period">契约期间</span>
-                <div class="c-inline-field-range">
-                    <input id="issue-start" type="date"/>
-                    <span>~</span>
-                    <input id="issue-end" type="date"/>
+        <div class="order-modal-layout">
+            <div class="order-editor-panel">
+                <div class="c-modal-form">
+                    <div class="c-modal-grid">
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.order_no">注文No</span>
+                            <input id="issue-order-no" type="text" placeholder="PO-2024-XXX"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span>件名</span>
+                            <input id="issue-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.customer">取引先（下请公司）</span>
+                            <input id="issue-customer-name" type="text" placeholder="下请公司"
+                                   data-i18n-placeholder="order.filter.customer_issue_placeholder"
+                                   autocomplete="off"
+                                   list="issue-customer-list"/>
+                        </label>
+                        <datalist id="issue-customer-list"></datalist>
+                        <input id="issue-customer-id" type="hidden"/>
+                        <label class="c-inline-field">
+                            <span data-i18n="common.field.status">状态</span>
+                            <select id="issue-status">
+                                <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
+                                <option value="承认中" selected data-i18n="order.status.approving">承认中</option>
+                                <option value="已受注" data-i18n="order.status.accepted">已受注</option>
+                                <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
+                                <option value="已取消" data-i18n="order.status.canceled">已取消</option>
+                            </select>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.period">契约期间</span>
+                            <div class="c-inline-field-range">
+                                <input id="issue-start" type="date"/>
+                                <span>~</span>
+                                <input id="issue-end" type="date"/>
+                            </div>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="common.field.owner">负责人</span>
+                            <select id="issue-owner"></select>
+                        </label>
+                        <label class="c-inline-field c-inline-field-full">
+                            <span>作業内容</span>
+                            <input id="issue-work-content" type="text" placeholder="作業内容"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span>作業場所</span>
+                            <input id="issue-work-place" type="text" placeholder="作業場所"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span>契約形態</span>
+                            <input id="issue-contract-type" type="text" placeholder="契約形態"/>
+                        </label>
+                        <label class="c-inline-field c-inline-field-full">
+                            <span>支払い条件</span>
+                            <input id="issue-payment-terms" type="text" placeholder="支払い条件"/>
+                        </label>
+                        <div class="order-issue-items">
+                            <div class="order-issue-items-head">
+                                <div class="order-issue-items-title">契约明细</div>
+                                <button class="c-btn c-btn-lite c-btn-sm" type="button" id="issue-line-add">＋ 添加</button>
+                            </div>
+                            <div class="order-issue-item-list" id="issue-line-items">
+                                <div class="order-issue-item-row">
+                                    <label class="c-inline-field">
+                                        <span>项目</span>
+                                        <input id="issue-technician-name" type="text" placeholder="项目" data-issue-item-field="item"/>
+                                    </label>
+                                    <label class="c-inline-field">
+                                        <span>单价</span>
+                                        <input id="issue-price" type="text" placeholder="¥ 0" data-issue-item-field="price"/>
+                                    </label>
+                                    <label class="c-inline-field">
+                                        <span>税金</span>
+                                        <input id="issue-hours" type="text" placeholder="¥ 0" data-issue-item-field="tax"/>
+                                    </label>
+                                    <label class="c-inline-field">
+                                        <span>单位</span>
+                                        <input id="issue-unit" type="text" placeholder="式" data-issue-item-field="unit"/>
+                                    </label>
+                                    <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-issue-line" aria-label="删除">×</button>
+                                </div>
+                            </div>
+                        </div>
+                        <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
+                            <span data-i18n="common.field.note">备注</span>
+                            <textarea id="issue-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
+                        </label>
+                    </div>
                 </div>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="common.field.owner">负责人</span>
-                <select id="issue-owner"></select>
-            </label>
-            <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
-                <span data-i18n="common.field.note">备注</span>
-                <textarea id="issue-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
-            </label>
+            </div>
+            <aside class="order-preview-panel" aria-label="发注书PDF预览">
+                <div class="order-preview-canvas">
+                    <div class="order-pdf-page" id="issuePdfPreviewPage">
+                        <div class="order-pdf-title">発 注 書</div>
+                        <div class="order-pdf-top">
+                            <div class="order-pdf-customer">
+                                <div class="order-pdf-customer-name"><span data-preview="issueCustomer">御中</span></div>
+                                <div class="order-pdf-note">下記のとおり、発注いたします。</div>
+                            </div>
+                            <table class="order-pdf-info">
+                                <tbody>
+                                <tr>
+                                    <th>発注番号</th>
+                                    <td data-preview="issueOrderNo"></td>
+                                </tr>
+                                <tr>
+                                    <th>発注日</th>
+                                    <td data-preview="issueOrderDate"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="order-pdf-top">
+                            <div class="order-pdf-lines">
+                                <div class="order-pdf-line"><span>件名</span><div class="order-pdf-line-value" data-preview="issueProject"></div></div>
+                                <div class="order-pdf-line"><span>作業内容</span><div class="order-pdf-line-value" data-preview="issueWorkContent"></div></div>
+                                <div class="order-pdf-line"><span>作業期間</span><div class="order-pdf-line-value" data-preview="issuePeriod"></div></div>
+                                <div class="order-pdf-line"><span>作業場所</span><div class="order-pdf-line-value" data-preview="issueWorkPlace"></div></div>
+                                <div class="order-pdf-line"><span>契約形態</span><div class="order-pdf-line-value" data-preview="issueContractType"></div></div>
+                                <div class="order-pdf-line"><span>支払い条件</span><div class="order-pdf-line-value" data-preview="issuePaymentTerms"></div></div>
+                            </div>
+                            <div class="order-pdf-company">
+                                <div class="order-pdf-company-name">株式会社○○</div>
+                                <div class="order-pdf-line"><span>〒</span><div class="order-pdf-line-value"></div></div>
+                                <div class="order-pdf-line"><span>住所</span><div class="order-pdf-line-value"></div></div>
+                                <div class="order-pdf-line"><span>TEL</span><div class="order-pdf-line-value"></div></div>
+                                <div class="order-pdf-line"><span>FAX</span><div class="order-pdf-line-value"></div></div>
+                                <div class="order-pdf-line"><span>Mail</span><div class="order-pdf-line-value"></div></div>
+                                <div class="order-pdf-line"><span>担当者</span><div class="order-pdf-line-value" data-preview="issueOwner"></div></div>
+                                <div class="order-pdf-stamp-row">
+                                    <div></div>
+                                    <div class="order-pdf-stamp"></div>
+                                    <div class="order-pdf-stamp"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="order-pdf-total">
+                            <div class="order-pdf-total-label">合計金額</div>
+                            <div class="order-pdf-total-value" data-preview="issueTotal">¥ 0</div>
+                        </div>
+                        <div>
+                            <table class="order-pdf-detail">
+                                <thead>
+                                <tr>
+                                    <th style="width: 48%;">項目</th>
+                                    <th style="width: 20%;">金額</th>
+                                    <th style="width: 12%;">単位</th>
+                                    <th style="width: 20%;">税金</th>
+                                </tr>
+                                </thead>
+                                <tbody id="issuePreviewDetailBody"></tbody>
+                            </table>
+                            <table class="order-pdf-summary">
+                                <tbody>
+                                <tr><th>小計</th><td data-preview="issueSubtotal">¥ 0</td></tr>
+                                <tr><th>税額</th><td data-preview="issueTax">¥ 0</td></tr>
+                                <tr><th>合計</th><td data-preview="issueSummaryTotal">¥ 0</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="order-pdf-remark">
+                            <div class="order-pdf-remark-title">特記事項</div>
+                            <div data-preview="issueRemark"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
-    </div>
     </div>
     <div class="c-dialog-actions">
         <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
@@ -202,79 +665,92 @@
     </div>
 </dialog>
 
-<dialog class="c-dialog" id="createDialogAccept" aria-labelledby="createTitleAccept">
+<dialog class="c-dialog order-dialog-wide" id="createDialogAccept" aria-labelledby="createTitleAccept">
     <div class="c-dialog-header">
         <div>
-            <h3 id="createTitleAccept" data-i18n="order.dialog.accept.title">新建受注</h3>
+            <h3 id="createTitleAccept" data-i18n="order.action.create_accept">新建受注</h3>
             <p class="c-card-subtitle" data-i18n="order.dialog.accept.subtitle">请根据受注字段填写基础信息。</p>
         </div>
         <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-    <div class="c-modal-form">
-        <div class="c-modal-grid">
-            <label class="c-inline-field">
-                <span data-i18n="order.field.order_no">注文No</span>
-                <input id="accept-order-no" type="text" placeholder="PO-2024-XXX"/>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.project">案件名</span>
-                <input id="accept-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.purchase_id">对应发注ID</span>
-                <input id="accept-purchase-id" type="number" placeholder="发注ID" data-i18n-placeholder="order.placeholder.purchase_id"/>
-            </label>
-            <label class="c-inline-field c-inline-field-full">
-                <span data-i18n="order.field.customer_accept">取引先（客户公司）</span>
-                <input id="accept-customer-name" type="text" placeholder="客户公司"
-                       data-i18n-placeholder="order.filter.customer_accept_placeholder"
-                       autocomplete="off"
-                       list="accept-customer-list"/>
-            </label>
-            <datalist id="accept-customer-list"></datalist>
-            <input id="accept-customer-id" type="hidden"/>
-            <label class="c-inline-field">
-                <span data-i18n="common.field.technician">技术者</span>
-                <input id="accept-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="common.field.name" list="accept-technician-list"/>
-            </label>
-            <datalist id="accept-technician-list"></datalist>
-            <input id="accept-technician-id" type="hidden"/>
-            <label class="c-inline-field">
-                <span data-i18n="common.field.status">状态</span>
-                <select id="accept-status">
-                    <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
-                    <option value="已受注" selected data-i18n="order.status.accepted">已受注</option>
-                    <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
-                    <option value="已取消" data-i18n="order.status.canceled">已取消</option>
-                </select>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.price">契约单价</span>
-                <input id="accept-price" type="text" placeholder="¥ 0"/>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="order.field.hours">契约工时</span>
-                <input id="accept-hours" type="text" placeholder="160h"/>
-            </label>
-            <label class="c-inline-field c-inline-field-full">
-                <span data-i18n="order.field.period">契约期间</span>
-                <div class="c-inline-field-range">
-                    <input id="accept-start" type="date"/>
-                    <span>~</span>
-                    <input id="accept-end" type="date"/>
+        <div class="order-modal-layout">
+            <div class="order-editor-panel">
+                <div class="c-modal-form">
+                    <div class="c-modal-grid">
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.order_no">注文No</span>
+                            <input id="accept-order-no" type="text" placeholder="PO-2024-XXX"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.project">案件名</span>
+                            <input id="accept-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.purchase_id">对应发注ID</span>
+                            <input id="accept-purchase-id" type="number" placeholder="发注ID" data-i18n-placeholder="order.placeholder.purchase_id"/>
+                        </label>
+                        <label class="c-inline-field c-inline-field-full">
+                            <span data-i18n="order.field.customer_accept">取引先（客户公司）</span>
+                            <input id="accept-customer-name" type="text" placeholder="客户公司"
+                                   data-i18n-placeholder="order.filter.customer_accept_placeholder"
+                                   autocomplete="off"
+                                   list="accept-customer-list"/>
+                        </label>
+                        <datalist id="accept-customer-list"></datalist>
+                        <input id="accept-customer-id" type="hidden"/>
+                        <label class="c-inline-field">
+                            <span data-i18n="common.field.technician">技术者</span>
+                            <input id="accept-technician-name" type="text" placeholder="姓名" data-i18n-placeholder="common.field.name" list="accept-technician-list"/>
+                        </label>
+                        <datalist id="accept-technician-list"></datalist>
+                        <input id="accept-technician-id" type="hidden"/>
+                        <label class="c-inline-field">
+                            <span data-i18n="common.field.status">状态</span>
+                            <select id="accept-status">
+                                <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
+                                <option value="已受注" selected data-i18n="order.status.accepted">已受注</option>
+                                <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
+                                <option value="已取消" data-i18n="order.status.canceled">已取消</option>
+                            </select>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.price">契约单价</span>
+                            <input id="accept-price" type="text" placeholder="¥ 0"/>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="order.field.hours">契约工时</span>
+                            <input id="accept-hours" type="text" placeholder="160h"/>
+                        </label>
+                        <label class="c-inline-field c-inline-field-full">
+                            <span data-i18n="order.field.period">契约期间</span>
+                            <div class="c-inline-field-range">
+                                <input id="accept-start" type="date"/>
+                                <span>~</span>
+                                <input id="accept-end" type="date"/>
+                            </div>
+                        </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="common.field.owner">负责人</span>
+                            <select id="accept-owner"></select>
+                        </label>
+                        <label class="c-inline-field c-inline-field-full order-upload-field">
+                            <span>受注书PDF</span>
+                            <input id="accept-pdf-file" type="file" accept="application/pdf,.pdf"/>
+                        </label>
+                        <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
+                            <span data-i18n="common.field.note">备注</span>
+                            <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
+                        </label>
+                    </div>
                 </div>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="common.field.owner">负责人</span>
-                <select id="accept-owner"></select>
-            </label>
-            <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
-                <span data-i18n="common.field.note">备注</span>
-                <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
-            </label>
+            </div>
+            <aside class="order-preview-panel" aria-label="受注书PDF预览">
+                <div id="acceptPdfPreviewSlot">
+                    <div class="order-accept-preview-empty">请选择受注书 PDF 文件进行预览</div>
+                </div>
+            </aside>
         </div>
-    </div>
     </div>
     <div class="c-dialog-actions">
         <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
@@ -453,7 +929,13 @@
             start: document.getElementById("issue-start"),
             end: document.getElementById("issue-end"),
             owner: document.getElementById("issue-owner"),
+            workContent: document.getElementById("issue-work-content"),
+            workPlace: document.getElementById("issue-work-place"),
+            contractType: document.getElementById("issue-contract-type"),
+            paymentTerms: document.getElementById("issue-payment-terms"),
             remark: document.getElementById("issue-remark"),
+            lineItems: document.getElementById("issue-line-items"),
+            lineAdd: document.getElementById("issue-line-add"),
         };
 
         const acceptForm = {
@@ -472,8 +954,31 @@
             start: document.getElementById("accept-start"),
             end: document.getElementById("accept-end"),
             owner: document.getElementById("accept-owner"),
+            pdfFile: document.getElementById("accept-pdf-file"),
             remark: document.getElementById("accept-remark"),
         };
+
+        const issuePreview = {
+            orderNo: document.querySelector('[data-preview="issueOrderNo"]'),
+            orderDate: document.querySelector('[data-preview="issueOrderDate"]'),
+            customer: document.querySelector('[data-preview="issueCustomer"]'),
+            project: document.querySelector('[data-preview="issueProject"]'),
+            workContent: document.querySelector('[data-preview="issueWorkContent"]'),
+            period: document.querySelector('[data-preview="issuePeriod"]'),
+            workPlace: document.querySelector('[data-preview="issueWorkPlace"]'),
+            contractType: document.querySelector('[data-preview="issueContractType"]'),
+            paymentTerms: document.querySelector('[data-preview="issuePaymentTerms"]'),
+            owner: document.querySelector('[data-preview="issueOwner"]'),
+            total: document.querySelector('[data-preview="issueTotal"]'),
+            subtotal: document.querySelector('[data-preview="issueSubtotal"]'),
+            tax: document.querySelector('[data-preview="issueTax"]'),
+            summaryTotal: document.querySelector('[data-preview="issueSummaryTotal"]'),
+            remark: document.querySelector('[data-preview="issueRemark"]'),
+            detailBody: document.getElementById("issuePreviewDetailBody"),
+        };
+        const acceptPdfPreviewSlot = document.getElementById("acceptPdfPreviewSlot");
+        const acceptPdfFileName = document.getElementById("acceptPdfFileName");
+        let acceptPdfObjectUrl = "";
 
         const detailFields = {
             orderNo: document.querySelector('[data-field="orderNo"]'),
@@ -657,6 +1162,181 @@
             return String(value);
         }
 
+        const parseMoneyValue = (value) => {
+            const raw = String(value || "").replace(/[^\d.-]/g, "");
+            const number = Number(raw);
+            return Number.isFinite(number) ? number : 0;
+        };
+
+        const formatYenValue = (value) => {
+            const number = Number(value || 0);
+            return `¥ ${number.toLocaleString("ja-JP", { maximumFractionDigits: 0 })}`;
+        };
+
+        const escapeHtml = (value) => String(value || "").replace(/[&<>"']/g, (char) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+        }[char]));
+
+        const todayText = () => {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd}`;
+        };
+
+        const buildPeriodText = (start, end) => {
+            if (start && end) return `${start} ～ ${end}`;
+            return start || end || "";
+        };
+
+        const collectIssueItems = () => {
+            const rows = Array.from(issueForm.lineItems ? issueForm.lineItems.querySelectorAll(".order-issue-item-row") : []);
+            return rows.map((row) => {
+                const get = (field) => row.querySelector(`[data-issue-item-field="${field}"]`);
+                const priceRaw = get("price")?.value?.trim() || "";
+                const taxRaw = get("tax")?.value?.trim() || "";
+                return {
+                    row,
+                    itemName: get("item")?.value?.trim() || "",
+                    priceRaw,
+                    price: parseMoneyValue(priceRaw),
+                    taxRaw,
+                    tax: parseMoneyValue(taxRaw),
+                    unit: get("unit")?.value?.trim() || "",
+                };
+            });
+        };
+
+        const summarizeIssueItems = () => {
+            const items = collectIssueItems();
+            const totalPrice = items.reduce((sum, item) => sum + item.price, 0);
+            const totalTax = items.reduce((sum, item) => sum + item.tax, 0);
+            const itemNames = Array.from(new Set(items.map((item) => item.itemName).filter(Boolean)));
+            return {
+                items,
+                totalPrice,
+                totalTax,
+                totalAmount: totalPrice + totalTax,
+                itemName: itemNames.join("、"),
+                periodStart: issueForm.start.value || "",
+                periodEnd: issueForm.end.value || "",
+            };
+        };
+
+        const createIssueItemRow = () => {
+            const row = document.createElement("div");
+            row.className = "order-issue-item-row";
+            row.innerHTML = `
+                <label class="c-inline-field">
+                    <span>项目</span>
+                    <input type="text" placeholder="项目" data-issue-item-field="item"/>
+                </label>
+                <label class="c-inline-field">
+                    <span>单价</span>
+                    <input type="text" placeholder="¥ 0" data-issue-item-field="price"/>
+                </label>
+                <label class="c-inline-field">
+                    <span>税金</span>
+                    <input type="text" placeholder="¥ 0" data-issue-item-field="tax"/>
+                </label>
+                <label class="c-inline-field">
+                    <span>单位</span>
+                    <input type="text" placeholder="式" data-issue-item-field="unit"/>
+                </label>
+                <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-issue-line" aria-label="删除">×</button>
+            `;
+            return row;
+        };
+
+        const updateIssuePreview = () => {
+            const summary = summarizeIssueItems();
+            const price = summary.totalPrice;
+            const tax = summary.totalTax;
+            const total = price + tax;
+            const owner = readOwnerSelect(issueForm.owner);
+            if (issuePreview.orderNo) issuePreview.orderNo.textContent = issueForm.orderNo.value.trim();
+            if (issuePreview.orderDate) issuePreview.orderDate.textContent = todayText();
+            if (issuePreview.customer) {
+                const name = issueForm.customerName.value.trim();
+                issuePreview.customer.textContent = name ? `${name} 御中` : "御中";
+            }
+            if (issuePreview.project) issuePreview.project.textContent = issueForm.projectName.value.trim();
+            if (issuePreview.workContent) issuePreview.workContent.textContent = issueForm.workContent.value.trim();
+            if (issuePreview.period) issuePreview.period.textContent = buildPeriodText(summary.periodStart, summary.periodEnd);
+            if (issuePreview.workPlace) issuePreview.workPlace.textContent = issueForm.workPlace.value.trim();
+            if (issuePreview.contractType) issuePreview.contractType.textContent = issueForm.contractType.value.trim();
+            if (issuePreview.paymentTerms) issuePreview.paymentTerms.textContent = issueForm.paymentTerms.value.trim();
+            if (issuePreview.owner) issuePreview.owner.textContent = owner.name || "";
+            if (issuePreview.total) issuePreview.total.textContent = formatYenValue(total);
+            if (issuePreview.subtotal) issuePreview.subtotal.textContent = formatYenValue(price);
+            if (issuePreview.tax) issuePreview.tax.textContent = formatYenValue(tax);
+            if (issuePreview.summaryTotal) issuePreview.summaryTotal.textContent = formatYenValue(total);
+            if (issuePreview.remark) issuePreview.remark.textContent = issueForm.remark.value.trim();
+            if (issuePreview.detailBody) {
+                const rows = summary.items.map((item) => ({
+                    item: item.itemName || issueForm.projectName.value.trim(),
+                    unit: item.unit,
+                    amount: item.price ? formatYenValue(item.price) : "",
+                    tax: item.tax ? formatYenValue(item.tax) : "",
+                }));
+                const minRows = 8;
+                issuePreview.detailBody.innerHTML = "";
+                for (let i = 0; i < Math.max(rows.length, minRows); i += 1) {
+                    const row = rows[i] || {};
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${escapeHtml(row.item)}</td>
+                        <td>${escapeHtml(row.amount)}</td>
+                        <td>${escapeHtml(row.unit)}</td>
+                        <td>${escapeHtml(row.tax)}</td>
+                    `;
+                    issuePreview.detailBody.appendChild(tr);
+                }
+            }
+        };
+
+        const resetAcceptPdfPreview = () => {
+            if (acceptPdfObjectUrl) {
+                URL.revokeObjectURL(acceptPdfObjectUrl);
+                acceptPdfObjectUrl = "";
+            }
+            if (acceptPdfFileName) acceptPdfFileName.textContent = "未选择文件";
+            if (acceptPdfPreviewSlot) {
+                acceptPdfPreviewSlot.innerHTML = '<div class="order-accept-preview-empty">请选择受注书 PDF 文件进行预览</div>';
+            }
+        };
+
+        const updateAcceptPdfPreview = () => {
+            const file = acceptForm.pdfFile && acceptForm.pdfFile.files ? acceptForm.pdfFile.files[0] : null;
+            if (!file) {
+                resetAcceptPdfPreview();
+                return;
+            }
+            const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name || "");
+            if (!isPdf) {
+                alert("请上传 PDF 文件");
+                acceptForm.pdfFile.value = "";
+                resetAcceptPdfPreview();
+                return;
+            }
+            if (acceptPdfObjectUrl) URL.revokeObjectURL(acceptPdfObjectUrl);
+            acceptPdfObjectUrl = URL.createObjectURL(file);
+            if (acceptPdfFileName) acceptPdfFileName.textContent = file.name || "PDF";
+            if (acceptPdfPreviewSlot) {
+                acceptPdfPreviewSlot.innerHTML = "";
+                const frame = document.createElement("iframe");
+                frame.className = "order-accept-preview-frame";
+                frame.title = "受注书PDF预览";
+                frame.src = acceptPdfObjectUrl;
+                acceptPdfPreviewSlot.appendChild(frame);
+            }
+        };
+
         const renderRows = (items, totalCount, page, totalPageCount) => {
             const count = Number.isFinite(totalCount) ? totalCount : items.length;
             totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
@@ -788,17 +1468,18 @@
 
         const buildIssuePayload = (fromDetail) => {
             const owner = readOwnerSelect(fromDetail ? detailFields.owner : issueForm.owner);
+            const summary = fromDetail ? null : summarizeIssueItems();
             return {
                 order_no: fromDetail ? detailFields.orderNo.value.trim() : issueForm.orderNo.value.trim(),
                 project_name: fromDetail ? detailFields.project.value.trim() : issueForm.projectName.value.trim(),
                 customer_id: Number(fromDetail ? detailFields.customerId.value : issueForm.customerId.value) || 0,
                 customer_name: fromDetail ? detailFields.client.value.trim() : issueForm.customerName.value.trim(),
-                technician_name: fromDetail ? detailFields.engineer.value.trim() : issueForm.technicianName.value.trim(),
+                technician_name: fromDetail ? detailFields.engineer.value.trim() : (summary.itemName || issueForm.technicianName.value.trim()),
                 status: fromDetail ? detailFields.status.value : issueForm.status.value,
-                price: fromDetail ? detailFields.price.value.trim() : issueForm.price.value.trim(),
-                working_hours: fromDetail ? detailFields.hours.value.trim() : issueForm.hours.value.trim(),
-                period_start: fromDetail ? detailFields.start.value : issueForm.start.value,
-                period_end: fromDetail ? detailFields.end.value : issueForm.end.value,
+                price: fromDetail ? detailFields.price.value.trim() : String(summary.totalAmount || parseMoneyValue(issueForm.price.value)),
+                working_hours: fromDetail ? detailFields.hours.value.trim() : String(summary.totalTax || parseMoneyValue(issueForm.hours.value)),
+                period_start: fromDetail ? detailFields.start.value : (summary.periodStart || issueForm.start.value),
+                period_end: fromDetail ? detailFields.end.value : (summary.periodEnd || issueForm.end.value),
                 person_in_charge_id: owner.id,
                 person_in_charge: owner.name,
                 remark: fromDetail ? detailFields.remark.value.trim() : issueForm.remark.value.trim(),
@@ -902,17 +1583,17 @@
             if (!project) return showMissingField(t("order.field.project"), issueForm.projectName), false;
             const customer = issueForm.customerName.value.trim();
             if (!customer) return showMissingField(t("order.field.customer"), issueForm.customerName), false;
-            const technician = issueForm.technicianName.value.trim();
-            if (!technician) return showMissingField(t("common.field.technician"), issueForm.technicianName), false;
             const status = issueForm.status.value;
             if (!status || status === "请选择状态") return showMissingField(t("common.field.status"), issueForm.status), false;
-            const price = issueForm.price.value.trim();
-            if (!price) return showMissingField(t("order.field.price"), issueForm.price), false;
-            const hours = issueForm.hours.value.trim();
-            if (!hours) return showMissingField(t("order.field.hours"), issueForm.hours), false;
-            const start = issueForm.start.value;
-            const end = issueForm.end.value;
-            if (!start || !end) return showMissingField(t("order.field.period"), issueForm.start), false;
+            const items = collectIssueItems();
+            if (!items.length) return showMissingField("契约明细", issueForm.lineAdd), false;
+            for (const item of items) {
+                const get = (field) => item.row.querySelector(`[data-issue-item-field="${field}"]`);
+                if (!item.itemName) return showMissingField("项目", get("item")), false;
+                if (!item.priceRaw) return showMissingField("单价", get("price")), false;
+                if (!item.taxRaw) return showMissingField("税金", get("tax")), false;
+                if (!item.unit) return showMissingField("单位", get("unit")), false;
+            }
             const owner = readOwnerSelect(issueForm.owner);
             if (!owner.id) return showMissingField(t("common.field.owner"), issueForm.owner), false;
             return true;
@@ -938,6 +1619,8 @@
             if (!start || !end) return showMissingField(t("order.field.period"), acceptForm.start), false;
             const owner = readOwnerSelect(acceptForm.owner);
             if (!owner.id) return showMissingField(t("common.field.owner"), acceptForm.owner), false;
+            const pdfFile = acceptForm.pdfFile && acceptForm.pdfFile.files ? acceptForm.pdfFile.files[0] : null;
+            if (!pdfFile) return showMissingField("受注书PDF", acceptForm.pdfFile), false;
             return true;
         };
 
@@ -1142,8 +1825,12 @@
         if (createBtn) {
             createBtn.addEventListener("click", () => {
                 if (currentView === "accept") {
-                    if (createDialogAccept) createDialogAccept.showModal();
+                    if (createDialogAccept) {
+                        updateAcceptPdfPreview();
+                        createDialogAccept.showModal();
+                    }
                 } else if (createDialogIssue) {
+                    updateIssuePreview();
                     createDialogIssue.showModal();
                 }
             });
@@ -1220,6 +1907,49 @@
         loadOwnerSelectOptions(acceptForm.owner);
         bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap, { enableDefault: true });
 
+        [
+            issueForm.orderNo,
+            issueForm.projectName,
+            issueForm.customerName,
+            issueForm.technicianName,
+            issueForm.status,
+            issueForm.price,
+            issueForm.hours,
+            issueForm.start,
+            issueForm.end,
+            issueForm.owner,
+            issueForm.workContent,
+            issueForm.workPlace,
+            issueForm.contractType,
+            issueForm.paymentTerms,
+            issueForm.remark,
+        ].forEach((field) => {
+            if (!field) return;
+            field.addEventListener("input", updateIssuePreview);
+            field.addEventListener("change", updateIssuePreview);
+        });
+        if (issueForm.lineAdd && issueForm.lineItems) {
+            issueForm.lineAdd.addEventListener("click", () => {
+                issueForm.lineItems.appendChild(createIssueItemRow());
+                updateIssuePreview();
+            });
+        }
+        if (issueForm.lineItems) {
+            issueForm.lineItems.addEventListener("input", updateIssuePreview);
+            issueForm.lineItems.addEventListener("change", updateIssuePreview);
+            issueForm.lineItems.addEventListener("click", (event) => {
+                const btn = event.target.closest('[data-action="remove-issue-line"]');
+                if (!btn) return;
+                const row = btn.closest(".order-issue-item-row");
+                if (!row || row === issueForm.lineItems.querySelector(".order-issue-item-row")) return;
+                row.remove();
+                updateIssuePreview();
+            });
+        }
+        if (acceptForm.pdfFile) {
+            acceptForm.pdfFile.addEventListener("change", updateAcceptPdfPreview);
+        }
+
         const refreshI18n = () => {
             if (i18n) {
                 i18n.apply();
@@ -1228,6 +1958,7 @@
             if (detailFields.status) {
                 fillStatusOptions(detailFields.status, currentView);
             }
+            updateIssuePreview();
             renderRows(currentItems, lastTotalCount, currentPage, lastTotalPages);
         };
 
@@ -1240,6 +1971,7 @@
         }
 
         setView("issue");
+        updateIssuePreview();
     })();
 </script>
 </body>

@@ -1,10 +1,12 @@
 import json
+import mimetypes
 import re
 import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
 from django.conf import settings as django_settings
+from django.http import FileResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_time
 from django.views.decorators.csrf import csrf_exempt
@@ -173,6 +175,32 @@ def company_info_api(request):
         return api_error("Invalid settings payload")
     settings_payload.update(_normalize_company_info_payload(data))
     return _save_setting("company-info", settings_payload, login_id)
+
+
+@require_http_methods(["GET"])
+def company_info_logo_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    settings_payload = _company_info_settings()
+    filename = str(settings_payload.get("logo_filename") or "").strip()
+    if not filename:
+        return api_error("File not found", status=404)
+    try:
+        safe_path = storage.path(StorageArea.COMPANY_INFO, filename)
+    except ValueError:
+        return api_error("Invalid path")
+    if not storage.exists(StorageArea.COMPANY_INFO, filename):
+        return api_error("File not found", status=404)
+
+    content_type, _ = mimetypes.guess_type(safe_path)
+    response = FileResponse(
+        storage.open_file(StorageArea.COMPANY_INFO, filename),
+        content_type=content_type or "application/octet-stream",
+    )
+    response["Content-Disposition"] = "inline"
+    return response
 
 
 # 营业邮箱配置

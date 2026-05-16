@@ -261,17 +261,23 @@
                                 <div class="order-pdf-line"><span>支払い条件</span><div class="order-pdf-line-value" data-preview="issuePaymentTerms"></div></div>
                             </div>
                             <div class="order-pdf-company">
-                                <div class="order-pdf-company-name">株式会社○○</div>
-                                <div class="order-pdf-line"><span>〒</span><div class="order-pdf-line-value"></div></div>
-                                <div class="order-pdf-line"><span>住所</span><div class="order-pdf-line-value"></div></div>
-                                <div class="order-pdf-line"><span>TEL</span><div class="order-pdf-line-value"></div></div>
-                                <div class="order-pdf-line"><span>FAX</span><div class="order-pdf-line-value"></div></div>
-                                <div class="order-pdf-line"><span>Mail</span><div class="order-pdf-line-value"></div></div>
+                                <div class="order-pdf-company-name" data-preview="issueCompanyName"></div>
+                                <div class="order-pdf-line"><span>〒</span><div class="order-pdf-line-value" data-preview="issueCompanyPostalCode"></div></div>
+                                <div class="order-pdf-line"><span>住所</span><div class="order-pdf-line-value" data-preview="issueCompanyAddress"></div></div>
+                                <div class="order-pdf-line"><span>TEL</span><div class="order-pdf-line-value" data-preview="issueCompanyTel"></div></div>
+                                <div class="order-pdf-line"><span>FAX</span><div class="order-pdf-line-value" data-preview="issueCompanyFax"></div></div>
+                                <div class="order-pdf-line"><span>Mail</span><div class="order-pdf-line-value" data-preview="issueCompanyMail"></div></div>
                                 <div class="order-pdf-line"><span>担当者</span><div class="order-pdf-line-value" data-preview="issueOwner"></div></div>
                                 <div class="order-pdf-stamp-row">
                                     <div></div>
-                                    <div class="order-pdf-stamp"></div>
-                                    <div class="order-pdf-stamp"></div>
+                                    <div class="order-pdf-stamp-cell">
+                                        <div class="order-pdf-stamp-label">担当印</div>
+                                        <div class="order-pdf-stamp"></div>
+                                    </div>
+                                    <div class="order-pdf-stamp-cell">
+                                        <div class="order-pdf-stamp-label">会社印</div>
+                                        <div class="order-pdf-stamp" data-preview="issueCompanySeal"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -611,6 +617,13 @@
             orderNo: document.querySelector('[data-preview="issueOrderNo"]'),
             orderDate: document.querySelector('[data-preview="issueOrderDate"]'),
             customer: document.querySelector('[data-preview="issueCustomer"]'),
+            companyName: document.querySelector('[data-preview="issueCompanyName"]'),
+            companyPostalCode: document.querySelector('[data-preview="issueCompanyPostalCode"]'),
+            companyAddress: document.querySelector('[data-preview="issueCompanyAddress"]'),
+            companyTel: document.querySelector('[data-preview="issueCompanyTel"]'),
+            companyFax: document.querySelector('[data-preview="issueCompanyFax"]'),
+            companyMail: document.querySelector('[data-preview="issueCompanyMail"]'),
+            companySeal: document.querySelector('[data-preview="issueCompanySeal"]'),
             project: document.querySelector('[data-preview="issueProject"]'),
             workContent: document.querySelector('[data-preview="issueWorkContent"]'),
             period: document.querySelector('[data-preview="issuePeriod"]'),
@@ -686,6 +699,16 @@
         const acceptCustomerMap = new Map();
         const filterCustomerMap = new Map();
         const acceptTechnicianMap = new Map();
+        let companyInfoState = {
+            company_name: "",
+            postal_code: "",
+            address: "",
+            tel: "",
+            fax: "",
+            mail: "",
+            logoUrl: "",
+        };
+        let companyLogoObjectUrl = "";
 
         const renderActions = (container) => {
             container.innerHTML = "";
@@ -901,12 +924,87 @@
             return row;
         };
 
+        const renderIssueCompanyInfo = () => {
+            if (issuePreview.companyName) issuePreview.companyName.textContent = companyInfoState.company_name || "";
+            if (issuePreview.companyPostalCode) issuePreview.companyPostalCode.textContent = companyInfoState.postal_code || "";
+            if (issuePreview.companyAddress) issuePreview.companyAddress.textContent = companyInfoState.address || "";
+            if (issuePreview.companyTel) issuePreview.companyTel.textContent = companyInfoState.tel || "";
+            if (issuePreview.companyFax) issuePreview.companyFax.textContent = companyInfoState.fax || "";
+            if (issuePreview.companyMail) issuePreview.companyMail.textContent = companyInfoState.mail || "";
+            if (issuePreview.companySeal) {
+                issuePreview.companySeal.innerHTML = "";
+                issuePreview.companySeal.classList.toggle("is-filled", Boolean(companyInfoState.logoUrl));
+                if (companyInfoState.logoUrl) {
+                    const img = document.createElement("img");
+                    img.src = companyInfoState.logoUrl;
+                    img.alt = "印";
+                    issuePreview.companySeal.appendChild(img);
+                }
+            }
+        };
+
+        const clearCompanyLogoObjectUrl = () => {
+            if (companyLogoObjectUrl) {
+                URL.revokeObjectURL(companyLogoObjectUrl);
+                companyLogoObjectUrl = "";
+            }
+        };
+
+        const fetchCompanyLogoUrl = async (filename) => {
+            clearCompanyLogoObjectUrl();
+            if (!filename) return "";
+            try {
+                const response = await fetch(
+                    `/api/company-info/logo?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`,
+                    { credentials: "same-origin" }
+                );
+                if (!response.ok) return "";
+                const blob = await response.blob();
+                if (!blob || !blob.size) return "";
+                companyLogoObjectUrl = URL.createObjectURL(blob);
+                return companyLogoObjectUrl;
+            } catch (error) {
+                console.warn(error);
+                return "";
+            }
+        };
+
+        const fetchCompanyInfo = async () => {
+            try {
+                const payload = await window.requestJson("/api/company-info", { method: "GET" });
+                const settings = payload && payload.data && payload.data.settings
+                    ? payload.data.settings
+                    : {};
+                const logoUrl = await fetchCompanyLogoUrl(settings.logo_filename);
+                companyInfoState = {
+                    ...companyInfoState,
+                    company_name: String(settings.company_name || ""),
+                    postal_code: String(settings.postal_code || ""),
+                    address: String(settings.address || ""),
+                    tel: String(settings.tel || ""),
+                    fax: String(settings.fax || ""),
+                    mail: String(settings.mail || ""),
+                    logoUrl,
+                };
+            } catch (error) {
+                console.warn(error);
+                clearCompanyLogoObjectUrl();
+                companyInfoState = {
+                    ...companyInfoState,
+                    logoUrl: "",
+                };
+            }
+            renderIssueCompanyInfo();
+            return companyInfoState;
+        };
+
         const updateIssuePreview = () => {
             const summary = summarizeIssueItems();
             const price = summary.totalPrice;
             const tax = summary.totalTax;
             const total = price + tax;
             const owner = readOwnerSelect(issueForm.owner);
+            renderIssueCompanyInfo();
             if (issuePreview.orderNo) issuePreview.orderNo.textContent = issueForm.orderNo.value.trim();
             if (issuePreview.orderDate) issuePreview.orderDate.textContent = todayText();
             if (issuePreview.customer) {
@@ -1472,13 +1570,14 @@
         });
 
         if (createBtn) {
-            createBtn.addEventListener("click", () => {
+            createBtn.addEventListener("click", async () => {
                 if (currentView === "accept") {
                     if (createDialogAccept) {
                         updateAcceptPdfPreview();
                         createDialogAccept.showModal();
                     }
                 } else if (createDialogIssue) {
+                    await fetchCompanyInfo();
                     updateIssuePreview();
                     createDialogIssue.showModal();
                 }
@@ -1620,6 +1719,7 @@
         }
 
         setView("issue");
+        fetchCompanyInfo();
         updateIssuePreview();
     })();
 </script>

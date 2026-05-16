@@ -239,14 +239,14 @@ body > .page {
 }
 .order-pdf-line {
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-columns: 62px minmax(0, 1fr);
   align-items: end;
-  gap: 8px;
+  gap: 3px;
   min-height: 18px;
 }
 .order-pdf-line span:first-child {
   font-weight: 700;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 .order-pdf-line-value {
   border-bottom: 1px solid #222222;
@@ -256,13 +256,18 @@ body > .page {
 }
 .order-pdf-company {
   display: grid;
-  gap: 5px;
-  padding-top: 18px;
+  gap: 3px;
+  padding-top: 8px;
 }
 .order-pdf-company-name {
   font-size: 14px;
   font-weight: 800;
-  min-height: 22px;
+  line-height: 1.25;
+  min-height: 18px;
+}
+.order-pdf-company .order-pdf-line {
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 3px;
 }
 .order-pdf-stamp-row {
   display: grid;
@@ -270,9 +275,37 @@ body > .page {
   justify-content: end;
   margin-top: 6px;
 }
+.order-pdf-stamp-cell {
+  display: grid;
+  grid-template-rows: 20px 58px;
+}
+.order-pdf-stamp-cell + .order-pdf-stamp-cell {
+  margin-left: -1px;
+}
+.order-pdf-stamp-label {
+  border: 1px solid #222222;
+  border-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  background: #ffffff;
+}
 .order-pdf-stamp {
   height: 58px;
   border: 1px solid #222222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #ffffff;
+}
+.order-pdf-stamp img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .order-pdf-total {
   width: 260px;

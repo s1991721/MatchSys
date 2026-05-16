@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="components.css">
     <title data-i18n="profile.title">个人信息</title>
 </head>
-<body>
+<body class="profile-page">
 <div class="page page-gap-compact">
     <div class="header-card c-card c-card-pad">
         <div class="profile-head">
@@ -31,9 +31,10 @@
             <button class="c-btn c-btn-danger" type="button" id="logoutBtn" data-i18n="profile.logout">退出登录</button>
         </div>
     </div>
-    <div class="content-grid content-spaced content-spaced-compact">
-        <section class="c-card">
-            <h3 class="section-title c-panel-title" data-i18n="profile.section.profile">修改员工信息</h3>
+    <div class="content-grid profile-grid">
+        <div class="profile-left c-stack">
+        <section class="c-card c-card-pad profile-card">
+            <h2 class="c-card-title" data-i18n="profile.section.profile">个人信息</h2>
             <form id="employeeForm" autocomplete="off">
                 <div class="form-grid">
                     <div class="form-field">
@@ -95,9 +96,11 @@
                 </div>
             </form>
         </section>
+        </div>
 
-        <section class="c-card">
-            <h3 class="section-title c-panel-title" data-i18n="profile.section.password">修改密码</h3>
+        <div class="profile-right c-stack">
+        <section class="c-card c-card-pad profile-card">
+            <h2 class="c-card-title" data-i18n="profile.section.password">修改密码</h2>
             <form id="passwordForm" autocomplete="off">
                 <div class="form-grid form-grid-single">
                     <div class="form-field">
@@ -119,6 +122,28 @@
                 </div>
             </form>
         </section>
+
+        <section class="c-card c-card-pad profile-card c-upload-card">
+            <h2 class="c-card-title" data-i18n="profile.section.seal">个人印章</h2>
+            <div class="c-upload-row">
+            <div class="c-upload-preview" id="sealPreview">
+                <span class="c-empty-text" data-i18n="profile.seal.empty">未上传印章</span>
+            </div>
+            <div class="c-upload-controls">
+            <div class="form-grid form-grid-single">
+                <div class="form-field">
+                    <label for="sealFile" data-i18n="profile.field.seal">印章文件（PNG）</label>
+                    <input id="sealFile" type="file" accept="image/png"/>
+                    <div class="hint" id="sealHint" data-i18n="profile.seal.empty">未上传印章</div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="c-btn c-btn-primary" type="button" id="sealUploadBtn" data-i18n="profile.action.upload_seal">上传印章</button>
+            </div>
+            </div>
+            </div>
+        </section>
+        </div>
     </div>
 </div>
 
@@ -149,6 +174,13 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const profileName = document.getElementById("profileName");
     const profilePosition = document.getElementById("profilePosition");
+    const sealFileInput = document.getElementById("sealFile");
+    const sealHint = document.getElementById("sealHint");
+    const sealPreview = document.getElementById("sealPreview");
+    const sealUploadBtn = document.getElementById("sealUploadBtn");
+    let currentSeal = "";
+    let selectedSealFile = null;
+    let selectedSealObjectUrl = "";
 
     if (profileName && employeeName) {
         profileName.textContent = employeeName;
@@ -175,8 +207,74 @@
         passwordForm.querySelectorAll("input, button").forEach((el) => {
             el.disabled = disabled;
         });
+        if (sealFileInput) sealFileInput.disabled = disabled;
+        if (sealUploadBtn) sealUploadBtn.disabled = disabled;
         logoutBtn.disabled = disabled;
     }
+
+    const format = (key, values = {}) => {
+        let text = t(key);
+        Object.keys(values).forEach((name) => {
+            text = text.replace(new RegExp(`\\{${name}\\}`, "g"), values[name]);
+        });
+        return text;
+    };
+
+    const clearSelectedSealObjectUrl = () => {
+        if (selectedSealObjectUrl) {
+            URL.revokeObjectURL(selectedSealObjectUrl);
+            selectedSealObjectUrl = "";
+        }
+    };
+
+    const renderSealPreview = (src) => {
+        if (!sealPreview) return;
+        sealPreview.innerHTML = "";
+        if (!src) {
+            const empty = document.createElement("span");
+            empty.className = "c-empty-text";
+            empty.textContent = t("profile.seal.empty");
+            sealPreview.appendChild(empty);
+            return;
+        }
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = t("profile.section.seal");
+        img.onerror = () => renderSealPreview("");
+        sealPreview.appendChild(img);
+    };
+
+    const updateSealHint = () => {
+        if (!sealHint) return;
+        if (selectedSealFile) {
+            sealHint.textContent = format("profile.seal.selected_with_name", {name: selectedSealFile.name || ""});
+            return;
+        }
+        const name = (currentSeal || "").split("/").pop();
+        sealHint.textContent = name
+            ? format("profile.seal.saved_with_name", {name})
+            : t("profile.seal.empty");
+    };
+
+    const setCurrentSeal = (sealPath, sealUrl) => {
+        currentSeal = sealPath || "";
+        clearSelectedSealObjectUrl();
+        selectedSealFile = null;
+        if (sealFileInput) sealFileInput.value = "";
+        if (sealUrl) {
+            renderSealPreview(`${sealUrl}?v=${encodeURIComponent(`${currentSeal}-${Date.now()}`)}`);
+        } else {
+            renderSealPreview("");
+        }
+        updateSealHint();
+    };
+
+    const isPngFile = (file) => {
+        if (!file) return false;
+        const name = String(file.name || "").toLowerCase();
+        const type = String(file.type || "").toLowerCase();
+        return name.endsWith(".png") && (!type || type === "image/png");
+    };
 
     const loadEmployee = async () => {
         if (!employeeId) {
@@ -203,6 +301,7 @@
             document.getElementById("empEmergencyName").value = item.emergency_contact_name || "";
             document.getElementById("empEmergencyPhone").value = item.emergency_contact_phone || "";
             document.getElementById("empEmergencyRelation").value = item.emergency_contact_relationship || "";
+            setCurrentSeal(item.seal || "", item.seal_url || "");
 
             setReadOnlyWhenFilled("empPhone", item.phone);
             setReadOnlyWhenFilled("empEmail", item.email);
@@ -316,6 +415,66 @@
             alert(message);
         }
     });
+
+    if (sealFileInput) {
+        sealFileInput.addEventListener("change", (event) => {
+            const file = event.target.files ? event.target.files[0] : null;
+            clearSelectedSealObjectUrl();
+            if (!file) {
+                selectedSealFile = null;
+                if (currentSeal) {
+                    renderSealPreview(`${API_BASE}/api/employees/${employeeId}/seal?v=${encodeURIComponent(`${currentSeal}-${Date.now()}`)}`);
+                } else {
+                    renderSealPreview("");
+                }
+                updateSealHint();
+                return;
+            }
+            if (!isPngFile(file)) {
+                selectedSealFile = null;
+                sealFileInput.value = "";
+                renderSealPreview(currentSeal ? `${API_BASE}/api/employees/${employeeId}/seal?v=${encodeURIComponent(`${currentSeal}-${Date.now()}`)}` : "");
+                updateSealHint();
+                alert(t("profile.alert.seal_png_required"));
+                return;
+            }
+            selectedSealFile = file;
+            selectedSealObjectUrl = URL.createObjectURL(file);
+            renderSealPreview(selectedSealObjectUrl);
+            updateSealHint();
+        });
+    }
+
+    if (sealUploadBtn) {
+        sealUploadBtn.addEventListener("click", async () => {
+            if (!employeeId) return;
+            if (!selectedSealFile) {
+                alert(t("profile.alert.seal_required"));
+                return;
+            }
+            if (!isPngFile(selectedSealFile)) {
+                alert(t("profile.alert.seal_png_required"));
+                return;
+            }
+            const formData = new FormData();
+            formData.append("seal_file", selectedSealFile);
+            try {
+                sealUploadBtn.disabled = true;
+                const payload = await window.requestJson(`${API_BASE}/api/employees/${employeeId}/seal`, {
+                    headers: {},
+                    body: formData,
+                });
+                if (!payload.success) throw new Error(payload.message || t("profile.alert.seal_failed"));
+                const data = payload.data || {};
+                setCurrentSeal(data.seal || "", data.seal_url || "");
+                alert(t("profile.alert.seal_uploaded"));
+            } catch (err) {
+                alert(err.message || t("profile.alert.seal_failed"));
+            } finally {
+                sealUploadBtn.disabled = false;
+            }
+        });
+    }
 
     logoutBtn.addEventListener("click", async () => {
         try {

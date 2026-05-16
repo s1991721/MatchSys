@@ -192,13 +192,23 @@
               <label for="company-mail" data-i18n="system_settings.company.mail">Mail</label>
               <input id="company-mail" type="email" placeholder="info@example.com" data-i18n-placeholder="system_settings.company.mail_placeholder" />
             </div>
-            <div class="form-field">
-              <label for="company-seal" data-i18n="system_settings.company.seal">印</label>
-              <input id="company-seal" type="file" accept="image/*" />
-              <div class="hint" id="company-seal-current"></div>
-            </div>
-            <div class="form-actions">
-              <button class="c-btn c-btn-primary" type="button" id="company-save" data-i18n="system_settings.common.save_config">保存配置</button>
+            <div class="form-field full c-upload-card">
+              <label data-i18n="system_settings.company.seal">印</label>
+              <div class="c-upload-row">
+                <div class="c-upload-preview" id="company-seal-preview">
+                  <span class="c-empty-text" data-i18n="system_settings.company.seal_empty">未上传印</span>
+                </div>
+                <div class="c-upload-controls">
+                  <div class="form-field">
+                    <label for="company-seal" data-i18n="system_settings.company.seal">印</label>
+                    <input id="company-seal" type="file" accept="image/png" />
+                    <div class="hint" id="company-seal-current"></div>
+                  </div>
+                  <div class="form-actions">
+                    <button class="c-btn c-btn-primary" type="button" id="company-save" data-i18n="system_settings.common.save_config">保存配置</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </form>
         </section>
@@ -550,6 +560,7 @@
     const companySaveButton = document.getElementById("company-save");
     const companySealInput = document.getElementById("company-seal");
     const companySealCurrent = document.getElementById("company-seal-current");
+    const companySealPreview = document.getElementById("company-seal-preview");
     const accountSaveButton = document.getElementById("account-save");
     const previewResetButton = document.getElementById("preview-reset");
     const previewResetStatus = document.getElementById("preview-reset-status");
@@ -603,6 +614,7 @@
       seal_path: "",
     };
     let companySealFile = null;
+    let companySealObjectUrl = "";
 
     const notifyError = (message) => {
       window.alert(message || t("system_settings.common.request_failed_retry", "请求失败，请稍后再试。"));
@@ -824,6 +836,39 @@
         );
       }
       return t("system_settings.company.seal_empty", "未上传印");
+    };
+
+    const clearCompanySealObjectUrl = () => {
+      if (companySealObjectUrl) {
+        URL.revokeObjectURL(companySealObjectUrl);
+        companySealObjectUrl = "";
+      }
+    };
+
+    const renderCompanySealPreview = (src) => {
+      if (!companySealPreview) return;
+      companySealPreview.innerHTML = "";
+      if (!src) {
+        const empty = document.createElement("span");
+        empty.className = "c-empty-text";
+        empty.textContent = t("system_settings.company.seal_empty", "未上传印");
+        companySealPreview.appendChild(empty);
+        return;
+      }
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = t("system_settings.company.seal", "印");
+      img.onerror = () => renderCompanySealPreview("");
+      companySealPreview.appendChild(img);
+    };
+
+    const renderSavedCompanySealPreview = () => {
+      const filename = resolveCompanySealName(companyInfoState);
+      if (!filename) {
+        renderCompanySealPreview("");
+        return;
+      }
+      renderCompanySealPreview(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`);
     };
 
     const updateCompanySealHint = () => {
@@ -2265,7 +2310,14 @@
     if (companySealInput) {
       companySealInput.addEventListener("change", (event) => {
         const file = event.target.files ? event.target.files[0] : null;
+        clearCompanySealObjectUrl();
         companySealFile = file || null;
+        if (companySealFile) {
+          companySealObjectUrl = URL.createObjectURL(companySealFile);
+          renderCompanySealPreview(companySealObjectUrl);
+        } else {
+          renderSavedCompanySealPreview();
+        }
         updateCompanySealHint();
       });
     }
@@ -2278,6 +2330,8 @@
           if (companySealInput) {
             companySealInput.value = "";
           }
+          clearCompanySealObjectUrl();
+          renderSavedCompanySealPreview();
           updateCompanySealHint();
           flashButton(companySaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
@@ -2651,6 +2705,7 @@
       setValue("company-tel", companyInfoState.tel || "");
       setValue("company-fax", companyInfoState.fax || "");
       setValue("company-mail", companyInfoState.mail || "");
+      renderSavedCompanySealPreview();
       updateCompanySealHint();
 
       const accountSettings = await fetchSettings(sections.account, {});

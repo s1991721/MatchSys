@@ -74,6 +74,18 @@ def _parse_nationality(value):
     return int_value, None
 
 
+def _is_png_upload(uploaded_file):
+    _, ext = os.path.splitext(uploaded_file.name or "")
+    if ext.lower() != ".png":
+        return False
+    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
+    return not content_type or content_type == "image/png"
+
+
+def _employee_seal_filename(employee_id):
+    return f"employee_seal/employee_{employee_id}_seal.png"
+
+
 @csrf_exempt
 @require_POST
 # 登录
@@ -247,6 +259,55 @@ def employee_detail_api(request, employee_id):
         request.session["employee_position_name"] = employee.position_name
     item = Employee.serialize(employee)
     return api_success(data=item)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def employee_seal_api(request, employee_id):
+    login_id = request.session.get("employee_id")
+    if not login_id:
+        return api_error("Unauthorized", status=401)
+
+    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
+    if not employee:
+        return api_error("Employee not found", status=404)
+
+    if request.method == "POST":
+        if int(login_id) != int(employee_id):
+            return api_error("Forbidden", status=403)
+        seal_file = request.FILES.get("seal_file")
+        if not seal_file:
+            return api_error("Missing file")
+        if not _is_png_upload(seal_file):
+            return api_error("Only PNG files are allowed")
+
+        filename = _employee_seal_filename(employee_id)
+        storage.save_upload(StorageArea.COMPANY_INFO, filename, seal_file)
+        employee.seal = filename
+        employee.updated_by = login_id
+        employee.save(update_fields=["seal", "updated_by", "updated_at"])
+        return api_success(data={
+            "seal": filename,
+            "seal_url": f"/api/employees/{employee_id}/seal",
+        })
+
+    seal_path = (employee.seal or "").strip()
+    if not seal_path:
+        return api_error("File not found", status=404)
+    try:
+        safe_path = storage.path(StorageArea.COMPANY_INFO, seal_path)
+    except ValueError:
+        return api_error("Invalid path")
+    if not storage.exists(StorageArea.COMPANY_INFO, seal_path):
+        return api_error("File not found", status=404)
+
+    content_type, _ = mimetypes.guess_type(safe_path)
+    response = FileResponse(
+        storage.open_file(StorageArea.COMPANY_INFO, seal_path),
+        content_type=content_type or "image/png",
+    )
+    response["Content-Disposition"] = "inline"
+    return response
 
 
 @csrf_exempt

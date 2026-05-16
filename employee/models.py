@@ -68,6 +68,8 @@ class Employee(models.Model):
 
     status = models.SmallIntegerField(default=1)  # 1在职/0离职/2停用...
 
+    seal = models.CharField(max_length=255, null=True, blank=True, verbose_name="个人印章文件路径")
+
     # 审计字段（谁创建/更新）
     created_by = models.BigIntegerField(unique=True, verbose_name="员工ID")
     created_at = models.DateTimeField(auto_now_add=True, db_column='created_at')
@@ -99,6 +101,8 @@ class Employee(models.Model):
             "emergency_contact_relationship": emp.emergency_contact_relationship or "",
             "hire_date": emp.hire_date.isoformat() if emp.hire_date else "",
             "leave_date": emp.leave_date.isoformat() if emp.leave_date else "",
+            "seal": emp.seal or "",
+            "seal_url": f"/api/employees/{emp.id}/seal" if emp.seal else "",
         }
 
 

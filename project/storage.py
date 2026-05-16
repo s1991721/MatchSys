@@ -74,6 +74,7 @@ def save_upload(area: str, filename: str, uploaded_file) -> str:
     """保存 Django request.FILES 中的上传文件，返回原文件名用于写入数据库。"""
 
     target = _resolve_path(area, filename)
+    target.parent.mkdir(parents=True, exist_ok=True)
     with open(target, "wb") as handle:
         for chunk in uploaded_file.chunks():
             handle.write(chunk)
@@ -84,6 +85,7 @@ def save_bytes(area: str, filename: str, content: bytes) -> str:
     """保存 bytes 内容，适用于 LINE 图片、JSON 凭据和 Gmail token 写回。"""
 
     target = _resolve_path(area, filename)
+    target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(content)
     return filename
 

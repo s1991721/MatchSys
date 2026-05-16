@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS employee
     position_name                  VARCHAR(100) NULL COMMENT '职位名称',
 
     status                         SMALLINT     NULL COMMENT '1在职/0离职/2停用...',
+    seal                           VARCHAR(255) NULL COMMENT '个人印章文件路径',
 
     created_by                     BIGINT       NULL COMMENT '创建人 employee.id',
     created_at                     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

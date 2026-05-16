@@ -8,15 +8,12 @@ project/__pycache__/**
 bpmatch/__pycache__/**
 /bpmatch/migrations/**
 /.idea/**
-/ss/**
+/upload/**
 .idea/
 *.iml
 __pycache__/
 *.pyc
 .DS_Store
-/customer_contract/**
 /.$ER.drawio.bkp
-/credentials/**
 /.vscode/
 /logs/**
-/line_uploads/**

@@ -12,13 +12,9 @@ staticfiles/
 *.sqlite3
 .DS_Store
 
-credentials/
-customer_contract/
+upload/
 docker_mysql_img/
 docs/
 frontend/
-line_uploads/
 logs/
 nginx/
-ss/
-

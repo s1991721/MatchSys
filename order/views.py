@@ -1,5 +1,6 @@
 import calendar
 import json
+import os
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
@@ -10,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from employee.models import Employee
 from order.models import PayRequest, PurchaseOrder, SalesOrder
 from project.api import api_error, api_paginated, api_success
+from project import storage
+from project.storage import StorageArea
 
 
 def _require_login(request):
@@ -29,6 +32,41 @@ def _parse_json_body(request):
         return None, api_error(
             "Invalid JSON body"
         )
+
+
+def _parse_request_body(request):
+    content_type = (request.META.get("CONTENT_TYPE") or "").lower()
+    if content_type.startswith("multipart/form-data"):
+        return request.POST, None
+    return _parse_json_body(request)
+
+
+def _model_has_field(model, field_name):
+    try:
+        model._meta.get_field(field_name)
+        return True
+    except Exception:
+        return False
+
+
+def _sanitize_filename_part(value):
+    text = str(value or "").strip()
+    safe = "".join(char if char.isalnum() or char in ("-", "_") else "_" for char in text)
+    return safe.strip("_") or "purchase_order"
+
+
+def _save_purchase_order_pdf(order_no, uploaded_file):
+    if not uploaded_file:
+        return ""
+    original_name = getattr(uploaded_file, "name", "") or ""
+    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
+    if content_type and content_type != "application/pdf":
+        return None
+    if original_name and not original_name.lower().endswith(".pdf"):
+        return None
+    filename = os.path.join("purchase", f"{_sanitize_filename_part(order_no)}.pdf")
+    storage.save_upload(StorageArea.ORDER, filename, uploaded_file)
+    return storage.relative_path(StorageArea.ORDER, filename)
 
 
 def _parse_date(value, field):
@@ -138,15 +176,18 @@ def _serialize_purchase(order):
         "person_in_charge_id": order.person_in_charge_id or None,
         "person_in_charge": order.person_in_charge,
         "status": order.status,
+        "work_content": order.work_content or "",
+        "work_place": order.work_place or "",
+        "contract_type": order.contract_type or "",
+        "payment_terms": order.payment_terms or "",
         "project_name": order.project_name,
         "customer_id": order.customer_id,
         "customer_name": order.customer_name,
-        "technician_name": order.technician_name or "",
-        "price": str(order.price) if order.price is not None else "",
-        "working_hours": str(order.working_hours) if order.working_hours is not None else "",
+        "line_items": order.line_items or [],
         "period_start": order.period_start.isoformat() if order.period_start else "",
         "period_end": order.period_end.isoformat() if order.period_end else "",
         "remark": order.remark or "",
+        "pdf_file": order.pdf_file or "",
         "created_by": order.created_by,
         "created_at": created_at.strftime("%Y-%m-%d %H:%M") if created_at else "",
         "updated_by": order.updated_by or "",
@@ -230,12 +271,18 @@ def _apply_purchase_payload(order, payload):
         return owner_error
     if "status" in payload:
         order.status = (payload.get("status") or "").strip()
+    if "work_content" in payload:
+        order.work_content = (payload.get("work_content") or "").strip()
+    if "work_place" in payload:
+        order.work_place = (payload.get("work_place") or "").strip()
+    if "contract_type" in payload:
+        order.contract_type = (payload.get("contract_type") or "").strip()
+    if "payment_terms" in payload:
+        order.payment_terms = (payload.get("payment_terms") or "").strip()
     if "project_name" in payload:
         order.project_name = (payload.get("project_name") or "").strip()
     if "customer_name" in payload:
         order.customer_name = (payload.get("customer_name") or "").strip()
-    if "technician_name" in payload:
-        order.technician_name = (payload.get("technician_name") or "").strip()
     if "customer_id" in payload:
         value, error = _parse_int(payload.get("customer_id"), "customer_id")
         if error:
@@ -244,17 +291,20 @@ def _apply_purchase_payload(order, payload):
     if "remark" in payload:
         order.remark = (payload.get("remark") or "").strip()
 
-    if "price" in payload:
-        value, error = _parse_decimal(payload.get("price"), "price")
-        if error:
-            return error
-        order.price = value
-
-    if "working_hours" in payload:
-        value, error = _parse_decimal(payload.get("working_hours"), "working_hours")
-        if error:
-            return error
-        order.working_hours = value
+    if "line_items" in payload:
+        raw_items = payload.get("line_items")
+        if raw_items in (None, ""):
+            order.line_items = []
+        elif isinstance(raw_items, list):
+            order.line_items = raw_items
+        else:
+            try:
+                items = json.loads(raw_items)
+            except (TypeError, json.JSONDecodeError):
+                return api_error("Invalid JSON: line_items")
+            if not isinstance(items, list):
+                return api_error("Invalid JSON: line_items")
+            order.line_items = items
 
     if "period_start" in payload:
         value, error = _parse_date(payload.get("period_start"), "period_start")
@@ -427,7 +477,8 @@ def _apply_filters(queryset, request):
                 "Invalid customer_id"
             )
     if technician_name:
-        queryset = queryset.filter(technician_name__icontains=technician_name)
+        if _model_has_field(queryset.model, "technician_name"):
+            queryset = queryset.filter(technician_name__icontains=technician_name)
     if status:
         queryset = queryset.filter(status=status)
     if _is_truthy(only_self):
@@ -515,7 +566,7 @@ def purchase_orders_api(request):
         )
 
     if request.method == "POST":
-        payload, error = _parse_json_body(request)
+        payload, error = _parse_request_body(request)
         if error:
             return error
         required_fields = [
@@ -542,6 +593,12 @@ def purchase_orders_api(request):
         order.updated_by = current_user
         order.created_at = now
         order.updated_at = now
+        pdf_file = request.FILES.get("pdf_file")
+        if pdf_file:
+            saved_pdf = _save_purchase_order_pdf(order.order_no, pdf_file)
+            if saved_pdf is None:
+                return api_error("Invalid PDF file")
+            order.pdf_file = saved_pdf
         order.save()
         item = _serialize_purchase(order)
         return api_success(data={"item": item})

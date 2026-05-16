@@ -512,6 +512,8 @@
 </dialog>
 <script src="i18n.js"></script>
 <script src="common.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
     (function () {
         const i18n = window.I18N;
@@ -640,6 +642,7 @@
             detailBody: document.getElementById("issuePreviewDetailBody"),
         };
         const acceptPdfPreviewSlot = document.getElementById("acceptPdfPreviewSlot");
+        const issuePdfPreviewPage = document.getElementById("issuePdfPreviewPage");
         let acceptPdfObjectUrl = "";
 
         const detailFields = {
@@ -867,6 +870,17 @@
             return `${yyyy}-${mm}-${dd}`;
         };
 
+        const buildIssueOrderNo = () => {
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mi = String(d.getMinutes()).padStart(2, "0");
+            const ss = String(d.getSeconds()).padStart(2, "0");
+            return `P_${yyyy}${mm}${dd}${hh}${mi}${ss}`;
+        };
+
         const buildPeriodText = (start, end) => {
             if (start && end) return `${start} ～ ${end}`;
             return start || end || "";
@@ -929,6 +943,43 @@
                 <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-issue-line" aria-label="删除">×</button>
             `;
             return row;
+        };
+
+        const resetIssueForm = () => {
+            [
+                issueForm.projectName,
+                issueForm.customerName,
+                issueForm.customerId,
+                issueForm.technicianName,
+                issueForm.price,
+                issueForm.hours,
+                issueForm.start,
+                issueForm.end,
+                issueForm.workContent,
+                issueForm.workPlace,
+                issueForm.contractType,
+                issueForm.paymentTerms,
+                issueForm.remark,
+            ].forEach((field) => {
+                if (field) field.value = "";
+            });
+            if (issueForm.orderNo) issueForm.orderNo.value = buildIssueOrderNo();
+            if (issueForm.status) issueForm.status.value = "承认中";
+            if (issueForm.customerList) issueForm.customerList.innerHTML = "";
+            issueCustomerMap.clear();
+            if (issueForm.lineItems) {
+                const rows = Array.from(issueForm.lineItems.querySelectorAll(".order-issue-item-row"));
+                rows.slice(1).forEach((row) => row.remove());
+                const firstRow = issueForm.lineItems.querySelector(".order-issue-item-row");
+                if (firstRow) {
+                    firstRow.querySelectorAll("input").forEach((input) => {
+                        input.value = "";
+                    });
+                } else {
+                    issueForm.lineItems.appendChild(createIssueItemRow());
+                }
+            }
+            updateIssuePreview();
         };
 
         const renderIssueCompanyInfo = () => {
@@ -1173,6 +1224,73 @@
             }
         };
 
+        const buildIssuePdfFileName = () => {
+            const rawNo = issueForm.orderNo?.value?.trim() || "";
+            const normalized = rawNo.replace(/[\\/:*?"<>|]/g, "_");
+            if (normalized) return `${normalized}.pdf`;
+            return `${buildIssueOrderNo()}.pdf`;
+        };
+
+        const exportIssuePreviewPdfBlob = async () => {
+            if (!issuePdfPreviewPage) {
+                throw new Error("未找到发注书预览区域");
+            }
+            if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+                throw new Error("PDF生成依赖未加载");
+            }
+            updateIssuePreview();
+            const clone = issuePdfPreviewPage.cloneNode(true);
+            clone.style.width = `${issuePdfPreviewPage.offsetWidth}px`;
+            clone.style.maxWidth = `${issuePdfPreviewPage.offsetWidth}px`;
+            clone.style.background = "#ffffff";
+
+            const stage = document.createElement("div");
+            stage.style.position = "fixed";
+            stage.style.left = "-100000px";
+            stage.style.top = "0";
+            stage.style.zIndex = "-1";
+            stage.appendChild(clone);
+            document.body.appendChild(stage);
+
+            try {
+                const canvas = await window.html2canvas(clone, {
+                    scale: 2,
+                    backgroundColor: "#ffffff",
+                    useCORS: true,
+                });
+                const imgData = canvas.toDataURL("image/png");
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF("p", "pt", "a4");
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const margin = 20;
+                const maxWidth = pageWidth - margin * 2;
+                const maxHeight = pageHeight - margin * 2;
+                const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
+                const drawWidth = canvas.width * scale;
+                const drawHeight = canvas.height * scale;
+                const x = (pageWidth - drawWidth) / 2;
+                const y = (pageHeight - drawHeight) / 2;
+                pdf.addImage(imgData, "PNG", x, y, drawWidth, drawHeight, undefined, "FAST");
+                return pdf.output("blob");
+            } finally {
+                stage.remove();
+            }
+        };
+
+        const buildIssueFormData = (payload, pdfBlob) => {
+            const formData = new FormData();
+            Object.entries(payload).forEach(([key, value]) => {
+                if (Array.isArray(value) || (value && typeof value === "object")) {
+                    formData.append(key, JSON.stringify(value));
+                } else if (value !== null && value !== undefined) {
+                    formData.append(key, String(value));
+                }
+            });
+            formData.append("pdf_file", pdfBlob, buildIssuePdfFileName());
+            return formData;
+        };
+
         const renderRows = (items, totalCount, page, totalPageCount) => {
             const count = Number.isFinite(totalCount) ? totalCount : items.length;
             totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
@@ -1308,21 +1426,36 @@
         const buildIssuePayload = (fromDetail) => {
             const owner = readOwnerSelect(fromDetail ? detailFields.owner : issueForm.owner);
             const summary = fromDetail ? null : summarizeIssueItems();
-            return {
+            const lineItems = summary
+                ? summary.items.map((item) => ({
+                    item: item.itemName,
+                    price: item.price,
+                    price_raw: item.priceRaw,
+                    tax: item.tax,
+                    tax_raw: item.taxRaw,
+                    unit: item.unit,
+                }))
+                : [];
+            const payload = {
                 order_no: fromDetail ? detailFields.orderNo.value.trim() : issueForm.orderNo.value.trim(),
                 project_name: fromDetail ? detailFields.project.value.trim() : issueForm.projectName.value.trim(),
                 customer_id: Number(fromDetail ? detailFields.customerId.value : issueForm.customerId.value) || 0,
                 customer_name: fromDetail ? detailFields.client.value.trim() : issueForm.customerName.value.trim(),
-                technician_name: fromDetail ? detailFields.engineer.value.trim() : (summary.itemName || issueForm.technicianName.value.trim()),
                 status: fromDetail ? detailFields.status.value : issueForm.status.value,
-                price: fromDetail ? detailFields.price.value.trim() : String(summary.totalAmount || parseMoneyValue(issueForm.price.value)),
-                working_hours: fromDetail ? detailFields.hours.value.trim() : String(summary.totalTax || parseMoneyValue(issueForm.hours.value)),
                 period_start: fromDetail ? detailFields.start.value : (summary.periodStart || issueForm.start.value),
                 period_end: fromDetail ? detailFields.end.value : (summary.periodEnd || issueForm.end.value),
                 person_in_charge_id: owner.id,
                 person_in_charge: owner.name,
                 remark: fromDetail ? detailFields.remark.value.trim() : issueForm.remark.value.trim(),
             };
+            if (!fromDetail) {
+                payload.work_content = issueForm.workContent.value.trim();
+                payload.work_place = issueForm.workPlace.value.trim();
+                payload.contract_type = issueForm.contractType.value.trim();
+                payload.payment_terms = issueForm.paymentTerms.value.trim();
+                payload.line_items = lineItems;
+            }
+            return payload;
         }
 
         const buildAcceptPayload = (fromDetail) => {
@@ -1463,27 +1596,48 @@
             return true;
         };
 
-        const submitCreate = (view) => {
+        const submitCreate = async (view) => {
             if (view === "issue" && !validateIssueForm()) return;
             if (view === "accept" && !validateAcceptForm()) return;
             const payload = view === "accept" ? buildAcceptPayload(false) : buildIssuePayload(false);
             const url = view === "accept" ? "/api/sales-orders" : "/api/purchase-orders";
-            window.requestJson(url, {
-                method: "POST",
-                body: JSON.stringify(payload),
-            })
-                .then((responsePayload) => {
-                    if (!responsePayload.success) {
-                        alert(formatOrderApiError(responsePayload.message, t("order.action.create_failed")));
-                        return;
+            const submitButton = view === "accept" ? acceptCreateSubmit : issueCreateSubmit;
+            const originalText = submitButton ? submitButton.textContent : "";
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = view === "issue" ? "PDF生成中..." : originalText;
+            }
+            try {
+                const requestOptions = view === "issue"
+                    ? {
+                        method: "POST",
+                        headers: {},
+                        body: buildIssueFormData(payload, await exportIssuePreviewPdfBlob()),
                     }
-                    if (view === "accept" && createDialogAccept) createDialogAccept.close();
-                    if (view === "issue" && createDialogIssue) createDialogIssue.close();
-                    fetchOrders();
-                })
-                .catch((error) => {
-                    alert(getRequestErrorMessage(error, t("order.action.create_failed_retry")));
-                });
+                    : {
+                        method: "POST",
+                        body: JSON.stringify(payload),
+                    };
+                if (submitButton && view === "issue") submitButton.textContent = "保存中...";
+                const responsePayload = await window.requestJson(url, requestOptions);
+                if (!responsePayload.success) {
+                    alert(formatOrderApiError(responsePayload.message, t("order.action.create_failed")));
+                    return;
+                }
+                if (view === "accept" && createDialogAccept) createDialogAccept.close();
+                if (view === "issue" && createDialogIssue) {
+                    createDialogIssue.close();
+                    resetIssueForm();
+                }
+                fetchOrders();
+            } catch (error) {
+                alert(getRequestErrorMessage(error, t("order.action.create_failed_retry")));
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || t("common.create");
+                }
+            }
         }
 
         const submitUpdate = () => {
@@ -1675,6 +1829,7 @@
                         createDialogAccept.showModal();
                     }
                 } else if (createDialogIssue) {
+                    resetIssueForm();
                     await fetchCompanyInfo();
                     updateIssuePreview();
                     createDialogIssue.showModal();

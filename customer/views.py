@@ -6,7 +6,6 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from django.conf import settings as django_settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
@@ -14,7 +13,9 @@ from customer.card_to_customer import process_uploaded_card_image
 from customer.models import Customer
 from employee.models import Employee
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import contract_storage_dir, parse_json_body
+from project import storage
+from project.common_tools import parse_json_body
+from project.storage import StorageArea
 from settings.LINE import (
     get_line_message_content,
     get_line_channel_secret,
@@ -23,10 +24,6 @@ from settings.LINE import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-def _line_card_storage_dir() -> Path:
-    return Path(django_settings.BASE_DIR) / "line_uploads" / "cards"
 
 
 def _guess_image_suffix(content_type: str) -> str:
@@ -73,16 +70,9 @@ def customer_contract_upload(request, customer_id):
     if not customer:
         return api_error("Customer not found", status=404)
 
-    base_dir = contract_storage_dir()
-    os.makedirs(base_dir, exist_ok=True)
-
     _, ext = os.path.splitext(upload.name or "")
     filename = f"customer_{customer_id}{ext or ''}"
-    dest_path = os.path.join(base_dir, filename)
-
-    with open(dest_path, "wb") as handle:
-        for chunk in upload.chunks():
-            handle.write(chunk)
+    storage.save_upload(StorageArea.CUSTOMER_CONTRACT, filename, upload)
 
     customer.contract = filename
     customer.updated_by = login_id
@@ -147,9 +137,6 @@ def line_webhook_api(request):
     errors = []
     saved_files = []
     processed_results = []
-    base_dir = _line_card_storage_dir()
-    os.makedirs(base_dir, exist_ok=True)
-
     for event in events:
         if not isinstance(event, dict):
             continue
@@ -178,9 +165,8 @@ def line_webhook_api(request):
             suffix = _guess_image_suffix(content_type)
             timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
             filename = f"line_{timestamp}_{message_id}_{uuid.uuid4().hex[:8]}{suffix}"
-            file_path = base_dir / filename
-            with open(file_path, "wb") as handle:
-                handle.write(content)
+            storage.save_bytes(StorageArea.LINE_CARDS, filename, content)
+            file_path = storage.path(StorageArea.LINE_CARDS, filename)
 
             downloaded_count += 1
             saved_files.append(
@@ -188,15 +174,15 @@ def line_webhook_api(request):
                     "message_id": message_id,
                     "content_type": content_type,
                     "file_name": filename,
-                    "relative_path": str(Path("line_uploads") / "cards" / filename),
+                    "relative_path": storage.relative_path(StorageArea.LINE_CARDS, filename),
                     "size": content_length,
                 }
             )
-            process_result = process_uploaded_card_image(str(file_path), reply_token)
+            process_result = process_uploaded_card_image(file_path, reply_token)
             processed_results.append(
                 {
                     "message_id": message_id,
-                    "relative_path": str(Path("line_uploads") / "cards" / filename),
+                    "relative_path": storage.relative_path(StorageArea.LINE_CARDS, filename),
                     "process": process_result,
                 }
             )

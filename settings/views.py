@@ -14,7 +14,9 @@ from bpmatch.authorize_gmail import test_connection
 from bpmatch.mailTool import test_receive_connection, test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
+from project import storage
 from project.common_tools import parse_json_body, require_login
+from project.storage import StorageArea
 from settings.LINE import (
     invalidate_line_notify_filter_cache,
     test_line_connection,
@@ -118,21 +120,16 @@ def _handle_business_email_upload(auth_file, token_file, login_id):
     record = _get_setting("business-email")
     settings_payload = record.settings if record else SECTION_DEFAULTS["business-email"].copy()
 
-    base_dir = Path(django_settings.BASE_DIR)
-    credentials_dir = base_dir / "credentials"
-    credentials_dir.mkdir(parents=True, exist_ok=True)
-
     if auth_file:
         try:
             auth_bytes = auth_file.read()
             json.loads(auth_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             return api_error("Invalid Gmail auth JSON file")
-        auth_target = credentials_dir / "gmail_credentials.json"
-        auth_target.write_bytes(auth_bytes)
+        storage.save_bytes(StorageArea.CREDENTIALS, "gmail_credentials.json", auth_bytes)
         settings_payload.update({
             "auth_filename": "gmail_credentials.json",
-            "auth_path": str(Path("credentials") / "gmail_credentials.json"),
+            "auth_path": storage.relative_path(StorageArea.CREDENTIALS, "gmail_credentials.json"),
         })
 
     if token_file:
@@ -141,11 +138,10 @@ def _handle_business_email_upload(auth_file, token_file, login_id):
             json.loads(token_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
             return api_error("Invalid Gmail token JSON file")
-        token_target = credentials_dir / "gmail_token.json"
-        token_target.write_bytes(token_bytes)
+        storage.save_bytes(StorageArea.CREDENTIALS, "gmail_token.json", token_bytes)
         settings_payload.update({
             "token_filename": "gmail_token.json",
-            "token_path": str(Path("credentials") / "gmail_token.json"),
+            "token_path": storage.relative_path(StorageArea.CREDENTIALS, "gmail_token.json"),
         })
 
     return _save_setting("business-email", settings_payload, login_id)
@@ -216,12 +212,7 @@ def _handle_ocr_upload(ocr_auth_file, login_id):
     except (UnicodeDecodeError, json.JSONDecodeError):
         return api_error("Invalid OCR auth JSON file")
 
-    base_dir = Path(django_settings.BASE_DIR)
-    credentials_dir = base_dir / "credentials"
-    credentials_dir.mkdir(parents=True, exist_ok=True)
-
-    ocr_target = credentials_dir / "ocr_credentials.json"
-    ocr_target.write_bytes(ocr_auth_bytes)
+    storage.save_bytes(StorageArea.CREDENTIALS, "ocr_credentials.json", ocr_auth_bytes)
 
     record = _get_setting("ocr")
     merged = SECTION_DEFAULTS["ocr"].copy()
@@ -229,7 +220,7 @@ def _handle_ocr_upload(ocr_auth_file, login_id):
         merged.update(record.settings)
     merged.update({
         "ocr_filename": "ocr_credentials.json",
-        "ocr_path": str(Path("credentials") / "ocr_credentials.json"),
+        "ocr_path": storage.relative_path(StorageArea.CREDENTIALS, "ocr_credentials.json"),
     })
     return _save_setting("ocr", merged, login_id)
 

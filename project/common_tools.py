@@ -84,13 +84,13 @@ def count_workdays(value):
     )
 
 
-import os
-from django.conf import settings
+from project import storage
+from project.storage import StorageArea
 
 
 # ss存储路径
 def ss_storage_dir():
-    return os.path.join(settings.BASE_DIR, "ss")
+    return storage.path(StorageArea.SS)
 
 def contract_storage_dir():
-    return os.path.join(settings.BASE_DIR, "customer_contract")
+    return storage.path(StorageArea.CUSTOMER_CONTRACT)

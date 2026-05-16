@@ -385,11 +385,13 @@ from google.cloud import vision
 import json
 from pathlib import Path
 
+from project import storage
+from project.storage import StorageArea
+
 
 def _ensure_google_credentials_hardcoded() -> None:
-    project_root = Path(__file__).resolve().parent.parent
-    credential_path = (project_root / "credentials" / "ocr_credentials.json").resolve()
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(credential_path)
+    credential_path = storage.path(StorageArea.CREDENTIALS, "ocr_credentials.json")
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_path
 
 
 class _GoogleVisionOCR:

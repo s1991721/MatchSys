@@ -5,13 +5,15 @@ from email.header import decode_header
 from email.utils import parsedate_to_datetime
 from html import unescape
 from html.parser import HTMLParser
-from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+
+from project import storage
+from project.storage import StorageArea
 
 
 class GmailTool:
@@ -28,19 +30,18 @@ class GmailTool:
 
     def _build_service(self):
         creds = None
-        # Use absolute paths so Django working dir changes won't break token/credentials lookup.
-        base_dir = Path(__file__).resolve().parent.parent
-        token_path = base_dir / "credentials" / "gmail_token.json"
-        credentials_path = base_dir / "credentials" / "gmail_credentials.json"
+        # Use storage paths so Django working dir changes won't break credential lookup.
+        token_path = storage.path(StorageArea.CREDENTIALS, "gmail_token.json")
+        credentials_path = storage.path(StorageArea.CREDENTIALS, "gmail_credentials.json")
 
-        if token_path.exists():
+        if storage.exists(StorageArea.CREDENTIALS, "gmail_token.json"):
             creds = Credentials.from_authorized_user_file(token_path, self.SCOPES)
 
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                if not credentials_path.exists():
+                if not storage.exists(StorageArea.CREDENTIALS, "gmail_credentials.json"):
                     raise FileNotFoundError(
                         f"Google OAuth client file missing: {credentials_path}"
                     )
@@ -49,8 +50,11 @@ class GmailTool:
                 )
                 creds = flow.run_local_server(port=0)
 
-            with open(token_path, "w") as token:
-                token.write(creds.to_json())
+            storage.save_bytes(
+                StorageArea.CREDENTIALS,
+                "gmail_token.json",
+                creds.to_json().encode("utf-8"),
+            )
 
         return build("gmail", "v1", credentials=creds)
 

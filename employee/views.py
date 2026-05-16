@@ -13,7 +13,9 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_date, parse_json_body, require_login, years_ago, ss_storage_dir
+from project import storage
+from project.common_tools import parse_date, parse_json_body, require_login, years_ago
+from project.storage import StorageArea
 from .models import Employee, LoginAudit, Technician, UserLogin
 
 logger = logging.getLogger(__name__)
@@ -867,19 +869,12 @@ def technician_ss_upload(request, employee_id):
     if not tech:
         return api_error("Technician not found", status=404)
 
-    base_dir = ss_storage_dir()
-    os.makedirs(base_dir, exist_ok=True)
-
     _, ext = os.path.splitext(upload.name or "")
     safe_name = os.path.basename(tech.name_mask).strip()
     if not safe_name:
         safe_name = str(employee_id)
     filename = f"{safe_name}{ext or ''}"
-    dest_path = os.path.join(base_dir, filename)
-
-    with open(dest_path, "wb") as handle:
-        for chunk in upload.chunks():
-            handle.write(chunk)
+    storage.save_upload(StorageArea.SS, filename, upload)
 
     rel_path = filename
     if tech:
@@ -896,14 +891,14 @@ def technician_ss_download(request, path):
     if not request.session.get("employee_id"):
         return api_error("Unauthorized", status=401)
 
-    base_dir = os.path.realpath(ss_storage_dir())
-    safe_path = os.path.realpath(os.path.join(base_dir, path))
-    if not safe_path.startswith(base_dir + os.sep):
+    try:
+        safe_path = storage.path(StorageArea.SS, path)
+    except ValueError:
         return api_error("Invalid path")
-    if not os.path.exists(safe_path):
+    if not storage.exists(StorageArea.SS, path):
         return api_error("File not found", status=404)
 
     content_type, _ = mimetypes.guess_type(safe_path)
-    response = FileResponse(open(safe_path, "rb"), content_type=content_type or "application/octet-stream")
+    response = FileResponse(storage.open_file(StorageArea.SS, path), content_type=content_type or "application/octet-stream")
     response["Content-Disposition"] = "inline"
     return response

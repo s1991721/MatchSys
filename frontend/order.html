@@ -272,7 +272,7 @@
                                     <div></div>
                                     <div class="order-pdf-stamp-cell">
                                         <div class="order-pdf-stamp-label">担当印</div>
-                                        <div class="order-pdf-stamp"></div>
+                                        <div class="order-pdf-stamp" data-preview="issueOwnerSeal"></div>
                                     </div>
                                     <div class="order-pdf-stamp-cell">
                                         <div class="order-pdf-stamp-label">会社印</div>
@@ -624,6 +624,7 @@
             companyFax: document.querySelector('[data-preview="issueCompanyFax"]'),
             companyMail: document.querySelector('[data-preview="issueCompanyMail"]'),
             companySeal: document.querySelector('[data-preview="issueCompanySeal"]'),
+            ownerSeal: document.querySelector('[data-preview="issueOwnerSeal"]'),
             project: document.querySelector('[data-preview="issueProject"]'),
             workContent: document.querySelector('[data-preview="issueWorkContent"]'),
             period: document.querySelector('[data-preview="issuePeriod"]'),
@@ -709,6 +710,12 @@
             sealUrl: "",
         };
         let companySealObjectUrl = "";
+        const ownerSealCache = new Map();
+        let issueOwnerSealState = {
+            employeeId: "",
+            url: "",
+            requestId: 0,
+        };
 
         const renderActions = (container) => {
             container.innerHTML = "";
@@ -943,11 +950,94 @@
             }
         };
 
+        const renderIssueOwnerSeal = (sealUrl, ownerName = "") => {
+            if (!issuePreview.ownerSeal) return;
+            issuePreview.ownerSeal.innerHTML = "";
+            issuePreview.ownerSeal.classList.toggle("is-filled", Boolean(sealUrl));
+            if (!sealUrl) return;
+            const img = document.createElement("img");
+            img.src = sealUrl;
+            img.alt = ownerName ? `${ownerName}印` : "担当印";
+            issuePreview.ownerSeal.appendChild(img);
+        };
+
+        const fetchOwnerSealUrl = async (employeeId) => {
+            const key = String(employeeId || "");
+            if (!key) return "";
+            if (ownerSealCache.has(key)) return ownerSealCache.get(key);
+            try {
+                const response = await fetch(
+                    `/api/employees/${encodeURIComponent(key)}/seal?v=${encodeURIComponent(Date.now())}`,
+                    { credentials: "same-origin" }
+                );
+                if (!response.ok) {
+                    ownerSealCache.set(key, "");
+                    return "";
+                }
+                const blob = await response.blob();
+                if (!blob || !blob.size) {
+                    ownerSealCache.set(key, "");
+                    return "";
+                }
+                const url = URL.createObjectURL(blob);
+                ownerSealCache.set(key, url);
+                return url;
+            } catch (error) {
+                console.warn(error);
+                ownerSealCache.set(key, "");
+                return "";
+            }
+        };
+
+        const updateIssueOwnerSeal = async (owner) => {
+            const employeeId = owner && owner.id ? String(owner.id) : "";
+            const ownerName = owner && owner.name ? owner.name : "";
+            if (!employeeId) {
+                issueOwnerSealState = {
+                    ...issueOwnerSealState,
+                    employeeId: "",
+                    url: "",
+                    requestId: issueOwnerSealState.requestId + 1,
+                };
+                renderIssueOwnerSeal("", ownerName);
+                return;
+            }
+            if (
+                issueOwnerSealState.employeeId === employeeId
+                && issueOwnerSealState.url !== undefined
+            ) {
+                renderIssueOwnerSeal(issueOwnerSealState.url, ownerName);
+                return;
+            }
+            const requestId = issueOwnerSealState.requestId + 1;
+            issueOwnerSealState = {
+                employeeId,
+                url: "",
+                requestId,
+            };
+            renderIssueOwnerSeal("", ownerName);
+            const sealUrl = await fetchOwnerSealUrl(employeeId);
+            if (issueOwnerSealState.requestId !== requestId) return;
+            issueOwnerSealState = {
+                employeeId,
+                url: sealUrl,
+                requestId,
+            };
+            renderIssueOwnerSeal(sealUrl, ownerName);
+        };
+
         const clearCompanySealObjectUrl = () => {
             if (companySealObjectUrl) {
                 URL.revokeObjectURL(companySealObjectUrl);
                 companySealObjectUrl = "";
             }
+        };
+
+        const clearOwnerSealObjectUrls = () => {
+            ownerSealCache.forEach((url) => {
+                if (url) URL.revokeObjectURL(url);
+            });
+            ownerSealCache.clear();
         };
 
         const fetchCompanySealUrl = async (filename) => {
@@ -1006,6 +1096,7 @@
             const total = price + tax;
             const owner = readOwnerSelect(issueForm.owner);
             renderIssueCompanyInfo();
+            updateIssueOwnerSeal(owner);
             if (issuePreview.orderNo) issuePreview.orderNo.textContent = issueForm.orderNo.value.trim();
             if (issuePreview.orderDate) issuePreview.orderDate.textContent = todayText();
             if (issuePreview.customer) {
@@ -1500,6 +1591,9 @@
                     if (currentValue) {
                         selectEl.value = String(currentValue);
                     }
+                    if (selectEl === issueForm.owner) {
+                        updateIssuePreview();
+                    }
                 })
                 .catch(() => {
                     selectEl.innerHTML = "";
@@ -1509,6 +1603,9 @@
                         opt.textContent = String(currentValue);
                         selectEl.appendChild(opt);
                         selectEl.value = String(currentValue);
+                    }
+                    if (selectEl === issueForm.owner) {
+                        updateIssuePreview();
                     }
                 });
         }
@@ -1717,6 +1814,10 @@
                 refreshI18n();
             });
             window.addEventListener("i18n:change", refreshI18n);
+            window.addEventListener("beforeunload", () => {
+                clearCompanySealObjectUrl();
+                clearOwnerSealObjectUrls();
+            });
         }
 
         setView("issue");

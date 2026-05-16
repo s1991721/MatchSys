@@ -164,9 +164,9 @@ def line_webhook_api(request):
             content_type = str(content_result.get("content_type") or "").strip()
             suffix = _guess_image_suffix(content_type)
             timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
-            filename = f"line_{timestamp}_{message_id}_{uuid.uuid4().hex[:8]}{suffix}"
-            storage.save_bytes(StorageArea.LINE_CARDS, filename, content)
-            file_path = storage.path(StorageArea.LINE_CARDS, filename)
+            filename = os.path.join("cards", f"line_{timestamp}_{message_id}_{uuid.uuid4().hex[:8]}{suffix}")
+            storage.save_bytes(StorageArea.LINE_UPLOADS, filename, content)
+            file_path = storage.path(StorageArea.LINE_UPLOADS, filename)
 
             downloaded_count += 1
             saved_files.append(
@@ -174,7 +174,7 @@ def line_webhook_api(request):
                     "message_id": message_id,
                     "content_type": content_type,
                     "file_name": filename,
-                    "relative_path": storage.relative_path(StorageArea.LINE_CARDS, filename),
+                    "relative_path": storage.relative_path(StorageArea.LINE_UPLOADS, filename),
                     "size": content_length,
                 }
             )
@@ -182,7 +182,7 @@ def line_webhook_api(request):
             processed_results.append(
                 {
                     "message_id": message_id,
-                    "relative_path": storage.relative_path(StorageArea.LINE_CARDS, filename),
+                    "relative_path": storage.relative_path(StorageArea.LINE_UPLOADS, filename),
                     "process": process_result,
                 }
             )

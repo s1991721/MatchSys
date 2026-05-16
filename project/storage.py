@@ -20,6 +20,7 @@ class StorageArea:
     CUSTOMER_CONTRACT = "customer_contract"
     LINE_CARDS = "line_cards"
     CREDENTIALS = "credentials"
+    COMPANY_INFO = "company_info"
 
 
 # 业务文件区到存储内相对目录的映射。
@@ -29,6 +30,7 @@ _AREA_DIRS = {
     StorageArea.CUSTOMER_CONTRACT: "customer_contract",
     StorageArea.LINE_CARDS: os.path.join("line_uploads", "cards"),
     StorageArea.CREDENTIALS: "credentials",
+    StorageArea.COMPANY_INFO: "company_info",
 }
 
 

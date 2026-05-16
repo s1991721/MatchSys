@@ -90,6 +90,17 @@ SECTION_DEFAULTS = {
     },
 }
 
+COMPANY_INFO_DEFAULTS = {
+    "company_name": "",
+    "postal_code": "",
+    "address": "",
+    "tel": "",
+    "fax": "",
+    "mail": "",
+    "logo_filename": "",
+    "logo_path": "",
+}
+
 
 # 根据section获取配置
 def _get_setting(section):
@@ -110,6 +121,58 @@ def _save_setting(section, settings_payload, login_id):
         )
     record.save()
     return api_success(data={"name": section, "settings": record.settings})
+
+
+def _company_info_settings():
+    record = _get_setting("company-info")
+    settings_payload = COMPANY_INFO_DEFAULTS.copy()
+    if record and isinstance(record.settings, dict):
+        settings_payload.update(record.settings)
+    return settings_payload
+
+
+def _normalize_company_info_payload(data):
+    return {
+        "company_name": str(data.get("company_name") or "").strip(),
+        "postal_code": str(data.get("postal_code") or "").strip(),
+        "address": str(data.get("address") or "").strip(),
+        "tel": str(data.get("tel") or "").strip(),
+        "fax": str(data.get("fax") or "").strip(),
+        "mail": str(data.get("mail") or "").strip(),
+    }
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def company_info_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        return api_success(data={"settings": _company_info_settings()})
+
+    settings_payload = _company_info_settings()
+    if request.content_type and request.content_type.startswith("multipart/form-data"):
+        settings_payload.update(_normalize_company_info_payload(request.POST))
+        logo_file = request.FILES.get("logo_file")
+        if logo_file:
+            filename = Path(logo_file.name or "company_logo").name
+            storage.save_upload(StorageArea.COMPANY_INFO, filename, logo_file)
+            settings_payload.update({
+                "logo_filename": filename,
+                "logo_path": storage.relative_path(StorageArea.COMPANY_INFO, filename),
+            })
+        return _save_setting("company-info", settings_payload, login_id)
+
+    payload, parse_error = parse_json_body(request)
+    if parse_error:
+        return parse_error
+    data = payload.get("settings", payload)
+    if not isinstance(data, dict):
+        return api_error("Invalid settings payload")
+    settings_payload.update(_normalize_company_info_payload(data))
+    return _save_setting("company-info", settings_payload, login_id)
 
 
 # 营业邮箱配置

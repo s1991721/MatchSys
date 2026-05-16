@@ -165,6 +165,45 @@
         </section>
 
         <section class="c-card c-card-pad settings-card">
+          <h2 class="c-card-title" data-i18n="system_settings.company.title">会社信息</h2>
+          <p class="c-card-subtitle settings-desc" data-i18n="system_settings.company.desc">配置会社基础信息与印。</p>
+          <form class="form-grid form-grid-spaced">
+            <div class="form-field">
+              <label for="company-name" data-i18n="system_settings.company.name">会社名</label>
+              <input id="company-name" type="text" placeholder="株式会社○○" data-i18n-placeholder="system_settings.company.name_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="company-postal-code" data-i18n="system_settings.company.postal_code">〒</label>
+              <input id="company-postal-code" type="text" placeholder="例如：100-0001" data-i18n-placeholder="system_settings.company.postal_code_placeholder" />
+            </div>
+            <div class="form-field full">
+              <label for="company-address" data-i18n="system_settings.company.address">住所</label>
+              <input id="company-address" type="text" placeholder="例如：東京都千代田区..." data-i18n-placeholder="system_settings.company.address_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="company-tel" data-i18n="system_settings.company.tel">TEL</label>
+              <input id="company-tel" type="text" placeholder="例如：03-1234-5678" data-i18n-placeholder="system_settings.company.tel_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="company-fax" data-i18n="system_settings.company.fax">FAX</label>
+              <input id="company-fax" type="text" placeholder="例如：03-1234-5679" data-i18n-placeholder="system_settings.company.fax_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="company-mail" data-i18n="system_settings.company.mail">Mail</label>
+              <input id="company-mail" type="email" placeholder="info@example.com" data-i18n-placeholder="system_settings.company.mail_placeholder" />
+            </div>
+            <div class="form-field">
+              <label for="company-logo" data-i18n="system_settings.company.seal">印</label>
+              <input id="company-logo" type="file" accept="image/*" />
+              <div class="hint" id="company-logo-current"></div>
+            </div>
+            <div class="form-actions">
+              <button class="c-btn c-btn-primary" type="button" id="company-save" data-i18n="system_settings.common.save_config">保存配置</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="c-card c-card-pad settings-card">
           <h2 class="c-card-title" data-i18n="system_settings.bank.title">口座信息</h2>
           <p class="c-card-subtitle settings-desc" data-i18n="system_settings.bank.desc">配置银行口座的基础信息。</p>
           <form class="form-grid form-grid-spaced">
@@ -466,6 +505,7 @@
     );
     const locale = () => window.getAppLocale();
     const apiBase = "/api/sys-settings";
+    const companyInfoApi = "/api/company-info";
     const tasksApi = "/api/sys-tasks";
     const taskLogsApi = "/api/sys-tasks/logs";
     const activationValidateApi = "/api/activation/validate";
@@ -507,6 +547,9 @@
     const aiTestStatus = document.getElementById("ai-test-status");
     const backupSaveButton = document.getElementById("backup-save");
     const backupTestButton = document.getElementById("backup-test");
+    const companySaveButton = document.getElementById("company-save");
+    const companyLogoInput = document.getElementById("company-logo");
+    const companyLogoCurrent = document.getElementById("company-logo-current");
     const accountSaveButton = document.getElementById("account-save");
     const previewResetButton = document.getElementById("preview-reset");
     const previewResetStatus = document.getElementById("preview-reset-status");
@@ -549,6 +592,17 @@
       ocr_path: "",
     };
     let matchOcrFile = null;
+    let companyInfoState = {
+      company_name: "",
+      postal_code: "",
+      address: "",
+      tel: "",
+      fax: "",
+      mail: "",
+      logo_filename: "",
+      logo_path: "",
+    };
+    let companyLogoFile = null;
 
     const notifyError = (message) => {
       window.alert(message || t("system_settings.common.request_failed_retry", "请求失败，请稍后再试。"));
@@ -740,6 +794,16 @@
       return "";
     };
 
+    const resolveCompanyLogoName = (config) => {
+      if (!config) return "";
+      if (config.logo_filename) return config.logo_filename;
+      if (config.logo_path) {
+        const parts = String(config.logo_path).split("/");
+        return parts[parts.length - 1];
+      }
+      return "";
+    };
+
     const gmailHintText = (state, filename, noNameKey, noNameFallback) => {
       if (filename) {
         return format(
@@ -751,7 +815,62 @@
       return t(noNameKey, noNameFallback);
     };
 
+    const companyLogoHintText = (state, filename) => {
+      if (filename) {
+        return format(
+          `system_settings.company.seal_${state}_with_name`,
+          { name: filename },
+          `${state === "selected" ? "已选择" : "已保存"}：${filename}`
+        );
+      }
+      return t("system_settings.company.seal_empty", "未上传印");
+    };
+
+    const updateCompanyLogoHint = () => {
+      if (!companyLogoCurrent) return;
+      const selectedFile =
+        (companyLogoInput && companyLogoInput.files && companyLogoInput.files[0]) ||
+        companyLogoFile;
+      if (selectedFile) {
+        companyLogoCurrent.textContent = companyLogoHintText("selected", selectedFile.name || "");
+        return;
+      }
+      companyLogoCurrent.textContent = companyLogoHintText("saved", resolveCompanyLogoName(companyInfoState));
+    };
+
     const formatDateTime = (date) => date.toLocaleString(locale(), { hour12: false });
+
+    const fetchCompanyInfo = async () => {
+      try {
+        const payload = await requestJson(companyInfoApi, { method: "GET" });
+        return payload.data && payload.data.settings !== undefined
+          ? payload.data.settings
+          : companyInfoState;
+      } catch (error) {
+        console.warn(error);
+        return companyInfoState;
+      }
+    };
+
+    const saveCompanyInfo = async () => {
+      const formData = new FormData();
+      formData.append("company_name", getValue("company-name").trim());
+      formData.append("postal_code", getValue("company-postal-code").trim());
+      formData.append("address", getValue("company-address").trim());
+      formData.append("tel", getValue("company-tel").trim());
+      formData.append("fax", getValue("company-fax").trim());
+      formData.append("mail", getValue("company-mail").trim());
+      const selectedLogo =
+        (companyLogoInput && companyLogoInput.files && companyLogoInput.files[0]) ||
+        companyLogoFile;
+      if (selectedLogo) {
+        formData.append("logo_file", selectedLogo);
+      }
+      const payload = await requestFormData(companyInfoApi, formData);
+      return payload.data && payload.data.settings !== undefined
+        ? payload.data.settings
+        : companyInfoState;
+    };
 
     const fetchSettings = async (section, fallback) => {
       try {
@@ -2143,6 +2262,30 @@
       });
     }
 
+    if (companyLogoInput) {
+      companyLogoInput.addEventListener("change", (event) => {
+        const file = event.target.files ? event.target.files[0] : null;
+        companyLogoFile = file || null;
+        updateCompanyLogoHint();
+      });
+    }
+
+    if (companySaveButton) {
+      companySaveButton.addEventListener("click", async () => {
+        try {
+          companyInfoState = await saveCompanyInfo();
+          companyLogoFile = null;
+          if (companyLogoInput) {
+            companyLogoInput.value = "";
+          }
+          updateCompanyLogoHint();
+          flashButton(companySaveButton, t("system_settings.common.saved", "已保存"));
+        } catch (error) {
+          notifyError(error.message);
+        }
+      });
+    }
+
     if (accountSaveButton) {
       accountSaveButton.addEventListener("click", async () => {
         const settings = {
@@ -2501,6 +2644,15 @@
       setValue("backup-ssl", backupSettings.ssl_mode || "require");
       setValue("backup-note", backupSettings.note || "");
 
+      companyInfoState = await fetchCompanyInfo();
+      setValue("company-name", companyInfoState.company_name || "");
+      setValue("company-postal-code", companyInfoState.postal_code || "");
+      setValue("company-address", companyInfoState.address || "");
+      setValue("company-tel", companyInfoState.tel || "");
+      setValue("company-fax", companyInfoState.fax || "");
+      setValue("company-mail", companyInfoState.mail || "");
+      updateCompanyLogoHint();
+
       const accountSettings = await fetchSettings(sections.account, {});
       setValue("account-bank-name", accountSettings.bank_name || "");
       setValue("account-branch-code", accountSettings.branch_code || "");
@@ -2555,6 +2707,7 @@
       applyStatuses("task-status", taskStatuses);
       applyStatuses("sendmsg-status", sendmsgStatuses);
       updateBusinessEmailHints();
+      updateCompanyLogoHint();
       updateActivationHint();
     };
 

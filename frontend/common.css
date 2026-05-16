@@ -979,6 +979,21 @@ body > .page {
   text-overflow: ellipsis;
   vertical-align: bottom;
 }
+.c-table-cell-sub {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+.order-page .c-table th,
+.order-page .c-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+.order-page .c-table .c-truncate {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
 .c-center-page {
   min-height: 100vh;
   display: flex;

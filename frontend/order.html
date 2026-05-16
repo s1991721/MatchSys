@@ -101,9 +101,13 @@
                         data-i18n-issue="order.table.project_customer_issue"
                         data-i18n-accept="order.table.project_customer_accept">案件名 / 取引先（下请）
                     </th>
-                    <th data-i18n="common.field.technician">技术者</th>
-                    <th data-i18n="order.table.price">契约单价</th>
-                    <th data-i18n="order.table.hours">契约工时</th>
+                    <th data-issue="作業場所" data-accept="技术者"
+                        data-i18n-issue="order.table.work_place"
+                        data-i18n-accept="common.field.technician">作業場所</th>
+                    <th data-issue="合計金額" data-accept="契约单价"
+                        data-i18n-issue="order.table.total_amount"
+                        data-i18n-accept="order.table.price">合計金額</th>
+                    <th data-accept-only data-i18n="order.table.hours">契约工时</th>
                     <th data-i18n="order.table.period">契约期间</th>
                     <th data-i18n="common.field.created_at">创建时间</th>
                     <th data-i18n="order.table.created_by">创建人</th>
@@ -843,6 +847,15 @@
             return String(value);
         }
 
+        const getIssueLineTotal = (item) => {
+            const rows = Array.isArray(item && item.line_items) ? item.line_items : [];
+            return rows.reduce((sum, row) => {
+                const price = parseMoneyValue(row.price ?? "");
+                const tax = parseMoneyValue(row.tax ?? "");
+                return sum + price + tax;
+            }, 0);
+        };
+
         const parseMoneyValue = (value) => {
             const raw = String(value || "").replace(/[^\d.-]/g, "");
             const number = Number(raw);
@@ -890,15 +903,15 @@
             const rows = Array.from(issueForm.lineItems ? issueForm.lineItems.querySelectorAll(".order-issue-item-row") : []);
             return rows.map((row) => {
                 const get = (field) => row.querySelector(`[data-issue-item-field="${field}"]`);
-                const priceRaw = get("price")?.value?.trim() || "";
-                const taxRaw = get("tax")?.value?.trim() || "";
+                const priceInput = get("price")?.value?.trim() || "";
+                const taxInput = get("tax")?.value?.trim() || "";
                 return {
                     row,
                     itemName: get("item")?.value?.trim() || "",
-                    priceRaw,
-                    price: parseMoneyValue(priceRaw),
-                    taxRaw,
-                    tax: parseMoneyValue(taxRaw),
+                    priceInput,
+                    price: parseMoneyValue(priceInput),
+                    taxInput,
+                    tax: parseMoneyValue(taxInput),
                     unit: get("unit")?.value?.trim() || "",
                 };
             });
@@ -1291,44 +1304,46 @@
             return formData;
         };
 
-        const renderRows = (items, totalCount, page, totalPageCount) => {
-            const count = Number.isFinite(totalCount) ? totalCount : items.length;
-            totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
-            lastTotalCount = count;
-            lastTotalPages = totalPages;
-            currentPage = Number.isFinite(page) ? page : 1;
-            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
-            if (pageSummary) {
-                pageSummary.textContent = format("common.summary.page", {
-                    count,
-                    page: currentPage,
-                    total: totalPages
-                });
-            }
-            if (!items.length) {
-                tableBody.innerHTML = `<tr><td colspan="13" class="empty c-empty">${t("order.table.no_data")}</td></tr>`;
-                tableInfo.textContent = format("order.table.info", {
-                    count,
-                    page: currentPage
-                });
-                return;
-            }
-            tableBody.innerHTML = items.map((item) => {
-                const status = item.status || "草稿";
-                const statusLabel = t(statusLabelMap[status] || status);
-                const periodStart = item.period_start || "-";
-                const periodEnd = item.period_end || "-";
-                const projectName = item.project_name || "-";
-                const customerName = item.customer_name || "-";
-                const projectCustomerTitle = `${item.project_name || ""} / ${item.customer_name || ""}`;
-                return `
+        const renderProjectCustomerCell = (item) => {
+            const projectName = item.project_name || "-";
+            const customerName = item.customer_name || "-";
+            const projectCustomerTitle = `${item.project_name || ""} / ${item.customer_name || ""}`;
+            return `
+              <td>
+                <div class="c-truncate" title="${escapeHtml(projectCustomerTitle)}">${escapeHtml(projectName)}</div>
+                <div class="c-truncate c-table-cell-sub" title="${escapeHtml(customerName)}">${escapeHtml(customerName)}</div>
+              </td>
+            `;
+        };
+
+        const renderIssueRow = (item, status, statusLabel, periodStart, periodEnd) => {
+            const totalAmount = getIssueLineTotal(item);
+            return `
             <tr data-id="${escapeHtml(item.id)}">
               <td>${escapeHtml(item.order_no || "-")}</td>
+              ${renderProjectCustomerCell(item)}
+              <td>${escapeHtml(item.work_place || "-")}</td>
+              <td>${escapeHtml(formatYenValue(totalAmount))}</td>
               <td>
-                <div class="c-truncate" title="${escapeHtml(projectCustomerTitle)}">
-                    ${escapeHtml(projectName)} / ${escapeHtml(customerName)}
-                </div>
+                <div>${escapeHtml(periodStart)}</div>
+                <div>${escapeHtml(periodEnd)}</div>
               </td>
+              <td>${escapeHtml(item.created_at || "-")}</td>
+              <td>${escapeHtml(item.created_by || "-")}</td>
+              <td>${escapeHtml(item.person_in_charge || "-")}</td>
+              <td>${escapeHtml(item.updated_at || "-")}</td>
+              <td>${escapeHtml(item.updated_by || "-")}</td>
+              <td><span class="c-tag ${statusClass[status] || "c-tag-neutral"}">${escapeHtml(statusLabel)}</span></td>
+              <td><div class="row-actions c-row-actions" data-row-actions></div></td>
+            </tr>
+          `;
+        };
+
+        const renderAcceptRow = (item, status, statusLabel, periodStart, periodEnd) => {
+            return `
+            <tr data-id="${escapeHtml(item.id)}">
+              <td>${escapeHtml(item.order_no || "-")}</td>
+              ${renderProjectCustomerCell(item)}
               <td>${escapeHtml(item.technician_name || "-")}</td>
               <td>${escapeHtml(formatPrice(item.price))}</td>
               <td>${escapeHtml(formatHours(item.working_hours))}</td>
@@ -1345,6 +1360,39 @@
               <td><div class="row-actions c-row-actions" data-row-actions></div></td>
             </tr>
           `;
+        };
+
+        const renderRows = (items, totalCount, page, totalPageCount) => {
+            const count = Number.isFinite(totalCount) ? totalCount : items.length;
+            totalPages = Number.isFinite(totalPageCount) ? totalPageCount : 1;
+            lastTotalCount = count;
+            lastTotalPages = totalPages;
+            currentPage = Number.isFinite(page) ? page : 1;
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+            if (pageSummary) {
+                pageSummary.textContent = format("common.summary.page", {
+                    count,
+                    page: currentPage,
+                    total: totalPages
+                });
+            }
+            if (!items.length) {
+                const colSpan = currentView === "accept" ? 13 : 12;
+                tableBody.innerHTML = `<tr><td colspan="${colSpan}" class="empty c-empty">${t("order.table.no_data")}</td></tr>`;
+                tableInfo.textContent = format("order.table.info", {
+                    count,
+                    page: currentPage
+                });
+                return;
+            }
+            tableBody.innerHTML = items.map((item) => {
+                const status = item.status || "草稿";
+                const statusLabel = t(statusLabelMap[status] || status);
+                const periodStart = item.period_start || "-";
+                const periodEnd = item.period_end || "-";
+                return currentView === "accept"
+                    ? renderAcceptRow(item, status, statusLabel, periodStart, periodEnd)
+                    : renderIssueRow(item, status, statusLabel, periodStart, periodEnd);
             }).join("");
             tableInfo.textContent = format("order.table.info", {
                 count,
@@ -1430,9 +1478,7 @@
                 ? summary.items.map((item) => ({
                     item: item.itemName,
                     price: item.price,
-                    price_raw: item.priceRaw,
                     tax: item.tax,
-                    tax_raw: item.taxRaw,
                     unit: item.unit,
                 }))
                 : [];
@@ -1562,8 +1608,8 @@
             for (const item of items) {
                 const get = (field) => item.row.querySelector(`[data-issue-item-field="${field}"]`);
                 if (!item.itemName) return showMissingField("项目", get("item")), false;
-                if (!item.priceRaw) return showMissingField("单价", get("price")), false;
-                if (!item.taxRaw) return showMissingField("税金", get("tax")), false;
+                if (!item.priceInput) return showMissingField("单价", get("price")), false;
+                if (!item.taxInput) return showMissingField("税金", get("tax")), false;
                 if (!item.unit) return showMissingField("单位", get("unit")), false;
             }
             const owner = readOwnerSelect(issueForm.owner);

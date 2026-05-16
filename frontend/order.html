@@ -706,9 +706,9 @@
             tel: "",
             fax: "",
             mail: "",
-            logoUrl: "",
+            sealUrl: "",
         };
-        let companyLogoObjectUrl = "";
+        let companySealObjectUrl = "";
 
         const renderActions = (container) => {
             container.innerHTML = "";
@@ -933,36 +933,36 @@
             if (issuePreview.companyMail) issuePreview.companyMail.textContent = companyInfoState.mail || "";
             if (issuePreview.companySeal) {
                 issuePreview.companySeal.innerHTML = "";
-                issuePreview.companySeal.classList.toggle("is-filled", Boolean(companyInfoState.logoUrl));
-                if (companyInfoState.logoUrl) {
+                issuePreview.companySeal.classList.toggle("is-filled", Boolean(companyInfoState.sealUrl));
+                if (companyInfoState.sealUrl) {
                     const img = document.createElement("img");
-                    img.src = companyInfoState.logoUrl;
+                    img.src = companyInfoState.sealUrl;
                     img.alt = "印";
                     issuePreview.companySeal.appendChild(img);
                 }
             }
         };
 
-        const clearCompanyLogoObjectUrl = () => {
-            if (companyLogoObjectUrl) {
-                URL.revokeObjectURL(companyLogoObjectUrl);
-                companyLogoObjectUrl = "";
+        const clearCompanySealObjectUrl = () => {
+            if (companySealObjectUrl) {
+                URL.revokeObjectURL(companySealObjectUrl);
+                companySealObjectUrl = "";
             }
         };
 
-        const fetchCompanyLogoUrl = async (filename) => {
-            clearCompanyLogoObjectUrl();
+        const fetchCompanySealUrl = async (filename) => {
+            clearCompanySealObjectUrl();
             if (!filename) return "";
             try {
                 const response = await fetch(
-                    `/api/company-info/logo?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`,
+                    `/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`,
                     { credentials: "same-origin" }
                 );
                 if (!response.ok) return "";
                 const blob = await response.blob();
                 if (!blob || !blob.size) return "";
-                companyLogoObjectUrl = URL.createObjectURL(blob);
-                return companyLogoObjectUrl;
+                companySealObjectUrl = URL.createObjectURL(blob);
+                return companySealObjectUrl;
             } catch (error) {
                 console.warn(error);
                 return "";
@@ -975,7 +975,8 @@
                 const settings = payload && payload.data && payload.data.settings
                     ? payload.data.settings
                     : {};
-                const logoUrl = await fetchCompanyLogoUrl(settings.logo_filename);
+                const sealFilename = settings.seal_filename || "";
+                const sealUrl = await fetchCompanySealUrl(sealFilename);
                 companyInfoState = {
                     ...companyInfoState,
                     company_name: String(settings.company_name || ""),
@@ -984,14 +985,14 @@
                     tel: String(settings.tel || ""),
                     fax: String(settings.fax || ""),
                     mail: String(settings.mail || ""),
-                    logoUrl,
+                    sealUrl,
                 };
             } catch (error) {
                 console.warn(error);
-                clearCompanyLogoObjectUrl();
+                clearCompanySealObjectUrl();
                 companyInfoState = {
                     ...companyInfoState,
-                    logoUrl: "",
+                    sealUrl: "",
                 };
             }
             renderIssueCompanyInfo();

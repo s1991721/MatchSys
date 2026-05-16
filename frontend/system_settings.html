@@ -193,9 +193,9 @@
               <input id="company-mail" type="email" placeholder="info@example.com" data-i18n-placeholder="system_settings.company.mail_placeholder" />
             </div>
             <div class="form-field">
-              <label for="company-logo" data-i18n="system_settings.company.seal">印</label>
-              <input id="company-logo" type="file" accept="image/*" />
-              <div class="hint" id="company-logo-current"></div>
+              <label for="company-seal" data-i18n="system_settings.company.seal">印</label>
+              <input id="company-seal" type="file" accept="image/*" />
+              <div class="hint" id="company-seal-current"></div>
             </div>
             <div class="form-actions">
               <button class="c-btn c-btn-primary" type="button" id="company-save" data-i18n="system_settings.common.save_config">保存配置</button>
@@ -548,8 +548,8 @@
     const backupSaveButton = document.getElementById("backup-save");
     const backupTestButton = document.getElementById("backup-test");
     const companySaveButton = document.getElementById("company-save");
-    const companyLogoInput = document.getElementById("company-logo");
-    const companyLogoCurrent = document.getElementById("company-logo-current");
+    const companySealInput = document.getElementById("company-seal");
+    const companySealCurrent = document.getElementById("company-seal-current");
     const accountSaveButton = document.getElementById("account-save");
     const previewResetButton = document.getElementById("preview-reset");
     const previewResetStatus = document.getElementById("preview-reset-status");
@@ -599,10 +599,10 @@
       tel: "",
       fax: "",
       mail: "",
-      logo_filename: "",
-      logo_path: "",
+      seal_filename: "",
+      seal_path: "",
     };
-    let companyLogoFile = null;
+    let companySealFile = null;
 
     const notifyError = (message) => {
       window.alert(message || t("system_settings.common.request_failed_retry", "请求失败，请稍后再试。"));
@@ -794,11 +794,11 @@
       return "";
     };
 
-    const resolveCompanyLogoName = (config) => {
+    const resolveCompanySealName = (config) => {
       if (!config) return "";
-      if (config.logo_filename) return config.logo_filename;
-      if (config.logo_path) {
-        const parts = String(config.logo_path).split("/");
+      if (config.seal_filename) return config.seal_filename;
+      if (config.seal_path) {
+        const parts = String(config.seal_path).split("/");
         return parts[parts.length - 1];
       }
       return "";
@@ -815,7 +815,7 @@
       return t(noNameKey, noNameFallback);
     };
 
-    const companyLogoHintText = (state, filename) => {
+    const companySealHintText = (state, filename) => {
       if (filename) {
         return format(
           `system_settings.company.seal_${state}_with_name`,
@@ -826,16 +826,16 @@
       return t("system_settings.company.seal_empty", "未上传印");
     };
 
-    const updateCompanyLogoHint = () => {
-      if (!companyLogoCurrent) return;
+    const updateCompanySealHint = () => {
+      if (!companySealCurrent) return;
       const selectedFile =
-        (companyLogoInput && companyLogoInput.files && companyLogoInput.files[0]) ||
-        companyLogoFile;
+        (companySealInput && companySealInput.files && companySealInput.files[0]) ||
+        companySealFile;
       if (selectedFile) {
-        companyLogoCurrent.textContent = companyLogoHintText("selected", selectedFile.name || "");
+        companySealCurrent.textContent = companySealHintText("selected", selectedFile.name || "");
         return;
       }
-      companyLogoCurrent.textContent = companyLogoHintText("saved", resolveCompanyLogoName(companyInfoState));
+      companySealCurrent.textContent = companySealHintText("saved", resolveCompanySealName(companyInfoState));
     };
 
     const formatDateTime = (date) => date.toLocaleString(locale(), { hour12: false });
@@ -860,11 +860,11 @@
       formData.append("tel", getValue("company-tel").trim());
       formData.append("fax", getValue("company-fax").trim());
       formData.append("mail", getValue("company-mail").trim());
-      const selectedLogo =
-        (companyLogoInput && companyLogoInput.files && companyLogoInput.files[0]) ||
-        companyLogoFile;
-      if (selectedLogo) {
-        formData.append("logo_file", selectedLogo);
+      const selectedSeal =
+        (companySealInput && companySealInput.files && companySealInput.files[0]) ||
+        companySealFile;
+      if (selectedSeal) {
+        formData.append("seal_file", selectedSeal);
       }
       const payload = await requestFormData(companyInfoApi, formData);
       return payload.data && payload.data.settings !== undefined
@@ -2262,11 +2262,11 @@
       });
     }
 
-    if (companyLogoInput) {
-      companyLogoInput.addEventListener("change", (event) => {
+    if (companySealInput) {
+      companySealInput.addEventListener("change", (event) => {
         const file = event.target.files ? event.target.files[0] : null;
-        companyLogoFile = file || null;
-        updateCompanyLogoHint();
+        companySealFile = file || null;
+        updateCompanySealHint();
       });
     }
 
@@ -2274,11 +2274,11 @@
       companySaveButton.addEventListener("click", async () => {
         try {
           companyInfoState = await saveCompanyInfo();
-          companyLogoFile = null;
-          if (companyLogoInput) {
-            companyLogoInput.value = "";
+          companySealFile = null;
+          if (companySealInput) {
+            companySealInput.value = "";
           }
-          updateCompanyLogoHint();
+          updateCompanySealHint();
           flashButton(companySaveButton, t("system_settings.common.saved", "已保存"));
         } catch (error) {
           notifyError(error.message);
@@ -2651,7 +2651,7 @@
       setValue("company-tel", companyInfoState.tel || "");
       setValue("company-fax", companyInfoState.fax || "");
       setValue("company-mail", companyInfoState.mail || "");
-      updateCompanyLogoHint();
+      updateCompanySealHint();
 
       const accountSettings = await fetchSettings(sections.account, {});
       setValue("account-bank-name", accountSettings.bank_name || "");
@@ -2707,7 +2707,7 @@
       applyStatuses("task-status", taskStatuses);
       applyStatuses("sendmsg-status", sendmsgStatuses);
       updateBusinessEmailHints();
-      updateCompanyLogoHint();
+      updateCompanySealHint();
       updateActivationHint();
     };
 

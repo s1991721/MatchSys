@@ -99,8 +99,8 @@ COMPANY_INFO_DEFAULTS = {
     "tel": "",
     "fax": "",
     "mail": "",
-    "logo_filename": "",
-    "logo_path": "",
+    "seal_filename": "",
+    "seal_path": "",
 }
 
 
@@ -157,13 +157,13 @@ def company_info_api(request):
     settings_payload = _company_info_settings()
     if request.content_type and request.content_type.startswith("multipart/form-data"):
         settings_payload.update(_normalize_company_info_payload(request.POST))
-        logo_file = request.FILES.get("logo_file")
-        if logo_file:
-            filename = Path(logo_file.name or "company_logo").name
-            storage.save_upload(StorageArea.COMPANY_INFO, filename, logo_file)
+        seal_file = request.FILES.get("seal_file")
+        if seal_file:
+            filename = Path(seal_file.name or "company_seal").name
+            storage.save_upload(StorageArea.COMPANY_INFO, filename, seal_file)
             settings_payload.update({
-                "logo_filename": filename,
-                "logo_path": storage.relative_path(StorageArea.COMPANY_INFO, filename),
+                "seal_filename": filename,
+                "seal_path": storage.relative_path(StorageArea.COMPANY_INFO, filename),
             })
         return _save_setting("company-info", settings_payload, login_id)
 
@@ -178,13 +178,13 @@ def company_info_api(request):
 
 
 @require_http_methods(["GET"])
-def company_info_logo_api(request):
+def company_info_seal_api(request):
     login_id, error = require_login(request)
     if error:
         return error
 
     settings_payload = _company_info_settings()
-    filename = str(settings_payload.get("logo_filename") or "").strip()
+    filename = str(settings_payload.get("seal_filename") or "").strip()
     if not filename:
         return api_error("File not found", status=404)
     try:

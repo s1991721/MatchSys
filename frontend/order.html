@@ -544,6 +544,7 @@
         const statusFilter = document.getElementById("statusFilter");
         const createBtn = document.getElementById("createBtn");
         const createDialogIssue = document.getElementById("createDialogIssue");
+        const createTitleIssue = document.getElementById("createTitleIssue");
         const createDialogAccept = document.getElementById("createDialogAccept");
         const issueCreateSubmit = document.getElementById("issue-create-submit");
         const acceptCreateSubmit = document.getElementById("accept-create-submit");
@@ -703,6 +704,8 @@
         let currentItems = [];
         let currentDetailId = null;
         let detailMode = "view";
+        let issueDialogMode = "create";
+        let currentIssueEditId = null;
         const issueCustomerMap = new Map();
         const acceptCustomerMap = new Map();
         const filterCustomerMap = new Map();
@@ -958,6 +961,35 @@
             return row;
         };
 
+        const setIssueLineItems = (lineItems) => {
+            if (!issueForm.lineItems) return;
+            issueForm.lineItems.innerHTML = "";
+            const items = Array.isArray(lineItems) && lineItems.length ? lineItems : [{}];
+            items.forEach((item) => {
+                const row = createIssueItemRow();
+                const set = (field, value) => {
+                    const input = row.querySelector(`[data-issue-item-field="${field}"]`);
+                    if (input) input.value = value === null || value === undefined ? "" : String(value);
+                };
+                set("item", item.item ?? item.itemName ?? "");
+                set("price", item.price ?? "");
+                set("tax", item.tax ?? "");
+                set("unit", item.unit ?? "");
+                issueForm.lineItems.appendChild(row);
+            });
+        };
+
+        const setIssueDialogMode = (mode) => {
+            issueDialogMode = mode;
+            const isEdit = mode === "edit";
+            if (createTitleIssue) {
+                createTitleIssue.textContent = isEdit ? t("order.action.edit_issue") : t("order.action.create_issue");
+            }
+            if (issueCreateSubmit) {
+                issueCreateSubmit.textContent = isEdit ? t("common.save") : t("common.create");
+            }
+        };
+
         const resetIssueForm = () => {
             [
                 issueForm.projectName,
@@ -980,19 +1012,37 @@
             if (issueForm.status) issueForm.status.value = "承认中";
             if (issueForm.customerList) issueForm.customerList.innerHTML = "";
             issueCustomerMap.clear();
-            if (issueForm.lineItems) {
-                const rows = Array.from(issueForm.lineItems.querySelectorAll(".order-issue-item-row"));
-                rows.slice(1).forEach((row) => row.remove());
-                const firstRow = issueForm.lineItems.querySelector(".order-issue-item-row");
-                if (firstRow) {
-                    firstRow.querySelectorAll("input").forEach((input) => {
-                        input.value = "";
-                    });
-                } else {
-                    issueForm.lineItems.appendChild(createIssueItemRow());
-                }
-            }
+            setIssueLineItems([]);
             updateIssuePreview();
+        };
+
+        const populateIssueForm = (item) => {
+            if (!item) return;
+            if (issueForm.orderNo) issueForm.orderNo.value = item.order_no || "";
+            if (issueForm.projectName) issueForm.projectName.value = item.project_name || "";
+            if (issueForm.customerName) issueForm.customerName.value = item.customer_name || "";
+            if (issueForm.customerId) issueForm.customerId.value = item.customer_id || "";
+            if (issueForm.status) issueForm.status.value = item.status || "承认中";
+            if (issueForm.start) issueForm.start.value = item.period_start || "";
+            if (issueForm.end) issueForm.end.value = item.period_end || "";
+            if (issueForm.workContent) issueForm.workContent.value = item.work_content || "";
+            if (issueForm.workPlace) issueForm.workPlace.value = item.work_place || "";
+            if (issueForm.contractType) issueForm.contractType.value = item.contract_type || "";
+            if (issueForm.paymentTerms) issueForm.paymentTerms.value = item.payment_terms || "";
+            if (issueForm.remark) issueForm.remark.value = item.remark || "";
+            setIssueLineItems(item.line_items || []);
+            loadOwnerSelectOptions(issueForm.owner, item.person_in_charge_id || item.person_in_charge || "");
+            updateIssuePreview();
+        };
+
+        const openIssueEditDialog = async (item) => {
+            if (!createDialogIssue || !item) return;
+            currentIssueEditId = item.id;
+            setIssueDialogMode("edit");
+            populateIssueForm(item);
+            await fetchCompanyInfo();
+            updateIssuePreview();
+            createDialogIssue.showModal();
         };
 
         const renderIssueCompanyInfo = () => {
@@ -1686,6 +1736,50 @@
             }
         }
 
+        const submitIssueDialog = () => {
+            if (issueDialogMode === "edit") {
+                submitIssueUpdate();
+                return;
+            }
+            submitCreate("issue");
+        };
+
+        const submitIssueUpdate = async () => {
+            if (!currentIssueEditId || !validateIssueForm()) return;
+            const payload = buildIssuePayload(false);
+            const submitButton = issueCreateSubmit;
+            const originalText = submitButton ? submitButton.textContent : "";
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "PDF生成中...";
+            }
+            try {
+                const pdfBlob = await exportIssuePreviewPdfBlob();
+                if (submitButton) submitButton.textContent = "保存中...";
+                const responsePayload = await window.requestJson(`/api/purchase-orders/${currentIssueEditId}`, {
+                    method: "PUT",
+                    headers: {},
+                    body: buildIssueFormData(payload, pdfBlob),
+                });
+                if (!responsePayload.success) {
+                    alert(formatOrderApiError(responsePayload.message, t("common.save_failed")));
+                    return;
+                }
+                createDialogIssue.close();
+                currentIssueEditId = null;
+                setIssueDialogMode("create");
+                resetIssueForm();
+                fetchOrders();
+            } catch (error) {
+                alert(getRequestErrorMessage(error, t("common.save_failed_retry")));
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText || t("common.save");
+                }
+            }
+        };
+
         const submitUpdate = () => {
             if (!currentDetailId) return;
             const payload = currentView === "accept" ? buildAcceptPayload(true) : buildIssuePayload(true);
@@ -1875,6 +1969,8 @@
                         createDialogAccept.showModal();
                     }
                 } else if (createDialogIssue) {
+                    currentIssueEditId = null;
+                    setIssueDialogMode("create");
                     resetIssueForm();
                     await fetchCompanyInfo();
                     updateIssuePreview();
@@ -1884,7 +1980,7 @@
         }
 
         if (issueCreateSubmit) {
-            issueCreateSubmit.addEventListener("click", () => submitCreate("issue"));
+            issueCreateSubmit.addEventListener("click", submitIssueDialog);
         }
         if (acceptCreateSubmit) {
             acceptCreateSubmit.addEventListener("click", () => submitCreate("accept"));
@@ -1935,6 +2031,10 @@
                 const id = row.dataset.id;
                 const item = currentItems.find((entry) => String(entry.id) === String(id));
                 if (!item) return;
+                if (currentView === "issue" && btn.dataset.action === "edit") {
+                    openIssueEditDialog(item);
+                    return;
+                }
                 openDetailDialog(btn.dataset.action, item);
             });
         }

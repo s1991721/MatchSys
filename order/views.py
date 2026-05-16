@@ -627,12 +627,18 @@ def purchase_order_detail_api(request, order_id):
         return api_success(data={"item": item})
 
     if request.method == "PUT":
-        payload, error = _parse_json_body(request)
+        payload, error = _parse_request_body(request)
         if error:
             return error
         apply_error = _apply_purchase_payload(order, payload)
         if apply_error:
             return apply_error
+        pdf_file = request.FILES.get("pdf_file")
+        if pdf_file:
+            saved_pdf = _save_purchase_order_pdf(order.order_no, pdf_file)
+            if saved_pdf is None:
+                return api_error("Invalid PDF file")
+            order.pdf_file = saved_pdf
         order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
         order.updated_at = timezone.now()
         order.save()

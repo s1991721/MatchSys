@@ -55,7 +55,7 @@
                 <div class="c-inline-field">
                     <span data-i18n="common.field.status">状态</span>
                     <select id="statusFilter"
-                            data-issue-options="承认中,已受注,拒绝,已取消"
+                            data-issue-options="已创建,承认中,已承认,已取消"
                             data-accept-options="已受注,拒绝,已取消"
                             data-default-option="全部">
                         <option>全部</option>
@@ -165,9 +165,9 @@
                             <span data-i18n="common.field.status">状态</span>
                             <select id="issue-status">
                                 <option value="请选择状态" data-i18n="common.field.status_select">请选择状态</option>
-                                <option value="承认中" selected data-i18n="order.status.approving">承认中</option>
-                                <option value="已受注" data-i18n="order.status.accepted">已受注</option>
-                                <option value="拒绝" data-i18n="order.status.rejected">拒绝</option>
+                                <option value="已创建" selected data-i18n="order.status.created">已创建</option>
+                                <option value="承认中" data-i18n="order.status.approving">承认中</option>
+                                <option value="已承认" data-i18n="order.status.approved">已承认</option>
                                 <option value="已取消" data-i18n="order.status.canceled">已取消</option>
                             </select>
                         </label>
@@ -461,7 +461,7 @@
             <label class="c-inline-field">
                 <span data-i18n="common.field.status">状态</span>
                 <select data-field="status"
-                        data-issue-options="承认中,已受注,拒绝,已取消"
+                        data-issue-options="已创建,承认中,已承认,已取消"
                         data-accept-options="已受注,拒绝,已取消"
                         data-default-option="请选择状态">
                 </select>
@@ -680,7 +680,9 @@
 
         const statusClass = {
             "草稿": "c-tag-neutral",
+            "已创建": "c-tag-neutral",
             "承认中": "c-tag-warn",
+            "已承认": "c-tag-success",
             "已送付": "c-tag-info",
             "已受注": "c-tag-success",
             "已取消": "c-tag-danger",
@@ -688,7 +690,9 @@
         };
         const statusLabelMap = {
             "草稿": "common.status.draft",
+            "已创建": "order.status.created",
             "承认中": "order.status.approving",
+            "已承认": "order.status.approved",
             "已送付": "order.status.sent",
             "已受注": "order.status.accepted",
             "已取消": "order.status.canceled",
@@ -706,6 +710,7 @@
         let detailMode = "view";
         let issueDialogMode = "create";
         let currentIssueEditId = null;
+        let currentIssueEditStatus = "";
         const issueCustomerMap = new Map();
         const acceptCustomerMap = new Map();
         const filterCustomerMap = new Map();
@@ -777,6 +782,26 @@
                 select.appendChild(opt);
             });
         }
+
+        const fillIssueStatusOptions = (select, values, defaultOption = "") => {
+            if (!select) return;
+            select.innerHTML = "";
+            if (defaultOption) {
+                const opt = document.createElement("option");
+                opt.value = defaultOption;
+                opt.textContent = defaultOption === "请选择状态" ? t("common.field.status_select") : defaultOption;
+                if (defaultOption === "请选择状态") opt.dataset.i18n = "common.field.status_select";
+                select.appendChild(opt);
+            }
+            values.forEach((value) => {
+                const opt = document.createElement("option");
+                opt.value = value;
+                const labelKey = statusLabelMap[value];
+                opt.textContent = t(labelKey || value);
+                if (labelKey) opt.dataset.i18n = labelKey;
+                select.appendChild(opt);
+            });
+        };
 
         const applyViewLabels = (view) => {
             switches.forEach((btn) => {
@@ -990,6 +1015,48 @@
             }
         };
 
+        const setIssueFormEditability = (status) => {
+            const isEdit = issueDialogMode === "edit";
+            const isCreated = !isEdit || status === "已创建";
+            const isApproving = isEdit && status === "承认中";
+            const canSave = !isEdit || isCreated || isApproving;
+
+            if (issueForm.status) {
+                fillIssueStatusOptions(
+                    issueForm.status,
+                    isApproving ? ["已承认", "已取消"] : ["已创建", "承认中", "已承认", "已取消"],
+                    ""
+                );
+                issueForm.status.value = isApproving ? "已承认" : (status || "已创建");
+                issueForm.status.disabled = !isEdit || (isEdit && !isCreated && !isApproving);
+            }
+
+            [
+                issueForm.orderNo,
+                issueForm.projectName,
+                issueForm.customerName,
+                issueForm.start,
+                issueForm.end,
+                issueForm.owner,
+                issueForm.workContent,
+                issueForm.workPlace,
+                issueForm.contractType,
+                issueForm.paymentTerms,
+                issueForm.remark,
+            ].forEach((field) => {
+                if (field) field.disabled = !isCreated;
+            });
+            if (issueForm.lineAdd) issueForm.lineAdd.disabled = !isCreated;
+            if (issueForm.lineItems) {
+                issueForm.lineItems.querySelectorAll("input, button").forEach((field) => {
+                    field.disabled = !isCreated;
+                });
+            }
+            if (issueCreateSubmit) {
+                issueCreateSubmit.style.display = canSave ? "" : "none";
+            }
+        };
+
         const resetIssueForm = () => {
             [
                 issueForm.projectName,
@@ -1009,7 +1076,7 @@
                 if (field) field.value = "";
             });
             if (issueForm.orderNo) issueForm.orderNo.value = buildIssueOrderNo();
-            if (issueForm.status) issueForm.status.value = "承认中";
+            setIssueFormEditability("已创建");
             if (issueForm.customerList) issueForm.customerList.innerHTML = "";
             issueCustomerMap.clear();
             setIssueLineItems([]);
@@ -1022,7 +1089,9 @@
             if (issueForm.projectName) issueForm.projectName.value = item.project_name || "";
             if (issueForm.customerName) issueForm.customerName.value = item.customer_name || "";
             if (issueForm.customerId) issueForm.customerId.value = item.customer_id || "";
-            if (issueForm.status) issueForm.status.value = item.status || "承认中";
+            const status = item.status || "已创建";
+            setIssueFormEditability(status);
+            if (issueForm.status) issueForm.status.value = status === "承认中" ? "已承认" : status;
             if (issueForm.start) issueForm.start.value = item.period_start || "";
             if (issueForm.end) issueForm.end.value = item.period_end || "";
             if (issueForm.workContent) issueForm.workContent.value = item.work_content || "";
@@ -1031,6 +1100,7 @@
             if (issueForm.paymentTerms) issueForm.paymentTerms.value = item.payment_terms || "";
             if (issueForm.remark) issueForm.remark.value = item.remark || "";
             setIssueLineItems(item.line_items || []);
+            setIssueFormEditability(status);
             loadOwnerSelectOptions(issueForm.owner, item.person_in_charge_id || item.person_in_charge || "");
             updateIssuePreview();
         };
@@ -1038,6 +1108,7 @@
         const openIssueEditDialog = async (item) => {
             if (!createDialogIssue || !item) return;
             currentIssueEditId = item.id;
+            currentIssueEditStatus = item.status || "已创建";
             setIssueDialogMode("edit");
             populateIssueForm(item);
             await fetchCompanyInfo();
@@ -1436,7 +1507,7 @@
                 return;
             }
             tableBody.innerHTML = items.map((item) => {
-                const status = item.status || "草稿";
+                const status = item.status || "已创建";
                 const statusLabel = t(statusLabelMap[status] || status);
                 const periodStart = item.period_start || "-";
                 const periodEnd = item.period_end || "-";
@@ -1745,28 +1816,43 @@
         };
 
         const submitIssueUpdate = async () => {
-            if (!currentIssueEditId || !validateIssueForm()) return;
-            const payload = buildIssuePayload(false);
+            const statusOnly = currentIssueEditStatus === "承认中";
+            if (!currentIssueEditId) return;
+            if (statusOnly) {
+                if (!["已承认", "已取消"].includes(issueForm.status.value)) {
+                    showMissingField(t("common.field.status"), issueForm.status);
+                    return;
+                }
+            } else if (!validateIssueForm()) {
+                return;
+            }
+            const payload = statusOnly
+                ? { status: issueForm.status.value }
+                : buildIssuePayload(false);
             const submitButton = issueCreateSubmit;
             const originalText = submitButton ? submitButton.textContent : "";
             if (submitButton) {
                 submitButton.disabled = true;
-                submitButton.textContent = "PDF生成中...";
+                submitButton.textContent = statusOnly ? "保存中..." : "PDF生成中...";
             }
             try {
-                const pdfBlob = await exportIssuePreviewPdfBlob();
-                if (submitButton) submitButton.textContent = "保存中...";
-                const responsePayload = await window.requestJson(`/api/purchase-orders/${currentIssueEditId}`, {
-                    method: "PUT",
-                    headers: {},
-                    body: buildIssueFormData(payload, pdfBlob),
-                });
+                const responsePayload = statusOnly
+                    ? await window.requestJson(`/api/purchase-orders/${currentIssueEditId}`, {
+                        method: "PUT",
+                        body: JSON.stringify(payload),
+                    })
+                    : await window.requestJson(`/api/purchase-orders/${currentIssueEditId}`, {
+                        method: "PUT",
+                        headers: {},
+                        body: buildIssueFormData(payload, await exportIssuePreviewPdfBlob()),
+                    });
                 if (!responsePayload.success) {
                     alert(formatOrderApiError(responsePayload.message, t("common.save_failed")));
                     return;
                 }
                 createDialogIssue.close();
                 currentIssueEditId = null;
+                currentIssueEditStatus = "";
                 setIssueDialogMode("create");
                 resetIssueForm();
                 fetchOrders();
@@ -1970,6 +2056,7 @@
                     }
                 } else if (createDialogIssue) {
                     currentIssueEditId = null;
+                    currentIssueEditStatus = "";
                     setIssueDialogMode("create");
                     resetIssueForm();
                     await fetchCompanyInfo();

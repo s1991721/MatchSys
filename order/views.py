@@ -15,6 +15,11 @@ from project import storage
 from project.storage import StorageArea
 
 
+PURCHASE_STATUSES = {"已创建", "承认中", "已承认", "已取消"}
+PURCHASE_APPROVING_NEXT_STATUSES = {"已承认", "已取消"}
+PURCHASE_TERMINAL_STATUSES = {"已承认", "已取消"}
+
+
 def _require_login(request):
     if not request.session.get("employee_id"):
         return api_error(
@@ -137,6 +142,15 @@ def _normalize_pay_request_status(value):
     }
     if raw in mapping:
         return mapping[raw], None
+    return None, api_error(
+        "Invalid status"
+    )
+
+
+def _normalize_purchase_status(value):
+    raw = str(value or "").strip()
+    if raw in PURCHASE_STATUSES:
+        return raw, None
     return None, api_error(
         "Invalid status"
     )
@@ -270,7 +284,10 @@ def _apply_purchase_payload(order, payload):
     if owner_error:
         return owner_error
     if "status" in payload:
-        order.status = (payload.get("status") or "").strip()
+        value, error = _normalize_purchase_status(payload.get("status"))
+        if error:
+            return error
+        order.status = value
     if "work_content" in payload:
         order.work_content = (payload.get("work_content") or "").strip()
     if "work_place" in payload:
@@ -569,6 +586,8 @@ def purchase_orders_api(request):
         payload, error = _parse_request_body(request)
         if error:
             return error
+        payload = payload.copy() if hasattr(payload, "copy") else dict(payload)
+        payload["status"] = "已创建"
         required_fields = [
             "order_no",
             "project_name",
@@ -630,6 +649,17 @@ def purchase_order_detail_api(request, order_id):
         payload, error = _parse_request_body(request)
         if error:
             return error
+        payload_keys = set(payload.keys())
+        if order.status in PURCHASE_TERMINAL_STATUSES:
+            return api_error("Order is locked")
+        if order.status == "承认中":
+            if payload_keys != {"status"} or request.FILES:
+                return api_error("Order is locked")
+            next_status, status_error = _normalize_purchase_status(payload.get("status"))
+            if status_error:
+                return status_error
+            if next_status not in PURCHASE_APPROVING_NEXT_STATUSES:
+                return api_error("Invalid status")
         apply_error = _apply_purchase_payload(order, payload)
         if apply_error:
             return apply_error

@@ -549,10 +549,23 @@
                             </select>
                         </label>
                     </div>
-                    <label class="order-send-field">
-                        <span>邮件内容</span>
+                    <div class="order-send-field">
+                        <span class="order-send-field-head">
+                            <span>邮件内容</span>
+                            <button
+                                    id="send-template-edit"
+                                    class="songxin-template-trigger order-send-template-trigger"
+                                    type="button"
+                                    aria-label="编辑模板信息"
+                                    title="编辑模板信息"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M6 2h8l5 5v4.25a1 1 0 1 1-2 0V8h-4V4H6v16h5.25a1 1 0 1 1 0 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm9 3.41V7h1.59L15 5.41zm-2.04 9.33 4.83-4.83 2.12 2.12-4.83 4.83-2.54.42.42-2.54zm6.24-6.24.71-.71a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1 0 1.41l-.71.71-2.12-2.12z"/>
+                                </svg>
+                            </button>
+                        </span>
                         <textarea id="send-body" placeholder="请输入邮件内容"></textarea>
-                    </label>
+                    </div>
                     <div class="order-send-bottom-grid">
                         <div class="order-send-field">
                             <span>上传附件</span>
@@ -586,6 +599,30 @@
     <div class="c-dialog-actions order-send-actions">
         <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
         <button class="c-btn c-btn-primary order-send-submit" type="button" id="sendSubmit">发送&nbsp; &gt;</button>
+    </div>
+</dialog>
+
+<dialog id="send-template-dialog" class="c-dialog songxin-template-dialog">
+    <div class="c-dialog-header">
+        <div class="songxin-template-header-text">
+            <h3>编辑模板信息</h3>
+            <p class="c-card-subtitle songxin-template-subtitle">发注邮件模板。</p>
+        </div>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>
+            ×
+        </button>
+    </div>
+    <div class="c-dialog-body">
+        <textarea
+                id="send-template-content"
+                class="songxin-template-textarea"
+                rows="14"
+                placeholder="请输入模板信息"
+        ></textarea>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-ghost" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button id="send-template-save" class="c-btn c-btn-primary" type="button" data-i18n="common.save">保存</button>
     </div>
 </dialog>
 <script src="i18n.js"></script>
@@ -625,13 +662,17 @@
         const detailDialog = document.getElementById("detailDialog");
         const sendDialog = document.getElementById("sendDialog");
         const sendSubmit = document.getElementById("sendSubmit");
+        const sendTemplateEdit = document.getElementById("send-template-edit");
+        const sendTemplateDialog = document.getElementById("send-template-dialog");
+        const sendTemplateContent = document.getElementById("send-template-content");
+        const sendTemplateSave = document.getElementById("send-template-save");
 
         const detailTitle = document.getElementById("detailTitle");
         const detailSubtitle = document.getElementById("detailSubtitle");
         const detailSave = document.getElementById("detailSave");
         if (window.initDialogCloseBehavior) {
             window.initDialogCloseBehavior({
-                dialogs: [createDialogIssue, createDialogAccept, detailDialog, sendDialog]
+                dialogs: [createDialogIssue, createDialogAccept, detailDialog, sendDialog, sendTemplateDialog]
             });
         }
         const tableBody = document.getElementById("order-body");
@@ -799,6 +840,8 @@
         let currentSendItem = null;
         let sendExtraFiles = [];
         let sendRecipientOptions = [];
+        const sendTemplateName = "order";
+        const sendTemplateCache = {};
         let detailMode = "view";
         let issueDialogMode = "create";
         let currentIssueEditId = null;
@@ -1654,6 +1697,88 @@
             return sendFields.to ? sendFields.to.value : "";
         };
 
+        const normalizeMultiline = (text) => {
+            if (typeof text !== "string") return "";
+            let clean = text
+                .replace(/\r\n/g, "\n")
+                .replace(/\\n/g, "\n")
+                .replace(/\t/g, "    ");
+            const trimmed = clean.trim();
+            if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+                clean = trimmed.slice(1, -1);
+            }
+            return clean;
+        };
+
+        const loadSendTemplate = async (forceRefresh = false) => {
+            if (!forceRefresh && Object.prototype.hasOwnProperty.call(sendTemplateCache, sendTemplateName)) {
+                return sendTemplateCache[sendTemplateName];
+            }
+            const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(sendTemplateName)}`, {
+                method: "GET",
+            }, {
+                throwOnFailure: true,
+                fallbackMessage: "加载模板失败",
+            });
+            const template = payload.data && typeof payload.data.template === "string"
+                ? payload.data.template
+                : "";
+            sendTemplateCache[sendTemplateName] = template;
+            return template;
+        };
+
+        const applySendTemplateToBody = async () => {
+            if (!sendFields.body) return;
+            try {
+                const template = await loadSendTemplate();
+                if (!sendFields.body.value.trim()) {
+                    sendFields.body.value = normalizeMultiline(template);
+                }
+            } catch (error) {
+                console.warn("加载发注邮件模板失败", error);
+            }
+        };
+
+        const openSendTemplateDialog = async () => {
+            if (!sendTemplateDialog || !sendTemplateContent) return;
+            try {
+                const template = await loadSendTemplate(true);
+                sendTemplateContent.value = normalizeMultiline(template);
+                sendTemplateDialog.showModal();
+            } catch (error) {
+                console.error("加载模板失败", error);
+                alert(error.message || "加载模板失败");
+            }
+        };
+
+        const saveSendTemplate = async () => {
+            if (!sendTemplateContent || !sendTemplateSave) return;
+            const originalText = sendTemplateSave.textContent;
+            sendTemplateSave.disabled = true;
+            sendTemplateSave.textContent = "保存中...";
+            try {
+                const template = normalizeMultiline(sendTemplateContent.value);
+                await window.requestJson(`/api/mail-templates/${encodeURIComponent(sendTemplateName)}`, {
+                    body: JSON.stringify({ template }),
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: "保存模板失败",
+                });
+                sendTemplateCache[sendTemplateName] = template;
+                if (sendFields.body) {
+                    sendFields.body.value = template;
+                    sendFields.body.focus();
+                }
+                sendTemplateDialog?.close();
+            } catch (error) {
+                console.error("保存模板失败", error);
+                alert(error.message || "保存模板失败");
+            } finally {
+                sendTemplateSave.disabled = false;
+                sendTemplateSave.textContent = originalText || "保存";
+            }
+        };
+
         const openSendDialog = async (item) => {
             if (!sendDialog || !item) return;
             currentSendItem = item;
@@ -1671,6 +1796,7 @@
             setSendPdfDisplayMode(item);
             fetchSendRecipient(item);
             sendDialog.showModal();
+            applySendTemplateToBody();
         };
 
         const submitSendMail = async () => {
@@ -2465,6 +2591,15 @@
         }
         if (sendSubmit) {
             sendSubmit.addEventListener("click", submitSendMail);
+        }
+        if (sendTemplateEdit) {
+            sendTemplateEdit.addEventListener("click", (event) => {
+                event.preventDefault();
+                openSendTemplateDialog();
+            });
+        }
+        if (sendTemplateSave) {
+            sendTemplateSave.addEventListener("click", saveSendTemplate);
         }
         if (sendFields.files) {
             sendFields.files.addEventListener("change", addSendFiles);

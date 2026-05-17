@@ -199,6 +199,21 @@ body > .page {
   font-size: 12px;
   font-weight: 600;
 }
+.order-send-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.order-send-template-trigger {
+  width: 34px;
+  height: 30px;
+  border-radius: 8px;
+}
+.order-send-template-trigger svg {
+  width: 16px;
+  height: 16px;
+}
 .order-send-field input,
 .order-send-field select,
 .order-send-field textarea {

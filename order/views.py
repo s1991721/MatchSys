@@ -1,10 +1,12 @@
 import calendar
 import json
+import mimetypes
 import os
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from django.db.models import Q
+from django.http import FileResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
@@ -72,6 +74,14 @@ def _save_purchase_order_pdf(order_no, uploaded_file):
     filename = os.path.join("purchase", f"{_sanitize_filename_part(order_no)}.pdf")
     storage.save_upload(StorageArea.ORDER, filename, uploaded_file)
     return storage.relative_path(StorageArea.ORDER, filename)
+
+
+def _order_storage_filename(value):
+    path = str(value or "").strip().replace("\\", "/")
+    prefix = f"{StorageArea.ORDER}/"
+    if path.startswith(prefix):
+        return path[len(prefix):]
+    return path
 
 
 def _parse_date(value, field):
@@ -679,6 +689,33 @@ def purchase_order_detail_api(request, order_id):
         "Method not allowed",
         status=405
     )
+
+
+# PDF文件预览
+def purchase_order_pdf_api(request, order_id):
+    auth_error = _require_login(request)
+    if auth_error:
+        return auth_error
+
+    order = PurchaseOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
+    if not order or not order.pdf_file:
+        return api_error("File not found", status=404)
+
+    filename = _order_storage_filename(order.pdf_file)
+    try:
+        safe_path = storage.path(StorageArea.ORDER, filename)
+    except ValueError:
+        return api_error("Invalid path")
+    if not storage.exists(StorageArea.ORDER, filename):
+        return api_error("File not found", status=404)
+
+    content_type, _ = mimetypes.guess_type(safe_path)
+    response = FileResponse(
+        storage.open_file(StorageArea.ORDER, filename),
+        content_type=content_type or "application/pdf",
+    )
+    response["Content-Disposition"] = "inline"
+    return response
 
 
 @csrf_exempt

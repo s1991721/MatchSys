@@ -83,6 +83,7 @@ from employee.views import (
 from order.views import (
     purchase_orders_api,
     purchase_order_detail_api,
+    purchase_order_pdf_api,
     sales_orders_api,
     sales_order_detail_api,
 )
@@ -243,6 +244,7 @@ urlpatterns = [
     # -------------------------------order API-------------------------------
     path("api/purchase-orders", purchase_orders_api, name="purchase-orders"),
     path("api/purchase-orders/<int:order_id>", purchase_order_detail_api, name="purchase-order-detail"),
+    path("api/purchase-orders/<int:order_id>/pdf", purchase_order_pdf_api, name="purchase-order-pdf"),
     path("api/sales-orders", sales_orders_api, name="sales-orders"),
     path("api/sales-orders/<int:order_id>", sales_order_detail_api, name="sales-order-detail"),
     # -------------------------------permission UI-------------------------------

@@ -115,7 +115,7 @@
                     <th data-i18n="order.table.updated_at">修改时间</th>
                     <th data-i18n="order.table.updated_by">修改人</th>
                     <th data-i18n="common.field.status">状态</th>
-                    <th data-i18n="common.field.actions">操作</th>
+                    <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                 </tr>
                 </thead>
                 <tbody id="order-body"></tbody>
@@ -208,19 +208,19 @@
                                 <div class="order-issue-item-row">
                                     <label class="c-inline-field">
                                         <span>项目</span>
-                                        <input id="issue-technician-name" type="text" placeholder="项目" data-issue-item-field="item"/>
+                                        <input type="text" placeholder="项目" data-issue-item-field="item"/>
                                     </label>
                                     <label class="c-inline-field">
                                         <span>单价</span>
-                                        <input id="issue-price" type="text" placeholder="¥ 0" data-issue-item-field="price"/>
+                                        <input type="text" placeholder="¥ 0" data-issue-item-field="price"/>
                                     </label>
                                     <label class="c-inline-field">
                                         <span>税金</span>
-                                        <input id="issue-hours" type="text" placeholder="¥ 0" data-issue-item-field="tax"/>
+                                        <input type="text" placeholder="¥ 0" data-issue-item-field="tax"/>
                                     </label>
                                     <label class="c-inline-field">
                                         <span>单位</span>
-                                        <input id="issue-unit" type="text" placeholder="式" data-issue-item-field="unit"/>
+                                        <input type="text" placeholder="式" data-issue-item-field="unit"/>
                                     </label>
                                     <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-issue-line" aria-label="删除">×</button>
                                 </div>
@@ -514,6 +514,80 @@
         <button class="c-btn c-btn-primary" type="button" id="detailSave" data-i18n="common.save">保存</button>
     </div>
 </dialog>
+
+<dialog class="c-dialog order-dialog-wide order-send-dialog" id="sendDialog" aria-labelledby="sendTitle">
+    <div class="c-dialog-header">
+        <div>
+            <h3 id="sendTitle">发送注文书</h3>
+            <p class="c-card-subtitle" id="sendSubtitle">确认PDF内容并填写邮件信息。</p>
+        </div>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <div class="order-send-layout">
+            <aside class="order-preview-panel" aria-label="PDF预览">
+                <div class="order-preview-canvas">
+                    <iframe class="order-send-pdf-frame" id="sendPdfFrame" title="注文书PDF预览" hidden></iframe>
+                    <div class="order-send-no-pdf" id="sendNoPdfMessage" hidden>没有PDF</div>
+                </div>
+            </aside>
+            <section class="order-send-panel" aria-label="发送邮件">
+                <div class="order-send-form">
+                    <div class="order-send-head-grid">
+                        <label class="order-send-field">
+                            <span>邮件主题</span>
+                            <input id="send-subject" type="text" placeholder="请输入邮件主题"/>
+                        </label>
+                        <label class="order-send-field order-send-type-field">
+                            <span>送信类型</span>
+                            <select id="send-type">
+                                <option value="-1">其他</option>
+                                <option value="0">BP</option>
+                                <option value="1">技术者送信</option>
+                                <option value="2">案件送信</option>
+                                <option value="3" selected>发注</option>
+                            </select>
+                        </label>
+                    </div>
+                    <label class="order-send-field">
+                        <span>邮件内容</span>
+                        <textarea id="send-body" placeholder="请输入邮件内容"></textarea>
+                    </label>
+                    <div class="order-send-bottom-grid">
+                        <div class="order-send-field">
+                            <span>上传附件</span>
+                            <div class="order-send-upload-row" data-file-i18n-skip="1">
+                                <input id="send-files" class="songxin-file-input" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
+                                <button id="send-files-trigger" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.select_file">选择文件</button>
+                                <span id="send-files-status">未添加附件</span>
+                                <span class="order-send-upload-hint">支持多文件，建议单个不超过10MB</span>
+                            </div>
+                            <div id="send-attachment-list" class="order-send-attachment-list">暂无附件</div>
+                        </div>
+                        <div class="order-send-recipient-stack">
+                            <label class="order-send-field">
+                                <span>收件人</span>
+                                <div class="order-send-combobox" id="send-to-combobox">
+                                    <input id="send-to" type="email" placeholder="name@example.com" autocomplete="off"/>
+                                    <button class="order-send-combobox-toggle" id="send-to-toggle" type="button" aria-label="展开收件人选项">▾</button>
+                                    <div class="order-send-combobox-menu" id="send-to-options" hidden></div>
+                                </div>
+                            </label>
+                            <label class="order-send-field order-send-cc">
+                                <span>抄送（可选）</span>
+                                <input id="send-cc" type="email" placeholder="cc@example.com"/>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+    <div class="c-dialog-actions order-send-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary order-send-submit" type="button" id="sendSubmit">发送&nbsp; &gt;</button>
+    </div>
+</dialog>
 <script src="i18n.js"></script>
 <script src="common.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -549,13 +623,15 @@
         const issueCreateSubmit = document.getElementById("issue-create-submit");
         const acceptCreateSubmit = document.getElementById("accept-create-submit");
         const detailDialog = document.getElementById("detailDialog");
+        const sendDialog = document.getElementById("sendDialog");
+        const sendSubmit = document.getElementById("sendSubmit");
 
         const detailTitle = document.getElementById("detailTitle");
         const detailSubtitle = document.getElementById("detailSubtitle");
         const detailSave = document.getElementById("detailSave");
         if (window.initDialogCloseBehavior) {
             window.initDialogCloseBehavior({
-                dialogs: [createDialogIssue, createDialogAccept, detailDialog]
+                dialogs: [createDialogIssue, createDialogAccept, detailDialog, sendDialog]
             });
         }
         const tableBody = document.getElementById("order-body");
@@ -584,10 +660,7 @@
             customerName: document.getElementById("issue-customer-name"),
             customerId: document.getElementById("issue-customer-id"),
             customerList: document.getElementById("issue-customer-list"),
-            technicianName: document.getElementById("issue-technician-name"),
             status: document.getElementById("issue-status"),
-            price: document.getElementById("issue-price"),
-            hours: document.getElementById("issue-hours"),
             start: document.getElementById("issue-start"),
             end: document.getElementById("issue-end"),
             owner: document.getElementById("issue-owner"),
@@ -648,6 +721,22 @@
         };
         const acceptPdfPreviewSlot = document.getElementById("acceptPdfPreviewSlot");
         const issuePdfPreviewPage = document.getElementById("issuePdfPreviewPage");
+        const sendPdfFrame = document.getElementById("sendPdfFrame");
+        const sendNoPdfMessage = document.getElementById("sendNoPdfMessage");
+        const sendFields = {
+            subject: document.getElementById("send-subject"),
+            type: document.getElementById("send-type"),
+            to: document.getElementById("send-to"),
+            toCombobox: document.getElementById("send-to-combobox"),
+            toToggle: document.getElementById("send-to-toggle"),
+            toOptions: document.getElementById("send-to-options"),
+            body: document.getElementById("send-body"),
+            cc: document.getElementById("send-cc"),
+            files: document.getElementById("send-files"),
+            filesTrigger: document.getElementById("send-files-trigger"),
+            filesStatus: document.getElementById("send-files-status"),
+            attachmentList: document.getElementById("send-attachment-list"),
+        };
         let acceptPdfObjectUrl = "";
 
         const detailFields = {
@@ -707,6 +796,9 @@
         let lastTotalPages = 1;
         let currentItems = [];
         let currentDetailId = null;
+        let currentSendItem = null;
+        let sendExtraFiles = [];
+        let sendRecipientOptions = [];
         let detailMode = "view";
         let issueDialogMode = "create";
         let currentIssueEditId = null;
@@ -735,13 +827,11 @@
         const renderActions = (container) => {
             container.innerHTML = "";
             [
-                { key: "common.edit", action: "edit", primary: false },
-                { key: "order.action.view", action: "view", primary: true }
+                { key: "common.edit", action: "edit", className: "c-btn c-btn-secondary c-btn-sm" },
+                { key: "order.action.send", action: "send", className: "c-btn c-btn-success-lite c-btn-sm" }
             ].forEach((item) => {
                 const btn = document.createElement("button");
-                btn.className = item.primary
-                    ? "c-btn c-btn-lite c-btn-sm"
-                    : "c-btn c-btn-ghost c-btn-sm";
+                btn.className = item.className;
                 btn.type = "button";
                 btn.textContent = t(item.key);
                 btn.dataset.action = item.action;
@@ -1062,9 +1152,6 @@
                 issueForm.projectName,
                 issueForm.customerName,
                 issueForm.customerId,
-                issueForm.technicianName,
-                issueForm.price,
-                issueForm.hours,
                 issueForm.start,
                 issueForm.end,
                 issueForm.workContent,
@@ -1412,6 +1499,245 @@
             }
         };
 
+        const readBlobAsBase64 = (blob) => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = String(reader.result || "");
+                resolve(result.includes(",") ? result.split(",").pop() : result);
+            };
+            reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
+            reader.readAsDataURL(blob);
+        });
+
+        const buildSafePdfName = (item) => {
+            const rawNo = item?.order_no || buildIssueOrderNo();
+            const normalized = String(rawNo).replace(/[\\/:*?"<>|]/g, "_");
+            return `${normalized || "purchase_order"}.pdf`;
+        };
+
+        const hasStoredPdf = (item) => Boolean(item?.id && item?.pdf_file);
+
+        const getStoredPdfUrl = (item) => (
+            hasStoredPdf(item)
+                ? `/api/purchase-orders/${encodeURIComponent(item.id)}/pdf`
+                : ""
+        );
+
+        const setSendPdfDisplayMode = (item) => {
+            const pdfUrl = getStoredPdfUrl(item);
+            if (sendPdfFrame) {
+                sendPdfFrame.hidden = !pdfUrl;
+                sendPdfFrame.src = pdfUrl || "about:blank";
+            }
+            if (sendNoPdfMessage) {
+                sendNoPdfMessage.hidden = Boolean(pdfUrl);
+            }
+        };
+
+        const getSendPdfBlob = async () => {
+            const pdfUrl = getStoredPdfUrl(currentSendItem);
+            if (!pdfUrl) {
+                throw new Error("没有PDF");
+            }
+            const response = await fetch(pdfUrl, { credentials: "same-origin" });
+            if (!response.ok) {
+                throw new Error("PDF文件读取失败");
+            }
+            return response.blob();
+        };
+
+        const renderSendAttachmentList = () => {
+            if (!sendFields.attachmentList) return;
+            if (sendFields.filesStatus) {
+                sendFields.filesStatus.textContent = sendExtraFiles.length
+                    ? `已添加 ${sendExtraFiles.length} 个附件`
+                    : "未添加附件";
+            }
+            const rows = [];
+            if (hasStoredPdf(currentSendItem)) {
+                rows.push(`<div class="order-send-attachment-item"><span>PDF文件：${escapeHtml(buildSafePdfName(currentSendItem))}</span></div>`);
+            }
+            sendExtraFiles.forEach((file, index) => {
+                rows.push(`
+                    <div class="order-send-attachment-item">
+                        <span>${escapeHtml(file.name)}</span>
+                        <button type="button" data-remove-send-file="${index}">删除</button>
+                    </div>
+                `);
+            });
+            if (!rows.length) {
+                sendFields.attachmentList.textContent = "暂无附件";
+                return;
+            }
+            sendFields.attachmentList.innerHTML = rows.join("");
+        };
+
+        const addSendFiles = () => {
+            const files = sendFields.files?.files ? Array.from(sendFields.files.files) : [];
+            if (!files.length) return;
+            sendExtraFiles.push(...files);
+            if (sendFields.files) sendFields.files.value = "";
+            renderSendAttachmentList();
+        };
+
+        const removeSendFile = (index) => {
+            if (!Number.isInteger(index) || index < 0 || index >= sendExtraFiles.length) return;
+            sendExtraFiles.splice(index, 1);
+            renderSendAttachmentList();
+        };
+
+        const closeSendRecipientMenu = () => {
+            if (sendFields.toOptions) sendFields.toOptions.hidden = true;
+        };
+
+        const renderSendRecipientOptions = () => {
+            if (!sendFields.toOptions) return;
+            sendFields.toOptions.innerHTML = "";
+            sendRecipientOptions.forEach((option) => {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "order-send-combobox-option";
+                button.dataset.email = option.email;
+                button.innerHTML = `
+                    <span class="order-send-combobox-name">${escapeHtml(option.name || option.email)}</span>
+                    <span class="order-send-combobox-email">${escapeHtml(option.email)}</span>
+                `;
+                sendFields.toOptions.appendChild(button);
+            });
+        };
+
+        const openSendRecipientMenu = () => {
+            if (!sendFields.toOptions || !sendRecipientOptions.length) return;
+            renderSendRecipientOptions();
+            sendFields.toOptions.hidden = false;
+        };
+
+        const toggleSendRecipientMenu = () => {
+            if (!sendFields.toOptions) return;
+            if (sendFields.toOptions.hidden) {
+                openSendRecipientMenu();
+            } else {
+                closeSendRecipientMenu();
+            }
+        };
+
+        const fetchSendRecipient = async (item) => {
+            sendRecipientOptions = [];
+            if (sendFields.to) sendFields.to.value = "";
+            if (sendFields.toOptions) sendFields.toOptions.innerHTML = "";
+            closeSendRecipientMenu();
+            const customerId = item?.customer_id;
+            if (!customerId) return "";
+            try {
+                const payload = await window.requestJson(`/api/customers/${encodeURIComponent(customerId)}`, { method: "GET" });
+                const customer = payload?.data?.item || {};
+                const options = [
+                    { name: customer.contact1_name || "联系人1", email: customer.contact1_email },
+                    { name: customer.company_name || "公司邮箱", email: customer.company_email },
+                    { name: customer.contact2_name || "联系人2", email: customer.contact2_email },
+                    { name: customer.contact3_name || "联系人3", email: customer.contact3_email },
+                ].map((option) => ({
+                    name: String(option.name || "").trim(),
+                    email: String(option.email || "").trim(),
+                })).filter((option) => option.email);
+                const seenEmails = new Set();
+                sendRecipientOptions = options.filter((option) => {
+                    if (seenEmails.has(option.email)) return false;
+                    seenEmails.add(option.email);
+                    return true;
+                });
+                renderSendRecipientOptions();
+                if (sendFields.to) sendFields.to.value = sendRecipientOptions[0]?.email || "";
+            } catch (error) {
+                console.warn(error);
+            }
+            return sendFields.to ? sendFields.to.value : "";
+        };
+
+        const openSendDialog = async (item) => {
+            if (!sendDialog || !item) return;
+            currentSendItem = item;
+            sendExtraFiles = [];
+            sendRecipientOptions = [];
+            if (sendFields.subject) sendFields.subject.value = item.project_name ? `${item.project_name} 注文書` : "注文書";
+            if (sendFields.type) sendFields.type.value = "3";
+            if (sendFields.to) sendFields.to.value = "";
+            if (sendFields.toOptions) sendFields.toOptions.innerHTML = "";
+            closeSendRecipientMenu();
+            if (sendFields.body) sendFields.body.value = "";
+            if (sendFields.cc) sendFields.cc.value = "";
+            if (sendFields.files) sendFields.files.value = "";
+            renderSendAttachmentList();
+            setSendPdfDisplayMode(item);
+            fetchSendRecipient(item);
+            sendDialog.showModal();
+        };
+
+        const submitSendMail = async () => {
+            if (!currentSendItem || !sendSubmit) return;
+            const subject = sendFields.subject?.value.trim() || "";
+            const body = sendFields.body?.value.trim() || "";
+            const recipient = sendFields.to?.value.trim() || "";
+            const mailType = Number(sendFields.type?.value || 3);
+            if (!subject) {
+                alert("请输入邮件主题");
+                sendFields.subject?.focus();
+                return;
+            }
+            if (!hasStoredPdf(currentSendItem)) {
+                alert("没有PDF，无法发送。");
+                return;
+            }
+            if (!body) {
+                alert("请输入邮件内容");
+                sendFields.body?.focus();
+                return;
+            }
+            if (!recipient) {
+                alert("请输入收件人，或先在客户资料中维护邮箱。");
+                sendFields.to?.focus();
+                return;
+            }
+            const originalText = sendSubmit.textContent;
+            sendSubmit.disabled = true;
+            sendSubmit.textContent = "发送中...";
+            try {
+                const pdfBlob = await getSendPdfBlob();
+                const attachments = [{
+                    filename: buildSafePdfName(currentSendItem),
+                    content_type: "application/pdf",
+                    content: await readBlobAsBase64(pdfBlob),
+                }];
+                const extraAttachments = await Promise.all(sendExtraFiles.map(async (file) => ({
+                    filename: file.name,
+                    content_type: file.type || "application/octet-stream",
+                    content: await readBlobAsBase64(file),
+                })));
+                attachments.push(...extraAttachments);
+                await window.requestJson("/api/send-mail", {
+                    body: JSON.stringify({
+                        to: recipient,
+                        cc: sendFields.cc?.value.trim() || "",
+                        subject,
+                        body,
+                        attachments,
+                        mail_type: Number.isFinite(mailType) ? mailType : 3,
+                    }),
+                }, {
+                    throwOnFailure: true,
+                    fallbackMessage: "发送失败",
+                });
+                alert("发送成功");
+                sendDialog.close();
+            } catch (error) {
+                console.error("发送邮件失败", error);
+                alert(error.message || "发送失败");
+            } finally {
+                sendSubmit.disabled = false;
+                sendSubmit.textContent = originalText || "发送 >";
+            }
+        };
+
         const buildIssueFormData = (payload, pdfBlob) => {
             const formData = new FormData();
             Object.entries(payload).forEach(([key, value]) => {
@@ -1455,7 +1781,7 @@
               <td>${escapeHtml(item.updated_at || "-")}</td>
               <td>${escapeHtml(item.updated_by || "-")}</td>
               <td><span class="c-tag ${statusClass[status] || "c-tag-neutral"}">${escapeHtml(statusLabel)}</span></td>
-              <td><div class="row-actions c-row-actions" data-row-actions></div></td>
+              <td><div class="row-actions c-row-actions c-row-actions-nowrap" data-row-actions></div></td>
             </tr>
           `;
         };
@@ -1478,7 +1804,7 @@
               <td>${escapeHtml(item.updated_at || "-")}</td>
               <td>${escapeHtml(item.updated_by || "-")}</td>
               <td><span class="c-tag ${statusClass[status] || "c-tag-neutral"}">${escapeHtml(statusLabel)}</span></td>
-              <td><div class="row-actions c-row-actions" data-row-actions></div></td>
+              <td><div class="row-actions c-row-actions c-row-actions-nowrap" data-row-actions></div></td>
             </tr>
           `;
         };
@@ -2122,6 +2448,10 @@
                     openIssueEditDialog(item);
                     return;
                 }
+                if (btn.dataset.action === "send") {
+                    openSendDialog(item);
+                    return;
+                }
                 openDetailDialog(btn.dataset.action, item);
             });
         }
@@ -2133,6 +2463,41 @@
                 }
             });
         }
+        if (sendSubmit) {
+            sendSubmit.addEventListener("click", submitSendMail);
+        }
+        if (sendFields.files) {
+            sendFields.files.addEventListener("change", addSendFiles);
+        }
+        if (sendFields.filesTrigger) {
+            sendFields.filesTrigger.addEventListener("click", () => sendFields.files?.click());
+        }
+        if (sendFields.attachmentList) {
+            sendFields.attachmentList.addEventListener("click", (event) => {
+                const button = event.target.closest("[data-remove-send-file]");
+                if (!button) return;
+                removeSendFile(Number(button.dataset.removeSendFile));
+            });
+        }
+        if (sendFields.toToggle) {
+            sendFields.toToggle.addEventListener("click", toggleSendRecipientMenu);
+        }
+        if (sendFields.toOptions) {
+            sendFields.toOptions.addEventListener("click", (event) => {
+                const option = event.target.closest(".order-send-combobox-option");
+                if (!option) return;
+                if (sendFields.to) {
+                    sendFields.to.value = option.dataset.email || option.textContent.trim();
+                    sendFields.to.focus();
+                }
+                closeSendRecipientMenu();
+            });
+        }
+        document.addEventListener("click", (event) => {
+            if (sendFields.toCombobox && !sendFields.toCombobox.contains(event.target)) {
+                closeSendRecipientMenu();
+            }
+        });
 
         bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap, { enableDefault: true });
         bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap, { enableDefault: true });
@@ -2145,10 +2510,7 @@
             issueForm.orderNo,
             issueForm.projectName,
             issueForm.customerName,
-            issueForm.technicianName,
             issueForm.status,
-            issueForm.price,
-            issueForm.hours,
             issueForm.start,
             issueForm.end,
             issueForm.owner,

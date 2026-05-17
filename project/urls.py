@@ -99,6 +99,7 @@ from settings.views import (
     activation_validate_api,
     company_info_api,
     company_info_seal_api,
+    mail_template_detail_api,
     sys_settings_ai_test_api,
     sys_settings_gmail_test_api,
     sys_settings_line_notify_test_api,
@@ -257,6 +258,7 @@ urlpatterns = [
     path("api/roles", roles_api, name="role-list"),
     path("api/roles/<int:role_id>", role_detail_api, name="role-detail"),
     # -------------------------------system settings API-------------------------------
+    path("api/mail-templates/<str:template_name>", mail_template_detail_api, name="mail-template-detail"),
     path("api/sys-settings/<str:section>", sys_settings_section_api, name="sys-settings-section"),
     path("api/sys-settings/business-email/test", sys_settings_gmail_test_api, name="sys-settings-gmail-test"),
     path("api/sys-settings/sendmsg/test", sys_settings_sendmsg_test_api, name="sys-settings-sendmsg-test"),

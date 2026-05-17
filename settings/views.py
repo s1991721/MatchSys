@@ -87,9 +87,6 @@ SECTION_DEFAULTS = {
         "email": "",
         "system_version": "",
     },
-    "mail-template": {
-        "anjian": "",
-    },
 }
 
 COMPANY_INFO_DEFAULTS = {
@@ -123,6 +120,43 @@ def _save_setting(section, settings_payload, login_id):
         )
     record.save()
     return api_success(data={"name": section, "settings": record.settings})
+
+
+def _get_mail_template_payload():
+    record = _get_setting("mail-template")
+    return record.settings if record and isinstance(record.settings, dict) else {}
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def mail_template_detail_api(request, template_name):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    name = str(template_name)
+    settings_payload = _get_mail_template_payload()
+
+    if request.method == "GET":
+        return api_success(data={
+            "name": name,
+            "template": str(settings_payload.get(name) or ""),
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return api_error("Invalid JSON body")
+    if "template" not in payload:
+        return api_error("Missing field: template")
+
+    settings_payload[name] = str(payload.get("template") or "")
+    _save_setting("mail-template", settings_payload, login_id)
+    return api_success(data={
+        "name": name,
+        "template": settings_payload[name],
+    })
 
 
 def _company_info_settings():
@@ -284,23 +318,6 @@ def _handle_match(settings_payload, login_id):
         return api_error("Invalid cycle_days")
 
     return _save_setting("match", {"cycle_days": cycle_days}, login_id)
-
-
-def _handle_mail_template(settings_payload, login_id):
-    if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
-
-    normalized_settings = {}
-    for raw_name, raw_template in settings_payload.items():
-        name = str(raw_name or "").strip()
-        if not name:
-            continue
-        normalized_settings[name] = str(raw_template or "")
-
-    if "anjian" not in normalized_settings:
-        normalized_settings["anjian"] = ""
-
-    return _save_setting("mail-template", normalized_settings, login_id)
 
 
 def _handle_ocr_upload(ocr_auth_file, login_id):
@@ -658,7 +675,6 @@ def _list_tasks():
 # 各个配置的处理方法
 SECTION_HANDLERS = {
     "match": _handle_match,
-    "mail-template": _handle_mail_template,
     "ocr": _handle_ocr,
     "ai": _handle_ai,
     "backup": _handle_backup,

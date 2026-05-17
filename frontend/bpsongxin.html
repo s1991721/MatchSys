@@ -170,10 +170,10 @@
     const queryParams = new URLSearchParams(window.location.search);
     const isMatchFlow = queryParams.get('from') === 'match';
     const sceneParam = (queryParams.get('scene') || '').toLowerCase();
-    const templateSection = 'mail-template';
+    const templateName = 'anjian';
     let loadingTimer = null;
     let currentSelection = null;
-    let templateSettingsCache = null;
+    let templateCache = null;
 
     const normalizeMultiline = (text) => {
         if (typeof text !== 'string') return '';
@@ -214,11 +214,10 @@
     };
 
     const openTemplateDialog = async () => {
-        const templateName = 'anjian';
         setLoading(true, {title: t('songxin.template.loading_title'), subtitle: t('songxin.template.loading_sub')});
         try {
-            const settingsPayload = await loadTemplateSettings(true);
-            templateContentInput.value = normalizeMultiline(settingsPayload[templateName] || '');
+            const template = await loadTemplate(true);
+            templateContentInput.value = normalizeMultiline(template);
             templateInfoDialog.showModal();
         } catch (err) {
             console.error('加载模板失败', err);
@@ -230,40 +229,35 @@
 
     templateInfoBtn.addEventListener('click', openTemplateDialog);
 
-    const loadTemplateSettings = async (forceRefresh = false) => {
-        if (!forceRefresh && templateSettingsCache) {
-            return templateSettingsCache;
+    const loadTemplate = async (forceRefresh = false) => {
+        if (!forceRefresh && templateCache !== null) {
+            return templateCache;
         }
-        const payload = await window.requestJson(`/api/sys-settings/${templateSection}`, {
+        const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
             method: 'GET',
             credentials: 'include'
         }, {
             throwOnFailure: true,
             fallbackMessage: t('songxin.error.template_load_failed')
         });
-        const settingsPayload = payload.data && typeof payload.data.settings === 'object' && payload.data.settings
-            ? payload.data.settings
-            : {};
-        templateSettingsCache = settingsPayload;
-        return settingsPayload;
+        const template = payload.data && typeof payload.data.template === 'string'
+            ? payload.data.template
+            : '';
+        templateCache = template;
+        return template;
     };
 
     templateSaveBtn.addEventListener('click', async () => {
-        const templateName = 'anjian';
         setLoading(true, {title: t('songxin.template.saving_title'), subtitle: t('songxin.template.saving_sub')});
         try {
-            const currentSettings = await loadTemplateSettings();
-            const nextSettings = {
-                ...currentSettings,
-                [templateName]: normalizeMultiline(templateContentInput.value)
-            };
-            await window.requestJson(`/api/sys-settings/${templateSection}`, {
-                body: JSON.stringify({settings: nextSettings})
+            const template = normalizeMultiline(templateContentInput.value);
+            await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
+                body: JSON.stringify({template})
             }, {
                 throwOnFailure: true,
                 fallbackMessage: t('songxin.error.template_save_failed')
             });
-            templateSettingsCache = nextSettings;
+            templateCache = template;
             templateInfoDialog.close();
             await analyzeByScene(currentSelection.job.detail);
         } catch (err) {

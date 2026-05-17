@@ -22,6 +22,7 @@
                             <button class="c-chip" data-type="0" type="button">BP</button>
                             <button class="c-chip" data-type="1" type="button">技术者送信</button>
                             <button class="c-chip" data-type="2" type="button">案件送信</button>
+                            <button class="c-chip" data-type="3" type="button">发注</button>
                         </div>
                     </div>
                     <div class="c-filter-group">
@@ -86,7 +87,8 @@
             const buildTypeMap = () => ({
                 0: { text: t('songxinhistory.type.bp'), cls: 'c-tag-success' },
                 1: { text: t('songxinhistory.type.tech'), cls: 'c-tag-warn' },
-                2: { text: t('songxinhistory.type.project'), cls: 'c-tag-danger' }
+                2: { text: t('songxinhistory.type.project'), cls: 'c-tag-danger' },
+                3: { text: t('songxinhistory.type.order'), cls: 'c-tag-info' }
             });
             let typeMap = buildTypeMap();
 

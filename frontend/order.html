@@ -998,15 +998,41 @@
             if (detailFields.updater) detailFields.updater.readOnly = true;
         }
 
-        const formatPrice = (value) => {
+        const formatBlankValue = (value) => {
             if (value === null || value === undefined || value === "") return "-";
             return String(value);
-        }
+        };
 
-        const formatHours = (value) => {
-            if (value === null || value === undefined || value === "") return "-";
-            return String(value);
-        }
+        const formatPrice = formatBlankValue;
+        const formatHours = formatBlankValue;
+
+        const setFieldValue = (field, value = "") => {
+            if (!field) return;
+            field.value = value === null || value === undefined ? "" : String(value);
+        };
+
+        const setFieldValues = (entries) => {
+            entries.forEach(([field, value]) => setFieldValue(field, value));
+        };
+
+        const clearFields = (fields) => {
+            fields.forEach((field) => setFieldValue(field, ""));
+        };
+
+        const createOption = (value, label = value) => {
+            const opt = document.createElement("option");
+            opt.value = String(value ?? "");
+            opt.textContent = String(label ?? value ?? "");
+            return opt;
+        };
+
+        const debounce = (fn, delay = 250) => {
+            let timer = null;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn(...args), delay);
+            };
+        };
 
         const getIssueLineTotal = (item) => {
             const rows = Array.isArray(item && item.line_items) ? item.line_items : [];
@@ -1036,22 +1062,23 @@
             "'": "&#39;",
         }[char]));
 
+        const getDateParts = (date = new Date()) => {
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const dd = String(date.getDate()).padStart(2, "0");
+            const hh = String(date.getHours()).padStart(2, "0");
+            const mi = String(date.getMinutes()).padStart(2, "0");
+            const ss = String(date.getSeconds()).padStart(2, "0");
+            return { yyyy, mm, dd, hh, mi, ss };
+        };
+
         const todayText = () => {
-            const d = new Date();
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const dd = String(d.getDate()).padStart(2, "0");
+            const { yyyy, mm, dd } = getDateParts();
             return `${yyyy}-${mm}-${dd}`;
         };
 
         const buildIssueOrderNo = () => {
-            const d = new Date();
-            const yyyy = d.getFullYear();
-            const mm = String(d.getMonth() + 1).padStart(2, "0");
-            const dd = String(d.getDate()).padStart(2, "0");
-            const hh = String(d.getHours()).padStart(2, "0");
-            const mi = String(d.getMinutes()).padStart(2, "0");
-            const ss = String(d.getSeconds()).padStart(2, "0");
+            const { yyyy, mm, dd, hh, mi, ss } = getDateParts();
             return `P_${yyyy}${mm}${dd}${hh}${mi}${ss}`;
         };
 
@@ -1060,20 +1087,30 @@
             return start || end || "";
         };
 
+        const setIssueItemField = (row, field, value) => {
+            const input = row.querySelector(`[data-issue-item-field="${field}"]`);
+            setFieldValue(input, value);
+        };
+
+        const readIssueItemField = (row, field) => {
+            return row.querySelector(`[data-issue-item-field="${field}"]`)?.value?.trim() || "";
+        };
+
+        const getIssueItemInput = (row, field) => row.querySelector(`[data-issue-item-field="${field}"]`);
+
         const collectIssueItems = () => {
             const rows = Array.from(issueForm.lineItems ? issueForm.lineItems.querySelectorAll(".order-issue-item-row") : []);
             return rows.map((row) => {
-                const get = (field) => row.querySelector(`[data-issue-item-field="${field}"]`);
-                const priceInput = get("price")?.value?.trim() || "";
-                const taxInput = get("tax")?.value?.trim() || "";
+                const priceInput = readIssueItemField(row, "price");
+                const taxInput = readIssueItemField(row, "tax");
                 return {
                     row,
-                    itemName: get("item")?.value?.trim() || "",
+                    itemName: readIssueItemField(row, "item"),
                     priceInput,
                     price: parseMoneyValue(priceInput),
                     taxInput,
                     tax: parseMoneyValue(taxInput),
-                    unit: get("unit")?.value?.trim() || "",
+                    unit: readIssueItemField(row, "unit"),
                 };
             });
         };
@@ -1125,14 +1162,10 @@
             const items = Array.isArray(lineItems) && lineItems.length ? lineItems : [{}];
             items.forEach((item) => {
                 const row = createIssueItemRow();
-                const set = (field, value) => {
-                    const input = row.querySelector(`[data-issue-item-field="${field}"]`);
-                    if (input) input.value = value === null || value === undefined ? "" : String(value);
-                };
-                set("item", item.item ?? item.itemName ?? "");
-                set("price", item.price ?? "");
-                set("tax", item.tax ?? "");
-                set("unit", item.unit ?? "");
+                setIssueItemField(row, "item", item.item ?? item.itemName ?? "");
+                setIssueItemField(row, "price", item.price ?? "");
+                setIssueItemField(row, "tax", item.tax ?? "");
+                setIssueItemField(row, "unit", item.unit ?? "");
                 issueForm.lineItems.appendChild(row);
             });
         };
@@ -1191,7 +1224,7 @@
         };
 
         const resetIssueForm = () => {
-            [
+            clearFields([
                 issueForm.projectName,
                 issueForm.customerName,
                 issueForm.customerId,
@@ -1202,10 +1235,8 @@
                 issueForm.contractType,
                 issueForm.paymentTerms,
                 issueForm.remark,
-            ].forEach((field) => {
-                if (field) field.value = "";
-            });
-            if (issueForm.orderNo) issueForm.orderNo.value = buildIssueOrderNo();
+            ]);
+            setFieldValue(issueForm.orderNo, buildIssueOrderNo());
             setIssueFormEditability("已创建");
             if (issueForm.customerList) issueForm.customerList.innerHTML = "";
             issueCustomerMap.clear();
@@ -1215,23 +1246,24 @@
 
         const populateIssueForm = (item) => {
             if (!item) return;
-            if (issueForm.orderNo) issueForm.orderNo.value = item.order_no || "";
-            if (issueForm.projectName) issueForm.projectName.value = item.project_name || "";
-            if (issueForm.customerName) issueForm.customerName.value = item.customer_name || "";
-            if (issueForm.customerId) issueForm.customerId.value = item.customer_id || "";
+            setFieldValues([
+                [issueForm.orderNo, item.order_no],
+                [issueForm.projectName, item.project_name],
+                [issueForm.customerName, item.customer_name],
+                [issueForm.customerId, item.customer_id],
+                [issueForm.start, item.period_start],
+                [issueForm.end, item.period_end],
+                [issueForm.workContent, item.work_content],
+                [issueForm.workPlace, item.work_place],
+                [issueForm.contractType, item.contract_type],
+                [issueForm.paymentTerms, item.payment_terms],
+                [issueForm.remark, item.remark],
+            ]);
             const status = item.status || "已创建";
             setIssueFormEditability(status);
             if (issueForm.status) issueForm.status.value = status === "承认中" ? "已承认" : status;
-            if (issueForm.start) issueForm.start.value = item.period_start || "";
-            if (issueForm.end) issueForm.end.value = item.period_end || "";
-            if (issueForm.workContent) issueForm.workContent.value = item.work_content || "";
-            if (issueForm.workPlace) issueForm.workPlace.value = item.work_place || "";
-            if (issueForm.contractType) issueForm.contractType.value = item.contract_type || "";
-            if (issueForm.paymentTerms) issueForm.paymentTerms.value = item.payment_terms || "";
-            if (issueForm.remark) issueForm.remark.value = item.remark || "";
             setIssueLineItems(item.line_items || []);
             setIssueFormEditability(status);
-            loadOwnerSelectOptions(issueForm.owner, item.person_in_charge_id || item.person_in_charge || "");
             updateIssuePreview();
         };
 
@@ -1241,7 +1273,10 @@
             currentIssueEditStatus = item.status || "已创建";
             setIssueDialogMode("edit");
             populateIssueForm(item);
-            await fetchCompanyInfo();
+            await Promise.all([
+                loadOwnerSelectOptions(issueForm.owner, item.person_in_charge_id || item.person_in_charge || ""),
+                fetchCompanyInfo(),
+            ]);
             updateIssuePreview();
             createDialogIssue.showModal();
         };
@@ -2018,26 +2053,28 @@
         const openDetailDialog = (mode, item) => {
             if (!detailDialog || !item) return;
             fillStatusOptions(detailFields.status, currentView);
-            if (detailFields.orderNo) detailFields.orderNo.value = item.order_no || "";
-            if (detailFields.project) detailFields.project.value = item.project_name || "";
-            if (detailFields.customerId) detailFields.customerId.value = item.customer_id || "";
-            if (detailFields.purchaseId) detailFields.purchaseId.value = item.purchase_id || "";
-            if (detailFields.client) detailFields.client.value = item.customer_name || "";
-            if (detailFields.engineer) detailFields.engineer.value = item.technician_name || "";
-            if (detailFields.technicianId) detailFields.technicianId.value = item.technician_id || "";
+            setFieldValues([
+                [detailFields.orderNo, item.order_no],
+                [detailFields.project, item.project_name],
+                [detailFields.customerId, item.customer_id],
+                [detailFields.purchaseId, item.purchase_id],
+                [detailFields.client, item.customer_name],
+                [detailFields.engineer, item.technician_name],
+                [detailFields.technicianId, item.technician_id],
+                [detailFields.price, item.price],
+                [detailFields.hours, item.working_hours],
+                [detailFields.start, item.period_start],
+                [detailFields.end, item.period_end],
+                [detailFields.createdAt, formatDateValue(item.created_at)],
+                [detailFields.creator, item.created_by],
+                [detailFields.remark, item.remark],
+                [detailFields.updatedAt, formatDateValue(item.updated_at)],
+                [detailFields.updater, item.updated_by],
+            ]);
             if (detailFields.status && item.status) detailFields.status.value = item.status;
-            if (detailFields.price) detailFields.price.value = item.price || "";
-            if (detailFields.hours) detailFields.hours.value = item.working_hours || "";
-            if (detailFields.start) detailFields.start.value = item.period_start || "";
-            if (detailFields.end) detailFields.end.value = item.period_end || "";
-            if (detailFields.createdAt) detailFields.createdAt.value = formatDateValue(item.created_at);
-            if (detailFields.creator) detailFields.creator.value = item.created_by || "";
             if (detailFields.owner) {
                 loadOwnerSelectOptions(detailFields.owner, item.person_in_charge_id || item.person_in_charge || "");
             }
-            if (detailFields.remark) detailFields.remark.value = item.remark || "";
-            if (detailFields.updatedAt) detailFields.updatedAt.value = formatDateValue(item.updated_at);
-            if (detailFields.updater) detailFields.updater.value = item.updated_by || "";
 
             currentDetailId = item.id;
             setDialogMode(mode);
@@ -2179,11 +2216,10 @@
             const items = collectIssueItems();
             if (!items.length) return showMissingField("契约明细", issueForm.lineAdd), false;
             for (const item of items) {
-                const get = (field) => item.row.querySelector(`[data-issue-item-field="${field}"]`);
-                if (!item.itemName) return showMissingField("项目", get("item")), false;
-                if (!item.priceInput) return showMissingField("单价", get("price")), false;
-                if (!item.taxInput) return showMissingField("税金", get("tax")), false;
-                if (!item.unit) return showMissingField("单位", get("unit")), false;
+                if (!item.itemName) return showMissingField("项目", getIssueItemInput(item.row, "item")), false;
+                if (!item.priceInput) return showMissingField("单价", getIssueItemInput(item.row, "price")), false;
+                if (!item.taxInput) return showMissingField("税金", getIssueItemInput(item.row, "tax")), false;
+                if (!item.unit) return showMissingField("单位", getIssueItemInput(item.row, "unit")), false;
             }
             const owner = readOwnerSelect(issueForm.owner);
             if (!owner.id) return showMissingField(t("common.field.owner"), issueForm.owner), false;
@@ -2347,9 +2383,7 @@
             items.forEach((item) => {
                 if (!item || !item.company_name) return;
                 map.set(item.company_name, item.id);
-                const opt = document.createElement("option");
-                opt.value = item.company_name;
-                listEl.appendChild(opt);
+                listEl.appendChild(createOption(item.company_name));
             });
         }
 
@@ -2380,9 +2414,14 @@
 
         const bindCustomerLookup = (inputEl, idEl, listEl, map, options = {}) => {
             if (!inputEl || !idEl || !listEl) return;
+            const debouncedFetch = debounce(() => fetchCustomerOptions(inputEl, listEl, map));
             inputEl.addEventListener("input", () => {
-                fetchCustomerOptions(inputEl, listEl, map);
                 idEl.value = "";
+                if (!inputEl.value.trim()) {
+                    fetchCustomerOptions(inputEl, listEl, map);
+                    return;
+                }
+                debouncedFetch();
             });
             if (options.enableDefault) {
                 inputEl.addEventListener("focus", () => {
@@ -2396,49 +2435,67 @@
         }
 
         const BUSINESS_ROLE_ID = 2;
+        let ownerSelectOptionsCache = null;
+        let ownerSelectOptionsRequest = null;
 
-        const loadOwnerSelectOptions = (selectEl, currentValue) => {
-            if (!selectEl) return;
+        const fetchOwnerSelectOptions = () => {
+            if (ownerSelectOptionsCache) {
+                return Promise.resolve(ownerSelectOptionsCache);
+            }
+            if (ownerSelectOptionsRequest) {
+                return ownerSelectOptionsRequest;
+            }
             const params = window.createParams([
                 ["role_id", String(BUSINESS_ROLE_ID)],
             ]);
-            window.requestJson(window.buildUrl("/api/user-logins/by-role", params), { method: "GET" })
+            ownerSelectOptionsRequest = window.requestJson(window.buildUrl("/api/user-logins/by-role", params), { method: "GET" })
                 .then((payload) => {
                     const result = payload.data || {};
                     const items = Array.isArray(result.items) ? result.items : [];
-                    selectEl.innerHTML = "";
-                    items.forEach((item) => {
-                        if (!item || !item.employee_name) return;
-                        const opt = document.createElement("option");
-                        opt.value = String(item.employee_id || "");
-                        opt.textContent = item.employee_name;
-                        selectEl.appendChild(opt);
-                    });
-                    if (currentValue && !items.some((item) => String(item.employee_id || "") === String(currentValue))) {
-                        const opt = document.createElement("option");
-                        opt.value = String(currentValue);
-                        opt.textContent = String(currentValue);
-                        selectEl.appendChild(opt);
-                    }
-                    if (currentValue) {
-                        selectEl.value = String(currentValue);
-                    }
+                    ownerSelectOptionsCache = items;
+                    return items;
+                })
+                .catch((error) => {
+                    ownerSelectOptionsRequest = null;
+                    throw error;
+                });
+            return ownerSelectOptionsRequest;
+        };
+
+        const renderOwnerSelectOptions = (selectEl, items, currentValue) => {
+            selectEl.innerHTML = "";
+            items.forEach((item) => {
+                if (!item || !item.employee_name) return;
+                selectEl.appendChild(createOption(item.employee_id || "", item.employee_name));
+            });
+            if (currentValue && !items.some((item) => String(item.employee_id || "") === String(currentValue))) {
+                selectEl.appendChild(createOption(currentValue));
+            }
+            if (currentValue) {
+                selectEl.value = String(currentValue);
+            }
+        };
+
+        const loadOwnerSelectOptions = (selectEl, currentValue) => {
+            if (!selectEl) return Promise.resolve([]);
+            return fetchOwnerSelectOptions()
+                .then((items) => {
+                    renderOwnerSelectOptions(selectEl, items, currentValue);
                     if (selectEl === issueForm.owner) {
                         updateIssuePreview();
                     }
+                    return items;
                 })
                 .catch(() => {
                     selectEl.innerHTML = "";
                     if (currentValue) {
-                        const opt = document.createElement("option");
-                        opt.value = String(currentValue);
-                        opt.textContent = String(currentValue);
-                        selectEl.appendChild(opt);
+                        selectEl.appendChild(createOption(currentValue));
                         selectEl.value = String(currentValue);
                     }
                     if (selectEl === issueForm.owner) {
                         updateIssuePreview();
                     }
+                    return [];
                 });
         }
 
@@ -2448,9 +2505,7 @@
             items.forEach((item) => {
                 if (!item || !item.name) return;
                 map.set(item.name, item.employee_id);
-                const opt = document.createElement("option");
-                opt.value = item.name;
-                listEl.appendChild(opt);
+                listEl.appendChild(createOption(item.name));
             });
         }
 
@@ -2480,9 +2535,14 @@
 
         const bindTechnicianLookup = (inputEl, idEl, listEl, map, options = {}) => {
             if (!inputEl || !idEl || !listEl) return;
+            const debouncedFetch = debounce(() => fetchTechnicianOptions(inputEl, listEl, map));
             inputEl.addEventListener("input", () => {
-                fetchTechnicianOptions(inputEl, listEl, map);
                 idEl.value = "";
+                if (!inputEl.value.trim()) {
+                    fetchTechnicianOptions(inputEl, listEl, map);
+                    return;
+                }
+                debouncedFetch();
             });
             if (options.enableDefault) {
                 inputEl.addEventListener("focus", () => {
@@ -2503,6 +2563,7 @@
             createBtn.addEventListener("click", async () => {
                 if (currentView === "accept") {
                     if (createDialogAccept) {
+                        await loadOwnerSelectOptions(acceptForm.owner);
                         updateAcceptPdfPreview();
                         createDialogAccept.showModal();
                     }
@@ -2511,7 +2572,10 @@
                     currentIssueEditStatus = "";
                     setIssueDialogMode("create");
                     resetIssueForm();
-                    await fetchCompanyInfo();
+                    await Promise.all([
+                        loadOwnerSelectOptions(issueForm.owner),
+                        fetchCompanyInfo(),
+                    ]);
                     updateIssuePreview();
                     createDialogIssue.showModal();
                 }
@@ -2637,8 +2701,6 @@
         bindCustomerLookup(issueForm.customerName, issueForm.customerId, issueForm.customerList, issueCustomerMap, { enableDefault: true });
         bindCustomerLookup(acceptForm.customerName, acceptForm.customerId, acceptForm.customerList, acceptCustomerMap, { enableDefault: true });
         bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap, { enableDefault: true });
-        loadOwnerSelectOptions(issueForm.owner);
-        loadOwnerSelectOptions(acceptForm.owner);
         bindTechnicianLookup(acceptForm.technicianName, acceptForm.technicianId, acceptForm.technicianList, acceptTechnicianMap, { enableDefault: true });
 
         [
@@ -2706,8 +2768,6 @@
         }
 
         setView("issue");
-        fetchCompanyInfo();
-        updateIssuePreview();
     })();
 </script>
 </body>

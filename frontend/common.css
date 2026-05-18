@@ -872,6 +872,21 @@ body > .page {
   font-size: 13px;
   flex-wrap: wrap;
 }
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.profile-attendance-link {
+  text-decoration: none;
+}
+.profile-attendance-link svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
 .profile-grid {
   align-items: start;
 }

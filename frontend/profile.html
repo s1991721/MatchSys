@@ -28,6 +28,12 @@
             </div>
         </div>
         <div class="profile-actions">
+            <a class="c-btn c-btn-secondary profile-attendance-link" href="myattendance.html" id="profileAttendanceLink" data-i18n-title="nav.my_attendance" title="我的考勤">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v6h-2V9H4v11a1 1 0 0 0 1 1h7v2H5a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1zm14 11.5l-4.2 4.2-2.3-2.3 1.4-1.4.9.9 2.8-2.8 1.4 1.4z"/>
+                </svg>
+                <span data-i18n="profile.action.my_attendance">我的考勤</span>
+            </a>
             <button class="c-btn c-btn-danger" type="button" id="logoutBtn" data-i18n="profile.logout">退出登录</button>
         </div>
     </div>
@@ -172,6 +178,7 @@
     const employeeForm = document.getElementById("employeeForm");
     const passwordForm = document.getElementById("passwordForm");
     const logoutBtn = document.getElementById("logoutBtn");
+    const profileAttendanceLink = document.getElementById("profileAttendanceLink");
     const profileName = document.getElementById("profileName");
     const profilePosition = document.getElementById("profilePosition");
     const sealFileInput = document.getElementById("sealFile");
@@ -187,6 +194,12 @@
     }
     if (profilePosition && employeePosition) {
         profilePosition.textContent = employeePosition;
+    }
+    if (profileAttendanceLink) {
+        profileAttendanceLink.addEventListener("click", (event) => {
+            event.preventDefault();
+            window.navigateAppRoute("myattendance.html");
+        });
     }
 
     const setReadOnlyWhenFilled = (fieldId, value) => {

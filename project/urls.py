@@ -179,6 +179,21 @@ urlpatterns = [
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/i18n.js", content_type="application/javascript")),
     ),
+    path(
+        "order_common.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/order_common.js", content_type="application/javascript")),
+    ),
+    path(
+        "order_purchase.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/order_purchase.js", content_type="application/javascript")),
+    ),
+    path(
+        "order_sales.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/order_sales.js", content_type="application/javascript")),
+    ),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
     path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),

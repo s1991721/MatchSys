@@ -678,6 +678,7 @@
                 const originalText = sendSubmit.textContent;
                 sendSubmit.disabled = true;
                 sendSubmit.textContent = "发送中...";
+                let mailSent = false;
                 try {
                     const pdfBlob = await getSendPdfBlob();
                     const attachments = [{
@@ -704,11 +705,23 @@
                         throwOnFailure: true,
                         fallbackMessage: "发送失败",
                     });
+                    mailSent = true;
+                    if (currentSendItem.status === "已创建") {
+                        await window.requestJson(`/api/purchase-orders/${encodeURIComponent(currentSendItem.id)}`, {
+                            method: "PUT",
+                            body: JSON.stringify({ status: "承认中" }),
+                        }, {
+                            throwOnFailure: true,
+                            fallbackMessage: "状态更新失败",
+                        });
+                        currentSendItem.status = "承认中";
+                    }
                     alert("发送成功");
                     sendDialog.close();
+                    ctx.fetchOrders();
                 } catch (error) {
                     console.error("发送邮件失败", error);
-                    alert(error.message || "发送失败");
+                    alert(mailSent ? `发送成功，但${error.message || "状态更新失败"}` : (error.message || "发送失败"));
                 } finally {
                     sendSubmit.disabled = false;
                     sendSubmit.textContent = originalText || "发送 >";

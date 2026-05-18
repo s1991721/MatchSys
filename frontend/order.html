@@ -393,10 +393,6 @@
                             <span data-i18n="common.field.owner">负责人</span>
                             <select id="accept-owner"></select>
                         </label>
-                        <label class="c-inline-field c-inline-field-full order-upload-field">
-                            <span>受注书PDF</span>
-                            <input id="accept-pdf-file" type="file" accept="application/pdf,.pdf"/>
-                        </label>
                         <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
                             <span data-i18n="common.field.note">备注</span>
                             <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>
@@ -405,8 +401,21 @@
                 </div>
             </div>
             <aside class="order-preview-panel" aria-label="受注书PDF预览">
-                <div id="acceptPdfPreviewSlot">
-                    <div class="order-accept-preview-empty">请选择受注书 PDF 文件进行预览</div>
+                <div class="order-accept-preview-slot" id="acceptPdfPreviewSlot">
+                    <div class="order-accept-upload-empty" id="acceptPdfUploadEmpty">
+                        <div class="order-accept-upload-box">
+                            <span class="order-accept-upload-title">受注书PDF</span>
+                            <span class="order-accept-upload-text">请选择受注书 PDF 文件进行预览</span>
+                            <input id="accept-pdf-file" type="file" accept="application/pdf,.pdf"/>
+                        </div>
+                    </div>
+                    <div class="order-accept-preview-wrap" id="acceptPdfPreviewWrap" hidden>
+                        <div class="order-accept-preview-head">
+                            <span id="acceptPdfFileName">受注书PDF</span>
+                            <button class="c-btn c-btn-secondary c-btn-sm" id="acceptPdfReplace" type="button">更换文件</button>
+                        </div>
+                        <iframe class="order-accept-preview-frame" id="acceptPdfPreviewFrame" title="受注书PDF预览"></iframe>
+                    </div>
                 </div>
             </aside>
         </div>

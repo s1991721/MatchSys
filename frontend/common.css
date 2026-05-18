@@ -409,13 +409,14 @@ body > .page {
   color: #111111;
   border: 1px solid #cbd5e1;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
-  padding: 28px 18px 22px;
+  padding: 24px 18px 18px;
   font-family: "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", Arial, sans-serif;
   font-size: 11px;
   line-height: 1.35;
   display: grid;
-  grid-template-rows: auto auto auto auto 1fr auto;
-  gap: 12px;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+  gap: 10px;
+  overflow: hidden;
 }
 .order-pdf-title {
   background: #666666;
@@ -434,8 +435,8 @@ body > .page {
 }
 .order-pdf-customer {
   display: grid;
-  gap: 14px;
-  padding-top: 22px;
+  gap: 10px;
+  padding-top: 18px;
 }
 .order-pdf-customer-name {
   border-bottom: 3px double #222222;
@@ -574,7 +575,7 @@ body > .page {
 .order-pdf-detail th,
 .order-pdf-detail td {
   border: 1px solid #222222;
-  height: 25px;
+  height: 23px;
   padding: 3px 5px;
   text-align: center;
   vertical-align: middle;
@@ -606,7 +607,7 @@ body > .page {
 .order-pdf-summary th,
 .order-pdf-summary td {
   border: 1px solid #222222;
-  height: 20px;
+  height: 18px;
   padding: 3px 6px;
 }
 .order-pdf-summary th {
@@ -619,7 +620,7 @@ body > .page {
 }
 .order-pdf-remark {
   border: 1px solid #222222;
-  min-height: 64px;
+  min-height: 56px;
   padding: 4px 6px;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -628,36 +629,69 @@ body > .page {
 .order-pdf-remark-title {
   font-weight: 700;
 }
-.order-accept-preview-frame {
-  width: 100%;
+.order-accept-preview-slot {
+  height: 100%;
   min-height: 560px;
-  height: calc(94vh - 194px);
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #ffffff;
 }
-.order-accept-preview-empty {
+.order-accept-preview-slot [hidden] {
+  display: none !important;
+}
+.order-accept-upload-empty {
   min-height: 560px;
   border: 1px dashed #cbd5e1;
   border-radius: 10px;
   background: #ffffff;
   display: grid;
   place-items: center;
-  color: #64748b;
-  font-weight: 800;
   text-align: center;
   padding: 24px;
 }
-.order-upload-field {
-  grid-column: 1 / -1;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
+.order-accept-upload-box {
+  color: #64748b;
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  max-width: 320px;
 }
-.order-upload-field input[type="file"] {
-  font-size: 13px;
-  font-weight: 700;
+.order-accept-upload-title {
   color: #334155;
+  font-size: 14px;
+  font-weight: 800;
+}
+.order-accept-upload-text {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.order-accept-preview-wrap {
+  display: grid;
+  gap: 10px;
+  height: 100%;
+  min-height: 560px;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.order-accept-preview-head {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.order-accept-preview-head span {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 800;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.order-accept-preview-frame {
+  width: 100%;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
 }
 .order-issue-items {
   grid-column: 1 / -1;

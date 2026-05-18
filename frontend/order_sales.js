@@ -3,7 +3,11 @@
         init(ctx) {
             const createDialog = document.getElementById("createDialogAccept");
             const submitButton = document.getElementById("accept-create-submit");
-            const pdfPreviewSlot = document.getElementById("acceptPdfPreviewSlot");
+            const pdfUploadEmpty = document.getElementById("acceptPdfUploadEmpty");
+            const pdfPreviewWrap = document.getElementById("acceptPdfPreviewWrap");
+            const pdfPreviewFrame = document.getElementById("acceptPdfPreviewFrame");
+            const pdfFileName = document.getElementById("acceptPdfFileName");
+            const pdfReplace = document.getElementById("acceptPdfReplace");
             const form = {
                 orderNo: document.getElementById("accept-order-no"),
                 projectName: document.getElementById("accept-project-name"),
@@ -32,9 +36,10 @@
                     URL.revokeObjectURL(pdfObjectUrl);
                     pdfObjectUrl = "";
                 }
-                if (pdfPreviewSlot) {
-                    pdfPreviewSlot.innerHTML = '<div class="order-accept-preview-empty">请选择受注书 PDF 文件进行预览</div>';
-                }
+                if (pdfPreviewFrame) pdfPreviewFrame.src = "about:blank";
+                if (pdfFileName) pdfFileName.textContent = "受注书PDF";
+                if (pdfUploadEmpty) pdfUploadEmpty.hidden = false;
+                if (pdfPreviewWrap) pdfPreviewWrap.hidden = true;
             };
 
             const updatePdfPreview = () => {
@@ -52,14 +57,10 @@
                 }
                 if (pdfObjectUrl) URL.revokeObjectURL(pdfObjectUrl);
                 pdfObjectUrl = URL.createObjectURL(file);
-                if (pdfPreviewSlot) {
-                    pdfPreviewSlot.innerHTML = "";
-                    const frame = document.createElement("iframe");
-                    frame.className = "order-accept-preview-frame";
-                    frame.title = "受注书PDF预览";
-                    frame.src = pdfObjectUrl;
-                    pdfPreviewSlot.appendChild(frame);
-                }
+                if (pdfPreviewFrame) pdfPreviewFrame.src = pdfObjectUrl;
+                if (pdfFileName) pdfFileName.textContent = file.name || "受注书PDF";
+                if (pdfUploadEmpty) pdfUploadEmpty.hidden = true;
+                if (pdfPreviewWrap) pdfPreviewWrap.hidden = false;
             };
 
             const buildPayload = (fromDetail) => {
@@ -141,6 +142,9 @@
 
             if (form.pdfFile) {
                 form.pdfFile.addEventListener("change", updatePdfPreview);
+            }
+            if (pdfReplace && form.pdfFile) {
+                pdfReplace.addEventListener("click", () => form.pdfFile.click());
             }
 
             return {

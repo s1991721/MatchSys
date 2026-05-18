@@ -568,6 +568,10 @@ body > .page {
   font-weight: 900;
   padding-right: 14px;
 }
+.order-pdf-detail-block {
+  min-height: 0;
+  overflow: hidden;
+}
 .order-pdf-detail {
   width: 100%;
   font-size: 10px;

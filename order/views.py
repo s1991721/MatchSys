@@ -350,6 +350,37 @@ def _apply_purchase_payload(order, payload):
     return None
 
 
+def _update_purchase_order_from_request(request, order):
+    payload, error = _parse_request_body(request)
+    if error:
+        return error
+    payload_keys = set(payload.keys())
+    if order.status in PURCHASE_TERMINAL_STATUSES:
+        return api_error("Order is locked")
+    if order.status == "承认中":
+        if payload_keys != {"status"} or request.FILES:
+            return api_error("Order is locked")
+        next_status, status_error = _normalize_purchase_status(payload.get("status"))
+        if status_error:
+            return status_error
+        if next_status not in PURCHASE_APPROVING_NEXT_STATUSES:
+            return api_error("Invalid status")
+    apply_error = _apply_purchase_payload(order, payload)
+    if apply_error:
+        return apply_error
+    pdf_file = request.FILES.get("pdf_file")
+    if pdf_file:
+        saved_pdf = _save_purchase_order_pdf(order.order_no, pdf_file)
+        if saved_pdf is None:
+            return api_error("Invalid PDF file")
+        order.pdf_file = saved_pdf
+    order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
+    order.updated_at = timezone.now()
+    order.save()
+    item = _serialize_purchase(order)
+    return api_success(data={"item": item})
+
+
 def _apply_sales_payload(order, payload):
     if "order_no" in payload:
         order.order_no = (payload.get("order_no") or "").strip()
@@ -639,10 +670,16 @@ def purchase_orders_api(request):
 
 
 @csrf_exempt
-def purchase_order_detail_api(request, order_id):
+def purchase_order_update_api(request, order_id):
     auth_error = _require_login(request)
     if auth_error:
         return auth_error
+
+    if request.method != "POST":
+        return api_error(
+            "Method not allowed",
+            status=405
+        )
 
     order = PurchaseOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
     if not order:
@@ -651,44 +688,7 @@ def purchase_order_detail_api(request, order_id):
             status=404
         )
 
-    if request.method == "GET":
-        item = _serialize_purchase(order)
-        return api_success(data={"item": item})
-
-    if request.method == "PUT":
-        payload, error = _parse_request_body(request)
-        if error:
-            return error
-        payload_keys = set(payload.keys())
-        if order.status in PURCHASE_TERMINAL_STATUSES:
-            return api_error("Order is locked")
-        if order.status == "承认中":
-            if payload_keys != {"status"} or request.FILES:
-                return api_error("Order is locked")
-            next_status, status_error = _normalize_purchase_status(payload.get("status"))
-            if status_error:
-                return status_error
-            if next_status not in PURCHASE_APPROVING_NEXT_STATUSES:
-                return api_error("Invalid status")
-        apply_error = _apply_purchase_payload(order, payload)
-        if apply_error:
-            return apply_error
-        pdf_file = request.FILES.get("pdf_file")
-        if pdf_file:
-            saved_pdf = _save_purchase_order_pdf(order.order_no, pdf_file)
-            if saved_pdf is None:
-                return api_error("Invalid PDF file")
-            order.pdf_file = saved_pdf
-        order.updated_by = request.session.get("employee_name") or request.session.get("user_name") or "系统"
-        order.updated_at = timezone.now()
-        order.save()
-        item = _serialize_purchase(order)
-        return api_success(data={"item": item})
-
-    return api_error(
-        "Method not allowed",
-        status=405
-    )
+    return _update_purchase_order_from_request(request, order)
 
 
 # PDF文件预览

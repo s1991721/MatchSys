@@ -97,6 +97,8 @@
                 url: "",
                 requestId: 0,
             };
+            const PDF_PREVIEW_WIDTH = 595;
+            const PDF_PREVIEW_HEIGHT = 842;
 
             const setItemField = (row, field, value) => {
                 ctx.setFieldValue(row.querySelector(`[data-issue-item-field="${field}"]`), value);
@@ -707,8 +709,7 @@
                     });
                     mailSent = true;
                     if (currentSendItem.status === "已创建") {
-                        await window.requestJson(`/api/purchase-orders/${encodeURIComponent(currentSendItem.id)}`, {
-                            method: "PUT",
+                        await window.requestJson(`/api/purchase-orders/${encodeURIComponent(currentSendItem.id)}/update`, {
                             body: JSON.stringify({ status: "承认中" }),
                         }, {
                             throwOnFailure: true,
@@ -733,8 +734,9 @@
                 if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) throw new Error("PDF生成依赖未加载");
                 updatePreview();
                 const clone = pdfPreviewPage.cloneNode(true);
-                clone.style.width = `${pdfPreviewPage.offsetWidth}px`;
-                clone.style.maxWidth = `${pdfPreviewPage.offsetWidth}px`;
+                clone.style.width = `${PDF_PREVIEW_WIDTH}px`;
+                clone.style.height = `${PDF_PREVIEW_HEIGHT}px`;
+                clone.style.maxWidth = "none";
                 clone.style.background = "#ffffff";
                 const stage = document.createElement("div");
                 stage.style.position = "fixed";
@@ -754,15 +756,7 @@
                     const pdf = new jsPDF("p", "pt", "a4");
                     const pageWidth = pdf.internal.pageSize.getWidth();
                     const pageHeight = pdf.internal.pageSize.getHeight();
-                    const margin = 20;
-                    const maxWidth = pageWidth - margin * 2;
-                    const maxHeight = pageHeight - margin * 2;
-                    const scale = Math.min(maxWidth / canvas.width, maxHeight / canvas.height);
-                    const drawWidth = canvas.width * scale;
-                    const drawHeight = canvas.height * scale;
-                    const x = (pageWidth - drawWidth) / 2;
-                    const y = (pageHeight - drawHeight) / 2;
-                    pdf.addImage(imgData, "PNG", x, y, drawWidth, drawHeight, undefined, "FAST");
+                    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight, undefined, "FAST");
                     return pdf.output("blob");
                 } finally {
                     stage.remove();
@@ -916,12 +910,10 @@
                 }
                 try {
                     const responsePayload = statusOnly
-                        ? await window.requestJson(`/api/purchase-orders/${currentEditId}`, {
-                            method: "PUT",
+                        ? await window.requestJson(`/api/purchase-orders/${currentEditId}/update`, {
                             body: JSON.stringify(payload),
                         })
-                        : await window.requestJson(`/api/purchase-orders/${currentEditId}`, {
-                            method: "PUT",
+                        : await window.requestJson(`/api/purchase-orders/${currentEditId}/update`, {
                             headers: {},
                             body: buildFormData(payload, await exportPdfBlob()),
                         });

@@ -402,8 +402,9 @@ body > .page {
   font-weight: 600;
 }
 .order-pdf-page {
-  width: min(100%, 595px);
-  aspect-ratio: 595 / 842;
+  width: 595px;
+  height: 842px;
+  flex: 0 0 auto;
   background: #ffffff;
   color: #111111;
   border: 1px solid #cbd5e1;
@@ -513,7 +514,7 @@ body > .page {
 }
 .order-pdf-stamp-cell {
   display: grid;
-  grid-template-rows: 20px 58px;
+  grid-template-rows: 20px 70px;
 }
 .order-pdf-stamp-cell + .order-pdf-stamp-cell {
   margin-left: -1px;
@@ -530,7 +531,8 @@ body > .page {
   background: #f8f8f8;
 }
 .order-pdf-stamp {
-  height: 58px;
+  width: 70px;
+  height: 70px;
   border: 1px solid #222222;
   display: flex;
   align-items: center;
@@ -539,9 +541,11 @@ body > .page {
   background: #ffffff;
 }
 .order-pdf-stamp img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  max-width: 58px;
+  max-height: 58px;
+  width: auto;
+  height: auto;
+  display: block;
 }
 .order-pdf-total {
   width: 260px;

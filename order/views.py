@@ -96,17 +96,6 @@ def _serve_order_pdf_file(pdf_file):
     return response
 
 
-def _parse_int(value, field):
-    if value in (None, ""):
-        return None, None
-    try:
-        return int(value), None
-    except (TypeError, ValueError):
-        return None, api_error(
-            f"Invalid number: {field}"
-        )
-
-
 def _normalize_purchase_status(value):
     raw = str(value or "").strip()
     if raw in PURCHASE_STATUSES:
@@ -220,9 +209,14 @@ def _list_orders(queryset, request, serializer):
 def _apply_person_in_charge(order, payload):
     if "person_in_charge_id" not in payload and "person_in_charge" not in payload:
         return None
-    person_id, error = _parse_int(payload.get("person_in_charge_id"), "person_in_charge_id")
-    if error:
-        return error
+    raw_person_id = payload.get("person_in_charge_id")
+    if raw_person_id not in (None, ""):
+        try:
+            person_id = int(raw_person_id)
+        except (TypeError, ValueError):
+            return api_error("Invalid number: person_in_charge_id")
+    else:
+        person_id = None
     if person_id:
         employee = Employee.objects.filter(id=person_id, deleted_at__isnull=True).first()
         order.person_in_charge_id = person_id
@@ -275,10 +269,10 @@ def _apply_purchase_payload(order, payload):
     if "customer_name" in payload:
         order.customer_name = (payload.get("customer_name") or "").strip()
     if "customer_id" in payload:
-        value, error = _parse_int(payload.get("customer_id"), "customer_id")
-        if error:
-            return error
-        order.customer_id = value or 0
+        try:
+            order.customer_id = int(payload.get("customer_id") or 0)
+        except (TypeError, ValueError):
+            return api_error("Invalid number: customer_id")
     if "remark" in payload:
         order.remark = (payload.get("remark") or "").strip()
 
@@ -353,24 +347,32 @@ def _apply_sales_payload(order, payload):
     if "technician_name" in payload:
         order.technician_name = (payload.get("technician_name") or "").strip()
     if "customer_id" in payload:
-        value, error = _parse_int(payload.get("customer_id"), "customer_id")
-        if error:
-            return error
-        order.customer_id = value or 0
+        try:
+            order.customer_id = int(payload.get("customer_id") or 0)
+        except (TypeError, ValueError):
+            return api_error("Invalid number: customer_id")
     if "remark" in payload:
         order.remark = (payload.get("remark") or "").strip()
 
     if "purchase_id" in payload:
-        value, error = _parse_int(payload.get("purchase_id"), "purchase_id")
-        if error:
-            return error
-        order.purchase_id = value if value is not None else None
+        raw_purchase_id = payload.get("purchase_id")
+        if raw_purchase_id in (None, ""):
+            order.purchase_id = None
+        else:
+            try:
+                order.purchase_id = int(raw_purchase_id)
+            except (TypeError, ValueError):
+                return api_error("Invalid number: purchase_id")
 
     if "technician_id" in payload:
-        value, error = _parse_int(payload.get("technician_id"), "technician_id")
-        if error:
-            return error
-        order.technician_id = value or None
+        raw_technician_id = payload.get("technician_id")
+        if raw_technician_id in (None, ""):
+            order.technician_id = None
+        else:
+            try:
+                order.technician_id = int(raw_technician_id) or None
+            except (TypeError, ValueError):
+                return api_error("Invalid number: technician_id")
 
     if "price" in payload:
         try:

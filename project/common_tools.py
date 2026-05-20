@@ -21,17 +21,35 @@ def require_login(request):
 
 
 # 格式化日期
-def parse_date(value):
+def parse_date(value, field=None):
     if value in (None, ""):
         return None, None
     if isinstance(value, str):
         try:
             return datetime.strptime(value, "%Y-%m-%d").date(), None
         except ValueError:
-            return None, api_error(
-                "Invalid date"
-            )
-    return None, api_error("Invalid date")
+            return None, api_error(f"Invalid date: {field}" if field else "")
+    return None, api_error(f"Invalid date: {field}" if field else "")
+
+
+# 组装分页请求参数
+def paginate_queryset(queryset, request, default_page_size=10, max_page_size=100):
+    try:
+        page = int(request.GET.get("page", 1))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        page_size = int(request.GET.get("page_size", default_page_size))
+    except (TypeError, ValueError):
+        page_size = default_page_size
+    page = max(page, 1)
+    page_size = max(min(page_size, max_page_size), 1)
+    total = queryset.count()
+    total_pages = max((total + page_size - 1) // page_size, 1)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+    return queryset[offset: offset + page_size], total, page, page_size, total_pages
 
 
 # 格式化时间
@@ -91,6 +109,7 @@ from project.storage import StorageArea
 # ss存储路径
 def ss_storage_dir():
     return storage.path(StorageArea.SS)
+
 
 def contract_storage_dir():
     return storage.path(StorageArea.CUSTOMER_CONTRACT)

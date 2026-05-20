@@ -14,6 +14,7 @@ from project.common_tools import (
     count_workdays,
     is_workday,
     paginate_queryset,
+    parse_date,
     parse_json_body,
     parse_time_value,
     require_login,
@@ -154,10 +155,9 @@ def attendance_record_edit_api(request):
     if not remark:
         return api_error("Missing remark")
 
-    try:
-        target_date = datetime.strptime(date_raw, "%Y-%m-%d").date()
-    except ValueError:
-        return api_error("Invalid date")
+    target_date, error = parse_date(date_raw)
+    if error:
+        return error
 
     start_time_value, error = parse_time_value(payload.get("start_time"))
     if error:
@@ -251,8 +251,12 @@ def my_attendance_summary_api(request):
     if error:
         return error
 
-    target_date = request.GET.get("date")
-    target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+    date_raw = request.GET.get("date")
+    if not date_raw:
+        return api_error("Missing date")
+    target_date, error = parse_date(date_raw)
+    if error:
+        return error
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
         employee_id=employee_id,
@@ -301,8 +305,12 @@ def my_attendance_detail_api(request):
     if error:
         return error
 
-    target_date = request.GET.get("date")
-    target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
+    date_raw = request.GET.get("date")
+    if not date_raw:
+        return api_error("Missing date")
+    target_date, error = parse_date(date_raw)
+    if error:
+        return error
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
         employee_id=employee_id,

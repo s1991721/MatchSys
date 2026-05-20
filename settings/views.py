@@ -2,7 +2,7 @@ import json
 import mimetypes
 import re
 import threading
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 from django.conf import settings as django_settings
@@ -15,9 +15,9 @@ from django.views.decorators.http import require_http_methods, require_POST
 from bpmatch.authorize_gmail import test_connection
 from bpmatch.mailTool import test_receive_connection, test_smtp_connection
 from employee.models import UserLogin
-from project.api import api_error, api_success
 from project import storage
-from project.common_tools import is_png_upload, parse_json_body, require_login
+from project.api import api_error, api_success
+from project.common_tools import is_png_upload, parse_date, parse_json_body, require_login
 from project.storage import StorageArea
 from settings.LINE import (
     invalidate_line_notify_filter_cache,
@@ -608,13 +608,6 @@ def _parse_task_log_line(line):
     }
 
 
-def _parse_log_date(value):
-    try:
-        return datetime.strptime(value, "%Y-%m-%d").date()
-    except (TypeError, ValueError):
-        return None
-
-
 def _collect_task_logs(task_id, limit, start_date=None, end_date=None, log_glob="scheduled_tasks.log*",
                        task_filter=None):
     logs_dir = Path(django_settings.BASE_DIR) / "logs"
@@ -648,7 +641,7 @@ def _collect_task_logs(task_id, limit, start_date=None, end_date=None, log_glob=
             continue
         if task_filter and not task_filter.search(message):
             continue
-        log_date = _parse_log_date((entry.get("time") or "")[:10])
+        log_date, _ = parse_date((entry.get("time") or "")[:10])
         if start_date and (not log_date or log_date < start_date):
             continue
         if end_date and (not log_date or log_date > end_date):
@@ -836,8 +829,8 @@ def sys_task_logs_api(request):
         limit = 50
     limit = max(1, min(limit, 200))
 
-    start_date = _parse_log_date(request.GET.get("start_date"))
-    end_date = _parse_log_date(request.GET.get("end_date"))
+    start_date, _ = parse_date(request.GET.get("start_date"))
+    end_date, _ = parse_date(request.GET.get("end_date"))
     if request.GET.get("start_date") and not start_date:
         return api_error("Invalid start_date")
     if request.GET.get("end_date") and not end_date:

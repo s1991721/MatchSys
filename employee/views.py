@@ -14,7 +14,14 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from project.api import api_error, api_paginated, api_success
 from project import storage
-from project.common_tools import paginate_queryset, parse_date, parse_json_body, require_login, years_ago
+from project.common_tools import (
+    is_png_upload,
+    paginate_queryset,
+    parse_date,
+    parse_json_body,
+    require_login,
+    years_ago,
+)
 from project.storage import StorageArea
 from .models import Employee, LoginAudit, Technician, UserLogin
 
@@ -72,14 +79,6 @@ def _parse_nationality(value):
     if int_value not in (0, 1):
         return None, api_error("Invalid field: nationality", status=400)
     return int_value, None
-
-
-def _is_png_upload(uploaded_file):
-    _, ext = os.path.splitext(uploaded_file.name or "")
-    if ext.lower() != ".png":
-        return False
-    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
-    return not content_type or content_type == "image/png"
 
 
 def _employee_seal_filename(employee_id):
@@ -282,7 +281,7 @@ def employee_seal_api(request, employee_id):
         seal_file = request.FILES.get("seal_file")
         if not seal_file:
             return api_error("Missing file")
-        if not _is_png_upload(seal_file):
+        if not is_png_upload(seal_file):
             return api_error("Only PNG files are allowed")
 
         filename = _employee_seal_filename(employee_id)

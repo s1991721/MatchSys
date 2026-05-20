@@ -14,6 +14,7 @@ from order.models import PurchaseOrder, SalesOrder
 from project.api import api_error, api_paginated, api_success
 from project import storage
 from project.common_tools import (
+    is_pdf_upload,
     paginate_queryset,
     parse_date,
     parse_json_body,
@@ -57,11 +58,7 @@ def _sanitize_filename_part(value):
 def _save_order_pdf(folder, order_no, uploaded_file):
     if not uploaded_file:
         return ""
-    original_name = getattr(uploaded_file, "name", "") or ""
-    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
-    if content_type and content_type != "application/pdf":
-        return None
-    if original_name and not original_name.lower().endswith(".pdf"):
+    if not is_pdf_upload(uploaded_file):
         return None
     filename = os.path.join(folder, f"{_sanitize_filename_part(order_no)}.pdf")
     storage.save_upload(StorageArea.ORDER, filename, uploaded_file)

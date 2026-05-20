@@ -17,7 +17,7 @@ from bpmatch.mailTool import test_receive_connection, test_smtp_connection
 from employee.models import UserLogin
 from project.api import api_error, api_success
 from project import storage
-from project.common_tools import parse_json_body, require_login
+from project.common_tools import is_png_upload, parse_json_body, require_login
 from project.storage import StorageArea
 from settings.LINE import (
     invalidate_line_notify_filter_cache,
@@ -178,14 +178,6 @@ def _normalize_company_info_payload(data):
     }
 
 
-def _is_png_upload(uploaded_file):
-    suffix = Path(uploaded_file.name or "").suffix.lower()
-    if suffix != ".png":
-        return False
-    content_type = (getattr(uploaded_file, "content_type", "") or "").lower()
-    return not content_type or content_type == "image/png"
-
-
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def company_info_api(request):
@@ -201,7 +193,7 @@ def company_info_api(request):
         settings_payload.update(_normalize_company_info_payload(request.POST))
         seal_file = request.FILES.get("seal_file")
         if seal_file:
-            if not _is_png_upload(seal_file):
+            if not is_png_upload(seal_file):
                 return api_error("Only PNG files are allowed")
             filename = "company_order_seal.png"
             storage.save_upload(StorageArea.COMPANY_INFO, filename, seal_file)

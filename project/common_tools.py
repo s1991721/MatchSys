@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime
+from pathlib import Path
 
 from project.api import api_error
 
@@ -31,6 +32,7 @@ def require_fields(payload, fields):
     return None
 
 
+# 校验登录，返回 employee_id
 def require_login(request):
     login_id = request.session.get("employee_id")
     if not login_id:
@@ -68,6 +70,38 @@ def paginate_queryset(queryset, request, default_page_size=10, max_page_size=100
         page = total_pages
     offset = (page - 1) * page_size
     return queryset[offset: offset + page_size], total, page, page_size, total_pages
+
+
+def _has_upload_extension(uploaded_file, extension):
+    return Path(uploaded_file.name or "").suffix.lower() == extension
+
+
+def _has_magic_bytes(uploaded_file, expected):
+    try:
+        position = uploaded_file.tell()
+        header = uploaded_file.read(len(expected))
+        uploaded_file.seek(position)
+    except (AttributeError, OSError, ValueError):
+        return False
+    return header == expected
+
+
+# 判断上传文件为PNG
+def is_png_upload(uploaded_file):
+    return (
+        bool(uploaded_file)
+        and _has_upload_extension(uploaded_file, ".png")
+        and _has_magic_bytes(uploaded_file, b"\x89PNG\r\n\x1a\n")
+    )
+
+
+# 判断上传文件为PDF
+def is_pdf_upload(uploaded_file):
+    return (
+        bool(uploaded_file)
+        and _has_upload_extension(uploaded_file, ".pdf")
+        and _has_magic_bytes(uploaded_file, b"%PDF")
+    )
 
 
 # 格式化时间

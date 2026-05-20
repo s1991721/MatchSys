@@ -8,14 +8,13 @@ from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
+from bpmatch.models import SentEmailLog, MailTechnicianInfo
 from employee.models import Employee
 from employee.models import Technician
-from bpmatch.models import SentEmailLog, MailTechnicianInfo
 from order.models import PurchaseOrder, SalesOrder
 from project.api import api_success
 from project.common_tools import require_login, shift_month
 from settings.models import SysSettings
-
 
 DEFAULT_MATCH_CYCLE_DAYS = 14
 
@@ -243,18 +242,6 @@ def _order_monthly_stats(employee_id, start_of_month):
     }
 
 
-def _decimal_value(value):
-    if value is None:
-        return Decimal("0")
-    if isinstance(value, Decimal):
-        return value
-    return Decimal(str(value))
-
-
-def _format_amount(value):
-    return format(_decimal_value(value), ".2f")
-
-
 def _load_technician_map(orders):
     tech_ids = {order.technician_id for order in orders if order.technician_id}
     tech_map = {}
@@ -287,7 +274,7 @@ def _sum_diffs_by_key(orders, key_getter, name_getter):
         key = key_getter(order)
         if key is None:
             continue
-        diff = _decimal_value(order.price) - _decimal_value(name_getter["tech_price"](order))
+        diff = Decimal(str(order.price)) - Decimal(str(name_getter["tech_price"](order)))
         totals[key] += diff
         if key not in names:
             names[key] = name_getter["name"](order)
@@ -341,7 +328,7 @@ def _analysis_payload(today):
 
     current_items = []
     for order in active_orders:
-        diff = _decimal_value(order.price) - _decimal_value(tech_price(order))
+        diff = Decimal(str(order.price)) - Decimal(str(tech_price(order)))
         current_items.append(
             {
                 "employee_name": tech_name(order),
@@ -369,7 +356,7 @@ def _analysis_payload(today):
     customer_totals = defaultdict(Decimal)
     customer_names = {}
     for order in year_orders:
-        diff = _decimal_value(order.price) - _decimal_value(tech_price(order))
+        diff = Decimal(str(order.price)) - Decimal(str(tech_price(order)))
         customer_totals[order.customer_id] += diff
         if order.customer_id not in customer_names:
             customer_names[order.customer_id] = order.customer_name or ""
@@ -405,7 +392,7 @@ def _analysis_payload(today):
         if not order.person_in_charge_id:
             continue
         month_order_counts[order.person_in_charge_id] += 1
-        diff = _decimal_value(order.price) - _decimal_value(tech_price(order))
+        diff = Decimal(str((order.price))) - Decimal(str(tech_price(order)))
         month_profit_totals[order.person_in_charge_id] += diff
         if order.person_in_charge_id not in month_person_names:
             month_person_names[order.person_in_charge_id] = employee_name(order)
@@ -439,7 +426,7 @@ def _analysis_payload(today):
     def format_amount_items(items):
         for item in items:
             if "amount" in item:
-                item["amount"] = _format_amount(item["amount"])
+                item["amount"] = format(item["amount"] or Decimal("0"), ".2f")
         return items
 
     return {

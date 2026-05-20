@@ -15,21 +15,134 @@
                 customerName: document.getElementById("accept-customer-name"),
                 customerId: document.getElementById("accept-customer-id"),
                 customerList: document.getElementById("accept-customer-list"),
-                technicianName: document.getElementById("accept-technician-name"),
-                technicianId: document.getElementById("accept-technician-id"),
                 technicianList: document.getElementById("accept-technician-list"),
                 status: document.getElementById("accept-status"),
-                price: document.getElementById("accept-price"),
-                hours: document.getElementById("accept-hours"),
                 start: document.getElementById("accept-start"),
                 end: document.getElementById("accept-end"),
                 owner: document.getElementById("accept-owner"),
                 pdfFile: document.getElementById("accept-pdf-file"),
                 remark: document.getElementById("accept-remark"),
+                lineItems: document.getElementById("accept-line-items"),
+                lineAdd: document.getElementById("accept-line-add"),
             };
             const customerMap = new Map();
             const technicianMap = new Map();
             let pdfObjectUrl = "";
+
+            const readItemField = (row, field) => row.querySelector(`[data-accept-item-field="${field}"]`)?.value?.trim() || "";
+            const getItemInput = (row, field) => row.querySelector(`[data-accept-item-field="${field}"]`);
+            const setItemField = (row, field, value) => ctx.setFieldValue(getItemInput(row, field), value);
+            const updateBpTag = (row) => {
+                if (!row) return;
+                const technicianName = readItemField(row, "technician");
+                const technicianId = readItemField(row, "technicianId");
+                const tag = row.querySelector("[data-accept-bp-tag]");
+                if (tag) tag.hidden = !technicianName || Boolean(technicianId);
+            };
+            const isTechnicianOptionSelection = (event) => {
+                return event.inputType === "insertReplacementText" || (!event.inputType && event.data == null);
+            };
+
+            const collectItems = () => {
+                const rows = Array.from(form.lineItems ? form.lineItems.querySelectorAll(".order-accept-item-row") : []);
+                return rows.map((row) => ({
+                    row,
+                    technicianName: readItemField(row, "technician"),
+                    technicianId: Number(readItemField(row, "technicianId")) || 0,
+                    priceInput: readItemField(row, "price"),
+                    price: readItemField(row, "price"),
+                }));
+            };
+
+            const createItemRow = () => {
+                const row = document.createElement("div");
+                row.className = "order-issue-item-row order-accept-item-row";
+                row.innerHTML = `
+                    <label class="c-inline-field">
+                        <span>${ctx.t("common.field.technician")}</span>
+                        <div class="order-accept-technician-wrap">
+                            <input type="text" placeholder="${ctx.t("common.field.name")}" list="accept-technician-list" autocomplete="off" data-accept-item-field="technician"/>
+                            <span class="order-accept-bp-tag" data-accept-bp-tag hidden>BP</span>
+                        </div>
+                        <input type="hidden" data-accept-item-field="technicianId"/>
+                    </label>
+                    <label class="c-inline-field">
+                        <span>${ctx.t("order.field.price")}</span>
+                        <input type="text" placeholder="¥ 0" data-accept-item-field="price"/>
+                    </label>
+                    <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-accept-line" aria-label="删除">×</button>
+                `;
+                return row;
+            };
+
+            const setLineItems = (lineItems) => {
+                if (!form.lineItems) return;
+                form.lineItems.innerHTML = "";
+                const items = Array.isArray(lineItems) && lineItems.length ? lineItems : [{}];
+                items.forEach((item) => {
+                    const row = createItemRow();
+                    setItemField(row, "technician", item.technician_name ?? item.technicianName ?? "");
+                    setItemField(row, "technicianId", item.technician_id ?? item.technicianId ?? "");
+                    setItemField(row, "price", item.price ?? "");
+                    updateBpTag(row);
+                    form.lineItems.appendChild(row);
+                });
+            };
+
+            const renderTechnicianOptions = (items) => {
+                technicianMap.clear();
+                if (!form.technicianList) return;
+                form.technicianList.innerHTML = "";
+                items.forEach((item) => {
+                    if (!item || !item.name) return;
+                    technicianMap.set(item.name, item.employee_id);
+                    form.technicianList.appendChild(ctx.createOption(item.name));
+                });
+                if (form.lineItems) {
+                    form.lineItems.querySelectorAll(".order-accept-item-row").forEach(updateBpTag);
+                }
+            };
+
+            const fetchTechnicianOptions = (keyword, useDefault = false) => {
+                const value = String(keyword || "").trim();
+                if (!value && useDefault !== true) {
+                    renderTechnicianOptions([]);
+                    return;
+                }
+                const params = window.createParams([["keyword", value], ["page_size", value ? "10" : "5"]]);
+                window.requestJson(window.buildUrl("/api/technicians", params), { method: "GET" })
+                    .then((payload) => {
+                        const result = payload.data || {};
+                        renderTechnicianOptions(Array.isArray(result.items) ? result.items : []);
+                    })
+                    .catch(() => renderTechnicianOptions([]));
+            };
+
+            const debounce = (fn, delay = 250) => {
+                let timer = null;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn(...args), delay);
+                };
+            };
+            const debouncedFetchTechnicians = debounce(fetchTechnicianOptions);
+
+            const resetForm = () => {
+                ctx.clearFields([
+                    form.orderNo,
+                    form.projectName,
+                    form.purchaseId,
+                    form.customerName,
+                    form.customerId,
+                    form.start,
+                    form.end,
+                    form.remark,
+                ]);
+                if (form.status) form.status.value = "已受注";
+                if (form.pdfFile) form.pdfFile.value = "";
+                resetPdfPreview();
+                setLineItems([{}]);
+            };
 
             const resetPdfPreview = () => {
                 if (pdfObjectUrl) {
@@ -66,22 +179,29 @@
             const buildPayload = (fromDetail) => {
                 const purchaseIdRaw = (fromDetail ? ctx.detailFields.purchaseId.value : form.purchaseId.value).trim();
                 const owner = ctx.readOwnerSelect(fromDetail ? ctx.detailFields.owner : form.owner);
+                const lineItems = fromDetail ? [] : collectItems().map((item) => ({
+                    technician_id: item.technicianId || null,
+                    technician_name: item.technicianName,
+                    price: item.price,
+                }));
+                const firstLine = lineItems[0] || {};
                 return {
                     order_no: fromDetail ? ctx.detailFields.orderNo.value.trim() : form.orderNo.value.trim(),
                     project_name: fromDetail ? ctx.detailFields.project.value.trim() : form.projectName.value.trim(),
                     purchase_id: purchaseIdRaw ? Number(purchaseIdRaw) : null,
                     customer_id: Number(fromDetail ? ctx.detailFields.customerId.value : form.customerId.value) || 0,
                     customer_name: fromDetail ? ctx.detailFields.client.value.trim() : form.customerName.value.trim(),
-                    technician_id: Number(fromDetail ? ctx.detailFields.technicianId.value : form.technicianId.value) || 0,
-                    technician_name: fromDetail ? ctx.detailFields.engineer.value.trim() : form.technicianName.value.trim(),
+                    technician_id: fromDetail ? Number(ctx.detailFields.technicianId.value) || 0 : (firstLine.technician_id || 0),
+                    technician_name: fromDetail ? ctx.detailFields.engineer.value.trim() : (firstLine.technician_name || ""),
                     status: fromDetail ? ctx.detailFields.status.value : form.status.value,
-                    price: fromDetail ? ctx.detailFields.price.value.trim() : form.price.value.trim(),
-                    working_hours: fromDetail ? ctx.detailFields.hours.value.trim() : form.hours.value.trim(),
+                    price: fromDetail ? ctx.detailFields.price.value.trim() : (firstLine.price || ""),
+                    working_hours: fromDetail ? ctx.detailFields.hours.value.trim() : "0",
                     period_start: fromDetail ? ctx.detailFields.start.value : form.start.value,
                     period_end: fromDetail ? ctx.detailFields.end.value : form.end.value,
                     person_in_charge_id: owner.id,
                     person_in_charge: owner.name,
                     remark: fromDetail ? ctx.detailFields.remark.value.trim() : form.remark.value.trim(),
+                    line_items: lineItems,
                 };
             };
 
@@ -92,14 +212,14 @@
                 if (!project) return ctx.showMissingField(ctx.t("order.field.project"), form.projectName), false;
                 const customer = form.customerName.value.trim();
                 if (!customer) return ctx.showMissingField(ctx.t("order.field.customer_accept"), form.customerName), false;
-                const technician = form.technicianName.value.trim();
-                if (!technician) return ctx.showMissingField(ctx.t("common.field.technician"), form.technicianName), false;
                 const status = form.status.value;
                 if (!status || status === "请选择状态") return ctx.showMissingField(ctx.t("common.field.status"), form.status), false;
-                const price = form.price.value.trim();
-                if (!price) return ctx.showMissingField(ctx.t("order.field.price"), form.price), false;
-                const hours = form.hours.value.trim();
-                if (!hours) return ctx.showMissingField(ctx.t("order.field.hours"), form.hours), false;
+                const items = collectItems();
+                if (!items.length) return ctx.showMissingField("契约明细", form.lineAdd), false;
+                for (const item of items) {
+                    if (!item.technicianName) return ctx.showMissingField(ctx.t("common.field.technician"), getItemInput(item.row, "technician")), false;
+                    if (!item.priceInput) return ctx.showMissingField(ctx.t("order.field.price"), getItemInput(item.row, "price")), false;
+                }
                 const start = form.start.value;
                 const end = form.end.value;
                 if (!start || !end) return ctx.showMissingField(ctx.t("order.field.period"), form.start), false;
@@ -135,6 +255,7 @@
 
             const openCreateDialog = async () => {
                 if (!createDialog) return;
+                resetForm();
                 await ctx.loadOwnerSelectOptions(form.owner);
                 updatePdfPreview();
                 createDialog.showModal();
@@ -145,6 +266,46 @@
             }
             if (pdfReplace && form.pdfFile) {
                 pdfReplace.addEventListener("click", () => form.pdfFile.click());
+            }
+            if (form.lineAdd && form.lineItems) {
+                form.lineAdd.addEventListener("click", () => {
+                    form.lineItems.appendChild(createItemRow());
+                });
+            }
+            if (form.lineItems) {
+                form.lineItems.addEventListener("input", (event) => {
+                    const input = event.target.closest('[data-accept-item-field="technician"]');
+                    if (!input) return;
+                    const row = input.closest(".order-accept-item-row");
+                    if (row) setItemField(row, "technicianId", "");
+                    const selectedId = technicianMap.get(input.value.trim());
+                    if (row && selectedId && isTechnicianOptionSelection(event)) {
+                        setItemField(row, "technicianId", selectedId);
+                    }
+                    updateBpTag(row);
+                    if (!input.value.trim()) {
+                        fetchTechnicianOptions("");
+                        return;
+                    }
+                    debouncedFetchTechnicians(input.value);
+                });
+                form.lineItems.addEventListener("focusin", (event) => {
+                    const input = event.target.closest('[data-accept-item-field="technician"]');
+                    if (input) fetchTechnicianOptions(input.value, true);
+                });
+                form.lineItems.addEventListener("change", (event) => {
+                    const input = event.target.closest('[data-accept-item-field="technician"]');
+                    if (!input) return;
+                    const row = input.closest(".order-accept-item-row");
+                    updateBpTag(row);
+                });
+                form.lineItems.addEventListener("click", (event) => {
+                    const btn = event.target.closest('[data-action="remove-accept-line"]');
+                    if (!btn) return;
+                    const row = btn.closest(".order-accept-item-row");
+                    if (!row || row === form.lineItems.querySelector(".order-accept-item-row")) return;
+                    row.remove();
+                });
             }
 
             return {

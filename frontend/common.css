@@ -727,6 +727,30 @@ body > .page {
   border-radius: 12px;
   background: #f8fafc;
 }
+.order-accept-item-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 40px;
+}
+.order-accept-technician-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.order-accept-technician-wrap input {
+  min-width: 0;
+}
+.order-accept-bp-tag {
+  flex: 0 0 auto;
+  border: 1px solid #f59e0b;
+  border-radius: 999px;
+  color: #b45309;
+  background: #fffbeb;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 4px 7px;
+}
 .order-issue-item-remove {
   width: 36px;
   height: 36px;
@@ -767,6 +791,9 @@ body > .page {
   }
   .order-issue-item-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .order-accept-item-row {
+    grid-template-columns: 1fr;
   }
   .order-issue-item-remove {
     justify-self: end;

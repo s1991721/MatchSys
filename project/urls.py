@@ -86,6 +86,7 @@ from order.views import (
     purchase_order_update_api,
     sales_orders_api,
     sales_order_detail_api,
+    sales_order_pdf_api,
 )
 from permission.views import (
     menus_api,
@@ -263,6 +264,7 @@ urlpatterns = [
     path("api/purchase-orders/<int:order_id>/pdf", purchase_order_pdf_api, name="purchase-order-pdf"),
     path("api/sales-orders", sales_orders_api, name="sales-orders"),
     path("api/sales-orders/<int:order_id>", sales_order_detail_api, name="sales-order-detail"),
+    path("api/sales-orders/<int:order_id>/pdf", sales_order_pdf_api, name="sales-order-pdf"),
     # -------------------------------permission UI-------------------------------
 
     # -------------------------------notification UI-------------------------------

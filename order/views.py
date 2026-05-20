@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
+from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse
 from django.utils import timezone
@@ -62,7 +63,7 @@ def _sanitize_filename_part(value):
     return safe.strip("_") or "purchase_order"
 
 
-def _save_purchase_order_pdf(order_no, uploaded_file):
+def _save_order_pdf(folder, order_no, uploaded_file):
     if not uploaded_file:
         return ""
     original_name = getattr(uploaded_file, "name", "") or ""
@@ -71,7 +72,7 @@ def _save_purchase_order_pdf(order_no, uploaded_file):
         return None
     if original_name and not original_name.lower().endswith(".pdf"):
         return None
-    filename = os.path.join("purchase", f"{_sanitize_filename_part(order_no)}.pdf")
+    filename = os.path.join(folder, f"{_sanitize_filename_part(order_no)}.pdf")
     storage.save_upload(StorageArea.ORDER, filename, uploaded_file)
     return storage.relative_path(StorageArea.ORDER, filename)
 
@@ -82,6 +83,26 @@ def _order_storage_filename(value):
     if path.startswith(prefix):
         return path[len(prefix):]
     return path
+
+
+def _serve_order_pdf_file(pdf_file):
+    if not pdf_file:
+        return api_error("File not found", status=404)
+    filename = _order_storage_filename(pdf_file)
+    try:
+        safe_path = storage.path(StorageArea.ORDER, filename)
+    except ValueError:
+        return api_error("Invalid path")
+    if not storage.exists(StorageArea.ORDER, filename):
+        return api_error("File not found", status=404)
+
+    content_type, _ = mimetypes.guess_type(safe_path)
+    response = FileResponse(
+        storage.open_file(StorageArea.ORDER, filename),
+        content_type=content_type or "application/pdf",
+    )
+    response["Content-Disposition"] = "inline"
+    return response
 
 
 def _parse_date(value, field):
@@ -235,10 +256,11 @@ def _serialize_sales(order):
         "technician_id": order.technician_id or 0,
         "technician_name": order.technician_name or "",
         "price": str(order.price) if order.price is not None else "",
-        "working_hours": str(order.working_hours) if order.working_hours is not None else "",
+        "line_items": order.line_items or [],
         "period_start": order.period_start.isoformat() if order.period_start else "",
         "period_end": order.period_end.isoformat() if order.period_end else "",
         "remark": order.remark or "",
+        "pdf_file": order.pdf_file or "",
         "created_by": order.created_by,
         "created_at": created_at.strftime("%Y-%m-%d %H:%M") if created_at else "",
         "updated_by": order.updated_by or "",
@@ -370,7 +392,7 @@ def _update_purchase_order_from_request(request, order):
         return apply_error
     pdf_file = request.FILES.get("pdf_file")
     if pdf_file:
-        saved_pdf = _save_purchase_order_pdf(order.order_no, pdf_file)
+        saved_pdf = _save_order_pdf("purchase", order.order_no, pdf_file)
         if saved_pdf is None:
             return api_error("Invalid PDF file")
         order.pdf_file = saved_pdf
@@ -421,11 +443,11 @@ def _apply_sales_payload(order, payload):
             return error
         order.price = value
 
-    if "working_hours" in payload:
-        value, error = _parse_decimal(payload.get("working_hours"), "working_hours")
+    if "line_items" in payload:
+        items, error = _parse_sales_line_items(payload.get("line_items"))
         if error:
             return error
-        order.working_hours = value
+        order.line_items = items
 
     if "period_start" in payload:
         value, error = _parse_date(payload.get("period_start"), "period_start")
@@ -442,6 +464,64 @@ def _apply_sales_payload(order, payload):
             order.period_end = value
 
     return None
+
+
+def _parse_sales_line_items(raw_items):
+    if raw_items in (None, ""):
+        return [], None
+    if isinstance(raw_items, list):
+        items = raw_items
+    else:
+        try:
+            items = json.loads(raw_items)
+        except (TypeError, json.JSONDecodeError):
+            return None, api_error("Invalid JSON: line_items")
+    if not isinstance(items, list):
+        return None, api_error("Invalid JSON: line_items")
+    for item in items:
+        if not isinstance(item, dict):
+            return None, api_error("Invalid JSON: line_items")
+    return items, None
+
+
+def _build_sales_line_payload(base_payload, item, line_items):
+    payload = base_payload.copy()
+    # Each input line becomes one sales_order row: in-house lines use technician_id, BP lines use purchase_id.
+    technician_id = item.get("technician_id")
+    purchase_id = item.get("purchase_id")
+    if technician_id not in (None, ""):
+        purchase_id = None
+    payload["technician_id"] = technician_id
+    payload["technician_name"] = item.get("technician_name") or ""
+    payload["purchase_id"] = purchase_id
+    payload["price"] = item.get("price") or ""
+    payload["line_items"] = line_items
+    return payload
+
+
+def _build_sales_orders(payload, line_items, pdf_file, current_user, now):
+    saved_pdf = _save_order_pdf("sales", payload.get("order_no"), pdf_file)
+    if saved_pdf is None:
+        return None, api_error("Invalid PDF file")
+
+    orders = []
+    for index, line_item in enumerate(line_items, start=1):
+        line_payload = _build_sales_line_payload(payload, line_item, line_items)
+        if not line_payload.get("technician_id") and not line_payload.get("purchase_id"):
+            return None, api_error(f"Missing field: line_items[{index}].purchase_id")
+        if not str(line_payload.get("technician_name") or "").strip():
+            return None, api_error(f"Missing field: line_items[{index}].technician_name")
+        order = SalesOrder()
+        apply_error = _apply_sales_payload(order, line_payload)
+        if apply_error:
+            return None, apply_error
+        order.pdf_file = saved_pdf
+        order.created_by = current_user
+        order.updated_by = current_user
+        order.created_at = now
+        order.updated_at = now
+        orders.append(order)
+    return orders, None
 
 
 def _apply_pay_request_payload(request_item, payload):
@@ -655,7 +735,7 @@ def purchase_orders_api(request):
         order.updated_at = now
         pdf_file = request.FILES.get("pdf_file")
         if pdf_file:
-            saved_pdf = _save_purchase_order_pdf(order.order_no, pdf_file)
+            saved_pdf = _save_order_pdf("purchase", order.order_no, pdf_file)
             if saved_pdf is None:
                 return api_error("Invalid PDF file")
             order.pdf_file = saved_pdf
@@ -701,21 +781,19 @@ def purchase_order_pdf_api(request, order_id):
     if not order or not order.pdf_file:
         return api_error("File not found", status=404)
 
-    filename = _order_storage_filename(order.pdf_file)
-    try:
-        safe_path = storage.path(StorageArea.ORDER, filename)
-    except ValueError:
-        return api_error("Invalid path")
-    if not storage.exists(StorageArea.ORDER, filename):
+    return _serve_order_pdf_file(order.pdf_file)
+
+
+def sales_order_pdf_api(request, order_id):
+    auth_error = _require_login(request)
+    if auth_error:
+        return auth_error
+
+    order = SalesOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
+    if not order or not order.pdf_file:
         return api_error("File not found", status=404)
 
-    content_type, _ = mimetypes.guess_type(safe_path)
-    response = FileResponse(
-        storage.open_file(StorageArea.ORDER, filename),
-        content_type=content_type or "application/pdf",
-    )
-    response["Content-Disposition"] = "inline"
-    return response
+    return _serve_order_pdf_file(order.pdf_file)
 
 
 @csrf_exempt
@@ -740,9 +818,10 @@ def sales_orders_api(request):
         )
 
     if request.method == "POST":
-        payload, error = _parse_json_body(request)
+        payload, error = _parse_request_body(request)
         if error:
             return error
+        payload = payload.dict() if hasattr(payload, "dict") else dict(payload or {})
         required_fields = [
             "order_no",
             "project_name",
@@ -757,19 +836,24 @@ def sales_orders_api(request):
                 return api_error(f"Missing field: {field}")
         if not (payload.get("person_in_charge_id") or str(payload.get("person_in_charge") or "").strip()):
             return api_error("Missing field: person_in_charge")
-        order = SalesOrder()
-        apply_error = _apply_sales_payload(order, payload)
-        if apply_error:
-            return apply_error
+        line_items, error = _parse_sales_line_items(payload.get("line_items"))
+        if error:
+            return error
+        if not line_items:
+            return api_error("Missing field: line_items")
+        pdf_file = request.FILES.get("pdf_file")
+        if not pdf_file:
+            return api_error("Missing field: pdf_file")
         now = timezone.now()
         current_user = request.session.get("employee_name") or request.session.get("user_name") or "系统"
-        order.created_by = current_user
-        order.updated_by = current_user
-        order.created_at = now
-        order.updated_at = now
-        order.save()
-        item = _serialize_sales(order)
-        return api_success(data={"item": item})
+        orders, error = _build_sales_orders(payload, line_items, pdf_file, current_user, now)
+        if error:
+            return error
+        with transaction.atomic():
+            for order in orders:
+                order.save()
+        items = [_serialize_sales(order) for order in orders]
+        return api_success(data={"item": items[0] if items else None, "items": items, "created_count": len(items)})
 
     return api_error(
         "Method not allowed",

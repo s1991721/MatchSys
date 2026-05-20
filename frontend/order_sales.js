@@ -91,10 +91,10 @@
                 const items = Array.isArray(lineItems) && lineItems.length ? lineItems : [{}];
                 items.forEach((item) => {
                     const row = createItemRow();
-                    setItemField(row, "technician", item.technician_name ?? item.technicianName ?? "");
-                    setItemField(row, "technicianId", item.technician_id ?? item.technicianId ?? "");
+                    setItemField(row, "technician", item.technician_name ?? "");
+                    setItemField(row, "technicianId", item.technician_id ?? "");
                     setItemField(row, "price", item.price ?? "");
-                    setItemField(row, "purchaseId", item.purchase_id ?? item.purchaseId ?? "");
+                    setItemField(row, "purchaseId", item.purchase_id ?? "");
                     updateBpTag(row);
                     form.lineItems.appendChild(row);
                 });
@@ -194,26 +194,42 @@
                     price: item.price,
                     purchase_id: item.purchaseId ? Number(item.purchaseId) : null,
                 }));
-                const firstLine = lineItems[0] || {};
-                const purchaseIdRaw = fromDetail ? ctx.detailFields.purchaseId.value.trim() : (firstLine.purchase_id || "");
-                return {
+                const payload = {
                     order_no: fromDetail ? ctx.detailFields.orderNo.value.trim() : form.orderNo.value.trim(),
                     project_name: fromDetail ? ctx.detailFields.project.value.trim() : form.projectName.value.trim(),
-                    purchase_id: purchaseIdRaw ? Number(purchaseIdRaw) : null,
                     customer_id: Number(fromDetail ? ctx.detailFields.customerId.value : form.customerId.value) || 0,
                     customer_name: fromDetail ? ctx.detailFields.client.value.trim() : form.customerName.value.trim(),
-                    technician_id: fromDetail ? Number(ctx.detailFields.technicianId.value) || 0 : (firstLine.technician_id || 0),
-                    technician_name: fromDetail ? ctx.detailFields.engineer.value.trim() : (firstLine.technician_name || ""),
                     status: fromDetail ? ctx.detailFields.status.value : form.status.value,
-                    price: fromDetail ? ctx.detailFields.price.value.trim() : (firstLine.price || ""),
-                    working_hours: fromDetail ? ctx.detailFields.hours.value.trim() : "0",
                     period_start: fromDetail ? ctx.detailFields.start.value : form.start.value,
                     period_end: fromDetail ? ctx.detailFields.end.value : form.end.value,
                     person_in_charge_id: owner.id,
                     person_in_charge: owner.name,
                     remark: fromDetail ? ctx.detailFields.remark.value.trim() : form.remark.value.trim(),
-                    line_items: lineItems,
                 };
+                if (fromDetail) {
+                    const purchaseIdRaw = ctx.detailFields.purchaseId.value.trim();
+                    payload.purchase_id = purchaseIdRaw ? Number(purchaseIdRaw) : null;
+                    payload.technician_id = Number(ctx.detailFields.technicianId.value) || 0;
+                    payload.technician_name = ctx.detailFields.engineer.value.trim();
+                    payload.price = ctx.detailFields.price.value.trim();
+                } else {
+                    payload.line_items = lineItems;
+                }
+                return payload;
+            };
+
+            const buildFormData = (payload) => {
+                const formData = new FormData();
+                Object.entries(payload).forEach(([key, value]) => {
+                    if (Array.isArray(value) || (value && typeof value === "object")) {
+                        formData.append(key, JSON.stringify(value));
+                    } else if (value !== null && value !== undefined) {
+                        formData.append(key, String(value));
+                    }
+                });
+                const file = form.pdfFile && form.pdfFile.files ? form.pdfFile.files[0] : null;
+                if (file) formData.append("pdf_file", file, file.name || "sales_order.pdf");
+                return formData;
             };
 
             const validateForm = () => {
@@ -230,6 +246,7 @@
                 for (const item of items) {
                     if (!item.technicianName) return ctx.showMissingField(ctx.t("common.field.technician"), getItemInput(item.row, "technician")), false;
                     if (!item.priceInput) return ctx.showMissingField(ctx.t("order.field.price"), getItemInput(item.row, "price")), false;
+                    if (!item.technicianId && !item.purchaseId) return ctx.showMissingField(ctx.t("order.field.purchase_id"), getItemInput(item.row, "purchaseId")), false;
                 }
                 const start = form.start.value;
                 const end = form.end.value;
@@ -248,7 +265,6 @@
                       ${ctx.renderProjectCustomerCell(item)}
                       <td>${ctx.escapeHtml(item.technician_name || "-")}</td>
                       <td>${ctx.escapeHtml(ctx.formatBlankValue(item.price))}</td>
-                      <td>${ctx.escapeHtml(ctx.formatBlankValue(item.working_hours))}</td>
                       <td>
                         <div>${ctx.escapeHtml(periodStart)}</div>
                         <div>${ctx.escapeHtml(periodEnd)}</div>
@@ -334,6 +350,7 @@
                 },
                 validateForm,
                 buildPayload,
+                buildFormData,
                 renderRow,
                 cleanup() {
                     resetPdfPreview();

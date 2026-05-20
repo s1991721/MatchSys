@@ -252,7 +252,6 @@
             technicianId: document.querySelector('[data-field="technicianId"]'),
             status: document.querySelector('[data-field="status"]'),
             price: document.querySelector('[data-field="price"]'),
-            hours: document.querySelector('[data-field="hours"]'),
             start: document.querySelector('[data-field="start"]'),
             end: document.querySelector('[data-field="end"]'),
             createdAt: document.querySelector('[data-field="createdAt"]'),
@@ -343,7 +342,6 @@
             technician_name: () => t("common.field.technician"),
             status: () => t("common.field.status"),
             price: () => t("order.field.price"),
-            working_hours: () => t("order.field.hours"),
             period_start: () => t("order.field.period"),
             period_end: () => t("order.field.period"),
             person_in_charge: () => t("common.field.owner"),
@@ -473,7 +471,7 @@
                 pageSummary.textContent = format("common.summary.page", { count, page: currentPage, total: totalPages });
             }
             if (!items.length) {
-                const colSpan = currentView === "accept" ? 13 : 12;
+                const colSpan = 12;
                 tableBody.innerHTML = `<tr><td colspan="${colSpan}" class="empty c-empty">${t("order.table.no_data")}</td></tr>`;
                 tableInfo.textContent = format("order.table.info", { count, page: currentPage });
                 return;
@@ -546,7 +544,6 @@
                 [detailFields.engineer, item.technician_name],
                 [detailFields.technicianId, item.technician_id],
                 [detailFields.price, item.price],
-                [detailFields.hours, item.working_hours],
                 [detailFields.start, item.period_start],
                 [detailFields.end, item.period_end],
                 [detailFields.createdAt, formatDateValue(item.created_at)],
@@ -573,8 +570,12 @@
                 submitButton.textContent = view === "issue" ? "PDF生成中..." : originalText;
             }
             try {
-                const requestOptions = view === "issue"
-                    ? { method: "POST", headers: {}, body: mod.buildFormData(payload, await mod.exportPdfBlob()) }
+                const requestOptions = mod.buildFormData
+                    ? {
+                        method: "POST",
+                        headers: {},
+                        body: view === "issue" ? mod.buildFormData(payload, await mod.exportPdfBlob()) : mod.buildFormData(payload),
+                    }
                     : { method: "POST", body: JSON.stringify(payload) };
                 if (submitButton && view === "issue") submitButton.textContent = "保存中...";
                 const responsePayload = await window.requestJson(mod.baseUrl, requestOptions);
@@ -782,8 +783,6 @@
         bindCustomerLookup(purchase.form.customerName, purchase.form.customerId, purchase.form.customerList, purchase.customerMap, { enableDefault: true });
         bindCustomerLookup(sales.form.customerName, sales.form.customerId, sales.form.customerList, sales.customerMap, { enableDefault: true });
         bindCustomerLookup(filters.customer, filters.customerId, filters.customerList, filterCustomerMap, { enableDefault: true });
-        bindTechnicianLookup(sales.form.technicianName, sales.form.technicianId, sales.form.technicianList, sales.technicianMap, { enableDefault: true });
-
         const refreshI18n = () => {
             if (i18n) i18n.apply();
             applyViewLabels(currentView);

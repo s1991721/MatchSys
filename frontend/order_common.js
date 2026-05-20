@@ -726,7 +726,7 @@
             });
         }
         if (purchase.submitButton) purchase.submitButton.addEventListener("click", purchase.submitDialog);
-        if (sales.submitButton) sales.submitButton.addEventListener("click", () => submitCreate("accept"));
+        if (sales.submitButton) sales.submitButton.addEventListener("click", sales.submitDialog);
         if (searchBtn) {
             searchBtn.addEventListener("click", () => {
                 currentPage = 1;
@@ -769,6 +769,10 @@
                 }
                 if (currentView === "issue" && btn.dataset.action === "send") {
                     purchase.openSendDialog(item);
+                    return;
+                }
+                if (currentView === "accept" && btn.dataset.action === "edit") {
+                    sales.openEditDialog(item);
                     return;
                 }
                 openDetailDialog(btn.dataset.action, item);

@@ -21,6 +21,7 @@ from project.storage import StorageArea
 PURCHASE_STATUSES = {"已创建", "承认中", "已承认", "已取消"}
 PURCHASE_APPROVING_NEXT_STATUSES = {"已承认", "已取消"}
 PURCHASE_TERMINAL_STATUSES = {"已承认", "已取消"}
+SALES_STATUSES = {"已受注", "已取消"}
 
 
 def _require_login(request):
@@ -181,6 +182,15 @@ def _normalize_pay_request_status(value):
 def _normalize_purchase_status(value):
     raw = str(value or "").strip()
     if raw in PURCHASE_STATUSES:
+        return raw, None
+    return None, api_error(
+        "Invalid status"
+    )
+
+
+def _normalize_sales_status(value):
+    raw = str(value or "").strip()
+    if raw in SALES_STATUSES:
         return raw, None
     return None, api_error(
         "Invalid status"
@@ -410,7 +420,10 @@ def _apply_sales_payload(order, payload):
     if owner_error:
         return owner_error
     if "status" in payload:
-        order.status = (payload.get("status") or "").strip()
+        value, error = _normalize_sales_status(payload.get("status"))
+        if error:
+            return error
+        order.status = value
     if "project_name" in payload:
         order.project_name = (payload.get("project_name") or "").strip()
     if "customer_name" in payload:
@@ -822,6 +835,7 @@ def sales_orders_api(request):
         if error:
             return error
         payload = payload.dict() if hasattr(payload, "dict") else dict(payload or {})
+        payload["status"] = "已受注"
         required_fields = [
             "order_no",
             "project_name",

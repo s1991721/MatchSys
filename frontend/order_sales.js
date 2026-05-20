@@ -2,6 +2,7 @@
     window.OrderSales = {
         init(ctx) {
             const createDialog = document.getElementById("createDialogAccept");
+            const dialogTitle = document.getElementById("createTitleAccept");
             const submitButton = document.getElementById("accept-create-submit");
             const pdfUploadEmpty = document.getElementById("acceptPdfUploadEmpty");
             const pdfPreviewWrap = document.getElementById("acceptPdfPreviewWrap");
@@ -27,6 +28,8 @@
             const customerMap = new Map();
             const technicianMap = new Map();
             let pdfObjectUrl = "";
+            let dialogMode = "create";
+            let currentEditId = null;
 
             const readItemField = (row, field) => row.querySelector(`[data-accept-item-field="${field}"]`)?.value?.trim() || "";
             const getItemInput = (row, field) => row.querySelector(`[data-accept-item-field="${field}"]`);
@@ -139,6 +142,10 @@
             const debouncedFetchTechnicians = debounce(fetchTechnicianOptions);
 
             const resetForm = () => {
+                dialogMode = "create";
+                currentEditId = null;
+                if (dialogTitle) dialogTitle.textContent = ctx.t("order.action.create_accept");
+                if (submitButton) submitButton.textContent = ctx.t("common.create");
                 ctx.clearFields([
                     form.orderNo,
                     form.projectName,
@@ -182,6 +189,15 @@
                 pdfObjectUrl = URL.createObjectURL(file);
                 if (pdfPreviewFrame) pdfPreviewFrame.src = pdfObjectUrl;
                 if (pdfFileName) pdfFileName.textContent = file.name || "受注书PDF";
+                if (pdfUploadEmpty) pdfUploadEmpty.hidden = true;
+                if (pdfPreviewWrap) pdfPreviewWrap.hidden = false;
+            };
+
+            const showStoredPdfPreview = (item) => {
+                resetPdfPreview();
+                if (!item || !item.id || !item.pdf_file) return;
+                if (pdfPreviewFrame) pdfPreviewFrame.src = `/api/sales-orders/${encodeURIComponent(item.id)}/pdf`;
+                if (pdfFileName) pdfFileName.textContent = "受注书PDF";
                 if (pdfUploadEmpty) pdfUploadEmpty.hidden = true;
                 if (pdfPreviewWrap) pdfPreviewWrap.hidden = false;
             };
@@ -254,8 +270,56 @@
                 const owner = ctx.readOwnerSelect(form.owner);
                 if (!owner.id) return ctx.showMissingField(ctx.t("common.field.owner"), form.owner), false;
                 const pdfFile = form.pdfFile && form.pdfFile.files ? form.pdfFile.files[0] : null;
-                if (!pdfFile) return ctx.showMissingField("受注书PDF", form.pdfFile), false;
+                if (dialogMode === "create" && !pdfFile) return ctx.showMissingField("受注书PDF", form.pdfFile), false;
                 return true;
+            };
+
+            const buildEditPayload = () => {
+                const owner = ctx.readOwnerSelect(form.owner);
+                const lineItem = collectItems()[0] || {};
+                return {
+                    order_no: form.orderNo.value.trim(),
+                    project_name: form.projectName.value.trim(),
+                    customer_id: Number(form.customerId.value) || 0,
+                    customer_name: form.customerName.value.trim(),
+                    status: form.status.value,
+                    period_start: form.start.value,
+                    period_end: form.end.value,
+                    person_in_charge_id: owner.id,
+                    person_in_charge: owner.name,
+                    remark: form.remark.value.trim(),
+                    purchase_id: lineItem.purchaseId ? Number(lineItem.purchaseId) : null,
+                    technician_id: lineItem.technicianId || null,
+                    technician_name: lineItem.technicianName,
+                    price: lineItem.price,
+                };
+            };
+
+            const submitEdit = () => {
+                if (!currentEditId || !validateForm()) return;
+                const originalText = submitButton ? submitButton.textContent : "";
+                if (submitButton) submitButton.disabled = true;
+                window.requestJson(`/api/sales-orders/${currentEditId}`, {
+                    method: "PUT",
+                    body: JSON.stringify(buildEditPayload()),
+                })
+                    .then((responsePayload) => {
+                        if (!responsePayload.success) {
+                            alert(ctx.getRequestErrorMessage({ payload: responsePayload }, ctx.t("common.save_failed")));
+                            return;
+                        }
+                        if (createDialog) createDialog.close();
+                        ctx.fetchOrders();
+                    })
+                    .catch((error) => {
+                        alert(ctx.getRequestErrorMessage(error, ctx.t("common.save_failed_retry")));
+                    })
+                    .finally(() => {
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                            submitButton.textContent = originalText || ctx.t("common.save");
+                        }
+                    });
             };
 
             const renderRow = (item, status, statusLabel, periodStart, periodEnd) => {
@@ -285,6 +349,34 @@
                 resetForm();
                 await ctx.loadOwnerSelectOptions(form.owner);
                 updatePdfPreview();
+                createDialog.showModal();
+            };
+
+            const openEditDialog = async (item) => {
+                if (!createDialog || !item) return;
+                resetForm();
+                dialogMode = "edit";
+                currentEditId = item.id;
+                if (dialogTitle) dialogTitle.textContent = ctx.t("order.action.edit_accept");
+                if (submitButton) submitButton.textContent = ctx.t("common.save");
+                ctx.setFieldValues([
+                    [form.orderNo, item.order_no],
+                    [form.projectName, item.project_name],
+                    [form.customerName, item.customer_name],
+                    [form.customerId, item.customer_id],
+                    [form.start, item.period_start],
+                    [form.end, item.period_end],
+                    [form.remark, item.remark],
+                ]);
+                if (form.status) form.status.value = item.status || "已受注";
+                setLineItems([{
+                    technician_name: item.technician_name,
+                    technician_id: item.technician_id,
+                    price: item.price,
+                    purchase_id: item.purchase_id,
+                }]);
+                await ctx.loadOwnerSelectOptions(form.owner, item.person_in_charge_id || item.person_in_charge || "");
+                showStoredPdfPreview(item);
                 createDialog.showModal();
             };
 
@@ -345,8 +437,16 @@
                 technicianMap,
                 submitButton,
                 openCreateDialog,
+                openEditDialog,
                 closeCreateDialog() {
                     if (createDialog) createDialog.close();
+                },
+                submitDialog() {
+                    if (dialogMode === "edit") {
+                        submitEdit();
+                    } else {
+                        ctx.submitCreate("accept");
+                    }
                 },
                 validateForm,
                 buildPayload,

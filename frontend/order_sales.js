@@ -11,7 +11,6 @@
             const form = {
                 orderNo: document.getElementById("accept-order-no"),
                 projectName: document.getElementById("accept-project-name"),
-                purchaseId: document.getElementById("accept-purchase-id"),
                 customerName: document.getElementById("accept-customer-name"),
                 customerId: document.getElementById("accept-customer-id"),
                 customerList: document.getElementById("accept-customer-list"),
@@ -36,8 +35,14 @@
                 if (!row) return;
                 const technicianName = readItemField(row, "technician");
                 const technicianId = readItemField(row, "technicianId");
+                const isBp = Boolean(technicianName && !technicianId);
                 const tag = row.querySelector("[data-accept-bp-tag]");
-                if (tag) tag.hidden = !technicianName || Boolean(technicianId);
+                const purchaseField = row.querySelector("[data-accept-purchase-field]");
+                if (tag) tag.hidden = !isBp;
+                if (purchaseField) {
+                    purchaseField.hidden = !isBp;
+                    if (!isBp) setItemField(row, "purchaseId", "");
+                }
             };
             const isTechnicianOptionSelection = (event) => {
                 return event.inputType === "insertReplacementText" || (!event.inputType && event.data == null);
@@ -51,6 +56,7 @@
                     technicianId: Number(readItemField(row, "technicianId")) || 0,
                     priceInput: readItemField(row, "price"),
                     price: readItemField(row, "price"),
+                    purchaseId: readItemField(row, "purchaseId"),
                 }));
             };
 
@@ -70,6 +76,10 @@
                         <span>${ctx.t("order.field.price")}</span>
                         <input type="text" placeholder="¥ 0" data-accept-item-field="price"/>
                     </label>
+                    <label class="c-inline-field" data-accept-purchase-field hidden>
+                        <span>${ctx.t("order.field.purchase_id")}</span>
+                        <input type="number" placeholder="${ctx.t("order.placeholder.purchase_id")}" data-accept-item-field="purchaseId"/>
+                    </label>
                     <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-accept-line" aria-label="删除">×</button>
                 `;
                 return row;
@@ -84,6 +94,7 @@
                     setItemField(row, "technician", item.technician_name ?? item.technicianName ?? "");
                     setItemField(row, "technicianId", item.technician_id ?? item.technicianId ?? "");
                     setItemField(row, "price", item.price ?? "");
+                    setItemField(row, "purchaseId", item.purchase_id ?? item.purchaseId ?? "");
                     updateBpTag(row);
                     form.lineItems.appendChild(row);
                 });
@@ -131,7 +142,6 @@
                 ctx.clearFields([
                     form.orderNo,
                     form.projectName,
-                    form.purchaseId,
                     form.customerName,
                     form.customerId,
                     form.start,
@@ -177,14 +187,15 @@
             };
 
             const buildPayload = (fromDetail) => {
-                const purchaseIdRaw = (fromDetail ? ctx.detailFields.purchaseId.value : form.purchaseId.value).trim();
                 const owner = ctx.readOwnerSelect(fromDetail ? ctx.detailFields.owner : form.owner);
                 const lineItems = fromDetail ? [] : collectItems().map((item) => ({
                     technician_id: item.technicianId || null,
                     technician_name: item.technicianName,
                     price: item.price,
+                    purchase_id: item.purchaseId ? Number(item.purchaseId) : null,
                 }));
                 const firstLine = lineItems[0] || {};
+                const purchaseIdRaw = fromDetail ? ctx.detailFields.purchaseId.value.trim() : (firstLine.purchase_id || "");
                 return {
                     order_no: fromDetail ? ctx.detailFields.orderNo.value.trim() : form.orderNo.value.trim(),
                     project_name: fromDetail ? ctx.detailFields.project.value.trim() : form.projectName.value.trim(),

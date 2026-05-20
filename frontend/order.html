@@ -346,10 +346,6 @@
                             <input id="accept-project-name" type="text" placeholder="案件名称" data-i18n-placeholder="order.placeholder.project"/>
                         </label>
                         <label class="c-inline-field">
-                            <span data-i18n="order.field.purchase_id">对应发注ID</span>
-                            <input id="accept-purchase-id" type="number" placeholder="发注ID" data-i18n-placeholder="order.placeholder.purchase_id"/>
-                        </label>
-                        <label class="c-inline-field">
                             <span data-i18n="order.field.customer_accept">取引先（客户公司）</span>
                             <input id="accept-customer-name" type="text" placeholder="客户公司"
                                    data-i18n-placeholder="order.filter.customer_accept_placeholder"
@@ -375,6 +371,10 @@
                                 <option value="已取消" data-i18n="order.status.canceled">已取消</option>
                             </select>
                         </label>
+                        <label class="c-inline-field">
+                            <span data-i18n="common.field.owner">负责人</span>
+                            <select id="accept-owner"></select>
+                        </label>
                         <div class="order-issue-items">
                             <div class="order-issue-items-head">
                                 <div class="order-issue-items-title">契约明细</div>
@@ -394,15 +394,15 @@
                                         <span data-i18n="order.field.price">契约单价</span>
                                         <input type="text" placeholder="¥ 0" data-accept-item-field="price"/>
                                     </label>
+                                    <label class="c-inline-field" data-accept-purchase-field hidden>
+                                        <span data-i18n="order.field.purchase_id">对应发注ID</span>
+                                        <input type="number" placeholder="发注ID" data-i18n-placeholder="order.placeholder.purchase_id" data-accept-item-field="purchaseId"/>
+                                    </label>
                                     <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-accept-line" aria-label="删除">×</button>
                                 </div>
                             </div>
                         </div>
                         <datalist id="accept-technician-list"></datalist>
-                        <label class="c-inline-field">
-                            <span data-i18n="common.field.owner">负责人</span>
-                            <select id="accept-owner"></select>
-                        </label>
                         <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
                             <span data-i18n="common.field.note">备注</span>
                             <textarea id="accept-remark" placeholder="填写备注" data-i18n-placeholder="order.placeholder.remark"></textarea>

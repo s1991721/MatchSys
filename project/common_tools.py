@@ -12,6 +12,24 @@ def parse_json_body(request):
     except json.JSONDecodeError:
         return None, api_error("Invalid JSON body")
 
+# todo 需要将json和file分开
+def parse_request_body(request):
+    content_type = (request.META.get("CONTENT_TYPE") or "").lower()
+    if content_type.startswith("multipart/form-data"):
+        return request.POST, None
+    return parse_json_body(request)
+
+# todo 需要将json和file分开
+def payload_to_dict(payload):
+    return payload.dict() if hasattr(payload, "dict") else dict(payload or {})
+
+
+def require_fields(payload, fields):
+    for field in fields:
+        if str(payload.get(field) or "").strip() == "":
+            return api_error(f"Missing field: {field}")
+    return None
+
 
 def require_login(request):
     login_id = request.session.get("employee_id")

@@ -14,7 +14,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from project.api import api_error, api_paginated, api_success
 from project import storage
-from project.common_tools import parse_date, parse_json_body, require_login, years_ago
+from project.common_tools import paginate_queryset, parse_date, parse_json_body, require_login, years_ago
 from project.storage import StorageArea
 from .models import Employee, LoginAudit, Technician, UserLogin
 
@@ -189,22 +189,26 @@ def employee_detail_api(request, employee_id):
         return api_success(data={"item": item})
 
     if request.method == "DELETE":
-        login_id = request.session.get("employee_id")
-        if login_id:
-            deleted_at = timezone.now()
-            employee.deleted_at = deleted_at
-            employee.updated_by = login_id
-            employee.save(update_fields=["deleted_at", "updated_by", "updated_at"])
-            UserLogin.objects.filter(
-                employee_id=employee.id,
-                deleted_at__isnull=True,
-            ).update(
-                deleted_at=deleted_at,
-                updated_by=login_id,
-                updated_at=deleted_at,
-            )
-            return api_success()
-        return api_error(status=401, message="请先登录")
+        login_id, error = require_login(request)
+        if error:
+            return error
+        deleted_at = timezone.now()
+        employee.deleted_at = deleted_at
+        employee.updated_by = login_id
+        employee.save(update_fields=["deleted_at", "updated_by", "updated_at"])
+        UserLogin.objects.filter(
+            employee_id=employee.id,
+            deleted_at__isnull=True,
+        ).update(
+            deleted_at=deleted_at,
+            updated_by=login_id,
+            updated_at=deleted_at,
+        )
+        return api_success()
+
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     payload, error = parse_json_body(request)
     if error:
@@ -250,10 +254,10 @@ def employee_detail_api(request, employee_id):
         return api_error(
             "Missing field: name"
         )
-    employee.updated_by = request.session.get("employee_id")
+    employee.updated_by = login_id
 
     employee.save()
-    if request.session.get("employee_id") == employee.id:
+    if login_id == employee.id:
         request.session["employee_name"] = employee.name
         request.session["employee_department_name"] = employee.department_name
         request.session["employee_position_name"] = employee.position_name
@@ -264,9 +268,9 @@ def employee_detail_api(request, employee_id):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def employee_seal_api(request, employee_id):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error("Unauthorized", status=401)
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
@@ -313,9 +317,9 @@ def employee_seal_api(request, employee_id):
 @csrf_exempt
 @require_http_methods(["GET", "PUT"])
 def employee_permission_api(request, employee_id):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error(status=401, message="employee id is required")
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     user_login = UserLogin.objects.filter(
         employee_id=employee_id,
@@ -380,12 +384,9 @@ def employee_permission_api(request, employee_id):
 @require_POST
 # 修改密码
 def change_password_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
-        return api_error(
-            "Unauthorized",
-            status=401,
-        )
+    employee_id, error = require_login(request)
+    if error:
+        return error
 
     payload, error = parse_json_body(request)
     if error:
@@ -450,19 +451,6 @@ def login_audit_api(request):
     if error:
         return error
 
-    try:
-        page = int(request.GET.get("page") or 1)
-    except (TypeError, ValueError):
-        page = 1
-    try:
-        page_size = int(request.GET.get("page_size") or 20)
-    except (TypeError, ValueError):
-        page_size = 20
-    if page < 1:
-        page = 1
-    if page_size < 1:
-        page_size = 20
-
     filters = {}
     employee_id = request.GET.get("employee_id")
     if employee_id not in (None, ""):
@@ -493,16 +481,14 @@ def login_audit_api(request):
     _build_date_range(filters, "created_at", start_date, end_date)
 
     qs = LoginAudit.objects.filter(**filters).order_by("-created_at")
-    total = qs.count()
-    total_pages = (total + page_size - 1) // page_size if page_size else 1
-    if total_pages < 1:
-        total_pages = 1
-    if page > total_pages:
-        page = total_pages
-    offset = (page - 1) * page_size
+    paged, total, page, page_size, total_pages = paginate_queryset(
+        qs,
+        request,
+        default_page_size=20,
+    )
 
     items = []
-    for row in qs[offset:offset + page_size]:
+    for row in paged:
         created_at = ""
         if row.created_at:
             created_at = timezone.localtime(row.created_at).strftime("%Y-%m-%d %H:%M:%S")
@@ -591,9 +577,9 @@ def user_logins_by_role_api(request):
 # 获取员工列表、创建员工
 def employees_api(request):
     if request.method == "POST":
-        login_id = request.session.get("employee_id")
-        if not login_id:
-            return api_error(status=401, message="employee id is required")
+        login_id, error = require_login(request)
+        if error:
+            return error
         payload, error = parse_json_body(request)
         if error:
             return error
@@ -660,18 +646,6 @@ def employees_api(request):
     if request.method == "GET":
         keyword = (request.GET.get("keyword") or "").strip()
         department = (request.GET.get("department") or "").strip()
-        try:
-            page = int(request.GET.get("page") or 1)
-        except (TypeError, ValueError):
-            page = 1
-        try:
-            page_size = int(request.GET.get("page_size") or 10)
-        except (TypeError, ValueError):
-            page_size = 10
-        if page < 1:
-            page = 1
-        if page_size < 1:
-            page_size = 10
 
         qs = Employee.objects.filter(deleted_at__isnull=True)
 
@@ -687,14 +661,8 @@ def employees_api(request):
         if department and department != "all":
             qs = qs.filter(department_name=department)
 
-        total = qs.count()
-        total_pages = (total + page_size - 1) // page_size if page_size else 1
-        if total_pages < 1:
-            total_pages = 1
-        if page > total_pages:
-            page = total_pages
-        offset = (page - 1) * page_size
-        items = [Employee.serialize(emp) for emp in qs.order_by("id")[offset:offset + page_size]]
+        paged, total, page, page_size, total_pages = paginate_queryset(qs.order_by("id"), request)
+        items = [Employee.serialize(emp) for emp in paged]
 
         return api_paginated(
             items=items,
@@ -711,9 +679,9 @@ def employees_api(request):
 # 新增技术者、获取技术者列表
 def technicians_api(request):
     if request.method == "POST":
-        login_id = request.session.get("employee_id")
-        if not login_id:
-            return api_error(status=401, message="employee id is required")
+        login_id, error = require_login(request)
+        if error:
+            return error
 
         payload, error = parse_json_body(request)
         if error:
@@ -816,20 +784,10 @@ def technicians_api(request):
             if site_date:
                 qs = qs.filter(spot_contract_deadline=site_date)
 
-        page = int(request.GET.get("page", 1))
-        page_size = int(request.GET.get("page_size", 10))
-
-        page = max(page, 1)
-        page_size = min(page_size, 100)
-
-        total = qs.count()
-        total_pages = max((total + page_size - 1) // page_size, 1)
-        if page > total_pages:
-            page = total_pages
-        offset = (page - 1) * page_size
+        paged, total, page, page_size, total_pages = paginate_queryset(qs.order_by("employee_id"), request)
         items = [
             Technician.serialize(tech)
-            for tech in qs.order_by("employee_id")[offset: offset + page_size]
+            for tech in paged
         ]
         return api_paginated(
             items=items,
@@ -906,21 +864,22 @@ def technician_detail_api(request, employee_id):
     if not tech.name:
         return api_error("Missing field: name")
 
-    login_id = request.session.get("employee_id")
-    if login_id:
-        tech.updated_by = login_id
-        tech.save()
-        item = Technician.serialize(tech)
-        return api_success(data={"item": item})
-    return api_error(status=401, message="请先登录")
+    login_id, error = require_login(request)
+    if error:
+        return error
+    tech.updated_by = login_id
+    tech.save()
+    item = Technician.serialize(tech)
+    return api_success(data={"item": item})
 
 
 @csrf_exempt
 @require_POST
 # 上传ss
 def technician_ss_upload(request, employee_id):
-    if not request.session.get("employee_id"):
-        return api_error("Unauthorized", status=401)
+    _login_id, error = require_login(request)
+    if error:
+        return error
 
     upload = request.FILES.get("file")
     if not upload:
@@ -949,8 +908,9 @@ def technician_ss_upload(request, employee_id):
 @require_http_methods(["GET"])
 # 下载ss
 def technician_ss_download(request, path):
-    if not request.session.get("employee_id"):
-        return api_error("Unauthorized", status=401)
+    _login_id, error = require_login(request)
+    if error:
+        return error
 
     try:
         safe_path = storage.path(StorageArea.SS, path)

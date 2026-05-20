@@ -6,14 +6,7 @@ from django.views.decorators.http import require_http_methods
 
 from permission.models import Menu, Role
 from project.api import api_error, api_success
-from project.common_tools import parse_json_body
-
-
-def _require_login(request):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return None, api_error(status=401, message="employee id is required")
-    return login_id, None
+from project.common_tools import parse_json_body, require_login
 
 
 def _menu_list_to_htmls(value):
@@ -49,7 +42,7 @@ def _menu_list_to_payload(value):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def menus_api(request):
-    login_id, error = _require_login(request)
+    login_id, error = require_login(request)
     if error:
         return error
 
@@ -75,7 +68,7 @@ def menus_api(request):
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
 def menu_detail_api(request, menu_id):
-    login_id, error = _require_login(request)
+    login_id, error = require_login(request)
     if error:
         return error
 
@@ -112,7 +105,7 @@ def menu_detail_api(request, menu_id):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def roles_api(request):
-    login_id, error = _require_login(request)
+    login_id, error = require_login(request)
     if error:
         return error
 
@@ -149,7 +142,7 @@ def roles_api(request):
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
 def role_detail_api(request, role_id):
-    login_id, error = _require_login(request)
+    login_id, error = require_login(request)
     if error:
         return error
 

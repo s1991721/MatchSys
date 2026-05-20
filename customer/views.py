@@ -14,7 +14,7 @@ from customer.models import Customer
 from employee.models import Employee
 from project.api import api_error, api_paginated, api_success
 from project import storage
-from project.common_tools import parse_json_body
+from project.common_tools import paginate_queryset, parse_json_body, require_login
 from project.storage import StorageArea
 from settings.LINE import (
     get_line_message_content,
@@ -58,9 +58,9 @@ def employee_names_api(request):
 @require_POST
 # 上传与客户公司的契约
 def customer_contract_upload(request, customer_id):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error(status=401, message="employee id is required")
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     upload = request.FILES.get("file")
     if not upload:
@@ -85,9 +85,9 @@ def customer_contract_upload(request, customer_id):
 @csrf_exempt
 @require_POST
 def customer_card_ocr_api(request):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error(status=401, message="employee id is required")
+    _login_id, error = require_login(request)
+    if error:
+        return error
 
     upload = request.FILES.get("file")
     if not upload:
@@ -212,37 +212,23 @@ def line_webhook_api(request):
 @require_http_methods(["GET", "POST"])
 # 获取客户公司列表、添加客户公司
 def customers_api(request):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error(status=401, message="employee id is required")
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     if request.method == "GET":
         company_name = (request.GET.get("company_name") or "").strip()
         person_in_charge = (request.GET.get("person_in_charge") or "").strip()
-        try:
-            page = int(request.GET.get("page", 1))
-        except (TypeError, ValueError):
-            page = 1
-        try:
-            page_size = int(request.GET.get("page_size", 10))
-        except (TypeError, ValueError):
-            page_size = 10
-        page = max(page, 1)
-        page_size = max(min(page_size, 100), 1)
         queryset = Customer.objects.filter(deleted_at__isnull=True)
         if company_name:
             queryset = queryset.filter(company_name__icontains=company_name)
         if person_in_charge:
             queryset = queryset.filter(person_in_charge__icontains=person_in_charge)
         queryset = queryset.order_by("-created_at", "-id")
-        total = queryset.count()
-        total_pages = max((total + page_size - 1) // page_size, 1)
-        if page > total_pages:
-            page = total_pages
-        offset = (page - 1) * page_size
+        paged, total, page, page_size, total_pages = paginate_queryset(queryset, request)
         items = [
             Customer.serialize(customer)
-            for customer in queryset[offset: offset + page_size]
+            for customer in paged
         ]
         return api_paginated(
             items=items,
@@ -273,9 +259,9 @@ def customers_api(request):
 @require_http_methods(["PUT", "GET"])
 # 更新客户公司信息、获取客户公司信息
 def customer_detail_api(request, customer_id):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error(status=401, message="employee id is required")
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     try:
         customer = Customer.objects.get(pk=customer_id, deleted_at__isnull=True)

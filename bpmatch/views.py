@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from project.api import api_error, api_paginated, api_success
-from project.common_tools import parse_json_body, require_login
+from project.common_tools import paginate_queryset, parse_json_body, require_login
 from settings.models import SysSettings
 from . import llmsTool
 from .gmailTool import GmailTool
@@ -162,11 +162,6 @@ def mail_projects_api(request):
     project_id = request.GET.get("id", "").strip()
     sender = request.GET.get("sender", "").strip()
     date_str = request.GET.get("date", "").strip()
-    page_str = request.GET.get("page", "1").strip()
-    page_size_str = request.GET.get("page_size", "50").strip()
-
-    page = int(page_str)
-    page_size = int(page_size_str)
 
     queryset = MailProjectInfo.objects.all()
 
@@ -183,13 +178,14 @@ def mail_projects_api(request):
 
     queryset = queryset.order_by("-date", "-id")
 
-    total = queryset.count()
-    total_pages = (total + page_size - 1) // page_size if total else 1
-    start = (page - 1) * page_size
-    end = start + page_size
+    paged, total, page, page_size, total_pages = paginate_queryset(
+        queryset,
+        request,
+        default_page_size=50,
+    )
 
     items = []
-    for row in queryset[start:end]:
+    for row in paged:
         items.append(
             {
                 "id": row.id,
@@ -970,22 +966,12 @@ def my_mails_unread_count_api(request):
 @require_GET
 # 送信历史
 def send_history(request):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error("employee id is required", status=401)
+    login_id, error = require_login(request)
+    if error:
+        return error
 
     mail_type = (request.GET.get("mail_type") or "").strip()
     keyword = (request.GET.get("keyword") or "").strip()
-    try:
-        page = int(request.GET.get("page", 1))
-    except (TypeError, ValueError):
-        page = 1
-    try:
-        page_size = int(request.GET.get("page_size", 10))
-    except (TypeError, ValueError):
-        page_size = 10
-    page = max(page, 1)
-    page_size = max(min(page_size, 100), 1)
 
     queryset = SentEmailLog.objects.filter(created_by=login_id)
     if mail_type and mail_type.lower() != "all":
@@ -1001,12 +987,7 @@ def send_history(request):
     if keyword:
         queryset = queryset.filter(to__icontains=keyword)
     queryset = queryset.order_by("-sent_at")
-    total = queryset.count()
-    total_pages = max((total + page_size - 1) // page_size, 1)
-    if page > total_pages:
-        page = total_pages
-    offset = (page - 1) * page_size
-    logs = queryset[offset: offset + page_size]
+    logs, total, page, page_size, total_pages = paginate_queryset(queryset, request)
     items = []
     current_tz = timezone.get_current_timezone()
 

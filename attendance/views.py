@@ -10,7 +10,15 @@ from django.views.decorators.http import require_POST, require_GET
 
 from employee.models import Employee
 from project.api import api_error, api_success
-from project.common_tools import parse_json_body, parse_time_value, weekday_label, is_workday, count_workdays
+from project.common_tools import (
+    count_workdays,
+    is_workday,
+    paginate_queryset,
+    parse_json_body,
+    parse_time_value,
+    require_login,
+    weekday_label,
+)
 from .models import AttendancePolicy, get_monthly_attendance_models
 from .exporters import export_kintai_xlsx, build_year_template
 
@@ -19,9 +27,9 @@ from .exporters import export_kintai_xlsx, build_year_template
 @require_POST
 # 打卡
 def attendance_punch_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
-        return api_error("Unauthorized", status=401)
+    employee_id, error = require_login(request)
+    if error:
+        return error
 
     payload, error = parse_json_body(request)
     if error:
@@ -131,9 +139,9 @@ def _sync_attendance_record(punch_model, record_model, employee, now):
 @require_POST
 # 修改考勤
 def attendance_record_edit_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
-        return api_error("Unauthorized", status=401)
+    employee_id, error = require_login(request)
+    if error:
+        return error
 
     payload, error = parse_json_body(request)
     if error:
@@ -212,9 +220,9 @@ def attendance_record_edit_api(request):
 @require_GET
 # 获取今天的考勤记录
 def attendance_record_today_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
-        return api_error("Unauthorized", status=401)
+    employee_id, error = require_login(request)
+    if error:
+        return error
 
     today = timezone.localdate()
     record_model = get_monthly_attendance_models(today)[1]
@@ -239,9 +247,9 @@ def attendance_record_today_api(request):
 @require_GET
 # 每月汇总 出勤-迟到-缺勤
 def my_attendance_summary_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
-        return api_error("Unauthorized", status=401)
+    employee_id, error = require_login(request)
+    if error:
+        return error
 
     target_date = request.GET.get("date")
     target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -289,9 +297,9 @@ def my_attendance_summary_api(request):
 @require_GET
 # 获取某月所有天的考勤详情
 def my_attendance_detail_api(request):
-    employee_id = request.session.get("employee_id")
-    if not employee_id:
-        return api_error("Unauthorized", status=401)
+    employee_id, error = require_login(request)
+    if error:
+        return error
 
     target_date = request.GET.get("date")
     target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
@@ -323,34 +331,19 @@ def my_attendance_detail_api(request):
 @require_GET
 # 全体人员，每月考勤汇总列表
 def attendance_summary_api(request):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error("Unauthorized", status=401)
+    _login_id, error = require_login(request)
+    if error:
+        return error
 
     target_date = request.GET.get("month")
     target_date = datetime.strptime(target_date, "%Y-%m").date()
     name_filter = (request.GET.get("name") or "").strip()
-    try:
-        page = int(request.GET.get("page", 1))
-    except (TypeError, ValueError):
-        page = 1
-    try:
-        page_size = int(request.GET.get("page_size", 10))
-    except (TypeError, ValueError):
-        page_size = 10
-    page = max(page, 1)
-    page_size = max(min(page_size, 100), 1)
-
     employees_qs = Employee.objects.filter(deleted_at__isnull=True).order_by("id")
     if name_filter:
         employees_qs = employees_qs.filter(name__icontains=name_filter)
 
-    total = employees_qs.count()
-    total_pages = max((total + page_size - 1) // page_size, 1)
-    if page > total_pages:
-        page = total_pages
-    offset = (page - 1) * page_size
-    employees = list(employees_qs[offset: offset + page_size])
+    employees, total, page, page_size, total_pages = paginate_queryset(employees_qs, request)
+    employees = list(employees)
     if not employees:
         response_payload = {
             "month": target_date.strftime("%Y-%m"),
@@ -444,9 +437,9 @@ def attendance_summary_api(request):
 @require_GET
 # employee_id员工在month月的考勤详情
 def attendance_detail_api(request, employee_id):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error("Unauthorized", status=401)
+    _login_id, error = require_login(request)
+    if error:
+        return error
 
     target_date = request.GET.get("month")
     target_date = datetime.strptime(target_date, "%Y-%m").date()
@@ -511,9 +504,9 @@ def attendance_detail_api(request, employee_id):
 @require_GET
 # employee_id员工在month月的考勤导出
 def attendance_export_api(request, employee_id):
-    login_id = request.session.get("employee_id")
-    if not login_id:
-        return api_error("Unauthorized", status=401)
+    _login_id, error = require_login(request)
+    if error:
+        return error
 
     target_month = (request.GET.get("month") or "").strip()
     if not target_month:
@@ -580,4 +573,3 @@ def attendance_export_api(request, employee_id):
         f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{quote(display_filename)}"
     )
     return response
-

@@ -61,13 +61,7 @@ services:
     environment:
       OLLAMA_NUM_THREADS: "6"    #提升效率使用机器的核心数线程
       OLLAMA_NUM_PARALLEL: "2"   #提升并发
-    deploy:                      #开启GPU
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [ gpu ]
+
     ports:
       - "11434:11434"
     volumes:

@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS employee
     position_name                  VARCHAR(100) NULL COMMENT '职位名称',
 
     status                         SMALLINT     NULL COMMENT '1在职/0离职/2停用...',
+    seal                           VARCHAR(255) NULL COMMENT '个人印章文件路径',
 
     created_by                     BIGINT       NULL COMMENT '创建人 employee.id',
     created_at                     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -336,18 +337,26 @@ CREATE TABLE IF NOT EXISTS purchase_order
 (
     id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     order_no            VARCHAR(50)    NOT NULL COMMENT '发注单号',
+
     person_in_charge    VARCHAR(100)   NOT NULL COMMENT '负责人',
-    person_in_charge_id VARCHAR(100)   NOT NULL COMMENT '负责人id',
+    person_in_charge_id BIGINT         NULL COMMENT '负责人id',
+
+    work_content        VARCHAR(500)   NULL COMMENT '作業内容',
+    work_place          VARCHAR(255)   NULL COMMENT '作業場所',
+    contract_type       VARCHAR(100)   NULL COMMENT '契約形態',
+    payment_terms       VARCHAR(255)   NULL COMMENT '支払い条件',
+
     status              VARCHAR(50)    NOT NULL COMMENT '状态',
     project_name        VARCHAR(255)   NOT NULL COMMENT '项目名称',
     customer_id         BIGINT         NOT NULL COMMENT '客户ID',
     customer_name       VARCHAR(255)   NOT NULL COMMENT '客户名称',
-    technician_name     VARCHAR(255) COMMENT '技术人员名称',
-    price               DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '金额',
-    working_hours       DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
+
+    line_items          JSON           NULL COMMENT '契约明细JSON',
+
     period_start        DATE           NOT NULL COMMENT '期间开始日',
     period_end          DATE           NOT NULL COMMENT '期间结束日',
-    remark              TEXT COMMENT '备注',
+    remark              TEXT           COMMENT '备注',
+    pdf_file            VARCHAR(255)   NULL COMMENT '发注书PDF文件路径',
 
     created_by          VARCHAR(100)   NOT NULL COMMENT '创建人',
     created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -363,19 +372,20 @@ CREATE TABLE IF NOT EXISTS sales_order
     id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
     order_no            VARCHAR(50)    NOT NULL COMMENT '受注单号',
     person_in_charge    VARCHAR(100)   NOT NULL COMMENT '负责人',
-    person_in_charge_id VARCHAR(100)   NOT NULL COMMENT '负责人id',
+    person_in_charge_id BIGINT         NULL COMMENT '负责人id',
     status              VARCHAR(50)    NOT NULL COMMENT '状态',
-    purchase_id         BIGINT         NULL COMMENT '对应发注ID',
+    purchase_id         BIGINT         NULL COMMENT '对应发注ID（BP明细）',
     project_name        VARCHAR(255)   NOT NULL COMMENT '项目名称',
     customer_id         BIGINT         NOT NULL COMMENT '客户ID',
     customer_name       VARCHAR(255)   NOT NULL COMMENT '客户名称',
-    technician_id       BIGINT COMMENT '技术人员ID',
-    technician_name     VARCHAR(255) COMMENT '技术人员名称',
-    price               DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '金额',
-    working_hours       DECIMAL(8, 2)           DEFAULT 0 COMMENT '工时',
+    technician_id       BIGINT         NULL COMMENT '技术人员ID（自社人员明细）',
+    technician_name     VARCHAR(255)   NULL COMMENT '技术人员名称',
+    price               DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '契约单价',
+    line_items          JSON           NULL COMMENT '原始契约明细JSON',
     period_start        DATE           NOT NULL COMMENT '期间开始日',
     period_end          DATE           NOT NULL COMMENT '期间结束日',
     remark              TEXT COMMENT '备注',
+    pdf_file            VARCHAR(255)   NULL COMMENT '受注书PDF文件路径',
 
     created_by          VARCHAR(100)   NOT NULL COMMENT '创建人',
     created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -424,7 +434,7 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
     body        TEXT         NOT NULL COMMENT '邮件正文',
     attachments TEXT         NOT NULL COMMENT '附件列表(JSON字符串)',
 
-    mail_type   INT          NOT NULL COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信 -1:其他',
+    mail_type   INT          NOT NULL COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信 3:发注 -1:其他',
     sent_at     DATETIME     NOT NULL COMMENT '邮件发送时间',
 
     created_by  VARCHAR(100) NOT NULL COMMENT '创建人',

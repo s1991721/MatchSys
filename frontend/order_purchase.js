@@ -49,6 +49,9 @@
                 orderNo: document.querySelector('[data-preview="issueOrderNo"]'),
                 orderDate: document.querySelector('[data-preview="issueOrderDate"]'),
                 customer: document.querySelector('[data-preview="issueCustomer"]'),
+                customerAddressBlock: document.querySelector('[data-preview="issueCustomerAddressBlock"]'),
+                customerPostalCode: document.querySelector('[data-preview="issueCustomerPostalCode"]'),
+                customerAddress: document.querySelector('[data-preview="issueCustomerAddress"]'),
                 companyName: document.querySelector('[data-preview="issueCompanyName"]'),
                 companyPostalCode: document.querySelector('[data-preview="issueCompanyPostalCode"]'),
                 companyAddress: document.querySelector('[data-preview="issueCompanyAddress"]'),
@@ -95,6 +98,13 @@
             let ownerSealState = {
                 employeeId: "",
                 url: "",
+                requestId: 0,
+            };
+            let customerAddressState = {
+                customerId: "",
+                customerName: "",
+                postalCode: "",
+                address: "",
                 requestId: 0,
             };
             const PDF_PREVIEW_WIDTH = 595;
@@ -286,6 +296,69 @@
                     }
                 }
                 paginatePreview();
+            };
+
+            const splitCustomerAddress = (rawAddress) => {
+                const value = String(rawAddress || "").trim();
+                if (!value) return { postalCode: "", address: "" };
+                const match = value.match(/(?:〒\s*)?(\d{3}-?\d{4})/);
+                if (!match) return { postalCode: "", address: value };
+                const postalCode = `〒${match[1]}`;
+                const address = value.replace(match[0], "").trim();
+                return { postalCode, address };
+            };
+
+            const renderCustomerAddress = () => {
+                const hasAddress = Boolean(customerAddressState.postalCode || customerAddressState.address);
+                if (preview.customerAddressBlock) preview.customerAddressBlock.hidden = !hasAddress;
+                if (preview.customerPostalCode) preview.customerPostalCode.textContent = customerAddressState.postalCode || "";
+                if (preview.customerAddress) preview.customerAddress.textContent = customerAddressState.address || "";
+                paginatePreview();
+            };
+
+            const updateCustomerAddress = async () => {
+                const selectedName = form.customerName.value.trim();
+                const mappedId = customerMap.get(selectedName);
+                const fieldId = form.customerId.value;
+                const customerId = String(
+                    mappedId || (fieldId && (!customerAddressState.customerName || customerAddressState.customerName === selectedName) ? fieldId : "")
+                ).trim();
+                if (!customerId) {
+                    customerAddressState = {
+                        customerId: "",
+                        customerName: "",
+                        postalCode: "",
+                        address: "",
+                        requestId: customerAddressState.requestId + 1,
+                    };
+                    renderCustomerAddress();
+                    return;
+                }
+                if (customerAddressState.customerId === customerId && customerAddressState.customerName === selectedName) {
+                    renderCustomerAddress();
+                    return;
+                }
+                const requestId = customerAddressState.requestId + 1;
+                customerAddressState = { customerId, customerName: selectedName, postalCode: "", address: "", requestId };
+                renderCustomerAddress();
+                try {
+                    const payload = await window.requestJson(`/api/customers/${encodeURIComponent(customerId)}`, { method: "GET" });
+                    if (customerAddressState.requestId !== requestId) return;
+                    const customer = payload?.data?.item || {};
+                    const addressParts = splitCustomerAddress(customer.company_address || "");
+                    customerAddressState = {
+                        customerId,
+                        customerName: selectedName,
+                        postalCode: addressParts.postalCode,
+                        address: addressParts.address,
+                        requestId,
+                    };
+                } catch (error) {
+                    console.warn(error);
+                    if (customerAddressState.requestId !== requestId) return;
+                    customerAddressState = { customerId, customerName: selectedName, postalCode: "", address: "", requestId };
+                }
+                renderCustomerAddress();
             };
 
             const renderOwnerSeal = (sealUrl, ownerName = "") => {
@@ -561,6 +634,7 @@
                     const name = form.customerName.value.trim();
                     preview.customer.textContent = name ? `${name} 御中` : "御中";
                 }
+                updateCustomerAddress();
                 if (preview.project) preview.project.textContent = form.projectName.value.trim();
                 if (preview.workContent) preview.workContent.textContent = form.workContent.value.trim();
                 if (preview.period) preview.period.textContent = ctx.buildPeriodText(summary.periodStart, summary.periodEnd);

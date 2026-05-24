@@ -456,7 +456,7 @@ body > .page {
 }
 .order-pdf-customer {
   display: grid;
-  gap: 10px;
+  gap: 7px;
   padding-top: 18px;
 }
 .order-pdf-customer-name {
@@ -468,7 +468,16 @@ body > .page {
   padding-bottom: 2px;
 }
 .order-pdf-note {
-  margin-top: 4px;
+  margin-top: 2px;
+}
+.order-pdf-customer-address {
+  min-height: 28px;
+  font-size: 10px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+.order-pdf-customer-address[hidden] {
+  display: none;
 }
 .order-pdf-info,
 .order-pdf-detail,

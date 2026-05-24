@@ -123,6 +123,10 @@
                 <input id="edit-address" type="text"/>
             </label>
             <label class="c-field">
+                <span>〒</span>
+                <input id="edit-postcode" type="text"/>
+            </label>
+            <label class="c-field">
                 <span>公司邮箱</span>
                 <input id="edit-company-email" type="email"/>
             </label>
@@ -253,6 +257,7 @@
     const editFields = {
         company: document.getElementById("edit-company"),
         address: document.getElementById("edit-address"),
+        postcode: document.getElementById("edit-postcode"),
         companyEmail: document.getElementById("edit-company-email"),
         contract: document.getElementById("edit-contract"),
         remark: document.getElementById("edit-remark"),
@@ -486,7 +491,7 @@
         const contractFile = editFields.contract.files[0];
         const payload = {
             company_name: editFields.company.value.trim(),
-            company_address: editFields.address.value.trim(),
+            company_address: joinPostcodeAndAddress(editFields.postcode.value, editFields.address.value),
             company_email: editFields.companyEmail.value.trim(),
             remark: editFields.remark.value.trim(),
             contact1_name: editFields.contact1Name.value.trim(),
@@ -682,9 +687,30 @@
         payload[`contact${slot}_phone`] = phone;
     };
 
+    const splitPostcodeAndAddress = (value) => {
+        const text = String(value || "").trim();
+        if (!text) return {postcode: "", address: ""};
+        const match = text.match(/^〒?\s*([0-9]{3}-?[0-9]{4})\s*(.*)$/);
+        if (!match) return {postcode: "", address: text};
+        return {
+            postcode: match[1],
+            address: String(match[2] || "").trim(),
+        };
+    };
+
+    const joinPostcodeAndAddress = (postcode, address) => {
+        const cleanPostcode = String(postcode || "").trim();
+        const cleanAddress = String(address || "").trim();
+        if (!cleanPostcode) return cleanAddress;
+        if (!cleanAddress) return `〒${cleanPostcode}`;
+        return `〒${cleanPostcode} ${cleanAddress}`;
+    };
+
     const applyCustomerToEditForm = (item) => {
+        const addressParts = splitPostcodeAndAddress(item?.company_address || "");
         editFields.company.value = item?.company_name || "";
-        editFields.address.value = item?.company_address || "";
+        editFields.address.value = addressParts.address;
+        editFields.postcode.value = addressParts.postcode;
         editFields.companyEmail.value = item?.company_email || "";
         editFields.contract.value = "";
         currentContract = item?.contract || "";

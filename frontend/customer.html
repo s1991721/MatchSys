@@ -20,10 +20,8 @@
                 </label>
                 <label>
                     <span data-i18n="common.field.owner">负责人</span>
-                    <input id="filter-owner" type="text" list="employee-names" placeholder="请输入负责人"
-                           data-i18n-placeholder="common.field.owner_placeholder"/>
+                    <select id="filter-owner"></select>
                 </label>
-                <datalist id="employee-names"></datalist>
             </div>
             <div class="filter-actions c-filter-actions-bar">
                 <div class="filter-actions-left c-filter-actions-left">
@@ -141,7 +139,7 @@
             </label>
             <label class="c-field">
                 <span data-i18n="common.field.owner">负责人</span>
-                <input id="edit-owner" type="text" list="employee-names"/>
+                <select id="edit-owner"></select>
             </label>
             <div class="form-field full">
                 <div class="c-card c-card-compact">
@@ -231,7 +229,6 @@
     const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
     const escapeHtml = window.escapeHtml;
 
-    const nameList = document.getElementById("employee-names");
     const tableBody = document.getElementById("customer-body");
     const filterCompany = document.getElementById("filter-company");
     const filterOwner = document.getElementById("filter-owner");
@@ -283,6 +280,8 @@
     let totalPages = 1;
     let selectedCustomerIds = new Set();
     let cardPreviewObjectUrl = "";
+    let ownerOptionsCache = null;
+    let ownerOptionsRequest = null;
 
     tableBody.addEventListener("click", (event) => {
         const target = event.target.closest("button[data-action]");
@@ -494,6 +493,7 @@
 
     dialogSave.addEventListener("click", () => {
         const contractFile = editFields.contract.files[0];
+        const owner = readOwnerSelect(editFields.owner);
         const payload = {
             company_name: editFields.company.value.trim(),
             company_address: joinPostcodeAndAddress(editFields.postcode.value, editFields.address.value),
@@ -511,7 +511,7 @@
             contact3_position: editFields.contact3Position.value.trim(),
             contact3_email: editFields.contact3Email.value.trim(),
             contact3_phone: editFields.contact3Phone.value.trim(),
-            person_in_charge: editFields.owner.value.trim(),
+            person_in_charge: owner.name,
         };
 
         if (!payload.company_name) {
@@ -723,7 +723,7 @@
             ? format("customer.contract.uploaded", {name: currentContract})
             : t("customer.contract.empty");
         editFields.remark.value = item?.remark || "";
-        editFields.owner.value = item?.person_in_charge || "";
+        setOwnerSelectValue(editFields.owner, item?.person_in_charge || "");
         editFields.contact1Name.value = item?.contact1_name || "";
         editFields.contact1Position.value = item?.contact1_position || "";
         editFields.contact1Phone.value = item?.contact1_phone || "";
@@ -858,9 +858,10 @@
     };
 
     const fetchCustomers = () => {
+        const ownerFilter = readOwnerSelect(filterOwner);
         const params = window.createParams([
             ["company_name", filterCompany.value.trim()],
-            ["person_in_charge", filterOwner.value.trim()],
+            ["person_in_charge", ownerFilter.name],
             ["page", String(currentPage)],
             ["page_size", String(pageSize)],
         ]);
@@ -886,23 +887,90 @@
             });
     };
 
-    const renderNames = (names) => {
-        nameList.innerHTML = names
-            .map((name) => `<option value="${escapeHtml(name)}"></option>`)
-            .join("");
+    const createOption = (value, label = value) => {
+        const option = document.createElement("option");
+        option.value = String(value ?? "");
+        option.textContent = String(label ?? value ?? "");
+        return option;
     };
 
-    window.requestJson("/api/employees/names", {method: "GET"})
-        .then((payload) => {
-            if (payload.success && Array.isArray(payload.data?.names)) {
-                renderNames(payload.data.names);
-            }
+    const readOwnerSelect = (selectEl) => {
+        if (!selectEl) return {name: ""};
+        const selected = selectEl.options[selectEl.selectedIndex];
+        if (!selected || !selected.value) return {name: ""};
+        return {
+            name: selected.textContent.trim(),
+        };
+    };
+
+    const setOwnerSelectValue = (selectEl, ownerName) => {
+        if (!selectEl) return;
+        const name = String(ownerName || "").trim();
+        const option = Array.from(selectEl.options).find((entry) => entry.textContent.trim() === name);
+        selectEl.value = option ? option.value : "";
+    };
+
+    const fetchOwnerOptions = () => {
+        if (ownerOptionsCache) return Promise.resolve(ownerOptionsCache);
+        if (ownerOptionsRequest) return ownerOptionsRequest;
+        const params = window.createParams([["role_id", "2"]]);
+        ownerOptionsRequest = window.requestJson(window.buildUrl("/api/user-logins/by-role", params), {method: "GET"})
+            .then((payload) => {
+                const result = payload.data || {};
+                const items = Array.isArray(result.items) ? result.items : [];
+                ownerOptionsCache = items;
+                return items;
+            })
+            .catch((error) => {
+                ownerOptionsRequest = null;
+                throw error;
+            });
+        return ownerOptionsRequest;
+    };
+
+    const renderOwnerOptions = (selectEl, items, {includeAll = false} = {}) => {
+        if (!selectEl) return;
+        selectEl.innerHTML = "";
+        selectEl.appendChild(createOption("", includeAll ? "全部" : ""));
+        items.forEach((item) => {
+            if (!item || !item.employee_name) return;
+            selectEl.appendChild(createOption(item.employee_id || "", item.employee_name));
+        });
+    };
+
+    const loadOwnerOptions = () => {
+        return fetchOwnerOptions()
+            .then((items) => {
+                renderOwnerOptions(filterOwner, items, {includeAll: true});
+                renderOwnerOptions(editFields.owner, items);
+                return items;
+            })
+            .catch(() => {
+                renderOwnerOptions(filterOwner, [], {includeAll: true});
+                renderOwnerOptions(editFields.owner, []);
+                return [];
+            });
+    };
+
+    loadOwnerOptions()
+        .then(() => {
+            fetchCustomers();
         })
         .catch(() => {
-            renderNames([]);
+            fetchCustomers();
         });
 
-    fetchCustomers();
+    filterOwner.addEventListener("change", () => {
+        currentPage = 1;
+        fetchCustomers();
+    });
+
+    editFields.owner.addEventListener("change", () => {
+        const selected = readOwnerSelect(editFields.owner);
+        if (!selected.name) {
+            editFields.owner.value = "";
+        }
+    });
 
 </script>
 </body>

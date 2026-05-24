@@ -1171,6 +1171,7 @@
             "common.save_failed_retry": "保存に失敗しました。しばらくしてから再試行してください。",
             "common.edit": "編集",
             "order.action.view": "確認",
+            "order.action.send": "送信",
             "common.status.draft": "下書き",
             "order.status.created": "作成済み",
             "order.status.approving": "承認中",

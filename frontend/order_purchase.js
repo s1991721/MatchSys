@@ -99,6 +99,7 @@
             };
             const PDF_PREVIEW_WIDTH = 595;
             const PDF_PREVIEW_HEIGHT = 842;
+            const pdfPreviewCanvas = pdfPreviewPage ? pdfPreviewPage.parentElement : null;
 
             const setItemField = (row, field, value) => {
                 ctx.setFieldValue(row.querySelector(`[data-issue-item-field="${field}"]`), value);
@@ -284,6 +285,7 @@
                         preview.companySeal.appendChild(img);
                     }
                 }
+                paginatePreview();
             };
 
             const renderOwnerSeal = (sealUrl, ownerName = "") => {
@@ -295,6 +297,7 @@
                 img.src = sealUrl;
                 img.alt = ownerName ? `${ownerName}印` : "担当印";
                 preview.ownerSeal.appendChild(img);
+                paginatePreview();
             };
 
             const fetchOwnerSealUrl = async (employeeId) => {
@@ -406,6 +409,144 @@
                 return companyInfoState;
             };
 
+            const preparePreviewPage = (page) => {
+                page.removeAttribute("id");
+                page.classList.add("is-paginated");
+                page.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+                return page;
+            };
+
+            const createPreviewPage = () => {
+                const page = preparePreviewPage(pdfPreviewPage.cloneNode(false));
+                page.style.width = `${PDF_PREVIEW_WIDTH}px`;
+                page.style.height = `${PDF_PREVIEW_HEIGHT}px`;
+                page.style.maxWidth = "none";
+                page.innerHTML = "";
+                return page;
+            };
+
+            const getPageContentNodes = () => Array.from(pdfPreviewPage.children)
+                .filter((node) => !node.classList || !node.classList.contains("order-pdf-page-number"));
+
+            const appendPageNumber = (page, index, total) => {
+                let node = page.querySelector(".order-pdf-page-number");
+                if (!node) {
+                    node = document.createElement("div");
+                    node.className = "order-pdf-page-number";
+                    page.appendChild(node);
+                }
+                node.textContent = `${index} / ${total}`;
+            };
+
+            const pageOverflows = (page) => page.scrollHeight > page.clientHeight + 1;
+
+            const hasPrintableContent = (page) => Array.from(page.children)
+                .some((node) => !node.classList || !node.classList.contains("order-pdf-page-number"));
+
+            const appendBlockWithOverflowCheck = (pages, block) => {
+                let page = pages[pages.length - 1];
+                page.appendChild(block);
+                if (!pageOverflows(page) || !hasPrintableContent(page)) return page;
+                page.removeChild(block);
+                page = createPreviewPage();
+                pages.push(page);
+                pdfPreviewCanvas.appendChild(page);
+                page.appendChild(block);
+                return page;
+            };
+
+            const createDetailBlockShell = (sourceBlock, includeHeader = true) => {
+                const block = sourceBlock.cloneNode(false);
+                const sourceTable = sourceBlock.querySelector(".order-pdf-detail");
+                if (sourceTable) {
+                    const table = sourceTable.cloneNode(false);
+                    if (includeHeader) {
+                        const thead = sourceTable.querySelector("thead");
+                        if (thead) table.appendChild(thead.cloneNode(true));
+                    }
+                    const tbody = document.createElement("tbody");
+                    table.appendChild(tbody);
+                    block.appendChild(table);
+                }
+                return block;
+            };
+
+            const appendDetailBlockPaginated = (pages, sourceBlock) => {
+                const sourceRows = Array.from(sourceBlock.querySelectorAll(".order-pdf-detail tbody tr"));
+                const sourceSummary = sourceBlock.querySelector(".order-pdf-summary");
+                let page = pages[pages.length - 1];
+                let block = createDetailBlockShell(sourceBlock, true);
+                page.appendChild(block);
+
+                sourceRows.forEach((sourceRow) => {
+                    const row = sourceRow.cloneNode(true);
+                    const tbody = block.querySelector("tbody");
+                    tbody.appendChild(row);
+                    if (!pageOverflows(page)) return;
+                    if (tbody.children.length <= 1) {
+                        if (page.children.length > 1) {
+                            page.removeChild(block);
+                            page = createPreviewPage();
+                            pages.push(page);
+                            pdfPreviewCanvas.appendChild(page);
+                            block = createDetailBlockShell(sourceBlock, true);
+                            page.appendChild(block);
+                            block.querySelector("tbody").appendChild(row);
+                        }
+                        return;
+                    }
+                    tbody.removeChild(row);
+                    if (!tbody.children.length && page.contains(block)) page.removeChild(block);
+                    page = createPreviewPage();
+                    pages.push(page);
+                    pdfPreviewCanvas.appendChild(page);
+                    block = createDetailBlockShell(sourceBlock, true);
+                    page.appendChild(block);
+                    block.querySelector("tbody").appendChild(row);
+                });
+
+                if (sourceSummary) {
+                    const summary = sourceSummary.cloneNode(true);
+                    block.appendChild(summary);
+                    if (pageOverflows(page)) {
+                        block.removeChild(summary);
+                        page = createPreviewPage();
+                        pages.push(page);
+                        pdfPreviewCanvas.appendChild(page);
+                        const summaryBlock = sourceBlock.cloneNode(false);
+                        summaryBlock.appendChild(summary);
+                        page.appendChild(summaryBlock);
+                    }
+                }
+            };
+
+            const paginatePreview = () => {
+                if (!pdfPreviewPage || !pdfPreviewCanvas) return [];
+                const sourceNodes = getPageContentNodes();
+                pdfPreviewCanvas.innerHTML = "";
+                const pages = [createPreviewPage()];
+                pdfPreviewCanvas.appendChild(pages[0]);
+
+                sourceNodes.forEach((sourceNode) => {
+                    if (sourceNode.classList && sourceNode.classList.contains("order-pdf-detail-block")) {
+                        appendDetailBlockPaginated(pages, sourceNode);
+                        return;
+                    }
+                    appendBlockWithOverflowCheck(pages, sourceNode.cloneNode(true));
+                });
+
+                const visiblePages = pages.filter(hasPrintableContent);
+                const total = visiblePages.length || 1;
+                visiblePages.forEach((page, index) => appendPageNumber(page, index + 1, total));
+                return visiblePages;
+            };
+
+            const refreshPreviewAfterDialogOpen = () => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(updatePreview);
+                });
+            };
+
             function updatePreview() {
                 const summary = summarizeItems();
                 const price = summary.totalPrice;
@@ -453,6 +594,7 @@
                         preview.detailBody.appendChild(tr);
                     }
                 }
+                paginatePreview();
             }
 
             const buildPdfFileName = () => {
@@ -733,30 +875,39 @@
                 if (!pdfPreviewPage) throw new Error("未找到发注书预览区域");
                 if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) throw new Error("PDF生成依赖未加载");
                 updatePreview();
-                const clone = pdfPreviewPage.cloneNode(true);
-                clone.style.width = `${PDF_PREVIEW_WIDTH}px`;
-                clone.style.height = `${PDF_PREVIEW_HEIGHT}px`;
-                clone.style.maxWidth = "none";
-                clone.style.background = "#ffffff";
+                await updateOwnerSeal(ctx.readOwnerSelect(form.owner));
+                const previewPages = paginatePreview();
+                if (!previewPages.length) throw new Error("未找到发注书预览页面");
                 const stage = document.createElement("div");
                 stage.style.position = "fixed";
                 stage.style.left = "-100000px";
                 stage.style.top = "0";
                 stage.style.zIndex = "-1";
-                stage.appendChild(clone);
+                const clones = previewPages.map((page) => {
+                    const clone = page.cloneNode(true);
+                    clone.style.width = `${PDF_PREVIEW_WIDTH}px`;
+                    clone.style.height = `${PDF_PREVIEW_HEIGHT}px`;
+                    clone.style.maxWidth = "none";
+                    clone.style.background = "#ffffff";
+                    stage.appendChild(clone);
+                    return clone;
+                });
                 document.body.appendChild(stage);
                 try {
-                    const canvas = await window.html2canvas(clone, {
-                        scale: 2,
-                        backgroundColor: "#ffffff",
-                        useCORS: true,
-                    });
-                    const imgData = canvas.toDataURL("image/png");
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF("p", "pt", "a4");
                     const pageWidth = pdf.internal.pageSize.getWidth();
                     const pageHeight = pdf.internal.pageSize.getHeight();
-                    pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight, undefined, "FAST");
+                    for (let index = 0; index < clones.length; index += 1) {
+                        const canvas = await window.html2canvas(clones[index], {
+                            scale: 2,
+                            backgroundColor: "#ffffff",
+                            useCORS: true,
+                        });
+                        const imgData = canvas.toDataURL("image/png");
+                        if (index > 0) pdf.addPage();
+                        pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight, undefined, "FAST");
+                    }
                     return pdf.output("blob");
                 } finally {
                     stage.remove();
@@ -875,6 +1026,7 @@
                 ]);
                 updatePreview();
                 createDialog.showModal();
+                refreshPreviewAfterDialogOpen();
             };
 
             const openEditDialog = async (item) => {
@@ -889,6 +1041,7 @@
                 ]);
                 updatePreview();
                 createDialog.showModal();
+                refreshPreviewAfterDialogOpen();
             };
 
             const submitUpdate = async () => {

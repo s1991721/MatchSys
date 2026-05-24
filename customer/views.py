@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
@@ -256,7 +257,7 @@ def customers_api(request):
 
 
 @csrf_exempt
-@require_http_methods(["PUT", "GET"])
+@require_http_methods(["PUT", "GET", "DELETE"])
 # 更新客户公司信息、获取客户公司信息
 def customer_detail_api(request, customer_id):
     login_id, error = require_login(request)
@@ -283,5 +284,11 @@ def customer_detail_api(request, customer_id):
     if request.method == "GET":
         item = Customer.serialize(customer)
         return api_success(data={"item": item})
+
+    if request.method == "DELETE":
+        customer.deleted_at = timezone.now()
+        customer.updated_by = login_id
+        customer.save(update_fields=["deleted_at", "updated_by", "updated_at"])
+        return api_success()
 
     return api_error("Method not allowed", status=405)

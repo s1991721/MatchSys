@@ -285,12 +285,17 @@
     let cardPreviewObjectUrl = "";
 
     tableBody.addEventListener("click", (event) => {
-        const target = event.target.closest(".edit-btn");
+        const target = event.target.closest("button[data-action]");
         if (!target) return;
         const id = target.dataset.id;
         const item = cachedItems.find((entry) => String(entry.id) === String(id));
-        if (item) {
+        const action = target.dataset.action;
+        if (action === "edit" && item) {
             openEditDialog(item);
+            return;
+        }
+        if (action === "delete" && item) {
+            deleteCustomer(item);
         }
     });
 
@@ -769,6 +774,27 @@
         openDialog(editDialog);
     };
 
+    const deleteCustomer = (item) => {
+        const companyName = item?.company_name || t("customer.bulk.unnamed");
+        const message = format("customer.confirm.delete", {name: companyName});
+        const fallbackMessage = `确定删除客户「${companyName}」吗？`;
+        if (!confirm(message === "customer.confirm.delete" ? fallbackMessage : message)) return;
+
+        window.requestJson(`/api/customers/${encodeURIComponent(item.id)}`, {method: "DELETE"})
+            .then((payload) => {
+                if (!payload.success) {
+                    throw new Error(payload.message || t("customer.alert.delete_failed"));
+                }
+                selectedCustomerIds.delete(String(item.id));
+                fetchCustomers();
+            })
+            .catch((error) => {
+                const fallback = "删除失败，请重试";
+                const message = t("customer.alert.delete_failed");
+                alert(error.message || (message === "customer.alert.delete_failed" ? fallback : message));
+            });
+    };
+
     const updateBulkButtonState = () => {
         const enabled = selectedCustomerIds.size > 0;
         bulkEmailButton.disabled = !enabled;
@@ -819,7 +845,8 @@
               <td>${escapeHtml(item.created_at || "-")}</td>
               <td>
                 <div class="row-actions c-row-actions c-row-actions-nowrap">
-                  <button class="edit-btn c-btn c-btn-secondary c-btn-sm" type="button" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.edit"))}</button>
+                  <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.edit"))}</button>
+                  <button class="c-btn c-btn-danger c-btn-sm" type="button" data-action="delete" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.delete"))}</button>
                 </div>
               </td>
             </tr>

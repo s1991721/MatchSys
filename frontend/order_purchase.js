@@ -572,7 +572,7 @@
                 if (preview.subtotal) preview.subtotal.textContent = ctx.formatYenValue(price);
                 if (preview.tax) preview.tax.textContent = ctx.formatYenValue(tax);
                 if (preview.summaryTotal) preview.summaryTotal.textContent = ctx.formatYenValue(total);
-                if (preview.remark) preview.remark.textContent = form.remark.value.trim();
+                if (preview.remark) preview.remark.textContent = form.remark.value;
                 if (preview.detailBody) {
                     const rows = summary.items.map((item) => ({
                         item: item.itemName || form.projectName.value.trim(),

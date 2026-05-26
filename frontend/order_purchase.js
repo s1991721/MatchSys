@@ -110,12 +110,28 @@
             const PDF_PREVIEW_WIDTH = 595;
             const PDF_PREVIEW_HEIGHT = 842;
             const pdfPreviewCanvas = pdfPreviewPage ? pdfPreviewPage.parentElement : null;
+            const ISSUE_TAX_RATE = 0.1;
 
             const setItemField = (row, field, value) => {
                 ctx.setFieldValue(row.querySelector(`[data-issue-item-field="${field}"]`), value);
             };
             const readItemField = (row, field) => row.querySelector(`[data-issue-item-field="${field}"]`)?.value?.trim() || "";
             const getItemInput = (row, field) => row.querySelector(`[data-issue-item-field="${field}"]`);
+            const hasManualTax = (row) => row?.dataset?.taxManual === "true";
+
+            const setAutoTaxForRow = (row) => {
+                if (!row || hasManualTax(row)) return;
+                const priceInput = getItemInput(row, "price");
+                const taxInput = getItemInput(row, "tax");
+                if (!priceInput || !taxInput) return;
+                const rawPrice = priceInput.value.trim();
+                if (!rawPrice) {
+                    taxInput.value = "";
+                    return;
+                }
+                const tax = Math.round(ctx.parseMoneyValue(rawPrice) * ISSUE_TAX_RATE);
+                taxInput.value = ctx.formatYenValue(tax);
+            };
 
             const collectItems = () => {
                 const rows = Array.from(form.lineItems ? form.lineItems.querySelectorAll(".order-issue-item-row") : []);
@@ -175,7 +191,7 @@
                 return row;
             };
 
-            const setLineItems = (lineItems) => {
+            const setLineItems = (lineItems, options = {}) => {
                 if (!form.lineItems) return;
                 form.lineItems.innerHTML = "";
                 const items = Array.isArray(lineItems) && lineItems.length ? lineItems : [{}];
@@ -185,6 +201,8 @@
                     setItemField(row, "price", item.price ?? "");
                     setItemField(row, "tax", item.tax ?? "");
                     setItemField(row, "unit", item.unit ?? "");
+                    row.dataset.taxManual = options.preserveTax ? "true" : "false";
+                    setAutoTaxForRow(row);
                     form.lineItems.appendChild(row);
                 });
             };
@@ -273,7 +291,7 @@
                 const status = item.status || "已创建";
                 setFormEditability(status);
                 if (form.status) form.status.value = status === "承认中" ? "已承认" : status;
-                setLineItems(item.line_items || []);
+                setLineItems(item.line_items || [], { preserveTax: true });
                 setFormEditability(status);
                 updatePreview();
             };
@@ -1197,7 +1215,17 @@
                 });
             }
             if (form.lineItems) {
-                form.lineItems.addEventListener("input", updatePreview);
+                form.lineItems.addEventListener("input", (event) => {
+                    const input = event.target.closest("[data-issue-item-field]");
+                    const row = input?.closest(".order-issue-item-row");
+                    if (row && input.dataset.issueItemField === "tax") {
+                        row.dataset.taxManual = "true";
+                    }
+                    if (row && input.dataset.issueItemField === "price") {
+                        setAutoTaxForRow(row);
+                    }
+                    updatePreview();
+                });
                 form.lineItems.addEventListener("change", updatePreview);
                 form.lineItems.addEventListener("click", (event) => {
                     const btn = event.target.closest('[data-action="remove-issue-line"]');

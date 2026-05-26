@@ -7,6 +7,62 @@
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title data-i18n="pay.title">请求书管理</title>
+  <style>
+    .pay-request-page .pay-pdf-main-grid {
+      align-items: start;
+    }
+    .pay-request-page .pay-pdf-left-column,
+    .pay-request-page .pay-pdf-right-column {
+      display: grid;
+      gap: 12px;
+    }
+    .pay-request-page .pay-pdf-left-column .order-pdf-customer {
+      padding-top: 0;
+    }
+    .pay-request-page .pay-pdf-bank-table {
+      width: 100%;
+      margin-top: 26px;
+    }
+    .pay-request-page .pay-pdf-bank-table th {
+      width: auto;
+      height: 42px;
+      font-size: 15px;
+      font-weight: 900;
+      background: #ffffff;
+    }
+    .pay-request-page .pay-pdf-bank-table th:first-child,
+    .pay-request-page .pay-pdf-bank-table td:first-child {
+      width: 34%;
+    }
+    .pay-request-page .pay-pdf-bank-table td {
+      height: 22px;
+      text-align: center;
+    }
+    .pay-request-page .pay-line-item-row {
+      grid-template-columns:
+        minmax(130px, 1.35fr)
+        minmax(78px, 0.65fr)
+        minmax(96px, 0.8fr)
+        minmax(96px, 0.8fr)
+        minmax(72px, 0.6fr)
+        36px;
+      gap: 8px;
+      padding: 8px;
+    }
+    .pay-request-page .pay-line-item-row .c-inline-field {
+      min-width: 0;
+      padding: 9px 10px;
+    }
+    .pay-request-page .pay-line-item-row .order-issue-item-remove {
+      width: 34px;
+      height: 34px;
+    }
+    @media (max-width: 1180px) {
+      .pay-request-page .pay-line-item-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+  </style>
 </head>
 <body class="pay-request-page">
   <div class="page">
@@ -69,7 +125,7 @@
     </section>
   </div>
 
-  <dialog class="c-dialog pay-dialog" id="createPayDialog" aria-labelledby="createPayTitle">
+  <dialog class="c-dialog order-dialog-wide" id="createPayDialog" aria-labelledby="createPayTitle">
     <div class="c-dialog-header">
       <div>
         <h3 id="createPayTitle" data-i18n="pay.dialog.create.title">新建请求书</h3>
@@ -78,120 +134,149 @@
       <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-      <div class="c-modal-form">
-        <div class="c-modal-grid">
-          <div class="pay-column-group">
-            <label class="c-inline-field">
-              <span data-i18n="pay.field.request_no">请求书编号</span>
-              <input type="text" placeholder="PR-2024-XXX"/>
-            </label>
-            <label class="c-inline-field">
-              <span data-i18n="pay.field.order_no">对应注文书编号</span>
-              <input type="text" placeholder="PO-2024-XXX"/>
-            </label>
-            <label class="c-inline-field">
-              <span>状态</span>
-              <select id="pay-status-select">
-                <option value="pending">待付款</option>
-                <option value="paid">已付款</option>
-              </select>
-            </label>
-          </div>
-          <div class="pay-column-group">
-            <label class="c-inline-field">
-              <span data-i18n="pay.field.target">请求对象</span>
-              <input id="pay-customer-name" type="text" placeholder="客户名称" data-i18n-placeholder="pay.placeholder.customer" list="pay-customer-list"/>
-            </label>
-            <datalist id="pay-customer-list"></datalist>
-            <input id="pay-customer-id" type="hidden"/>
-            <div class="c-inline-field pay-customer-info" id="payCustomerInfo" hidden>
-              <div><span data-i18n="pay.customer.name">客户名称</span><strong id="payCustomerName">-</strong></div>
-              <div><span data-i18n="pay.customer.address">客户地址</span><strong id="payCustomerAddress">-</strong></div>
-            </div>
-          </div>
-          <div></div>
-          <div class="c-inline-field c-inline-field-full pay-detail-section">
-            <div class="pay-detail-heading">
-              <span data-i18n="pay.field.detail">明细</span>
-              <button class="c-btn c-btn-ghost c-btn-sm" type="button" id="detailAddBtn" data-i18n="pay.detail.add">新增明细</button>
-            </div>
-            <div class="c-table-wrapper pay-detail-table-wrap">
-              <table class="c-table c-table-hover pay-detail-table" id="detailTable">
-                <thead>
-                <tr>
-                  <th data-i18n="pay.detail.item">项目</th>
-                  <th data-i18n="pay.detail.qty">数量</th>
-                  <th data-i18n="pay.detail.price">单价</th>
-                  <th data-i18n="pay.detail.subtotal">小计</th>
-                  <th data-i18n="common.field.note">备注</th>
-                  <th data-i18n="common.field.actions">操作</th>
-                </tr>
-                </thead>
-                <tbody id="detailTableBody"></tbody>
-              </table>
-            </div>
-          </div>
-          <div class="c-inline-field c-inline-field-full pay-detail-section">
-            <span data-i18n="pay.field.tax_breakdown">税相关</span>
-            <div class="c-table-wrapper pay-detail-table-wrap">
-              <table class="c-table c-table-hover pay-detail-table" id="taxTable">
-                <thead>
-                <tr>
-                  <th data-i18n="pay.tax.category">区分</th>
-                  <th data-i18n="pay.tax.amount_excl">対象額（税抜）</th>
-                  <th data-i18n="pay.tax.value">消費税</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                  <td data-i18n="pay.tax.rate_10">10%対象</td>
-                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-                </tr>
-                <tr>
-                  <td data-i18n="pay.tax.rate_8">8%対象（※）</td>
-                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-                  <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-                </tr>
-                <tr>
-                  <td data-i18n="pay.tax.subtotal">小计</td>
-                  <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
-                  <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div class="pay-bottom-row">
-            <div class="pay-account-card">
-              <div class="pay-account-title">振込先</div>
-              <div class="pay-account-subtitle">○○銀行○○支店</div>
-              <div class="pay-account-grid">
-                <div class="pay-account-label">□□口座種</div>
-                <div class="pay-account-value">普通口座</div>
-                <div class="pay-account-label">□□口座番号</div>
-                <div class="pay-account-value">1234567</div>
-                <div class="pay-account-label">□□口座名義</div>
-                <div class="pay-account-value">タナカ イチロウ</div>
+      <div class="order-modal-layout">
+        <div class="order-editor-panel">
+          <div class="c-modal-form">
+            <div class="c-modal-grid">
+              <label class="c-inline-field">
+                <span data-i18n="pay.field.request_no">请求书编号</span>
+                <input id="pay-request-no" type="text" placeholder="R_20240527093000"/>
+              </label>
+              <label class="c-inline-field">
+                <span data-i18n="pay.field.target">请求对象</span>
+                <input id="pay-customer-name" type="text" placeholder="客户名称" data-i18n-placeholder="pay.placeholder.customer" list="pay-customer-list" autocomplete="off"/>
+              </label>
+              <datalist id="pay-customer-list"></datalist>
+              <input id="pay-customer-id" type="hidden"/>
+              <label class="c-inline-field">
+                <span data-i18n="pay.field.order_no">对应注文书编号</span>
+                <input id="pay-order-no" type="text" placeholder="PO-2024-XXX"/>
+              </label>
+              <label class="c-inline-field">
+                <span>件名</span>
+                <input id="pay-subject" type="text" placeholder="件名"/>
+              </label>
+              <label class="c-inline-field">
+                <span>状态</span>
+                <select id="pay-status-select" disabled data-always-disabled>
+                  <option value="pending" selected>待付款</option>
+                </select>
+              </label>
+              <label class="c-inline-field">
+                <span>入金期日</span>
+                <input id="pay-request-date" type="date"/>
+              </label>
+              <div class="order-issue-items">
+                <div class="order-issue-items-head">
+                  <div class="order-issue-items-title" data-i18n="pay.field.detail">明细</div>
+                  <button class="c-btn c-btn-lite c-btn-sm" type="button" id="detailAddBtn" data-i18n="pay.detail.add">＋ 添加</button>
+                </div>
+                <div class="order-issue-item-list pay-line-items" id="detailTableBody"></div>
               </div>
-            </div>
-
-            <div class="pay-side-stack">
-              <label class="c-inline-field pay-total-field">
-                <span data-i18n="pay.field.total">总价</span>
-                <span class="pay-total-display" aria-live="polite">¥ 0</span>
-              </label>
-              <label class="c-inline-field pay-request-date-field">
-                <span>最迟支付日</span>
-                <input type="date"/>
-              </label>
-              <label class="c-inline-field pay-upload-field">
-                <span>附件上传</span>
-                <input type="file" multiple />
+              <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
+                <span>备注</span>
+                <textarea id="pay-remark" class="c-input" rows="4" placeholder="填写备注内容"></textarea>
               </label>
             </div>
           </div>
         </div>
+        <aside class="order-preview-panel" aria-label="PDF预览">
+          <div class="order-preview-canvas">
+            <div class="order-pdf-page" id="payPreviewPage">
+              <div class="order-pdf-title">請 求 書</div>
+              <div class="order-pdf-top pay-pdf-main-grid">
+                <div class="pay-pdf-left-column">
+                  <div class="order-pdf-customer">
+                    <div class="order-pdf-customer-name"><span id="previewCustomerName">-</span></div>
+                    <div class="order-pdf-customer-address" id="previewCustomerAddressBlock" hidden>
+                      <div id="previewCustomerPostalCode"></div>
+                      <div id="previewCustomerAddress"></div>
+                    </div>
+                    <div class="order-pdf-note">下記の通りご請求申し上げます。</div>
+                  </div>
+                  <div class="order-pdf-line"><span>件名</span><div class="order-pdf-line-value" id="previewSubject"></div></div>
+                  <table class="order-pdf-info pay-pdf-bank-table">
+                    <thead>
+                    <tr>
+                      <th>入金期日</th>
+                      <th>振込先</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                      <td id="previewPayDate"></td>
+                      <td id="previewBankAccount">-</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="pay-pdf-right-column">
+                  <table class="order-pdf-info">
+                    <tbody>
+                    <tr>
+                      <th>請求書番号</th>
+                      <td id="previewRequestNo">-</td>
+                    </tr>
+                    <tr>
+                      <th>請求日</th>
+                      <td id="previewRequestDate">-</td>
+                    </tr>
+                    </tbody>
+                  </table>
+                  <div class="order-pdf-company">
+                    <div class="order-pdf-company-name" id="previewCompanyName"></div>
+                    <div class="order-pdf-line"><span>〒</span><div class="order-pdf-line-value" id="previewCompanyPostalCode"></div></div>
+                    <div class="order-pdf-line"><span>住所</span><div class="order-pdf-line-value" id="previewCompanyAddress"></div></div>
+                    <div class="order-pdf-line"><span>TEL</span><div class="order-pdf-line-value" id="previewCompanyTel"></div></div>
+                    <div class="order-pdf-line"><span>FAX</span><div class="order-pdf-line-value" id="previewCompanyFax"></div></div>
+                    <div class="order-pdf-line"><span>Mail</span><div class="order-pdf-line-value" id="previewCompanyMail"></div></div>
+                    <div class="order-pdf-line"><span>担当者</span><div class="order-pdf-line-value" id="previewCompanyOwner"></div></div>
+                    <div class="order-pdf-stamp-row">
+                      <div></div>
+                      <div class="order-pdf-stamp-cell">
+                        <div class="order-pdf-stamp-label">担当印</div>
+                        <div class="order-pdf-stamp" id="previewOwnerSeal"></div>
+                      </div>
+                      <div class="order-pdf-stamp-cell">
+                        <div class="order-pdf-stamp-label">会社印</div>
+                        <div class="order-pdf-stamp" id="previewCompanySeal"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="order-pdf-total">
+                <div class="order-pdf-total-label">請求金額</div>
+                <div class="order-pdf-total-value" id="previewTotal">0円</div>
+              </div>
+              <div class="order-pdf-detail-block">
+                <table class="order-pdf-detail">
+                  <thead>
+                  <tr>
+                    <th>項目</th>
+                    <th>数量</th>
+                    <th>金額</th>
+                    <th>単位</th>
+                    <th>税金</th>
+                  </tr>
+                  </thead>
+                  <tbody id="previewDetailBody"></tbody>
+                </table>
+                <table class="order-pdf-summary">
+                  <tbody>
+                  <tr><th>小計</th><td id="previewSubtotal">0円</td></tr>
+                  <tr><th>税額</th><td id="previewTax">0円</td></tr>
+                  <tr><th>合計</th><td id="previewSummaryTotal">0円</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="order-pdf-remark">
+                <div class="order-pdf-remark-title">備考</div>
+                <div class="order-pdf-remark-content" id="previewRemark"></div>
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
     <div class="c-dialog-actions">
@@ -209,6 +294,7 @@
       i18n.init();
       i18n.apply();
     }
+
     const createPayBtn = document.getElementById("createPayBtn");
     const createPayDialog = document.getElementById("createPayDialog");
     const createPayTitle = document.getElementById("createPayTitle");
@@ -218,25 +304,112 @@
     const payCustomerNameInput = document.getElementById("pay-customer-name");
     const payCustomerIdInput = document.getElementById("pay-customer-id");
     const payCustomerList = document.getElementById("pay-customer-list");
-    const payCustomerInfo = document.getElementById("payCustomerInfo");
-    const payCustomerName = document.getElementById("payCustomerName");
-    const payCustomerAddress = document.getElementById("payCustomerAddress");
     const payStatusSelect = document.getElementById("pay-status-select");
     const payRequestTable = document.querySelector(".pay-request-table");
+    const payRequestNoInput = document.getElementById("pay-request-no");
+    const paySubjectInput = document.getElementById("pay-subject");
+    const payRequestDateInput = document.getElementById("pay-request-date");
+    const payRemarkInput = document.getElementById("pay-remark");
+    const previewRequestDate = document.getElementById("previewRequestDate");
+    const previewRequestNo = document.getElementById("previewRequestNo");
+    const previewCustomerName = document.getElementById("previewCustomerName");
+    const previewCustomerAddressBlock = document.getElementById("previewCustomerAddressBlock");
+    const previewCustomerPostalCode = document.getElementById("previewCustomerPostalCode");
+    const previewCustomerAddress = document.getElementById("previewCustomerAddress");
+    const previewCompanyName = document.getElementById("previewCompanyName");
+    const previewCompanyPostalCode = document.getElementById("previewCompanyPostalCode");
+    const previewCompanyAddress = document.getElementById("previewCompanyAddress");
+    const previewCompanyTel = document.getElementById("previewCompanyTel");
+    const previewCompanyFax = document.getElementById("previewCompanyFax");
+    const previewCompanyMail = document.getElementById("previewCompanyMail");
+    const previewCompanyOwner = document.getElementById("previewCompanyOwner");
+    const previewOwnerSeal = document.getElementById("previewOwnerSeal");
+    const previewCompanySeal = document.getElementById("previewCompanySeal");
+    const previewSubject = document.getElementById("previewSubject");
+    const previewSubtotal = document.getElementById("previewSubtotal");
+    const previewTax = document.getElementById("previewTax");
+    const previewTotal = document.getElementById("previewTotal");
+    const previewSummaryTotal = document.getElementById("previewSummaryTotal");
+    const previewPayDate = document.getElementById("previewPayDate");
+    const previewBankAccount = document.getElementById("previewBankAccount");
+    const previewDetailBody = document.getElementById("previewDetailBody");
+    const previewRemark = document.getElementById("previewRemark");
+    const payPreviewPage = document.getElementById("payPreviewPage");
+    const payPreviewCanvas = payPreviewPage ? payPreviewPage.parentElement : null;
+    const PDF_PREVIEW_WIDTH = 595;
+    const PDF_PREVIEW_HEIGHT = 842;
+    const payCustomerMap = new Map();
+    let customerAddressState = {
+      customerId: "",
+      customerName: "",
+      postalCode: "",
+      address: "",
+      requestId: 0
+    };
+    let bankAccountState = {
+      bank_name: "",
+      branch_code: "",
+      branch_name: "",
+      account_type: "",
+      account_number: "",
+      account_holder: ""
+    };
+    let companySealObjectUrl = "";
+    let ownerSealObjectUrl = "";
+    let companyInfoState = {
+      company_name: "",
+      postal_code: "",
+      address: "",
+      tel: "",
+      fax: "",
+      mail: "",
+      sealUrl: ""
+    };
+    let ownerInfoState = {
+      name: "",
+      sealUrl: ""
+    };
 
     if (window.initDialogCloseBehavior) {
-      window.initDialogCloseBehavior({
-        dialogs: [createPayDialog]
-      });
+      window.initDialogCloseBehavior({ dialogs: [createPayDialog] });
     }
+
+    const getDateParts = (date = new Date()) => {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      const hh = String(date.getHours()).padStart(2, "0");
+      const mi = String(date.getMinutes()).padStart(2, "0");
+      const ss = String(date.getSeconds()).padStart(2, "0");
+      return { yyyy, mm, dd, hh, mi, ss };
+    };
+
+    const todayText = () => {
+      const { yyyy, mm, dd } = getDateParts();
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    const buildRequestNo = () => {
+      const { yyyy, mm, dd, hh, mi, ss } = getDateParts();
+      return `R_${yyyy}${mm}${dd}${hh}${mi}${ss}`;
+    };
+
+    const PAY_TAX_RATE = 0.1;
+    const formatYen = (value) => `${Number(value || 0).toLocaleString()}円`;
+    const parseNumber = (value) => Number(String(value || "").replace(/[^\d.]/g, "")) || 0;
+    const debounce = (fn, delay = 250) => {
+      let timer = null;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    };
 
     const setDialogReadonly = (readonly) => {
       if (!createPayDialog) return;
-      const fields = createPayDialog.querySelectorAll("input, select, textarea");
-      fields.forEach((field) => {
-        if (field.type === "hidden") return;
+      createPayDialog.querySelectorAll("input, select, textarea").forEach((field) => {
         if (!readonly && field.hasAttribute("data-always-disabled")) return;
-        field.disabled = readonly;
+        if (field.type !== "hidden") field.disabled = readonly;
       });
       if (detailAddBtn) detailAddBtn.disabled = readonly;
       if (detailTableBody) {
@@ -244,6 +417,488 @@
           btn.disabled = readonly;
         });
       }
+    };
+
+    const buildDetailRow = () => {
+      const row = document.createElement("div");
+      row.className = "order-issue-item-row pay-line-item-row";
+      row.innerHTML = `
+        <label class="c-inline-field">
+          <span>${t("pay.detail.item", "项目")}</span>
+          <input type="text" placeholder="项目" data-pay-item-field="item"/>
+        </label>
+        <label class="c-inline-field">
+          <span>${t("pay.detail.qty", "数量")}</span>
+          <input type="number" min="0" step="0.01" placeholder="1" data-pay-item-field="qty"/>
+        </label>
+        <label class="c-inline-field">
+          <span>${t("pay.detail.price", "单价")}</span>
+          <input type="text" placeholder="¥ 0" data-pay-item-field="price"/>
+        </label>
+        <label class="c-inline-field">
+          <span>税金</span>
+          <input type="text" placeholder="¥ 0" data-pay-item-field="tax"/>
+        </label>
+        <label class="c-inline-field">
+          <span>单位</span>
+          <input type="text" placeholder="式" data-pay-item-field="unit"/>
+        </label>
+        <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-pay-line" aria-label="删除">×</button>
+      `;
+      return row;
+    };
+
+    const resetLineItems = () => {
+      if (!detailTableBody) return;
+      detailTableBody.innerHTML = "";
+      detailTableBody.appendChild(buildDetailRow());
+    };
+
+    const readItemField = (row, field) => row.querySelector(`[data-pay-item-field="${field}"]`)?.value?.trim() || "";
+    const getItemInput = (row, field) => row.querySelector(`[data-pay-item-field="${field}"]`);
+    const hasManualTax = (row) => row?.dataset?.taxManual === "true";
+
+    const setAutoTaxForRow = (row) => {
+      if (!row || hasManualTax(row)) return;
+      const priceInput = getItemInput(row, "price");
+      const taxInput = getItemInput(row, "tax");
+      if (!priceInput || !taxInput) return;
+      const qty = parseNumber(readItemField(row, "qty")) || 1;
+      const price = parseNumber(priceInput.value);
+      const amount = price * qty;
+      taxInput.value = amount ? `¥ ${Math.round(amount * PAY_TAX_RATE).toLocaleString()}` : "";
+    };
+
+    const collectItems = () => {
+      const rows = Array.from(detailTableBody ? detailTableBody.querySelectorAll(".pay-line-item-row") : []);
+      return rows.map((row) => {
+        const price = parseNumber(readItemField(row, "price"));
+        const qty = parseNumber(readItemField(row, "qty")) || 1;
+        const amount = price * qty;
+        const tax = parseNumber(readItemField(row, "tax"));
+        return {
+          item: readItemField(row, "item"),
+          price,
+          qty,
+          amount,
+          tax,
+          unit: readItemField(row, "unit")
+        };
+      });
+    };
+
+    const renderCustomerAddress = () => {
+      const hasAddress = Boolean(customerAddressState.postalCode || customerAddressState.address);
+      if (previewCustomerAddressBlock) previewCustomerAddressBlock.hidden = !hasAddress;
+      if (previewCustomerPostalCode) previewCustomerPostalCode.textContent = customerAddressState.postalCode || "";
+      if (previewCustomerAddress) previewCustomerAddress.textContent = customerAddressState.address || "";
+      paginatePreview();
+    };
+
+    const formatBankAccountLines = (settings) => {
+      const bankAndBranch = [
+        settings.bank_name,
+        settings.branch_name ? `${settings.branch_name}支店` : "",
+        settings.branch_code ? `(${settings.branch_code})` : ""
+      ].filter(Boolean).join(" ");
+      const account = [
+        settings.account_type,
+        settings.account_number,
+        settings.account_holder
+      ].filter(Boolean).join(" ");
+      return [bankAndBranch, account].filter(Boolean);
+    };
+
+    const renderBankAccount = () => {
+      if (!previewBankAccount) return;
+      const lines = formatBankAccountLines(bankAccountState);
+      previewBankAccount.innerHTML = "";
+      if (!lines.length) {
+        previewBankAccount.textContent = "-";
+        paginatePreview();
+        return;
+      }
+      lines.forEach((line) => {
+        const div = document.createElement("div");
+        div.textContent = line;
+        previewBankAccount.appendChild(div);
+      });
+      paginatePreview();
+    };
+
+    const clearCompanySealObjectUrl = () => {
+      if (companySealObjectUrl) {
+        URL.revokeObjectURL(companySealObjectUrl);
+        companySealObjectUrl = "";
+      }
+    };
+
+    const clearOwnerSealObjectUrl = () => {
+      if (ownerSealObjectUrl) {
+        URL.revokeObjectURL(ownerSealObjectUrl);
+        ownerSealObjectUrl = "";
+      }
+    };
+
+    const renderCompanyInfo = () => {
+      if (previewCompanyName) previewCompanyName.textContent = companyInfoState.company_name || "";
+      if (previewCompanyPostalCode) previewCompanyPostalCode.textContent = companyInfoState.postal_code || "";
+      if (previewCompanyAddress) previewCompanyAddress.textContent = companyInfoState.address || "";
+      if (previewCompanyTel) previewCompanyTel.textContent = companyInfoState.tel || "";
+      if (previewCompanyFax) previewCompanyFax.textContent = companyInfoState.fax || "";
+      if (previewCompanyMail) previewCompanyMail.textContent = companyInfoState.mail || "";
+      if (previewCompanySeal) {
+        previewCompanySeal.innerHTML = "";
+        if (companyInfoState.sealUrl) {
+          const img = document.createElement("img");
+          img.src = companyInfoState.sealUrl;
+          img.alt = "会社印";
+          previewCompanySeal.appendChild(img);
+        }
+      }
+      paginatePreview();
+    };
+
+    const renderOwnerInfo = () => {
+      if (previewCompanyOwner) previewCompanyOwner.textContent = ownerInfoState.name || "";
+      if (previewOwnerSeal) {
+        previewOwnerSeal.innerHTML = "";
+        if (ownerInfoState.sealUrl) {
+          const img = document.createElement("img");
+          img.src = ownerInfoState.sealUrl;
+          img.alt = "担当印";
+          previewOwnerSeal.appendChild(img);
+        }
+      }
+      paginatePreview();
+    };
+
+    const preparePreviewPage = (page) => {
+      page.removeAttribute("id");
+      page.classList.add("is-paginated");
+      page.querySelectorAll("[id]").forEach((node) => node.removeAttribute("id"));
+      return page;
+    };
+
+    const createPreviewPage = () => {
+      const page = preparePreviewPage(payPreviewPage.cloneNode(false));
+      page.style.width = `${PDF_PREVIEW_WIDTH}px`;
+      page.style.height = `${PDF_PREVIEW_HEIGHT}px`;
+      page.style.maxWidth = "none";
+      page.innerHTML = "";
+      return page;
+    };
+
+    const getPageContentNodes = () => Array.from(payPreviewPage.children)
+      .filter((node) => !node.classList || !node.classList.contains("order-pdf-page-number"));
+
+    const appendPageNumber = (page, index, total) => {
+      let node = page.querySelector(".order-pdf-page-number");
+      if (!node) {
+        node = document.createElement("div");
+        node.className = "order-pdf-page-number";
+        page.appendChild(node);
+      }
+      node.textContent = `${index} / ${total}`;
+    };
+
+    const pageOverflows = (page) => page.scrollHeight > page.clientHeight + 1;
+
+    const hasPrintableContent = (page) => Array.from(page.children)
+      .some((node) => !node.classList || !node.classList.contains("order-pdf-page-number"));
+
+    const appendBlockWithOverflowCheck = (pages, block) => {
+      let page = pages[pages.length - 1];
+      page.appendChild(block);
+      if (!pageOverflows(page) || !hasPrintableContent(page)) return page;
+      page.removeChild(block);
+      page = createPreviewPage();
+      pages.push(page);
+      payPreviewCanvas.appendChild(page);
+      page.appendChild(block);
+      return page;
+    };
+
+    const createDetailBlockShell = (sourceBlock, includeHeader = true) => {
+      const block = sourceBlock.cloneNode(false);
+      const sourceTable = sourceBlock.querySelector(".order-pdf-detail");
+      if (sourceTable) {
+        const table = sourceTable.cloneNode(false);
+        if (includeHeader) {
+          const thead = sourceTable.querySelector("thead");
+          if (thead) table.appendChild(thead.cloneNode(true));
+        }
+        const tbody = document.createElement("tbody");
+        table.appendChild(tbody);
+        block.appendChild(table);
+      }
+      return block;
+    };
+
+    const appendDetailBlockPaginated = (pages, sourceBlock) => {
+      const sourceRows = Array.from(sourceBlock.querySelectorAll(".order-pdf-detail tbody tr"));
+      const sourceSummary = sourceBlock.querySelector(".order-pdf-summary");
+      let page = pages[pages.length - 1];
+      let block = createDetailBlockShell(sourceBlock, true);
+      page.appendChild(block);
+
+      sourceRows.forEach((sourceRow) => {
+        const row = sourceRow.cloneNode(true);
+        const tbody = block.querySelector("tbody");
+        tbody.appendChild(row);
+        if (!pageOverflows(page)) return;
+        if (tbody.children.length <= 1) {
+          if (page.children.length > 1) {
+            page.removeChild(block);
+            page = createPreviewPage();
+            pages.push(page);
+            payPreviewCanvas.appendChild(page);
+            block = createDetailBlockShell(sourceBlock, true);
+            page.appendChild(block);
+            block.querySelector("tbody").appendChild(row);
+          }
+          return;
+        }
+        tbody.removeChild(row);
+        if (!tbody.children.length && page.contains(block)) page.removeChild(block);
+        page = createPreviewPage();
+        pages.push(page);
+        payPreviewCanvas.appendChild(page);
+        block = createDetailBlockShell(sourceBlock, true);
+        page.appendChild(block);
+        block.querySelector("tbody").appendChild(row);
+      });
+
+      if (sourceSummary) {
+        const summary = sourceSummary.cloneNode(true);
+        block.appendChild(summary);
+        if (pageOverflows(page)) {
+          block.removeChild(summary);
+          page = createPreviewPage();
+          pages.push(page);
+          payPreviewCanvas.appendChild(page);
+          const summaryBlock = sourceBlock.cloneNode(false);
+          summaryBlock.appendChild(summary);
+          page.appendChild(summaryBlock);
+        }
+      }
+    };
+
+    const paginatePreview = () => {
+      if (!payPreviewPage || !payPreviewCanvas) return [];
+      const sourceNodes = getPageContentNodes();
+      payPreviewCanvas.innerHTML = "";
+      const pages = [createPreviewPage()];
+      payPreviewCanvas.appendChild(pages[0]);
+
+      sourceNodes.forEach((sourceNode) => {
+        if (sourceNode.classList && sourceNode.classList.contains("order-pdf-detail-block")) {
+          appendDetailBlockPaginated(pages, sourceNode);
+          return;
+        }
+        appendBlockWithOverflowCheck(pages, sourceNode.cloneNode(true));
+      });
+
+      const visiblePages = pages.filter(hasPrintableContent);
+      const total = visiblePages.length || 1;
+      visiblePages.forEach((page, index) => appendPageNumber(page, index + 1, total));
+      return visiblePages;
+    };
+
+    const refreshPreviewAfterDialogOpen = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(updatePreview);
+      });
+    };
+
+    const fetchCompanySealUrl = async (filename) => {
+      clearCompanySealObjectUrl();
+      if (!filename) return "";
+      try {
+        const response = await fetch(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
+          credentials: "same-origin"
+        });
+        if (!response.ok) return "";
+        const blob = await response.blob();
+        if (!blob || !blob.size) return "";
+        companySealObjectUrl = URL.createObjectURL(blob);
+        return companySealObjectUrl;
+      } catch (error) {
+        console.warn(error);
+        return "";
+      }
+    };
+
+    const loadCompanyInfo = async () => {
+      try {
+        const payload = await window.requestJson("/api/company-info", { method: "GET" });
+        const settings = payload?.data?.settings || {};
+        const sealUrl = await fetchCompanySealUrl(settings.seal_filename || "");
+        companyInfoState = {
+          company_name: String(settings.company_name || ""),
+          postal_code: String(settings.postal_code || ""),
+          address: String(settings.address || ""),
+          tel: String(settings.tel || ""),
+          fax: String(settings.fax || ""),
+          mail: String(settings.mail || ""),
+          sealUrl
+        };
+      } catch (error) {
+        console.warn(error);
+        clearCompanySealObjectUrl();
+        companyInfoState = { ...companyInfoState, sealUrl: "" };
+      }
+      renderCompanyInfo();
+    };
+
+    const fetchOwnerSealUrl = async (employeeId) => {
+      clearOwnerSealObjectUrl();
+      if (!employeeId) return "";
+      try {
+        const response = await fetch(`/api/employees/${encodeURIComponent(employeeId)}/seal?v=${Date.now()}`, {
+          credentials: "same-origin"
+        });
+        if (!response.ok) return "";
+        const blob = await response.blob();
+        if (!blob || !blob.size) return "";
+        ownerSealObjectUrl = URL.createObjectURL(blob);
+        return ownerSealObjectUrl;
+      } catch (error) {
+        console.warn(error);
+        return "";
+      }
+    };
+
+    const loadOwnerInfo = async () => {
+      const employeeId = localStorage.getItem("app_employee_id") || "";
+      const employeeName = localStorage.getItem("app_employee_name") || "";
+      ownerInfoState = {
+        name: employeeName,
+        sealUrl: await fetchOwnerSealUrl(employeeId)
+      };
+      renderOwnerInfo();
+    };
+
+    const loadBankAccount = () => {
+      window.requestJson("/api/sys-settings/bank-account", { method: "GET" })
+        .then((payload) => {
+          const settings = payload?.data?.settings || {};
+          bankAccountState = {
+            bank_name: String(settings.bank_name || ""),
+            branch_code: String(settings.branch_code || ""),
+            branch_name: String(settings.branch_name || ""),
+            account_type: String(settings.account_type || ""),
+            account_number: String(settings.account_number || ""),
+            account_holder: String(settings.account_holder || "")
+          };
+          renderBankAccount();
+        })
+        .catch((error) => {
+          console.warn(error);
+          renderBankAccount();
+        });
+    };
+
+    const splitCustomerAddress = (rawAddress) => {
+      const value = String(rawAddress || "").trim();
+      if (!value) return { postalCode: "", address: "" };
+      const match = value.match(/(?:〒\s*)?(\d{3}-?\d{4})/);
+      if (!match) return { postalCode: "", address: value };
+      return {
+        postalCode: `〒${match[1]}`,
+        address: value.replace(match[0], "").trim()
+      };
+    };
+
+    const updateCustomerAddress = async () => {
+      const selectedName = payCustomerNameInput?.value?.trim() || "";
+      const customerId = String(payCustomerMap.get(selectedName) || payCustomerIdInput?.value || "").trim();
+      if (!customerId) {
+        customerAddressState = { customerId: "", customerName: "", postalCode: "", address: "", requestId: customerAddressState.requestId + 1 };
+        renderCustomerAddress();
+        return;
+      }
+      if (customerAddressState.customerId === customerId && customerAddressState.customerName === selectedName) {
+        renderCustomerAddress();
+        return;
+      }
+      const requestId = customerAddressState.requestId + 1;
+      customerAddressState = { customerId, customerName: selectedName, postalCode: "", address: "", requestId };
+      renderCustomerAddress();
+      try {
+        const payload = await window.requestJson(`/api/customers/${encodeURIComponent(customerId)}`, { method: "GET" });
+        if (customerAddressState.requestId !== requestId) return;
+        const customer = payload?.data?.item || {};
+        const addressParts = splitCustomerAddress(customer.company_address || "");
+        customerAddressState = { customerId, customerName: selectedName, postalCode: addressParts.postalCode, address: addressParts.address, requestId };
+      } catch (error) {
+        console.warn(error);
+        if (customerAddressState.requestId !== requestId) return;
+        customerAddressState = { customerId, customerName: selectedName, postalCode: "", address: "", requestId };
+      }
+      renderCustomerAddress();
+    };
+
+    const updatePreview = () => {
+      const items = collectItems();
+      const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+      const tax = items.reduce((sum, item) => sum + item.tax, 0);
+      const total = subtotal + tax;
+
+      if (previewRequestDate) previewRequestDate.textContent = todayText();
+      if (previewRequestNo) previewRequestNo.textContent = payRequestNoInput?.value?.trim() || "-";
+      if (previewCustomerName) {
+        const name = payCustomerNameInput?.value?.trim() || "";
+        previewCustomerName.textContent = name ? `${name} 御中` : "御中";
+      }
+      if (previewSubject) previewSubject.textContent = paySubjectInput?.value?.trim() || "";
+      if (previewPayDate) previewPayDate.textContent = payRequestDateInput?.value || "";
+      if (previewRemark) previewRemark.textContent = payRemarkInput?.value || "";
+      if (previewSubtotal) previewSubtotal.textContent = formatYen(subtotal);
+      if (previewTax) previewTax.textContent = formatYen(tax);
+      if (previewTotal) previewTotal.textContent = formatYen(total);
+      if (previewSummaryTotal) previewSummaryTotal.textContent = formatYen(total);
+      if (previewDetailBody) {
+        previewDetailBody.innerHTML = "";
+        const minRows = 8;
+        for (let i = 0; i < Math.max(items.length, minRows); i += 1) {
+          const item = items[i] || {};
+          const tr = document.createElement("tr");
+          const itemCell = document.createElement("td");
+          const qtyCell = document.createElement("td");
+          const priceCell = document.createElement("td");
+          const unitCell = document.createElement("td");
+          const taxCell = document.createElement("td");
+          itemCell.style.textAlign = "left";
+          qtyCell.style.textAlign = "right";
+          priceCell.style.textAlign = "right";
+          taxCell.style.textAlign = "right";
+          itemCell.textContent = item.item || "";
+          qtyCell.textContent = item.qty ? Number(item.qty).toLocaleString() : "";
+          priceCell.textContent = item.amount ? formatYen(item.amount) : "";
+          unitCell.textContent = item.unit || "";
+          taxCell.textContent = item.tax ? formatYen(item.tax) : "";
+          tr.append(itemCell, qtyCell, priceCell, unitCell, taxCell);
+          previewDetailBody.appendChild(tr);
+        }
+      }
+      paginatePreview();
+    };
+
+    const resetCreateForm = () => {
+      if (payRequestNoInput) payRequestNoInput.value = buildRequestNo();
+      if (payCustomerNameInput) payCustomerNameInput.value = "";
+      if (payCustomerIdInput) payCustomerIdInput.value = "";
+      if (payCustomerList) payCustomerList.innerHTML = "";
+      if (payStatusSelect) payStatusSelect.value = "pending";
+      if (paySubjectInput) paySubjectInput.value = "";
+      if (payRequestDateInput) payRequestDateInput.value = "";
+      if (payRemarkInput) payRemarkInput.value = "";
+      payCustomerMap.clear();
+      customerAddressState = { customerId: "", customerName: "", postalCode: "", address: "", requestId: customerAddressState.requestId + 1 };
+      renderCustomerAddress();
+      resetLineItems();
+      updatePreview();
     };
 
     const setDialogMode = (mode) => {
@@ -255,109 +910,25 @@
       if (payDialogSubmitBtn) {
         payDialogSubmitBtn.textContent = mode === "edit" ? "保存修改" : mode === "view" ? "关闭" : "开始创建";
       }
-      if (mode === "create" && payStatusSelect) {
-        payStatusSelect.value = "pending";
-      }
+      if (mode === "create") resetCreateForm();
       setDialogReadonly(mode === "view");
     };
 
-    if (createPayBtn && createPayDialog) {
-      createPayBtn.addEventListener("click", () => {
-        setDialogMode("create");
-        createPayDialog.showModal();
-      });
-    }
-
-    if (payDialogSubmitBtn && createPayDialog) {
-      payDialogSubmitBtn.addEventListener("click", () => {
-        if (createPayDialog.dataset.mode === "view") {
-          createPayDialog.close();
-          return;
-        }
-        createPayDialog.close();
-      });
-    }
-
-    const buildDetailRow = () => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td><input class="c-input" type="text" placeholder="服务/物料"/></td>
-        <td><input class="c-input" type="number" min="0" placeholder="1"/></td>
-        <td><input class="c-input" type="text" placeholder="¥ 0"/></td>
-        <td><input class="c-input" type="text" placeholder="¥ 0" disabled data-always-disabled/></td>
-        <td><input class="c-input" type="text" placeholder="备注"/></td>
-        <td>
-          <button class="c-btn c-btn-ghost c-btn-sm" type="button" data-action="save" data-i18n="pay.detail.save">${t("pay.detail.save", "保存")}</button>
-        </td>
-      `;
-      return row;
-    };
-
-    const setRowEditable = (row, editable) => {
-      row.querySelectorAll("input").forEach((input, index) => {
-        if (index === 3) return;
-        input.disabled = !editable;
-      });
-    };
-
-    const updateRowSubtotal = (row) => {
-      const qty = Number(row.querySelectorAll("input")[1].value || 0);
-      const priceRaw = row.querySelectorAll("input")[2].value || "";
-      const price = Number(String(priceRaw).replace(/[^\d.]/g, "")) || 0;
-      row.querySelectorAll("input")[3].value = `¥ ${qty * price}`;
-    };
-
-    if (detailTableBody) {
-      const initialRow = buildDetailRow();
-      setRowEditable(initialRow, true);
-      detailTableBody.appendChild(initialRow);
-    }
-
-    if (detailAddBtn && detailTableBody) {
-      detailAddBtn.addEventListener("click", () => {
-        const row = buildDetailRow();
-        setRowEditable(row, true);
-        detailTableBody.appendChild(row);
-      });
-    }
-
-    if (detailTableBody) {
-      detailTableBody.addEventListener("click", (event) => {
-        const btn = event.target.closest("button[data-action]");
-        if (!btn) return;
-        const row = btn.closest("tr");
-        if (!row) return;
-        const isEditing = btn.dataset.action === "save";
-        setRowEditable(row, !isEditing);
-        btn.dataset.action = isEditing ? "edit" : "save";
-        btn.textContent = isEditing ? t("common.edit", "编辑") : t("pay.detail.save", "保存");
-      });
-      detailTableBody.addEventListener("input", (event) => {
-        const row = event.target.closest("tr");
-        if (!row) return;
-        updateRowSubtotal(row);
-      });
-    }
-
-    const payCustomerMap = new Map();
     const renderPayCustomerOptions = (listEl, map, items) => {
       map.clear();
       listEl.innerHTML = "";
       items.forEach((item) => {
         if (!item || !item.company_name) return;
-        map.set(item.company_name, {
-          id: item.id,
-          address: item.company_address || ""
-        });
+        map.set(item.company_name, item.id);
         const opt = document.createElement("option");
         opt.value = item.company_name;
         listEl.appendChild(opt);
       });
     };
 
-    const fetchPayCustomerOptions = (inputEl, listEl, map) => {
+    const fetchPayCustomerOptions = (inputEl, listEl, map, options = {}) => {
       const keyword = inputEl.value.trim();
-      if (!keyword) {
+      if (!keyword && options.useDefault !== true) {
         listEl.innerHTML = "";
         map.clear();
         return;
@@ -365,7 +936,7 @@
       const params = window.createParams([
         ["company_name", keyword],
         ["page", "1"],
-        ["page_size", "10"],
+        ["page_size", "5"],
       ]);
       window.requestJson(window.buildUrl("/api/customers", params), { method: "GET" })
         .then((payload) => {
@@ -379,28 +950,76 @@
         });
     };
 
-    const updatePayCustomerInfo = (name) => {
-      const info = payCustomerMap.get(name);
-      if (!info) {
-        if (payCustomerIdInput) payCustomerIdInput.value = "";
-        if (payCustomerInfo) payCustomerInfo.hidden = true;
-        if (payCustomerName) payCustomerName.textContent = "-";
-        if (payCustomerAddress) payCustomerAddress.textContent = "-";
-        return;
-      }
-      if (payCustomerIdInput) payCustomerIdInput.value = info.id ? String(info.id) : "";
-      if (payCustomerName) payCustomerName.textContent = name || "-";
-      if (payCustomerAddress) payCustomerAddress.textContent = info.address || "-";
-      if (payCustomerInfo) payCustomerInfo.hidden = false;
-    };
+    if (createPayBtn && createPayDialog) {
+      createPayBtn.addEventListener("click", () => {
+        setDialogMode("create");
+        createPayDialog.showModal();
+        refreshPreviewAfterDialogOpen();
+      });
+    }
+
+    if (payDialogSubmitBtn && createPayDialog) {
+      payDialogSubmitBtn.addEventListener("click", () => {
+        createPayDialog.close();
+      });
+    }
+
+    if (detailAddBtn && detailTableBody) {
+      detailAddBtn.addEventListener("click", () => {
+        const row = buildDetailRow();
+        detailTableBody.appendChild(row);
+        setAutoTaxForRow(row);
+        updatePreview();
+      });
+    }
+
+    if (detailTableBody) {
+      detailTableBody.addEventListener("click", (event) => {
+        const btn = event.target.closest('[data-action="remove-pay-line"]');
+        if (!btn || detailTableBody.children.length <= 1) return;
+        btn.closest(".pay-line-item-row")?.remove();
+        updatePreview();
+      });
+      detailTableBody.addEventListener("input", (event) => {
+        const row = event.target.closest(".pay-line-item-row");
+        if (row && event.target.matches('[data-pay-item-field="price"], [data-pay-item-field="qty"]')) {
+          setAutoTaxForRow(row);
+        }
+        if (row && event.target.matches('[data-pay-item-field="tax"]')) {
+          row.dataset.taxManual = "true";
+        }
+        updatePreview();
+      });
+      detailTableBody.addEventListener("change", updatePreview);
+    }
+
+    [payRequestNoInput, paySubjectInput, payRequestDateInput, payRemarkInput].forEach((field) => {
+      if (!field) return;
+      field.addEventListener("input", updatePreview);
+      field.addEventListener("change", updatePreview);
+    });
 
     if (payCustomerNameInput && payCustomerList) {
+      const debouncedFetchCustomers = debounce(() => fetchPayCustomerOptions(payCustomerNameInput, payCustomerList, payCustomerMap));
+      payCustomerNameInput.addEventListener("focus", () => {
+        fetchPayCustomerOptions(payCustomerNameInput, payCustomerList, payCustomerMap, { useDefault: true });
+      });
       payCustomerNameInput.addEventListener("input", () => {
-        fetchPayCustomerOptions(payCustomerNameInput, payCustomerList, payCustomerMap);
-        updatePayCustomerInfo("");
+        if (!payCustomerNameInput.value.trim()) {
+          fetchPayCustomerOptions(payCustomerNameInput, payCustomerList, payCustomerMap);
+        } else {
+          debouncedFetchCustomers();
+        }
+        if (payCustomerIdInput) payCustomerIdInput.value = "";
+        customerAddressState = { customerId: "", customerName: "", postalCode: "", address: "", requestId: customerAddressState.requestId + 1 };
+        renderCustomerAddress();
+        updatePreview();
       });
       payCustomerNameInput.addEventListener("change", () => {
-        updatePayCustomerInfo(payCustomerNameInput.value.trim());
+        const id = payCustomerMap.get(payCustomerNameInput.value.trim()) || "";
+        if (payCustomerIdInput) payCustomerIdInput.value = id ? String(id) : "";
+        updatePreview();
+        updateCustomerAddress();
       });
     }
 
@@ -411,8 +1030,14 @@
         const mode = btn.dataset.action === "edit" ? "edit" : "view";
         setDialogMode(mode);
         createPayDialog.showModal();
+        refreshPreviewAfterDialogOpen();
       });
     }
+
+    resetCreateForm();
+    loadBankAccount();
+    loadCompanyInfo();
+    loadOwnerInfo();
   </script>
 </body>
 </html>

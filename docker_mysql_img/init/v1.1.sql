@@ -20,3 +20,15 @@ COMMENT = '错误邮件记录表';
 
 INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at) VALUES
     ('mail-template','{"anjian": "いつもお世話になっております。\\n株式会社の林でございます。\\n\\n技術者をご紹介いただきありがとうございます。\\n弊社にて対応可能な案件をご紹介させて頂きます。\\nご検討頂けますと幸いです。\\n\\n**************************************\\n{project_block}\\n{detail_block}\\n{requirement_block}\\n{skills_must_block}\\n{skills_can_block}\\n{remark_block}\\n**************************************\\n\\n今後とも何卒よろしくお願い申し上げます。\\n\\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\\n株式会社\\n営業部　マネージャー：\\n個人mail:gmail@outlook.com\\n営業共通mail: outlook@gmail.com\\nmobile: 010-2345-6789\\n〒123-4567\\n東京都XXX区XX町X丁目12-3\\n第一 ビル 88F\\nHP:https://www.homapage.jp/\\n", "technician": "いつもお世話になっております。\\n株式会社の林でございます。\\n\\n技術者をご紹介させて頂きます。\\nご検討頂けますと幸いです。\\n\\n**************************************\\n{person_intro}\\n**************************************\\n\\n今後とも何卒よろしくお願い申し上げます。\\n\\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\\n株式会社\\n営業部　マネージャー：\\n個人mail:gmail@outlook.com\\n営業共通mail: outlook@gmail.com\\nmobile: 010-2345-6789\\n〒123-4567\\n東京都XXX区XX町X丁目12-3\\n第一 ビル 88F\\nHP:https://www.homapage.jp/\\n"}',1,'2026-04-22 15:10:29',NULL,'2026-04-22 15:13:25',NULL);
+
+UPDATE sys_settings
+SET settings = JSON_SET(
+        settings,
+        '$.order',
+        '{company_name}\nご担当者様\n\nいつもお世話になっております。\n\n注文書を添付にて送付いたします。\n内容をご確認のうえ、ご査収くださいますようお願いいたします。\n\nご不明点や修正がございましたら、お知らせください。\n何卒よろしくお願いいたします。'
+    ),
+    updated_by = 1,
+    updated_at = '2026-05-26 00:00:00',
+    deleted_at = NULL
+WHERE name = 'mail-template'
+  AND deleted_at IS NULL;

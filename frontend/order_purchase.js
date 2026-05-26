@@ -695,10 +695,22 @@
                 return normalized ? `${normalized}.pdf` : `${ctx.buildIssueOrderNo()}.pdf`;
             };
 
+            const sanitizeMailFilenamePart = (value, fallback) => {
+                const normalized = String(value || "")
+                    .trim()
+                    .replace(/[\\/:*?"<>|]/g, "_")
+                    .replace(/\s+/g, "");
+                return normalized || fallback;
+            };
+
+            const buildOrderAttachmentBaseName = (item) => {
+                const companyName = sanitizeMailFilenamePart(item?.customer_name, "取引先");
+                const orderNo = sanitizeMailFilenamePart(item?.order_no || ctx.buildIssueOrderNo(), "発注番号未設定");
+                return `${companyName}御中_発注書_${orderNo}`;
+            };
+
             const buildSafePdfName = (item) => {
-                const rawNo = item?.order_no || ctx.buildIssueOrderNo();
-                const normalized = String(rawNo).replace(/[\\/:*?"<>|]/g, "_");
-                return `${normalized || "purchase_order"}.pdf`;
+                return `${buildOrderAttachmentBaseName(item)}.pdf`;
             };
 
             const hasStoredPdf = (item) => Boolean(item?.id && item?.pdf_file);
@@ -826,16 +838,25 @@
                     throwOnFailure: true,
                     fallbackMessage: "加载模板失败",
                 });
-                const template = payload.data && typeof payload.data.template === "string" ? payload.data.template : "";
+                const template = payload.data && typeof payload.data.template === "string"
+                    ? payload.data.template
+                    : "";
                 sendTemplateCache[sendTemplateName] = template;
                 return template;
+            };
+
+            const renderSendTemplate = (template, item) => {
+                const companyName = String(item?.customer_name || "").trim() || "取引先";
+                return normalizeMultiline(template).split("{company_name}").join(companyName);
             };
 
             const applySendTemplateToBody = async () => {
                 if (!sendFields.body) return;
                 try {
                     const template = await loadSendTemplate();
-                    if (!sendFields.body.value.trim()) sendFields.body.value = normalizeMultiline(template);
+                    if (!sendFields.body.value.trim()) {
+                        sendFields.body.value = renderSendTemplate(template, currentSendItem);
+                    }
                 } catch (error) {
                     console.warn("加载发注邮件模板失败", error);
                 }
@@ -886,7 +907,7 @@
                 currentSendItem = item;
                 sendExtraFiles = [];
                 sendRecipientOptions = [];
-                if (sendFields.subject) sendFields.subject.value = item.project_name ? `${item.project_name} 注文書` : "注文書";
+                if (sendFields.subject) sendFields.subject.value = `【注文書送付】${buildOrderAttachmentBaseName(item)}`;
                 if (sendFields.type) sendFields.type.value = "3";
                 if (sendFields.to) sendFields.to.value = "";
                 if (sendFields.toOptions) sendFields.toOptions.innerHTML = "";

@@ -8,6 +8,8 @@ class Customer(models.Model):
     contract = models.TextField(null=True, blank=True)
     remark = models.TextField(null=True, blank=True)
 
+    payment_info = models.JSONField(default=dict, blank=True)
+
     contact1_name = models.CharField(max_length=100, null=True, blank=True)
     contact1_position = models.CharField(max_length=100, null=True, blank=True)
     contact1_email = models.EmailField(max_length=254, null=True, blank=True)
@@ -47,6 +49,7 @@ class Customer(models.Model):
             "company_email": customer.company_email or "",
             "contract": customer.contract or "",
             "remark": customer.remark or "",
+            "payment_info": customer.payment_info or {},
             "contact1_name": customer.contact1_name or "",
             "contact1_position": customer.contact1_position or "",
             "contact1_email": customer.contact1_email or "",
@@ -85,5 +88,22 @@ class Customer(models.Model):
         customer.person_in_charge = (payload.get("person_in_charge") or "").strip()
         if "contract" in payload:
             customer.contract = (payload.get("contract") or "").strip()
+        if "payment_info" in payload:
+            payment_info = payload.get("payment_info") or {}
+            if not isinstance(payment_info, dict):
+                payment_info = {}
+            def normalize_json_value(value):
+                if isinstance(value, str):
+                    return value.strip()
+                if isinstance(value, dict):
+                    return {
+                        str(key): normalize_json_value(child_value)
+                        for key, child_value in value.items()
+                    }
+                if isinstance(value, list):
+                    return [normalize_json_value(item) for item in value]
+                return value
+
+            customer.payment_info = normalize_json_value(payment_info)
 
         return customer

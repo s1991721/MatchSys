@@ -217,6 +217,46 @@
         <button class="c-btn c-btn-primary" id="dialog-save" type="button" data-i18n="common.save">保存</button>
     </div>
 </dialog>
+<dialog class="c-dialog" id="payment-dialog">
+    <div class="c-dialog-header">
+        <h3>支付信息</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>
+            ×
+        </button>
+    </div>
+    <div class="c-dialog-body">
+        <div class="form-grid">
+            <label class="c-field">
+                <span>银行名</span>
+                <input id="payment-bank-name" type="text"/>
+            </label>
+            <label class="c-field">
+                <span>支点编号</span>
+                <input id="payment-branch-code" type="text"/>
+            </label>
+            <label class="c-field">
+                <span>支点名</span>
+                <input id="payment-branch-name" type="text"/>
+            </label>
+            <label class="c-field">
+                <span>口座种类</span>
+                <input id="payment-account-type" type="text"/>
+            </label>
+            <label class="c-field">
+                <span>口座号</span>
+                <input id="payment-account-number" type="text"/>
+            </label>
+            <label class="c-field">
+                <span>口座名义</span>
+                <input id="payment-account-holder" type="text"/>
+            </label>
+        </div>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button class="c-btn c-btn-primary" id="payment-save" type="button" data-i18n="common.save">保存</button>
+    </div>
+</dialog>
 <script src="i18n.js"></script>
 <script src="common.js"></script>
 <script>
@@ -241,8 +281,10 @@
     const pageSummary = document.getElementById("page-summary");
     const selectAllCheckbox = document.getElementById("select-all-customers");
     const editDialog = document.getElementById("edit-dialog");
+    const paymentDialog = document.getElementById("payment-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
+    const paymentSave = document.getElementById("payment-save");
     const contractHint = document.getElementById("contract-hint");
     const cardUploadSection = document.getElementById("card-upload-section");
     const cardPreviewSection = document.getElementById("card-preview-section");
@@ -272,7 +314,16 @@
         contact3Phone: document.getElementById("edit-contact3-phone"),
         contact3Email: document.getElementById("edit-contact3-email"),
     };
+    const paymentFields = {
+        bankName: document.getElementById("payment-bank-name"),
+        branchCode: document.getElementById("payment-branch-code"),
+        branchName: document.getElementById("payment-branch-name"),
+        accountType: document.getElementById("payment-account-type"),
+        accountNumber: document.getElementById("payment-account-number"),
+        accountHolder: document.getElementById("payment-account-holder"),
+    };
     let currentEditId = null;
+    let currentPaymentItem = null;
     let cachedItems = [];
     let currentContract = "";
     let currentPage = 1;
@@ -291,6 +342,10 @@
         const action = target.dataset.action;
         if (action === "edit" && item) {
             openEditDialog(item);
+            return;
+        }
+        if (action === "payment" && item) {
+            openPaymentDialog(item);
             return;
         }
         if (action === "delete" && item) {
@@ -544,8 +599,38 @@
             });
     });
 
+    paymentSave.addEventListener("click", () => {
+        if (!currentPaymentItem) return;
+        const payload = buildCustomerPayloadFromItem(currentPaymentItem);
+        Object.assign(payload, {
+            payment_info: {
+                bank_name: paymentFields.bankName.value.trim(),
+                branch_code: paymentFields.branchCode.value.trim(),
+                branch_name: paymentFields.branchName.value.trim(),
+                account_type: paymentFields.accountType.value.trim(),
+                account_number: paymentFields.accountNumber.value.trim(),
+                account_holder: paymentFields.accountHolder.value.trim(),
+            },
+        });
+
+        window.requestJson(`/api/customers/${encodeURIComponent(currentPaymentItem.id)}`, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+        })
+            .then((payload) => {
+                if (!payload.success) {
+                    throw new Error(payload.message || t("common.save_failed"));
+                }
+                closeDialog(paymentDialog);
+                fetchCustomers();
+            })
+            .catch((error) => {
+                alert(error.message || t("common.save_failed_retry"));
+            });
+    });
+
     window.initDialogCloseBehavior({
-        dialogs: [editDialog],
+        dialogs: [editDialog, paymentDialog],
         onClose: (dialog) => {
             closeDialog(dialog);
             return false;
@@ -667,6 +752,7 @@
             company_email: String(item?.company_email || "").trim(),
             contract: String(item?.contract || "").trim(),
             remark: String(item?.remark || "").trim(),
+            payment_info: item?.payment_info && typeof item.payment_info === "object" ? item.payment_info : {},
             contact1_name: String(item?.contact1_name || "").trim(),
             contact1_position: String(item?.contact1_position || "").trim(),
             contact1_email: String(item?.contact1_email || "").trim(),
@@ -738,6 +824,16 @@
         editFields.contact3Email.value = item?.contact3_email || "";
     };
 
+    const applyCustomerToPaymentForm = (item) => {
+        const paymentInfo = item?.payment_info && typeof item.payment_info === "object" ? item.payment_info : {};
+        paymentFields.bankName.value = paymentInfo.bank_name || "";
+        paymentFields.branchCode.value = paymentInfo.branch_code || "";
+        paymentFields.branchName.value = paymentInfo.branch_name || "";
+        paymentFields.accountType.value = paymentInfo.account_type || "";
+        paymentFields.accountNumber.value = paymentInfo.account_number || "";
+        paymentFields.accountHolder.value = paymentInfo.account_holder || "";
+    };
+
     const openDialog = (dialog) => {
         if (!dialog) return;
         if (typeof dialog.showModal === "function") {
@@ -762,6 +858,9 @@
             resetCardPreview();
             if (cardUploadSection) cardUploadSection.hidden = false;
         }
+        if (dialog === paymentDialog) {
+            currentPaymentItem = null;
+        }
     };
 
     const openEditDialog = (item) => {
@@ -772,6 +871,12 @@
         applyCustomerToEditForm(item);
 
         openDialog(editDialog);
+    };
+
+    const openPaymentDialog = (item) => {
+        currentPaymentItem = item || null;
+        applyCustomerToPaymentForm(item);
+        openDialog(paymentDialog);
     };
 
     const deleteCustomer = (item) => {
@@ -846,6 +951,7 @@
               <td>
                 <div class="row-actions c-row-actions c-row-actions-nowrap">
                   <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.edit"))}</button>
+                  <button class="c-btn c-btn-success-lite c-btn-sm" type="button" data-action="payment" data-id="${escapeHtml(item.id)}">支付信息</button>
                   <button class="c-btn c-btn-danger c-btn-sm" type="button" data-action="delete" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.delete"))}</button>
                 </div>
               </td>

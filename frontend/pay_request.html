@@ -344,7 +344,8 @@
                   <option value="0">BP</option>
                   <option value="1">技术者送信</option>
                   <option value="2">案件送信</option>
-                  <option value="3" selected>发注</option>
+                  <option value="3">发注</option>
+                  <option value="4" selected>请求书</option>
                 </select>
               </label>
             </div>
@@ -1403,7 +1404,7 @@
       paySendExtraFiles = [];
       paySendRecipientOptions = [];
       if (paySendFields.subject) paySendFields.subject.value = `【請求書送付】${buildPayAttachmentBaseName(item)}`;
-      if (paySendFields.type) paySendFields.type.value = "3";
+      if (paySendFields.type) paySendFields.type.value = "4";
       if (paySendFields.to) paySendFields.to.value = "";
       if (paySendFields.toOptions) paySendFields.toOptions.innerHTML = "";
       closePaySendRecipientMenu();
@@ -1422,7 +1423,7 @@
       const subject = paySendFields.subject?.value.trim() || "";
       const body = paySendFields.body?.value.trim() || "";
       const recipient = paySendFields.to?.value.trim() || "";
-      const mailType = Number(paySendFields.type?.value || 3);
+      const mailType = Number(paySendFields.type?.value || 4);
       if (!subject) return alert("请输入邮件主题"), paySendFields.subject?.focus();
       if (!hasStoredPayPdf(payCurrentSendItem)) return alert("没有PDF，无法发送。");
       if (!body) return alert("请输入邮件内容"), paySendFields.body?.focus();
@@ -1450,7 +1451,7 @@
             subject,
             body,
             attachments,
-            mail_type: Number.isFinite(mailType) ? mailType : 3
+            mail_type: Number.isFinite(mailType) ? mailType : 4
           })
         }, {
           throwOnFailure: true,

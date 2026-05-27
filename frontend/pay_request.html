@@ -314,6 +314,115 @@
     </div>
   </dialog>
 
+  <dialog class="c-dialog order-dialog-wide order-send-dialog" id="paySendDialog" aria-labelledby="paySendTitle">
+    <div class="c-dialog-header">
+      <div>
+        <h3 id="paySendTitle">发送请求书</h3>
+        <p class="c-card-subtitle">确认PDF内容并填写邮件信息。</p>
+      </div>
+      <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+      <div class="order-send-layout">
+        <aside class="order-preview-panel" aria-label="PDF预览">
+          <div class="order-preview-canvas">
+            <iframe class="order-send-pdf-frame" id="paySendPdfFrame" title="请求书PDF预览" hidden></iframe>
+            <div class="order-send-no-pdf" id="paySendNoPdfMessage" hidden>没有PDF</div>
+          </div>
+        </aside>
+        <section class="order-send-panel" aria-label="发送邮件">
+          <div class="order-send-form">
+            <div class="order-send-head-grid">
+              <label class="order-send-field">
+                <span>邮件主题</span>
+                <input id="pay-send-subject" type="text" placeholder="请输入邮件主题"/>
+              </label>
+              <label class="order-send-field order-send-type-field">
+                <span>送信类型</span>
+                <select id="pay-send-type">
+                  <option value="-1">其他</option>
+                  <option value="0">BP</option>
+                  <option value="1">技术者送信</option>
+                  <option value="2">案件送信</option>
+                  <option value="3" selected>发注</option>
+                </select>
+              </label>
+            </div>
+            <div class="order-send-field">
+              <span class="order-send-field-head">
+                <span>邮件内容</span>
+                <button
+                  id="pay-send-template-edit"
+                  class="songxin-template-trigger order-send-template-trigger"
+                  type="button"
+                  aria-label="编辑模板信息"
+                  title="编辑模板信息"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 2h8l5 5v4.25a1 1 0 1 1-2 0V8h-4V4H6v16h5.25a1 1 0 1 1 0 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm9 3.41V7h1.59L15 5.41zm-2.04 9.33 4.83-4.83 2.12 2.12-4.83 4.83-2.54.42.42-2.54zm6.24-6.24.71-.71a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1 0 1.41l-.71.71-2.12-2.12z"/>
+                  </svg>
+                </button>
+              </span>
+              <textarea id="pay-send-body" placeholder="请输入邮件内容"></textarea>
+            </div>
+            <div class="order-send-bottom-grid">
+              <div class="order-send-field">
+                <span>上传附件</span>
+                <div class="order-send-upload-row" data-file-i18n-skip="1">
+                  <input id="pay-send-files" class="songxin-file-input" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
+                  <button id="pay-send-files-trigger" class="c-btn c-btn-ghost" type="button">选择文件</button>
+                  <span id="pay-send-files-status">未添加附件</span>
+                  <span class="order-send-upload-hint">支持多文件，建议单个不超过10MB</span>
+                </div>
+                <div id="pay-send-attachment-list" class="order-send-attachment-list">暂无附件</div>
+              </div>
+              <div class="order-send-recipient-stack">
+                <label class="order-send-field">
+                  <span>收件人</span>
+                  <div class="order-send-combobox" id="pay-send-to-combobox">
+                    <input id="pay-send-to" type="email" placeholder="name@example.com" autocomplete="off"/>
+                    <button class="order-send-combobox-toggle" id="pay-send-to-toggle" type="button" aria-label="展开收件人选项">▾</button>
+                    <div class="order-send-combobox-menu" id="pay-send-to-options" hidden></div>
+                  </div>
+                </label>
+                <label class="order-send-field order-send-cc">
+                  <span>抄送（可选）</span>
+                  <input id="pay-send-cc" type="email" placeholder="cc@example.com"/>
+                </label>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="c-dialog-actions order-send-actions">
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+      <button class="c-btn c-btn-primary order-send-submit" type="button" id="paySendSubmit">发送&nbsp; &gt;</button>
+    </div>
+  </dialog>
+
+  <dialog id="pay-send-template-dialog" class="c-dialog songxin-template-dialog">
+    <div class="c-dialog-header">
+      <div class="songxin-template-header-text">
+        <h3>编辑模板信息</h3>
+        <p class="c-card-subtitle songxin-template-subtitle">请求书邮件模板。</p>
+      </div>
+      <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+      <textarea
+        id="pay-send-template-content"
+        class="songxin-template-textarea"
+        rows="14"
+        placeholder="请输入模板信息"
+      ></textarea>
+    </div>
+    <div class="c-dialog-actions">
+      <button class="c-btn c-btn-ghost" type="button" data-dialog-close>取消</button>
+      <button id="pay-send-template-save" class="c-btn c-btn-primary" type="button">保存</button>
+    </div>
+  </dialog>
+
   <script src="i18n.js"></script>
   <script src="common.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -340,6 +449,14 @@
     const payFilterMonthInput = document.getElementById("pay-filter-month");
     const paySearchBtn = document.getElementById("paySearchBtn");
     const payResetBtn = document.getElementById("payResetBtn");
+    const paySendDialog = document.getElementById("paySendDialog");
+    const paySendSubmit = document.getElementById("paySendSubmit");
+    const paySendTemplateEdit = document.getElementById("pay-send-template-edit");
+    const paySendTemplateDialog = document.getElementById("pay-send-template-dialog");
+    const paySendTemplateContent = document.getElementById("pay-send-template-content");
+    const paySendTemplateSave = document.getElementById("pay-send-template-save");
+    const paySendPdfFrame = document.getElementById("paySendPdfFrame");
+    const paySendNoPdfMessage = document.getElementById("paySendNoPdfMessage");
     const payCustomerNameInput = document.getElementById("pay-customer-name");
     const payCustomerIdInput = document.getElementById("pay-customer-id");
     const payCustomerList = document.getElementById("pay-customer-list");
@@ -381,6 +498,25 @@
     let payCurrentPage = 1;
     let payCurrentItems = [];
     let payCurrentEditId = null;
+    let payCurrentSendItem = null;
+    let paySendExtraFiles = [];
+    let paySendRecipientOptions = [];
+    const paySendTemplateName = "pay_request";
+    const paySendTemplateCache = {};
+    const paySendFields = {
+      subject: document.getElementById("pay-send-subject"),
+      type: document.getElementById("pay-send-type"),
+      to: document.getElementById("pay-send-to"),
+      toCombobox: document.getElementById("pay-send-to-combobox"),
+      toToggle: document.getElementById("pay-send-to-toggle"),
+      toOptions: document.getElementById("pay-send-to-options"),
+      body: document.getElementById("pay-send-body"),
+      cc: document.getElementById("pay-send-cc"),
+      files: document.getElementById("pay-send-files"),
+      filesTrigger: document.getElementById("pay-send-files-trigger"),
+      filesStatus: document.getElementById("pay-send-files-status"),
+      attachmentList: document.getElementById("pay-send-attachment-list")
+    };
     const payCustomerMap = new Map();
     let customerAddressState = {
       customerId: "",
@@ -414,7 +550,7 @@
     };
 
     if (window.initDialogCloseBehavior) {
-      window.initDialogCloseBehavior({ dialogs: [createPayDialog] });
+      window.initDialogCloseBehavior({ dialogs: [createPayDialog, paySendDialog, paySendTemplateDialog] });
     }
 
     const getDateParts = (date = new Date()) => {
@@ -1046,6 +1182,292 @@
       return normalized ? `${normalized}.pdf` : `${buildRequestNo()}.pdf`;
     };
 
+    const readBlobAsBase64 = (blob) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = String(reader.result || "");
+        resolve(result.includes(",") ? result.split(",").pop() : result);
+      };
+      reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
+      reader.readAsDataURL(blob);
+    });
+
+    const sanitizeMailFilenamePart = (value, fallback) => {
+      const normalized = String(value || "")
+        .trim()
+        .replace(/[\\/:*?"<>|]/g, "_")
+        .replace(/\s+/g, "");
+      return normalized || fallback;
+    };
+
+    const buildPayAttachmentBaseName = (item) => {
+      const companyName = sanitizeMailFilenamePart(item?.customer_name, "取引先");
+      const requestNo = sanitizeMailFilenamePart(item?.request_no || buildRequestNo(), "請求書番号未設定");
+      return `${companyName}御中_請求書_${requestNo}`;
+    };
+
+    const buildPaySafePdfName = (item) => `${buildPayAttachmentBaseName(item)}.pdf`;
+
+    const hasStoredPayPdf = (item) => Boolean(item?.id && item?.pdf_file);
+
+    const getStoredPayPdfUrl = (item) => (
+      hasStoredPayPdf(item)
+        ? `/api/pay-requests/${encodeURIComponent(item.id)}/pdf`
+        : ""
+    );
+
+    const setPaySendPdfDisplayMode = (item) => {
+      const pdfUrl = getStoredPayPdfUrl(item);
+      if (paySendPdfFrame) {
+        paySendPdfFrame.hidden = !pdfUrl;
+        paySendPdfFrame.src = pdfUrl || "about:blank";
+      }
+      if (paySendNoPdfMessage) paySendNoPdfMessage.hidden = Boolean(pdfUrl);
+    };
+
+    const getPaySendPdfBlob = async () => {
+      const pdfUrl = getStoredPayPdfUrl(payCurrentSendItem);
+      if (!pdfUrl) throw new Error("没有PDF");
+      const response = await fetch(pdfUrl, { credentials: "same-origin" });
+      if (!response.ok) throw new Error("PDF文件读取失败");
+      return response.blob();
+    };
+
+    const renderPaySendAttachmentList = () => {
+      if (!paySendFields.attachmentList) return;
+      if (paySendFields.filesStatus) {
+        paySendFields.filesStatus.textContent = paySendExtraFiles.length
+          ? `已添加 ${paySendExtraFiles.length} 个附件`
+          : "未添加附件";
+      }
+      const rows = [];
+      if (hasStoredPayPdf(payCurrentSendItem)) {
+        rows.push(`<div class="order-send-attachment-item"><span>PDF文件：${escapeHtml(buildPaySafePdfName(payCurrentSendItem))}</span></div>`);
+      }
+      paySendExtraFiles.forEach((file, index) => {
+        rows.push(`
+          <div class="order-send-attachment-item">
+            <span>${escapeHtml(file.name)}</span>
+            <button type="button" data-remove-pay-send-file="${index}">删除</button>
+          </div>
+        `);
+      });
+      if (!rows.length) {
+        paySendFields.attachmentList.textContent = "暂无附件";
+        return;
+      }
+      paySendFields.attachmentList.innerHTML = rows.join("");
+    };
+
+    const closePaySendRecipientMenu = () => {
+      if (paySendFields.toOptions) paySendFields.toOptions.hidden = true;
+    };
+
+    const renderPaySendRecipientOptions = () => {
+      if (!paySendFields.toOptions) return;
+      paySendFields.toOptions.innerHTML = "";
+      paySendRecipientOptions.forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "order-send-combobox-option";
+        button.dataset.email = option.email;
+        button.innerHTML = `
+          <span class="order-send-combobox-name">${escapeHtml(option.name || option.email)}</span>
+          <span class="order-send-combobox-email">${escapeHtml(option.email)}</span>
+        `;
+        paySendFields.toOptions.appendChild(button);
+      });
+    };
+
+    const fetchPaySendRecipient = async (item) => {
+      paySendRecipientOptions = [];
+      if (paySendFields.to) paySendFields.to.value = "";
+      if (paySendFields.toOptions) paySendFields.toOptions.innerHTML = "";
+      closePaySendRecipientMenu();
+      const customerId = item?.customer_id;
+      if (!customerId) return "";
+      try {
+        const payload = await window.requestJson(`/api/customers/${encodeURIComponent(customerId)}`, { method: "GET" });
+        const customer = payload?.data?.item || {};
+        const options = [
+          { name: customer.contact1_name || "联系人1", email: customer.contact1_email },
+          { name: customer.company_name || "公司邮箱", email: customer.company_email },
+          { name: customer.contact2_name || "联系人2", email: customer.contact2_email },
+          { name: customer.contact3_name || "联系人3", email: customer.contact3_email }
+        ].map((option) => ({
+          name: String(option.name || "").trim(),
+          email: String(option.email || "").trim()
+        })).filter((option) => option.email);
+        const seenEmails = new Set();
+        paySendRecipientOptions = options.filter((option) => {
+          if (seenEmails.has(option.email)) return false;
+          seenEmails.add(option.email);
+          return true;
+        });
+        renderPaySendRecipientOptions();
+        if (paySendFields.to) paySendFields.to.value = paySendRecipientOptions[0]?.email || "";
+      } catch (error) {
+        console.warn(error);
+      }
+      return paySendFields.to ? paySendFields.to.value : "";
+    };
+
+    const normalizeMultiline = (text) => {
+      if (typeof text !== "string") return "";
+      let clean = text
+        .replace(/\r\n/g, "\n")
+        .replace(/\\n/g, "\n")
+        .replace(/\t/g, "    ");
+      const trimmed = clean.trim();
+      if (trimmed.startsWith('"') && trimmed.endsWith('"')) clean = trimmed.slice(1, -1);
+      return clean;
+    };
+
+    const loadPaySendTemplate = async (forceRefresh = false) => {
+      if (!forceRefresh && Object.prototype.hasOwnProperty.call(paySendTemplateCache, paySendTemplateName)) {
+        return paySendTemplateCache[paySendTemplateName];
+      }
+      const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
+        method: "GET"
+      }, {
+        throwOnFailure: true,
+        fallbackMessage: "加载模板失败"
+      });
+      const template = payload.data && typeof payload.data.template === "string" ? payload.data.template : "";
+      paySendTemplateCache[paySendTemplateName] = template;
+      return template;
+    };
+
+    const renderPaySendTemplate = (template, item) => {
+      const companyName = String(item?.customer_name || "").trim() || "取引先";
+      return normalizeMultiline(template)
+        .split("{company_name}").join(companyName)
+        .split("{request_no}").join(String(item?.request_no || "").trim());
+    };
+
+    const applyPaySendTemplateToBody = async () => {
+      if (!paySendFields.body) return;
+      try {
+        const template = await loadPaySendTemplate();
+        if (!paySendFields.body.value.trim()) {
+          paySendFields.body.value = renderPaySendTemplate(template, payCurrentSendItem);
+        }
+      } catch (error) {
+        console.warn("加载请求书邮件模板失败", error);
+      }
+    };
+
+    const openPaySendTemplateDialog = async () => {
+      if (!paySendTemplateDialog || !paySendTemplateContent) return;
+      try {
+        const template = await loadPaySendTemplate(true);
+        paySendTemplateContent.value = normalizeMultiline(template);
+        paySendTemplateDialog.showModal();
+      } catch (error) {
+        console.error("加载模板失败", error);
+        alert(error.message || "加载模板失败");
+      }
+    };
+
+    const savePaySendTemplate = async () => {
+      if (!paySendTemplateContent || !paySendTemplateSave) return;
+      const originalText = paySendTemplateSave.textContent;
+      paySendTemplateSave.disabled = true;
+      paySendTemplateSave.textContent = "保存中...";
+      try {
+        const template = normalizeMultiline(paySendTemplateContent.value);
+        await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
+          body: JSON.stringify({ template })
+        }, {
+          throwOnFailure: true,
+          fallbackMessage: "保存模板失败"
+        });
+        paySendTemplateCache[paySendTemplateName] = template;
+        if (paySendFields.body) {
+          paySendFields.body.value = template;
+          paySendFields.body.focus();
+        }
+        paySendTemplateDialog?.close();
+      } catch (error) {
+        console.error("保存模板失败", error);
+        alert(error.message || "保存模板失败");
+      } finally {
+        paySendTemplateSave.disabled = false;
+        paySendTemplateSave.textContent = originalText || "保存";
+      }
+    };
+
+    const openPaySendDialog = async (item) => {
+      if (!paySendDialog || !item) return;
+      payCurrentSendItem = item;
+      paySendExtraFiles = [];
+      paySendRecipientOptions = [];
+      if (paySendFields.subject) paySendFields.subject.value = `【請求書送付】${buildPayAttachmentBaseName(item)}`;
+      if (paySendFields.type) paySendFields.type.value = "3";
+      if (paySendFields.to) paySendFields.to.value = "";
+      if (paySendFields.toOptions) paySendFields.toOptions.innerHTML = "";
+      closePaySendRecipientMenu();
+      if (paySendFields.body) paySendFields.body.value = "";
+      if (paySendFields.cc) paySendFields.cc.value = "";
+      if (paySendFields.files) paySendFields.files.value = "";
+      renderPaySendAttachmentList();
+      setPaySendPdfDisplayMode(item);
+      fetchPaySendRecipient(item);
+      paySendDialog.showModal();
+      applyPaySendTemplateToBody();
+    };
+
+    const submitPaySendMail = async () => {
+      if (!payCurrentSendItem || !paySendSubmit) return;
+      const subject = paySendFields.subject?.value.trim() || "";
+      const body = paySendFields.body?.value.trim() || "";
+      const recipient = paySendFields.to?.value.trim() || "";
+      const mailType = Number(paySendFields.type?.value || 3);
+      if (!subject) return alert("请输入邮件主题"), paySendFields.subject?.focus();
+      if (!hasStoredPayPdf(payCurrentSendItem)) return alert("没有PDF，无法发送。");
+      if (!body) return alert("请输入邮件内容"), paySendFields.body?.focus();
+      if (!recipient) return alert("请输入收件人，或先在客户资料中维护邮箱。"), paySendFields.to?.focus();
+      const originalText = paySendSubmit.textContent;
+      paySendSubmit.disabled = true;
+      paySendSubmit.textContent = "发送中...";
+      try {
+        const pdfBlob = await getPaySendPdfBlob();
+        const attachments = [{
+          filename: buildPaySafePdfName(payCurrentSendItem),
+          content_type: "application/pdf",
+          content: await readBlobAsBase64(pdfBlob)
+        }];
+        const extraAttachments = await Promise.all(paySendExtraFiles.map(async (file) => ({
+          filename: file.name,
+          content_type: file.type || "application/octet-stream",
+          content: await readBlobAsBase64(file)
+        })));
+        attachments.push(...extraAttachments);
+        await window.requestJson("/api/send-mail", {
+          body: JSON.stringify({
+            to: recipient,
+            cc: paySendFields.cc?.value.trim() || "",
+            subject,
+            body,
+            attachments,
+            mail_type: Number.isFinite(mailType) ? mailType : 3
+          })
+        }, {
+          throwOnFailure: true,
+          fallbackMessage: "发送失败"
+        });
+        alert("发送成功");
+        paySendDialog.close();
+        fetchPayRequests();
+      } catch (error) {
+        console.error("发送邮件失败", error);
+        alert(error.message || "发送失败");
+      } finally {
+        paySendSubmit.disabled = false;
+        paySendSubmit.textContent = originalText || "发送 >";
+      }
+    };
+
     const exportPreviewPdfBlob = async () => {
       if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
         throw new Error("PDF生成依赖未加载");
@@ -1154,8 +1576,8 @@
           <td>${escapeHtml(item.status || "-")}</td>
           <td>${escapeHtml(item.created_at || "-")}</td>
           <td class="c-actions-col">
-            <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="view" data-id="${escapeHtml(item.id)}">查看</button>
             <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">编辑</button>
+            <button class="c-btn c-btn-success-lite c-btn-sm" type="button" data-action="send" data-id="${escapeHtml(item.id)}">发送</button>
           </td>
         </tr>
       `).join("");
@@ -1316,15 +1738,19 @@
       payRequestTable.addEventListener("click", async (event) => {
         const btn = event.target.closest("button[data-action]");
         if (!btn) return;
-        const mode = btn.dataset.action === "edit" ? "edit" : "view";
+        const action = btn.dataset.action;
         const id = btn.dataset.id || btn.closest("tr")?.dataset?.id || "";
         if (!id) return;
         btn.disabled = true;
         try {
           const item = await loadPayRequestDetail(id);
+          if (action === "send") {
+            openPaySendDialog(item);
+            return;
+          }
           fillPayForm(item);
-          payCurrentEditId = mode === "edit" ? id : null;
-          setDialogMode(mode);
+          payCurrentEditId = id;
+          setDialogMode("edit");
           createPayDialog.showModal();
           refreshPreviewAfterDialogOpen();
         } catch (error) {
@@ -1334,6 +1760,65 @@
         }
       });
     }
+
+    if (paySendSubmit) paySendSubmit.addEventListener("click", submitPaySendMail);
+    if (paySendTemplateEdit) {
+      paySendTemplateEdit.addEventListener("click", (event) => {
+        event.preventDefault();
+        openPaySendTemplateDialog();
+      });
+    }
+    if (paySendTemplateSave) paySendTemplateSave.addEventListener("click", savePaySendTemplate);
+    if (paySendFields.files) {
+      paySendFields.files.addEventListener("change", () => {
+        const files = paySendFields.files?.files ? Array.from(paySendFields.files.files) : [];
+        if (!files.length) return;
+        paySendExtraFiles.push(...files);
+        paySendFields.files.value = "";
+        renderPaySendAttachmentList();
+      });
+    }
+    if (paySendFields.filesTrigger) {
+      paySendFields.filesTrigger.addEventListener("click", () => paySendFields.files?.click());
+    }
+    if (paySendFields.attachmentList) {
+      paySendFields.attachmentList.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-remove-pay-send-file]");
+        if (!button) return;
+        const index = Number(button.dataset.removePaySendFile);
+        if (!Number.isInteger(index) || index < 0 || index >= paySendExtraFiles.length) return;
+        paySendExtraFiles.splice(index, 1);
+        renderPaySendAttachmentList();
+      });
+    }
+    if (paySendFields.toToggle) {
+      paySendFields.toToggle.addEventListener("click", () => {
+        if (!paySendFields.toOptions) return;
+        if (paySendFields.toOptions.hidden) {
+          if (!paySendRecipientOptions.length) return;
+          renderPaySendRecipientOptions();
+          paySendFields.toOptions.hidden = false;
+        } else {
+          closePaySendRecipientMenu();
+        }
+      });
+    }
+    if (paySendFields.toOptions) {
+      paySendFields.toOptions.addEventListener("click", (event) => {
+        const option = event.target.closest(".order-send-combobox-option");
+        if (!option) return;
+        if (paySendFields.to) {
+          paySendFields.to.value = option.dataset.email || option.textContent.trim();
+          paySendFields.to.focus();
+        }
+        closePaySendRecipientMenu();
+      });
+    }
+    document.addEventListener("click", (event) => {
+      if (paySendFields.toCombobox && !paySendFields.toCombobox.contains(event.target)) {
+        closePaySendRecipientMenu();
+      }
+    });
 
     if (paySearchBtn) {
       paySearchBtn.addEventListener("click", () => {

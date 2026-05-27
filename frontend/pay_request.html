@@ -1886,6 +1886,12 @@
     if (payFilterMonthInput && !payFilterMonthInput.value) {
       payFilterMonthInput.value = currentMonthText();
     }
+    const initialParams = new URLSearchParams(window.location.search || "");
+    const initialCustomerName = initialParams.get("customer_name") || initialParams.get("customer") || "";
+    if (initialCustomerName && payFilterCustomerInput) {
+      payFilterCustomerInput.value = initialCustomerName;
+      payCurrentPage = 1;
+    }
     loadBankAccount();
     loadCompanyInfo();
     loadOwnerInfo();

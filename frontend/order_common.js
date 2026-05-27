@@ -818,6 +818,31 @@
                     window.navigateAppRoute(`pay_request.html${customerName}`);
                     return;
                 }
+                if (currentView === "accept" && btn.dataset.action === "create_request") {
+                    const price = parseMoneyValue(item.price);
+                    const detailName = item.technician_name || item.project_name || "";
+                    const prefill = {
+                        source: "sales_order",
+                        customer_id: item.customer_id || "",
+                        customer_name: item.customer_name || "",
+                        order_no: item.order_no || "",
+                        subject: item.project_name || "",
+                        details: [{
+                            item: detailName,
+                            qty: 1,
+                            price,
+                            tax: price ? Math.round(price * 0.1) : 0,
+                            unit: "人月",
+                        }],
+                    };
+                    try {
+                        sessionStorage.setItem("pay_request_prefill", JSON.stringify(prefill));
+                    } catch (error) {
+                        console.warn(error);
+                    }
+                    window.navigateAppRoute("pay_request.html?prefill=1");
+                    return;
+                }
                 openDetailDialog(btn.dataset.action, item);
             });
         }

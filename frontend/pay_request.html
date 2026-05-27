@@ -496,6 +496,7 @@
     const PDF_PREVIEW_WIDTH = 595;
     const PDF_PREVIEW_HEIGHT = 842;
     const PAY_PAGE_SIZE = 10;
+    const PAY_PREFILL_STORAGE_KEY = "pay_request_prefill";
     const HTML2CANVAS_SRC = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
     const JSPDF_SRC = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
     let payCurrentPage = 1;
@@ -1193,6 +1194,45 @@
       }
     };
 
+    const applyPayRequestPrefill = (prefill) => {
+      if (!prefill || typeof prefill !== "object") return;
+      if (payCustomerNameInput) payCustomerNameInput.value = prefill.customer_name || "";
+      if (payCustomerIdInput) payCustomerIdInput.value = prefill.customer_id ? String(prefill.customer_id) : "";
+      const orderNoInput = document.getElementById("pay-order-no");
+      if (orderNoInput) orderNoInput.value = prefill.order_no || "";
+      if (paySubjectInput) paySubjectInput.value = prefill.subject || "";
+      setLineItems(Array.isArray(prefill.details) ? prefill.details : []);
+      updateCustomerAddress();
+      updatePreview();
+    };
+
+    const openCreatePayDialog = (prefill = null) => {
+      if (!createPayDialog) return;
+      payCurrentEditId = null;
+      setDialogMode("create");
+      applyPayRequestPrefill(prefill);
+      createPayDialog.showModal();
+      refreshPreviewAfterDialogOpen();
+      ensurePreviewSupportData().then(refreshPreviewAfterDialogOpen);
+    };
+
+    const readStoredPayRequestPrefill = () => {
+      let raw = "";
+      try {
+        raw = sessionStorage.getItem(PAY_PREFILL_STORAGE_KEY) || "";
+        if (raw) sessionStorage.removeItem(PAY_PREFILL_STORAGE_KEY);
+      } catch (error) {
+        console.warn(error);
+      }
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        console.warn(error);
+        return null;
+      }
+    };
+
     const renderPayCustomerOptions = (listEl, map, items) => {
       map.clear();
       listEl.innerHTML = "";
@@ -1749,11 +1789,7 @@
 
     if (createPayBtn && createPayDialog) {
       createPayBtn.addEventListener("click", () => {
-        payCurrentEditId = null;
-        setDialogMode("create");
-        createPayDialog.showModal();
-        refreshPreviewAfterDialogOpen();
-        ensurePreviewSupportData().then(refreshPreviewAfterDialogOpen);
+        openCreatePayDialog();
       });
     }
 
@@ -1969,7 +2005,13 @@
       payFilterCustomerInput.value = initialCustomerName;
       payCurrentPage = 1;
     }
+    const storedPayRequestPrefill = initialParams.get("prefill") ? readStoredPayRequestPrefill() : null;
+    if (storedPayRequestPrefill?.customer_name && payFilterCustomerInput) {
+      payFilterCustomerInput.value = storedPayRequestPrefill.customer_name;
+      payCurrentPage = 1;
+    }
     fetchPayRequests();
+    if (storedPayRequestPrefill) openCreatePayDialog(storedPayRequestPrefill);
   </script>
 </body>
 </html>

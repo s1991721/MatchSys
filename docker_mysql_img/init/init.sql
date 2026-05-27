@@ -99,7 +99,8 @@ VALUES ('主页', 'home.html', 1),
        ('登录日志', 'login_audit.html', 13),
        ('客户管理', 'customer.html', 14),
        ('数据分析', 'analysis.html', 15),
-       ('系统设置', 'system_settings.html', 16);
+       ('系统设置', 'system_settings.html', 16),
+       ('财务管理', 'finance.html', 17);
 
 
 CREATE TABLE IF NOT EXISTS sys_role

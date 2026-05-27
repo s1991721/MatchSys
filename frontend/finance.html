@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="finance.title">财务管理</title>
+    <style>
+        .finance-view {
+            display: grid;
+            gap: 16px;
+        }
+        .finance-page .c-switch-wrap {
+            max-width: 100%;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+        .finance-page .c-switcher-group {
+            flex-wrap: nowrap;
+            white-space: nowrap;
+        }
+        .finance-view.hidden {
+            display: none;
+        }
+        .finance-section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .finance-section-title {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.25;
+            color: #0f172a;
+        }
+        .finance-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .finance-summary-item {
+            min-height: 84px;
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.38);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .finance-summary-label {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .finance-summary-value {
+            display: block;
+            margin-top: 8px;
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        .finance-empty-row {
+            text-align: center;
+            color: #94a3b8;
+            padding: 28px 12px;
+        }
+        @media (max-width: 980px) {
+            .finance-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .finance-section-head {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
+        @media (max-width: 640px) {
+            .finance-page .c-page-head-grid {
+                grid-template-columns: 1fr;
+            }
+            .finance-page .c-switch-wrap {
+                justify-self: stretch;
+            }
+            .finance-summary-grid,
+            .c-inline-filters-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .finance-section-title {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="order-page finance-page">
+<div class="page">
+    <div class="c-stack">
+        <div class="c-page-head-grid">
+            <div class="c-page-head-spacer" aria-hidden="true"></div>
+            <div class="c-switch-wrap">
+                <div class="c-switcher-group" role="tablist" aria-label="财务视角切换" data-i18n-aria="finance.title">
+                    <button class="c-toggle is-active" type="button" data-finance-view="receivables" role="tab" aria-selected="true" data-i18n="finance.tabs.receivables">收账确认</button>
+                    <button class="c-toggle" type="button" data-finance-view="reimbursements" role="tab" aria-selected="false" data-i18n="finance.tabs.reimbursements">报销管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="payroll" role="tab" aria-selected="false" data-i18n="finance.tabs.payroll">工资计算</button>
+                    <button class="c-toggle" type="button" data-finance-view="payments" role="tab" aria-selected="false" data-i18n="finance.tabs.payments">支付记录</button>
+                    <button class="c-toggle" type="button" data-finance-view="reports" role="tab" aria-selected="false" data-i18n="finance.tabs.reports">财务报表</button>
+                </div>
+            </div>
+        </div>
+
+        <section class="c-card c-card-pad finance-view" data-finance-panel="receivables">
+            <div class="finance-section-head">
+                <div>
+                    <h2 class="finance-section-title" data-i18n="finance.receivables.title">收账确认</h2>
+                    <p class="c-card-subtitle" data-i18n="finance.receivables.subtitle">确认客户款项到账状态，跟踪订单、请求书与入金日期。</p>
+                </div>
+                <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_receivable">新增收账</button>
+            </div>
+            <div class="finance-summary-grid">
+                <div class="finance-summary-item"><span class="finance-summary-label">本月应收</span><span class="finance-summary-value">¥0</span></div>
+                <div class="finance-summary-item"><span class="finance-summary-label">已到账</span><span class="finance-summary-value">¥0</span></div>
+                <div class="finance-summary-item"><span class="finance-summary-label">待确认</span><span class="finance-summary-value">0</span></div>
+                <div class="finance-summary-item"><span class="finance-summary-label">逾期</span><span class="finance-summary-value">0</span></div>
+            </div>
+            <div class="c-inline-filters">
+                <div class="c-inline-filters-grid-3">
+                    <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
+                    <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="客户 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.keyword"></div>
+                    <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>待确认</option><option>已到账</option><option>逾期</option></select></div>
+                </div>
+                <div class="c-filter-actions-bar">
+                    <div></div>
+                    <div class="c-filter-actions-right c-filter-actions-group">
+                        <button class="c-btn c-btn-primary" type="button" data-i18n="common.search">搜索</button>
+                        <button class="c-btn c-btn-warn" type="button" data-i18n="common.reset">重置</button>
+                    </div>
+                </div>
+            </div>
+            <div class="table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead><tr><th>请求书号</th><th>客户</th><th>金额</th><th>预定到账日</th><th>实际到账日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+                    <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="c-card c-card-pad finance-view hidden" data-finance-panel="reimbursements">
+            <div class="finance-section-head">
+                <div>
+                    <h2 class="finance-section-title" data-i18n="finance.reimbursements.title">报销管理</h2>
+                    <p class="c-card-subtitle" data-i18n="finance.reimbursements.subtitle">管理员工报销申请、凭证、审核状态与付款进度。</p>
+                </div>
+                <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_reimbursement">新增报销</button>
+            </div>
+            <div class="c-inline-filters">
+                <div class="c-inline-filters-grid-3">
+                    <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
+                    <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="客户 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.keyword"></div>
+                    <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>申请中</option><option>已承认</option><option>已支付</option><option>已驳回</option></select></div>
+                </div>
+            </div>
+            <div class="table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead><tr><th>报销单号</th><th>申请人</th><th>类型</th><th>金额</th><th>申请日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+                    <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="c-card c-card-pad finance-view hidden" data-finance-panel="payroll">
+            <div class="finance-section-head">
+                <div>
+                    <h2 class="finance-section-title" data-i18n="finance.payroll.title">工资计算</h2>
+                    <p class="c-card-subtitle" data-i18n="finance.payroll.subtitle">按月份汇总考勤、契约单价、扣款与最终发放金额。</p>
+                </div>
+                <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.calculate_payroll">计算工资</button>
+            </div>
+            <div class="table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead><tr><th>月份</th><th>员工</th><th>出勤日数</th><th>基本工资</th><th>扣款</th><th>发放金额</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+                    <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="c-card c-card-pad finance-view hidden" data-finance-panel="payments">
+            <div class="finance-section-head">
+                <div>
+                    <h2 class="finance-section-title" data-i18n="finance.payments.title">支付记录</h2>
+                    <p class="c-card-subtitle" data-i18n="finance.payments.subtitle">查询公司对外付款、员工付款与历史流水。</p>
+                </div>
+                <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_payment">新增支付</button>
+            </div>
+            <div class="table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead><tr><th>支付编号</th><th>对象</th><th>类别</th><th>金额</th><th>支付日</th><th>支付方式</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+                    <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="c-card c-card-pad finance-view hidden" data-finance-panel="reports">
+            <div class="finance-section-head">
+                <div>
+                    <h2 class="finance-section-title" data-i18n="finance.reports.title">财务报表</h2>
+                    <p class="c-card-subtitle" data-i18n="finance.reports.subtitle">查看月度收支、应收应付与利润概览。</p>
+                </div>
+                <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.export_report">导出报表</button>
+            </div>
+            <div class="finance-summary-grid">
+                <div class="finance-summary-item"><span class="finance-summary-label">收入</span><span class="finance-summary-value">¥0</span></div>
+                <div class="finance-summary-item"><span class="finance-summary-label">支出</span><span class="finance-summary-value">¥0</span></div>
+                <div class="finance-summary-item"><span class="finance-summary-label">应收</span><span class="finance-summary-value">¥0</span></div>
+                <div class="finance-summary-item"><span class="finance-summary-label">利润</span><span class="finance-summary-value">¥0</span></div>
+            </div>
+            <div class="table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead><tr><th>月份</th><th>收入</th><th>支出</th><th>应收</th><th>应付</th><th>利润</th><th>备注</th></tr></thead>
+                    <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const buttons = Array.from(document.querySelectorAll("[data-finance-view]"));
+        const panels = Array.from(document.querySelectorAll("[data-finance-panel]"));
+
+        const setView = (view) => {
+            buttons.forEach((button) => {
+                const active = button.dataset.financeView === view;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            panels.forEach((panel) => {
+                panel.classList.toggle("hidden", panel.dataset.financePanel !== view);
+            });
+        };
+
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setView(button.dataset.financeView));
+        });
+
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply();
+        }
+    });
+</script>
+</body>
+</html>

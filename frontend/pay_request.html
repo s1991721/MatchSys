@@ -102,8 +102,9 @@
         <div class="filter-grid c-filter-grid-wide">
           <label class="c-field">
             <span>客户名称</span>
-            <input id="pay-filter-customer" type="text" placeholder="输入客户名称" />
+            <input id="pay-filter-customer" type="text" placeholder="输入客户名称" list="pay-filter-customer-list" autocomplete="off" />
           </label>
+          <datalist id="pay-filter-customer-list"></datalist>
           <label class="c-field">
             <span>月份</span>
             <input id="pay-filter-month" type="month" />
@@ -447,6 +448,7 @@
     const payPaginationPages = payPagination ? payPagination.querySelector(".pagination-pages") : null;
     const payPaginationSummary = payPagination ? payPagination.querySelector(".pagination-summary") : null;
     const payFilterCustomerInput = document.getElementById("pay-filter-customer");
+    const payFilterCustomerList = document.getElementById("pay-filter-customer-list");
     const payFilterMonthInput = document.getElementById("pay-filter-month");
     const paySearchBtn = document.getElementById("paySearchBtn");
     const payResetBtn = document.getElementById("payResetBtn");
@@ -519,6 +521,7 @@
       attachmentList: document.getElementById("pay-send-attachment-list")
     };
     const payCustomerMap = new Map();
+    const payFilterCustomerMap = new Map();
     let customerAddressState = {
       customerId: "",
       customerName: "",
@@ -568,6 +571,12 @@
       const { yyyy, mm, dd } = getDateParts();
       return `${yyyy}-${mm}-${dd}`;
     };
+
+    const currentMonthText = () => (
+      typeof window.getCurrentMonth === "function"
+        ? window.getCurrentMonth()
+        : todayText().slice(0, 7)
+    );
 
     const buildRequestNo = () => {
       const { yyyy, mm, dd, hh, mi, ss } = getDateParts();
@@ -1735,6 +1744,20 @@
       });
     }
 
+    if (payFilterCustomerInput && payFilterCustomerList) {
+      const debouncedFetchFilterCustomers = debounce(() => fetchPayCustomerOptions(payFilterCustomerInput, payFilterCustomerList, payFilterCustomerMap));
+      payFilterCustomerInput.addEventListener("focus", () => {
+        fetchPayCustomerOptions(payFilterCustomerInput, payFilterCustomerList, payFilterCustomerMap, { useDefault: true });
+      });
+      payFilterCustomerInput.addEventListener("input", () => {
+        if (!payFilterCustomerInput.value.trim()) {
+          fetchPayCustomerOptions(payFilterCustomerInput, payFilterCustomerList, payFilterCustomerMap);
+          return;
+        }
+        debouncedFetchFilterCustomers();
+      });
+    }
+
     if (payRequestTable && createPayDialog) {
       payRequestTable.addEventListener("click", async (event) => {
         const btn = event.target.closest("button[data-action]");
@@ -1831,7 +1854,9 @@
     if (payResetBtn) {
       payResetBtn.addEventListener("click", () => {
         if (payFilterCustomerInput) payFilterCustomerInput.value = "";
-        if (payFilterMonthInput) payFilterMonthInput.value = "";
+        if (payFilterCustomerList) payFilterCustomerList.innerHTML = "";
+        payFilterCustomerMap.clear();
+        if (payFilterMonthInput) payFilterMonthInput.value = currentMonthText();
         payCurrentPage = 1;
         fetchPayRequests();
       });
@@ -1858,6 +1883,9 @@
     }
 
     resetCreateForm();
+    if (payFilterMonthInput && !payFilterMonthInput.value) {
+      payFilterMonthInput.value = currentMonthText();
+    }
     loadBankAccount();
     loadCompanyInfo();
     loadOwnerInfo();

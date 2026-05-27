@@ -159,7 +159,14 @@ urlpatterns = [
     path("order.html", TemplateView.as_view(template_name="frontend/order.html")),
     path("pay_request.html", TemplateView.as_view(template_name="frontend/pay_request.html")),
     # -------------------------------finance UI-------------------------------
-    path("finance.html", TemplateView.as_view(template_name="frontend/finance.html")),
+    path("finance.html", TemplateView.as_view(template_name="frontend/finance/finance.html")),
+    path("finance/receivables.html", TemplateView.as_view(template_name="frontend/finance/receivables.html")),
+    path("finance/payables.html", TemplateView.as_view(template_name="frontend/finance/payables.html")),
+    path("finance/reimbursements.html", TemplateView.as_view(template_name="frontend/finance/reimbursements.html")),
+    path("finance/payroll.html", TemplateView.as_view(template_name="frontend/finance/payroll.html")),
+    path("finance/payments.html", TemplateView.as_view(template_name="frontend/finance/payments.html")),
+    path("finance/reports.html", TemplateView.as_view(template_name="frontend/finance/reports.html")),
+    path("finance/settings.html", TemplateView.as_view(template_name="frontend/finance/settings.html")),
     # -------------------------------permission UI-------------------------------
     path("permission.html", TemplateView.as_view(template_name="frontend/permission.html")),
     # -------------------------------notification UI-------------------------------
@@ -200,6 +207,46 @@ urlpatterns = [
         "order_sales.js",
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/order_sales.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/finance.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/finance.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/receivables.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/receivables.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/payables.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/payables.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/reimbursements.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/reimbursements.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/payroll.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/payroll.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/payments.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/payments.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/reports.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/reports.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/settings.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/settings.js", content_type="application/javascript")),
     ),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="finance.title">财务管理</title>
+    <style>
+        .finance-page .c-switch-wrap {
+            max-width: 100%;
+            overflow-x: auto;
+            padding-bottom: 2px;
+        }
+        .finance-page .c-switcher-group {
+            flex-wrap: nowrap;
+            white-space: nowrap;
+        }
+        .finance-content {
+            min-height: 240px;
+        }
+        .finance-view {
+            display: grid;
+            gap: 16px;
+        }
+        .finance-view.hidden {
+            display: none;
+        }
+        .finance-section-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .finance-section-title {
+            margin: 0;
+            font-size: 20px;
+            line-height: 1.25;
+            color: #0f172a;
+        }
+        .finance-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .finance-summary-item {
+            min-height: 84px;
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.38);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .finance-summary-label {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .finance-summary-value {
+            display: block;
+            margin-top: 8px;
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        .finance-empty-row {
+            text-align: center;
+            color: #94a3b8;
+            padding: 28px 12px;
+        }
+        .finance-subtabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 4px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .finance-subtab {
+            min-height: 34px;
+            padding: 0 14px;
+            border: 0;
+            border-radius: 6px;
+            background: transparent;
+            color: #475569;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .finance-subtab.is-active {
+            background: #fff;
+            color: #1d4ed8;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+        }
+        .finance-subpanel {
+            display: grid;
+            gap: 16px;
+        }
+        .finance-subpanel.hidden {
+            display: none;
+        }
+        @media (max-width: 980px) {
+            .finance-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .finance-section-head {
+                align-items: stretch;
+                flex-direction: column;
+            }
+        }
+        @media (max-width: 640px) {
+            .finance-page .c-page-head-grid {
+                grid-template-columns: 1fr;
+            }
+            .finance-page .c-switch-wrap {
+                justify-self: stretch;
+            }
+            .finance-summary-grid,
+            .c-inline-filters-grid-3 {
+                grid-template-columns: 1fr;
+            }
+            .finance-section-title {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body class="order-page finance-page">
+<div class="page">
+    <div class="c-stack">
+        <div class="c-page-head-grid">
+            <div class="c-page-head-spacer" aria-hidden="true"></div>
+            <div class="c-switch-wrap">
+                <div class="c-switcher-group" role="tablist" aria-label="财务视角切换" data-i18n-aria="finance.title">
+                    <button class="c-toggle is-active" type="button" data-finance-view="receivables" role="tab" aria-selected="true" data-i18n="finance.tabs.receivables">应收管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="payables" role="tab" aria-selected="false" data-i18n="finance.tabs.payables">应付管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="reimbursements" role="tab" aria-selected="false" data-i18n="finance.tabs.reimbursements">报销管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="payroll" role="tab" aria-selected="false" data-i18n="finance.tabs.payroll">工资计算</button>
+                    <button class="c-toggle" type="button" data-finance-view="payments" role="tab" aria-selected="false" data-i18n="finance.tabs.payments">支付记录</button>
+                    <button class="c-toggle" type="button" data-finance-view="reports" role="tab" aria-selected="false" data-i18n="finance.tabs.reports">财务报表</button>
+                    <button class="c-toggle" type="button" data-finance-view="settings" role="tab" aria-selected="false" data-i18n="finance.tabs.settings">财务设置</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="financeContent" class="finance-content" aria-live="polite"></div>
+    </div>
+</div>
+
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script src="finance/finance.js"></script>
+</body>
+</html>

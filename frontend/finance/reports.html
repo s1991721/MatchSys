@@ -1,0 +1,62 @@
+<section class="c-card c-card-pad finance-view" data-finance-panel="reports">
+    <div class="finance-section-head">
+        <div>
+            <h2 class="finance-section-title" data-i18n="finance.reports.title">财务报表</h2>
+            <p class="c-card-subtitle" data-i18n="finance.reports.subtitle">查看月度收支、应收应付与利润概览。</p>
+        </div>
+        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.export_report">导出报表</button>
+    </div>
+    <div class="finance-subtabs" role="tablist" aria-label="财务报表子功能">
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="monthly">月度收支</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="balance">应收应付</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="profit">利润分析</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="cashflow">现金流</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="exports">导出中心</button>
+    </div>
+    <div class="finance-subpanel" data-finance-subpanel="monthly">
+    <div class="finance-summary-grid">
+        <div class="finance-summary-item"><span class="finance-summary-label">收入</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-summary-item"><span class="finance-summary-label">支出</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-summary-item"><span class="finance-summary-label">应收</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-summary-item"><span class="finance-summary-label">利润</span><span class="finance-summary-value">¥0</span></div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead><tr><th>月份</th><th>收入</th><th>支出</th><th>应收</th><th>应付</th><th>利润</th><th>备注</th></tr></thead>
+            <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="balance">
+        <div class="finance-summary-grid">
+            <div class="finance-summary-item"><span class="finance-summary-label">应收余额</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">应付余额</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">逾期应收</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">逾期应付</span><span class="finance-summary-value">¥0</span></div>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="profit">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>维度</th><th>收入</th><th>成本</th><th>利润</th><th>利润率</th><th>备注</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无利润分析数据</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="cashflow">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>月份</th><th>期初余额</th><th>入金</th><th>出金</th><th>期末余额</th><th>备注</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无现金流数据</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="exports">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>报表类型</th><th>期间</th><th>格式</th><th>生成时间</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="5">暂无导出记录</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</section>

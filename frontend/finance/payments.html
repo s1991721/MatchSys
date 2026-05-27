@@ -1,0 +1,56 @@
+<section class="c-card c-card-pad finance-view" data-finance-panel="payments">
+    <div class="finance-section-head">
+        <div>
+            <h2 class="finance-section-title" data-i18n="finance.payments.title">支付记录</h2>
+            <p class="c-card-subtitle" data-i18n="finance.payments.subtitle">查询公司对外付款、员工付款与历史流水。</p>
+        </div>
+        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_payment">新增支付</button>
+    </div>
+    <div class="finance-subtabs" role="tablist" aria-label="支付记录子功能">
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="ledger">支付流水</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="bank">银行转账</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="cash">现金/其他</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="source">来源关联</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="voucher">支付凭证</button>
+    </div>
+    <div class="finance-subpanel" data-finance-subpanel="ledger">
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead><tr><th>支付编号</th><th>对象</th><th>类别</th><th>金额</th><th>支付日</th><th>支付方式</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+            <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="bank">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>转账编号</th><th>银行账户</th><th>收款对象</th><th>金额</th><th>转账日</th><th>状态</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无银行转账记录</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="cash">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>支付编号</th><th>对象</th><th>方式</th><th>金额</th><th>支付日</th><th>备注</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无现金/其他支付记录</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="source">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>支付编号</th><th>来源类型</th><th>来源单号</th><th>对象</th><th>金额</th><th>关联状态</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无来源关联</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="voucher">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>凭证编号</th><th>支付编号</th><th>文件名</th><th>上传人</th><th>上传日</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无支付凭证</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</section>

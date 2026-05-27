@@ -1,0 +1,63 @@
+<section class="c-card c-card-pad finance-view" data-finance-panel="reimbursements">
+    <div class="finance-section-head">
+        <div>
+            <h2 class="finance-section-title" data-i18n="finance.reimbursements.title">报销管理</h2>
+            <p class="c-card-subtitle" data-i18n="finance.reimbursements.subtitle">管理员工报销申请、凭证、审核状态与付款进度。</p>
+        </div>
+        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_reimbursement">新增报销</button>
+    </div>
+    <div class="finance-subtabs" role="tablist" aria-label="报销管理子功能">
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="requests">报销申请</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="approval">审核处理</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="receipts">凭证管理</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="payment">报销付款</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="stats">报销统计</button>
+    </div>
+    <div class="finance-subpanel" data-finance-subpanel="requests">
+    <div class="c-inline-filters">
+        <div class="c-inline-filters-grid-3">
+            <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="客户 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.keyword"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>申请中</option><option>已承认</option><option>已支付</option><option>已驳回</option></select></div>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead><tr><th>报销单号</th><th>申请人</th><th>类型</th><th>金额</th><th>申请日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+            <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="approval">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>报销单号</th><th>申请人</th><th>金额</th><th>申请日</th><th>审核状态</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无待审核报销</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="receipts">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>凭证编号</th><th>报销单号</th><th>类型</th><th>金额</th><th>上传人</th><th>上传日</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无凭证</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="payment">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>报销单号</th><th>申请人</th><th>应付金额</th><th>支付日</th><th>支付状态</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无待付款报销</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="stats">
+        <div class="finance-summary-grid">
+            <div class="finance-summary-item"><span class="finance-summary-label">本月报销</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">交通费</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">通信费</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">其他费用</span><span class="finance-summary-value">¥0</span></div>
+        </div>
+    </div>
+</section>

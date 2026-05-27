@@ -1,0 +1,76 @@
+<section class="c-card c-card-pad finance-view" data-finance-panel="receivables">
+    <div class="finance-section-head">
+        <div>
+            <h2 class="finance-section-title" data-i18n="finance.receivables.title">应收管理</h2>
+            <p class="c-card-subtitle" data-i18n="finance.receivables.subtitle">管理客户侧应收款、入金确认、未收款与账龄风险。</p>
+        </div>
+        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_receivable">新增收账</button>
+    </div>
+    <div class="finance-subtabs" role="tablist" aria-label="应收管理子功能">
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="list">应收列表</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="collection">收账确认</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="aging">账龄分析</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="customer">客户对账</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="cashflow">入金流水</button>
+    </div>
+    <div class="finance-subpanel" data-finance-subpanel="list">
+    <div class="finance-summary-grid">
+        <div class="finance-summary-item"><span class="finance-summary-label">本月应收</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-summary-item"><span class="finance-summary-label">未收金额</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-summary-item"><span class="finance-summary-label">逾期金额</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-summary-item"><span class="finance-summary-label">待确认入金</span><span class="finance-summary-value">0</span></div>
+    </div>
+    <div class="c-inline-filters">
+        <div class="c-inline-filters-grid-3">
+            <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="客户 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.keyword"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>待确认</option><option>已到账</option><option>逾期</option></select></div>
+        </div>
+        <div class="c-filter-actions-bar">
+            <div></div>
+            <div class="c-filter-actions-right c-filter-actions-group">
+                <button class="c-btn c-btn-primary" type="button" data-i18n="common.search">搜索</button>
+                <button class="c-btn c-btn-warn" type="button" data-i18n="common.reset">重置</button>
+            </div>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead><tr><th>请求书号</th><th>客户</th><th>应收金额</th><th>未收金额</th><th>预定到账日</th><th>账龄</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+            <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="collection">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>入金编号</th><th>客户</th><th>请求书号</th><th>入金金额</th><th>入金日</th><th>确认状态</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="7">暂无待确认入金</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="aging">
+        <div class="finance-summary-grid">
+            <div class="finance-summary-item"><span class="finance-summary-label">未到期</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">1-30 天</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">31-60 天</span><span class="finance-summary-value">¥0</span></div>
+            <div class="finance-summary-item"><span class="finance-summary-label">60 天以上</span><span class="finance-summary-value">¥0</span></div>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="customer">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>客户</th><th>应收金额</th><th>已收金额</th><th>未收金额</th><th>逾期金额</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无客户对账数据</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="cashflow">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>流水号</th><th>银行账户</th><th>入金金额</th><th>入金日</th><th>匹配状态</th><th>备注</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无入金流水</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</section>

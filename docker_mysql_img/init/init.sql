@@ -300,6 +300,7 @@ CREATE TABLE IF NOT EXISTS customer
 
     contract          TEXT                  DEFAULT NULL COMMENT '合同信息',
     remark            TEXT                  DEFAULT NULL COMMENT '备注',
+    payment_info      JSON                  DEFAULT NULL COMMENT '支付信息',
 
     contact1_name     VARCHAR(100)          DEFAULT NULL COMMENT '联系人1姓名',
     contact1_position VARCHAR(100)          DEFAULT NULL COMMENT '联系人1职位',
@@ -496,6 +497,27 @@ CREATE TABLE IF NOT EXISTS my_mail
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='我的邮件缓存表';
 
+# ----------------------------------------------- 错误邮件 -----------------------------------------------
+CREATE TABLE IF NOT EXISTS wrong_mail_info
+(
+    id            VARCHAR(255) PRIMARY KEY,
+    title         VARCHAR(500) COMMENT '邮件标题',
+    address       VARCHAR(255) NOT NULL COMMENT '发件人',
+    body          TEXT COMMENT '正文内容',
+    files         TEXT COMMENT '附件信息',
+    date          DATETIME COMMENT '日期',
+    remark        VARCHAR(500) COMMENT '备注',
+    country       VARCHAR(100) COMMENT '国家 0=日本籍 1=日本籍以外',
+    skills        VARCHAR(500) COMMENT '技能要求',
+    price         DECIMAL(10, 2) COMMENT '价格',
+
+    wrong_type    TINYINT(1) COMMENT '错误类型 1=邮件分类错误 2=国籍识别错误 3=关键词识别错误',
+    wrong_label   TINYINT(1) COMMENT '错误分类',
+    correct_label TINYINT(1) COMMENT '正确分类',
+    deleted_at    DATETIME COMMENT '下载标记时间（软删除）'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT ='错误邮件记录表';
+
 # ----------------------------------------------- 系统设置 -----------------------------------------------
 
 CREATE TABLE IF NOT EXISTS sys_settings
@@ -512,15 +534,112 @@ CREATE TABLE IF NOT EXISTS sys_settings
   DEFAULT CHARSET = utf8mb4 COMMENT ='系统设置表';
 
 INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at)
-VALUES ('match', '{
-  "cycle_days": 14
-}', 1, '2026-01-03 17:08:42', 1, '2026-01-04 14:01:59', NULL),
-       ('ai', '{
-         "api_key": "",
-         "mode_type": "local",
-         "model_name": "llama3.2:3b-instruct-q4_K_M"
-       }', 1,
-        '2026-01-04 05:31:02', 1, '2026-01-04 05:42:31', NULL);
+VALUES (
+    'match',
+    JSON_OBJECT(
+        'cycle_days', 14
+    ),
+    1,
+    '2026-01-03 17:08:42',
+    1,
+    '2026-01-04 14:01:59',
+    NULL
+);
+
+INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at)
+VALUES (
+    'ai',
+    JSON_OBJECT(
+        'api_key', '',
+        'mode_type', 'local',
+        'model_name', 'llama3.2:3b-instruct-q4_K_M'
+    ),
+    1,
+    '2026-01-04 05:31:02',
+    1,
+    '2026-01-04 05:42:31',
+    NULL
+);
+
+INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at)
+VALUES (
+    'mail-template',
+    JSON_OBJECT(
+        'anjian',
+        CONCAT(
+            'いつもお世話になっております。\n',
+            '株式会社の林でございます。\n\n',
+            '技術者をご紹介いただきありがとうございます。\n',
+            '弊社にて対応可能な案件をご紹介させて頂きます。\n',
+            'ご検討頂けますと幸いです。\n\n',
+            '**************************************\n',
+            '{project_block}\n',
+            '{detail_block}\n',
+            '{requirement_block}\n',
+            '{skills_must_block}\n',
+            '{skills_can_block}\n',
+            '{remark_block}\n',
+            '**************************************\n\n',
+            '今後とも何卒よろしくお願い申し上げます。\n\n',
+            '＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n',
+            '株式会社\n',
+            '営業部　マネージャー：\n',
+            '個人mail:gmail@outlook.com\n',
+            '営業共通mail: outlook@gmail.com\n',
+            'mobile: 010-2345-6789\n',
+            '〒123-4567\n',
+            '東京都XXX区XX町X丁目12-3\n',
+            '第一 ビル 88F\n',
+            'HP:https://www.homapage.jp/\n'
+        ),
+        'technician',
+        CONCAT(
+            'いつもお世話になっております。\n',
+            '株式会社の林でございます。\n\n',
+            '技術者をご紹介させて頂きます。\n',
+            'ご検討頂けますと幸いです。\n\n',
+            '**************************************\n',
+            '{person_intro}\n',
+            '**************************************\n\n',
+            '今後とも何卒よろしくお願い申し上げます。\n\n',
+            '＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\n',
+            '株式会社\n',
+            '営業部　マネージャー：\n',
+            '個人mail:gmail@outlook.com\n',
+            '営業共通mail: outlook@gmail.com\n',
+            'mobile: 010-2345-6789\n',
+            '〒123-4567\n',
+            '東京都XXX区XX町X丁目12-3\n',
+            '第一 ビル 88F\n',
+            'HP:https://www.homapage.jp/\n'
+        ),
+        'order',
+        CONCAT(
+            '{company_name}\n',
+            'ご担当者様\n\n',
+            'いつもお世話になっております。\n\n',
+            '注文書を添付にて送付いたします。\n',
+            '内容をご確認のうえ、ご査収くださいますようお願いいたします。\n\n',
+            'ご不明点や修正がございましたら、お知らせください。\n',
+            '何卒よろしくお願いいたします。'
+        ),
+        'pay_request',
+        CONCAT(
+            '{company_name}\n',
+            'ご担当者様\n\n',
+            'いつもお世話になっております。\n\n',
+            '請求書を添付にて送付いたします。\n',
+            '内容をご確認のうえ、ご査収くださいますようお願いいたします。\n\n',
+            'ご不明点や修正がございましたら、お知らせください。\n',
+            '何卒よろしくお願いいたします。'
+        )
+    ),
+    1,
+    '2026-04-22 15:10:29',
+    1,
+    '2026-05-26 00:00:00',
+    NULL
+);
 
 CREATE TABLE IF NOT EXISTS sys_tasks
 (
@@ -550,4 +669,4 @@ INSERT INTO sys_tasks (name,`time`,frequency,cron_expr,`method`,api,body,enabled
 	 ('夜间过期数据清理','05:00:00','每天','0 5 * * *','POST','/api/time-to-clean','',1,'2026-01-10 20:00:00',NULL,'error','HTTP 500',1,'2026-01-04 15:20:48',1,'2026-01-10 20:00:00',NULL),
 	 ('重要数据备份','01:00:00','每周','0 1 * * 6','POST','/api/time-to-backup','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
 	 ('我的邮件定时同步','09:00:00','自定义 Cron','*/10 9-20 * * *','POST','/api/time-to-sync-my-mails','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
-	 ('工作日日间数据处理','09:00:00','自定义 Cron','0 9-20 * * 1-5','POST','/api/time-to-save-day','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL)
+	 ('工作日日间数据处理','09:00:00','自定义 Cron','0 9-20 * * 1-5','POST','/api/time-to-save-day','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL);

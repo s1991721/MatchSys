@@ -437,12 +437,10 @@
 
         const tick = async () => {
             try {
-                const response = await fetch("/api/my-mails/unread-count", {
+                const payload = await window.requestJson("/api/my-mails/unread-count", {
                     method: "GET",
-                    credentials: "include",
                     cache: "no-store",
                 });
-                const payload = await response.json();
                 if (!payload || payload.success === false) {
                     onData({ unread_count: 0, has_mailbox: false, error: true });
                     return;

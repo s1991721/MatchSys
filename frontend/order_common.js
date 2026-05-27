@@ -317,6 +317,7 @@
         let currentItems = [];
         let currentDetailId = null;
         let detailMode = "view";
+        const viewStorageKey = "order_current_view";
         const filterCustomerMap = new Map();
         let ownerSelectOptionsCache = null;
         let ownerSelectOptionsRequest = null;
@@ -566,6 +567,11 @@
         const setView = (view) => {
             currentView = view;
             currentPage = 1;
+            try {
+                sessionStorage.setItem(viewStorageKey, view);
+            } catch (error) {
+                console.warn(error);
+            }
             applyViewLabels(view);
             fetchOrders();
         };
@@ -873,7 +879,14 @@
             sales.cleanup();
         });
 
-        setView("issue");
+        let initialView = "issue";
+        try {
+            const storedView = sessionStorage.getItem(viewStorageKey);
+            if (storedView === "issue" || storedView === "accept") initialView = storedView;
+        } catch (error) {
+            console.warn(error);
+        }
+        setView(initialView);
     }
 
     window.OrderCommon = { init };

@@ -489,9 +489,7 @@
 
     const loadWeekMatchStats = async () => {
       try {
-        const response = await fetch("/api/home/stats");
-        if (!response.ok) return;
-        const payload = await response.json();
+        const payload = await window.requestJson("/api/home/stats", { method: "GET" });
         const data = payload && (payload.data || {});
         if (payload && (payload.status === "ok" || payload.success === true)) {
           updateWeekMatchStats(data);

@@ -396,13 +396,9 @@
                 if (!key) return "";
                 if (ownerSealCache.has(key)) return ownerSealCache.get(key);
                 try {
-                    const response = await fetch(`/api/employees/${encodeURIComponent(key)}/seal?v=${encodeURIComponent(Date.now())}`, {
-                        credentials: "same-origin"
+                    const response = await window.fetchWithAuth(`/api/employees/${encodeURIComponent(key)}/seal?v=${encodeURIComponent(Date.now())}`, {
+                        method: "GET"
                     });
-                    if (!response.ok) {
-                        ownerSealCache.set(key, "");
-                        return "";
-                    }
                     const blob = await response.blob();
                     if (!blob || !blob.size) {
                         ownerSealCache.set(key, "");
@@ -462,10 +458,9 @@
                 clearCompanySealObjectUrl();
                 if (!filename) return "";
                 try {
-                    const response = await fetch(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
-                        credentials: "same-origin"
+                    const response = await window.fetchWithAuth(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
+                        method: "GET"
                     });
-                    if (!response.ok) return "";
                     const blob = await response.blob();
                     if (!blob || !blob.size) return "";
                     companySealObjectUrl = URL.createObjectURL(blob);
@@ -733,8 +728,7 @@
             const getSendPdfBlob = async () => {
                 const pdfUrl = getStoredPdfUrl(currentSendItem);
                 if (!pdfUrl) throw new Error("没有PDF");
-                const response = await fetch(pdfUrl, { credentials: "same-origin" });
-                if (!response.ok) throw new Error("PDF文件读取失败");
+                const response = await window.fetchWithAuth(pdfUrl, { method: "GET" });
                 return response.blob();
             };
 

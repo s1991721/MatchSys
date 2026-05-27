@@ -958,10 +958,9 @@
       clearCompanySealObjectUrl();
       if (!filename) return "";
       try {
-        const response = await fetch(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
-          credentials: "same-origin"
+        const response = await window.fetchWithAuth(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
+          method: "GET"
         });
-        if (!response.ok) return "";
         const blob = await response.blob();
         if (!blob || !blob.size) return "";
         companySealObjectUrl = URL.createObjectURL(blob);
@@ -1006,10 +1005,9 @@
       clearOwnerSealObjectUrl();
       if (!employeeId) return "";
       try {
-        const response = await fetch(`/api/employees/${encodeURIComponent(employeeId)}/seal?v=${Date.now()}`, {
-          credentials: "same-origin"
+        const response = await window.fetchWithAuth(`/api/employees/${encodeURIComponent(employeeId)}/seal?v=${Date.now()}`, {
+          method: "GET"
         });
-        if (!response.ok) return "";
         const blob = await response.blob();
         if (!blob || !blob.size) return "";
         ownerSealObjectUrl = URL.createObjectURL(blob);
@@ -1354,8 +1352,7 @@
     const getPaySendPdfBlob = async () => {
       const pdfUrl = getStoredPayPdfUrl(payCurrentSendItem);
       if (!pdfUrl) throw new Error("没有PDF");
-      const response = await fetch(pdfUrl, { credentials: "same-origin" });
-      if (!response.ok) throw new Error("PDF文件读取失败");
+      const response = await window.fetchWithAuth(pdfUrl, { method: "GET" });
       return response.blob();
     };
 

@@ -331,13 +331,11 @@
       const loadSystemExpiryStatus = async () => {
         if (!systemExpiryStatus) return;
         try {
-          const response = await fetch(activationSettingsApi, {
+          const payload = await window.requestJson(activationSettingsApi, {
             method: "GET",
-            credentials: "same-origin",
             cache: "no-store",
           });
-          const payload = await response.json().catch(() => ({}));
-          if (!response.ok || !payload || payload.success === false) {
+          if (!payload || payload.success === false) {
             activationExpiryRaw = "";
             activationSystemVersion = "";
             renderSystemVersion();

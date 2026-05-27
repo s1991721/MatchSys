@@ -81,6 +81,10 @@ from employee.views import (
     user_login_names_api,
 )
 from order.views import (
+    pay_request_detail_api,
+    pay_request_pdf_api,
+    pay_request_update_api,
+    pay_requests_api,
     purchase_orders_api,
     purchase_order_pdf_api,
     purchase_order_update_api,
@@ -265,6 +269,10 @@ urlpatterns = [
     path("api/sales-orders", sales_orders_api, name="sales-orders"),
     path("api/sales-orders/<int:order_id>", sales_order_detail_api, name="sales-order-detail"),
     path("api/sales-orders/<int:order_id>/pdf", sales_order_pdf_api, name="sales-order-pdf"),
+    path("api/pay-requests", pay_requests_api, name="pay-requests"),
+    path("api/pay-requests/<int:pay_request_id>", pay_request_detail_api, name="pay-request-detail"),
+    path("api/pay-requests/<int:pay_request_id>/update", pay_request_update_api, name="pay-request-update"),
+    path("api/pay-requests/<int:pay_request_id>/pdf", pay_request_pdf_api, name="pay-request-pdf"),
     # -------------------------------permission UI-------------------------------
 
     # -------------------------------notification UI-------------------------------

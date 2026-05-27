@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from employee.models import Employee
-from order.models import PurchaseOrder, SalesOrder
+from order.models import PayRequest, PurchaseOrder, SalesOrder
 from project.api import api_error, api_paginated, api_success
 from project import storage
 from project.common_tools import (
@@ -22,6 +22,7 @@ from project.common_tools import (
     payload_to_dict,
     require_fields,
     require_login,
+    shift_month,
 )
 from project.storage import StorageArea
 
@@ -30,6 +31,7 @@ PURCHASE_STATUSES = {"已创建", "承认中", "已承认", "已取消"}
 PURCHASE_APPROVING_NEXT_STATUSES = {"已承认", "已取消"}
 PURCHASE_TERMINAL_STATUSES = {"已承认", "已取消"}
 SALES_STATUSES = {"已受注", "已取消"}
+PAY_REQUEST_STATUSES = {"待付款", "已付款", "已取消"}
 ORDER_REQUIRED_FIELDS = (
     "order_no",
     "project_name",
@@ -38,6 +40,12 @@ ORDER_REQUIRED_FIELDS = (
     "status",
     "period_start",
     "period_end",
+)
+PAY_REQUEST_REQUIRED_FIELDS = (
+    "request_no",
+    "customer_id",
+    "customer_name",
+    "status",
 )
 
 
@@ -111,6 +119,13 @@ def _normalize_sales_status(value):
     )
 
 
+def _normalize_pay_request_status(value):
+    raw = str(value or "").strip()
+    if raw in PAY_REQUEST_STATUSES:
+        return raw, None
+    return None, api_error("Invalid status")
+
+
 def _serialize_purchase(order):
     created_at = timezone.localtime(order.created_at) if order.created_at else None
     updated_at = timezone.localtime(order.updated_at) if order.updated_at else None
@@ -167,6 +182,42 @@ def _serialize_sales(order):
     }
 
 
+def _parse_pay_request_details(raw_details):
+    if raw_details in (None, ""):
+        return []
+    if isinstance(raw_details, list):
+        return raw_details
+    try:
+        details = json.loads(raw_details)
+    except (TypeError, json.JSONDecodeError):
+        return []
+    return details if isinstance(details, list) else []
+
+
+def _serialize_pay_request(pay_request):
+    created_at = timezone.localtime(pay_request.created_at) if pay_request.created_at else None
+    updated_at = timezone.localtime(pay_request.updated_at) if pay_request.updated_at else None
+    details = _parse_pay_request_details(pay_request.details)
+    return {
+        "id": pay_request.id,
+        "request_no": pay_request.request_no,
+        "order_no": pay_request.order_no or "",
+        "subject": pay_request.subject or "",
+        "status": pay_request.status,
+        "customer_id": pay_request.customer_id,
+        "customer_name": pay_request.customer_name,
+        "total_amount": str(pay_request.total_amount) if pay_request.total_amount is not None else "0.00",
+        "due_date": pay_request.due_date.isoformat() if pay_request.due_date else "",
+        "details": details,
+        "pdf_file": pay_request.pdf_file or "",
+        "remark": pay_request.remark or "",
+        "created_by": pay_request.created_by,
+        "created_at": created_at.strftime("%Y-%m-%d %H:%M") if created_at else "",
+        "updated_by": pay_request.updated_by or "",
+        "updated_at": updated_at.strftime("%Y-%m-%d %H:%M") if updated_at else "",
+    }
+
+
 def _current_user(request):
     return request.session.get("employee_name") or request.session.get("user_name") or "系统"
 
@@ -181,6 +232,75 @@ def _set_created_audit(instance, current_user, now):
 def _set_updated_audit(instance, request):
     instance.updated_by = _current_user(request)
     instance.updated_at = timezone.now()
+
+
+def _decimal_from_value(value):
+    try:
+        return Decimal(str(value or "0"))
+    except (InvalidOperation, ValueError):
+        return Decimal("0")
+
+
+def _parse_pay_request_details_payload(raw_details):
+    if raw_details in (None, ""):
+        return [], None
+    if isinstance(raw_details, list):
+        details = raw_details
+    else:
+        try:
+            details = json.loads(raw_details)
+        except (TypeError, json.JSONDecodeError):
+            return None, api_error("Invalid JSON: details")
+    if not isinstance(details, list) or any(not isinstance(item, dict) for item in details):
+        return None, api_error("Invalid JSON: details")
+    return details, None
+
+
+def _calculate_pay_request_total(details):
+    total = Decimal("0")
+    for item in details:
+        amount = _decimal_from_value(item.get("amount"))
+        if not amount:
+            qty = _decimal_from_value(item.get("qty") or "1")
+            price = _decimal_from_value(item.get("price"))
+            amount = qty * price
+        total += amount + _decimal_from_value(item.get("tax"))
+    return total.quantize(Decimal("0.01"))
+
+
+def _apply_pay_request_payload(pay_request, payload):
+    if "request_no" in payload:
+        pay_request.request_no = (payload.get("request_no") or "").strip()
+    if "order_no" in payload:
+        pay_request.order_no = (payload.get("order_no") or "").strip()
+    if "subject" in payload:
+        pay_request.subject = (payload.get("subject") or "").strip()
+    if "status" in payload:
+        value, error = _normalize_pay_request_status(payload.get("status"))
+        if error:
+            return error
+        pay_request.status = value
+    if "customer_name" in payload:
+        pay_request.customer_name = (payload.get("customer_name") or "").strip()
+    if "customer_id" in payload:
+        try:
+            pay_request.customer_id = int(payload.get("customer_id") or 0)
+        except (TypeError, ValueError):
+            return api_error("Invalid number: customer_id")
+    if "due_date" in payload:
+        value, error = parse_date(payload.get("due_date"), "due_date")
+        if error:
+            return error
+        pay_request.due_date = value
+    if "remark" in payload:
+        pay_request.remark = (payload.get("remark") or "").strip()
+    if "details" in payload:
+        details, error = _parse_pay_request_details_payload(payload.get("details"))
+        if error:
+            return error
+        pay_request.details = json.dumps(details, ensure_ascii=False)
+        pay_request.total_amount = _calculate_pay_request_total(details)
+    return None
 
 
 def _require_person_in_charge(payload):
@@ -570,6 +690,123 @@ def _order_pdf_response(request, model, order_id):
         return api_error("File not found", status=404)
 
     return _serve_order_pdf_file(order.pdf_file)
+
+
+def _apply_pay_request_filters(queryset, request):
+    request_no = (request.GET.get("request_no") or "").strip()
+    customer_name = (request.GET.get("customer_name") or "").strip()
+    status = (request.GET.get("status") or "").strip()
+    month = (request.GET.get("month") or "").strip()
+
+    if request_no:
+        queryset = queryset.filter(request_no__icontains=request_no)
+    if customer_name:
+        queryset = queryset.filter(customer_name__icontains=customer_name)
+    if status:
+        queryset = queryset.filter(status=status)
+    if month:
+        try:
+            start = timezone.datetime.strptime(month, "%Y-%m").date().replace(day=1)
+        except ValueError:
+            return None, api_error("Invalid date: month")
+        end = shift_month(start, 1)
+        queryset = queryset.filter(created_at__date__gte=start, created_at__date__lt=end)
+    return queryset, None
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def pay_requests_api(request):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        queryset = PayRequest.objects.filter(deleted_at__isnull=True).order_by("-created_at", "-id")
+        queryset, filter_error = _apply_pay_request_filters(queryset, request)
+        if filter_error:
+            return filter_error
+        paged, total, page, page_size, total_pages = paginate_queryset(queryset, request)
+        return api_paginated(
+            items=[_serialize_pay_request(item) for item in paged],
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+
+    payload, error = parse_request_body(request)
+    if error:
+        return error
+    payload = payload_to_dict(payload)
+    payload["status"] = payload.get("status") or "待付款"
+    required_error = require_fields(payload, PAY_REQUEST_REQUIRED_FIELDS)
+    if required_error:
+        return required_error
+
+    pay_request = PayRequest()
+    apply_error = _apply_pay_request_payload(pay_request, payload)
+    if apply_error:
+        return apply_error
+    if not _parse_pay_request_details(pay_request.details):
+        return api_error("Missing field: details")
+    now = timezone.now()
+    _set_created_audit(pay_request, _current_user(request), now)
+    pdf_file = request.FILES.get("pdf_file")
+    if pdf_file:
+        saved_pdf = _save_order_pdf("pay_request", pay_request.request_no, pdf_file)
+        if saved_pdf is None:
+            return api_error("Invalid PDF file")
+        pay_request.pdf_file = saved_pdf
+    pay_request.save()
+    return api_success(data={"item": _serialize_pay_request(pay_request)})
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def pay_request_detail_api(request, pay_request_id):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    pay_request = PayRequest.objects.filter(id=pay_request_id, deleted_at__isnull=True).first()
+    if not pay_request:
+        return api_error("Pay request not found", status=404)
+    return api_success(data={"item": _serialize_pay_request(pay_request)})
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def pay_request_update_api(request, pay_request_id):
+    _login_id, error = require_login(request)
+    if error:
+        return error
+
+    pay_request = PayRequest.objects.filter(id=pay_request_id, deleted_at__isnull=True).first()
+    if not pay_request:
+        return api_error("Pay request not found", status=404)
+
+    payload, error = parse_request_body(request)
+    if error:
+        return error
+    payload = payload_to_dict(payload)
+    apply_error = _apply_pay_request_payload(pay_request, payload)
+    if apply_error:
+        return apply_error
+    pdf_file = request.FILES.get("pdf_file")
+    if pdf_file:
+        saved_pdf = _save_order_pdf("pay_request", pay_request.request_no, pdf_file)
+        if saved_pdf is None:
+            return api_error("Invalid PDF file")
+        pay_request.pdf_file = saved_pdf
+    _set_updated_audit(pay_request, request)
+    pay_request.save()
+    return api_success(data={"item": _serialize_pay_request(pay_request)})
+
+
+@require_http_methods(["GET"])
+def pay_request_pdf_api(request, pay_request_id):
+    return _order_pdf_response(request, PayRequest, pay_request_id)
 
 
 @csrf_exempt

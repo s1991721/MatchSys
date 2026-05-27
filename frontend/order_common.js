@@ -122,13 +122,51 @@
         reader.readAsDataURL(blob);
     });
 
+    const createActionIcon = (name) => {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 24 24");
+        svg.setAttribute("width", "14");
+        svg.setAttribute("height", "14");
+        svg.setAttribute("fill", "none");
+        svg.setAttribute("stroke", "currentColor");
+        svg.setAttribute("stroke-width", "2");
+        svg.setAttribute("stroke-linecap", "round");
+        svg.setAttribute("stroke-linejoin", "round");
+        svg.setAttribute("aria-hidden", "true");
+        const paths = {
+            eye: [
+                ["path", { d: "M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" }],
+                ["circle", { cx: "12", cy: "12", r: "3" }],
+            ],
+            edit: [
+                ["path", { d: "M12 20h9" }],
+                ["path", { d: "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" }],
+            ],
+        };
+        (paths[name] || []).forEach(([tag, attrs]) => {
+            const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+            node.setAttribute("fill", "none");
+            Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+            svg.appendChild(node);
+        });
+        return svg;
+    };
+
     const renderActions = (container, actions) => {
         container.innerHTML = "";
         actions.forEach((item) => {
             const btn = document.createElement("button");
             btn.className = item.className;
             btn.type = "button";
-            btn.textContent = t(item.key);
+            if (item.icon) {
+                btn.appendChild(createActionIcon(item.icon));
+                const label = document.createElement("span");
+                label.textContent = t(item.labelKey || item.key);
+                btn.appendChild(label);
+                btn.setAttribute("aria-label", t(item.key));
+            } else {
+                btn.textContent = t(item.key);
+            }
             if (item.action) btn.dataset.action = item.action;
             container.appendChild(btn);
         });

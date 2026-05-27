@@ -431,8 +431,8 @@
                 baseUrl: "/api/sales-orders",
                 actions: [
                     { key: "common.edit", action: "edit", className: "c-btn c-btn-secondary c-btn-sm" },
-                    { key: "order.action.view_request", action: "view_request", className: "c-btn c-btn-lite c-btn-sm" },
-                    { key: "order.action.create_request", className: "c-btn c-btn-success-lite c-btn-sm" },
+                    { key: "order.action.view_request", labelKey: "order.action.request", action: "view_request", icon: "eye", className: "c-btn c-btn-lite c-btn-sm" },
+                    { key: "order.action.create_request", labelKey: "order.action.request", icon: "edit", className: "c-btn c-btn-success-lite c-btn-sm" },
                 ],
                 form,
                 customerMap,

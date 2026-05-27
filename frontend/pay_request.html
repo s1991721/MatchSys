@@ -427,8 +427,6 @@
 
   <script src="i18n.js"></script>
   <script src="common.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script>
     const i18n = window.I18N || null;
     const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
@@ -498,6 +496,8 @@
     const PDF_PREVIEW_WIDTH = 595;
     const PDF_PREVIEW_HEIGHT = 842;
     const PAY_PAGE_SIZE = 10;
+    const HTML2CANVAS_SRC = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+    const JSPDF_SRC = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
     let payCurrentPage = 1;
     let payCurrentItems = [];
     let payCurrentEditId = null;
@@ -552,6 +552,15 @@
       name: "",
       sealUrl: ""
     };
+    let bankAccountLoaded = false;
+    let bankAccountLoadPromise = null;
+    let companyInfoLoaded = false;
+    let companyInfoLoadPromise = null;
+    let ownerInfoLoaded = false;
+    let ownerInfoLoadPromise = null;
+    let previewSupportDataPromise = null;
+    let html2canvasLoadPromise = null;
+    let jspdfLoadPromise = null;
 
     if (window.initDialogCloseBehavior) {
       window.initDialogCloseBehavior({ dialogs: [createPayDialog, paySendDialog, paySendTemplateDialog] });
@@ -963,25 +972,33 @@
     };
 
     const loadCompanyInfo = async () => {
-      try {
-        const payload = await window.requestJson("/api/company-info", { method: "GET" });
-        const settings = payload?.data?.settings || {};
-        const sealUrl = await fetchCompanySealUrl(settings.seal_filename || "");
-        companyInfoState = {
-          company_name: String(settings.company_name || ""),
-          postal_code: String(settings.postal_code || ""),
-          address: String(settings.address || ""),
-          tel: String(settings.tel || ""),
-          fax: String(settings.fax || ""),
-          mail: String(settings.mail || ""),
-          sealUrl
-        };
-      } catch (error) {
-        console.warn(error);
-        clearCompanySealObjectUrl();
-        companyInfoState = { ...companyInfoState, sealUrl: "" };
-      }
-      renderCompanyInfo();
+      if (companyInfoLoaded) return;
+      if (companyInfoLoadPromise) return companyInfoLoadPromise;
+      companyInfoLoadPromise = (async () => {
+        try {
+          const payload = await window.requestJson("/api/company-info", { method: "GET" });
+          const settings = payload?.data?.settings || {};
+          const sealUrl = await fetchCompanySealUrl(settings.seal_filename || "");
+          companyInfoState = {
+            company_name: String(settings.company_name || ""),
+            postal_code: String(settings.postal_code || ""),
+            address: String(settings.address || ""),
+            tel: String(settings.tel || ""),
+            fax: String(settings.fax || ""),
+            mail: String(settings.mail || ""),
+            sealUrl
+          };
+        } catch (error) {
+          console.warn(error);
+          clearCompanySealObjectUrl();
+          companyInfoState = { ...companyInfoState, sealUrl: "" };
+        } finally {
+          companyInfoLoaded = true;
+          companyInfoLoadPromise = null;
+        }
+        renderCompanyInfo();
+      })();
+      return companyInfoLoadPromise;
     };
 
     const fetchOwnerSealUrl = async (employeeId) => {
@@ -1003,17 +1020,26 @@
     };
 
     const loadOwnerInfo = async () => {
-      const employeeId = localStorage.getItem("app_employee_id") || "";
-      const employeeName = localStorage.getItem("app_employee_name") || "";
-      ownerInfoState = {
-        name: employeeName,
-        sealUrl: await fetchOwnerSealUrl(employeeId)
-      };
-      renderOwnerInfo();
+      if (ownerInfoLoaded) return;
+      if (ownerInfoLoadPromise) return ownerInfoLoadPromise;
+      ownerInfoLoadPromise = (async () => {
+        const employeeId = localStorage.getItem("app_employee_id") || "";
+        const employeeName = localStorage.getItem("app_employee_name") || "";
+        ownerInfoState = {
+          name: employeeName,
+          sealUrl: await fetchOwnerSealUrl(employeeId)
+        };
+        ownerInfoLoaded = true;
+        ownerInfoLoadPromise = null;
+        renderOwnerInfo();
+      })();
+      return ownerInfoLoadPromise;
     };
 
-    const loadBankAccount = () => {
-      window.requestJson("/api/sys-settings/bank-account", { method: "GET" })
+    const loadBankAccount = async () => {
+      if (bankAccountLoaded) return;
+      if (bankAccountLoadPromise) return bankAccountLoadPromise;
+      bankAccountLoadPromise = window.requestJson("/api/sys-settings/bank-account", { method: "GET" })
         .then((payload) => {
           const settings = payload?.data?.settings || {};
           bankAccountState = {
@@ -1029,7 +1055,24 @@
         .catch((error) => {
           console.warn(error);
           renderBankAccount();
+        })
+        .finally(() => {
+          bankAccountLoaded = true;
+          bankAccountLoadPromise = null;
         });
+      return bankAccountLoadPromise;
+    };
+
+    const ensurePreviewSupportData = async () => {
+      if (previewSupportDataPromise) return previewSupportDataPromise;
+      previewSupportDataPromise = Promise.all([
+        loadBankAccount(),
+        loadCompanyInfo(),
+        loadOwnerInfo()
+      ]).finally(() => {
+        previewSupportDataPromise = null;
+      });
+      return previewSupportDataPromise;
     };
 
     const splitCustomerAddress = (rawAddress) => {
@@ -1201,6 +1244,39 @@
       reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
       reader.readAsDataURL(blob);
     });
+
+    const loadExternalScript = (src) => new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        existing.addEventListener("load", resolve, { once: true });
+        existing.addEventListener("error", reject, { once: true });
+        if (existing.dataset.loaded === "true") resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = () => {
+        script.dataset.loaded = "true";
+        resolve();
+      };
+      script.onerror = () => reject(new Error(`Script load failed: ${src}`));
+      document.head.appendChild(script);
+    });
+
+    const ensurePdfDependencies = async () => {
+      if (!window.html2canvas) {
+        html2canvasLoadPromise = html2canvasLoadPromise || loadExternalScript(HTML2CANVAS_SRC);
+        await html2canvasLoadPromise;
+      }
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        jspdfLoadPromise = jspdfLoadPromise || loadExternalScript(JSPDF_SRC);
+        await jspdfLoadPromise;
+      }
+      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+        throw new Error("PDF生成依赖未加载");
+      }
+    };
 
     const sanitizeMailFilenamePart = (value, fallback) => {
       const normalized = String(value || "")
@@ -1479,9 +1555,7 @@
     };
 
     const exportPreviewPdfBlob = async () => {
-      if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
-        throw new Error("PDF生成依赖未加载");
-      }
+      await ensurePdfDependencies();
       updatePreview();
       const sourcePages = Array.from(payPreviewCanvas?.querySelectorAll(".order-pdf-page") || []);
       if (!sourcePages.length) throw new Error("未找到预览区域");
@@ -1652,6 +1726,7 @@
       payDialogSubmitBtn.disabled = true;
       payDialogSubmitBtn.textContent = "保存中...";
       try {
+        await ensurePreviewSupportData();
         const pdfBlob = await exportPreviewPdfBlob();
         const isEdit = createPayDialog.dataset.mode === "edit" && payCurrentEditId;
         const url = isEdit
@@ -1678,6 +1753,7 @@
         setDialogMode("create");
         createPayDialog.showModal();
         refreshPreviewAfterDialogOpen();
+        ensurePreviewSupportData().then(refreshPreviewAfterDialogOpen);
       });
     }
 
@@ -1777,6 +1853,7 @@
           setDialogMode("edit");
           createPayDialog.showModal();
           refreshPreviewAfterDialogOpen();
+          ensurePreviewSupportData().then(refreshPreviewAfterDialogOpen);
         } catch (error) {
           showPayError(error, "请求书详情加载失败");
         } finally {
@@ -1892,9 +1969,6 @@
       payFilterCustomerInput.value = initialCustomerName;
       payCurrentPage = 1;
     }
-    loadBankAccount();
-    loadCompanyInfo();
-    loadOwnerInfo();
     fetchPayRequests();
   </script>
 </body>

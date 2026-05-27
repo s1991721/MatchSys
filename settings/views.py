@@ -178,6 +178,28 @@ def _normalize_company_info_payload(data):
     }
 
 
+def _validate_company_info_activation(company_name):
+    error_message = "激活码信息有误"
+    activation_record = _get_setting("activation")
+    activation_settings = (
+        activation_record.settings
+        if activation_record and isinstance(activation_record.settings, dict)
+        else {}
+    )
+    activation_code = str(activation_settings.get("code") or "").strip()
+    if not activation_code:
+        return api_error(error_message, code="ERR_ACTIVATION_INVALID")
+
+    valid, payload, _reason = is_activation_code_valid(activation_code, now=timezone.now())
+    if not valid or not payload:
+        return api_error(error_message, code="ERR_ACTIVATION_INVALID")
+
+    activation_username = str(payload.get("username") or "").strip()
+    if not activation_username or str(company_name or "").strip() != activation_username:
+        return api_error(error_message, code="ERR_ACTIVATION_INVALID")
+    return None
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def company_info_api(request):
@@ -191,6 +213,9 @@ def company_info_api(request):
     settings_payload = _company_info_settings()
     if request.content_type and request.content_type.startswith("multipart/form-data"):
         settings_payload.update(_normalize_company_info_payload(request.POST))
+        activation_error = _validate_company_info_activation(settings_payload.get("company_name"))
+        if activation_error:
+            return activation_error
         seal_file = request.FILES.get("seal_file")
         if seal_file:
             if not is_png_upload(seal_file):
@@ -210,6 +235,9 @@ def company_info_api(request):
     if not isinstance(data, dict):
         return api_error("Invalid settings payload")
     settings_payload.update(_normalize_company_info_payload(data))
+    activation_error = _validate_company_info_activation(settings_payload.get("company_name"))
+    if activation_error:
+        return activation_error
     return _save_setting("company-info", settings_payload, login_id)
 
 

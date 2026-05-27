@@ -402,7 +402,7 @@ CREATE TABLE pay_request
     request_no    varchar(50)    NOT NULL COMMENT '请求书编号',
     order_no      varchar(50)             DEFAULT NULL COMMENT '对应注文书编号',
     subject       varchar(255)            DEFAULT NULL COMMENT '件名',
-    status        varchar(50)    NOT NULL COMMENT '状态：已创建 承认中 已承认 已取消',
+    status        varchar(50)    NOT NULL COMMENT '状态：待付款 已付款 已取消',
     customer_id   bigint         NOT NULL COMMENT '客户ID',
     customer_name varchar(255)   NOT NULL COMMENT '客户名称',
     total_amount  decimal(12, 2) NOT NULL DEFAULT 0.00 COMMENT '总价',

@@ -129,7 +129,7 @@
             btn.className = item.className;
             btn.type = "button";
             btn.textContent = t(item.key);
-            btn.dataset.action = item.action;
+            if (item.action) btn.dataset.action = item.action;
             container.appendChild(btn);
         });
     };
@@ -773,6 +773,11 @@
                 }
                 if (currentView === "accept" && btn.dataset.action === "edit") {
                     sales.openEditDialog(item);
+                    return;
+                }
+                if (currentView === "accept" && btn.dataset.action === "view_request") {
+                    const customerName = item.customer_name ? `?customer_name=${encodeURIComponent(item.customer_name)}` : "";
+                    window.navigateAppRoute(`pay_request.html${customerName}`);
                     return;
                 }
                 openDetailDialog(btn.dataset.action, item);

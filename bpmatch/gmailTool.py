@@ -237,6 +237,7 @@ class GmailTool:
         subject = get_header("Subject")
         from_ = get_header("From")
         to = get_header("To")
+        cc = get_header("Cc")
         date_header = get_header("Date")
         message_id_header = get_header("Message-ID")
         references_header = get_header("References")
@@ -255,6 +256,7 @@ class GmailTool:
             "subject": subject,
             "from": from_,
             "to": to,
+            "cc": cc,
             "date": iso_ts or date_header or "",  # 前端显示使用 ISO，缺失则原始
             "date_header": date_header,
             "thread_id": msg.get("threadId"),

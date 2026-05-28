@@ -17,6 +17,36 @@ CREATE TABLE IF NOT EXISTS wrong_mail_info (
 )
 COMMENT = '错误邮件记录表';
 
+SET @add_mail_project_cc = (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE mail_project_info ADD COLUMN cc VARCHAR(1024) NOT NULL DEFAULT '''' COMMENT ''抄送'' AFTER address',
+        'SELECT 1'
+    )
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mail_project_info'
+      AND COLUMN_NAME = 'cc'
+);
+PREPARE stmt FROM @add_mail_project_cc;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @add_mail_technician_cc = (
+    SELECT IF(
+        COUNT(*) = 0,
+        'ALTER TABLE mail_technician_info ADD COLUMN cc VARCHAR(1024) NOT NULL DEFAULT '''' COMMENT ''抄送'' AFTER address',
+        'SELECT 1'
+    )
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'mail_technician_info'
+      AND COLUMN_NAME = 'cc'
+);
+PREPARE stmt FROM @add_mail_technician_cc;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 
 INSERT INTO sys_settings (name, settings, created_by, created_at, updated_by, updated_at, deleted_at) VALUES
     ('mail-template','{"anjian": "いつもお世話になっております。\\n株式会社の林でございます。\\n\\n技術者をご紹介いただきありがとうございます。\\n弊社にて対応可能な案件をご紹介させて頂きます。\\nご検討頂けますと幸いです。\\n\\n**************************************\\n{project_block}\\n{detail_block}\\n{requirement_block}\\n{skills_must_block}\\n{skills_can_block}\\n{remark_block}\\n**************************************\\n\\n今後とも何卒よろしくお願い申し上げます。\\n\\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\\n株式会社\\n営業部　マネージャー：\\n個人mail:gmail@outlook.com\\n営業共通mail: outlook@gmail.com\\nmobile: 010-2345-6789\\n〒123-4567\\n東京都XXX区XX町X丁目12-3\\n第一 ビル 88F\\nHP:https://www.homapage.jp/\\n", "technician": "いつもお世話になっております。\\n株式会社の林でございます。\\n\\n技術者をご紹介させて頂きます。\\nご検討頂けますと幸いです。\\n\\n**************************************\\n{person_intro}\\n**************************************\\n\\n今後とも何卒よろしくお願い申し上げます。\\n\\n＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝\\n株式会社\\n営業部　マネージャー：\\n個人mail:gmail@outlook.com\\n営業共通mail: outlook@gmail.com\\nmobile: 010-2345-6789\\n〒123-4567\\n東京都XXX区XX町X丁目12-3\\n第一 ビル 88F\\nHP:https://www.homapage.jp/\\n"}',1,'2026-04-22 15:10:29',NULL,'2026-04-22 15:13:25',NULL);

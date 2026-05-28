@@ -416,7 +416,7 @@
         const jobPayload = {
             id: jobData.id || activeJob?.dataset?.id || '',
             title: jobData.title || activeJob?.querySelector('.item-title')?.textContent.trim() || '',
-            desc: jobData.desc || activeJob?.querySelector('.item-desc')?.textContent.trim() || '',
+            address: jobData.address || '',
             cc: jobData.cc || '',
             detail: jobData.detail || activeJob?.dataset?.detail || '',
             time: jobData.date || activeJob?.querySelector('.item-time')?.textContent.trim() || ''
@@ -425,7 +425,7 @@
         const personPayload = {
             id: personData.id || activePerson?.dataset?.id || '',
             name: personData.title || activePerson?.querySelector('.person-name')?.textContent.trim() || '',
-            belong: personData.from || activePerson?.querySelector('.person-belong')?.textContent.trim() || '',
+            address: personData.address || '',
             cc: personData.cc || '',
             detail: personData.body || activePerson?.dataset?.detail || '',
             time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || ''
@@ -448,7 +448,7 @@
 
         const prefill = {
             subject: jobPayload.title,
-            body: jobPayload.detail || jobPayload.desc || '',
+            body: jobPayload.detail || '',
             mail_type: '2',
             source: 'bpmatch',
             updatedAt: Date.now()
@@ -565,7 +565,7 @@
 
             const desc = document.createElement('div');
             desc.className = 'item-desc';
-            desc.textContent = item.belong || item.from || '';
+            desc.textContent = item.address || '';
 
             const feedbackControl = document.createElement('div');
             feedbackControl.className = `mail-feedback-control${openPersonFeedbackId === String(personId) ? ' is-open' : ''}`;
@@ -1014,7 +1014,7 @@
 
             const desc = document.createElement('div');
             desc.className = 'item-desc';
-            desc.textContent = item.desc;
+            desc.textContent = item.address || '';
 
             const time = document.createElement('div');
             time.className = 'item-time';

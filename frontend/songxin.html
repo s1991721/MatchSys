@@ -461,23 +461,13 @@
             : t('songxin.template.subtitle.project');
     };
 
-    const extractEmail = (raw) => {
-        if (!raw) return '';
-        const bracketMatch = raw.match(/<([^>]+)>/);
-        if (bracketMatch && bracketMatch[1]) {
-            return bracketMatch[1].trim();
-        }
-        const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-        return emailMatch ? emailMatch[0].trim() : '';
-    };
-
     const applySelectionMailMeta = () => {
         if (!currentSelection) return;
         const targetMail = sceneParam === 'technician'
             ? (currentSelection.job || {})
             : (currentSelection.person || {});
         const subject = (targetMail.subject || targetMail.title || targetMail.name || '').trim();
-        const replyTo = extractEmail(targetMail.belong || targetMail.from || targetMail.desc || '');
+        const replyTo = targetMail.address || '';
         const replyCc = String(targetMail.cc || '').trim();
 
         if (!subjectInput.value && subject) {
@@ -513,7 +503,7 @@
         if (sceneParam === 'project') {
             return normalizeMultiline(person.detail || '');
         }
-        return normalizeMultiline(job.detail || job.desc || '');
+        return normalizeMultiline(job.detail || '');
     };
 
     const renderOriginal = (text) => {
@@ -557,7 +547,7 @@
     const analyzeByScene = async () => {
         if (!currentSelection) return;
         const body = sceneParam === 'project'
-            ? (currentSelection.job?.detail || currentSelection.job?.desc || '')
+            ? (currentSelection.job?.detail || '')
             : (currentSelection.person?.intro || currentSelection.person?.detail || '');
         setLoading(true, {title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub')});
         try {

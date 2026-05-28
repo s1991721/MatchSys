@@ -75,7 +75,7 @@
             </div>
             <div class="form-field">
                 <label for="cc" data-i18n="songxin.field.cc">抄送 (可选)</label>
-                <input id="cc" type="email" placeholder="cc@example.com">
+                <input id="cc" type="text" placeholder="cc@example.com, other@example.com">
             </div>
             <div class="form-field">
                 <label for="file-input" data-i18n="songxin.field.attach">上传附件</label>
@@ -504,6 +504,9 @@
             if (replyTo) {
                 email.value = replyTo;
             }
+        }
+        if (!cc.value && person.cc) {
+            cc.value = String(person.cc || '').trim();
         }
 
         templateDialogSubtitle.textContent = t('songxin.template.subtitle.project');

@@ -69,7 +69,7 @@
             </div>
             <div class="form-field">
                 <label for="cc" data-i18n="songxin.field.cc">抄送 (可选)</label>
-                <input id="cc" type="email" placeholder="cc@example.com">
+                <input id="cc" type="text" placeholder="cc@example.com, other@example.com">
             </div>
             <div class="form-field">
                 <label for="file-input" data-i18n="songxin.field.attach">上传附件</label>
@@ -472,10 +472,13 @@
     };
 
     const applySelectionMailMeta = () => {
-        if (!currentSelection || !currentSelection.person) return;
-        const person = currentSelection.person || {};
-        const subject = (person.subject || person.title || person.name || '').trim();
-        const replyTo = extractEmail(person.belong || person.from || '');
+        if (!currentSelection) return;
+        const targetMail = sceneParam === 'technician'
+            ? (currentSelection.job || {})
+            : (currentSelection.person || {});
+        const subject = (targetMail.subject || targetMail.title || targetMail.name || '').trim();
+        const replyTo = extractEmail(targetMail.belong || targetMail.from || targetMail.desc || '');
+        const replyCc = String(targetMail.cc || '').trim();
 
         if (!subjectInput.value && subject) {
             subjectInput.value = subject.startsWith('Re:')
@@ -484,6 +487,9 @@
         }
         if (!email.value && replyTo) {
             email.value = replyTo;
+        }
+        if (!cc.value && replyCc) {
+            cc.value = replyCc;
         }
     };
 

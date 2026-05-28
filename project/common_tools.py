@@ -3,6 +3,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from project.api import api_error
+from project.error_codes import ErrorCode
 
 
 # 解析请求体
@@ -11,7 +12,7 @@ def parse_json_body(request):
         raw = request.body.decode("utf-8") if request.body else "{}"
         return json.loads(raw or "{}"), None
     except json.JSONDecodeError:
-        return None, api_error("Invalid JSON body")
+        return None, api_error(ErrorCode.INVALID_JSON)
 
 # todo 需要将json和file分开
 def parse_request_body(request):
@@ -28,7 +29,7 @@ def payload_to_dict(payload):
 def require_fields(payload, fields):
     for field in fields:
         if str(payload.get(field) or "").strip() == "":
-            return api_error(f"Missing field: {field}")
+            return api_error(ErrorCode.INVALID_REQUEST, f"Missing field: {field}")
     return None
 
 
@@ -36,7 +37,7 @@ def require_fields(payload, fields):
 def require_login(request):
     login_id = request.session.get("employee_id")
     if not login_id:
-        return None, api_error(status=401, message="employee id is required")
+        return None, api_error(ErrorCode.LOGIN_REQUIRED, "employee id is required", status=401)
     return login_id, None
 
 
@@ -48,8 +49,8 @@ def parse_date(value, field=None):
         try:
             return datetime.strptime(value, "%Y-%m-%d").date(), None
         except ValueError:
-            return None, api_error(f"Invalid date: {field}" if field else "")
-    return None, api_error(f"Invalid date: {field}" if field else "")
+            return None, api_error(ErrorCode.INVALID_DATE, f"Invalid date: {field}" if field else "Invalid date")
+    return None, api_error(ErrorCode.INVALID_DATE, f"Invalid date: {field}" if field else "Invalid date")
 
 
 # 组装分页请求参数
@@ -112,7 +113,7 @@ def parse_time_value(value):
             return datetime.strptime(value, fmt).time()
         except ValueError:
             continue
-    return api_error("Invalid time")
+    return api_error(ErrorCode.INVALID_TIME)
 
 
 # 获取星期

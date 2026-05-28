@@ -5,6 +5,7 @@ import urllib.error
 import urllib.request
 
 from project.api import api_error, api_success
+from project.error_codes import ErrorCode
 
 
 def _build_ssl_context():
@@ -34,9 +35,9 @@ def check_local_model(model_name):
         )
         with urllib.request.urlopen(req, timeout=180) as resp:
             if resp.status != 200:
-                return api_error("模型连接失败")
+                return api_error(ErrorCode.EXTERNAL_LLM, "模型连接失败")
     except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError):
-        return api_error("模型连接失败")
+        return api_error(ErrorCode.EXTERNAL_LLM, "模型连接失败")
 
     return api_success(
         data={
@@ -72,10 +73,10 @@ def check_cloud_model(model_name, api_key):
             context=_build_ssl_context(),
         ) as resp:
             if resp.status != 200:
-                return api_error("OpenAI 接口返回失败")
+                return api_error(ErrorCode.EXTERNAL_OPENAI_RESPONSE_FAILED, "OpenAI 接口返回失败")
             return api_success()
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", "ignore")
-        return api_error(detail or "OpenAI 接口返回失败")
+        return api_error(ErrorCode.EXTERNAL_OPENAI_RESPONSE_FAILED, detail or "OpenAI 接口返回失败")
     except urllib.error.URLError as exc:
-        return api_error(str(exc.reason) or "OpenAI 接口请求失败")
+        return api_error(ErrorCode.EXTERNAL_OPENAI_REQUEST_FAILED, str(exc.reason) or "OpenAI 接口请求失败")

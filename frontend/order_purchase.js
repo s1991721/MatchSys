@@ -829,7 +829,6 @@
                 const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(sendTemplateName)}`, {
                     method: "GET",
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: "加载模板失败",
                 });
                 const template = payload.data && typeof payload.data.template === "string"
@@ -878,7 +877,6 @@
                     await window.requestJson(`/api/mail-templates/${encodeURIComponent(sendTemplateName)}`, {
                         body: JSON.stringify({ template }),
                     }, {
-                        throwOnFailure: true,
                         fallbackMessage: "保存模板失败",
                     });
                     sendTemplateCache[sendTemplateName] = template;
@@ -953,7 +951,6 @@
                             mail_type: Number.isFinite(mailType) ? mailType : 3,
                         }),
                     }, {
-                        throwOnFailure: true,
                         fallbackMessage: "发送失败",
                     });
                     mailSent = true;
@@ -961,7 +958,6 @@
                         await window.requestJson(`/api/purchase-orders/${encodeURIComponent(currentSendItem.id)}/update`, {
                             body: JSON.stringify({ status: "承认中" }),
                         }, {
-                            throwOnFailure: true,
                             fallbackMessage: "状态更新失败",
                         });
                         currentSendItem.status = "承认中";

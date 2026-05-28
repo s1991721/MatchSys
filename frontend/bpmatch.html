@@ -144,6 +144,7 @@
 </div>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -309,7 +310,6 @@
                         correct_label: Number(selected)
                     })
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
                 removeJobFromCurrentList(jobId);
@@ -392,7 +392,6 @@
                     wrong_type: wrongType
                 })
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
             target.submitted.add(id);
@@ -676,7 +675,6 @@
                         correct_label: Number(selected)
                     })
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
                 removePersonFromCurrentList(personId);
@@ -874,7 +872,6 @@
             const projectId = payload?.id || '';
             const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
             const responsePayload = await window.requestJson(url, {method: 'GET'}, {
-                throwOnFailure: true,
                 fallbackMessage: t("match.match_failed")
             });
             const result = responsePayload.data || {};
@@ -1136,7 +1133,6 @@
 
         try {
             const payload = await window.requestJson(url, {method: 'GET'}, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
             if (requestSeq !== jobRequestSeq) return;

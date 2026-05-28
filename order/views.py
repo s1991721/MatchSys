@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 from employee.models import Employee
 from order.models import PayRequest, PurchaseOrder, SalesOrder
 from project.api import api_error, api_paginated, api_success
+from project.error_codes import ErrorCode
 from project import storage
 from project.common_tools import (
     is_pdf_upload,
@@ -83,14 +84,14 @@ def _order_storage_filename(value):
 
 def _serve_order_pdf_file(pdf_file):
     if not pdf_file:
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
     filename = _order_storage_filename(pdf_file)
     try:
         safe_path = storage.path(StorageArea.ORDER, filename)
     except ValueError:
-        return api_error("Invalid path")
+        return api_error(ErrorCode.FILE_PATH_INVALID)
     if not storage.exists(StorageArea.ORDER, filename):
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
 
     content_type, _ = mimetypes.guess_type(safe_path)
     response = FileResponse(
@@ -106,7 +107,7 @@ def _normalize_purchase_status(value):
     if raw in PURCHASE_STATUSES:
         return raw, None
     return None, api_error(
-        "Invalid status"
+        ErrorCode.ORDER_STATUS_INVALID
     )
 
 
@@ -115,7 +116,7 @@ def _normalize_sales_status(value):
     if raw in SALES_STATUSES:
         return raw, None
     return None, api_error(
-        "Invalid status"
+        ErrorCode.ORDER_STATUS_INVALID
     )
 
 
@@ -123,7 +124,7 @@ def _normalize_pay_request_status(value):
     raw = str(value or "").strip()
     if raw in PAY_REQUEST_STATUSES:
         return raw, None
-    return None, api_error("Invalid status")
+    return None, api_error(ErrorCode.ORDER_STATUS_INVALID)
 
 
 def _serialize_purchase(order):
@@ -250,9 +251,9 @@ def _parse_pay_request_details_payload(raw_details):
         try:
             details = json.loads(raw_details)
         except (TypeError, json.JSONDecodeError):
-            return None, api_error("Invalid JSON: details")
+            return None, api_error(ErrorCode.ORDER_DETAILS_INVALID_JSON)
     if not isinstance(details, list) or any(not isinstance(item, dict) for item in details):
-        return None, api_error("Invalid JSON: details")
+        return None, api_error(ErrorCode.ORDER_DETAILS_INVALID_JSON)
     return details, None
 
 
@@ -286,7 +287,7 @@ def _apply_pay_request_payload(pay_request, payload):
         try:
             pay_request.customer_id = int(payload.get("customer_id") or 0)
         except (TypeError, ValueError):
-            return api_error("Invalid number: customer_id")
+            return api_error(ErrorCode.ORDER_CUSTOMER_ID_INVALID)
     if "due_date" in payload:
         value, error = parse_date(payload.get("due_date"), "due_date")
         if error:
@@ -306,7 +307,7 @@ def _apply_pay_request_payload(pay_request, payload):
 def _require_person_in_charge(payload):
     if payload.get("person_in_charge_id") or str(payload.get("person_in_charge") or "").strip():
         return None
-    return api_error("Missing field: person_in_charge")
+    return api_error(ErrorCode.ORDER_PERSON_IN_CHARGE_REQUIRED)
 
 
 def _list_orders(queryset, request, serializer):
@@ -331,7 +332,7 @@ def _apply_person_in_charge(order, payload):
         try:
             person_id = int(raw_person_id)
         except (TypeError, ValueError):
-            return api_error("Invalid number: person_in_charge_id")
+            return api_error(ErrorCode.ORDER_PERSON_IN_CHARGE_ID_INVALID)
     else:
         person_id = None
     if person_id:
@@ -354,11 +355,11 @@ def _parse_line_items(raw_items, require_dict_items=False):
         try:
             items = json.loads(raw_items)
         except (TypeError, json.JSONDecodeError):
-            return None, api_error("Invalid JSON: line_items")
+            return None, api_error(ErrorCode.ORDER_LINE_ITEMS_INVALID_JSON)
     if not isinstance(items, list):
-        return None, api_error("Invalid JSON: line_items")
+        return None, api_error(ErrorCode.ORDER_LINE_ITEMS_INVALID_JSON)
     if require_dict_items and any(not isinstance(item, dict) for item in items):
-        return None, api_error("Invalid JSON: line_items")
+        return None, api_error(ErrorCode.ORDER_LINE_ITEMS_INVALID_JSON)
     return items, None
 
 
@@ -389,7 +390,7 @@ def _apply_purchase_payload(order, payload):
         try:
             order.customer_id = int(payload.get("customer_id") or 0)
         except (TypeError, ValueError):
-            return api_error("Invalid number: customer_id")
+            return api_error(ErrorCode.ORDER_CUSTOMER_ID_INVALID)
     if "remark" in payload:
         order.remark = (payload.get("remark") or "").strip()
 
@@ -422,15 +423,15 @@ def _update_purchase_order_from_request(request, order):
         return error
     payload_keys = set(payload.keys())
     if order.status in PURCHASE_TERMINAL_STATUSES:
-        return api_error("Order is locked")
+        return api_error(ErrorCode.ORDER_LOCKED)
     if order.status == "承认中":
         if payload_keys != {"status"} or request.FILES:
-            return api_error("Order is locked")
+            return api_error(ErrorCode.ORDER_LOCKED)
         next_status, status_error = _normalize_purchase_status(payload.get("status"))
         if status_error:
             return status_error
         if next_status not in PURCHASE_APPROVING_NEXT_STATUSES:
-            return api_error("Invalid status")
+            return api_error(ErrorCode.ORDER_STATUS_INVALID)
     apply_error = _apply_purchase_payload(order, payload)
     if apply_error:
         return apply_error
@@ -438,7 +439,7 @@ def _update_purchase_order_from_request(request, order):
     if pdf_file:
         saved_pdf = _save_order_pdf("purchase", order.order_no, pdf_file)
         if saved_pdf is None:
-            return api_error("Invalid PDF file")
+            return api_error(ErrorCode.ORDER_PDF_INVALID)
         order.pdf_file = saved_pdf
     _set_updated_audit(order, request)
     order.save()
@@ -467,7 +468,7 @@ def _apply_sales_payload(order, payload):
         try:
             order.customer_id = int(payload.get("customer_id") or 0)
         except (TypeError, ValueError):
-            return api_error("Invalid number: customer_id")
+            return api_error(ErrorCode.ORDER_CUSTOMER_ID_INVALID)
     if "remark" in payload:
         order.remark = (payload.get("remark") or "").strip()
 
@@ -479,7 +480,7 @@ def _apply_sales_payload(order, payload):
             try:
                 order.purchase_id = int(raw_purchase_id)
             except (TypeError, ValueError):
-                return api_error("Invalid number: purchase_id")
+                return api_error(ErrorCode.ORDER_PURCHASE_ID_INVALID)
 
     if "technician_id" in payload:
         raw_technician_id = payload.get("technician_id")
@@ -489,13 +490,13 @@ def _apply_sales_payload(order, payload):
             try:
                 order.technician_id = int(raw_technician_id) or None
             except (TypeError, ValueError):
-                return api_error("Invalid number: technician_id")
+                return api_error(ErrorCode.ORDER_TECHNICIAN_ID_INVALID)
 
     if "price" in payload:
         try:
             order.price = Decimal(str(payload.get("price") or "0"))
         except (InvalidOperation, ValueError):
-            return api_error("Invalid number: price")
+            return api_error(ErrorCode.ORDER_PRICE_INVALID)
 
     if "line_items" in payload:
         items, error = _parse_line_items(payload.get("line_items"), require_dict_items=True)
@@ -538,15 +539,15 @@ def _build_sales_line_payload(base_payload, item, line_items):
 def _build_sales_orders(payload, line_items, pdf_file, current_user, now):
     saved_pdf = _save_order_pdf("sales", payload.get("order_no"), pdf_file)
     if saved_pdf is None:
-        return None, api_error("Invalid PDF file")
+        return None, api_error(ErrorCode.ORDER_PDF_INVALID)
 
     orders = []
     for index, line_item in enumerate(line_items, start=1):
         line_payload = _build_sales_line_payload(payload, line_item, line_items)
         if not line_payload.get("technician_id") and not line_payload.get("purchase_id"):
-            return None, api_error(f"Missing field: line_items[{index}].purchase_id")
+            return None, api_error(ErrorCode.ORDER_LINE_ITEM_PURCHASE_ID_REQUIRED, f"Missing field: line_items[{index}].purchase_id")
         if not str(line_payload.get("technician_name") or "").strip():
-            return None, api_error(f"Missing field: line_items[{index}].technician_name")
+            return None, api_error(ErrorCode.ORDER_LINE_ITEM_TECHNICIAN_NAME_REQUIRED, f"Missing field: line_items[{index}].technician_name")
         order = SalesOrder()
         apply_error = _apply_sales_payload(order, line_payload)
         if apply_error:
@@ -576,7 +577,7 @@ def _apply_filters(queryset, request):
             queryset = queryset.filter(customer_id=int(customer_id))
         except ValueError:
             return None, api_error(
-                "Invalid customer_id"
+                ErrorCode.ORDER_INVALID_CUSTOMER_ID
             )
     if technician_name:
         if _model_has_field(queryset.model, "technician_name"):
@@ -634,14 +635,14 @@ def purchase_orders_api(request):
         if pdf_file:
             saved_pdf = _save_order_pdf("purchase", order.order_no, pdf_file)
             if saved_pdf is None:
-                return api_error("Invalid PDF file")
+                return api_error(ErrorCode.ORDER_PDF_INVALID)
             order.pdf_file = saved_pdf
         order.save()
         item = _serialize_purchase(order)
         return api_success(data={"item": item})
 
     return api_error(
-        "Method not allowed",
+        ErrorCode.METHOD_NOT_ALLOWED,
         status=405
     )
 
@@ -655,15 +656,14 @@ def purchase_order_update_api(request, order_id):
 
     if request.method != "POST":
         return api_error(
-            "Method not allowed",
+            ErrorCode.METHOD_NOT_ALLOWED,
             status=405
         )
 
     order = PurchaseOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
     if not order:
         return api_error(
-            "Order not found",
-            status=404
+            ErrorCode.PURCHASE_ORDER_NOT_FOUND
         )
 
     return _update_purchase_order_from_request(request, order)
@@ -687,7 +687,7 @@ def _order_pdf_response(request, model, order_id):
 
     order = model.objects.filter(id=order_id, deleted_at__isnull=True).first()
     if not order or not order.pdf_file:
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
 
     return _serve_order_pdf_file(order.pdf_file)
 
@@ -708,7 +708,7 @@ def _apply_pay_request_filters(queryset, request):
         try:
             start = timezone.datetime.strptime(month, "%Y-%m").date().replace(day=1)
         except ValueError:
-            return None, api_error("Invalid date: month")
+            return None, api_error(ErrorCode.PAY_REQUEST_MONTH_INVALID)
         end = shift_month(start, 1)
         queryset = queryset.filter(created_at__date__gte=start, created_at__date__lt=end)
     return queryset, None
@@ -749,14 +749,14 @@ def pay_requests_api(request):
     if apply_error:
         return apply_error
     if not _parse_pay_request_details(pay_request.details):
-        return api_error("Missing field: details")
+        return api_error(ErrorCode.PAY_REQUEST_DETAILS_REQUIRED)
     now = timezone.now()
     _set_created_audit(pay_request, _current_user(request), now)
     pdf_file = request.FILES.get("pdf_file")
     if pdf_file:
         saved_pdf = _save_order_pdf("pay_request", pay_request.request_no, pdf_file)
         if saved_pdf is None:
-            return api_error("Invalid PDF file")
+            return api_error(ErrorCode.ORDER_PDF_INVALID)
         pay_request.pdf_file = saved_pdf
     pay_request.save()
     return api_success(data={"item": _serialize_pay_request(pay_request)})
@@ -771,7 +771,7 @@ def pay_request_detail_api(request, pay_request_id):
 
     pay_request = PayRequest.objects.filter(id=pay_request_id, deleted_at__isnull=True).first()
     if not pay_request:
-        return api_error("Pay request not found", status=404)
+        return api_error(ErrorCode.PAY_REQUEST_NOT_FOUND)
     return api_success(data={"item": _serialize_pay_request(pay_request)})
 
 
@@ -784,7 +784,7 @@ def pay_request_update_api(request, pay_request_id):
 
     pay_request = PayRequest.objects.filter(id=pay_request_id, deleted_at__isnull=True).first()
     if not pay_request:
-        return api_error("Pay request not found", status=404)
+        return api_error(ErrorCode.PAY_REQUEST_NOT_FOUND)
 
     payload, error = parse_request_body(request)
     if error:
@@ -797,7 +797,7 @@ def pay_request_update_api(request, pay_request_id):
     if pdf_file:
         saved_pdf = _save_order_pdf("pay_request", pay_request.request_no, pdf_file)
         if saved_pdf is None:
-            return api_error("Invalid PDF file")
+            return api_error(ErrorCode.ORDER_PDF_INVALID)
         pay_request.pdf_file = saved_pdf
     _set_updated_audit(pay_request, request)
     pay_request.save()
@@ -833,10 +833,10 @@ def sales_orders_api(request):
         if error:
             return error
         if not line_items:
-            return api_error("Missing field: line_items")
+            return api_error(ErrorCode.ORDER_LINE_ITEMS_REQUIRED)
         pdf_file = request.FILES.get("pdf_file")
         if not pdf_file:
-            return api_error("Missing field: pdf_file")
+            return api_error(ErrorCode.ORDER_PDF_REQUIRED)
         now = timezone.now()
         orders, error = _build_sales_orders(payload, line_items, pdf_file, _current_user(request), now)
         if error:
@@ -848,7 +848,7 @@ def sales_orders_api(request):
         return api_success(data={"item": items[0] if items else None, "items": items, "created_count": len(items)})
 
     return api_error(
-        "Method not allowed",
+        ErrorCode.METHOD_NOT_ALLOWED,
         status=405
     )
 
@@ -863,8 +863,7 @@ def sales_order_detail_api(request, order_id):
     order = SalesOrder.objects.filter(id=order_id, deleted_at__isnull=True).first()
     if not order:
         return api_error(
-            "Order not found",
-            status=404
+            ErrorCode.SALES_ORDER_NOT_FOUND
         )
 
     if request.method == "GET":
@@ -884,6 +883,6 @@ def sales_order_detail_api(request, order_id):
         return api_success(data={"item": item})
 
     return api_error(
-        "Method not allowed",
+        ErrorCode.METHOD_NOT_ALLOWED,
         status=405
     )

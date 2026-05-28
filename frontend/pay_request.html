@@ -426,6 +426,7 @@
   </dialog>
 
   <script src="i18n.js"></script>
+  <script src="error_code.js"></script>
   <script src="common.js"></script>
   <script>
     const i18n = window.I18N || null;
@@ -1453,7 +1454,6 @@
       const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
         method: "GET"
       }, {
-        throwOnFailure: true,
         fallbackMessage: "加载模板失败"
       });
       const template = payload.data && typeof payload.data.template === "string" ? payload.data.template : "";
@@ -1502,7 +1502,6 @@
         await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
           body: JSON.stringify({ template })
         }, {
-          throwOnFailure: true,
           fallbackMessage: "保存模板失败"
         });
         paySendTemplateCache[paySendTemplateName] = template;
@@ -1576,7 +1575,6 @@
             mail_type: Number.isFinite(mailType) ? mailType : 4
           })
         }, {
-          throwOnFailure: true,
           fallbackMessage: "发送失败"
         });
         alert("发送成功");
@@ -1744,7 +1742,7 @@
     };
 
     const loadPayRequestDetail = async (id) => {
-      const payload = await window.requestJson(`/api/pay-requests/${encodeURIComponent(id)}`, { method: "GET" }, { throwOnFailure: true });
+      const payload = await window.requestJson(`/api/pay-requests/${encodeURIComponent(id)}`, { method: "GET" });
       return payload?.data?.item || null;
     };
 
@@ -1773,7 +1771,7 @@
           method: "POST",
           headers: {},
           body: buildFormData(payload, pdfBlob)
-        }, { throwOnFailure: true });
+        });
         createPayDialog.close();
         fetchPayRequests();
       } catch (error) {

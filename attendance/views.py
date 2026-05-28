@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 from employee.models import Employee
 from project.api import api_error, api_success
+from project.error_codes import ErrorCode
 from project.common_tools import (
     count_workdays,
     is_workday,
@@ -45,7 +46,7 @@ def attendance_punch_api(request):
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error("Employee not found", status=404)
+        return api_error(ErrorCode.EMPLOYEE_NOT_FOUND)
 
     punch_model, record_model = get_monthly_attendance_models(now.date())
     punch = _create_attendance_punch(punch_model, employee, now, punch_time_value, punch_type, payload)
@@ -151,9 +152,9 @@ def attendance_record_edit_api(request):
     date_raw = (payload.get("date") or "").strip()
     remark = (payload.get("remark") or "").strip()
     if not date_raw:
-        return api_error("Missing date")
+        return api_error(ErrorCode.ATTENDANCE_DATE_REQUIRED)
     if not remark:
-        return api_error("Missing remark")
+        return api_error(ErrorCode.ATTENDANCE_REMARK_REQUIRED)
 
     target_date, error = parse_date(date_raw)
     if error:
@@ -177,7 +178,7 @@ def attendance_record_edit_api(request):
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error("Employee not found", status=404)
+        return api_error(ErrorCode.EMPLOYEE_NOT_FOUND)
 
     punch_model, record_model = get_monthly_attendance_models(target_date)
 
@@ -185,7 +186,7 @@ def attendance_record_edit_api(request):
     final_end = end_time_value if end_time_value is not None else original_end
 
     if final_start is None or final_end is None:
-        return api_error("Missing start_time or end_time")
+        return api_error(ErrorCode.ATTENDANCE_TIME_RANGE_REQUIRED)
 
     defaults = {
         "start_time": final_start,
@@ -253,7 +254,7 @@ def my_attendance_summary_api(request):
 
     date_raw = request.GET.get("date")
     if not date_raw:
-        return api_error("Missing date")
+        return api_error(ErrorCode.ATTENDANCE_DATE_REQUIRED)
     target_date, error = parse_date(date_raw)
     if error:
         return error
@@ -307,7 +308,7 @@ def my_attendance_detail_api(request):
 
     date_raw = request.GET.get("date")
     if not date_raw:
-        return api_error("Missing date")
+        return api_error(ErrorCode.ATTENDANCE_DATE_REQUIRED)
     target_date, error = parse_date(date_raw)
     if error:
         return error
@@ -453,7 +454,7 @@ def attendance_detail_api(request, employee_id):
     target_date = datetime.strptime(target_date, "%Y-%m").date()
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error("Employee not found", status=404)
+        return api_error(ErrorCode.EMPLOYEE_NOT_FOUND)
 
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
@@ -518,16 +519,16 @@ def attendance_export_api(request, employee_id):
 
     target_month = (request.GET.get("month") or "").strip()
     if not target_month:
-        return api_error("Missing month")
+        return api_error(ErrorCode.ATTENDANCE_MONTH_REQUIRED)
 
     try:
         target_date = datetime.strptime(target_month, "%Y-%m").date()
     except ValueError:
-        return api_error("Invalid date")
+        return api_error(ErrorCode.ATTENDANCE_DATE_INVALID)
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error("Employee not found", status=404)
+        return api_error(ErrorCode.EMPLOYEE_NOT_FOUND)
 
     record_model = get_monthly_attendance_models(target_date)[1]
     records = record_model.objects.filter(
@@ -550,7 +551,7 @@ def attendance_export_api(request, employee_id):
         try:
             build_year_template(base_template_path, template_path, target_date.year)
         except Exception:
-            return api_error("年模板生成失败", status=500)
+            return api_error(ErrorCode.ATTENDANCE_YEAR_TEMPLATE_FAILED, status=500)
     try:
         output = export_kintai_xlsx(
             template_path,
@@ -560,11 +561,11 @@ def attendance_export_api(request, employee_id):
             employee_name=employee.name,
         )
     except FileNotFoundError:
-        return api_error("Template not found", status=500)
+        return api_error(ErrorCode.ATTENDANCE_TEMPLATE_NOT_FOUND, status=500)
     except KeyError:
-        return api_error("Template sheet not found", status=500)
+        return api_error(ErrorCode.ATTENDANCE_TEMPLATE_SHEET_NOT_FOUND, status=500)
     except Exception:
-        return api_error("Export failed", status=500)
+        return api_error(ErrorCode.ATTENDANCE_EXPORT_FAILED, status=500)
 
     raw_name = (employee.name or "").strip().strip("_")
     compact_name = "".join(raw_name.split())

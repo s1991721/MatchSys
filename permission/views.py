@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from permission.models import Menu, Role
 from project.api import api_error, api_success
 from project.common_tools import parse_json_body, require_login
+from project.error_codes import ErrorCode
 
 
 def _menu_list_to_htmls(value):
@@ -55,9 +56,9 @@ def menus_api(request):
     if error:
         return error
     if not (payload.get("menu_name") or "").strip():
-        return api_error("Missing field: menu_name")
+        return api_error(ErrorCode.PERMISSION_MENU_NAME_REQUIRED)
     if not (payload.get("menu_html") or "").strip():
-        return api_error("Missing field: menu_html")
+        return api_error(ErrorCode.PERMISSION_MENU_HTML_REQUIRED)
     menu = Menu()
     Menu.apply_payload(menu, payload)
     menu.created_by = login_id
@@ -75,7 +76,7 @@ def menu_detail_api(request, menu_id):
     try:
         menu = Menu.objects.get(pk=menu_id, deleted_at__isnull=True)
     except Menu.DoesNotExist:
-        return api_error("Menu not found", status=404)
+        return api_error(ErrorCode.PERMISSION_MENU_NOT_FOUND)
 
     if request.method == "GET":
         return api_success(data={"item": Menu.serialize(menu)})
@@ -85,9 +86,9 @@ def menu_detail_api(request, menu_id):
         if error:
             return error
         if not (payload.get("menu_name") or "").strip():
-            return api_error("Missing field: menu_name")
+            return api_error(ErrorCode.PERMISSION_MENU_NAME_REQUIRED)
         if not (payload.get("menu_html") or "").strip():
-            return api_error("Missing field: menu_html")
+            return api_error(ErrorCode.PERMISSION_MENU_HTML_REQUIRED)
         Menu.apply_payload(menu, payload)
         menu.updated_by = login_id
         menu.save()
@@ -99,7 +100,7 @@ def menu_detail_api(request, menu_id):
         menu.save(update_fields=["deleted_at", "updated_by", "updated_at"])
         return api_success()
 
-    return api_error("Method not allowed", status=405)
+    return api_error(ErrorCode.METHOD_NOT_ALLOWED, status=405)
 
 
 @csrf_exempt
@@ -122,7 +123,7 @@ def roles_api(request):
     if error:
         return error
     if not (payload.get("role_name") or "").strip():
-        return api_error("Missing field: role_name")
+        return api_error(ErrorCode.PERMISSION_ROLE_NAME_REQUIRED)
     role = Role()
     Role.apply_payload(role, payload)
     menu_list = payload.get("menu_list")
@@ -149,7 +150,7 @@ def role_detail_api(request, role_id):
     try:
         role = Role.objects.get(pk=role_id, deleted_at__isnull=True)
     except Role.DoesNotExist:
-        return api_error("Role not found", status=404)
+        return api_error(ErrorCode.PERMISSION_ROLE_NOT_FOUND)
 
     if request.method == "GET":
         item = Role.serialize(role)
@@ -161,7 +162,7 @@ def role_detail_api(request, role_id):
         if error:
             return error
         if not (payload.get("role_name") or "").strip():
-            return api_error("Missing field: role_name")
+            return api_error(ErrorCode.PERMISSION_ROLE_NAME_REQUIRED)
         Role.apply_payload(role, payload)
         menu_list = payload.get("menu_list")
         if menu_list == "*":
@@ -182,6 +183,6 @@ def role_detail_api(request, role_id):
         role.save(update_fields=["deleted_at", "updated_by", "updated_at"])
         return api_success()
 
-    return api_error("Method not allowed", status=405)
+    return api_error(ErrorCode.METHOD_NOT_ALLOWED, status=405)
 
 # Create your views here.

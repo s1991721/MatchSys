@@ -1,26 +1,12 @@
 from django.http import JsonResponse
 
-ERROR_CODE_MAP = {
-    400: "ERR_VALIDATION",
-    401: "ERR_AUTH",
-    403: "ERR_FORBIDDEN",
-    404: "ERR_NOT_FOUND",
-    405: "ERR_METHOD_NOT_ALLOWED",
-    409: "ERR_CONFLICT",
-    500: "ERR_SERVER",
-}
-
-
-def _resolve_error_code(status, code=None):
-    if code:
-        return code
-    return ERROR_CODE_MAP.get(status, "ERR_UNKNOWN")
+from project.error_codes import ErrorCode, SUCCESS_CODE
 
 
 def api_success(data=None, meta=None, status=200):
     payload = {
         "success": True,
-        "code": status,
+        "code": SUCCESS_CODE,
         "message": "OK",
         "data": data,
         "meta": meta or {},
@@ -28,13 +14,19 @@ def api_success(data=None, meta=None, status=200):
     return JsonResponse(payload, status=status)
 
 
-def api_error(message, status=400, code=None, meta=None):
+def api_error(error, message=None, status=200):
+    if isinstance(error, ErrorCode):
+        code = error.code
+        resolved_message = message if message is not None else error.message
+    else:
+        code = error
+        resolved_message = message
     payload = {
         "success": False,
-        "code": status,
-        "message": message or _resolve_error_code(status, code),
+        "code": code,
+        "message": resolved_message,
         "data": None,
-        "meta": meta or {},
+        "meta": {},
     }
     return JsonResponse(payload, status=status)
 

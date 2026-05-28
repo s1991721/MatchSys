@@ -167,6 +167,7 @@
 </div>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -390,7 +391,6 @@
                         correct_label: Number(selected)
                     })
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
                 removeItemFromCurrentList(itemId);
@@ -655,7 +655,6 @@
                     wrong_type: wrongType
                 })
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
             detailFeedbackSubmitted[getActiveView()].add(itemId);
@@ -918,7 +917,6 @@
             const result = await window.requestJson(endpoint, {
                 body: JSON.stringify(payload)
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
 

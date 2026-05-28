@@ -502,7 +502,8 @@
   </div>
 
   <script src="i18n.js"></script>
-  <script src="common.js"></script>
+  <script src="error_code.js"></script>
+<script src="common.js"></script>
   <script>
     const i18n = window.I18N || null;
     if (i18n) {
@@ -633,7 +634,6 @@
 
     const requestJson = (url, options = {}, settings = {}) =>
       window.requestJson(url, options, {
-        throwOnFailure: true,
         fallbackMessage: t("system_settings.common.request_failed", "请求失败"),
         ...settings,
       });

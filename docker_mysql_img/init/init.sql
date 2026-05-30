@@ -124,6 +124,7 @@ INSERT INTO sys_role (id, role_name, description, menu_list)
 VALUES (1, '技术者', '公司内技术人员', '[myattendance.html]'),
        (2, '营业', '公司营业部成员',
         '[home.html,bpmatch.html,match.html,songxinhistory.html,people.html,attendance.html,myattendance.html,order.html,pay_request.html]'),
+       (3, '财务', '公司财务部成员', '[finance.html]'),
        (999, '管理员', '整个系统的管理者', '*');
 
 

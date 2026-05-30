@@ -167,6 +167,7 @@ urlpatterns = [
     path("finance/payments.html", TemplateView.as_view(template_name="frontend/finance/payments.html")),
     path("finance/reports.html", TemplateView.as_view(template_name="frontend/finance/reports.html")),
     path("finance/settings.html", TemplateView.as_view(template_name="frontend/finance/settings.html")),
+    path("finance/my_salary.html", TemplateView.as_view(template_name="frontend/finance/my_salary.html")),
     # -------------------------------permission UI-------------------------------
     path("permission.html", TemplateView.as_view(template_name="frontend/permission.html")),
     # -------------------------------notification UI-------------------------------

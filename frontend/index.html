@@ -549,8 +549,8 @@
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
         if (normalized === fallbackRoute) return true;
-        // “我的考勤”从个人信息页进入，不再依赖左侧菜单节点。
-        if (normalized === "myattendance.html") return true;
+        // 个人信息页快捷入口不依赖左侧菜单节点。
+        if (normalized === "myattendance.html" || normalized === "finance/my_salary.html") return true;
         // “我的邮件”通过顶部入口访问，不依赖左侧菜单权限列表。
         if (normalized === noticeRoute) return true;
         if (workflowRoutes.has(normalized)) return true;
@@ -592,6 +592,9 @@
         }
         if (!match && route === "myattendance.html") {
           label = i18n ? i18n.t("nav.my_attendance") : "我的考勤";
+        }
+        if (!match && route === "finance/my_salary.html") {
+          label = i18n ? i18n.t("nav.my_salary") : "我的薪资";
         }
         if (!match && (route === "songxin.html" || route === "bpsongxin.html")) {
           label = i18n ? i18n.t("songxin.title") : "送信页";

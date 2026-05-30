@@ -985,13 +985,62 @@ body > .page {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+.profile-quick-link,
 .profile-attendance-link {
   text-decoration: none;
 }
+.profile-quick-link svg,
 .profile-attendance-link svg {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
+}
+.profile-page .profile-salary-link {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.32);
+  box-shadow: none;
+}
+.my-salary-page .my-salary-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.my-salary-page .my-salary-summary-item {
+  min-height: 92px;
+}
+.my-salary-page .my-salary-summary-value {
+  display: block;
+  margin-top: 10px;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.my-salary-page .my-salary-summary-note {
+  display: block;
+  margin-top: 8px;
+}
+.my-salary-page .my-salary-empty-row {
+  padding: 28px 12px;
+}
+@media (max-width: 900px) {
+  .my-salary-page .my-salary-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .my-salary-page .my-salary-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .my-salary-page .my-salary-summary-value {
+    font-size: 22px;
+  }
+  .my-salary-page .my-salary-toolbar,
+  .my-salary-page .my-salary-toolbar .c-btn,
+  .my-salary-page .my-salary-toolbar .c-inline-field {
+    width: 100%;
+  }
 }
 .profile-grid {
   align-items: start;

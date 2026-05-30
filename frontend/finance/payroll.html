@@ -7,14 +7,23 @@
         <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.calculate_payroll">计算工资</button>
     </div>
     <div class="finance-subtabs" role="tablist" aria-label="工资计算子功能">
-        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="monthly">月度工资</button>
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="base">工资基础信息</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly">月度工资</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="calculate">工资计算</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="attendance">考勤关联</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="adjustments">扣款/加算</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="payment">工资发放</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="detail">工资明细</button>
     </div>
-    <div class="finance-subpanel" data-finance-subpanel="monthly">
+    <div class="finance-subpanel" data-finance-subpanel="base">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>员工</th><th>雇佣类型</th><th>基本工资</th><th>健康保险基数</th><th>厚生年金基数</th><th>雇用保险区分</th><th>所得税区分</th><th>生效月份</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="10">暂无工资基础信息</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="finance-subpanel hidden" data-finance-subpanel="monthly">
     <div class="table-wrap c-table-wrapper">
         <table class="c-table c-table-hover">
             <thead><tr><th>月份</th><th>员工</th><th>出勤日数</th><th>基本工资</th><th>扣款</th><th>发放金额</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>

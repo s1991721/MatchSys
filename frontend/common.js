@@ -79,11 +79,15 @@
         return i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN";
     };
 
-    const redirectTopOrSelf = (target) => {
+    const redirectAuthFailureTopOrSelf = (reason = "login") => {
+        const target = reason === "activation" ? "login.html?activation=1" : "login.html";
+
+        const cleanTarget = String(target || "").replace(/^\/+/, "");
+        const nextUrl = new URL(cleanTarget, `${window.location.origin}/`).toString();
         if (window.top && window.top !== window) {
-            window.top.location.href = target;
+            window.top.location.href = nextUrl;
         } else {
-            window.location.href = target;
+            window.location.href = nextUrl;
         }
     };
 
@@ -214,11 +218,11 @@
             const payload = await res.json().catch(() => ({}));
             const message = payload?.message || `HTTP ${res.status}`;
             if (res.status === 401) {
-                redirectTopOrSelf("login.html");
+                redirectAuthFailureTopOrSelf("login");
                 throw new Error("Unauthorized");
             }
             if (res.status === 403) {
-                redirectTopOrSelf("login.html?activation=1");
+                redirectAuthFailureTopOrSelf("activation");
             }
             const error = new Error(translateApiMessage(message));
             error.payload = payload;

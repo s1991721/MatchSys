@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "attendance",
     "customer",
     "order",
+    "finance",
     "permission",
     "settings.apps.SettingsConfig",
 ]

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS payroll_basic_info
     employment_insurance  DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '雇用保险',
     income_tax            DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '所得税',
 
-    effective_month       DATE           NOT NULL COMMENT '生效月份，统一存每月1号',
+    valid_until_date      DATE           NULL COMMENT '有效期截止日',
     status                TINYINT        NOT NULL DEFAULT 1 COMMENT '状态：1-有效 0-无效',
 
     remark                TEXT           NULL COMMENT '备注',

@@ -80,6 +80,7 @@ from employee.views import (
     user_logins_by_role_api,
     user_login_names_api,
 )
+from finance.views import payroll_basic_info_api, payroll_basic_info_detail_api
 from order.views import (
     pay_request_detail_api,
     pay_request_pdf_api,
@@ -302,6 +303,8 @@ urlpatterns = [
     path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),
     path("api/employees/departments", employee_departments_api, name="employee-departments"),
+    path("api/finance/payroll/basic-info", payroll_basic_info_api, name="payroll-basic-info"),
+    path("api/finance/payroll/basic-info/<int:payroll_basic_id>", payroll_basic_info_detail_api, name="payroll-basic-info-detail"),
     path("api/technicians", technicians_api, name="technician-list"),
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),

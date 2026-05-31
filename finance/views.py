@@ -84,11 +84,7 @@ def payroll_basic_info_api(request):
             qs = qs.filter(status=parsed_status)
 
         if keyword:
-            matching_ids = Employee.objects.filter(
-                deleted_at__isnull=True,
-                name__icontains=keyword,
-            ).values_list("id", flat=True)
-            qs = qs.filter(employee_id__in=matching_ids)
+            qs = qs.filter(employee_name__icontains=keyword)
 
         paged, total, page, page_size, total_pages = paginate_queryset(
             qs.order_by("employee_id", "id"),
@@ -117,7 +113,8 @@ def payroll_basic_info_api(request):
     except (TypeError, ValueError):
         return api_error("Missing field: employee_id")
 
-    if not Employee.objects.filter(id=employee_id, deleted_at__isnull=True).exists():
+    employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
+    if not employee:
         return api_error("Employee not found", status=404)
 
     if PayrollBasicInfo.objects.filter(employee_id=employee_id, deleted_at__isnull=True).exists():
@@ -148,6 +145,7 @@ def payroll_basic_info_api(request):
 
     item = PayrollBasicInfo.objects.create(
         employee_id=employee_id,
+        employee_name=employee.name,
         contract_type=contract_type,
         valid_until_date=valid_until_date,
         status=status_value,
@@ -156,7 +154,6 @@ def payroll_basic_info_api(request):
         updated_by=login_id,
         **amount_values,
     )
-    employee = Employee.objects.filter(id=item.employee_id, deleted_at__isnull=True).first()
     return api_success(data={"item": PayrollBasicInfo.serialize(item, employee)})
 
 

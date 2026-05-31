@@ -13,6 +13,7 @@ class PayrollBasicInfo(models.Model):
     )
 
     employee_id = models.BigIntegerField(verbose_name="员工ID")
+    employee_name = models.CharField(max_length=100, verbose_name="员工姓名")
     contract_type = models.SmallIntegerField(choices=CONTRACT_TYPE_CHOICES, default=0, verbose_name="契约类型")
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="基本工资")
     health_insurance = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="社保/健康保险")
@@ -51,7 +52,7 @@ class PayrollBasicInfo(models.Model):
         return {
             "id": item.id,
             "employee_id": item.employee_id,
-            "employee_name": employee.name if employee else "",
+            "employee_name": item.employee_name or (employee.name if employee else ""),
             "contract_type": item.contract_type,
             "contract_label": contract_labels.get(item.contract_type, ""),
             "base_salary": str(item.base_salary),

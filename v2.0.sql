@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS payroll_basic_info
     id                    BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
 
     employee_id           BIGINT         NOT NULL COMMENT '员工ID',
+    employee_name         VARCHAR(100)   NOT NULL COMMENT '员工姓名',
     contract_type         TINYINT        NOT NULL DEFAULT 0 COMMENT '契约类型：0-正社员 1-契约社员 2-フリーランス',
 
     base_salary           DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',

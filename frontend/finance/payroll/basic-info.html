@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>基础信息</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payroll.basic">
+    <div class="c-inline-filters">
+        <div class="c-inline-filters-grid-3">
+            <label class="c-inline-field"><span>员工</span><input type="text" placeholder="员工姓名"></label>
+            <label class="c-inline-field"><span>雇佣类型</span><select><option>社员</option><option>契约员工</option><option>兼职</option></select></label>
+            <label class="c-inline-field"><span>生效月份</span><input type="month"></label>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead>
+            <tr>
+                <th>员工</th>
+                <th>雇佣类型</th>
+                <th>基本工资</th>
+                <th>社保</th>
+                <th>年金</th>
+                <th>雇用保险</th>
+                <th>所得税</th>
+                <th>生效月份</th>
+                <th>状态</th>
+                <th class="c-actions-col">操作</th>
+            </tr>
+            </thead>
+            <tbody><tr><td class="finance-empty-row" colspan="10">暂无基础信息</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>window.__routeNotified = true;</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
+        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+    });
+}());
+</script>
+</body>
+</html>

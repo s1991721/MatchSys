@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>月度计算</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payroll.monthly">
+    <div class="c-inline-filters">
+        <div class="c-inline-filters-grid-3">
+            <label class="c-inline-field"><span>计算月份</span><input type="month"></label>
+            <label class="c-inline-field"><span>对象范围</span><select><option>全部员工</option><option>社员</option><option>契约员工</option></select></label>
+            <label class="c-inline-field"><span>计算状态</span><select><option>未计算</option><option>已计算</option><option>已确认</option></select></label>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead>
+            <tr>
+                <th>月份</th>
+                <th>员工</th>
+                <th>出勤日数</th>
+                <th>基本工资</th>
+                <th>补贴</th>
+                <th>扣款</th>
+                <th>社保/年金/保险</th>
+                <th>实发金额</th>
+                <th>状态</th>
+                <th class="c-actions-col">操作</th>
+            </tr>
+            </thead>
+            <tbody><tr><td class="finance-empty-row" colspan="10">暂无月度计算数据</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>window.__routeNotified = true;</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
+        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+    });
+}());
+</script>
+</body>
+</html>

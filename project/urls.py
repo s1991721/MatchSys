@@ -161,7 +161,7 @@ urlpatterns = [
     path("pay_request.html", TemplateView.as_view(template_name="frontend/pay_request.html")),
     # -------------------------------finance UI-------------------------------
     path("finance.html", TemplateView.as_view(template_name="frontend/finance.html")),
-    path("finance/finance.html", TemplateView.as_view(template_name="frontend/finance/finance.html")),
+    path("finance/finance.html", RedirectView.as_view(url="/finance.html", permanent=False)),
     path("finance/receivables.html", TemplateView.as_view(template_name="frontend/finance/receivables.html")),
     path("finance/receivables/list.html", TemplateView.as_view(template_name="frontend/finance/receivables/list.html")),
     path("finance/receivables/collection.html", TemplateView.as_view(template_name="frontend/finance/receivables/collection.html")),

@@ -13,7 +13,7 @@
     <div class="c-inline-filters">
         <div class="c-inline-filters-grid-3">
             <label class="c-inline-field"><span>员工</span><input type="text" placeholder="员工姓名"></label>
-            <label class="c-inline-field"><span>雇佣类型</span><select><option>社员</option><option>契约员工</option><option>兼职</option></select></label>
+            <label class="c-inline-field"><span>契约类型</span><select><option>正社员</option><option>契约社员</option><option>フリーランス</option></select></label>
             <label class="c-inline-field"><span>生效月份</span><input type="month"></label>
         </div>
     </div>
@@ -22,7 +22,7 @@
             <thead>
             <tr>
                 <th>员工</th>
-                <th>雇佣类型</th>
+                <th>契约类型</th>
                 <th>基本工资</th>
                 <th>社保</th>
                 <th>年金</th>
@@ -46,6 +46,11 @@
     document.addEventListener("DOMContentLoaded", () => {
         if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
         if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+        const effectiveMonthInput = document.querySelector("input[type='month']");
+        if (effectiveMonthInput && !effectiveMonthInput.value) {
+            const now = new Date();
+            effectiveMonthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        }
     });
 }());
 </script>

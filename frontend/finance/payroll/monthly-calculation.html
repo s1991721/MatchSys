@@ -7,14 +7,55 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>月度计算</title>
+    <style>
+        .payroll-monthly-filter-row {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.1fr) auto minmax(160px, 0.85fr) minmax(180px, 0.9fr) auto auto auto;
+            align-items: center;
+            gap: 12px;
+        }
+        .payroll-monthly-filter-row .c-btn {
+            min-height: 44px;
+            white-space: nowrap;
+        }
+        .payroll-monthly-filter-row .c-btn:disabled {
+            opacity: 0.58;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        @media (max-width: 1180px) {
+            .payroll-monthly-filter-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payroll.monthly">
     <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3">
-            <label class="c-inline-field"><span>计算月份</span><input type="month"></label>
-            <label class="c-inline-field"><span>对象范围</span><select><option>全部员工</option><option>社员</option><option>契约员工</option></select></label>
-            <label class="c-inline-field"><span>计算状态</span><select><option>未计算</option><option>已计算</option><option>已确认</option></select></label>
+        <div class="payroll-monthly-filter-row">
+            <label class="c-inline-field">
+                <span>月份</span>
+                <input id="payrollMonth" type="month">
+            </label>
+            <button type="button" class="c-btn c-btn-success" id="payrollCalculateBtn" disabled>一键计算薪资</button>
+            <label class="c-inline-field">
+                <span>契约类型</span>
+                <select id="payrollContractType" disabled>
+                    <option value="">全部</option>
+                    <option value="0">正社员</option>
+                    <option value="1">契约社员</option>
+                    <option value="2">フリーランス</option>
+                </select>
+            </label>
+            <label class="c-inline-field">
+                <span>员工姓名</span>
+                <input id="payrollKeyword" type="text" placeholder="员工姓名" disabled>
+            </label>
+            <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" disabled>搜索</button>
+            <button type="button" class="c-btn c-btn-success-lite" id="payrollAddBtn" hidden>新增</button>
+            <button type="button" class="c-btn c-btn-warn" id="payrollExportBtn" disabled>导出</button>
         </div>
     </div>
     <div class="table-wrap c-table-wrapper">
@@ -33,7 +74,7 @@
                 <th class="c-actions-col">操作</th>
             </tr>
             </thead>
-            <tbody><tr><td class="finance-empty-row" colspan="10">暂无月度计算数据</td></tr></tbody>
+            <tbody id="payrollMonthlyBody"><tr><td class="finance-empty-row" colspan="10">请先选择月份</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -43,9 +84,237 @@
 <script src="../../common.js"></script>
 <script>
 (function () {
+    const statusLabels = {
+        0: "未确认",
+        1: "已确认",
+        2: "已发放"
+    };
+    const payrollRowsByMonth = {};
+    let selectedMonth = "";
+    let loadingTimer = null;
+
+    const h = (value) => {
+        if (window.escapeHtml) return window.escapeHtml(value == null ? "" : String(value));
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+    const formatMoney = (value) => {
+        const number = Number(value || 0);
+        return number.toLocaleString("ja-JP", {
+            style: "currency",
+            currency: "JPY",
+            maximumFractionDigits: 0
+        });
+    };
+    const normalizeKeyword = (value) => String(value || "").trim().toLowerCase();
+    const getCurrentMonthValue = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        return `${year}-${month}`;
+    };
+
+    const createCalculatedRows = (month) => ([
+        {
+            id: `${month}-1`,
+            month,
+            employee_id: 1,
+            employee_name: "山田太郎",
+            contract_type: 0,
+            attendance_days: 20,
+            base_salary: 350000,
+            allowance_amount: 0,
+            deduction_amount: 12000,
+            social_insurance_amount: 52000,
+            net_salary: 286000,
+            status: 0
+        },
+        {
+            id: `${month}-2`,
+            month,
+            employee_id: 2,
+            employee_name: "佐藤花子",
+            contract_type: 1,
+            attendance_days: 18,
+            base_salary: 300000,
+            allowance_amount: 0,
+            deduction_amount: 10000,
+            social_insurance_amount: 43000,
+            net_salary: 247000,
+            status: 0
+        }
+    ]);
+
+    const getMonthlyRows = (month) => payrollRowsByMonth[month] || [];
+
+    const setEmpty = (tbody, message) => {
+        tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">${h(message)}</td></tr>`;
+    };
+
+    const renderRows = (tbody, rows) => {
+        if (!rows.length) {
+            setEmpty(tbody, "没有符合条件的月度计算数据");
+            return;
+        }
+        tbody.innerHTML = rows.map((item) => `
+            <tr>
+                <td>${h(item.month)}</td>
+                <td>${h(item.employee_name)}</td>
+                <td>${h(item.attendance_days)}</td>
+                <td>${h(formatMoney(item.base_salary))}</td>
+                <td>${h(formatMoney(item.allowance_amount))}</td>
+                <td>${h(formatMoney(item.deduction_amount))}</td>
+                <td>${h(formatMoney(item.social_insurance_amount))}</td>
+                <td>${h(formatMoney(item.net_salary))}</td>
+                <td>${h(statusLabels[item.status] || "")}</td>
+                <td class="c-actions-col">
+                    <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">编辑</button>
+                    <button type="button" class="c-btn c-btn-danger c-btn-sm" data-action="delete" data-id="${h(item.id)}">删除</button>
+                </td>
+            </tr>
+        `).join("");
+    };
+
+    const filterRows = (rows, contractType, keyword) => {
+        const normalizedKeyword = normalizeKeyword(keyword);
+        return rows.filter((item) => {
+            const typeMatched = contractType === "" || String(item.contract_type) === contractType;
+            const keywordMatched = !normalizedKeyword || normalizeKeyword(item.employee_name).includes(normalizedKeyword);
+            return typeMatched && keywordMatched;
+        });
+    };
+
+    const setLoadingState = () => {
+        const monthInput = document.getElementById("payrollMonth");
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const keywordInput = document.getElementById("payrollKeyword");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const calculateBtn = document.getElementById("payrollCalculateBtn");
+        const addBtn = document.getElementById("payrollAddBtn");
+        const exportBtn = document.getElementById("payrollExportBtn");
+        const tbody = document.getElementById("payrollMonthlyBody");
+
+        contractTypeSelect.disabled = true;
+        keywordInput.disabled = true;
+        searchBtn.disabled = true;
+        calculateBtn.disabled = true;
+        addBtn.hidden = true;
+        exportBtn.disabled = true;
+        setEmpty(tbody, monthInput.value ? "正在加载中..." : "请先选择月份");
+    };
+
+    const updateState = () => {
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const keywordInput = document.getElementById("payrollKeyword");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const calculateBtn = document.getElementById("payrollCalculateBtn");
+        const addBtn = document.getElementById("payrollAddBtn");
+        const exportBtn = document.getElementById("payrollExportBtn");
+        const tbody = document.getElementById("payrollMonthlyBody");
+        const month = selectedMonth;
+
+        if (!month) {
+            contractTypeSelect.disabled = true;
+            keywordInput.disabled = true;
+            searchBtn.disabled = true;
+            calculateBtn.disabled = true;
+            addBtn.hidden = true;
+            exportBtn.disabled = true;
+            contractTypeSelect.value = "";
+            keywordInput.value = "";
+            setEmpty(tbody, "请先选择月份");
+            return;
+        }
+
+        const rows = getMonthlyRows(month);
+        const hasRows = rows.length > 0;
+        contractTypeSelect.disabled = !hasRows;
+        keywordInput.disabled = !hasRows;
+        searchBtn.disabled = !hasRows;
+        calculateBtn.disabled = hasRows;
+        addBtn.hidden = !hasRows;
+        exportBtn.disabled = !hasRows;
+
+        if (!hasRows) {
+            contractTypeSelect.value = "";
+            keywordInput.value = "";
+            setEmpty(tbody, "此月份还没有进行工资计算");
+            return;
+        }
+
+        renderRows(tbody, filterRows(rows, contractTypeSelect.value, keywordInput.value));
+    };
+
     document.addEventListener("DOMContentLoaded", () => {
         if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
         if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+
+        const monthInput = document.getElementById("payrollMonth");
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const keywordInput = document.getElementById("payrollKeyword");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const calculateBtn = document.getElementById("payrollCalculateBtn");
+        const addBtn = document.getElementById("payrollAddBtn");
+        const exportBtn = document.getElementById("payrollExportBtn");
+        const tbody = document.getElementById("payrollMonthlyBody");
+
+        const loadSelectedMonth = () => {
+            selectedMonth = "";
+            window.clearTimeout(loadingTimer);
+            setLoadingState();
+            loadingTimer = window.setTimeout(() => {
+                selectedMonth = monthInput.value;
+                updateState();
+            }, 300);
+        };
+
+        monthInput.addEventListener("change", () => {
+            loadSelectedMonth();
+        });
+        searchBtn.addEventListener("click", updateState);
+        contractTypeSelect.addEventListener("change", updateState);
+        keywordInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") updateState();
+        });
+        calculateBtn.addEventListener("click", () => {
+            const month = selectedMonth;
+            if (!month || getMonthlyRows(month).length) return;
+            calculateBtn.disabled = true;
+            calculateBtn.textContent = "薪资计算中...";
+            window.setTimeout(() => {
+                payrollRowsByMonth[month] = createCalculatedRows(month);
+                calculateBtn.disabled = false;
+                calculateBtn.textContent = "一键计算薪资";
+                updateState();
+            }, 300);
+        });
+        addBtn.addEventListener("click", () => {
+            window.alert("单条新增将在月度计算 API 接入后实现。");
+        });
+        exportBtn.addEventListener("click", () => {
+            window.alert("导出将在月度计算 API 接入后实现。");
+        });
+        tbody.addEventListener("click", (event) => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const action = button.dataset.action;
+            if (action === "edit") {
+                window.alert("单条编辑将在月度计算 API 接入后实现。");
+                return;
+            }
+            if (action === "delete") {
+                const month = selectedMonth;
+                payrollRowsByMonth[month] = getMonthlyRows(month).filter((item) => String(item.id) !== String(button.dataset.id));
+                updateState();
+            }
+        });
+
+        monthInput.value = getCurrentMonthValue();
+        loadSelectedMonth();
     });
 }());
 </script>

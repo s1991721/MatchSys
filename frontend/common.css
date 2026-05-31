@@ -1874,6 +1874,13 @@ body.finance-module-page > .page,
 body.finance-subpage {
   padding: 0;
 }
+.c-inline-filters-grid-3.payroll-basic-filter-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: center;
+}
+.payroll-basic-search-action {
+  justify-content: flex-end;
+}
 .finance-page .c-switch-wrap {
   max-width: 100%;
   overflow-x: auto;
@@ -2011,6 +2018,12 @@ body.finance-subpage {
   .finance-summary-grid,
   .c-inline-filters-grid-3 {
     grid-template-columns: 1fr;
+  }
+  .c-inline-filters-grid-3.payroll-basic-filter-row {
+    grid-template-columns: 1fr;
+  }
+  .payroll-basic-search-action {
+    justify-content: flex-start;
   }
   .finance-section-title {
     font-size: 18px;

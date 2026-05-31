@@ -61,12 +61,23 @@
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
         const frame = document.getElementById("financeSubFrame");
+        const pageParams = new URLSearchParams(window.location.search || "");
         const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
         const syncFrameLang = () => {
             if (!frame || !frame.contentWindow) return;
             try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
         };
-        const setSubtab = (key) => {
+        const buildFrameSrc = (key, src) => {
+            if (key !== "basic") return src;
+            const employeeId = pageParams.get("employee_id");
+            if (!employeeId) return src;
+            const params = new URLSearchParams();
+            params.set("employee_id", employeeId);
+            const trigger = pageParams.get("trigger");
+            if (trigger) params.set("trigger", trigger);
+            return `${src}?${params.toString()}`;
+        };
+        const setSubtab = (key, preserveParams = false) => {
             const route = routes[key];
             if (!route || !frame) return;
             buttons.forEach((button) => {
@@ -74,8 +85,9 @@
                 button.classList.toggle("is-active", active);
                 button.setAttribute("aria-selected", String(active));
             });
-            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
-                frame.setAttribute("src", route.src);
+            const targetSrc = preserveParams ? buildFrameSrc(key, route.src) : route.src;
+            if (frame.getAttribute("src") !== targetSrc) {
+                frame.setAttribute("src", targetSrc);
             }
             frame.setAttribute("title", route.title);
         };
@@ -86,7 +98,8 @@
             frame.addEventListener("load", syncFrameLang);
         }
         window.addEventListener("i18n:change", syncFrameLang);
-        setSubtab("basic");
+        const initialSubtab = routes[pageParams.get("subtab")] ? pageParams.get("subtab") : "basic";
+        setSubtab(initialSubtab, true);
     });
 }());
 </script>

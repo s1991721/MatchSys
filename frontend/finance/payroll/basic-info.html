@@ -11,10 +11,28 @@
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payroll.basic">
     <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3">
-            <label class="c-inline-field"><span>员工</span><input type="text" placeholder="员工姓名"></label>
-            <label class="c-inline-field"><span>契约类型</span><select><option>正社员</option><option>契约社员</option><option>フリーランス</option></select></label>
-            <label class="c-inline-field"><span>生效月份</span><input type="month"></label>
+        <div class="c-inline-filters-grid-3 payroll-basic-filter-row">
+            <label class="c-inline-field"><span>员工</span><input id="payrollKeyword" type="text" placeholder="员工姓名"></label>
+            <label class="c-inline-field">
+                <span>契约类型</span>
+                <select id="payrollContractType">
+                    <option value="">全部</option>
+                    <option value="0">正社员</option>
+                    <option value="1">契约社员</option>
+                    <option value="2">フリーランス</option>
+                </select>
+            </label>
+            <label class="c-inline-field">
+                <span>状态</span>
+                <select id="payrollStatus">
+                    <option value="">全部</option>
+                    <option value="1">有效</option>
+                    <option value="0">无效</option>
+                </select>
+            </label>
+            <div class="c-filter-actions-group payroll-basic-search-action">
+                <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn">搜索</button>
+            </div>
         </div>
     </div>
     <div class="table-wrap c-table-wrapper">
@@ -28,13 +46,79 @@
                 <th>年金</th>
                 <th>雇用保险</th>
                 <th>所得税</th>
-                <th>生效月份</th>
+                <th>有效期截止日</th>
                 <th>状态</th>
                 <th class="c-actions-col">操作</th>
             </tr>
             </thead>
-            <tbody><tr><td class="finance-empty-row" colspan="10">暂无基础信息</td></tr></tbody>
+            <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="10">加载中...</td></tr></tbody>
         </table>
+    </div>
+</div>
+
+<div class="personnel-page c-form-page">
+    <div class="modal" id="payrollBasicModal" aria-hidden="true">
+        <div class="modal-card c-card c-card-pad">
+            <div class="modal-header">
+                <h4 id="payrollBasicModalTitle">新增薪资信息</h4>
+                <button class="modal-close" id="payrollBasicClose" aria-label="关闭">×</button>
+            </div>
+            <form id="payrollBasicForm" class="modal-body">
+                <div class="form-grid">
+                    <label>
+                        <span>员工</span>
+                        <input id="payrollEmployeeName" type="text" readonly>
+                    </label>
+                    <label>
+                        <span>契约类型</span>
+                        <select id="payrollFormContractType">
+                            <option value="0">正社员</option>
+                            <option value="1">契约社员</option>
+                            <option value="2">フリーランス</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>基本工资</span>
+                        <input id="payrollBaseSalary" type="number" min="0" step="1">
+                    </label>
+                    <label>
+                        <span>社保</span>
+                        <input id="payrollHealthInsurance" type="number" min="0" step="1">
+                    </label>
+                    <label>
+                        <span>年金</span>
+                        <input id="payrollWelfarePension" type="number" min="0" step="1">
+                    </label>
+                    <label>
+                        <span>雇用保险</span>
+                        <input id="payrollEmploymentInsurance" type="number" min="0" step="1">
+                    </label>
+                    <label>
+                        <span>所得税</span>
+                        <input id="payrollIncomeTax" type="number" min="0" step="1">
+                    </label>
+                    <label>
+                        <span>有效期截止日</span>
+                        <input id="payrollValidUntilDate" type="date">
+                    </label>
+                    <label>
+                        <span>状态</span>
+                        <select id="payrollFormStatus">
+                            <option value="1">有效</option>
+                            <option value="0">无效</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>备注</span>
+                        <input id="payrollRemark" type="text">
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="c-btn c-btn-secondary" id="payrollBasicCancel">取消</button>
+                    <button type="submit" class="c-btn c-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -43,14 +127,223 @@
 <script src="../../common.js"></script>
 <script>
 (function () {
+    const contractLabels = {
+        0: "正社员",
+        1: "契约社员",
+        2: "フリーランス"
+    };
+    const statusLabels = {
+        0: "无效",
+        1: "有效"
+    };
+    const h = (value) => window.escapeHtml ? window.escapeHtml(value) : String(value == null ? "" : value);
+    const formatMoney = (value) => {
+        const number = Number(value || 0);
+        if (!Number.isFinite(number)) return "0";
+        return number.toLocaleString(window.getAppLocale ? window.getAppLocale() : "zh-CN", {
+            maximumFractionDigits: 0
+        });
+    };
+    const showError = (message) => alert(message);
+
     document.addEventListener("DOMContentLoaded", () => {
         if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
         if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
-        const effectiveMonthInput = document.querySelector("input[type='month']");
-        if (effectiveMonthInput && !effectiveMonthInput.value) {
-            const now = new Date();
-            effectiveMonthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-        }
+
+        const keywordInput = document.getElementById("payrollKeyword");
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const statusSelect = document.getElementById("payrollStatus");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const tbody = document.getElementById("payrollBasicBody");
+        const modal = document.getElementById("payrollBasicModal");
+        const modalTitle = document.getElementById("payrollBasicModalTitle");
+        const form = document.getElementById("payrollBasicForm");
+        const closeBtn = document.getElementById("payrollBasicClose");
+        const cancelBtn = document.getElementById("payrollBasicCancel");
+        const fields = {
+            employeeName: document.getElementById("payrollEmployeeName"),
+            contractType: document.getElementById("payrollFormContractType"),
+            baseSalary: document.getElementById("payrollBaseSalary"),
+            healthInsurance: document.getElementById("payrollHealthInsurance"),
+            welfarePension: document.getElementById("payrollWelfarePension"),
+            employmentInsurance: document.getElementById("payrollEmploymentInsurance"),
+            incomeTax: document.getElementById("payrollIncomeTax"),
+            validUntilDate: document.getElementById("payrollValidUntilDate"),
+            status: document.getElementById("payrollFormStatus"),
+            remark: document.getElementById("payrollRemark")
+        };
+        let items = [];
+        let editingId = null;
+        let editingEmployeeId = null;
+
+        const closeModal = () => {
+            modal.classList.remove("show");
+            modal.setAttribute("aria-hidden", "true");
+            form.reset();
+            editingId = null;
+            editingEmployeeId = null;
+        };
+
+        const renderRows = () => {
+            if (!items.length) {
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">暂无基础信息</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = items.map((item) => {
+                const contract = contractLabels[Number(item.contract_type)] || item.contract_label || "";
+                const status = statusLabels[Number(item.status)] || item.status_label || "";
+                return `
+                    <tr>
+                        <td>${h(item.employee_name || item.employee_id)}</td>
+                        <td>${h(contract)}</td>
+                        <td>${h(formatMoney(item.base_salary))}</td>
+                        <td>${h(formatMoney(item.health_insurance))}</td>
+                        <td>${h(formatMoney(item.welfare_pension))}</td>
+                        <td>${h(formatMoney(item.employment_insurance))}</td>
+                        <td>${h(formatMoney(item.income_tax))}</td>
+                        <td>${h(item.valid_until_date || "长期有效")}</td>
+                        <td>${h(status)}</td>
+                        <td class="c-actions-col">
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">编辑</button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        };
+
+        const fetchList = async () => {
+            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">加载中...</td></tr>`;
+            const params = window.createParams([
+                ["keyword", keywordInput.value.trim()],
+                ["contract_type", contractTypeSelect.value],
+                ["status", statusSelect.value],
+                ["page_size", "100"]
+            ]);
+            const payload = await window.requestJson(window.buildUrl("/api/finance/payroll/basic-info", params), {method: "GET"});
+            if (!payload.success) {
+                throw new Error(payload.message || "加载失败");
+            }
+            items = Array.isArray(payload.data?.items) ? payload.data.items : [];
+            renderRows();
+        };
+
+        const fetchEmployee = async (employeeId) => {
+            const payload = await window.requestJson(`/api/employees/${encodeURIComponent(employeeId)}`, {method: "GET"});
+            if (!payload.success) {
+                throw new Error(payload.message || "员工不存在");
+            }
+            return payload.data?.item || {};
+        };
+
+        const fetchPayrollByEmployee = async (employeeId) => {
+            const params = window.createParams([
+                ["employee_id", String(employeeId)],
+                ["page_size", "1"]
+            ]);
+            const payload = await window.requestJson(window.buildUrl("/api/finance/payroll/basic-info", params), {method: "GET"});
+            if (!payload.success) {
+                throw new Error(payload.message || "加载失败");
+            }
+            const found = Array.isArray(payload.data?.items) ? payload.data.items : [];
+            return found[0] || null;
+        };
+
+        const openModal = (mode, data, employee) => {
+            editingId = mode === "edit" ? data?.id : null;
+            editingEmployeeId = data?.employee_id || employee?.id || null;
+            modalTitle.textContent = mode === "edit" ? "编辑薪资信息" : "新增薪资信息";
+            fields.employeeName.value = data?.employee_name || employee?.name || "";
+            fields.contractType.value = String(data?.contract_type ?? 0);
+            fields.baseSalary.value = data?.base_salary || "0";
+            fields.healthInsurance.value = data?.health_insurance || "0";
+            fields.welfarePension.value = data?.welfare_pension || "0";
+            fields.employmentInsurance.value = data?.employment_insurance || "0";
+            fields.incomeTax.value = data?.income_tax || "0";
+            fields.validUntilDate.value = data?.valid_until_date || "";
+            fields.status.value = String(data?.status ?? 1);
+            fields.remark.value = data?.remark || "";
+            modal.classList.add("show");
+            modal.setAttribute("aria-hidden", "false");
+        };
+
+        const buildPayload = () => ({
+            employee_id: editingEmployeeId,
+            contract_type: Number(fields.contractType.value),
+            base_salary: fields.baseSalary.value || "0",
+            health_insurance: fields.healthInsurance.value || "0",
+            welfare_pension: fields.welfarePension.value || "0",
+            employment_insurance: fields.employmentInsurance.value || "0",
+            income_tax: fields.incomeTax.value || "0",
+            valid_until_date: fields.validUntilDate.value || "",
+            status: Number(fields.status.value),
+            remark: fields.remark.value.trim()
+        });
+
+        const handleEmployeeTrigger = async () => {
+            const params = new URLSearchParams(window.location.search || "");
+            const employeeId = params.get("employee_id");
+            if (!employeeId) return;
+            const trigger = params.get("trigger") || "";
+            const triggerKey = trigger ? `payroll_basic_trigger_${trigger}` : "";
+            if (triggerKey) {
+                try {
+                    if (sessionStorage.getItem(triggerKey) === "1") return;
+                    sessionStorage.setItem(triggerKey, "1");
+                } catch (err) {
+                }
+            }
+            const cleanUrl = `${window.location.pathname}`;
+            window.history.replaceState({}, document.title, cleanUrl);
+            try {
+                const existing = await fetchPayrollByEmployee(employeeId);
+                if (existing) {
+                    openModal("edit", existing);
+                    return;
+                }
+                const employee = await fetchEmployee(employeeId);
+                openModal("add", {employee_id: employeeId}, employee);
+            } catch (err) {
+                showError(err.message || "薪资信息加载失败");
+            }
+        };
+
+        searchBtn.addEventListener("click", () => {
+            fetchList().catch((err) => {
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">加载失败：${h(err.message)}</td></tr>`;
+            });
+        });
+        tbody.addEventListener("click", (event) => {
+            const btn = event.target.closest("button[data-action='edit']");
+            if (!btn) return;
+            const item = items.find((row) => String(row.id) === String(btn.dataset.id));
+            if (item) openModal("edit", item);
+        });
+        closeBtn.addEventListener("click", closeModal);
+        cancelBtn.addEventListener("click", closeModal);
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const payload = buildPayload();
+            try {
+                const url = editingId ? `/api/finance/payroll/basic-info/${editingId}` : "/api/finance/payroll/basic-info";
+                const response = await window.requestJson(url, {
+                    method: editingId ? "PUT" : "POST",
+                    body: JSON.stringify(payload)
+                });
+                if (!response.success) {
+                    throw new Error(response.message || "保存失败");
+                }
+                closeModal();
+                await fetchList();
+            } catch (err) {
+                showError(err.message || "保存失败");
+            }
+        });
+
+        fetchList()
+            .then(handleEmployeeTrigger)
+            .catch((err) => {
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">加载失败：${h(err.message)}</td></tr>`;
+            });
     });
 }());
 </script>

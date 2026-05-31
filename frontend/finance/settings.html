@@ -1,4 +1,17 @@
-<section class="c-card c-card-pad finance-view" data-finance-panel="settings">
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>税率设置</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="settings">
+
     <div class="finance-section-head">
         <div>
             <h2 class="finance-section-title" data-i18n="finance.settings.title">财务设置</h2>
@@ -15,76 +28,82 @@
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="numbering">编号规则</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="reminders">提醒规则</button>
     </div>
-    <div class="finance-subpanel" data-finance-subpanel="tax">
-    <div class="finance-summary-grid">
-        <div class="finance-summary-item"><span class="finance-summary-label">税率</span><span class="finance-summary-value">10%</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">费用科目</span><span class="finance-summary-value">0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">银行账户</span><span class="finance-summary-value">0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">付款条件</span><span class="finance-summary-value">0</span></div>
-    </div>
-    <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead><tr><th>设置类别</th><th>项目</th><th>当前值</th><th>说明</th><th class="c-actions-col">操作</th></tr></thead>
-            <tbody>
-                <tr><td>税率</td><td>消费税</td><td>10%</td><td>请求书与报表默认税率</td><td class="c-actions-col"><button class="c-btn c-btn-secondary c-btn-sm" type="button">编辑</button></td></tr>
-                <tr><td>付款条件</td><td>默认结算日</td><td>月末締め翌月末払い</td><td>应收/应付预定日期计算</td><td class="c-actions-col"><button class="c-btn c-btn-secondary c-btn-sm" type="button">编辑</button></td></tr>
-                <tr><td>银行账户</td><td>默认入金账户</td><td>-</td><td>入金确认和支付记录使用</td><td class="c-actions-col"><button class="c-btn c-btn-secondary c-btn-sm" type="button">编辑</button></td></tr>
-            </tbody>
-        </table>
-    </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="accounts">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>科目代码</th><th>科目名称</th><th>适用模块</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="5">暂无费用科目</td></tr></tbody>
-            </table>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="settings/tax.html" title="税率设置"></iframe>
         </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="terms">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>条件名称</th><th>締日</th><th>支付/入金日</th><th>说明</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="5">暂无付款条件</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="banks">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>银行名</th><th>支店</th><th>账户类型</th><th>账号</th><th>用途</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无银行账户</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="payroll">
-        <div class="c-empty">工资规则将在工资计算模块确定后补充</div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="numbering">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>业务类型</th><th>前缀</th><th>日期格式</th><th>流水位数</th><th>示例</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="5">暂无编号规则</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="reminders">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>提醒类型</th><th>触发条件</th><th>通知对象</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="5">暂无提醒规则</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-</section>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
 <script>
 (function () {
-    window.FinanceViews = window.FinanceViews || {};
-    window.FinanceViews.settings = {
-        init(root) {
-            if (!root || root.dataset.initialized === "true") return;
-            root.dataset.initialized = "true";
-        },
-    };
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
 }());
 </script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+        tax: { src: "settings/tax.html", title: "税率设置" },
+        accounts: { src: "settings/accounts.html", title: "费用科目" },
+        terms: { src: "settings/terms.html", title: "付款条件" },
+        banks: { src: "settings/banks.html", title: "银行账户" },
+        payroll: { src: "settings/payroll.html", title: "工资规则" },
+        numbering: { src: "settings/numbering.html", title: "编号规则" },
+        reminders: { src: "settings/reminders.html", title: "提醒规则" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const setSubtab = (key) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
+                frame.setAttribute("src", route.src);
+            }
+            frame.setAttribute("title", route.title);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        setSubtab("tax");
+    });
+}());
+</script>
+</body>
+</html>

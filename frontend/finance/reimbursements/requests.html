@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>报销申请</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="reimbursements.requests">
+    <div class="c-inline-filters">
+        <div class="c-inline-filters-grid-3">
+            <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="客户 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.keyword"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>申请中</option><option>已承认</option><option>已支付</option><option>已驳回</option></select></div>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead><tr><th>报销单号</th><th>申请人</th><th>类型</th><th>金额</th><th>申请日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+            <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    
+</div>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+    });
+}());
+</script>
+</body>
+</html>

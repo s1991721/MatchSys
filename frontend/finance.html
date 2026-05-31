@@ -3,9 +3,9 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
-    <link rel="stylesheet" href="../common.css">
-    <link rel="stylesheet" href="../components.css">
+    <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
     <title>财务管理</title>
 </head>
 <body class="order-page finance-page finance-shell">
@@ -27,30 +27,13 @@
         </div>
 
         <div id="financeContent" class="finance-content">
-            <iframe id="financeModuleFrame" class="finance-module-frame" src="receivables.html" title="应收管理"></iframe>
+            <iframe id="financeModuleFrame" class="finance-module-frame" src="finance/receivables.html" title="应收管理"></iframe>
         </div>
     </div>
 </div>
 
-<script src="../i18n.js"></script>
-<script>
-(function () {
-    const route = (window.location.pathname || "").replace(/^\/+/, "");
-    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
-    window.__routeNotified = true;
-    try {
-        if (!window.top || window.top === window) return;
-        const topHash = ((window.top.location && window.top.location.hash) || "")
-            .replace(/^#/, "")
-            .split("?")[0]
-            .split("#")[0];
-        if (topHash === route) {
-            window.top.location.hash = "finance.html";
-        }
-    } catch (e) {}
-}());
-</script>
-<script src="../common.js"></script>
+<script src="i18n.js"></script>
+<script src="common.js"></script>
 <script>
 (function () {
     const applyI18n = () => {
@@ -64,13 +47,13 @@
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
         const routes = {
-            receivables: { src: "receivables.html", title: "应收管理" },
-            payables: { src: "payables.html", title: "应付管理" },
-            reimbursements: { src: "reimbursements.html", title: "报销管理" },
-            payroll: { src: "payroll.html", title: "工资计算" },
-            payments: { src: "payments.html", title: "支付记录" },
-            reports: { src: "reports.html", title: "财务报表" },
-            settings: { src: "settings.html", title: "财务设置" }
+            receivables: { src: "finance/receivables.html", title: "应收管理" },
+            payables: { src: "finance/payables.html", title: "应付管理" },
+            reimbursements: { src: "finance/reimbursements.html", title: "报销管理" },
+            payroll: { src: "finance/payroll.html", title: "工资计算" },
+            payments: { src: "finance/payments.html", title: "支付记录" },
+            reports: { src: "finance/reports.html", title: "财务报表" },
+            settings: { src: "finance/settings.html", title: "财务设置" }
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-view]"));
         const frame = document.getElementById("financeModuleFrame");

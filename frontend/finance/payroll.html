@@ -1,4 +1,17 @@
-<section class="c-card c-card-pad finance-view" data-finance-panel="payroll">
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>工资基础信息</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="payroll">
+
     <div class="finance-section-head">
         <div>
             <h2 class="finance-section-title" data-i18n="finance.payroll.title">工资计算</h2>
@@ -15,67 +28,82 @@
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="payment">工资发放</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="detail">工资明细</button>
     </div>
-    <div class="finance-subpanel" data-finance-subpanel="base">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>员工</th><th>雇佣类型</th><th>基本工资</th><th>健康保险基数</th><th>厚生年金基数</th><th>雇用保险区分</th><th>所得税区分</th><th>生效月份</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="10">暂无工资基础信息</td></tr></tbody>
-            </table>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="payroll/base.html" title="工资基础信息"></iframe>
         </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="monthly">
-    <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead><tr><th>月份</th><th>员工</th><th>出勤日数</th><th>基本工资</th><th>扣款</th><th>发放金额</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-            <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
-        </table>
-    </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="calculate">
-        <div class="c-inline-filters">
-            <div class="c-inline-filters-grid-3">
-                <div class="c-inline-field"><span>计算月份</span><input type="month"></div>
-                <div class="c-inline-field"><span>对象范围</span><select><option>全部员工</option><option>社员</option><option>契约员工</option></select></div>
-                <div class="c-inline-field"><span>状态</span><select><option>未计算</option><option>重新计算</option></select></div>
-            </div>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="attendance">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>月份</th><th>员工</th><th>出勤日数</th><th>缺勤</th><th>加班</th><th>关联状态</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无考勤关联数据</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="adjustments">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>员工</th><th>项目</th><th>类型</th><th>金额</th><th>适用月份</th><th>备注</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无扣款/加算</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="payment">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>月份</th><th>员工</th><th>发放金额</th><th>预定发放日</th><th>发放状态</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无工资发放数据</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="detail">
-        <div class="c-empty">选择员工后查看工资明细</div>
-    </div>
-</section>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
 <script>
 (function () {
-    window.FinanceViews = window.FinanceViews || {};
-    window.FinanceViews.payroll = {
-        init(root) {
-            if (!root || root.dataset.initialized === "true") return;
-            root.dataset.initialized = "true";
-        },
-    };
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
 }());
 </script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+        base: { src: "payroll/base.html", title: "工资基础信息" },
+        monthly: { src: "payroll/monthly.html", title: "月度工资" },
+        calculate: { src: "payroll/calculate.html", title: "工资计算" },
+        attendance: { src: "payroll/attendance.html", title: "考勤关联" },
+        adjustments: { src: "payroll/adjustments.html", title: "扣款/加算" },
+        payment: { src: "payroll/payment.html", title: "工资发放" },
+        detail: { src: "payroll/detail.html", title: "工资明细" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const setSubtab = (key) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
+                frame.setAttribute("src", route.src);
+            }
+            frame.setAttribute("title", route.title);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        setSubtab("base");
+    });
+}());
+</script>
+</body>
+</html>

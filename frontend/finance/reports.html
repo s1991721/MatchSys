@@ -1,4 +1,17 @@
-<section class="c-card c-card-pad finance-view" data-finance-panel="reports">
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>月度收支</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="reports">
+
     <div class="finance-section-head">
         <div>
             <h2 class="finance-section-title" data-i18n="finance.reports.title">财务报表</h2>
@@ -13,61 +26,80 @@
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="cashflow">现金流</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="exports">导出中心</button>
     </div>
-    <div class="finance-subpanel" data-finance-subpanel="monthly">
-    <div class="finance-summary-grid">
-        <div class="finance-summary-item"><span class="finance-summary-label">收入</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">支出</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">应收</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">利润</span><span class="finance-summary-value">¥0</span></div>
-    </div>
-    <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead><tr><th>月份</th><th>收入</th><th>支出</th><th>应收</th><th>应付</th><th>利润</th><th>备注</th></tr></thead>
-            <tbody><tr><td class="finance-empty-row" colspan="7" data-i18n="finance.empty">暂无数据</td></tr></tbody>
-        </table>
-    </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="balance">
-        <div class="finance-summary-grid">
-            <div class="finance-summary-item"><span class="finance-summary-label">应收余额</span><span class="finance-summary-value">¥0</span></div>
-            <div class="finance-summary-item"><span class="finance-summary-label">应付余额</span><span class="finance-summary-value">¥0</span></div>
-            <div class="finance-summary-item"><span class="finance-summary-label">逾期应收</span><span class="finance-summary-value">¥0</span></div>
-            <div class="finance-summary-item"><span class="finance-summary-label">逾期应付</span><span class="finance-summary-value">¥0</span></div>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="reports/monthly.html" title="月度收支"></iframe>
         </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="profit">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>维度</th><th>收入</th><th>成本</th><th>利润</th><th>利润率</th><th>备注</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无利润分析数据</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="cashflow">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>月份</th><th>期初余额</th><th>入金</th><th>出金</th><th>期末余额</th><th>备注</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无现金流数据</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="exports">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>报表类型</th><th>期间</th><th>格式</th><th>生成时间</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="5">暂无导出记录</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-</section>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
 <script>
 (function () {
-    window.FinanceViews = window.FinanceViews || {};
-    window.FinanceViews.reports = {
-        init(root) {
-            if (!root || root.dataset.initialized === "true") return;
-            root.dataset.initialized = "true";
-        },
-    };
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
 }());
 </script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+        monthly: { src: "reports/monthly.html", title: "月度收支" },
+        balance: { src: "reports/balance.html", title: "应收应付" },
+        profit: { src: "reports/profit.html", title: "利润分析" },
+        cashflow: { src: "reports/cashflow.html", title: "现金流" },
+        exports: { src: "reports/exports.html", title: "导出中心" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const setSubtab = (key) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
+                frame.setAttribute("src", route.src);
+            }
+            frame.setAttribute("title", route.title);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        setSubtab("monthly");
+    });
+}());
+</script>
+</body>
+</html>

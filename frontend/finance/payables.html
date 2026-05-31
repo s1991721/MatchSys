@@ -1,4 +1,17 @@
-<section class="c-card c-card-pad finance-view" data-finance-panel="payables">
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>应付列表</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="payables">
+
     <div class="finance-section-head">
         <div>
             <h2 class="finance-section-title" data-i18n="finance.payables.title">应付管理</h2>
@@ -13,75 +26,80 @@
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="vendor">对象对账</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="aging">应付 Aging</button>
     </div>
-    <div class="finance-subpanel" data-finance-subpanel="list">
-    <div class="finance-summary-grid">
-        <div class="finance-summary-item"><span class="finance-summary-label">本月应付</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">待支付</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">待确认</span><span class="finance-summary-value">0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">逾期应付</span><span class="finance-summary-value">0</span></div>
-    </div>
-    <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3">
-            <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
-            <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="对象 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.payable_keyword"></div>
-            <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>待确认</option><option>待支付</option><option>部分支付</option><option>已支付</option></select></div>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="payables/list.html" title="应付列表"></iframe>
         </div>
-        <div class="c-filter-actions-bar">
-            <div></div>
-            <div class="c-filter-actions-right c-filter-actions-group">
-                <button class="c-btn c-btn-primary" type="button" data-i18n="common.search">搜索</button>
-                <button class="c-btn c-btn-warn" type="button" data-i18n="common.reset">重置</button>
-            </div>
-        </div>
-    </div>
-    <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead><tr><th>应付编号</th><th>对象</th><th>类别</th><th>应付金额</th><th>已付金额</th><th>预定支付日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-            <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
-        </table>
-    </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="schedule">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>预定支付日</th><th>对象</th><th>类别</th><th>金额</th><th>优先级</th><th>状态</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无付款计划</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="confirm">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>应付编号</th><th>对象</th><th>应付金额</th><th>支付金额</th><th>支付日</th><th>确认状态</th><th class="c-actions-col">操作</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="7">暂无待确认支付</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="vendor">
-        <div class="table-wrap c-table-wrapper">
-            <table class="c-table c-table-hover">
-                <thead><tr><th>对象</th><th>类别</th><th>应付金额</th><th>已付金额</th><th>未付金额</th><th>最后支付日</th></tr></thead>
-                <tbody><tr><td class="finance-empty-row" colspan="6">暂无对象对账数据</td></tr></tbody>
-            </table>
-        </div>
-    </div>
-    <div class="finance-subpanel hidden" data-finance-subpanel="aging">
-        <div class="finance-summary-grid">
-            <div class="finance-summary-item"><span class="finance-summary-label">未到期</span><span class="finance-summary-value">¥0</span></div>
-            <div class="finance-summary-item"><span class="finance-summary-label">逾期 1-30 天</span><span class="finance-summary-value">¥0</span></div>
-            <div class="finance-summary-item"><span class="finance-summary-label">逾期 31-60 天</span><span class="finance-summary-value">¥0</span></div>
-            <div class="finance-summary-item"><span class="finance-summary-label">逾期 60 天以上</span><span class="finance-summary-value">¥0</span></div>
-        </div>
-    </div>
-</section>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
 <script>
 (function () {
-    window.FinanceViews = window.FinanceViews || {};
-    window.FinanceViews.payables = {
-        init(root) {
-            if (!root || root.dataset.initialized === "true") return;
-            root.dataset.initialized = "true";
-        },
-    };
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
 }());
 </script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+        list: { src: "payables/list.html", title: "应付列表" },
+        schedule: { src: "payables/schedule.html", title: "付款计划" },
+        confirm: { src: "payables/confirm.html", title: "支付确认" },
+        vendor: { src: "payables/vendor.html", title: "对象对账" },
+        aging: { src: "payables/aging.html", title: "应付 Aging" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const setSubtab = (key) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
+                frame.setAttribute("src", route.src);
+            }
+            frame.setAttribute("title", route.title);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        setSubtab("list");
+    });
+}());
+</script>
+</body>
+</html>

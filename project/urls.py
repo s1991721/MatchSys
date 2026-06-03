@@ -80,7 +80,14 @@ from employee.views import (
     user_logins_by_role_api,
     user_login_names_api,
 )
-from finance.views import payroll_basic_info_api, payroll_basic_info_detail_api
+from finance.views import (
+    payroll_basic_info_api,
+    payroll_basic_info_detail_api,
+    payroll_monthly_api,
+    payroll_monthly_calculate_api,
+    payroll_monthly_detail_api,
+    payroll_monthly_export_api,
+)
 from order.views import (
     pay_request_detail_api,
     pay_request_pdf_api,
@@ -305,6 +312,10 @@ urlpatterns = [
     path("api/employees/departments", employee_departments_api, name="employee-departments"),
     path("api/finance/payroll/basic-info", payroll_basic_info_api, name="payroll-basic-info"),
     path("api/finance/payroll/basic-info/<int:payroll_basic_id>", payroll_basic_info_detail_api, name="payroll-basic-info-detail"),
+    path("api/finance/payroll/monthly", payroll_monthly_api, name="payroll-monthly"),
+    path("api/finance/payroll/monthly/calculate", payroll_monthly_calculate_api, name="payroll-monthly-calculate"),
+    path("api/finance/payroll/monthly/export", payroll_monthly_export_api, name="payroll-monthly-export"),
+    path("api/finance/payroll/monthly/<int:monthly_id>", payroll_monthly_detail_api, name="payroll-monthly-detail"),
     path("api/technicians", technicians_api, name="technician-list"),
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),

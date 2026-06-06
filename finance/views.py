@@ -300,10 +300,16 @@ def _build_monthly_payload(payload, target_month=None):
             return None, error
     values["payroll_month"] = target_month
 
-    try:
-        employee_id = int(payload.get("employee_id"))
-    except (TypeError, ValueError):
-        return None, api_error("Missing field: employee_id")
+    raw_employee_id = payload.get("employee_id")
+    if raw_employee_id in (None, ""):
+        employee_id = 0
+    else:
+        try:
+            employee_id = int(raw_employee_id)
+        except (TypeError, ValueError):
+            return None, api_error("Invalid field: employee_id", status=400)
+        if employee_id < 0:
+            return None, api_error("Invalid field: employee_id", status=400)
     employee_name = (payload.get("employee_name") or "").strip()
     if not employee_name:
         return None, api_error("Missing field: employee_name")
@@ -385,10 +391,10 @@ def payroll_monthly_api(request):
     values, error = _build_monthly_payload(payload)
     if error:
         return error
-    if PayrollMonthlyCalculation.objects.filter(
-        payroll_month=values["payroll_month"],
-        employee_id=values["employee_id"],
-        deleted_at__isnull=True,
+    if values["employee_id"] and PayrollMonthlyCalculation.objects.filter(
+            payroll_month=values["payroll_month"],
+            employee_id=values["employee_id"],
+            deleted_at__isnull=True,
     ).exists():
         return api_error("Payroll monthly calculation already exists", status=409)
     item = PayrollMonthlyCalculation.objects.create(

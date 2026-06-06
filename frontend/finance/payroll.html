@@ -15,7 +15,6 @@
     <div class="finance-subtabs" role="tablist" aria-label="工资计算子功能">
         <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic">基础信息</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly">月度计算</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="payment">发放查询</button>
     </div>
         <div class="finance-subframe-shell">
             <iframe id="financeSubFrame" class="finance-subframe" src="payroll/basic-info.html" title="基础信息"></iframe>
@@ -56,8 +55,7 @@
         applyI18n();
         const routes = {
         basic: { src: "payroll/basic-info.html", title: "基础信息" },
-        monthly: { src: "payroll/monthly-calculation.html", title: "月度计算" },
-        payment: { src: "payroll/payment-query.html", title: "发放查询" }
+        monthly: { src: "payroll/monthly-calculation.html", title: "月度计算" }
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
         const frame = document.getElementById("financeSubFrame");

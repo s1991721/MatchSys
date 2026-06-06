@@ -190,7 +190,6 @@ urlpatterns = [
     path("finance/payroll.html", TemplateView.as_view(template_name="frontend/finance/payroll.html")),
     path("finance/payroll/basic-info.html", TemplateView.as_view(template_name="frontend/finance/payroll/basic-info.html")),
     path("finance/payroll/monthly-calculation.html", TemplateView.as_view(template_name="frontend/finance/payroll/monthly-calculation.html")),
-    path("finance/payroll/payment-query.html", TemplateView.as_view(template_name="frontend/finance/payroll/payment-query.html")),
     path("finance/payments.html", TemplateView.as_view(template_name="frontend/finance/payments.html")),
     path("finance/payments/ledger.html", TemplateView.as_view(template_name="frontend/finance/payments/ledger.html")),
     path("finance/payments/bank.html", TemplateView.as_view(template_name="frontend/finance/payments/bank.html")),

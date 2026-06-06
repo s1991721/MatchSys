@@ -1,6 +1,9 @@
 ALTER TABLE customer
     ADD COLUMN payment_info JSON DEFAULT NULL COMMENT '支付信息' AFTER remark;
 
+ALTER TABLE employee
+    ADD COLUMN bank_info JSON DEFAULT NULL COMMENT '员工银行信息' AFTER seal;
+
 INSERT INTO sys_menu (menu_name, menu_html, sort_order)
 VALUES ('财务管理', 'finance.html', 17);
 

@@ -112,25 +112,36 @@
 
         <div class="profile-right c-stack">
         <section class="c-card c-card-pad profile-card">
-            <h2 class="c-card-title" data-i18n="profile.section.password">修改密码</h2>
-            <form id="passwordForm" autocomplete="off">
-                <div class="form-grid form-grid-single">
+            <h2 class="c-card-title" data-i18n="system_settings.bank.title">口座信息</h2>
+            <form id="bankForm" autocomplete="off">
+                <div class="form-grid">
                     <div class="form-field">
-                        <label for="oldPassword" data-i18n="profile.field.old_password">当前密码</label>
-                        <input id="oldPassword" type="password" required/>
+                        <label for="empBankName" data-i18n="system_settings.bank.name">银行名</label>
+                        <input id="empBankName" name="bank_name" type="text"/>
                     </div>
                     <div class="form-field">
-                        <label for="newPassword" data-i18n="profile.field.new_password">新密码</label>
-                        <input id="newPassword" type="password" required/>
+                        <label for="empBranchCode" data-i18n="system_settings.bank.branch_code">支点编号</label>
+                        <input id="empBranchCode" name="branch_code" type="text"/>
                     </div>
                     <div class="form-field">
-                        <label for="confirmPassword" data-i18n="profile.field.confirm_password">确认新密码</label>
-                        <input id="confirmPassword" type="password" required/>
+                        <label for="empBranchName" data-i18n="system_settings.bank.branch_name">支点名</label>
+                        <input id="empBranchName" name="branch_name" type="text"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empAccountType" data-i18n="system_settings.bank.account_type">口座种类</label>
+                        <input id="empAccountType" name="account_type" type="text"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empAccountNumber" data-i18n="system_settings.bank.account_number">口座号</label>
+                        <input id="empAccountNumber" name="account_number" type="text"/>
+                    </div>
+                    <div class="form-field">
+                        <label for="empAccountHolder" data-i18n="system_settings.bank.account_holder">口座名义</label>
+                        <input id="empAccountHolder" name="account_holder" type="text"/>
                     </div>
                 </div>
-                <div class="hint" data-i18n="profile.password.hint">密码修改后需要重新登录。</div>
                 <div class="form-actions">
-                    <button class="c-btn c-btn-primary" type="submit" data-i18n="profile.action.update_password">更新密码</button>
+                    <button class="c-btn c-btn-primary" type="submit" data-i18n="profile.action.save_profile">保存信息</button>
                 </div>
             </form>
         </section>
@@ -154,6 +165,30 @@
             </div>
             </div>
             </div>
+        </section>
+
+        <section class="c-card c-card-pad profile-card">
+            <h2 class="c-card-title" data-i18n="profile.section.password">修改密码</h2>
+            <form id="passwordForm" autocomplete="off">
+                <div class="form-grid form-grid-single">
+                    <div class="form-field">
+                        <label for="oldPassword" data-i18n="profile.field.old_password">当前密码</label>
+                        <input id="oldPassword" type="password" required/>
+                    </div>
+                    <div class="form-field">
+                        <label for="newPassword" data-i18n="profile.field.new_password">新密码</label>
+                        <input id="newPassword" type="password" required/>
+                    </div>
+                    <div class="form-field">
+                        <label for="confirmPassword" data-i18n="profile.field.confirm_password">确认新密码</label>
+                        <input id="confirmPassword" type="password" required/>
+                    </div>
+                </div>
+                <div class="hint" data-i18n="profile.password.hint">密码修改后需要重新登录。</div>
+                <div class="form-actions">
+                    <button class="c-btn c-btn-primary" type="submit" data-i18n="profile.action.update_password">更新密码</button>
+                </div>
+            </form>
         </section>
         </div>
     </div>
@@ -183,6 +218,7 @@
     } catch (e) {}
 
     const employeeForm = document.getElementById("employeeForm");
+    const bankForm = document.getElementById("bankForm");
     const passwordForm = document.getElementById("passwordForm");
     const logoutBtn = document.getElementById("logoutBtn");
     const profileSalaryLink = document.getElementById("profileSalaryLink");
@@ -229,6 +265,9 @@
 
     const setDisabled = (disabled) => {
         employeeForm.querySelectorAll("input, textarea, select, button").forEach((el) => {
+            el.disabled = disabled;
+        });
+        bankForm.querySelectorAll("input, button").forEach((el) => {
             el.disabled = disabled;
         });
         passwordForm.querySelectorAll("input, button").forEach((el) => {
@@ -303,6 +342,25 @@
         return name.endsWith(".png") && (!type || type === "image/png");
     };
 
+    const getBankInfoPayload = () => ({
+        bank_name: document.getElementById("empBankName").value.trim(),
+        branch_code: document.getElementById("empBranchCode").value.trim(),
+        branch_name: document.getElementById("empBranchName").value.trim(),
+        account_type: document.getElementById("empAccountType").value.trim(),
+        account_number: document.getElementById("empAccountNumber").value.trim(),
+        account_holder: document.getElementById("empAccountHolder").value.trim(),
+    });
+
+    const populateBankInfo = (bankInfo) => {
+        const value = bankInfo && typeof bankInfo === "object" ? bankInfo : {};
+        document.getElementById("empBankName").value = value.bank_name || "";
+        document.getElementById("empBranchCode").value = value.branch_code || "";
+        document.getElementById("empBranchName").value = value.branch_name || "";
+        document.getElementById("empAccountType").value = value.account_type || "";
+        document.getElementById("empAccountNumber").value = value.account_number || "";
+        document.getElementById("empAccountHolder").value = value.account_holder || "";
+    };
+
     const loadEmployee = async () => {
         if (!employeeId) {
             alert(t("profile.error.not_logged_in"));
@@ -328,6 +386,7 @@
             document.getElementById("empEmergencyName").value = item.emergency_contact_name || "";
             document.getElementById("empEmergencyPhone").value = item.emergency_contact_phone || "";
             document.getElementById("empEmergencyRelation").value = item.emergency_contact_relationship || "";
+            populateBankInfo(item.bank_info);
             setCurrentSeal(item.seal || "", item.seal_url || "");
 
             setReadOnlyWhenFilled("empPhone", item.phone);
@@ -378,8 +437,8 @@
             }
             alert(t("profile.alert.profile_updated"));
             const result = responsePayload.data || {};
-            if (result.item) {
-                const item = result.item;
+            const item = result.item || result;
+            if (item && item.id) {
                 document.getElementById("profileName").textContent = item.name || "";
                 document.getElementById("profileDepartment").textContent = item.department_name || "";
                 try {
@@ -407,6 +466,30 @@
         } catch (err) {
             const message = err.message || t("common.save_failed");
             alert(message);
+        }
+    });
+
+    bankForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!employeeId) return;
+        try {
+            const responsePayload = await window.requestJson(`${API_BASE}/api/employees/${employeeId}`, {
+                method: "PUT",
+                body: JSON.stringify({
+                    bank_info: getBankInfoPayload(),
+                }),
+            });
+            if (!responsePayload.success) {
+                throw new Error(responsePayload.message || t("common.save_failed"));
+            }
+            const result = responsePayload.data || {};
+            const item = result.item || result;
+            if (item && item.id) {
+                populateBankInfo(item.bank_info);
+            }
+            alert(t("profile.alert.profile_updated"));
+        } catch (err) {
+            alert(err.message || t("common.save_failed"));
         }
     });
 

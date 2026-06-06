@@ -86,6 +86,37 @@ def _employee_seal_filename(employee_id):
     return f"employee_seal/employee_{employee_id}_seal.png"
 
 
+def _normalize_json_value(value):
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, dict):
+        return {
+            str(key): _normalize_json_value(child_value)
+            for key, child_value in value.items()
+        }
+    if isinstance(value, list):
+        return [_normalize_json_value(item) for item in value]
+    return value
+
+
+def _normalize_bank_info(value):
+    if not isinstance(value, dict):
+        return {}
+    fields = (
+        "bank_name",
+        "branch_code",
+        "branch_name",
+        "account_type",
+        "account_number",
+        "account_holder",
+    )
+    normalized = _normalize_json_value(value)
+    return {
+        field: str(normalized.get(field) or "").strip()
+        for field in fields
+    }
+
+
 @csrf_exempt
 @require_POST
 # 登录
@@ -248,6 +279,8 @@ def employee_detail_api(request, employee_id):
         employee.emergency_contact_phone = (payload.get("emergency_contact_phone") or "").strip() or None
     if "emergency_contact_relationship" in payload:
         employee.emergency_contact_relationship = (payload.get("emergency_contact_relationship") or "").strip() or None
+    if "bank_info" in payload:
+        employee.bank_info = _normalize_bank_info(payload.get("bank_info"))
 
     if not employee.name:
         return api_error(
@@ -623,6 +656,7 @@ def employees_api(request):
                 leave_date=leave_date,
                 department_name=(payload.get("department_name") or "").strip() or None,
                 position_name=(payload.get("position_name") or "").strip() or None,
+                bank_info=_normalize_bank_info(payload.get("bank_info")),
                 created_by=login_id
             )
             default_password = birthday.strftime("%Y%m%d")

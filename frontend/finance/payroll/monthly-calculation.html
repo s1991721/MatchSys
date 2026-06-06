@@ -436,7 +436,9 @@
             if (action === "delete") {
                 if (!window.confirm("确定删除这条月度工资数据吗？")) return;
                 try {
-                    await window.requestJson(`/api/finance/payroll/monthly/${button.dataset.id}`, {
+                    await window.requestJson(window.buildUrl(`/api/finance/payroll/monthly/${button.dataset.id}`, window.createParams([
+                        ["month", selectedMonth]
+                    ])), {
                         method: "DELETE"
                     }, {throwOnFailure: true});
                     await loadMonthlyRows();

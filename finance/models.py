@@ -1,4 +1,7 @@
-from django.db import models
+from datetime import date, datetime
+from functools import lru_cache
+
+from django.db import connection, models
 
 
 class PayrollBasicInfo(models.Model):
@@ -67,7 +70,7 @@ class PayrollBasicInfo(models.Model):
         }
 
 
-class PayrollMonthlyCalculation(models.Model):
+class PayrollMonthlyCalculationBase(models.Model):
     CONTRACT_TYPE_CHOICES = PayrollBasicInfo.CONTRACT_TYPE_CHOICES
     STATUS_CHOICES = (
         (0, "未确认"),
@@ -95,10 +98,48 @@ class PayrollMonthlyCalculation(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
 
     class Meta:
-        managed = False
-        db_table = "payroll_monthly_calculation"
+        abstract = True
         verbose_name = "月度工资计算"
         verbose_name_plural = "月度工资计算"
+
+    @classmethod
+    def _resolve_year_suffix(cls, value):
+        if isinstance(value, datetime):
+            value = value.date()
+        if isinstance(value, date):
+            return str(value.year)
+        try:
+            return str(int(value))
+        except (TypeError, ValueError):
+            raise ValueError("Expected date, datetime, or year for payroll yearly table resolution")
+
+    @classmethod
+    def model_for_period(cls, value):
+        suffix = cls._resolve_year_suffix(value)
+        model = _get_payroll_monthly_calculation_model_for_year(suffix)
+        _ensure_payroll_yearly_table_exists(model._meta.db_table, cls._meta.db_table, model)
+        return model
+
+    @classmethod
+    def objects_for_period(cls, value):
+        return cls.model_for_period(value).objects
+
+    @classmethod
+    def create_for_period(cls, value, **kwargs):
+        return cls.objects_for_period(value).create(**kwargs)
+
+    @classmethod
+    def build_for_period(cls, value, **kwargs):
+        return cls.model_for_period(value)(**kwargs)
+
+    @classmethod
+    def bulk_create_for_period(cls, value, items, **kwargs):
+        model = cls.model_for_period(value)
+        yearly_items = [
+            item if isinstance(item, model) else model(**_copy_payroll_monthly_values(item))
+            for item in items
+        ]
+        return model.objects.bulk_create(yearly_items, **kwargs)
 
     @staticmethod
     def serialize(item):
@@ -131,3 +172,56 @@ class PayrollMonthlyCalculation(models.Model):
             "status_label": status_labels.get(item.status, ""),
             "remark": item.remark or "",
         }
+
+
+class PayrollMonthlyCalculation(PayrollMonthlyCalculationBase):
+    class Meta:
+        managed = False
+        db_table = "payroll_monthly_calculation"
+        verbose_name = "月度工资计算"
+        verbose_name_plural = "月度工资计算"
+
+
+def _copy_payroll_monthly_values(item):
+    return {
+        field.name: getattr(item, field.name)
+        for field in PayrollMonthlyCalculation._meta.fields
+        if field.name != "id"
+    }
+
+
+def _build_payroll_monthly_calculation_year_model(table_name, suffix):
+    class Meta:
+        db_table = table_name
+        managed = False
+        app_label = PayrollMonthlyCalculation._meta.app_label
+        verbose_name = PayrollMonthlyCalculation._meta.verbose_name
+        verbose_name_plural = PayrollMonthlyCalculation._meta.verbose_name_plural
+
+    attrs = {
+        "Meta": Meta,
+        "__module__": PayrollMonthlyCalculation.__module__,
+    }
+    return type(f"{PayrollMonthlyCalculation.__name__}{suffix}", (PayrollMonthlyCalculationBase,), attrs)
+
+
+@lru_cache(maxsize=32)
+def _get_payroll_monthly_calculation_model_for_year(suffix):
+    table_name = f"{PayrollMonthlyCalculation._meta.db_table}_{suffix}"
+    return _build_payroll_monthly_calculation_year_model(table_name, suffix)
+
+
+def _ensure_payroll_yearly_table_exists(table_name, template_table, model):
+    existing_tables = set(connection.introspection.table_names())
+    if table_name in existing_tables:
+        return
+
+    if connection.vendor == "mysql" and template_table in existing_tables:
+        quoted_table = connection.ops.quote_name(table_name)
+        quoted_template = connection.ops.quote_name(template_table)
+        with connection.cursor() as cursor:
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {quoted_table} LIKE {quoted_template}")
+        return
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(model)

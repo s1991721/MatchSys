@@ -358,7 +358,8 @@ def payroll_monthly_api(request):
         target_month, error = _parse_payroll_month(request.GET.get("month"))
         if error:
             return error
-        base_qs = PayrollMonthlyCalculation.objects.filter(
+        monthly_objects = PayrollMonthlyCalculation.objects_for_period(target_month)
+        base_qs = monthly_objects.filter(
             payroll_month=target_month,
             deleted_at__isnull=True,
         )
@@ -391,13 +392,15 @@ def payroll_monthly_api(request):
     values, error = _build_monthly_payload(payload)
     if error:
         return error
-    if values["employee_id"] and PayrollMonthlyCalculation.objects.filter(
+    monthly_objects = PayrollMonthlyCalculation.objects_for_period(values["payroll_month"])
+    if values["employee_id"] and monthly_objects.filter(
             payroll_month=values["payroll_month"],
             employee_id=values["employee_id"],
             deleted_at__isnull=True,
     ).exists():
         return api_error("Payroll monthly calculation already exists", status=409)
-    item = PayrollMonthlyCalculation.objects.create(
+    item = PayrollMonthlyCalculation.create_for_period(
+        values["payroll_month"],
         created_by=login_id,
         updated_by=login_id,
         **values,
@@ -417,7 +420,8 @@ def payroll_monthly_calculate_api(request):
     target_month, error = _parse_payroll_month(payload.get("month"))
     if error:
         return error
-    if PayrollMonthlyCalculation.objects.filter(
+    monthly_objects = PayrollMonthlyCalculation.objects_for_period(target_month)
+    if monthly_objects.filter(
         payroll_month=target_month,
         deleted_at__isnull=True,
     ).exists():
@@ -441,7 +445,8 @@ def payroll_monthly_calculate_api(request):
         )
         net_salary = basic.base_salary + allowance_amount - deduction_amount - social_insurance_amount
         created_items.append(
-            PayrollMonthlyCalculation(
+            PayrollMonthlyCalculation.build_for_period(
+                target_month,
                 payroll_month=target_month,
                 employee_id=basic.employee_id,
                 employee_name=basic.employee_name,
@@ -460,9 +465,9 @@ def payroll_monthly_calculate_api(request):
             )
         )
     if created_items:
-        PayrollMonthlyCalculation.objects.bulk_create(created_items)
+        PayrollMonthlyCalculation.bulk_create_for_period(target_month, created_items)
     items = list(
-        PayrollMonthlyCalculation.objects.filter(
+        monthly_objects.filter(
             payroll_month=target_month,
             deleted_at__isnull=True,
         ).order_by("employee_id", "id")
@@ -477,27 +482,43 @@ def payroll_monthly_calculate_api(request):
 
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
-def payroll_monthly_detail_api(request, monthly_id):
-    item = PayrollMonthlyCalculation.objects.filter(id=monthly_id, deleted_at__isnull=True).first()
+def payroll_monthly_detail_api(request, calculation_id):
+    if request.method == "PUT":
+        login_id, error = require_login(request)
+        if error:
+            return error
+
+        payload, error = parse_json_body(request)
+        if error:
+            return error
+        target_month, error = _parse_payroll_month(payload.get("month"))
+        if error:
+            return error
+    else:
+        target_month, error = _parse_payroll_month(request.GET.get("month"))
+        if error:
+            return error
+        payload = None
+        login_id = None
+
+    item = PayrollMonthlyCalculation.objects_for_period(target_month).filter(
+        id=calculation_id,
+        deleted_at__isnull=True,
+    ).first()
     if not item:
         return api_error("Payroll monthly calculation not found", status=404)
 
     if request.method == "GET":
         return api_success(data={"item": PayrollMonthlyCalculation.serialize(item)})
 
-    login_id, error = require_login(request)
-    if error:
-        return error
-
     if request.method == "DELETE":
+        login_id, error = require_login(request)
+        if error:
+            return error
         item.deleted_at = timezone.now()
         item.updated_by = login_id
         item.save(update_fields=["deleted_at", "updated_by", "updated_at"])
-        return api_success(data={"id": monthly_id})
-
-    payload, error = parse_json_body(request)
-    if error:
-        return error
+        return api_success(data={"id": calculation_id})
 
     if "contract_type" in payload:
         contract_type, error = _parse_payroll_contract_type(payload.get("contract_type"))
@@ -549,7 +570,7 @@ def payroll_monthly_export_api(request):
     target_month, error = _parse_payroll_month(request.GET.get("month"))
     if error:
         return error
-    qs = PayrollMonthlyCalculation.objects.filter(
+    qs = PayrollMonthlyCalculation.objects_for_period(target_month).filter(
         payroll_month=target_month,
         deleted_at__isnull=True,
     )

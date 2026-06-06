@@ -62,7 +62,28 @@
         const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
         const frame = document.getElementById("financeSubFrame");
         const pageParams = new URLSearchParams(window.location.search || "");
+        const LAST_SUBTAB_KEY = "finance:payroll:last-subtab";
+        const STATE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
         const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const readLastSubtab = () => {
+            try {
+                const stored = window.MatchSys && typeof window.MatchSys.readJSONFromSessionStorage === "function"
+                    ? window.MatchSys.readJSONFromSessionStorage(LAST_SUBTAB_KEY, STATE_MAX_AGE_MS)
+                    : null;
+                const subtab = stored && typeof stored === "object" ? stored.subtab : "";
+                return routes[subtab] ? subtab : "";
+            } catch (e) {
+                return "";
+            }
+        };
+        const writeLastSubtab = (subtab) => {
+            if (!routes[subtab]) return;
+            try {
+                if (window.MatchSys && typeof window.MatchSys.writeJSONToSessionStorage === "function") {
+                    window.MatchSys.writeJSONToSessionStorage(LAST_SUBTAB_KEY, { subtab, updatedAt: Date.now() });
+                }
+            } catch (e) {}
+        };
         const syncFrameLang = () => {
             if (!frame || !frame.contentWindow) return;
             try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
@@ -90,6 +111,7 @@
                 frame.setAttribute("src", targetSrc);
             }
             frame.setAttribute("title", route.title);
+            writeLastSubtab(key);
         };
         buttons.forEach((button) => {
             button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
@@ -98,7 +120,7 @@
             frame.addEventListener("load", syncFrameLang);
         }
         window.addEventListener("i18n:change", syncFrameLang);
-        const initialSubtab = routes[pageParams.get("subtab")] ? pageParams.get("subtab") : "basic";
+        const initialSubtab = routes[pageParams.get("subtab")] ? pageParams.get("subtab") : (readLastSubtab() || "basic");
         setSubtab(initialSubtab, true);
     });
 }());

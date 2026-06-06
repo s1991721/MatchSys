@@ -58,7 +58,24 @@
         const buttons = Array.from(document.querySelectorAll("[data-finance-view]"));
         const frame = document.getElementById("financeModuleFrame");
         const pageParams = new URLSearchParams(window.location.search || "");
+        const LAST_VIEW_KEY = "finance:last-view";
+        const STATE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
         const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const readLastView = () => {
+            try {
+                const stored = window.MatchSys.readJSONFromSessionStorage(LAST_VIEW_KEY, STATE_MAX_AGE_MS);
+                const view = stored && typeof stored === "object" ? stored.view : "";
+                return routes[view] ? view : "";
+            } catch (e) {
+                return "";
+            }
+        };
+        const writeLastView = (view) => {
+            if (!routes[view]) return;
+            try {
+                window.MatchSys.writeJSONToSessionStorage(LAST_VIEW_KEY, { view, updatedAt: Date.now() });
+            } catch (e) {}
+        };
         const syncFrameLang = () => {
             if (!frame || !frame.contentWindow) return;
             try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
@@ -86,6 +103,7 @@
                 frame.setAttribute("src", targetSrc);
             }
             frame.setAttribute("title", route.title);
+            writeLastView(view);
         };
         buttons.forEach((button) => {
             button.addEventListener("click", () => setView(button.dataset.financeView));
@@ -94,7 +112,7 @@
             frame.addEventListener("load", syncFrameLang);
         }
         window.addEventListener("i18n:change", syncFrameLang);
-        const initialView = routes[pageParams.get("view")] ? pageParams.get("view") : "receivables";
+        const initialView = routes[pageParams.get("view")] ? pageParams.get("view") : (readLastView() || "receivables");
         setView(initialView, true);
     });
 }());

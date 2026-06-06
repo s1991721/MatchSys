@@ -163,6 +163,7 @@
 </dialog>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -384,7 +385,7 @@
                 window.requestJson(
                     `/api/technicians/${deleteId}`,
                     {method: 'DELETE'},
-                    {throwOnFailure: true, fallbackMessage: t("people.error.delete_failed")}
+                    {fallbackMessage: t("people.error.delete_failed")}
                 )
                     .then(() => {
                         return fetchPeople();
@@ -402,7 +403,7 @@
         const responsePayload = await window.requestJson(`/api/technicians/${employeeId}/ss`, {
             headers: {},
             body: formData
-        }, {throwOnFailure: true, fallbackMessage: t("people.upload_failed")});
+        }, {fallbackMessage: t("people.upload_failed")});
         return responsePayload.data || {};
     };
 
@@ -412,7 +413,7 @@
         const responsePayload = await window.requestJson(url, {
             method,
             body: JSON.stringify(payload)
-        }, {throwOnFailure: true, fallbackMessage: t("common.save_failed")});
+        }, {fallbackMessage: t("common.save_failed")});
         return responsePayload.data || {};
     };
 
@@ -599,7 +600,7 @@
             const payload = await window.requestJson(
                 `/api/technicians/${employeeId}`,
                 {method: 'GET'},
-                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+                {fallbackMessage: t("common.load_failed")}
             );
             const result = payload.data || {};
             const item = result.item || {};
@@ -647,7 +648,7 @@
             const payload = await window.requestJson(
                 `/api/employees/${employeeId}`,
                 {method: 'GET'},
-                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+                {fallbackMessage: t("common.load_failed")}
             );
             const result = payload.data || {};
             const emp = result.item || {};
@@ -796,7 +797,7 @@
             const payload = await window.requestJson(
                 buildUrl('/api/technicians', params),
                 {method: 'GET'},
-                {throwOnFailure: true, fallbackMessage: t("common.load_failed")}
+                {fallbackMessage: t("common.load_failed")}
             );
             const result = payload.data || {};
             const meta = payload.meta || {};

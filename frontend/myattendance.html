@@ -248,6 +248,7 @@
 <div class="c-toast" id="toast"></div>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -264,7 +265,6 @@
         i18n.apply();
     }
     const requestJson = (url, options = {}) => window.requestJson(url, options, {
-        throwOnFailure: true,
         fallbackMessage: t("common.load_failed"),
     });
 

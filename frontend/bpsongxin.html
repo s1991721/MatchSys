@@ -75,7 +75,7 @@
             </div>
             <div class="form-field">
                 <label for="cc" data-i18n="songxin.field.cc">抄送 (可选)</label>
-                <input id="cc" type="email" placeholder="cc@example.com">
+                <input id="cc" type="text" placeholder="cc@example.com, other@example.com">
             </div>
             <div class="form-field">
                 <label for="file-input" data-i18n="songxin.field.attach">上传附件</label>
@@ -131,6 +131,7 @@
 </dialog>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -237,7 +238,6 @@
             method: 'GET',
             credentials: 'include'
         }, {
-            throwOnFailure: true,
             fallbackMessage: t('songxin.error.template_load_failed')
         });
         const template = payload.data && typeof payload.data.template === 'string'
@@ -254,7 +254,6 @@
             await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
                 body: JSON.stringify({template})
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.template_save_failed')
             });
             templateCache = template;
@@ -415,7 +414,6 @@
             await window.requestJson('/api/send-mail', {
                 body: JSON.stringify(payload)
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.send_failed')
             });
 
@@ -447,7 +445,6 @@
             const payload = await window.requestJson(endpoint, {
                 body: JSON.stringify({body: jobText})
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.analyze_failed')
             });
             const result = payload.data || {};
@@ -476,16 +473,6 @@
         }
     };
 
-    const extractEmail = (raw) => {
-        if (!raw) return '';
-        const bracketMatch = raw.match(/<([^>]+)>/);
-        if (bracketMatch && bracketMatch[1]) {
-            return bracketMatch[1].trim();
-        }
-        const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-        return emailMatch ? emailMatch[0].trim() : '';
-    };
-
     const applySelectionFromMatch = () => {
         currentSelection = window.MatchSys.readJSONFromLocalStorage(selectionKey);
         if (!currentSelection || !currentSelection.job || !currentSelection.person) return;
@@ -500,10 +487,13 @@
         }
 
         if (!email.value) {
-            const replyTo = extractEmail(person.belong || person.from || '');
+            const replyTo = person.address || '';
             if (replyTo) {
                 email.value = replyTo;
             }
+        }
+        if (!cc.value && person.cc) {
+            cc.value = String(person.cc || '').trim();
         }
 
         templateDialogSubtitle.textContent = t('songxin.template.subtitle.project');

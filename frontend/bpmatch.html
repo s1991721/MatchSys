@@ -144,6 +144,7 @@
 </div>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -309,7 +310,6 @@
                         correct_label: Number(selected)
                     })
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
                 removeJobFromCurrentList(jobId);
@@ -392,7 +392,6 @@
                     wrong_type: wrongType
                 })
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
             target.submitted.add(id);
@@ -416,7 +415,8 @@
         const jobPayload = {
             id: jobData.id || activeJob?.dataset?.id || '',
             title: jobData.title || activeJob?.querySelector('.item-title')?.textContent.trim() || '',
-            desc: jobData.desc || activeJob?.querySelector('.item-desc')?.textContent.trim() || '',
+            address: jobData.address || '',
+            cc: jobData.cc || '',
             detail: jobData.detail || activeJob?.dataset?.detail || '',
             time: jobData.date || activeJob?.querySelector('.item-time')?.textContent.trim() || ''
         };
@@ -424,7 +424,8 @@
         const personPayload = {
             id: personData.id || activePerson?.dataset?.id || '',
             name: personData.title || activePerson?.querySelector('.person-name')?.textContent.trim() || '',
-            belong: personData.from || activePerson?.querySelector('.person-belong')?.textContent.trim() || '',
+            address: personData.address || '',
+            cc: personData.cc || '',
             detail: personData.body || activePerson?.dataset?.detail || '',
             time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || ''
         };
@@ -446,7 +447,7 @@
 
         const prefill = {
             subject: jobPayload.title,
-            body: jobPayload.detail || jobPayload.desc || '',
+            body: jobPayload.detail || '',
             mail_type: '2',
             source: 'bpmatch',
             updatedAt: Date.now()
@@ -563,7 +564,7 @@
 
             const desc = document.createElement('div');
             desc.className = 'item-desc';
-            desc.textContent = item.belong || item.from || '';
+            desc.textContent = item.address || '';
 
             const feedbackControl = document.createElement('div');
             feedbackControl.className = `mail-feedback-control${openPersonFeedbackId === String(personId) ? ' is-open' : ''}`;
@@ -676,7 +677,6 @@
                         correct_label: Number(selected)
                     })
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
                 removePersonFromCurrentList(personId);
@@ -874,7 +874,6 @@
             const projectId = payload?.id || '';
             const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
             const responsePayload = await window.requestJson(url, {method: 'GET'}, {
-                throwOnFailure: true,
                 fallbackMessage: t("match.match_failed")
             });
             const result = responsePayload.data || {};
@@ -1012,7 +1011,7 @@
 
             const desc = document.createElement('div');
             desc.className = 'item-desc';
-            desc.textContent = item.desc;
+            desc.textContent = item.address || '';
 
             const time = document.createElement('div');
             time.className = 'item-time';
@@ -1136,7 +1135,6 @@
 
         try {
             const payload = await window.requestJson(url, {method: 'GET'}, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
             if (requestSeq !== jobRequestSeq) return;

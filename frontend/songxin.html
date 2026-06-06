@@ -69,7 +69,7 @@
             </div>
             <div class="form-field">
                 <label for="cc" data-i18n="songxin.field.cc">抄送 (可选)</label>
-                <input id="cc" type="email" placeholder="cc@example.com">
+                <input id="cc" type="text" placeholder="cc@example.com, other@example.com">
             </div>
             <div class="form-field">
                 <label for="file-input" data-i18n="songxin.field.attach">上传附件</label>
@@ -125,6 +125,7 @@
 </dialog>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -188,7 +189,6 @@
         const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
             method: 'GET'
         }, {
-            throwOnFailure: true,
             fallbackMessage: t('songxin.error.template_load_failed')
         });
         const template = payload.data && typeof payload.data.template === 'string'
@@ -224,7 +224,6 @@
             await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
                 body: JSON.stringify({template})
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.template_save_failed')
             });
             templateCache[templateName] = template;
@@ -373,7 +372,6 @@
             await window.requestJson('/api/send-mail', {
                 body: JSON.stringify(payload)
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.send_failed')
             });
 
@@ -461,21 +459,14 @@
             : t('songxin.template.subtitle.project');
     };
 
-    const extractEmail = (raw) => {
-        if (!raw) return '';
-        const bracketMatch = raw.match(/<([^>]+)>/);
-        if (bracketMatch && bracketMatch[1]) {
-            return bracketMatch[1].trim();
-        }
-        const emailMatch = raw.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
-        return emailMatch ? emailMatch[0].trim() : '';
-    };
-
     const applySelectionMailMeta = () => {
-        if (!currentSelection || !currentSelection.person) return;
-        const person = currentSelection.person || {};
-        const subject = (person.subject || person.title || person.name || '').trim();
-        const replyTo = extractEmail(person.belong || person.from || '');
+        if (!currentSelection) return;
+        const targetMail = sceneParam === 'technician'
+            ? (currentSelection.job || {})
+            : (currentSelection.person || {});
+        const subject = (targetMail.subject || targetMail.title || targetMail.name || '').trim();
+        const replyTo = targetMail.address || '';
+        const replyCc = String(targetMail.cc || '').trim();
 
         if (!subjectInput.value && subject) {
             subjectInput.value = subject.startsWith('Re:')
@@ -484,6 +475,9 @@
         }
         if (!email.value && replyTo) {
             email.value = replyTo;
+        }
+        if (!cc.value && replyCc) {
+            cc.value = replyCc;
         }
     };
 
@@ -507,7 +501,7 @@
         if (sceneParam === 'project') {
             return normalizeMultiline(person.detail || '');
         }
-        return normalizeMultiline(job.detail || job.desc || '');
+        return normalizeMultiline(job.detail || '');
     };
 
     const renderOriginal = (text) => {
@@ -551,7 +545,7 @@
     const analyzeByScene = async () => {
         if (!currentSelection) return;
         const body = sceneParam === 'project'
-            ? (currentSelection.job?.detail || currentSelection.job?.desc || '')
+            ? (currentSelection.job?.detail || '')
             : (currentSelection.person?.intro || currentSelection.person?.detail || '');
         setLoading(true, {title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub')});
         try {
@@ -561,7 +555,6 @@
             const payload = await window.requestJson(endpoint, {
                 body: JSON.stringify({body})
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.analyze_failed')
             });
 

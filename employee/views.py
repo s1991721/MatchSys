@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from project.api import api_error, api_paginated, api_success
+from project.error_codes import ErrorCode
 from project import storage
 from project.common_tools import (
     is_png_upload,
@@ -75,9 +76,9 @@ def _parse_nationality(value):
     try:
         int_value = int(value)
     except (TypeError, ValueError):
-        return None, api_error("Invalid field: nationality", status=400)
+        return None, api_error(ErrorCode.EMPLOYEE_NATIONALITY_INVALID)
     if int_value not in (0, 1):
-        return None, api_error("Invalid field: nationality", status=400)
+        return None, api_error(ErrorCode.EMPLOYEE_NATIONALITY_INVALID)
     return int_value, None
 
 
@@ -99,8 +100,7 @@ def login_api(request):
     if not user_name or not password:
         _log_login_attempt(request, user_name, False, reason="missing_credentials")
         return api_error(
-            "Missing user_name or password",
-            status=400,
+            ErrorCode.USER_NAME_PASSWORD_REQUIRED,
         )
 
     user_login = (
@@ -115,7 +115,7 @@ def login_api(request):
     if not user_login:
         _log_login_attempt(request, user_name, False, reason="invalid_credentials")
         return api_error(
-            "Invalid credentials",
+            ErrorCode.LOGIN_INVALID_CREDENTIALS,
             status=401,
         )
 
@@ -123,6 +123,7 @@ def login_api(request):
     if password_expires_at and password_expires_at <= timezone.now():
         _log_login_attempt(request, user_name, False, reason="password_expired", employee_id=user_login.employee_id)
         return api_error(
+            ErrorCode.LOGIN_PASSWORD_EXPIRED,
             "密码已过期，请联系管理员重置",
             status=401,
         )
@@ -179,8 +180,7 @@ def employee_detail_api(request, employee_id):
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
         return api_error(
-            "Employee not found",
-            status=404,
+            ErrorCode.EMPLOYEE_NOT_FOUND,
         )
 
     if request.method == "GET":
@@ -251,7 +251,7 @@ def employee_detail_api(request, employee_id):
 
     if not employee.name:
         return api_error(
-            "Missing field: name"
+            ErrorCode.EMPLOYEE_NAME_REQUIRED
         )
     employee.updated_by = login_id
 
@@ -273,16 +273,16 @@ def employee_seal_api(request, employee_id):
 
     employee = Employee.objects.filter(id=employee_id, deleted_at__isnull=True).first()
     if not employee:
-        return api_error("Employee not found", status=404)
+        return api_error(ErrorCode.EMPLOYEE_NOT_FOUND)
 
     if request.method == "POST":
         if int(login_id) != int(employee_id):
-            return api_error("Forbidden", status=403)
+            return api_error(ErrorCode.FORBIDDEN, status=403)
         seal_file = request.FILES.get("seal_file")
         if not seal_file:
-            return api_error("Missing file")
+            return api_error(ErrorCode.FILE_MISSING)
         if not is_png_upload(seal_file):
-            return api_error("Only PNG files are allowed")
+            return api_error(ErrorCode.FILE_TYPE_INVALID, "Only PNG files are allowed")
 
         filename = _employee_seal_filename(employee_id)
         storage.save_upload(StorageArea.COMPANY_INFO, filename, seal_file)
@@ -296,13 +296,13 @@ def employee_seal_api(request, employee_id):
 
     seal_path = (employee.seal or "").strip()
     if not seal_path:
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
     try:
         safe_path = storage.path(StorageArea.COMPANY_INFO, seal_path)
     except ValueError:
-        return api_error("Invalid path")
+        return api_error(ErrorCode.FILE_PATH_INVALID)
     if not storage.exists(StorageArea.COMPANY_INFO, seal_path):
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
 
     content_type, _ = mimetypes.guess_type(safe_path)
     response = FileResponse(
@@ -325,7 +325,7 @@ def employee_permission_api(request, employee_id):
         deleted_at__isnull=True,
     ).first()
     if not user_login:
-        return api_error("User login not found", status=404)
+        return api_error(ErrorCode.USER_LOGIN_NOT_FOUND)
 
     if request.method == "GET":
         menu_list = user_login.menu_list or ""
@@ -357,7 +357,7 @@ def employee_permission_api(request, employee_id):
         try:
             role_id_value = int(role_id)
         except (TypeError, ValueError):
-            return api_error("Invalid role_id", status=400)
+            return api_error(ErrorCode.ROLE_ID_INVALID)
 
     menu_list = payload.get("menu_list")
     if menu_list == "*":
@@ -396,13 +396,11 @@ def change_password_api(request):
 
     if not old_password or not new_password:
         return api_error(
-            "Missing old_password or new_password",
-            status=400,
+            ErrorCode.PASSWORD_CHANGE_FIELDS_REQUIRED,
         )
     if old_password == new_password:
         return api_error(
-            "New password must be different",
-            status=400,
+            ErrorCode.PASSWORD_NEW_SAME_AS_OLD,
         )
 
     user_login = UserLogin.objects.filter(
@@ -411,13 +409,11 @@ def change_password_api(request):
     ).first()
     if not user_login:
         return api_error(
-            "User not found",
-            status=404,
+            ErrorCode.USER_NOT_FOUND,
         )
     if user_login.password != old_password:
         return api_error(
-            "Invalid current password",
-            status=400,
+            ErrorCode.PASSWORD_CURRENT_INVALID,
         )
 
     user_login.password = new_password
@@ -456,7 +452,7 @@ def login_audit_api(request):
         try:
             filters["employee_id"] = int(employee_id)
         except (TypeError, ValueError):
-            return api_error("Invalid employee_id", status=400)
+            return api_error(ErrorCode.EMPLOYEE_ID_INVALID)
 
     user_name = (request.GET.get("user_name") or "").strip()
     if user_name:
@@ -469,7 +465,7 @@ def login_audit_api(request):
         elif success_raw in ("0", "false", "no"):
             filters["success"] = False
         else:
-            return api_error("Invalid success", status=400)
+            return api_error(ErrorCode.EMPLOYEE_LOGIN_AUDIT_SUCCESS_INVALID)
 
     start_date, error = parse_date(request.GET.get("start_date"))
     if error:
@@ -544,13 +540,13 @@ def user_logins_by_role_api(request):
         role_id_raw = (request.GET.get("role_id") or "").strip()
         raw_role_ids = [item for item in role_id_raw.split(",") if item.strip()]
     if not raw_role_ids:
-        return api_error("Missing role_id")
+        return api_error(ErrorCode.ROLE_ID_REQUIRED)
     role_ids = []
     for value in raw_role_ids:
         try:
             role_ids.append(int(str(value).strip()))
         except (TypeError, ValueError):
-            return api_error("Invalid role_id")
+            return api_error(ErrorCode.ROLE_ID_INVALID)
 
     exclude_role = _is_truthy(request.GET.get("exclude"))
     queryset = UserLogin.objects.filter(deleted_at__isnull=True)
@@ -586,18 +582,18 @@ def employees_api(request):
         name = (payload.get("name") or "").strip()
         if not name:
             return api_error(
-                "Missing field: name"
+                ErrorCode.EMPLOYEE_NAME_REQUIRED
             )
 
         email = (payload.get("email") or "").strip()
         if not email:
             return api_error(
-                "Missing field: email"
+                ErrorCode.EMPLOYEE_EMAIL_REQUIRED
             )
 
         if UserLogin.objects.filter(user_name=email, deleted_at__isnull=True).exists():
             return api_error(
-                "User login already exists"
+                ErrorCode.USER_LOGIN_ALREADY_EXISTS
             )
 
         hire_date, error = parse_date(payload.get("hire_date"))
@@ -610,7 +606,7 @@ def employees_api(request):
         if error:
             return error
         if not birthday:
-            return api_error("Missing field: birthday")
+            return api_error(ErrorCode.EMPLOYEE_BIRTHDAY_REQUIRED)
 
         with transaction.atomic():
             employee = Employee.objects.create(
@@ -689,18 +685,18 @@ def technicians_api(request):
         employee_id = payload.get("employee_id")
 
         if employee_id is None:
-            return api_error("Missing field: employee_id")
+            return api_error(ErrorCode.EMPLOYEE_ID_REQUIRED)
 
         if Technician.objects.filter(employee_id=employee_id).exists():
-            return api_error("Employee ID already exists")
+            return api_error(ErrorCode.EMPLOYEE_ID_DUPLICATE)
 
         name_mask = (payload.get("name_mask") or "").strip()
         if not name_mask:
-            return api_error("Missing field: name_mask")
+            return api_error(ErrorCode.EMPLOYEE_NAME_MASK_REQUIRED)
 
         name = (payload.get("name") or "").strip()
         if not name:
-            return api_error("Missing field: name")
+            return api_error(ErrorCode.TECHNICIAN_NAME_REQUIRED)
 
         birthday, error = parse_date(payload.get("birthday"))
         if error:
@@ -804,7 +800,7 @@ def technicians_api(request):
 def technician_detail_api(request, employee_id):
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
-        return api_error("Technician not found", status=404)
+        return api_error(ErrorCode.TECHNICIAN_NOT_FOUND)
 
     if request.method == "GET":
         item = Technician.serialize(tech)
@@ -859,9 +855,9 @@ def technician_detail_api(request, employee_id):
     # Do not allow employee_id updates for existing technicians.
 
     if not tech.name_mask:
-        return api_error("Missing field: name_mask")
+        return api_error(ErrorCode.EMPLOYEE_NAME_MASK_REQUIRED)
     if not tech.name:
-        return api_error("Missing field: name")
+        return api_error(ErrorCode.TECHNICIAN_NAME_REQUIRED)
 
     login_id, error = require_login(request)
     if error:
@@ -882,11 +878,11 @@ def technician_ss_upload(request, employee_id):
 
     upload = request.FILES.get("file")
     if not upload:
-        return api_error("Missing file")
+        return api_error(ErrorCode.FILE_MISSING)
 
     tech = Technician.objects.filter(employee_id=employee_id).first()
     if not tech:
-        return api_error("Technician not found", status=404)
+        return api_error(ErrorCode.TECHNICIAN_NOT_FOUND)
 
     _, ext = os.path.splitext(upload.name or "")
     safe_name = os.path.basename(tech.name_mask).strip()
@@ -914,9 +910,9 @@ def technician_ss_download(request, path):
     try:
         safe_path = storage.path(StorageArea.SS, path)
     except ValueError:
-        return api_error("Invalid path")
+        return api_error(ErrorCode.FILE_PATH_INVALID)
     if not storage.exists(StorageArea.SS, path):
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
 
     content_type, _ = mimetypes.guess_type(safe_path)
     response = FileResponse(storage.open_file(StorageArea.SS, path), content_type=content_type or "application/octet-stream")

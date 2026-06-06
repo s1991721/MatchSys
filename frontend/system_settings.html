@@ -502,7 +502,8 @@
   </div>
 
   <script src="i18n.js"></script>
-  <script src="common.js"></script>
+  <script src="error_code.js"></script>
+<script src="common.js"></script>
   <script>
     const i18n = window.I18N || null;
     if (i18n) {
@@ -631,34 +632,17 @@
       }, 1400);
     };
 
-    const requestJson = (url, options) =>
-      fetch(url, {
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        ...options,
-      }).then(async (response) => {
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.success) {
-          const message = payload.message || t("system_settings.common.request_failed", "请求失败");
-          const localized = window.translateApiMessage ? window.translateApiMessage(message) : message;
-          throw new Error(localized);
-        }
-        return payload;
+    const requestJson = (url, options = {}, settings = {}) =>
+      window.requestJson(url, options, {
+        fallbackMessage: t("system_settings.common.request_failed", "请求失败"),
+        ...settings,
       });
 
     const requestFormData = (url, formData) =>
-      fetch(url, {
+      requestJson(url, {
         method: "POST",
-        credentials: "same-origin",
+        headers: {},
         body: formData,
-      }).then(async (response) => {
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || !payload.success) {
-          const message = payload.message || t("system_settings.common.request_failed", "请求失败");
-          const localized = window.translateApiMessage ? window.translateApiMessage(message) : message;
-          throw new Error(localized);
-        }
-        return payload;
       });
 
     const wrongMailTypeLabels = {
@@ -749,14 +733,9 @@
       wrongMailDownloadButton.disabled = true;
       setWrongMailStatus("正在生成 CSV...", "");
       try {
-        const response = await fetch(wrongMailExportApi, {
+        const response = await window.fetchWithAuth(wrongMailExportApi, {
           method: "GET",
-          credentials: "same-origin",
         });
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}));
-          throw new Error(payload.message || "CSV 下载失败");
-        }
         const blob = await response.blob();
         const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14);
         const filename = resolveDownloadFilename(response, `wrong_mails_${stamp}.csv`);
@@ -1801,9 +1780,8 @@
           }
         }
       }
-      const response = await fetch(api, {
+      const response = await window.fetchWithAuth(api, {
         method,
-        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body,
       });

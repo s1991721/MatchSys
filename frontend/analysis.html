@@ -245,9 +245,7 @@
 
     const loadAnalysis = async () => {
       try {
-        const response = await fetch("/api/analysis/stats");
-        if (!response.ok) return;
-        const payload = await response.json();
+        const payload = await window.requestJson("/api/analysis/stats", { method: "GET" });
         if (payload && (payload.status === "ok" || payload.success === true)) {
           renderAnalysis(payload.data || {});
         }

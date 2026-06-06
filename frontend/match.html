@@ -167,6 +167,7 @@
 </div>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -390,7 +391,6 @@
                         correct_label: Number(selected)
                     })
                 }, {
-                    throwOnFailure: true,
                     fallbackMessage: t("common.load_failed")
                 });
                 removeItemFromCurrentList(itemId);
@@ -459,7 +459,7 @@
             const view = getActiveView();
             const itemData = parseDatasetJSON(activeItem, 'item') || {};
             const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
-            const itemDesc = itemData.desc || activeItem.querySelector('.item-desc')?.textContent.trim() || '';
+            const itemAddress = itemData.address || '';
             const itemDetail = itemData.detail || activeItem.dataset.detail || '';
             const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
 
@@ -474,7 +474,8 @@
                 jobPayload = {
                     id: itemData.id || activeItem.dataset.id || '',
                     title: itemTitle,
-                    desc: itemDesc,
+                    address: itemAddress,
+                    cc: itemData.cc || '',
                     detail: itemDetail,
                     time: itemDate
                 };
@@ -520,7 +521,8 @@
                     id: itemData.id || activeItem.dataset.id || '',
                     name: itemTitle,
                     subject: itemTitle,
-                    belong: itemDesc,
+                    address: itemAddress,
+                    cc: itemData.cc || '',
                     detail: itemDetail,
                     time: itemDate
                 };
@@ -655,7 +657,6 @@
                     wrong_type: wrongType
                 })
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
             detailFeedbackSubmitted[getActiveView()].add(itemId);
@@ -718,7 +719,7 @@
 
             const desc = document.createElement('div');
             desc.className = 'item-desc';
-            desc.textContent = item.desc;
+            desc.textContent = item.address || '';
 
             const time = document.createElement('div');
             time.className = 'item-time';
@@ -918,7 +919,6 @@
             const result = await window.requestJson(endpoint, {
                 body: JSON.stringify(payload)
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t("common.load_failed")
             });
 

@@ -14,6 +14,7 @@ from customer.card_to_customer import process_uploaded_card_image
 from customer.models import Customer
 from employee.models import Employee
 from project.api import api_error, api_paginated, api_success
+from project.error_codes import ErrorCode
 from project import storage
 from project.common_tools import paginate_queryset, parse_json_body, require_login
 from project.storage import StorageArea
@@ -65,11 +66,11 @@ def customer_contract_upload(request, customer_id):
 
     upload = request.FILES.get("file")
     if not upload:
-        return api_error("Missing file")
+        return api_error(ErrorCode.CUSTOMER_CONTRACT_FILE_REQUIRED)
 
     customer = Customer.objects.filter(pk=customer_id, deleted_at__isnull=True).first()
     if not customer:
-        return api_error("Customer not found", status=404)
+        return api_error(ErrorCode.CUSTOMER_NOT_FOUND)
 
     _, ext = os.path.splitext(upload.name or "")
     filename = f"customer_{customer_id}{ext or ''}"
@@ -92,7 +93,7 @@ def customer_card_ocr_api(request):
 
     upload = request.FILES.get("file")
     if not upload:
-        return api_error("Missing file")
+        return api_error(ErrorCode.CUSTOMER_CARD_FILE_REQUIRED)
 
     suffix = Path(upload.name or "").suffix
     temp_path = None
@@ -107,7 +108,7 @@ def customer_card_ocr_api(request):
         result = parse_card(temp_path)
         return api_success(data={"result": result})
     except Exception as exc:
-        return api_error(f"OCR failed: {exc}")
+        return api_error(ErrorCode.CUSTOMER_CARD_OCR_FAILED, f"OCR failed: {exc}")
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
@@ -120,14 +121,14 @@ def line_webhook_api(request):
     signature = request.META.get("HTTP_X_LINE_SIGNATURE", "")
     channel_secret = get_line_channel_secret()
     if not channel_secret:
-        return api_error("Missing LINE channel secret", status=500)
+        return api_error(ErrorCode.CUSTOMER_LINE_SECRET_REQUIRED, status=500)
     if not verify_line_signature(request_body, signature, channel_secret):
-        return api_error("Invalid LINE signature", status=403)
+        return api_error(ErrorCode.CUSTOMER_LINE_SIGNATURE_INVALID, status=403)
 
     try:
         payload = json.loads(request_body.decode("utf-8") if request_body else "{}")
     except json.JSONDecodeError:
-        return api_error("Invalid JSON body")
+        return api_error(ErrorCode.INVALID_JSON)
 
     events = payload.get("events")
     if not isinstance(events, list):
@@ -244,7 +245,7 @@ def customers_api(request):
         if error:
             return error
         if not (payload.get("company_name") or "").strip():
-            return api_error("Missing field: company_name")
+            return api_error(ErrorCode.CUSTOMER_COMPANY_NAME_REQUIRED)
 
         customer = Customer()
         Customer.get_customer_by_payload(customer, payload)
@@ -253,7 +254,7 @@ def customers_api(request):
         item = Customer.serialize(customer)
         return api_success(data={"item": item})
 
-    return api_error("Method not allowed", status=405)
+    return api_error(ErrorCode.METHOD_NOT_ALLOWED, status=405)
 
 
 @csrf_exempt
@@ -267,14 +268,14 @@ def customer_detail_api(request, customer_id):
     try:
         customer = Customer.objects.get(pk=customer_id, deleted_at__isnull=True)
     except Customer.DoesNotExist:
-        return api_error("Customer not found", status=404)
+        return api_error(ErrorCode.CUSTOMER_NOT_FOUND)
 
     if request.method == "PUT":
         payload, error = parse_json_body(request)
         if error:
             return error
         if not (payload.get("company_name") or "").strip():
-            return api_error("Missing field: company_name")
+            return api_error(ErrorCode.CUSTOMER_COMPANY_NAME_REQUIRED)
         Customer.get_customer_by_payload(customer, payload)
         customer.updated_by = login_id
         customer.save()
@@ -291,4 +292,4 @@ def customer_detail_api(request, customer_id):
         customer.save(update_fields=["deleted_at", "updated_by", "updated_at"])
         return api_success()
 
-    return api_error("Method not allowed", status=405)
+    return api_error(ErrorCode.METHOD_NOT_ALLOWED, status=405)

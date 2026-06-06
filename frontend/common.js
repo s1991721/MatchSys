@@ -176,35 +176,18 @@
         }
     };
 
-    const translateApiMessage = (message) => {
-        if (!message || typeof message !== "string") return message;
-        const missingFieldMatch = message.match(/^Missing field:\s*(.+)$/);
-        if (missingFieldMatch) {
-            const rawField = missingFieldMatch[1].trim();
-            const fieldKeyMap = {
-                name: "personnel.field.name",
-                email: "common.field.email",
-                birthday: "common.field.birthday",
-                user_name: "common.field.account",
-                password: "login.password",
-            };
-            const fieldKey = fieldKeyMap[rawField];
-            const fieldLabel = fieldKey ? resolveLabel(fieldKey, rawField) : rawField;
-            return format("common.error.missing_field", {field: fieldLabel}, `Missing field: ${fieldLabel}`);
+    const translateApiError = (payload, fallback) => {
+        const responsePayload = payload && typeof payload === "object" ? payload : {};
+        const fallbackMessage = fallback || responsePayload.message || t("common.load_failed", "Load failed");
+        const errorCodeMessages = window.ErrorCodeMessages;
+        if (errorCodeMessages && typeof errorCodeMessages.getMessage === "function") {
+            const message = errorCodeMessages.getMessage(responsePayload);
+            if (message) return message;
         }
-        const messageKeyMap = {
-            "Invalid date": "common.error.invalid_date",
-            "Activation required": "common.error.activation_required",
-            "请先登录": "common.error.login_required",
-            "Internal server error": "common.error.internal_server_error",
-        };
-        const messageKey = messageKeyMap[message];
-        if (messageKey) {
-            return resolveLabel(messageKey, message);
-        }
-        return message;
+        return fallbackMessage;
     };
-    window.translateApiMessage = translateApiMessage;
+    window.translateApiError = translateApiError;
+
     // 接口校验登录
     window.fetchWithAuth = async function (url, options = {}) {
         const mergedOptions = {
@@ -216,16 +199,20 @@
         const res = await fetch(url, mergedOptions);
         if (!res.ok) {
             const payload = await res.json().catch(() => ({}));
-            const message = payload?.message || `HTTP ${res.status}`;
+            const message = translateApiError(payload, `HTTP ${res.status}`);
             if (res.status === 401) {
-                redirectAuthFailureTopOrSelf("login");
-                throw new Error("Unauthorized");
+                redirectTopOrSelf("login.html");
+                const error = new Error(message);
+                error.payload = payload;
+                error.code = payload?.code;
+                throw error;
             }
             if (res.status === 403) {
-                redirectAuthFailureTopOrSelf("activation");
+                redirectTopOrSelf("login.html?activation=1");
             }
-            const error = new Error(translateApiMessage(message));
+            const error = new Error(message);
             error.payload = payload;
+            error.code = payload?.code;
             throw error;
         }
         return res;
@@ -266,11 +253,15 @@
         const response = await window.fetchWithAuth(url, options);
         const raw = await response.json();
         const payload = window.normalizeApiResponse(raw);
-        if (settings.throwOnFailure && !payload.success) {
-            const message = payload.message
-                ? translateApiMessage(payload.message)
-                : (settings.fallbackMessage || t("common.load_failed", "Load failed"));
-            throw new Error(message);
+        if (!payload.success) {
+            const message = translateApiError(
+                payload,
+                settings.fallbackMessage || t("common.load_failed", "Load failed")
+            );
+            const error = new Error(message);
+            error.payload = payload;
+            error.code = payload.code;
+            throw error;
         }
         return payload;
     };
@@ -441,12 +432,10 @@
 
         const tick = async () => {
             try {
-                const response = await fetch("/api/my-mails/unread-count", {
+                const payload = await window.requestJson("/api/my-mails/unread-count", {
                     method: "GET",
-                    credentials: "include",
                     cache: "no-store",
                 });
-                const payload = await response.json();
                 if (!payload || payload.success === false) {
                     onData({ unread_count: 0, has_mailbox: false, error: true });
                     return;

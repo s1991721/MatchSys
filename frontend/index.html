@@ -214,7 +214,8 @@
   </dialog>
 
   <script src="i18n.js"></script>
-  <script src="common.js"></script>
+  <script src="error_code.js"></script>
+<script src="common.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const btn = document.getElementById("collapseBtn");
@@ -331,13 +332,11 @@
       const loadSystemExpiryStatus = async () => {
         if (!systemExpiryStatus) return;
         try {
-          const response = await fetch(activationSettingsApi, {
+          const payload = await window.requestJson(activationSettingsApi, {
             method: "GET",
-            credentials: "same-origin",
             cache: "no-store",
           });
-          const payload = await response.json().catch(() => ({}));
-          if (!response.ok || !payload || payload.success === false) {
+          if (!payload || payload.success === false) {
             activationExpiryRaw = "";
             activationSystemVersion = "";
             renderSystemVersion();

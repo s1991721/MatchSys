@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 
 from project.api import api_error
+from project.error_codes import ErrorCode
 from settings.activation_code import is_activation_code_valid
 from settings.models import SysSettings
 
@@ -86,7 +87,7 @@ class SessionLoginRequiredMiddleware:
     @staticmethod
     def _activation_required_response(path: str) -> HttpResponse:
         if path.startswith("/api/"):
-            return api_error("Activation required", status=403)
+            return api_error(ErrorCode.ACTIVATION_REQUIRED, status=403)
         return HttpResponse(
             "<!doctype html><html><head><meta charset='utf-8'></head>"
             "<body><script>window.top.location.href='login.html?activation=1';</script></body></html>",
@@ -96,7 +97,7 @@ class SessionLoginRequiredMiddleware:
     @staticmethod
     def _login_required_response(path: str) -> HttpResponse:
         if path.startswith("/api/"):
-            return api_error("请先登录", status=401)
+            return api_error(ErrorCode.LOGIN_REQUIRED, "请先登录", status=401)
         return HttpResponse(
             "<!doctype html><html><head><meta charset='utf-8'></head>"
             "<body><script>window.top.location.href='login.html';</script></body></html>",
@@ -120,4 +121,4 @@ class ApiExceptionMiddleware:
         message = "Internal server error"
         if settings.DEBUG:
             message = str(exception)
-        return api_error(message, status=500)
+        return api_error(ErrorCode.SERVER, message, status=500)

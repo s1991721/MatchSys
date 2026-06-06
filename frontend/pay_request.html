@@ -426,6 +426,7 @@
   </dialog>
 
   <script src="i18n.js"></script>
+  <script src="error_code.js"></script>
   <script src="common.js"></script>
   <script>
     const i18n = window.I18N || null;
@@ -958,10 +959,9 @@
       clearCompanySealObjectUrl();
       if (!filename) return "";
       try {
-        const response = await fetch(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
-          credentials: "same-origin"
+        const response = await window.fetchWithAuth(`/api/company-info/seal?v=${encodeURIComponent(`${filename}-${Date.now()}`)}`, {
+          method: "GET"
         });
-        if (!response.ok) return "";
         const blob = await response.blob();
         if (!blob || !blob.size) return "";
         companySealObjectUrl = URL.createObjectURL(blob);
@@ -1006,10 +1006,9 @@
       clearOwnerSealObjectUrl();
       if (!employeeId) return "";
       try {
-        const response = await fetch(`/api/employees/${encodeURIComponent(employeeId)}/seal?v=${Date.now()}`, {
-          credentials: "same-origin"
+        const response = await window.fetchWithAuth(`/api/employees/${encodeURIComponent(employeeId)}/seal?v=${Date.now()}`, {
+          method: "GET"
         });
-        if (!response.ok) return "";
         const blob = await response.blob();
         if (!blob || !blob.size) return "";
         ownerSealObjectUrl = URL.createObjectURL(blob);
@@ -1354,8 +1353,7 @@
     const getPaySendPdfBlob = async () => {
       const pdfUrl = getStoredPayPdfUrl(payCurrentSendItem);
       if (!pdfUrl) throw new Error("没有PDF");
-      const response = await fetch(pdfUrl, { credentials: "same-origin" });
-      if (!response.ok) throw new Error("PDF文件读取失败");
+      const response = await window.fetchWithAuth(pdfUrl, { method: "GET" });
       return response.blob();
     };
 
@@ -1456,7 +1454,6 @@
       const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
         method: "GET"
       }, {
-        throwOnFailure: true,
         fallbackMessage: "加载模板失败"
       });
       const template = payload.data && typeof payload.data.template === "string" ? payload.data.template : "";
@@ -1505,7 +1502,6 @@
         await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
           body: JSON.stringify({ template })
         }, {
-          throwOnFailure: true,
           fallbackMessage: "保存模板失败"
         });
         paySendTemplateCache[paySendTemplateName] = template;
@@ -1579,7 +1575,6 @@
             mail_type: Number.isFinite(mailType) ? mailType : 4
           })
         }, {
-          throwOnFailure: true,
           fallbackMessage: "发送失败"
         });
         alert("发送成功");
@@ -1747,7 +1742,7 @@
     };
 
     const loadPayRequestDetail = async (id) => {
-      const payload = await window.requestJson(`/api/pay-requests/${encodeURIComponent(id)}`, { method: "GET" }, { throwOnFailure: true });
+      const payload = await window.requestJson(`/api/pay-requests/${encodeURIComponent(id)}`, { method: "GET" });
       return payload?.data?.item || null;
     };
 
@@ -1776,7 +1771,7 @@
           method: "POST",
           headers: {},
           body: buildFormData(payload, pdfBlob)
-        }, { throwOnFailure: true });
+        });
         createPayDialog.close();
         fetchPayRequests();
       } catch (error) {

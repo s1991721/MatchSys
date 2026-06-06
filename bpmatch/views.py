@@ -15,6 +15,7 @@ from django.views.decorators.http import require_GET, require_POST
 
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import paginate_queryset, parse_json_body, require_login
+from project.error_codes import ErrorCode
 from settings.models import SysSettings
 from . import llmsTool
 from .gmailTool import GmailTool
@@ -213,12 +214,12 @@ def mail_project_match_api(request):
     project_id = (request.GET.get("id") or "").strip()
 
     if not project_id:
-        return api_error("Missing field: id")
+        return api_error(ErrorCode.MATCH_ID_REQUIRED)
 
     try:
         project = MailProjectInfo.objects.get(id=project_id)
     except MailProjectInfo.DoesNotExist:
-        return api_error("MailProjectInfo not found", status=404)
+        return api_error(ErrorCode.MATCH_PROJECT_INFO_NOT_FOUND)
 
     project_skills = _normalize_skills(project.skills)
     project_skill_set = {skill.lower() for skill in project_skills}
@@ -278,7 +279,7 @@ def _get_wrong_mail_source(mail_id, wrong_label):
         return MailTechnicianInfo.objects.filter(id=mail_id).first(), None
     if wrong_label == 0:
         return MailProjectInfo.objects.filter(id=mail_id).first(), None
-    return None, api_error("Invalid field: wrong_label")
+    return None, api_error(ErrorCode.MATCH_WRONG_LABEL_INVALID)
 
 
 def _build_wrong_mail_defaults(source_obj, wrong_label, wrong_type, correct_label=None):
@@ -308,11 +309,11 @@ def wrong_mail_info_api(request):
 
     mail_id = str(payload.get("id") or "").strip()
     if not mail_id:
-        return api_error("Missing field: id")
+        return api_error(ErrorCode.MATCH_ID_REQUIRED)
 
     wrong_label = payload.get("wrong_label")
     if wrong_label is None:
-        return api_error("Missing field: wrong_label")
+        return api_error(ErrorCode.MATCH_WRONG_LABEL_REQUIRED)
 
     correct_label = payload.get("correct_label")
 
@@ -321,7 +322,7 @@ def wrong_mail_info_api(request):
         return label_error
 
     if source_obj is None:
-        return api_error("Mail not found", status=404)
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND)
 
     defaults = _build_wrong_mail_defaults(
         source_obj,
@@ -350,24 +351,24 @@ def wrong_mail_detail_api(request):
 
     mail_id = str(payload.get("id") or "").strip()
     if not mail_id:
-        return api_error("Missing field: id")
+        return api_error(ErrorCode.MATCH_ID_REQUIRED)
 
     wrong_label = payload.get("wrong_label")
     if wrong_label is None:
-        return api_error("Missing field: wrong_label")
+        return api_error(ErrorCode.MATCH_WRONG_LABEL_REQUIRED)
 
     wrong_type = payload.get("wrong_type")
     if wrong_type is None:
-        return api_error("Missing field: wrong_type")
+        return api_error(ErrorCode.MATCH_WRONG_TYPE_REQUIRED)
     if wrong_type not in (2, 3):
-        return api_error("Invalid field: wrong_type")
+        return api_error(ErrorCode.MATCH_WRONG_TYPE_INVALID)
 
     source_obj, label_error = _get_wrong_mail_source(mail_id, wrong_label)
     if label_error:
         return label_error
 
     if source_obj is None:
-        return api_error("Mail not found", status=404)
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND)
 
     defaults = _build_wrong_mail_defaults(
         source_obj,
@@ -498,7 +499,7 @@ def mail_project_search_api(request):
         try:
             llm_result = llmsTool.qiuanjian_detail_analysis(intro)
         except Exception as exc:
-            return api_error(str(exc), status=500)
+            return api_error(ErrorCode.EXTERNAL_LLM, str(exc), status=500)
         try:
             parsed = json.loads(llm_result)
         except Exception as exc:
@@ -592,7 +593,7 @@ def mail_technician_search_api(request):
         try:
             llm_result = llmsTool.qiuren_detail_analysis(intro)
         except Exception as exc:
-            return api_error(str(exc), status=500)
+            return api_error(ErrorCode.EXTERNAL_LLM, str(exc), status=500)
         try:
             parsed = json.loads(llm_result)
         except Exception as exc:
@@ -731,9 +732,9 @@ def send_mail(request):
         data = send_mail_by_login(login_id, payload)
         return api_success(data=data)
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -749,9 +750,9 @@ def send_bulk_mail(request):
         data = send_bulk_mail_by_login(login_id, payload)
         return api_success(data=data)
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -794,9 +795,9 @@ def my_mails_api(request):
         )
         return api_success(data=data, meta=meta)
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -812,7 +813,7 @@ def my_mails_query_api(request):
     try:
         send_config = ensure_send_config_for_login(login_id)
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
 
     page = request.GET.get("page", 1)
     page_size = request.GET.get("page_size", 20)
@@ -840,9 +841,9 @@ def my_mails_query_api(request):
         )
         return api_success(data=data, meta=meta)
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -857,9 +858,9 @@ def my_mails_sync_api(request):
         updated = sync_my_mails(login_id, send_config)
         return api_success(data={"updated": int(updated or 0)})
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -882,9 +883,9 @@ def my_mail_detail_api(request, mail_id):
             thread.start()
         return api_success(data=data)
     except MailToolError as exc:
-        return api_error(exc.message, status=exc.status)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -897,7 +898,7 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
     message_id = str(message_id or "").strip()
     attachment_id = str(attachment_id or "").strip()
     if not message_id or not attachment_id:
-        return api_error("message_id and attachment_id are required")
+        return api_error(ErrorCode.MATCH_ATTACHMENT_IDS_REQUIRED)
 
     exists = (
             SavedMailInfo.objects.filter(id=message_id).exists()
@@ -907,7 +908,7 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
             or MyMail.objects.filter(id=message_id, owner_id=login_id).exists()
     )
     if not exists:
-        return api_error("Attachment not found", status=404)
+        return api_error(ErrorCode.MATCH_ATTACHMENT_NOT_FOUND, status=404)
 
     attachment_meta = None
     for source in (
@@ -923,7 +924,7 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
         if attachment_meta:
             break
     if not attachment_meta:
-        return api_error("Attachment not found", status=404)
+        return api_error(ErrorCode.MATCH_ATTACHMENT_NOT_FOUND, status=404)
 
     disposition = str(request.GET.get("disposition") or "attachment").strip().lower()
     if disposition not in ("attachment", "inline"):
@@ -931,7 +932,7 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
     try:
         content = GmailTool().fetch_attachment(message_id, attachment_id)
     except Exception as exc:
-        return api_error(str(exc), status=502)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=502)
 
     filename = str(attachment_meta.get("filename") or "attachment").replace('"', "")
     content_type = str(
@@ -961,7 +962,7 @@ def my_mails_unread_count_api(request):
         unread_count = count_unread_mails_from_db(login_id)
         return api_success(data={"unread_count": int(unread_count), "has_mailbox": True})
     except Exception as exc:
-        return api_error(str(exc), status=500)
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
 
 
 @csrf_exempt
@@ -985,7 +986,7 @@ def send_history(request):
                 mail_type_value = int(mail_type)
                 queryset = queryset.filter(mail_type=mail_type_value)
         except (TypeError, ValueError):
-            return api_error("Invalid mail_type")
+            return api_error(ErrorCode.MATCH_MAIL_TYPE_INVALID)
     if keyword:
         queryset = queryset.filter(to__icontains=keyword)
     queryset = queryset.order_by("-sent_at")

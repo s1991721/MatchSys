@@ -18,6 +18,7 @@ from employee.models import UserLogin
 from project import storage
 from project.api import api_error, api_success
 from project.common_tools import is_png_upload, parse_date, parse_json_body, require_login
+from project.error_codes import ErrorCode
 from project.storage import StorageArea
 from settings.LINE import (
     invalidate_line_notify_filter_cache,
@@ -147,9 +148,9 @@ def mail_template_detail_api(request, template_name):
     if error:
         return error
     if not isinstance(payload, dict):
-        return api_error("Invalid JSON body")
+        return api_error(ErrorCode.INVALID_JSON)
     if "template" not in payload:
-        return api_error("Missing field: template")
+        return api_error(ErrorCode.SETTINGS_TEMPLATE_REQUIRED)
 
     settings_payload[name] = str(payload.get("template") or "")
     _save_setting("mail-template", settings_payload, login_id)
@@ -178,6 +179,28 @@ def _normalize_company_info_payload(data):
     }
 
 
+def _validate_company_info_activation(company_name):
+    error_message = "激活码信息有误"
+    activation_record = _get_setting("activation")
+    activation_settings = (
+        activation_record.settings
+        if activation_record and isinstance(activation_record.settings, dict)
+        else {}
+    )
+    activation_code = str(activation_settings.get("code") or "").strip()
+    if not activation_code:
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_INVALID, error_message)
+
+    valid, payload, _reason = is_activation_code_valid(activation_code, now=timezone.now())
+    if not valid or not payload:
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_INVALID, error_message)
+
+    activation_username = str(payload.get("username") or "").strip()
+    if not activation_username or str(company_name or "").strip() != activation_username:
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_INVALID, error_message)
+    return None
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def company_info_api(request):
@@ -191,10 +214,13 @@ def company_info_api(request):
     settings_payload = _company_info_settings()
     if request.content_type and request.content_type.startswith("multipart/form-data"):
         settings_payload.update(_normalize_company_info_payload(request.POST))
+        activation_error = _validate_company_info_activation(settings_payload.get("company_name"))
+        if activation_error:
+            return activation_error
         seal_file = request.FILES.get("seal_file")
         if seal_file:
             if not is_png_upload(seal_file):
-                return api_error("Only PNG files are allowed")
+                return api_error(ErrorCode.FILE_TYPE_INVALID, "Only PNG files are allowed")
             filename = "company_order_seal.png"
             storage.save_upload(StorageArea.COMPANY_INFO, filename, seal_file)
             settings_payload.update({
@@ -208,8 +234,11 @@ def company_info_api(request):
         return parse_error
     data = payload.get("settings", payload)
     if not isinstance(data, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     settings_payload.update(_normalize_company_info_payload(data))
+    activation_error = _validate_company_info_activation(settings_payload.get("company_name"))
+    if activation_error:
+        return activation_error
     return _save_setting("company-info", settings_payload, login_id)
 
 
@@ -222,13 +251,13 @@ def company_info_seal_api(request):
     settings_payload = _company_info_settings()
     filename = str(settings_payload.get("seal_filename") or "").strip()
     if not filename:
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
     try:
         safe_path = storage.path(StorageArea.COMPANY_INFO, filename)
     except ValueError:
-        return api_error("Invalid path")
+        return api_error(ErrorCode.FILE_PATH_INVALID)
     if not storage.exists(StorageArea.COMPANY_INFO, filename):
-        return api_error("File not found", status=404)
+        return api_error(ErrorCode.FILE_NOT_FOUND, status=404)
 
     content_type, _ = mimetypes.guess_type(safe_path)
     response = FileResponse(
@@ -242,7 +271,7 @@ def company_info_seal_api(request):
 # 营业邮箱配置
 def _handle_business_email_upload(auth_file, token_file, login_id):
     if not auth_file and not token_file:
-        return api_error("Missing Gmail auth or token file")
+        return api_error(ErrorCode.SETTINGS_GMAIL_FILES_REQUIRED)
 
     record = _get_setting("business-email")
     settings_payload = record.settings if record else SECTION_DEFAULTS["business-email"].copy()
@@ -252,7 +281,7 @@ def _handle_business_email_upload(auth_file, token_file, login_id):
             auth_bytes = auth_file.read()
             json.loads(auth_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
-            return api_error("Invalid Gmail auth JSON file")
+            return api_error(ErrorCode.SETTINGS_GMAIL_AUTH_JSON_INVALID)
         storage.save_bytes(StorageArea.CREDENTIALS, "gmail_credentials.json", auth_bytes)
         settings_payload.update({
             "auth_filename": "gmail_credentials.json",
@@ -264,7 +293,7 @@ def _handle_business_email_upload(auth_file, token_file, login_id):
             token_bytes = token_file.read()
             json.loads(token_bytes.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
-            return api_error("Invalid Gmail token JSON file")
+            return api_error(ErrorCode.SETTINGS_GMAIL_TOKEN_JSON_INVALID)
         storage.save_bytes(StorageArea.CREDENTIALS, "gmail_token.json", token_bytes)
         settings_payload.update({
             "token_filename": "gmail_token.json",
@@ -277,19 +306,19 @@ def _handle_business_email_upload(auth_file, token_file, login_id):
 # 保存AI配置
 def _handle_ai(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
 
     model_type = settings_payload.get("model_type")
     if model_type not in ("local", "cloud"):
-        return api_error("Invalid mode")
+        return api_error(ErrorCode.SETTINGS_MODE_INVALID)
 
     model_name = settings_payload.get("model_name")
     if model_name is None:
-        return api_error("Invalid model name")
+        return api_error(ErrorCode.SETTINGS_MODEL_NAME_INVALID)
 
     api_key = settings_payload.get("api_key")
     if api_key is None:
-        return api_error("Invalid API key")
+        return api_error(ErrorCode.SETTINGS_API_KEY_INVALID)
 
     settings_payload = {
         "model_type": model_type,
@@ -302,25 +331,25 @@ def _handle_ai(settings_payload, login_id):
 # 保存Match 配置
 def _handle_match(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
 
     cycle_days = int(settings_payload.get("cycle_days", 0))
 
     if cycle_days < 1:
-        return api_error("Invalid cycle_days")
+        return api_error(ErrorCode.SETTINGS_CYCLE_DAYS_INVALID)
 
     return _save_setting("match", {"cycle_days": cycle_days}, login_id)
 
 
 def _handle_ocr_upload(ocr_auth_file, login_id):
     if not ocr_auth_file:
-        return api_error("Missing OCR auth file")
+        return api_error(ErrorCode.SETTINGS_OCR_FILE_REQUIRED)
 
     try:
         ocr_auth_bytes = ocr_auth_file.read()
         json.loads(ocr_auth_bytes.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return api_error("Invalid OCR auth JSON file")
+        return api_error(ErrorCode.SETTINGS_OCR_JSON_INVALID)
 
     storage.save_bytes(StorageArea.CREDENTIALS, "ocr_credentials.json", ocr_auth_bytes)
 
@@ -339,7 +368,7 @@ def _handle_ocr(settings_payload, login_id):
     if settings_payload is None:
         settings_payload = {}
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     record = _get_setting("ocr")
     merged = SECTION_DEFAULTS["ocr"].copy()
     if record and isinstance(record.settings, dict):
@@ -353,7 +382,7 @@ def _handle_ocr(settings_payload, login_id):
 
 def _handle_backup(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     settings_payload = {
         "host": (settings_payload.get("host") or "").strip(),
         "port": str(settings_payload.get("port") or "").strip(),
@@ -370,7 +399,7 @@ def _handle_sendmsg(settings_payload, login_id):
     if settings_payload is None:
         settings_payload = []
     if not isinstance(settings_payload, list):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     normalized = []
     for item in settings_payload:
         if not isinstance(item, dict):
@@ -427,7 +456,7 @@ def _handle_sendmsg(settings_payload, login_id):
 
 def _handle_line_notify(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
 
     def _normalize_nationality(value):
         # -1: 未设置, 0: 仅日本籍, 1: 外国籍可
@@ -476,7 +505,7 @@ def _handle_line_notify(settings_payload, login_id):
 
 def _handle_bank_account(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     normalized = {
         "bank_name": str(settings_payload.get("bank_name") or "").strip(),
         "branch_code": str(settings_payload.get("branch_code") or "").strip(),
@@ -490,13 +519,13 @@ def _handle_bank_account(settings_payload, login_id):
 
 def _handle_activation(settings_payload, login_id):
     if not isinstance(settings_payload, dict):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     code = str(settings_payload.get("code") or "").strip()
     if not code:
-        return api_error("Missing activation code")
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_REQUIRED)
     valid, payload, _reason = is_activation_code_valid(code, now=timezone.now())
     if not valid or not payload:
-        return api_error("Invalid or expired activation code")
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_INVALID)
     expires_at = str(payload.get("expires_at") or "")
     normalized = {
         "code": code,
@@ -512,7 +541,7 @@ def _handle_tasks(settings_payload, login_id):
     if settings_payload is None:
         settings_payload = []
     if not isinstance(settings_payload, list):
-        return api_error("Invalid settings payload")
+        return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID)
     existing_tasks = {
         task.id: task
         for task in ScheduledTask.objects.filter(deleted_at__isnull=True)
@@ -522,14 +551,14 @@ def _handle_tasks(settings_payload, login_id):
 
     for item in settings_payload:
         if not isinstance(item, dict):
-            return api_error("Invalid task payload")
+            return api_error(ErrorCode.SETTINGS_TASK_PAYLOAD_INVALID)
         raw_id = item.get("id")
         task_id = None
         if raw_id not in (None, ""):
             try:
                 task_id = int(raw_id)
             except (TypeError, ValueError):
-                return api_error("Invalid task id")
+                return api_error(ErrorCode.SETTINGS_TASK_ID_INVALID)
 
         task = existing_tasks.get(task_id) if task_id else ScheduledTask()
         task.name = str(item.get("name") or "").strip()
@@ -679,7 +708,7 @@ def sys_settings_section_api(request, section):
         return error
 
     if section not in SECTION_DEFAULTS:
-        return api_error("Unknown settings section", status=404)
+        return api_error(ErrorCode.SETTINGS_SECTION_UNKNOWN)
 
     if request.method == "GET":
         record = _get_setting(section)
@@ -690,7 +719,7 @@ def sys_settings_section_api(request, section):
         # gmail认证文件上传start
         if request.FILES.get("auth_file") or request.FILES.get("token_file"):
             if section != "business-email":
-                return api_error("Unsupported action for this section", status=405)
+                return api_error(ErrorCode.SETTINGS_ACTION_UNSUPPORTED, status=405)
             return _handle_business_email_upload(
                 request.FILES.get("auth_file"),
                 request.FILES.get("token_file"),
@@ -699,7 +728,7 @@ def sys_settings_section_api(request, section):
         # gmail认证文件上传end
         if request.FILES.get("ocr_auth_file"):
             if section != "ocr":
-                return api_error("Unsupported action for this section", status=405)
+                return api_error(ErrorCode.SETTINGS_ACTION_UNSUPPORTED, status=405)
             return _handle_ocr_upload(
                 request.FILES.get("ocr_auth_file"),
                 login_id,
@@ -711,14 +740,14 @@ def sys_settings_section_api(request, section):
 
         # 保存配置
         if "settings" not in payload:
-            return api_error("Missing field: settings")
+            return api_error(ErrorCode.SETTINGS_FIELD_SETTINGS_REQUIRED)
         settings_payload = payload.get("settings")
         handler = SECTION_HANDLERS.get(section)
         if not handler:
-            return api_error("Unknown settings section", status=404)
+            return api_error(ErrorCode.SETTINGS_SECTION_UNKNOWN)
         return handler(settings_payload, login_id)
 
-    return api_error("Unknown settings section", status=404)
+    return api_error(ErrorCode.SETTINGS_SECTION_UNKNOWN)
 
 
 @csrf_exempt
@@ -753,10 +782,10 @@ def activation_code_api(request):
         return error
     code = str(payload.get("code") or "").strip()
     if not code:
-        return api_error("Missing activation code")
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_REQUIRED)
     valid, parsed, _reason = is_activation_code_valid(code, now=timezone.now())
     if not valid or not parsed:
-        return api_error("激活码无效或已过期")
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_INVALID, "激活码无效或已过期")
     settings_payload = {
         "code": code,
         "expires_at": str(parsed.get("expires_at") or ""),
@@ -775,10 +804,10 @@ def activation_validate_api(request):
         return error
     code = str(payload.get("code") or "").strip()
     if not code:
-        return api_error("Missing activation code")
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_REQUIRED)
     valid, parsed, _reason = is_activation_code_valid(code, now=timezone.now())
     if not valid or not parsed:
-        return api_error("激活码无效或已过期")
+        return api_error(ErrorCode.SETTINGS_ACTIVATION_CODE_INVALID, "激活码无效或已过期")
     return api_success(
         data={
             "expires_at": str(parsed.get("expires_at") or ""),
@@ -803,7 +832,7 @@ def sys_tasks_api(request):
     if error:
         return error
     if "tasks" not in payload:
-        return api_error("Missing field: tasks")
+        return api_error(ErrorCode.SETTINGS_TASKS_REQUIRED)
     return _handle_tasks(payload.get("tasks"), login_id)
 
 
@@ -816,11 +845,11 @@ def sys_task_logs_api(request):
 
     task_id_raw = request.GET.get("task_id")
     if not task_id_raw:
-        return api_error("Missing task_id")
+        return api_error(ErrorCode.SETTINGS_TASK_ID_REQUIRED)
     try:
         task_id = int(task_id_raw)
     except (TypeError, ValueError):
-        return api_error("Invalid task_id")
+        return api_error(ErrorCode.SETTINGS_TASK_ID_INVALID)
 
     limit_raw = request.GET.get("limit", 50)
     try:
@@ -832,11 +861,11 @@ def sys_task_logs_api(request):
     start_date, _ = parse_date(request.GET.get("start_date"))
     end_date, _ = parse_date(request.GET.get("end_date"))
     if request.GET.get("start_date") and not start_date:
-        return api_error("Invalid start_date")
+        return api_error(ErrorCode.SETTINGS_TASK_START_DATE_INVALID)
     if request.GET.get("end_date") and not end_date:
-        return api_error("Invalid end_date")
+        return api_error(ErrorCode.SETTINGS_TASK_END_DATE_INVALID)
     if start_date and end_date and start_date > end_date:
-        return api_error("Invalid date range")
+        return api_error(ErrorCode.SETTINGS_TASK_DATE_RANGE_INVALID)
 
     task = ScheduledTask.objects.filter(id=task_id, deleted_at__isnull=True).first()
     log_glob = "scheduled_tasks.log*"
@@ -894,17 +923,17 @@ def sys_password_reset_api(request):
     password = payload.get("password") or ""
     expires_in_days = payload.get("expires_in_days", 1)
     if not user_name or not password:
-        return api_error("Missing user_name or password")
+        return api_error(ErrorCode.SETTINGS_PASSWORD_RESET_USER_PASSWORD_REQUIRED)
     try:
         expires_in_days = int(expires_in_days)
     except (TypeError, ValueError):
-        return api_error("Invalid expires_in_days")
+        return api_error(ErrorCode.SETTINGS_PASSWORD_RESET_EXPIRES_INVALID)
     if expires_in_days < 1:
-        return api_error("expires_in_days must be at least 1")
+        return api_error(ErrorCode.SETTINGS_PASSWORD_RESET_EXPIRES_TOO_SMALL)
 
     user_login = UserLogin.objects.filter(user_name=user_name, deleted_at__isnull=True).first()
     if not user_login:
-        return api_error("User login not found", status=404)
+        return api_error(ErrorCode.USER_LOGIN_NOT_FOUND)
 
     expires_at = timezone.now() + timedelta(days=expires_in_days)
     user_login.password = password
@@ -930,9 +959,9 @@ def sys_settings_gmail_test_api(request):
     try:
         result = test_connection()
     except FileNotFoundError as exc:
-        return api_error(str(exc))
+        return api_error(ErrorCode.SETTINGS_GMAIL_TEST_FAILED, str(exc))
     except Exception as exc:
-        return api_error(str(exc))
+        return api_error(ErrorCode.SETTINGS_GMAIL_TEST_FAILED, str(exc))
     return api_success(
         data={
             "message": "连接成功",
@@ -959,12 +988,12 @@ def sys_settings_sendmsg_test_api(request):
     smtp_port_raw = str(payload.get("port") or "").strip()
 
     if not email or not password or not smtp_host or not smtp_port_raw:
-        return api_error("Missing SMTP config")
+        return api_error(ErrorCode.SETTINGS_SMTP_CONFIG_REQUIRED)
 
     try:
         smtp_port = int(smtp_port_raw)
     except (TypeError, ValueError):
-        return api_error("Invalid SMTP port")
+        return api_error(ErrorCode.SETTINGS_SMTP_PORT_INVALID)
 
     try:
         result = test_smtp_connection(
@@ -974,7 +1003,7 @@ def sys_settings_sendmsg_test_api(request):
             password=password,
         )
     except Exception as exc:
-        return api_error(str(exc))
+        return api_error(ErrorCode.SETTINGS_SENDMSG_TEST_FAILED, str(exc))
 
     return api_success(data=result)
 
@@ -993,7 +1022,7 @@ def sys_settings_sendmsg_receiver_test_api(request):
     try:
         result = test_receive_connection(payload or {})
     except Exception as exc:
-        return api_error(str(exc))
+        return api_error(ErrorCode.SETTINGS_SENDMSG_TEST_FAILED, str(exc))
 
     return api_success(data=result)
 
@@ -1015,7 +1044,7 @@ def sys_settings_line_notify_test_api(request):
     try:
         result = test_line_connection(channel_access_token, to_user_id)
     except Exception as exc:
-        return api_error(str(exc))
+        return api_error(ErrorCode.SETTINGS_LINE_TEST_FAILED, str(exc))
 
     return api_success(data=result)
 
@@ -1037,11 +1066,11 @@ def sys_settings_ai_test_api(request):
     api_key = payload.get("api_key")
 
     if model_type not in ("local", "cloud"):
-        return api_error("Invalid mode")
+        return api_error(ErrorCode.SETTINGS_MODE_INVALID)
     if not model_name:
-        return api_error("Missing model name")
+        return api_error(ErrorCode.SETTINGS_MODEL_NAME_INVALID, "Missing model name")
     if model_type == "cloud" and not api_key:
-        return api_error("Missing API key")
+        return api_error(ErrorCode.SETTINGS_API_KEY_INVALID, "Missing API key")
 
     if model_type == "local":
         return check_local_model(model_name)

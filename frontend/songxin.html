@@ -125,6 +125,7 @@
 </dialog>
 
 <script src="i18n.js"></script>
+<script src="error_code.js"></script>
 <script src="common.js"></script>
 <script>
     const i18n = window.I18N;
@@ -188,7 +189,6 @@
         const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
             method: 'GET'
         }, {
-            throwOnFailure: true,
             fallbackMessage: t('songxin.error.template_load_failed')
         });
         const template = payload.data && typeof payload.data.template === 'string'
@@ -224,7 +224,6 @@
             await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
                 body: JSON.stringify({template})
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.template_save_failed')
             });
             templateCache[templateName] = template;
@@ -373,7 +372,6 @@
             await window.requestJson('/api/send-mail', {
                 body: JSON.stringify(payload)
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.send_failed')
             });
 
@@ -557,7 +555,6 @@
             const payload = await window.requestJson(endpoint, {
                 body: JSON.stringify({body})
             }, {
-                throwOnFailure: true,
                 fallbackMessage: t('songxin.error.analyze_failed')
             });
 

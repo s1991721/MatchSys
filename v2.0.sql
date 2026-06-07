@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS finance_receivable
 
     due_date           DATE           NULL COMMENT '预定到账日/入金期日',
 
-    finance_status     TINYINT        NOT NULL DEFAULT 0 COMMENT '财务状态：0-未收 1-部分入金 2-已收 3-逾期 4-待确认入金 5-异常 6-核销',
+    finance_status     TINYINT        NOT NULL DEFAULT 0 COMMENT '财务处理状态：0-正常 1-异常 2-核销',
 
     remark             TEXT           NULL COMMENT '备注',
 
@@ -121,10 +121,6 @@ CREATE TABLE IF NOT EXISTS finance_receipt
 
     receipt_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '入金金额',
     receipt_date   DATE           NOT NULL COMMENT '入金日',
-
-    confirm_status TINYINT        NOT NULL DEFAULT 0 COMMENT '确认状态：0-待确认 1-已确认 2-已取消',
-    confirmed_by   BIGINT         NULL COMMENT '确认人 employee.id',
-    confirmed_at   DATETIME       NULL COMMENT '确认时间',
 
     remark         TEXT           NULL COMMENT '备注',
 

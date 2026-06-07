@@ -127,7 +127,7 @@
                     <span class="receivable-month-amount">¥0</span>
                 </button>
             </div>
-            <p class="receivable-overview-note">临时入口：点击月份后，后续将联动应收列表并显示该未平账月份的数据。</p>
+            <p class="receivable-overview-note">点击月份后切换到应收列表，并按该月份筛选未平账数据。</p>
         </section>
     </div>
 </div>
@@ -165,7 +165,14 @@
         applyI18n();
         document.querySelectorAll("[data-month]").forEach((button) => {
             button.addEventListener("click", () => {
-                window.alert(`临时入口：后续显示 ${button.dataset.month} 未平账数据`);
+                const month = button.dataset.month || "";
+                try {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: "receivables:open-list", month }, "*");
+                        return;
+                    }
+                } catch (e) {}
+                window.location.href = `list.html?month=${encodeURIComponent(month)}`;
             });
         });
     });

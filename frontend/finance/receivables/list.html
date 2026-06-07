@@ -7,37 +7,282 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>应收列表</title>
+    <style>
+        .receivable-filter-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+            align-items: center;
+        }
+        .receivable-filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            min-height: 44px;
+        }
+        .receivable-table th,
+        .receivable-table td {
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .receivable-table .receivable-name-cell {
+            white-space: normal;
+            min-width: 180px;
+        }
+        .receivable-expand-btn {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            padding: 0;
+            border-radius: 8px;
+            font-weight: 900;
+            line-height: 1;
+        }
+        .receivable-source {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 54px;
+            height: 26px;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .receivable-source-manual {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .receivable-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 72px;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .receivable-status-open {
+            background: #eef2ff;
+            color: #3730a3;
+        }
+        .receivable-status-partial,
+        .receivable-status-pending {
+            background: #fffbeb;
+            color: #92400e;
+        }
+        .receivable-status-paid {
+            background: #ecfdf5;
+            color: #047857;
+        }
+        .receivable-status-overdue,
+        .receivable-status-exception {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+        .receivable-status-writeoff {
+            background: #f8fafc;
+            color: #64748b;
+        }
+        .receivable-detail-row td {
+            padding: 0;
+            background: #f8fafc;
+        }
+        .receivable-detail-panel {
+            padding: 14px 18px 18px 56px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .receivable-detail-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .receivable-detail-table {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .receivable-detail-table .c-table th,
+        .receivable-detail-table .c-table td {
+            padding: 10px 12px;
+        }
+        .receivable-dialog-summary {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .receivable-dialog-summary-item {
+            padding: 10px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .receivable-dialog-summary-label {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .receivable-dialog-summary-value {
+            display: block;
+            margin-top: 4px;
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .receivable-form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+        .receivable-form-grid .c-inline-field-full {
+            grid-column: 1 / -1;
+        }
+        .receivable-form-grid .c-inline-field {
+            margin: 0;
+        }
+        @media (max-width: 900px) {
+            .receivable-filter-grid,
+            .receivable-form-grid,
+            .receivable-dialog-summary {
+                grid-template-columns: 1fr;
+            }
+            .receivable-filter-actions {
+                justify-content: stretch;
+            }
+            .receivable-filter-actions .c-btn {
+                flex: 1 1 0;
+            }
+        }
+    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="receivables.list">
-    <div class="finance-summary-grid">
-        <div class="finance-summary-item"><span class="finance-summary-label">本月应收</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">未收金额</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">逾期金额</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">待确认入金</span><span class="finance-summary-value">0</span></div>
-    </div>
     <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3">
-            <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
-            <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="客户 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.keyword"></div>
-            <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>待确认</option><option>已到账</option><option>逾期</option></select></div>
-        </div>
-        <div class="c-filter-actions-bar">
-            <div></div>
-            <div class="c-filter-actions-right c-filter-actions-group">
-                <button class="c-btn c-btn-primary" type="button" data-i18n="common.search">搜索</button>
-                <button class="c-btn c-btn-warn" type="button" data-i18n="common.reset">重置</button>
+        <div class="c-inline-filters-grid-3 receivable-filter-grid">
+            <div class="c-inline-field"><span>月份</span><input type="month" id="filterMonth"></div>
+            <div class="c-inline-field">
+                <span>来源</span>
+                <select id="filterSource">
+                    <option value="">全部</option>
+                    <option value="request">请求书</option>
+                    <option value="manual">手动</option>
+                </select>
+            </div>
+            <div class="c-inline-field">
+                <span>状态</span>
+                <select id="filterStatus">
+                    <option value="">全部</option>
+                    <option value="0">未收</option>
+                    <option value="1">部分入金</option>
+                    <option value="2">已收</option>
+                    <option value="3">逾期</option>
+                    <option value="5">异常</option>
+                    <option value="6">核销</option>
+                </select>
+            </div>
+            <div class="receivable-filter-actions">
+                <button class="c-btn c-btn-success" type="button" id="addReceivableBtn">新增应收</button>
+                <button class="c-btn c-btn-primary" type="button" id="searchBtn">搜索</button>
             </div>
         </div>
     </div>
+
     <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead><tr><th>请求书号</th><th>客户</th><th>应收金额</th><th>未收金额</th><th>预定到账日</th><th>账龄</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-            <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        <table class="c-table c-table-hover receivable-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>来源</th>
+                <th>请求书号</th>
+                <th>客户</th>
+                <th>应收金额</th>
+                <th>已收金额</th>
+                <th>未收金额</th>
+                <th>预定到账日</th>
+                <th>账龄</th>
+                <th>状态</th>
+                <th class="c-actions-col">操作</th>
+            </tr>
+            </thead>
+            <tbody id="receivableTableBody">
+            <tr><td class="finance-empty-row" colspan="11">暂无数据</td></tr>
+            </tbody>
         </table>
     </div>
-    
+    <div class="pagination c-pagination" id="receivablePagination">
+        <div class="pagination-summary" id="receivablePaginationSummary">共 0 条 · 第 1/1 页</div>
+        <div class="pagination-pages" id="receivablePaginationPages"></div>
+    </div>
 </div>
+
+<dialog class="c-dialog" id="receivableDialog" aria-labelledby="receivableDialogTitle">
+    <div class="c-dialog-header">
+        <h3 id="receivableDialogTitle">新增应收</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <form class="receivable-form-grid" id="receivableForm">
+            <input type="hidden" id="receivableId">
+            <div class="c-inline-field"><span>客户ID</span><input type="number" id="receivableCustomerId" placeholder="可为空"></div>
+            <div class="c-inline-field"><span>客户名称</span><input type="text" id="receivableCustomerName" required></div>
+            <div class="c-inline-field"><span>应收金额</span><input type="number" id="receivableAmount" min="0" step="0.01" required></div>
+            <div class="c-inline-field"><span>到账日</span><input type="date" id="receivableDueDate"></div>
+            <div class="c-inline-field">
+                <span>财务处理</span>
+                <select id="receivableStatus">
+                    <option value="0">正常</option>
+                    <option value="1">异常</option>
+                    <option value="2">核销</option>
+                </select>
+            </div>
+            <div class="c-inline-field c-inline-field-full"><span>备注</span><textarea id="receivableRemark" rows="3"></textarea></div>
+        </form>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="saveReceivableBtn">保存</button>
+    </div>
+</dialog>
+
+<dialog class="c-dialog" id="receiptDialog" aria-labelledby="receiptDialogTitle">
+    <div class="c-dialog-header">
+        <h3 id="receiptDialogTitle">新增入金</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <div class="receivable-dialog-summary">
+            <div class="receivable-dialog-summary-item"><span class="receivable-dialog-summary-label">应收对象</span><span class="receivable-dialog-summary-value" id="receiptSummaryCustomer">-</span></div>
+            <div class="receivable-dialog-summary-item"><span class="receivable-dialog-summary-label">未收金额</span><span class="receivable-dialog-summary-value" id="receiptSummaryOutstanding">¥0</span></div>
+            <div class="receivable-dialog-summary-item"><span class="receivable-dialog-summary-label">请求书号</span><span class="receivable-dialog-summary-value" id="receiptSummaryRequestNo">-</span></div>
+        </div>
+        <form class="receivable-form-grid" id="receiptForm">
+            <input type="hidden" id="receiptReceivableId">
+            <input type="hidden" id="receiptId">
+            <div class="c-inline-field"><span>客户ID</span><input type="number" id="receiptCustomerId" placeholder="可为空"></div>
+            <div class="c-inline-field"><span>付款方</span><input type="text" id="receiptPayerName" placeholder="银行流水付款人"></div>
+            <div class="c-inline-field"><span>银行流水号</span><input type="text" id="receiptBankTransactionNo"></div>
+            <div class="c-inline-field"><span>入金金额</span><input type="number" id="receiptAmount" min="0" step="0.01" required></div>
+            <div class="c-inline-field"><span>入金日</span><input type="date" id="receiptDate" required></div>
+            <div class="c-inline-field c-inline-field-full"><span>备注</span><textarea id="receiptRemark" rows="3"></textarea></div>
+        </form>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="saveReceiptBtn">保存</button>
+    </div>
+</dialog>
 
 <script src="../../i18n.js"></script>
 <script>
@@ -60,6 +305,299 @@
 <script src="../../common.js"></script>
 <script>
 (function () {
+    const statusLabels = {
+        0: "未收",
+        1: "部分入金",
+        2: "已收",
+        3: "逾期",
+        5: "异常",
+        6: "核销",
+    };
+    const financeStatusToDisplayStatus = {
+        1: 5,
+        2: 6,
+    };
+    const statusClasses = {
+        0: "receivable-status-open",
+        1: "receivable-status-partial",
+        2: "receivable-status-paid",
+        3: "receivable-status-overdue",
+        5: "receivable-status-exception",
+        6: "receivable-status-writeoff",
+    };
+    const PAGE_SIZE = 10;
+    let nextReceivableId = 4;
+    let nextReceiptId = 4;
+    let expandedId = null;
+    let currentPage = 1;
+    let receivables = [
+        {
+            id: 1,
+            pay_request_id: 101,
+            request_no: "REQ-2026-0601",
+            customer_id: 12,
+            customer_name: "青山科技株式会社",
+            receivable_amount: 880000,
+            due_date: "2026-06-30",
+            finance_status: 0,
+            remark: "6月开发支援费用",
+            receipts: [
+                { id: 1, customer_id: 12, payer_name: "青山科技株式会社", bank_transaction_no: "BK20260605018", receipt_amount: 300000, receipt_date: "2026-06-05", remark: "" },
+            ],
+        },
+        {
+            id: 2,
+            pay_request_id: null,
+            request_no: "",
+            customer_id: null,
+            customer_name: "期初余额-未归属客户",
+            receivable_amount: 120000,
+            due_date: "2026-06-20",
+            finance_status: 0,
+            remark: "手动新增历史应收",
+            receipts: [],
+        },
+        {
+            id: 3,
+            pay_request_id: 102,
+            request_no: "REQ-2026-0528",
+            customer_id: 18,
+            customer_name: "北川系统株式会社",
+            receivable_amount: 450000,
+            due_date: "2026-05-31",
+            finance_status: 0,
+            remark: "已逾期，待营业确认",
+            receipts: [
+                { id: 2, customer_id: 18, payer_name: "北川系统株式会社", bank_transaction_no: "", receipt_amount: 100000, receipt_date: "2026-05-28", remark: "部分入金" },
+                { id: 3, customer_id: 18, payer_name: "北川系统株式会社", bank_transaction_no: "BK20260601004", receipt_amount: 50000, receipt_date: "2026-06-01", remark: "" },
+            ],
+        },
+    ];
+
+    const $ = (selector) => document.querySelector(selector);
+    const tableBody = $("#receivableTableBody");
+    const receivableDialog = $("#receivableDialog");
+    const receiptDialog = $("#receiptDialog");
+    const pagination = $("#receivablePagination");
+    const paginationPages = $("#receivablePaginationPages");
+    const paginationSummary = $("#receivablePaginationSummary");
+    const toNumber = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+    const today = () => new Date().toISOString().slice(0, 10);
+    const confirmedTotal = (item) => item.receipts
+        .reduce((sum, receipt) => sum + toNumber(receipt.receipt_amount), 0);
+    const outstandingAmount = (item) => Math.max(toNumber(item.receivable_amount) - confirmedTotal(item), 0);
+    const sourceType = (item) => item.pay_request_id ? "request" : "manual";
+    const sourceLabel = (item) => item.pay_request_id ? "请求书" : "手动";
+    const ageText = (item) => {
+        if (!item.due_date || outstandingAmount(item) <= 0) return "-";
+        const todayDate = new Date(`${today()}T00:00:00`);
+        const dueDate = new Date(`${item.due_date}T00:00:00`);
+        const days = Math.floor((todayDate - dueDate) / 86400000);
+        if (days <= 0) return "未到期";
+        return `${days}天`;
+    };
+    const computedStatus = (item) => {
+        const status = Number(item.finance_status);
+        if (financeStatusToDisplayStatus[status]) return financeStatusToDisplayStatus[status];
+        if (outstandingAmount(item) <= 0) return 2;
+        if (item.due_date && ageText(item) !== "未到期" && ageText(item) !== "-") return 3;
+        if (confirmedTotal(item) > 0) return 1;
+        return status;
+    };
+    const filteredItems = () => {
+        const month = $("#filterMonth").value;
+        const source = $("#filterSource").value;
+        const status = $("#filterStatus").value;
+        return receivables.filter((item) => {
+            if (month && !(item.due_date || "").startsWith(month)) return false;
+            if (source && sourceType(item) !== source) return false;
+            if (status !== "" && String(computedStatus(item)) !== status) return false;
+            return true;
+        });
+    };
+    const syncStoredAmounts = () => {
+        receivables = receivables.map((item) => ({
+            ...item,
+            received_amount: confirmedTotal(item),
+            outstanding_amount: outstandingAmount(item),
+        }));
+    };
+    const renderReceiptRows = (item) => {
+        if (!item.receipts.length) {
+            return `<tr><td class="finance-empty-row" colspan="7">暂无入金明细</td></tr>`;
+        }
+        return item.receipts.map((receipt) => `
+            <tr>
+                <td>${escapeHtml(receipt.id)}</td>
+                <td>${escapeHtml(receipt.receipt_date || "-")}</td>
+                <td>${escapeHtml(money(receipt.receipt_amount))}</td>
+                <td>${escapeHtml(receipt.payer_name || "-")}</td>
+                <td>${escapeHtml(receipt.bank_transaction_no || "-")}</td>
+                <td>${escapeHtml(receipt.remark || "-")}</td>
+                <td class="c-actions-col">
+                    <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit-receipt" data-receivable-id="${escapeHtml(item.id)}" data-receipt-id="${escapeHtml(receipt.id)}">编辑</button>
+                </td>
+            </tr>
+        `).join("");
+    };
+    const renderTable = () => {
+        syncStoredAmounts();
+        const items = filteredItems();
+        const totalPages = Math.max(Math.ceil(items.length / PAGE_SIZE), 1);
+        if (currentPage > totalPages) currentPage = totalPages;
+        const pageItems = items.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+        if (paginationSummary) {
+            paginationSummary.textContent = `共 ${items.length} 条 · 第 ${currentPage}/${totalPages} 页`;
+        }
+        if (pagination && window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+        }
+        if (!items.length) {
+            tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">暂无数据</td></tr>`;
+            return;
+        }
+        tableBody.innerHTML = pageItems.map((item) => {
+            const status = computedStatus(item);
+            const expanded = expandedId === item.id;
+            return `
+                <tr data-id="${escapeHtml(item.id)}">
+                    <td><button class="c-btn c-btn-lite c-btn-sm receivable-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" aria-label="展开入金明细">${expanded ? "−" : "+"}</button></td>
+                    <td><span class="receivable-source ${sourceType(item) === "manual" ? "receivable-source-manual" : ""}">${sourceLabel(item)}</span></td>
+                    <td>${escapeHtml(item.request_no || "-")}</td>
+                    <td class="receivable-name-cell">${escapeHtml(item.customer_name || "-")}</td>
+                    <td>${escapeHtml(money(item.receivable_amount))}</td>
+                    <td>${escapeHtml(money(confirmedTotal(item)))}</td>
+                    <td>${escapeHtml(money(outstandingAmount(item)))}</td>
+                    <td>${escapeHtml(item.due_date || "-")}</td>
+                    <td>${escapeHtml(ageText(item))}</td>
+                    <td><span class="receivable-status ${statusClasses[status] || ""}">${escapeHtml(statusLabels[status] || "-")}</span></td>
+                    <td class="c-actions-col">
+                        <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit-receivable" data-id="${escapeHtml(item.id)}">编辑</button>
+                        <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="add-receipt" data-id="${escapeHtml(item.id)}">新增入金</button>
+                    </td>
+                </tr>
+                ${expanded ? `
+                    <tr class="receivable-detail-row">
+                        <td colspan="11">
+                            <div class="receivable-detail-panel">
+                                <div class="receivable-detail-head">
+                                    <span>入金明细</span>
+                                    <span>已入金 ${escapeHtml(money(confirmedTotal(item)))}</span>
+                                </div>
+                                <div class="receivable-detail-table">
+                                    <table class="c-table c-table-compact">
+                                        <thead><tr><th>ID</th><th>入金日</th><th>金额</th><th>付款方</th><th>银行流水号</th><th>备注</th><th class="c-actions-col">操作</th></tr></thead>
+                                        <tbody>${renderReceiptRows(item)}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                ` : ""}
+            `;
+        }).join("");
+    };
+    const openDialog = (dialog) => {
+        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
+    };
+    const openReceivableDialog = (item = null) => {
+        $("#receivableDialogTitle").textContent = item ? "编辑应收" : "新增应收";
+        $("#receivableId").value = item ? item.id : "";
+        $("#receivableCustomerId").value = item && item.customer_id ? item.customer_id : "";
+        $("#receivableCustomerName").value = item ? item.customer_name || "" : "";
+        $("#receivableAmount").value = item ? item.receivable_amount : "";
+        $("#receivableDueDate").value = item ? item.due_date || "" : "";
+        $("#receivableStatus").value = item ? String(item.finance_status) : "0";
+        $("#receivableRemark").value = item ? item.remark || "" : "";
+        openDialog(receivableDialog);
+    };
+    const openReceiptDialog = (item, receipt = null) => {
+        $("#receiptDialogTitle").textContent = receipt ? "编辑入金" : "新增入金";
+        $("#receiptReceivableId").value = item.id;
+        $("#receiptId").value = receipt ? receipt.id : "";
+        $("#receiptSummaryCustomer").textContent = item.customer_name || "-";
+        $("#receiptSummaryOutstanding").textContent = money(outstandingAmount(item));
+        $("#receiptSummaryRequestNo").textContent = item.request_no || "-";
+        $("#receiptCustomerId").value = receipt && receipt.customer_id ? receipt.customer_id : (item.customer_id || "");
+        $("#receiptPayerName").value = receipt ? receipt.payer_name || "" : item.customer_name || "";
+        $("#receiptBankTransactionNo").value = receipt ? receipt.bank_transaction_no || "" : "";
+        $("#receiptAmount").value = receipt ? receipt.receipt_amount : outstandingAmount(item);
+        $("#receiptDate").value = receipt ? receipt.receipt_date || "" : today();
+        $("#receiptRemark").value = receipt ? receipt.remark || "" : "";
+        openDialog(receiptDialog);
+    };
+    const saveReceivable = () => {
+        const customerName = $("#receivableCustomerName").value.trim();
+        const amount = toNumber($("#receivableAmount").value);
+        if (!customerName) {
+            window.alert("请输入客户名称");
+            return;
+        }
+        if (amount <= 0) {
+            window.alert("请输入有效的应收金额");
+            return;
+        }
+        const id = Number($("#receivableId").value);
+        const currentItem = id ? receivables.find((item) => item.id === id) : null;
+        const payload = {
+            pay_request_id: currentItem ? currentItem.pay_request_id : null,
+            request_no: currentItem ? currentItem.request_no : "",
+            customer_id: $("#receivableCustomerId").value ? Number($("#receivableCustomerId").value) : null,
+            customer_name: customerName,
+            receivable_amount: amount,
+            due_date: $("#receivableDueDate").value,
+            finance_status: Number($("#receivableStatus").value),
+            remark: $("#receivableRemark").value.trim(),
+        };
+        if (id) {
+            receivables = receivables.map((item) => item.id === id ? { ...item, ...payload } : item);
+        } else {
+            receivables.unshift({ id: nextReceivableId++, ...payload, receipts: [] });
+            currentPage = 1;
+        }
+        receivableDialog.close();
+        renderTable();
+    };
+    const saveReceipt = () => {
+        const receivableId = Number($("#receiptReceivableId").value);
+        const amount = toNumber($("#receiptAmount").value);
+        const item = receivables.find((target) => target.id === receivableId);
+        if (!item) return;
+        if (amount <= 0) {
+            window.alert("请输入有效的入金金额");
+            return;
+        }
+        if (!$("#receiptDate").value) {
+            window.alert("请选择入金日");
+            return;
+        }
+        const receiptId = Number($("#receiptId").value);
+        const payload = {
+            customer_id: $("#receiptCustomerId").value ? Number($("#receiptCustomerId").value) : null,
+            payer_name: $("#receiptPayerName").value.trim(),
+            bank_transaction_no: $("#receiptBankTransactionNo").value.trim(),
+            receipt_amount: amount,
+            receipt_date: $("#receiptDate").value,
+            remark: $("#receiptRemark").value.trim(),
+        };
+        item.receipts = receiptId
+            ? item.receipts.map((receipt) => receipt.id === receiptId ? { ...receipt, ...payload } : receipt)
+            : [{ id: nextReceiptId++, ...payload }, ...item.receipts];
+        expandedId = item.id;
+        receiptDialog.close();
+        renderTable();
+    };
     const applyI18n = () => {
         if (window.I18N && typeof window.I18N.init === "function") {
             window.I18N.init();
@@ -70,6 +608,62 @@
     };
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
+        const initialMonth = new URLSearchParams(window.location.search || "").get("month") || today().slice(0, 7);
+        $("#filterMonth").value = initialMonth;
+        if (window.initDialogCloseBehavior) {
+            window.initDialogCloseBehavior({ dialogs: [receivableDialog, receiptDialog] });
+        }
+        $("#addReceivableBtn").addEventListener("click", () => openReceivableDialog());
+        $("#saveReceivableBtn").addEventListener("click", saveReceivable);
+        $("#saveReceiptBtn").addEventListener("click", saveReceipt);
+        $("#searchBtn").addEventListener("click", () => {
+            currentPage = 1;
+            renderTable();
+        });
+        ["#filterMonth", "#filterSource", "#filterStatus"].forEach((selector) => {
+            $(selector).addEventListener("input", () => {
+                currentPage = 1;
+                renderTable();
+            });
+            $(selector).addEventListener("change", () => {
+                currentPage = 1;
+                renderTable();
+            });
+        });
+        if (pagination && window.bindPagination) {
+            window.bindPagination(pagination, (value) => {
+                const totalPages = Math.max(Math.ceil(filteredItems().length / PAGE_SIZE), 1);
+                if (value === "prev") {
+                    currentPage = Math.max(currentPage - 1, 1);
+                } else if (value === "next") {
+                    currentPage = Math.min(currentPage + 1, totalPages);
+                } else {
+                    currentPage = Math.min(Math.max(Number(value) || 1, 1), totalPages);
+                }
+                renderTable();
+            });
+        }
+        tableBody.addEventListener("click", (event) => {
+            const button = event.target.closest("[data-action]");
+            if (!button) return;
+            const action = button.dataset.action;
+            const item = receivables.find((target) => target.id === Number(button.dataset.id || button.dataset.receivableId));
+            if (action === "toggle" && item) {
+                expandedId = expandedId === item.id ? null : item.id;
+                renderTable();
+            }
+            if (action === "edit-receivable" && item) {
+                openReceivableDialog(item);
+            }
+            if (action === "add-receipt" && item) {
+                openReceiptDialog(item);
+            }
+            if (action === "edit-receipt" && item) {
+                const receipt = item.receipts.find((target) => target.id === Number(button.dataset.receiptId));
+                if (receipt) openReceiptDialog(item, receipt);
+            }
+        });
+        renderTable();
     });
 }());
 </script>

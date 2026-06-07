@@ -72,7 +72,17 @@
             if (!frame || !frame.contentWindow) return;
             try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
         };
-        const setSubtab = (key) => {
+        const buildFrameSrc = (route, params = {}) => {
+            const search = new URLSearchParams();
+            Object.entries(params).forEach(([name, value]) => {
+                if (value !== undefined && value !== null && value !== "") {
+                    search.set(name, value);
+                }
+            });
+            const query = search.toString();
+            return query ? `${route.src}?${query}` : route.src;
+        };
+        const setSubtab = (key, params = {}) => {
             const route = routes[key];
             if (!route || !frame) return;
             buttons.forEach((button) => {
@@ -80,8 +90,9 @@
                 button.classList.toggle("is-active", active);
                 button.setAttribute("aria-selected", String(active));
             });
-            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
-                frame.setAttribute("src", route.src);
+            const targetSrc = buildFrameSrc(route, params);
+            if (frame.getAttribute("src") !== targetSrc) {
+                frame.setAttribute("src", targetSrc);
             }
             frame.setAttribute("title", route.title);
         };
@@ -92,6 +103,11 @@
             frame.addEventListener("load", syncFrameLang);
         }
         window.addEventListener("i18n:change", syncFrameLang);
+        window.addEventListener("message", (event) => {
+            const data = event.data || {};
+            if (!data || data.type !== "receivables:open-list") return;
+            setSubtab("list", { month: data.month || "" });
+        });
         setSubtab("overview");
     });
 }());

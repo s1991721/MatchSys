@@ -81,10 +81,10 @@ CREATE TABLE IF NOT EXISTS finance_receivable
 (
     id                 BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
 
-    pay_request_id     BIGINT         NOT NULL COMMENT '来源请求书 pay_request.id',
-    request_no         VARCHAR(50)    NOT NULL COMMENT '请求书号快照',
+    pay_request_id     BIGINT         NULL COMMENT '来源请求书 pay_request.id',
+    request_no         VARCHAR(50)    NULL COMMENT '请求书号快照',
 
-    customer_id        BIGINT         NOT NULL COMMENT '客户ID',
+    customer_id        BIGINT         NULL COMMENT '客户ID',
     customer_name      VARCHAR(255)   NOT NULL COMMENT '客户名称快照',
 
     receivable_amount  DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '应收金额',

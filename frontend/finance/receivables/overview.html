@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>应收概览</title>
+    <style>
+        .receivable-overview-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+            gap: 16px;
+        }
+        .receivable-overview-panel {
+            border: 1px solid rgba(148, 163, 184, 0.36);
+            border-radius: 8px;
+            background: #fff;
+            padding: 16px;
+        }
+        .receivable-overview-title {
+            margin: 0 0 14px;
+            color: #0f172a;
+            font-size: 15px;
+            font-weight: 800;
+        }
+        .receivable-month-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .receivable-month-card {
+            min-height: 86px;
+            padding: 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        .receivable-month-label {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .receivable-month-value {
+            display: block;
+            margin-top: 8px;
+            color: #0f172a;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+        .receivable-month-list {
+            display: grid;
+            gap: 10px;
+        }
+        .receivable-month-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid #dbe4f0;
+            border-radius: 8px;
+            background: #f8fafc;
+            color: #1f2937;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .receivable-month-item:hover {
+            border-color: rgba(28, 123, 255, 0.42);
+            background: #eff6ff;
+        }
+        .receivable-month-amount {
+            color: #b91c1c;
+        }
+        .receivable-overview-note {
+            margin-top: 12px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        @media (max-width: 900px) {
+            .receivable-overview-grid,
+            .receivable-month-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="receivables.overview">
+    <div class="receivable-overview-grid">
+        <section class="receivable-overview-panel">
+            <h3 class="receivable-overview-title">本月汇总</h3>
+            <div class="receivable-month-grid">
+                <div class="receivable-month-card">
+                    <span class="receivable-month-label">本月应收</span>
+                    <span class="receivable-month-value">¥0</span>
+                </div>
+                <div class="receivable-month-card">
+                    <span class="receivable-month-label">已收金额</span>
+                    <span class="receivable-month-value">¥0</span>
+                </div>
+                <div class="receivable-month-card">
+                    <span class="receivable-month-label">未收金额</span>
+                    <span class="receivable-month-value">¥0</span>
+                </div>
+            </div>
+            <p class="receivable-overview-note">临时页面：后续接入应收台账后，本区域按当前月份汇总应收、已收和未收金额。</p>
+        </section>
+
+        <section class="receivable-overview-panel">
+            <h3 class="receivable-overview-title">历史未平账月份</h3>
+            <div class="receivable-month-list">
+                <button class="receivable-month-item" type="button" data-month="2026-05">
+                    <span>2026-05</span>
+                    <span class="receivable-month-amount">¥0</span>
+                </button>
+                <button class="receivable-month-item" type="button" data-month="2026-04">
+                    <span>2026-04</span>
+                    <span class="receivable-month-amount">¥0</span>
+                </button>
+                <button class="receivable-month-item" type="button" data-month="2026-03">
+                    <span>2026-03</span>
+                    <span class="receivable-month-amount">¥0</span>
+                </button>
+            </div>
+            <p class="receivable-overview-note">临时入口：点击月份后，后续将联动应收列表并显示该未平账月份的数据。</p>
+        </section>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        document.querySelectorAll("[data-month]").forEach((button) => {
+            button.addEventListener("click", () => {
+                window.alert(`临时入口：后续显示 ${button.dataset.month} 未平账数据`);
+            });
+        });
+    });
+}());
+</script>
+</body>
+</html>

@@ -13,14 +13,15 @@
     <section class="c-card c-card-pad finance-view" data-finance-panel="receivables">
 
     <div class="finance-subtabs" role="tablist" aria-label="应收管理子功能">
-        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="list">应收列表</button>
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="overview">应收概览</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="list">应收列表</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="collection">收账确认</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="aging">账龄分析</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="customer">客户对账</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="cashflow">入金流水</button>
     </div>
         <div class="finance-subframe-shell">
-            <iframe id="financeSubFrame" class="finance-subframe" src="receivables/list.html" title="应收列表"></iframe>
+            <iframe id="financeSubFrame" class="finance-subframe" src="receivables/overview.html" title="应收概览"></iframe>
         </div>
     </section>
 </div>
@@ -57,6 +58,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
         const routes = {
+        overview: { src: "receivables/overview.html", title: "应收概览" },
         list: { src: "receivables/list.html", title: "应收列表" },
         collection: { src: "receivables/collection.html", title: "收账确认" },
         aging: { src: "receivables/aging.html", title: "账龄分析" },
@@ -90,7 +92,7 @@
             frame.addEventListener("load", syncFrameLang);
         }
         window.addEventListener("i18n:change", syncFrameLang);
-        setSubtab("list");
+        setSubtab("overview");
     });
 }());
 </script>

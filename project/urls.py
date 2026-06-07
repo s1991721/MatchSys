@@ -81,6 +81,11 @@ from employee.views import (
     user_login_names_api,
 )
 from finance.views import (
+    finance_receipt_detail_api,
+    finance_receivable_detail_api,
+    finance_receivable_receipts_api,
+    finance_receivables_api,
+    finance_receivables_overview_api,
     payroll_basic_info_api,
     payroll_basic_info_detail_api,
     payroll_monthly_api,
@@ -310,6 +315,11 @@ urlpatterns = [
     path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),
     path("api/employees/departments", employee_departments_api, name="employee-departments"),
+    path("api/finance/receivables/overview", finance_receivables_overview_api, name="finance-receivables-overview"),
+    path("api/finance/receivables", finance_receivables_api, name="finance-receivables"),
+    path("api/finance/receivables/<int:receivable_id>", finance_receivable_detail_api, name="finance-receivable-detail"),
+    path("api/finance/receivables/<int:receivable_id>/receipts", finance_receivable_receipts_api, name="finance-receivable-receipts"),
+    path("api/finance/receipts/<int:receipt_id>", finance_receipt_detail_api, name="finance-receipt-detail"),
     path("api/finance/payroll/basic-info", payroll_basic_info_api, name="payroll-basic-info"),
     path("api/finance/payroll/basic-info/<int:payroll_basic_id>", payroll_basic_info_detail_api, name="payroll-basic-info-detail"),
     path("api/finance/payroll/monthly", payroll_monthly_api, name="payroll-monthly"),

@@ -4,6 +4,39 @@ from functools import lru_cache
 from django.db import connection, models
 
 
+class FinanceReceivable(models.Model):
+    FINANCE_STATUS_CHOICES = (
+        (0, "正常"),
+        (1, "异常"),
+        (2, "核销"),
+    )
+
+    pay_request_id = models.BigIntegerField(null=True, blank=True, verbose_name="来源请求书 pay_request.id")
+    request_no = models.CharField(max_length=50, null=True, blank=True, verbose_name="请求书号快照")
+    customer_id = models.BigIntegerField(null=True, blank=True, verbose_name="客户ID")
+    customer_name = models.CharField(max_length=255, verbose_name="客户名称快照")
+    receivable_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="应收金额")
+    received_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="已收金额")
+    outstanding_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="未收金额")
+    due_date = models.DateField(null=True, blank=True, verbose_name="预定到账日/入金期日")
+    finance_status = models.SmallIntegerField(choices=FINANCE_STATUS_CHOICES, default=0, verbose_name="财务处理状态")
+    remark = models.TextField(null=True, blank=True, verbose_name="备注")
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="创建人 employee.id")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="更新人 employee.id")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
+
+    class Meta:
+        managed = False
+        db_table = "finance_receivable"
+        verbose_name = "应收台账"
+        verbose_name_plural = "应收台账"
+
+    def __str__(self):
+        return f"{self.id}:{self.request_no or self.customer_name}"
+
+
 class PayrollBasicInfo(models.Model):
     CONTRACT_TYPE_CHOICES = (
         (0, "正社员"),

@@ -76,3 +76,66 @@ CREATE TABLE IF NOT EXISTS payroll_monthly_calculation
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
     COMMENT = '月度工资计算表';
+
+CREATE TABLE IF NOT EXISTS finance_receivable
+(
+    id                 BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    pay_request_id     BIGINT         NOT NULL COMMENT '来源请求书 pay_request.id',
+    request_no         VARCHAR(50)    NOT NULL COMMENT '请求书号快照',
+
+    customer_id        BIGINT         NOT NULL COMMENT '客户ID',
+    customer_name      VARCHAR(255)   NOT NULL COMMENT '客户名称快照',
+
+    receivable_amount  DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '应收金额',
+    received_amount    DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '已收金额',
+    outstanding_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '未收金额',
+
+    due_date           DATE           NULL COMMENT '预定到账日/入金期日',
+
+    finance_status     TINYINT        NOT NULL DEFAULT 0 COMMENT '财务状态：0-未收 1-部分入金 2-已收 3-逾期 4-待确认入金 5-异常 6-核销',
+
+    remark             TEXT           NULL COMMENT '备注',
+
+    created_by         BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by         BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at         DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '应收台账表';
+
+CREATE TABLE IF NOT EXISTS finance_receipt
+(
+    id             BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    receivable_id  BIGINT         NOT NULL COMMENT '应收台账 finance_receivable.id',
+
+    customer_id    BIGINT         NULL COMMENT '客户ID，可为空',
+    payer_name     VARCHAR(255)   NULL COMMENT '付款方名称/银行流水付款人',
+    bank_transaction_no VARCHAR(100) NULL COMMENT '银行流水号/交易编号',
+
+    receipt_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '入金金额',
+    receipt_date   DATE           NOT NULL COMMENT '入金日',
+
+    confirm_status TINYINT        NOT NULL DEFAULT 0 COMMENT '确认状态：0-待确认 1-已确认 2-已取消',
+    confirmed_by   BIGINT         NULL COMMENT '确认人 employee.id',
+    confirmed_at   DATETIME       NULL COMMENT '确认时间',
+
+    remark         TEXT           NULL COMMENT '备注',
+
+    created_by     BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by     BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at     DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '入金/收款记录表';

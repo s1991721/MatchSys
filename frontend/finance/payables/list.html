@@ -129,35 +129,10 @@
         .payment-form-grid .c-inline-field {
             margin: 0;
         }
-        .payment-allocation-list {
-            display: grid;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        .payment-allocation-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) 150px;
-            gap: 10px;
-            align-items: center;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: #f8fafc;
-        }
-        .payment-allocation-name {
-            color: #1f2937;
-            font-weight: 800;
-        }
-        .payment-allocation-meta {
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 700;
-        }
         @media (max-width: 900px) {
             .payable-filter-grid,
             .payable-form-grid,
-            .payment-form-grid,
-            .payment-allocation-row {
+            .payment-form-grid {
                 grid-template-columns: 1fr;
             }
             .payable-filter-actions {
@@ -247,7 +222,6 @@
             <div class="c-inline-field"><span>银行流水号</span><input type="text" id="paymentBankTransactionNo"></div>
             <div class="c-inline-field"><span>支付金额</span><input type="number" id="paymentAmount" min="0" step="0.01" required></div>
             <div class="c-inline-field"><span>支付日</span><input type="date" id="paymentDate" required></div>
-            <div class="c-inline-field c-inline-field-full"><span>核销明细</span><div class="payment-allocation-list" id="paymentAllocationList"></div></div>
             <div class="c-inline-field c-inline-field-full"><span>备注</span><textarea id="paymentRemark" rows="3"></textarea></div>
         </form>
     </div>
@@ -493,18 +467,6 @@
         $("#payableRemark").value = item ? item.remark || "" : "";
         openDialog(payableDialog);
     };
-    const renderAllocationList = (items) => {
-        const list = $("#paymentAllocationList");
-        list.innerHTML = items.map((item) => `
-            <label class="payment-allocation-row">
-                <span>
-                    <span class="payment-allocation-name">${escapeHtml(item.customer_name || "-")} · ${escapeHtml(item.payable_month || "-")}</span>
-                    <span class="payment-allocation-meta">未付 ${escapeHtml(money(item.outstanding_amount))} · 应付ID ${escapeHtml(item.id)}</span>
-                </span>
-                <input type="number" min="0" step="0.01" value="${escapeHtml(item.allocate_amount ?? item.outstanding_amount)}" data-payable-id="${escapeHtml(item.id)}" data-payable-year="${escapeHtml(item.year)}">
-            </label>
-        `).join("");
-    };
     const openPaymentDialog = (item) => {
         const fallbackPaymentDate = `${item.year}-${String((item.payable_month || "").slice(5, 7) || "01").padStart(2, "0")}-01`;
         const defaultPaymentDate = item.due_date && String(item.due_date).slice(0, 4) === String(item.year)
@@ -516,7 +478,6 @@
         $("#paymentAmount").value = outstandingAmount(item);
         $("#paymentDate").value = defaultPaymentDate;
         $("#paymentRemark").value = "";
-        renderAllocationList([{ ...item, allocate_amount: outstandingAmount(item) }]);
         openDialog(paymentDialog);
     };
     const savePayable = async () => {
@@ -556,15 +517,8 @@
         const paymentDate = $("#paymentDate").value;
         if (amount <= 0) return window.alert("请输入有效的支付金额");
         if (!paymentDate) return window.alert("请选择支付日");
-        const allocationInputs = Array.from($("#paymentAllocationList").querySelectorAll("[data-payable-id]"));
-        const allocations = allocationInputs
-            .map((input) => ({ payable_id: Number(input.dataset.payableId), payment_amount: String(toNumber(input.value)) }))
-            .filter((item) => toNumber(item.payment_amount) > 0);
-        const allocationTotal = allocations.reduce((sum, item) => sum + toNumber(item.payment_amount), 0);
-        if (Math.round(allocationTotal * 100) !== Math.round(amount * 100)) {
-            return window.alert("支付金额必须等于核销明细合计");
-        }
         const baseItem = payables.find((item) => String(item.id) === String($("#paymentPayableId").value));
+        if (!baseItem) return;
         const payload = {
             customer_id: baseItem && baseItem.customer_id ? Number(baseItem.customer_id) : null,
             payee_name: $("#paymentPayeeName").value.trim(),
@@ -572,7 +526,7 @@
             payment_amount: String(amount),
             payment_date: paymentDate,
             remark: $("#paymentRemark").value.trim(),
-            allocations,
+            allocations: [{ payable_id: Number(baseItem.id), payment_amount: String(amount) }],
         };
         try {
             const response = await window.requestJson("/api/finance/payments", {
@@ -582,8 +536,10 @@
             (response.data?.payables || []).forEach(refreshCachedPayable);
             paymentDialog.close();
             paymentsCache.clear();
-            renderTable();
+            expandedId = `${baseItem.year}:${baseItem.id}`;
             await fetchPayables();
+            const updatedItem = payables.find((item) => String(item.id) === String(baseItem.id) && String(item.year) === String(baseItem.year));
+            if (updatedItem) await loadPayments(updatedItem, true);
         } catch (err) {
             window.alert(err.message || "保存失败");
         }
@@ -594,9 +550,13 @@
             const params = window.createParams([["year", String(year)]]);
             const response = await window.requestJson(window.buildUrl(`/api/finance/payments/${encodeURIComponent(paymentId)}`, params), { method: "DELETE" });
             (response.data?.payables || []).forEach(refreshCachedPayable);
+            const previousExpandedId = expandedId;
             paymentsCache.clear();
-            renderTable();
             await fetchPayables();
+            if (previousExpandedId) {
+                const updatedItem = payables.find((item) => `${item.year}:${item.id}` === previousExpandedId);
+                if (updatedItem) await loadPayments(updatedItem, true);
+            }
         } catch (err) {
             window.alert(err.message || "删除失败");
         }

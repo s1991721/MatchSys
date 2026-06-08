@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from employee.models import Employee
-from finance.models import FinanceReceivable
+from finance.models import FinancePayable, FinanceReceivable
 from order.models import PayRequest, PurchaseOrder, SalesOrder
 from project.api import api_error, api_paginated, api_success
 from project.error_codes import ErrorCode
@@ -275,6 +275,80 @@ def _calculate_receivable_outstanding(receivable_amount, received_amount):
     if outstanding < 0:
         outstanding = Decimal("0")
     return outstanding.quantize(Decimal("0.01"))
+
+
+def _month_start(value):
+    return value.replace(day=1)
+
+
+def _iter_month_starts(start, end):
+    current = _month_start(start)
+    end_month = _month_start(end)
+    while current <= end_month:
+        yield current
+        current = shift_month(current, 1)
+
+
+def _calculate_purchase_order_monthly_payable_amount(order):
+    return _calculate_pay_request_total(order.line_items or [])
+
+
+def _ensure_purchase_order_payable_year_tables(start, end):
+    years = {month.year for month in _iter_month_starts(start, end)}
+    for year in years:
+        FinancePayable.model_for_period(year)
+
+
+def _sync_purchase_order_payables(order, employee_id):
+    monthly_amount = _calculate_purchase_order_monthly_payable_amount(order)
+    now = timezone.now()
+    active_months = set(_iter_month_starts(order.period_start, order.period_end))
+
+    for payable_month in active_months:
+        payable_model = FinancePayable.model_for_period(payable_month)
+        payable = payable_model.objects.filter(
+            purchase_order_id=order.id,
+            payable_month=payable_month,
+            deleted_at__isnull=True,
+        ).first()
+        if payable:
+            payable.order_no = order.order_no or None
+            payable.customer_id = order.customer_id or None
+            payable.customer_name = order.customer_name
+            payable.payable_amount = monthly_amount
+            payable.outstanding_amount = _calculate_receivable_outstanding(
+                payable.payable_amount,
+                payable.paid_amount,
+            )
+            payable.updated_by = employee_id
+            payable.save()
+            continue
+
+        payable_model.objects.create(
+            purchase_order_id=order.id,
+            order_no=order.order_no or None,
+            payable_month=payable_month,
+            customer_id=order.customer_id or None,
+            customer_name=order.customer_name,
+            payable_amount=monthly_amount,
+            paid_amount=Decimal("0.00"),
+            outstanding_amount=monthly_amount,
+            due_date=None,
+            finance_status=0,
+            remark=None,
+            created_by=employee_id,
+            updated_by=employee_id,
+        )
+
+    for year in {month.year for month in active_months}:
+        payable_model = FinancePayable.model_for_period(year)
+        stale_qs = payable_model.objects.filter(
+            purchase_order_id=order.id,
+            deleted_at__isnull=True,
+        ).exclude(payable_month__in=active_months)
+        stale_qs.update(deleted_at=now, updated_by=employee_id, updated_at=now)
+
+    return active_months
 
 
 def _sync_pay_request_receivable(pay_request, employee_id):
@@ -689,7 +763,10 @@ def purchase_orders_api(request):
             if saved_pdf is None:
                 return api_error(ErrorCode.ORDER_PDF_INVALID)
             order.pdf_file = saved_pdf
-        order.save()
+        _ensure_purchase_order_payable_year_tables(order.period_start, order.period_end)
+        with transaction.atomic():
+            order.save()
+            _sync_purchase_order_payables(order, _login_id)
         item = _serialize_purchase(order)
         return api_success(data={"item": item})
 

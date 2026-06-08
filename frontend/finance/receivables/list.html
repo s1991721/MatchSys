@@ -7,170 +7,11 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>应收列表</title>
-    <style>
-        .receivable-filter-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
-            align-items: center;
-        }
-        .receivable-filter-actions {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 12px;
-            min-height: 44px;
-        }
-        .receivable-table th,
-        .receivable-table td {
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-        .receivable-table .receivable-name-cell {
-            white-space: normal;
-            min-width: 180px;
-        }
-        .receivable-expand-btn {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            padding: 0;
-            border-radius: 8px;
-            font-weight: 900;
-            line-height: 1;
-        }
-        .receivable-source {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 54px;
-            height: 26px;
-            padding: 0 10px;
-            border-radius: 999px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .receivable-source-manual {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .receivable-status {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 72px;
-            height: 28px;
-            padding: 0 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .receivable-status-open {
-            background: #eef2ff;
-            color: #3730a3;
-        }
-        .receivable-status-partial,
-        .receivable-status-pending {
-            background: #fffbeb;
-            color: #92400e;
-        }
-        .receivable-status-paid {
-            background: #ecfdf5;
-            color: #047857;
-        }
-        .receivable-status-overdue,
-        .receivable-status-exception {
-            background: #fef2f2;
-            color: #b91c1c;
-        }
-        .receivable-status-writeoff {
-            background: #f8fafc;
-            color: #64748b;
-        }
-        .receivable-detail-row td {
-            padding: 0;
-            background: #f8fafc;
-        }
-        .receivable-detail-panel {
-            padding: 14px 18px 18px 56px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .receivable-detail-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-            color: #334155;
-            font-size: 13px;
-            font-weight: 800;
-        }
-        .receivable-detail-table {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .receivable-detail-table .c-table th,
-        .receivable-detail-table .c-table td {
-            padding: 10px 12px;
-        }
-        .receivable-dialog-summary {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
-            margin: 12px 0;
-        }
-        .receivable-dialog-summary-item {
-            padding: 10px 12px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: #f8fafc;
-        }
-        .receivable-dialog-summary-label {
-            display: block;
-            color: #64748b;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .receivable-dialog-summary-value {
-            display: block;
-            margin-top: 4px;
-            color: #0f172a;
-            font-size: 16px;
-            font-weight: 800;
-        }
-        .receivable-form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 14px;
-        }
-        .receivable-form-grid .c-inline-field-full {
-            grid-column: 1 / -1;
-        }
-        .receivable-form-grid .c-inline-field {
-            margin: 0;
-        }
-        @media (max-width: 900px) {
-            .receivable-filter-grid,
-            .receivable-form-grid,
-            .receivable-dialog-summary {
-                grid-template-columns: 1fr;
-            }
-            .receivable-filter-actions {
-                justify-content: stretch;
-            }
-            .receivable-filter-actions .c-btn {
-                flex: 1 1 0;
-            }
-        }
-    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="receivables.list">
     <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3 receivable-filter-grid">
+        <div class="c-inline-filters-grid-3 finance-filter-grid">
             <div class="c-inline-field"><span>月份</span><input type="month" id="filterMonth"></div>
             <div class="c-inline-field">
                 <span>来源</span>
@@ -192,7 +33,7 @@
                     <option value="6">核销</option>
                 </select>
             </div>
-            <div class="receivable-filter-actions">
+            <div class="finance-filter-actions">
                 <button class="c-btn c-btn-success" type="button" id="addReceivableBtn">新增应收</button>
                 <button class="c-btn c-btn-primary" type="button" id="searchBtn">搜索</button>
             </div>
@@ -200,7 +41,7 @@
     </div>
 
     <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover receivable-table">
+        <table class="c-table c-table-hover finance-ledger-table">
             <thead>
             <tr>
                 <th></th>
@@ -233,7 +74,7 @@
         <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-        <form class="receivable-form-grid" id="receivableForm">
+        <form class="finance-form-grid" id="receivableForm">
             <input type="hidden" id="receivableId">
             <input type="hidden" id="receivableCustomerId">
             <div class="c-inline-field c-inline-field-full">
@@ -266,12 +107,12 @@
         <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-        <div class="receivable-dialog-summary">
-            <div class="receivable-dialog-summary-item"><span class="receivable-dialog-summary-label">应收对象</span><span class="receivable-dialog-summary-value" id="receiptSummaryCustomer">-</span></div>
-            <div class="receivable-dialog-summary-item"><span class="receivable-dialog-summary-label">未收金额</span><span class="receivable-dialog-summary-value" id="receiptSummaryOutstanding">¥0</span></div>
-            <div class="receivable-dialog-summary-item"><span class="receivable-dialog-summary-label">请求书号</span><span class="receivable-dialog-summary-value" id="receiptSummaryRequestNo">-</span></div>
+        <div class="finance-dialog-summary">
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">应收对象</span><span class="finance-dialog-summary-value" id="receiptSummaryCustomer">-</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">未收金额</span><span class="finance-dialog-summary-value" id="receiptSummaryOutstanding">¥0</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">请求书号</span><span class="finance-dialog-summary-value" id="receiptSummaryRequestNo">-</span></div>
         </div>
-        <form class="receivable-form-grid" id="receiptForm">
+        <form class="finance-form-grid" id="receiptForm">
             <input type="hidden" id="receiptReceivableId">
             <input type="hidden" id="receiptId">
             <div class="c-inline-field"><span>付款方</span><input type="text" id="receiptPayerName" placeholder="银行流水付款人"></div>
@@ -321,12 +162,12 @@
         2: 6,
     };
     const statusClasses = {
-        0: "receivable-status-open",
-        1: "receivable-status-partial",
-        2: "receivable-status-paid",
-        3: "receivable-status-overdue",
-        5: "receivable-status-exception",
-        6: "receivable-status-writeoff",
+        0: "finance-status-open",
+        1: "finance-status-partial",
+        2: "finance-status-paid",
+        3: "finance-status-overdue",
+        5: "finance-status-exception",
+        6: "finance-status-writeoff",
     };
     const PAGE_SIZE = 10;
     let expandedId = null;
@@ -439,30 +280,30 @@
             const expanded = String(expandedId) === String(item.id);
             return `
                 <tr data-id="${escapeHtml(item.id)}">
-                    <td><button class="c-btn c-btn-lite c-btn-sm receivable-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" aria-label="展开入金明细">${expanded ? "−" : "+"}</button></td>
-                    <td><span class="receivable-source ${sourceType(item) === "manual" ? "receivable-source-manual" : ""}">${sourceLabel(item)}</span></td>
+                    <td><button class="c-btn c-btn-lite c-btn-sm finance-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" aria-label="展开入金明细">${expanded ? "−" : "+"}</button></td>
+                    <td><span class="finance-source ${sourceType(item) === "manual" ? "finance-source-manual" : ""}">${sourceLabel(item)}</span></td>
                     <td>${escapeHtml(item.request_no || "-")}</td>
-                    <td class="receivable-name-cell">${escapeHtml(item.customer_name || "-")}</td>
+                    <td class="finance-name-cell">${escapeHtml(item.customer_name || "-")}</td>
                     <td>${escapeHtml(money(item.receivable_amount))}</td>
                     <td>${escapeHtml(money(confirmedTotal(item)))}</td>
                     <td>${escapeHtml(money(outstandingAmount(item)))}</td>
                     <td>${escapeHtml(item.due_date || "-")}</td>
                     <td>${escapeHtml(ageText(item))}</td>
-                    <td><span class="receivable-status ${statusClasses[status] || ""}">${escapeHtml(statusLabels[status] || "-")}</span></td>
+                    <td><span class="finance-status ${statusClasses[status] || ""}">${escapeHtml(statusLabels[status] || "-")}</span></td>
                     <td class="c-actions-col">
                         <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit-receivable" data-id="${escapeHtml(item.id)}">编辑</button>
                         <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="add-receipt" data-id="${escapeHtml(item.id)}">新增入金</button>
                     </td>
                 </tr>
                 ${expanded ? `
-                    <tr class="receivable-detail-row">
+                    <tr class="finance-detail-row">
                         <td colspan="11">
-                            <div class="receivable-detail-panel">
-                                <div class="receivable-detail-head">
+                            <div class="finance-detail-panel">
+                                <div class="finance-detail-head">
                                     <span>入金明细</span>
                                     <span>已入金 ${escapeHtml(money(confirmedTotal(item)))}</span>
                                 </div>
-                                <div class="receivable-detail-table">
+                                <div class="finance-detail-table">
                                     <table class="c-table c-table-compact">
                                         <thead><tr><th>ID</th><th>入金日</th><th>金额</th><th>付款方</th><th>银行流水号</th><th>备注</th><th class="c-actions-col">操作</th></tr></thead>
                                         <tbody>${renderReceiptRows(item)}</tbody>

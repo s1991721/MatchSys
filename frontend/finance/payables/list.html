@@ -7,147 +7,11 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>应付列表</title>
-    <style>
-        .payable-filter-grid {
-            grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
-            align-items: center;
-        }
-        .payable-filter-actions {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 12px;
-            min-height: 44px;
-        }
-        .payable-table th,
-        .payable-table td {
-            white-space: nowrap;
-            vertical-align: middle;
-        }
-        .payable-table .payable-name-cell {
-            white-space: normal;
-            min-width: 180px;
-        }
-        .payable-expand-btn {
-            width: 32px;
-            height: 32px;
-            min-width: 32px;
-            padding: 0;
-            border-radius: 8px;
-            font-weight: 900;
-            line-height: 1;
-        }
-        .payable-source {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 54px;
-            height: 26px;
-            padding: 0 10px;
-            border-radius: 999px;
-            background: #eff6ff;
-            color: #1d4ed8;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .payable-source-manual {
-            background: #f1f5f9;
-            color: #475569;
-        }
-        .payable-status {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 72px;
-            height: 28px;
-            padding: 0 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-        .payable-status-open {
-            background: #eef2ff;
-            color: #3730a3;
-        }
-        .payable-status-partial {
-            background: #fffbeb;
-            color: #92400e;
-        }
-        .payable-status-paid {
-            background: #ecfdf5;
-            color: #047857;
-        }
-        .payable-status-overdue,
-        .payable-status-exception {
-            background: #fef2f2;
-            color: #b91c1c;
-        }
-        .payable-status-writeoff {
-            background: #f8fafc;
-            color: #64748b;
-        }
-        .payable-detail-row td {
-            padding: 0;
-            background: #f8fafc;
-        }
-        .payable-detail-panel {
-            padding: 14px 18px 18px 56px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        .payable-detail-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 10px;
-            color: #334155;
-            font-size: 13px;
-            font-weight: 800;
-        }
-        .payable-detail-table {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .payable-detail-table .c-table th,
-        .payable-detail-table .c-table td {
-            padding: 10px 12px;
-        }
-        .payable-form-grid,
-        .payment-form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-            margin-top: 14px;
-        }
-        .payable-form-grid .c-inline-field-full,
-        .payment-form-grid .c-inline-field-full {
-            grid-column: 1 / -1;
-        }
-        .payable-form-grid .c-inline-field,
-        .payment-form-grid .c-inline-field {
-            margin: 0;
-        }
-        @media (max-width: 900px) {
-            .payable-filter-grid,
-            .payable-form-grid,
-            .payment-form-grid {
-                grid-template-columns: 1fr;
-            }
-            .payable-filter-actions {
-                justify-content: stretch;
-            }
-            .payable-filter-actions .c-btn {
-                flex: 1 1 0;
-            }
-        }
-    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payables.list">
     <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3 payable-filter-grid">
+        <div class="c-inline-filters-grid-3 finance-filter-grid">
             <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month" id="filterMonth"></div>
             <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" id="filterKeyword" placeholder="对象 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.payable_keyword"></div>
             <div class="c-inline-field">
@@ -162,14 +26,14 @@
                     <option value="6">核销</option>
                 </select>
             </div>
-            <div class="payable-filter-actions">
+            <div class="finance-filter-actions">
                 <button class="c-btn c-btn-success" type="button" id="addPayableBtn" data-i18n="finance.action.add_payable">新增应付</button>
                 <button class="c-btn c-btn-primary" type="button" id="searchBtn" data-i18n="common.search">搜索</button>
             </div>
         </div>
     </div>
     <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover payable-table">
+        <table class="c-table c-table-hover finance-ledger-table">
             <thead><tr><th></th><th>来源</th><th>发注单号</th><th>对象</th><th>月份</th><th>应付金额</th><th>已付金额</th><th>未付金额</th><th>预定支付日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
             <tbody id="payableTableBody"><tr><td class="finance-empty-row" colspan="11" data-i18n="finance.empty">暂无数据</td></tr></tbody>
         </table>
@@ -186,7 +50,7 @@
         <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-        <form class="payable-form-grid" id="payableForm">
+        <form class="finance-form-grid" id="payableForm">
             <input type="hidden" id="payableId">
             <input type="hidden" id="payableYear">
             <div class="c-inline-field c-inline-field-full"><span>支付对象</span><input type="text" id="payableCustomerName" placeholder="支付对象" required></div>
@@ -216,7 +80,7 @@
         <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
-        <form class="payment-form-grid" id="paymentForm">
+        <form class="finance-form-grid" id="paymentForm">
             <input type="hidden" id="paymentPayableId">
             <div class="c-inline-field"><span>收款方</span><input type="text" id="paymentPayeeName" placeholder="银行流水收款人"></div>
             <div class="c-inline-field"><span>银行流水号</span><input type="text" id="paymentBankTransactionNo"></div>
@@ -261,12 +125,12 @@
         6: "核销",
     };
     const statusClasses = {
-        0: "payable-status-open",
-        1: "payable-status-partial",
-        2: "payable-status-paid",
-        3: "payable-status-overdue",
-        5: "payable-status-exception",
-        6: "payable-status-writeoff",
+        0: "finance-status-open",
+        1: "finance-status-partial",
+        2: "finance-status-paid",
+        3: "finance-status-overdue",
+        5: "finance-status-exception",
+        6: "finance-status-writeoff",
     };
     const applyI18n = () => {
         if (window.I18N && typeof window.I18N.init === "function") {
@@ -368,30 +232,30 @@
             const expanded = String(expandedId) === `${item.year}:${item.id}`;
             return `
                 <tr data-id="${escapeHtml(item.id)}">
-                    <td><button class="c-btn c-btn-lite c-btn-sm payable-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" aria-label="展开支付明细">${expanded ? "−" : "+"}</button></td>
-                    <td><span class="payable-source ${sourceType(item) === "manual" ? "payable-source-manual" : ""}">${escapeHtml(sourceLabel(item))}</span></td>
+                    <td><button class="c-btn c-btn-lite c-btn-sm finance-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" aria-label="展开支付明细">${expanded ? "−" : "+"}</button></td>
+                    <td><span class="finance-source ${sourceType(item) === "manual" ? "finance-source-manual" : ""}">${escapeHtml(sourceLabel(item))}</span></td>
                     <td>${escapeHtml(item.order_no || "-")}</td>
-                    <td class="payable-name-cell">${escapeHtml(item.customer_name || "-")}</td>
+                    <td class="finance-name-cell">${escapeHtml(item.customer_name || "-")}</td>
                     <td>${escapeHtml(item.payable_month || "-")}</td>
                     <td>${escapeHtml(money(item.payable_amount))}</td>
                     <td>${escapeHtml(money(item.paid_amount))}</td>
                     <td>${escapeHtml(money(item.outstanding_amount))}</td>
                     <td>${escapeHtml(item.due_date || "-")}</td>
-                    <td><span class="payable-status ${statusClasses[status] || ""}">${escapeHtml(statusLabels[status] || "-")}</span></td>
+                    <td><span class="finance-status ${statusClasses[status] || ""}">${escapeHtml(statusLabels[status] || "-")}</span></td>
                     <td class="c-actions-col">
                         <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit-payable" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" ${sourceType(item) !== "manual" ? "disabled" : ""}>编辑</button>
                         <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="add-payment" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" ${outstandingAmount(item) <= 0 || Number(item.finance_status) === 2 ? "disabled" : ""}>支付</button>
                     </td>
                 </tr>
                 ${expanded ? `
-                    <tr class="payable-detail-row">
+                    <tr class="finance-detail-row">
                         <td colspan="11">
-                            <div class="payable-detail-panel">
-                                <div class="payable-detail-head">
+                            <div class="finance-detail-panel">
+                                <div class="finance-detail-head">
                                     <span>支付明细</span>
                                     <span>已支付 ${escapeHtml(money(item.paid_amount))}</span>
                                 </div>
-                                <div class="payable-detail-table">
+                                <div class="finance-detail-table">
                                     <table class="c-table c-table-compact">
                                         <thead><tr><th>支付ID</th><th>支付日</th><th>金额</th><th>收款方</th><th>银行流水号</th><th>备注</th><th class="c-actions-col">操作</th></tr></thead>
                                         <tbody>${renderPaymentRows(item)}</tbody>

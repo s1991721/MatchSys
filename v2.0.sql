@@ -109,6 +109,40 @@ CREATE TABLE IF NOT EXISTS finance_receivable
   DEFAULT CHARSET = utf8mb4
     COMMENT = '应收台账表';
 
+CREATE TABLE IF NOT EXISTS finance_payable
+(
+    id                 BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    purchase_order_id  BIGINT         NULL COMMENT '来源发注 purchase_order.id',
+    order_no           VARCHAR(50)    NULL COMMENT '发注单号快照',
+
+    payable_month      DATE           NOT NULL COMMENT '应付月份，统一存当月1日',
+
+    customer_id        BIGINT         NULL COMMENT '支付对象ID',
+    customer_name      VARCHAR(255)   NOT NULL COMMENT '支付对象名称快照',
+
+    payable_amount     DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '应付金额',
+    paid_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '已付金额',
+    outstanding_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '未付金额',
+
+    due_date           DATE           NULL COMMENT '预定支付日/支払期日',
+
+    finance_status     TINYINT        NOT NULL DEFAULT 0 COMMENT '财务处理状态：0-正常 1-异常 2-核销',
+
+    remark             TEXT           NULL COMMENT '备注',
+
+    created_by         BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by         BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at         DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '应付台账表';
+
 CREATE TABLE IF NOT EXISTS finance_receipt
 (
     id             BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
@@ -135,3 +169,51 @@ CREATE TABLE IF NOT EXISTS finance_receipt
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
     COMMENT = '入金/收款记录表';
+
+CREATE TABLE IF NOT EXISTS finance_payment
+(
+    id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    customer_id         BIGINT         NULL COMMENT '支付对象ID，可为空',
+    payee_name          VARCHAR(255)   NULL COMMENT '收款方名称/银行流水收款人',
+    bank_transaction_no VARCHAR(100)   NULL COMMENT '银行流水号/交易编号',
+
+    payment_amount      DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '支付金额',
+    payment_date        DATE           NOT NULL COMMENT '支付日',
+
+    remark              TEXT           NULL COMMENT '备注',
+
+    created_by          BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by          BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at          DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '支付记录表';
+
+CREATE TABLE IF NOT EXISTS finance_payment_detail
+(
+    id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    payment_id          BIGINT         NOT NULL COMMENT '支付记录 finance_payment.id',
+    payable_id          BIGINT         NOT NULL COMMENT '应付台账 finance_payable.id',
+
+    payment_amount      DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '本次核销金额',
+
+    remark              TEXT           NULL COMMENT '备注',
+
+    created_by          BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by          BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at          DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '支付核销明细表';

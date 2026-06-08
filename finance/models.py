@@ -63,10 +63,23 @@ class YearlyTableMixin(models.Model):
         raise NotImplementedError
 
     @classmethod
+    def _yearly_model_base_class(cls):
+        if cls._meta.abstract:
+            return cls
+        for base_class in cls.__mro__[1:]:
+            if (
+                issubclass(base_class, YearlyTableMixin)
+                and base_class is not YearlyTableMixin
+                and base_class._meta.abstract
+            ):
+                return base_class
+        return cls
+
+    @classmethod
     def model_for_period(cls, value):
         suffix = _resolve_year_suffix(value)
         base_model = cls._yearly_base_model()
-        model = _get_yearly_model(base_model, cls, suffix)
+        model = _get_yearly_model(base_model, cls._yearly_model_base_class(), suffix)
         _ensure_yearly_table_exists(model._meta.db_table, base_model._meta.db_table, model)
         return model
 

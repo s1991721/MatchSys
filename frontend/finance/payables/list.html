@@ -7,36 +7,54 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>应付列表</title>
+    <style>
+        .payable-filter-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+            align-items: center;
+        }
+        .payable-filter-actions {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            min-height: 44px;
+        }
+        @media (max-width: 900px) {
+            .payable-filter-grid {
+                grid-template-columns: 1fr;
+            }
+            .payable-filter-actions {
+                justify-content: stretch;
+            }
+            .payable-filter-actions .c-btn {
+                flex: 1 1 0;
+            }
+        }
+    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payables.list">
-    <div class="finance-summary-grid">
-        <div class="finance-summary-item"><span class="finance-summary-label">本月应付</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">待支付</span><span class="finance-summary-value">¥0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">待确认</span><span class="finance-summary-value">0</span></div>
-        <div class="finance-summary-item"><span class="finance-summary-label">逾期应付</span><span class="finance-summary-value">0</span></div>
-    </div>
     <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3">
+        <div class="c-inline-filters-grid-3 payable-filter-grid">
             <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month"></div>
             <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" placeholder="对象 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.payable_keyword"></div>
             <div class="c-inline-field"><span data-i18n="finance.filter.status">状态</span><select><option>全部</option><option>待确认</option><option>待支付</option><option>部分支付</option><option>已支付</option></select></div>
-        </div>
-        <div class="c-filter-actions-bar">
-            <div></div>
-            <div class="c-filter-actions-right c-filter-actions-group">
+            <div class="payable-filter-actions">
+                <button class="c-btn c-btn-success" type="button" data-i18n="finance.action.add_payable">新增应付</button>
                 <button class="c-btn c-btn-primary" type="button" data-i18n="common.search">搜索</button>
-                <button class="c-btn c-btn-warn" type="button" data-i18n="common.reset">重置</button>
             </div>
         </div>
     </div>
     <div class="table-wrap c-table-wrapper">
         <table class="c-table c-table-hover">
             <thead><tr><th>应付编号</th><th>对象</th><th>类别</th><th>应付金额</th><th>已付金额</th><th>预定支付日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
-            <tbody><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+            <tbody id="payableTableBody"><tr><td class="finance-empty-row" colspan="8" data-i18n="finance.empty">暂无数据</td></tr></tbody>
         </table>
     </div>
-    
+    <div class="pagination c-pagination" id="payablePagination">
+        <div class="pagination-summary" id="payablePaginationSummary">共 0 条 · 第 1/1 页</div>
+        <div class="pagination-pages" id="payablePaginationPages"></div>
+    </div>
 </div>
 
 <script src="../../i18n.js"></script>
@@ -68,8 +86,54 @@
             window.I18N.apply(document);
         }
     };
+    const pageSize = 10;
+    let currentPage = 1;
+    let totalPages = 1;
+
+    const renderTablePagination = () => {
+        const tbody = document.getElementById("payableTableBody");
+        const pagination = document.getElementById("payablePagination");
+        const paginationPages = document.getElementById("payablePaginationPages");
+        const paginationSummary = document.getElementById("payablePaginationSummary");
+        if (!tbody || !pagination) return;
+
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+        const dataRows = rows.filter((row) => !row.querySelector(".finance-empty-row"));
+        const totalItems = dataRows.length;
+        totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        currentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+        if (totalItems) {
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            dataRows.forEach((row, index) => {
+                row.hidden = index < start || index >= end;
+            });
+        }
+        if (paginationSummary) {
+            paginationSummary.textContent = `共 ${totalItems} 条 · 第 ${currentPage}/${totalPages} 页`;
+        }
+        if (window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+        }
+    };
+
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
+        renderTablePagination();
+        const pagination = document.getElementById("payablePagination");
+        if (pagination && window.bindPagination) {
+            window.bindPagination(pagination, (value) => {
+                if (value === "prev") {
+                    currentPage = Math.max(currentPage - 1, 1);
+                } else if (value === "next") {
+                    currentPage = Math.min(currentPage + 1, totalPages);
+                } else {
+                    currentPage = Math.min(Math.max(Number(value) || 1, 1), totalPages);
+                }
+                renderTablePagination();
+            });
+        }
     });
 }());
 </script>

@@ -4,7 +4,103 @@ from functools import lru_cache
 from django.db import connection, models
 
 
-class FinanceReceivable(models.Model):
+def _resolve_year_suffix(value):
+    if isinstance(value, datetime):
+        value = value.date()
+    if isinstance(value, date):
+        return str(value.year)
+    try:
+        return str(int(value))
+    except (TypeError, ValueError):
+        raise ValueError("Expected date, datetime, or year for yearly table resolution")
+
+
+def _build_yearly_model(base_model, base_class, table_name, suffix):
+    class Meta:
+        db_table = table_name
+        managed = False
+        app_label = base_model._meta.app_label
+        verbose_name = base_model._meta.verbose_name
+        verbose_name_plural = base_model._meta.verbose_name_plural
+
+    attrs = {
+        "Meta": Meta,
+        "__module__": base_model.__module__,
+    }
+    return type(f"{base_model.__name__}{suffix}", (base_class,), attrs)
+
+
+@lru_cache(maxsize=128)
+def _get_yearly_model(base_model, base_class, suffix):
+    table_name = f"{base_model._meta.db_table}_{suffix}"
+    return _build_yearly_model(base_model, base_class, table_name, suffix)
+
+
+def _ensure_yearly_table_exists(table_name, template_table, model):
+    existing_tables = set(connection.introspection.table_names())
+    if table_name in existing_tables:
+        return
+
+    if connection.vendor == "mysql":
+        if template_table not in existing_tables:
+            raise RuntimeError(f"Template table {template_table} does not exist")
+        quoted_table = connection.ops.quote_name(table_name)
+        quoted_template = connection.ops.quote_name(template_table)
+        with connection.cursor() as cursor:
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {quoted_table} LIKE {quoted_template}")
+        return
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(model)
+
+
+class YearlyTableMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def _yearly_base_model(cls):
+        raise NotImplementedError
+
+    @classmethod
+    def model_for_period(cls, value):
+        suffix = _resolve_year_suffix(value)
+        base_model = cls._yearly_base_model()
+        model = _get_yearly_model(base_model, cls, suffix)
+        _ensure_yearly_table_exists(model._meta.db_table, base_model._meta.db_table, model)
+        return model
+
+    @classmethod
+    def objects_for_period(cls, value):
+        return cls.model_for_period(value).objects
+
+    @classmethod
+    def create_for_period(cls, value, **kwargs):
+        return cls.objects_for_period(value).create(**kwargs)
+
+    @classmethod
+    def build_for_period(cls, value, **kwargs):
+        return cls.model_for_period(value)(**kwargs)
+
+    @classmethod
+    def bulk_create_for_period(cls, value, items, **kwargs):
+        model = cls.model_for_period(value)
+        yearly_items = [
+            item if isinstance(item, model) else model(**_copy_model_values(cls._yearly_base_model(), item))
+            for item in items
+        ]
+        return model.objects.bulk_create(yearly_items, **kwargs)
+
+
+def _copy_model_values(model, item):
+    return {
+        field.name: getattr(item, field.name)
+        for field in model._meta.fields
+        if field.name != "id"
+    }
+
+
+class FinanceReceivableBase(YearlyTableMixin):
     FINANCE_STATUS_CHOICES = (
         (0, "正常"),
         (1, "异常"),
@@ -28,16 +124,68 @@ class FinanceReceivable(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
 
     class Meta:
-        managed = False
-        db_table = "finance_receivable"
+        abstract = True
         verbose_name = "应收台账"
         verbose_name_plural = "应收台账"
+
+    @classmethod
+    def _yearly_base_model(cls):
+        return FinanceReceivable
 
     def __str__(self):
         return f"{self.id}:{self.request_no or self.customer_name}"
 
 
-class FinanceReceipt(models.Model):
+class FinanceReceivable(FinanceReceivableBase):
+    class Meta:
+        managed = False
+        db_table = "finance_receivable"
+        verbose_name = "应收台账"
+        verbose_name_plural = "应收台账"
+
+
+class FinancePayableBase(YearlyTableMixin):
+    FINANCE_STATUS_CHOICES = FinanceReceivable.FINANCE_STATUS_CHOICES
+
+    purchase_order_id = models.BigIntegerField(null=True, blank=True, verbose_name="来源发注 purchase_order.id")
+    order_no = models.CharField(max_length=50, null=True, blank=True, verbose_name="发注单号快照")
+    payable_month = models.DateField(verbose_name="应付月份")
+    customer_id = models.BigIntegerField(null=True, blank=True, verbose_name="支付对象ID")
+    customer_name = models.CharField(max_length=255, verbose_name="支付对象名称快照")
+    payable_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="应付金额")
+    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="已付金额")
+    outstanding_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="未付金额")
+    due_date = models.DateField(null=True, blank=True, verbose_name="预定支付日/支払期日")
+    finance_status = models.SmallIntegerField(choices=FINANCE_STATUS_CHOICES, default=0, verbose_name="财务处理状态")
+    remark = models.TextField(null=True, blank=True, verbose_name="备注")
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="创建人 employee.id")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="更新人 employee.id")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
+
+    class Meta:
+        abstract = True
+        verbose_name = "应付台账"
+        verbose_name_plural = "应付台账"
+
+    @classmethod
+    def _yearly_base_model(cls):
+        return FinancePayable
+
+    def __str__(self):
+        return f"{self.id}:{self.order_no or self.customer_name}:{self.payable_month}"
+
+
+class FinancePayable(FinancePayableBase):
+    class Meta:
+        managed = False
+        db_table = "finance_payable"
+        verbose_name = "应付台账"
+        verbose_name_plural = "应付台账"
+
+
+class FinanceReceiptBase(YearlyTableMixin):
     receivable_id = models.BigIntegerField(verbose_name="应收台账 finance_receivable.id")
     customer_id = models.BigIntegerField(null=True, blank=True, verbose_name="客户ID，可为空")
     payer_name = models.CharField(max_length=255, null=True, blank=True, verbose_name="付款方名称/银行流水付款人")
@@ -52,13 +200,90 @@ class FinanceReceipt(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
 
     class Meta:
+        abstract = True
+        verbose_name = "入金/收款记录"
+        verbose_name_plural = "入金/收款记录"
+
+    @classmethod
+    def _yearly_base_model(cls):
+        return FinanceReceipt
+
+    def __str__(self):
+        return f"{self.id}:{self.receivable_id}:{self.receipt_amount}"
+
+
+class FinanceReceipt(FinanceReceiptBase):
+    class Meta:
         managed = False
         db_table = "finance_receipt"
         verbose_name = "入金/收款记录"
         verbose_name_plural = "入金/收款记录"
 
+
+class FinancePaymentBase(YearlyTableMixin):
+    customer_id = models.BigIntegerField(null=True, blank=True, verbose_name="支付对象ID，可为空")
+    payee_name = models.CharField(max_length=255, null=True, blank=True, verbose_name="收款方名称/银行流水收款人")
+    bank_transaction_no = models.CharField(max_length=100, null=True, blank=True, verbose_name="银行流水号/交易编号")
+    payment_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="支付金额")
+    payment_date = models.DateField(verbose_name="支付日")
+    remark = models.TextField(null=True, blank=True, verbose_name="备注")
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="创建人 employee.id")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="更新人 employee.id")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
+
+    class Meta:
+        abstract = True
+        verbose_name = "支付记录"
+        verbose_name_plural = "支付记录"
+
+    @classmethod
+    def _yearly_base_model(cls):
+        return FinancePayment
+
     def __str__(self):
-        return f"{self.id}:{self.receivable_id}:{self.receipt_amount}"
+        return f"{self.id}:{self.payee_name or self.customer_id}:{self.payment_amount}"
+
+
+class FinancePayment(FinancePaymentBase):
+    class Meta:
+        managed = False
+        db_table = "finance_payment"
+        verbose_name = "支付记录"
+        verbose_name_plural = "支付记录"
+
+
+class FinancePaymentDetailBase(YearlyTableMixin):
+    payment_id = models.BigIntegerField(verbose_name="支付记录 finance_payment.id")
+    payable_id = models.BigIntegerField(verbose_name="应付台账 finance_payable.id")
+    payment_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="本次核销金额")
+    remark = models.TextField(null=True, blank=True, verbose_name="备注")
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="创建人 employee.id")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="更新人 employee.id")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
+
+    class Meta:
+        abstract = True
+        verbose_name = "支付核销明细"
+        verbose_name_plural = "支付核销明细"
+
+    @classmethod
+    def _yearly_base_model(cls):
+        return FinancePaymentDetail
+
+    def __str__(self):
+        return f"{self.id}:{self.payment_id}:{self.payable_id}:{self.payment_amount}"
+
+
+class FinancePaymentDetail(FinancePaymentDetailBase):
+    class Meta:
+        managed = False
+        db_table = "finance_payment_detail"
+        verbose_name = "支付核销明细"
+        verbose_name_plural = "支付核销明细"
 
 
 class PayrollBasicInfo(models.Model):

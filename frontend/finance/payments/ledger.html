@@ -165,66 +165,22 @@
         reimbursement: "finance-source-reimbursement",
         other: "finance-source-manual",
     };
-    let payments = [
-        {
-            id: "PAY-202605-001",
-            type: "payable",
-            payee: "株式会社青山",
-            amount: 330000,
-            paymentDate: "2026-05-31",
-            method: "bank",
-            bankNo: "BK202605310018",
-            remark: "5月外注费，单笔支付。",
-            details: [
-                { id: "D-001", sourceNo: "PO-2026-041", sourceName: "株式会社青山 / 2026-05", amount: 330000, remark: "对应发注 PO-2026-041" },
-            ],
-        },
-        {
-            id: "PAY-202605-002",
-            type: "salary",
-            payee: "员工工资批量支付",
-            amount: 1280000,
-            paymentDate: "2026-05-25",
-            method: "bank",
-            bankNo: "BK202605250042",
-            remark: "等待工资明细最终确认。",
-            details: [
-                { id: "D-002", sourceNo: "SAL-2026-05-A", sourceName: "2026-05 工资批次 A", amount: 1280000, remark: "" },
-            ],
-        },
-        {
-            id: "PAY-202605-003",
-            type: "reimbursement",
-            payee: "佐藤 花子",
-            amount: 24500,
-            paymentDate: "2026-05-20",
-            method: "bank",
-            bankNo: "",
-            remark: "缺少银行流水号，需回填。",
-            details: [
-                { id: "D-003", sourceNo: "RB-2026-018", sourceName: "交通费报销", amount: 24500, remark: "财务确认后补充" },
-            ],
-        },
-        {
-            id: "PAY-202604-009",
-            type: "other",
-            payee: "三菱UFJ银行",
-            amount: 660,
-            paymentDate: "2026-04-30",
-            method: "bank",
-            bankNo: "BK202604300077",
-            remark: "振込手续费。",
-            details: [
-                { id: "D-004", sourceNo: "OTH-BANK-FEE", sourceName: "银行手续费", amount: 660, remark: "" },
-            ],
-        },
-    ];
+    let payments = [];
     let filteredPayments = [];
     let expandedId = "";
     let selectedPaymentId = "";
     let currentPage = 1;
     let activeType = "";
     let paymentLoadTimer = 0;
+    let listTotal = 0;
+    let listTotalPages = 1;
+    let currentSummary = {
+        total_amount: "0",
+        salary_amount: "0",
+        payable_amount: "0",
+        reimbursement_amount: "0",
+        other_amount: "0",
+    };
     const PAGE_SIZE = 10;
 
     const $ = (selector) => document.querySelector(selector);
@@ -297,13 +253,77 @@
         if (paginationSummary) paginationSummary.textContent = "正在加载...";
         if (paginationPages) paginationPages.innerHTML = "";
     };
-    const loadPaymentRecords = () => {
+    const normalizeDetail = (item) => ({
+        id: String(item.id || ""),
+        sourceNo: item.source_no || item.payable?.order_no || `PAYABLE-${item.payable_id || ""}`,
+        sourceName: item.source_name || item.payable?.customer_name || "-",
+        amount: item.payment_amount,
+        remark: item.remark || "",
+    });
+    const normalizePayment = (item) => ({
+        id: String(item.id || ""),
+        year: item.year,
+        type: item.type || "payable",
+        payee: item.payee_name || "-",
+        amount: item.payment_amount,
+        paymentDate: item.payment_date || "",
+        method: item.method || (item.bank_transaction_no ? "bank" : "other"),
+        bankNo: item.bank_transaction_no || "",
+        remark: item.remark || "",
+        details: Array.isArray(item.details) ? item.details.map(normalizeDetail) : [],
+        detailsCount: Number(item.details_count || (Array.isArray(item.details) ? item.details.length : 0)),
+        detailsAmount: item.details_amount || item.payment_amount || "0",
+        detailsLoaded: item.details_loaded === true,
+    });
+    const mergePayment = (item) => {
+        const normalized = normalizePayment(item);
+        const index = payments.findIndex((payment) => payment.id === normalized.id);
+        if (index >= 0) {
+            payments[index] = { ...payments[index], ...normalized };
+            return payments[index];
+        }
+        payments.push(normalized);
+        return normalized;
+    };
+    const getRequestYear = () => {
+        const month = $("#filterMonth").value;
+        if (month) return month.slice(0, 4);
+        return String(new Date().getFullYear());
+    };
+    const loadPaymentRecords = async () => {
         window.clearTimeout(paymentLoadTimer);
         setPaymentLoading(true);
-        paymentLoadTimer = window.setTimeout(() => {
-            applyFilters();
-            setPaymentLoading(false);
-        }, 260);
+        paymentLoadTimer = window.setTimeout(async () => {
+            try {
+                const month = $("#filterMonth").value;
+                const params = window.createParams([
+                    ["month", month],
+                    ["year", month ? "" : getRequestYear()],
+                    ["type", activeType],
+                    ["page", String(currentPage)],
+                    ["page_size", String(PAGE_SIZE)],
+                ]);
+                const payload = await window.requestJson(window.buildUrl("/api/finance/payments", params), { method: "GET" });
+                payments = (payload.data?.items || []).map(normalizePayment);
+                filteredPayments = payments;
+                currentSummary = payload.data?.summary || currentSummary;
+                listTotal = Number(payload.meta?.total || 0);
+                listTotalPages = Math.max(1, Number(payload.meta?.total_pages || 1));
+                currentPage = Math.min(Math.max(1, Number(payload.meta?.page || currentPage)), listTotalPages);
+                if (!payments.some((item) => item.id === expandedId)) expandedId = "";
+                renderTable();
+            } catch (err) {
+                payments = [];
+                filteredPayments = [];
+                listTotal = 0;
+                listTotalPages = 1;
+                tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">${escapeHtml(err.message || "支付记录加载失败")}</td></tr>`;
+                renderSummary();
+                renderPaymentPagination();
+            } finally {
+                setPaymentLoading(false);
+            }
+        }, 120);
     };
     const openDialog = (dialog) => {
         if (dialog && typeof dialog.showModal === "function") dialog.showModal();
@@ -312,24 +332,17 @@
         if (dialog && typeof dialog.close === "function") dialog.close();
     };
     const getPayment = (id) => payments.find((item) => item.id === id);
-    const sourceTotal = (payment) => payment.details.reduce((sum, detail) => sum + toNumber(detail.amount), 0);
-    const monthPayments = () => {
-        const month = $("#filterMonth").value;
-        return payments.filter((item) => !month || item.paymentDate.slice(0, 7) === month);
-    };
-    const totalPages = () => Math.max(1, Math.ceil(filteredPayments.length / PAGE_SIZE));
-    const pagedPayments = () => {
-        const safePage = Math.min(Math.max(1, currentPage), totalPages());
-        const start = (safePage - 1) * PAGE_SIZE;
-        return filteredPayments.slice(start, start + PAGE_SIZE);
-    };
+    const sourceTotal = (payment) => payment.detailsLoaded
+        ? payment.details.reduce((sum, detail) => sum + toNumber(detail.amount), 0)
+        : toNumber(payment.detailsAmount);
+    const totalPages = () => listTotalPages;
+    const pagedPayments = () => filteredPayments;
     const renderSummary = () => {
-        const summaryItems = monthPayments();
-        $("#summaryAmount").textContent = money(summaryItems.reduce((sum, item) => sum + toNumber(item.amount), 0));
-        $("#summarySalary").textContent = money(summaryItems.filter((item) => item.type === "salary").reduce((sum, item) => sum + toNumber(item.amount), 0));
-        $("#summaryPayable").textContent = money(summaryItems.filter((item) => item.type === "payable").reduce((sum, item) => sum + toNumber(item.amount), 0));
-        $("#summaryReimbursement").textContent = money(summaryItems.filter((item) => item.type === "reimbursement").reduce((sum, item) => sum + toNumber(item.amount), 0));
-        $("#summaryOther").textContent = money(summaryItems.filter((item) => item.type === "other").reduce((sum, item) => sum + toNumber(item.amount), 0));
+        $("#summaryAmount").textContent = money(currentSummary.total_amount);
+        $("#summarySalary").textContent = money(currentSummary.salary_amount);
+        $("#summaryPayable").textContent = money(currentSummary.payable_amount);
+        $("#summaryReimbursement").textContent = money(currentSummary.reimbursement_amount);
+        $("#summaryOther").textContent = money(currentSummary.other_amount);
         document.querySelectorAll("[data-summary-type]").forEach((button) => {
             button.classList.toggle("is-active", (button.dataset.summaryType || "") === activeType);
         });
@@ -338,7 +351,7 @@
         const pages = totalPages();
         currentPage = Math.min(Math.max(1, currentPage), pages);
         if (paginationSummary) {
-            paginationSummary.textContent = `共 ${filteredPayments.length} 条 · 第 ${currentPage}/${pages} 页`;
+            paginationSummary.textContent = `共 ${listTotal} 条 · 第 ${currentPage}/${pages} 页`;
         }
         if (window.renderPagination) {
             window.renderPagination(pagination, paginationPages, currentPage, pages);
@@ -368,7 +381,7 @@
         tableBody.innerHTML = pagedPayments().map((item) => {
             const expanded = expandedId === item.id;
             const detailTotal = sourceTotal(item);
-            const sourceText = `${item.details.length}条 / ${money(detailTotal)}`;
+            const sourceText = `${item.detailsCount}条 / ${money(detailTotal)}`;
             return `
                 <tr>
                     <td><button class="c-btn c-btn-lite c-btn-sm finance-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" aria-label="展开来源明细">${expanded ? "−" : "+"}</button></td>
@@ -407,18 +420,23 @@
             `;
         }).join("");
     };
-    const applyFilters = () => {
-        const month = $("#filterMonth").value;
-        filteredPayments = payments.filter((item) => {
-            return (!month || item.paymentDate.slice(0, 7) === month)
-                && (!activeType || item.type === activeType);
-        }).sort((a, b) => `${b.paymentDate}${b.id}`.localeCompare(`${a.paymentDate}${a.id}`));
-        currentPage = Math.min(currentPage, totalPages());
-        if (!filteredPayments.some((item) => item.id === expandedId)) expandedId = "";
-        renderTable();
-    };
-    const openPaymentDetail = (paymentId) => {
+    const loadPaymentDetail = async (paymentId) => {
         const payment = getPayment(paymentId);
+        if (!payment) return null;
+        if (payment.detailsLoaded) return payment;
+        const params = window.createParams([["year", String(payment.year || getRequestYear())]]);
+        const payload = await window.requestJson(
+            window.buildUrl(`/api/finance/payments/${encodeURIComponent(paymentId)}`, params),
+            { method: "GET" },
+        );
+        return mergePayment(payload.data?.item || {});
+    };
+    const applyFilters = () => {
+        currentPage = 1;
+        loadPaymentRecords();
+    };
+    const openPaymentDetail = async (paymentId) => {
+        const payment = await loadPaymentDetail(paymentId);
         if (!payment) return;
         selectedPaymentId = paymentId;
         $("#detailPaymentId").textContent = payment.id;
@@ -442,21 +460,27 @@
         $("#remarkDialogTitle").textContent = detail ? "编辑明细备注" : "编辑支付备注";
         openDialog(remarkDialog);
     };
-    const saveRemark = () => {
+    const saveRemark = async () => {
         const payment = getPayment($("#remarkPaymentId").value);
         if (!payment) return;
         const detailId = $("#remarkDetailId").value;
-        if (detailId) {
-            const detail = payment.details.find((item) => item.id === detailId);
-            if (detail) detail.remark = $("#remarkText").value.trim();
-        } else {
-            payment.remark = $("#remarkText").value.trim();
-        }
+        const params = window.createParams([["year", String(payment.year || getRequestYear())]]);
+        const payload = await window.requestJson(
+            window.buildUrl(`/api/finance/payments/${encodeURIComponent(payment.id)}`, params),
+            {
+                method: "PUT",
+                body: JSON.stringify({
+                    detail_id: detailId || null,
+                    remark: $("#remarkText").value.trim(),
+                }),
+            },
+        );
+        mergePayment(payload.data?.item || {});
         closeDialog(remarkDialog);
         if (paymentDialog.open && selectedPaymentId === payment.id) {
-            openPaymentDetail(payment.id);
+            await openPaymentDetail(payment.id);
         }
-        applyFilters();
+        renderTable();
     };
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
@@ -498,25 +522,38 @@
                 else if (value === "next") currentPage += 1;
                 else currentPage = Number(value) || 1;
                 currentPage = Math.min(Math.max(1, currentPage), pages);
-                renderTable();
+                loadPaymentRecords();
             });
         }
         $("#editDetailRemarkBtn").addEventListener("click", () => {
             if (selectedPaymentId) openRemarkDialog(selectedPaymentId);
         });
-        $("#saveRemarkBtn").addEventListener("click", saveRemark);
-        tableBody.addEventListener("click", (event) => {
+        $("#saveRemarkBtn").addEventListener("click", () => {
+            saveRemark().catch((err) => window.alert(err.message || "备注保存失败"));
+        });
+        tableBody.addEventListener("click", async (event) => {
             const button = event.target.closest("[data-action]");
             if (!button) return;
             const action = button.dataset.action;
             const paymentId = button.dataset.id;
             if (action === "toggle") {
-                expandedId = expandedId === paymentId ? "" : paymentId;
+                if (expandedId === paymentId) {
+                    expandedId = "";
+                    renderTable();
+                    return;
+                }
+                try {
+                    await loadPaymentDetail(paymentId);
+                } catch (err) {
+                    window.alert(err.message || "来源明细加载失败");
+                    return;
+                }
+                expandedId = paymentId;
                 renderTable();
                 return;
             }
             if (action === "view") {
-                openPaymentDetail(paymentId);
+                openPaymentDetail(paymentId).catch((err) => window.alert(err.message || "支付详情加载失败"));
                 return;
             }
             if (action === "edit-remark") {
@@ -524,6 +561,12 @@
                 return;
             }
             if (action === "edit-detail-remark") {
+                try {
+                    await loadPaymentDetail(paymentId);
+                } catch (err) {
+                    window.alert(err.message || "来源明细加载失败");
+                    return;
+                }
                 openRemarkDialog(paymentId, button.dataset.detailId || "");
             }
         });

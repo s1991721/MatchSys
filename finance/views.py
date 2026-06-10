@@ -643,6 +643,54 @@ def _serialize_payment_detail(item):
     }
 
 
+def _truthy_request_value(value):
+    return str(value or "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def _serialize_payment_for_ledger(
+    item,
+    details=None,
+    payables=None,
+    details_loaded=True,
+    details_count=None,
+    details_amount=None,
+):
+    details = details or []
+    payables = payables or {}
+    serialized_details = []
+    for detail in details:
+        payable = payables.get(detail.payable_id)
+        serialized_detail = _serialize_payment_detail(detail)
+        serialized_detail.update({
+            "source_type": "payable",
+            "source_no": (payable.order_no if payable else "") or f"PAYABLE-{detail.payable_id}",
+            "source_name": (
+                f"{payable.customer_name} / {payable.payable_month.strftime('%Y-%m')}"
+                if payable and payable.payable_month
+                else ""
+            ),
+            "payable": _serialize_payable(payable) if payable else None,
+        })
+        serialized_details.append(serialized_detail)
+
+    item_payload = _serialize_payment(item)
+    item_payload.update({
+        "type": "payable",
+        "type_label": "应付",
+        "method": "bank" if item.bank_transaction_no else "other",
+        "method_label": "银行转账" if item.bank_transaction_no else "其他",
+        "details": serialized_details,
+        "details_loaded": details_loaded,
+        "details_count": details_count if details_count is not None else len(serialized_details),
+        "details_amount": str(_quantize_amount(
+            details_amount
+            if details_amount is not None
+            else sum((detail.payment_amount for detail in details), Decimal("0"))
+        )),
+    })
+    return item_payload
+
+
 def _parse_payable_display_status(value):
     if value in (None, "", "all"):
         return None, None
@@ -1006,16 +1054,75 @@ def finance_payments_api(request):
         keyword = (request.GET.get("keyword") or "").strip()
         if keyword:
             qs = qs.filter(Q(payee_name__icontains=keyword) | Q(bank_transaction_no__icontains=keyword))
+
+        summary_total = qs.aggregate(total=Sum("payment_amount"))["total"] or Decimal("0")
+
+        payment_type = (request.GET.get("type") or "").strip()
+        if payment_type == "all":
+            payment_type = ""
+        if payment_type and payment_type != "payable":
+            qs = qs.none()
+
         paged, total, page, page_size, total_pages = paginate_queryset(
             qs.order_by("-payment_date", "-id"),
             request,
         )
-        return api_paginated(
-            items=[_serialize_payment(item) for item in paged],
-            page=page,
-            page_size=page_size,
-            total=total,
-            total_pages=total_pages,
+        paged = list(paged)
+        details_by_payment = {}
+        detail_stats_by_payment = {}
+        payables_by_id = {}
+        include_details = _truthy_request_value(request.GET.get("include_details"))
+        if paged:
+            detail_model = FinancePaymentDetail.model_for_period(year)
+            detail_qs = detail_model.objects.filter(
+                payment_id__in=[item.id for item in paged],
+                deleted_at__isnull=True,
+            )
+            detail_stats_by_payment = {
+                row["payment_id"]: row
+                for row in detail_qs.values("payment_id").annotate(
+                    count=Count("id"),
+                    amount=Sum("payment_amount"),
+                )
+            }
+            if include_details:
+                details = list(detail_qs.order_by("id"))
+                for detail in details:
+                    details_by_payment.setdefault(detail.payment_id, []).append(detail)
+                payable_ids = {detail.payable_id for detail in details}
+                if payable_ids:
+                    payable_model = FinancePayable.model_for_period(year)
+                    payables_by_id = {
+                        item.id: item
+                        for item in payable_model.objects.filter(id__in=payable_ids, deleted_at__isnull=True)
+                    }
+        return api_success(
+            data={
+                "items": [
+                    _serialize_payment_for_ledger(
+                        item,
+                        details_by_payment.get(item.id, []),
+                        payables_by_id,
+                        details_loaded=include_details,
+                        details_count=(detail_stats_by_payment.get(item.id) or {}).get("count", 0),
+                        details_amount=(detail_stats_by_payment.get(item.id) or {}).get("amount", Decimal("0")),
+                    )
+                    for item in paged
+                ],
+                "summary": {
+                    "total_amount": str(_quantize_amount(summary_total)),
+                    "salary_amount": "0.00",
+                    "payable_amount": str(_quantize_amount(summary_total)),
+                    "reimbursement_amount": "0.00",
+                    "other_amount": "0.00",
+                },
+            },
+            meta={
+                "page": page,
+                "page_size": page_size,
+                "total": total,
+                "total_pages": total_pages,
+            },
         )
 
     payload, error = parse_json_body(request)
@@ -1127,7 +1234,7 @@ def finance_payments_api(request):
 
 
 @csrf_exempt
-@require_http_methods(["GET", "DELETE"])
+@require_http_methods(["GET", "PUT", "DELETE"])
 def finance_payment_detail_api(request, payment_id):
     year, error = _year_from_request(request)
     if error:
@@ -1139,20 +1246,78 @@ def finance_payment_detail_api(request, payment_id):
         return api_error("Finance payment not found", status=404)
 
     if request.method == "GET":
-        details = detail_model.objects.filter(
+        details = list(detail_model.objects.filter(
             payment_id=payment.id,
             deleted_at__isnull=True,
-        ).order_by("id")
+        ).order_by("id"))
+        payable_model = FinancePayable.model_for_period(year)
+        payables = {
+            item.id: item
+            for item in payable_model.objects.filter(
+                id__in=[detail.payable_id for detail in details],
+                deleted_at__isnull=True,
+            )
+        }
         return api_success(
             data={
-                "item": _serialize_payment(payment),
-                "details": [_serialize_payment_detail(item) for item in details],
+                "item": _serialize_payment_for_ledger(payment, details, payables),
+                "details": [
+                    _serialize_payment_for_ledger(payment, [detail], payables)["details"][0]
+                    for detail in details
+                ],
             }
         )
 
     login_id, error = require_login(request)
     if error:
         return error
+
+    if request.method == "PUT":
+        payload, error = parse_json_body(request)
+        if error:
+            return error
+        detail_id, error = _parse_optional_int(payload.get("detail_id"), "detail_id")
+        if error:
+            return error
+        remark = (payload.get("remark") or "").strip() or None
+        with transaction.atomic():
+            payment = payment_model.objects.select_for_update().get(id=payment.id)
+            if detail_id:
+                detail = detail_model.objects.select_for_update().filter(
+                    id=detail_id,
+                    payment_id=payment.id,
+                    deleted_at__isnull=True,
+                ).first()
+                if not detail:
+                    return api_error("Finance payment detail not found", status=404)
+                detail.remark = remark
+                detail.updated_by = login_id
+                detail.save(update_fields=["remark", "updated_by", "updated_at"])
+            else:
+                payment.remark = remark
+                payment.updated_by = login_id
+                payment.save(update_fields=["remark", "updated_by", "updated_at"])
+        details = list(detail_model.objects.filter(
+            payment_id=payment.id,
+            deleted_at__isnull=True,
+        ).order_by("id"))
+        payable_model = FinancePayable.model_for_period(year)
+        payables = {
+            item.id: item
+            for item in payable_model.objects.filter(
+                id__in=[detail.payable_id for detail in details],
+                deleted_at__isnull=True,
+            )
+        }
+        return api_success(
+            data={
+                "item": _serialize_payment_for_ledger(payment, details, payables),
+                "details": [
+                    _serialize_payment_for_ledger(payment, [detail], payables)["details"][0]
+                    for detail in details
+                ],
+            }
+        )
 
     with transaction.atomic():
         payment = payment_model.objects.select_for_update().get(id=payment.id)

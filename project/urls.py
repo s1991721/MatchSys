@@ -81,6 +81,7 @@ from employee.views import (
     user_login_names_api,
 )
 from finance.views import (
+    finance_annuity_insurance_settings_api,
     finance_payable_detail_api,
     finance_payable_payments_api,
     finance_payables_api,
@@ -327,6 +328,7 @@ urlpatterns = [
     path("api/finance/payables/<int:payable_id>/payments", finance_payable_payments_api, name="finance-payable-payments"),
     path("api/finance/payments", finance_payments_api, name="finance-payments"),
     path("api/finance/payments/<int:payment_id>", finance_payment_detail_api, name="finance-payment-detail"),
+    path("api/finance/settings/annuity-insurance", finance_annuity_insurance_settings_api, name="finance-annuity-insurance-settings"),
     path("api/finance/payroll/basic-info", payroll_basic_info_api, name="payroll-basic-info"),
     path("api/finance/payroll/basic-info/<int:payroll_basic_id>", payroll_basic_info_detail_api, name="payroll-basic-info-detail"),
     path("api/finance/payroll/monthly", payroll_monthly_api, name="payroll-monthly"),

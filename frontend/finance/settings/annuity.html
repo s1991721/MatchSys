@@ -106,7 +106,14 @@
         const downloadButton = document.getElementById("annuityDownloadBtn");
         const addTaxSubjectButton = document.getElementById("annuityAddTaxSubjectBtn");
         const fileInput = document.getElementById("annuityCsvInput");
+        const yearInput = document.getElementById("annuityYearInput");
+        const associationInput = document.getElementById("annuityAssociationInput");
+        const settingsApi = "/api/finance/settings/annuity-insurance";
         const CSV_COLUMNS = ["grade", "standard_salary", "daily_salary", "min_salary", "max_salary"];
+
+        if (yearInput && !yearInput.value) {
+            yearInput.value = String(new Date().getFullYear());
+        }
 
         const columnName = (index) => {
             let name = "";
@@ -201,6 +208,13 @@
             return Number.isFinite(number) ? number / 100 : 0;
         };
 
+        const cleanCellText = (cell) => {
+            if (!cell) return "";
+            const clone = cell.cloneNode(true);
+            clone.querySelectorAll(".finance-sheet-new").forEach((el) => el.remove());
+            return clone.textContent.replace(/\s+/g, " ").trim();
+        };
+
         const formatAmount = (value) => {
             if (!Number.isFinite(value)) return "";
             return value.toFixed(1);
@@ -209,6 +223,24 @@
         const getTaxRateCells = () => {
             const headerRow = table?.tBodies[0]?.querySelector(".finance-sheet-header-row");
             return headerRow ? Array.from(headerRow.cells).slice(6) : [];
+        };
+
+        const getTaxSubjectCells = () => {
+            const groupRow = table?.tBodies[0]?.querySelector(".finance-sheet-group-row");
+            return groupRow ? Array.from(groupRow.cells).slice(3) : [];
+        };
+
+        const buildTaxItemKey = (index) => `tax_item_${index + 1}`;
+
+        const formatRate = (value) => {
+            const number = Number(value);
+            if (!Number.isFinite(number)) return "0%";
+            return `${(number * 100).toFixed(4).replace(/\.?0+$/, "")}%`;
+        };
+
+        const formatSavedNumber = (value) => {
+            if (value === null || value === undefined || value === "") return "";
+            return String(value);
         };
 
         const setTaxDefaultCell = (cell, value) => {
@@ -292,6 +324,187 @@
             });
         };
 
+        const trimSheetColumns = (columnCount) => {
+            if (!table) return;
+            const letterRow = table.tHead.rows[0];
+            while (letterRow && letterRow.cells.length > columnCount + 1) {
+                letterRow.deleteCell(letterRow.cells.length - 1);
+            }
+            Array.from(table.tBodies[0]?.rows || []).forEach((row) => {
+                while (row.cells.length > columnCount + 1) {
+                    row.deleteCell(row.cells.length - 1);
+                }
+            });
+        };
+
+        const clearDataRows = () => {
+            getDataRows().forEach((row) => row.remove());
+        };
+
+        const renderTaxSubjects = (taxItems) => {
+            const items = Array.isArray(taxItems) ? taxItems : [];
+            const baseColumnCount = CSV_COLUMNS.length + items.length;
+            trimSheetColumns(baseColumnCount);
+            clearDataRows();
+
+            const groupRow = table?.tBodies[0]?.querySelector(".finance-sheet-group-row");
+            const headerRow = table?.tBodies[0]?.querySelector(".finance-sheet-header-row");
+            if (!groupRow || !headerRow) return;
+            while (getSheetColumnCount() < baseColumnCount) {
+                appendLetterHeaders(1);
+                appendEditableCell(groupRow, "");
+                appendEditableCell(headerRow, "");
+            }
+            while (getTaxSubjectCells().length > items.length) {
+                groupRow.deleteCell(groupRow.cells.length - 1);
+            }
+
+            Array.from(groupRow.cells).slice(3).forEach((cell, index) => {
+                cell.textContent = items[index]?.name || `扣税项目${index + 1}`;
+                cell.classList.add("finance-sheet-editable-cell");
+                cell.contentEditable = "true";
+            });
+            Array.from(headerRow.cells).slice(6).forEach((cell, index) => {
+                cell.textContent = formatRate(items[index]?.rate);
+                cell.classList.add("finance-sheet-editable-cell");
+                cell.contentEditable = "true";
+            });
+        };
+
+        const applyAmountOverrides = (settings) => {
+            const overrides = Array.isArray(settings?.amount_overrides) ? settings.amount_overrides : [];
+            if (!overrides.length) return;
+            const taxItems = Array.isArray(settings?.tax_items) ? settings.tax_items : [];
+            const taxIndexByKey = new Map(taxItems.map((item, index) => [String(item.key || buildTaxItemKey(index)), index]));
+            const rowByGrade = new Map(getDataRows().map((row) => [String(parseNumber(row.cells[1]?.textContent)), row]));
+
+            overrides.forEach((item) => {
+                const row = rowByGrade.get(String(item.grade));
+                const taxIndex = taxIndexByKey.get(String(item.tax_item_key || item.key || ""));
+                const cell = row && Number.isInteger(taxIndex) ? row.cells[6 + taxIndex] : null;
+                if (!cell) return;
+                cell.textContent = formatSavedNumber(item.amount);
+                cell.classList.add("finance-sheet-editable-cell");
+                cell.classList.remove("finance-sheet-default-cell");
+                cell.contentEditable = "true";
+                cell.removeAttribute("title");
+            });
+        };
+
+        const renderSavedSettings = (settings) => {
+            if (!settings || typeof settings !== "object") return;
+            const metadata = settings.metadata || {};
+            if (yearInput && metadata.year) yearInput.value = String(metadata.year);
+            if (associationInput) {
+                associationInput.value = metadata.region_name || metadata.region || "";
+            }
+
+            renderTaxSubjects(settings.tax_items);
+            const rows = Array.isArray(settings.base_standards)
+                ? settings.base_standards.map((item) => [
+                    formatSavedNumber(item.grade),
+                    formatSavedNumber(item.monthly_amount ?? item.standard_salary),
+                    formatSavedNumber(item.daily_amount ?? item.daily_salary),
+                    formatSavedNumber(item.salary_min ?? item.min_salary),
+                    formatSavedNumber(item.salary_max ?? item.max_salary),
+                ])
+                : [];
+            renderBaseColumns(rows);
+            applyAmountOverrides(settings);
+        };
+
+        const loadSettings = async () => {
+            try {
+                const payload = await window.requestJson(settingsApi, { method: "GET" });
+                renderSavedSettings(payload?.data?.settings);
+            } catch (err) {
+                window.alert(err.message || "年金保险设置加载失败");
+            }
+        };
+
+        const buildSettingsPayload = () => {
+            const year = Number(yearInput?.value);
+            const association = (associationInput?.value || "").trim();
+            if (!Number.isInteger(year) || year < 1900 || year > 2100) {
+                throw new Error("请输入有效年份。");
+            }
+            if (!association) {
+                throw new Error("请输入协会けんぽ。");
+            }
+
+            const dataRows = getDataRows();
+            if (!dataRows.length) {
+                throw new Error("请先上传CSV基础标准。");
+            }
+
+            const baseStandards = dataRows.map((row) => ({
+                grade: parseNumber(row.cells[1]?.textContent),
+                monthly_amount: parseNumber(row.cells[2]?.textContent),
+                daily_amount: parseNumber(row.cells[3]?.textContent),
+                salary_min: parseNumber(row.cells[4]?.textContent),
+                salary_max: parseNumber(row.cells[5]?.textContent),
+            }));
+
+            const taxSubjectCells = getTaxSubjectCells();
+            const taxRateCells = getTaxRateCells();
+            const taxItems = taxRateCells.map((cell, index) => ({
+                key: buildTaxItemKey(index),
+                name: cleanCellText(taxSubjectCells[index]) || `扣税项目${index + 1}`,
+                rate: parseRate(cell.textContent),
+            }));
+
+            const amountOverrides = [];
+            dataRows.forEach((row) => {
+                const grade = parseNumber(row.cells[1]?.textContent);
+                taxItems.forEach((item, index) => {
+                    const cell = row.cells[6 + index];
+                    if (!cell || cell.classList.contains("finance-sheet-default-cell")) return;
+                    const text = cell.textContent.trim();
+                    if (!text) return;
+                    amountOverrides.push({
+                        grade,
+                        tax_item_key: item.key,
+                        amount: parseNumber(text),
+                    });
+                });
+            });
+
+            return {
+                metadata: {
+                    year,
+                    region: association,
+                    region_name: association,
+                    currency: "JPY",
+                },
+                base_standards: baseStandards,
+                tax_items: taxItems,
+                amount_overrides: amountOverrides,
+            };
+        };
+
+        const saveSettings = async () => {
+            if (!uploadButton) return;
+            const originalText = uploadButton.textContent;
+            uploadButton.disabled = true;
+            uploadButton.textContent = "保存中...";
+            try {
+                const settings = buildSettingsPayload();
+                await window.requestJson(settingsApi, {
+                    method: "POST",
+                    body: JSON.stringify({settings}),
+                });
+                uploadButton.textContent = "已保存";
+                window.setTimeout(() => {
+                    uploadButton.textContent = originalText || "保存";
+                }, 1200);
+            } catch (err) {
+                uploadButton.textContent = originalText || "保存";
+                window.alert(err.message || "保存失败");
+            } finally {
+                uploadButton.disabled = false;
+            }
+        };
+
         const appendLetterHeaders = (count) => {
             const letterRow = table?.tHead.rows[0];
             if (!letterRow) return;
@@ -351,10 +564,7 @@
             }
         });
         uploadButton?.addEventListener("click", () => {
-            uploadButton.textContent = "已保存";
-            window.setTimeout(() => {
-                uploadButton.textContent = "保存";
-            }, 1200);
+            saveSettings();
         });
         fileInput?.addEventListener("change", async () => {
             const file = fileInput.files && fileInput.files[0];
@@ -387,6 +597,7 @@
             link.remove();
         });
         addTaxSubjectButton?.addEventListener("click", addTaxSubjectColumns);
+        loadSettings();
     });
 }());
 </script>

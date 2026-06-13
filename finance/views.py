@@ -18,6 +18,7 @@ from project.api import api_error, api_paginated, api_success
 from project.common_tools import is_workday, paginate_queryset, parse_date, parse_json_body, require_login, shift_month
 from project.error_codes import ErrorCode
 from .models import (
+    FinanceSettings,
     FinancePayable,
     FinancePayment,
     FinancePaymentDetail,
@@ -27,6 +28,8 @@ from .models import (
     PayrollMonthlyCalculation,
 )
 
+
+FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
 
 RECEIVABLE_DISPLAY_STATUS_LABELS = {
     0: "未收",
@@ -38,8 +41,276 @@ RECEIVABLE_DISPLAY_STATUS_LABELS = {
 }
 
 
+def _finance_settings_payload_error(message="Invalid annuity insurance settings"):
+    return api_error(ErrorCode.SETTINGS_PAYLOAD_INVALID, message, status=400)
+
+
+def _unwrap_annuity_settings_payload(payload):
+    if not isinstance(payload, dict):
+        return None, _finance_settings_payload_error()
+    if isinstance(payload.get("settings"), dict):
+        return payload["settings"], None
+    if isinstance(payload.get(FINANCE_ANNUITY_SETTING_NAME), dict):
+        return payload[FINANCE_ANNUITY_SETTING_NAME], None
+    return payload, None
+
+
+def _parse_json_decimal(value, field_name, allow_negative=False):
+    if value in (None, ""):
+        return None, _finance_settings_payload_error(f"Missing field: {field_name}")
+    try:
+        parsed = Decimal(str(value).replace(",", "").strip())
+    except Exception:
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    if not parsed.is_finite() or (not allow_negative and parsed < 0):
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    return parsed, None
+
+
+def _decimal_to_json_number(value):
+    if value == value.to_integral_value():
+        return int(value)
+    return float(value)
+
+
+def _normalize_annuity_metadata(value):
+    if not isinstance(value, dict):
+        return None, _finance_settings_payload_error("Missing field: metadata")
+
+    try:
+        year = int(value.get("year"))
+    except (TypeError, ValueError):
+        return None, _finance_settings_payload_error("Invalid field: metadata.year")
+    if year <= 0:
+        return None, _finance_settings_payload_error("Invalid field: metadata.year")
+
+    region = str(value.get("region") or "").strip()
+    if not region:
+        return None, _finance_settings_payload_error("Missing field: metadata.region")
+
+    return {
+        "year": year,
+        "region": region,
+        "region_name": str(value.get("region_name") or "").strip(),
+        "currency": str(value.get("currency") or "JPY").strip() or "JPY",
+    }, None
+
+
+def _normalize_annuity_base_standards(value):
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error("Invalid field: base_standards")
+
+    rows = []
+    seen_grades = set()
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, _finance_settings_payload_error(f"Invalid field: base_standards[{index}]")
+
+        try:
+            grade = int(item.get("grade"))
+        except (TypeError, ValueError):
+            return None, _finance_settings_payload_error(f"Invalid field: base_standards[{index}].grade")
+        if grade in seen_grades:
+            return None, _finance_settings_payload_error(f"Duplicate grade: {grade}")
+        seen_grades.add(grade)
+
+        monthly_amount, error = _parse_json_decimal(
+            item.get("monthly_amount", item.get("standard_salary")),
+            f"base_standards[{index}].monthly_amount",
+        )
+        if error:
+            return None, error
+        daily_amount, error = _parse_json_decimal(
+            item.get("daily_amount", item.get("daily_salary")),
+            f"base_standards[{index}].daily_amount",
+        )
+        if error:
+            return None, error
+        salary_min, error = _parse_json_decimal(
+            item.get("salary_min", item.get("min_salary")),
+            f"base_standards[{index}].salary_min",
+        )
+        if error:
+            return None, error
+        salary_max, error = _parse_json_decimal(
+            item.get("salary_max", item.get("max_salary")),
+            f"base_standards[{index}].salary_max",
+        )
+        if error:
+            return None, error
+
+        rows.append({
+            "grade": grade,
+            "monthly_amount": _decimal_to_json_number(monthly_amount),
+            "daily_amount": _decimal_to_json_number(daily_amount),
+            "salary_min": _decimal_to_json_number(salary_min),
+            "salary_max": _decimal_to_json_number(salary_max),
+        })
+
+    return rows, None
+
+
+def _normalize_annuity_tax_items(value):
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error("Invalid field: tax_items")
+
+    items = []
+    seen_keys = set()
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, _finance_settings_payload_error(f"Invalid field: tax_items[{index}]")
+
+        name = str(item.get("name") or "").strip()
+        if not name:
+            return None, _finance_settings_payload_error(f"Missing field: tax_items[{index}].name")
+
+        key = str(item.get("key") or f"tax_item_{index + 1}").strip()
+        if not key or key in seen_keys:
+            return None, _finance_settings_payload_error(f"Invalid field: tax_items[{index}].key")
+        seen_keys.add(key)
+
+        rate, error = _parse_json_decimal(item.get("rate"), f"tax_items[{index}].rate")
+        if error:
+            return None, error
+        if rate > Decimal("1"):
+            return None, _finance_settings_payload_error(f"Invalid field: tax_items[{index}].rate")
+
+        items.append({
+            "key": key,
+            "name": name,
+            "rate": _decimal_to_json_number(rate),
+        })
+
+    return items, None
+
+
+def _normalize_annuity_amount_overrides(value, grades, tax_item_keys):
+    if value in (None, ""):
+        return [], None
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error("Invalid field: amount_overrides")
+
+    overrides = []
+    seen = set()
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, _finance_settings_payload_error(f"Invalid field: amount_overrides[{index}]")
+
+        try:
+            grade = int(item.get("grade"))
+        except (TypeError, ValueError):
+            return None, _finance_settings_payload_error(f"Invalid field: amount_overrides[{index}].grade")
+        if grade not in grades:
+            return None, _finance_settings_payload_error(f"Unknown grade in amount_overrides[{index}]")
+
+        tax_item_key = str(item.get("tax_item_key") or item.get("key") or "").strip()
+        if not tax_item_key or tax_item_key not in tax_item_keys:
+            return None, _finance_settings_payload_error(f"Unknown tax_item_key in amount_overrides[{index}]")
+
+        pair = (grade, tax_item_key)
+        if pair in seen:
+            return None, _finance_settings_payload_error(f"Duplicate amount override: {grade}/{tax_item_key}")
+        seen.add(pair)
+
+        amount, error = _parse_json_decimal(item.get("amount"), f"amount_overrides[{index}].amount")
+        if error:
+            return None, error
+        overrides.append({
+            "grade": grade,
+            "tax_item_key": tax_item_key,
+            "amount": _decimal_to_json_number(amount),
+        })
+
+    return overrides, None
+
+
+def _normalize_annuity_settings(payload):
+    settings_payload, error = _unwrap_annuity_settings_payload(payload)
+    if error:
+        return None, error
+
+    metadata, error = _normalize_annuity_metadata(settings_payload.get("metadata"))
+    if error:
+        return None, error
+    base_standards, error = _normalize_annuity_base_standards(settings_payload.get("base_standards"))
+    if error:
+        return None, error
+    tax_items, error = _normalize_annuity_tax_items(settings_payload.get("tax_items"))
+    if error:
+        return None, error
+
+    grades = {item["grade"] for item in base_standards}
+    tax_item_keys = {item["key"] for item in tax_items}
+    amount_overrides, error = _normalize_annuity_amount_overrides(
+        settings_payload.get("amount_overrides"),
+        grades,
+        tax_item_keys,
+    )
+    if error:
+        return None, error
+
+    return {
+        "metadata": metadata,
+        "base_standards": base_standards,
+        "tax_items": tax_items,
+        "amount_overrides": amount_overrides,
+    }, None
+
+
 def _quantize_amount(value):
     return Decimal(value or "0").quantize(Decimal("0.01"))
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_annuity_insurance_settings_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        return api_success(data={
+            "name": FINANCE_ANNUITY_SETTING_NAME,
+            "settings": record.settings if record else None,
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    settings_payload, error = _normalize_annuity_settings(payload)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        if record:
+            record.settings = settings_payload
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_ANNUITY_SETTING_NAME,
+                settings=settings_payload,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
+    })
 
 
 def _get_receivable_display_status(item, today=None):

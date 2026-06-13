@@ -10,6 +10,24 @@ VALUES ('财务管理', 'finance.html', 17);
 INSERT INTO sys_role (id, role_name, description, menu_list)
 VALUES (3, '财务', '公司财务部成员', '[finance.html]');
 
+CREATE TABLE IF NOT EXISTS finance_settings
+(
+    id         BIGINT       NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    name       VARCHAR(100) NOT NULL COMMENT '配置项名称，例如 annuity_insurance',
+    settings   JSON         NOT NULL COMMENT '配置内容JSON',
+
+    created_by BIGINT       NULL COMMENT '创建人 employee.id',
+    created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by BIGINT       NULL COMMENT '更新人 employee.id',
+    updated_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at DATETIME     NULL COMMENT '删除时间（软删除）'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '财务设置表';
+
 CREATE TABLE IF NOT EXISTS payroll_basic_info
 (
     id                    BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,

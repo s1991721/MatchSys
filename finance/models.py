@@ -299,6 +299,25 @@ class FinancePaymentDetail(FinancePaymentDetailBase):
         verbose_name_plural = "支付核销明细"
 
 
+class FinanceSettings(models.Model):
+    name = models.CharField(max_length=100, verbose_name="配置项名称")
+    settings = models.JSONField(verbose_name="配置内容")
+    created_by = models.BigIntegerField(null=True, blank=True, verbose_name="创建人 employee.id")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="创建时间")
+    updated_by = models.BigIntegerField(null=True, blank=True, verbose_name="更新人 employee.id")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="更新时间")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="删除时间")
+
+    class Meta:
+        managed = False
+        db_table = "finance_settings"
+        verbose_name = "财务设置"
+        verbose_name_plural = "财务设置"
+
+    def __str__(self):
+        return self.name
+
+
 class PayrollBasicInfo(models.Model):
     CONTRACT_TYPE_CHOICES = (
         (0, "正社员"),

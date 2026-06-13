@@ -314,11 +314,8 @@ class PayrollBasicInfo(models.Model):
     employee_name = models.CharField(max_length=100, verbose_name="员工姓名")
     contract_type = models.SmallIntegerField(choices=CONTRACT_TYPE_CHOICES, default=0, verbose_name="契约类型")
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="基本工资")
-    health_insurance = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="社保/健康保险")
-    welfare_pension = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="厚生年金")
-    employment_insurance = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="雇用保险")
-    income_tax = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="所得税")
-    valid_until_date = models.DateField(null=True, blank=True, verbose_name="有效期截止日")
+    addition_items = models.JSONField(null=True, blank=True, verbose_name="工资增加项明细")
+    deduction_items = models.JSONField(null=True, blank=True, verbose_name="工资减少项明细")
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=1, verbose_name="状态")
     remark = models.TextField(null=True, blank=True, verbose_name="备注")
     created_by = models.BigIntegerField(null=True, blank=True, verbose_name="创建人 employee.id")
@@ -354,11 +351,8 @@ class PayrollBasicInfo(models.Model):
             "contract_type": item.contract_type,
             "contract_label": contract_labels.get(item.contract_type, ""),
             "base_salary": str(item.base_salary),
-            "health_insurance": str(item.health_insurance),
-            "welfare_pension": str(item.welfare_pension),
-            "employment_insurance": str(item.employment_insurance),
-            "income_tax": str(item.income_tax),
-            "valid_until_date": item.valid_until_date.isoformat() if item.valid_until_date else "",
+            "addition_items": item.addition_items or [],
+            "deduction_items": item.deduction_items or [],
             "status": item.status,
             "status_label": status_labels.get(item.status, ""),
             "remark": item.remark or "",
@@ -381,6 +375,8 @@ class PayrollMonthlyCalculationBase(models.Model):
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="基本工资")
     allowance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="补贴")
     deduction_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="扣款")
+    addition_items = models.JSONField(null=True, blank=True, verbose_name="工资增加项明细快照")
+    deduction_items = models.JSONField(null=True, blank=True, verbose_name="工资减少项明细快照")
     social_insurance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="社保/年金/保险")
     net_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="实发金额")
     bank_info = models.JSONField(null=True, blank=True, verbose_name="员工银行信息快照")
@@ -460,6 +456,8 @@ class PayrollMonthlyCalculationBase(models.Model):
             "base_salary": str(item.base_salary),
             "allowance_amount": str(item.allowance_amount),
             "deduction_amount": str(item.deduction_amount),
+            "addition_items": item.addition_items or [],
+            "deduction_items": item.deduction_items or [],
             "social_insurance_amount": str(item.social_insurance_amount),
             "net_salary": str(item.net_salary),
             "bank_info": item.bank_info,

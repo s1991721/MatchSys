@@ -19,12 +19,9 @@ CREATE TABLE IF NOT EXISTS payroll_basic_info
     contract_type         TINYINT        NOT NULL DEFAULT 0 COMMENT '契约类型：0-正社员 1-契约社员 2-フリーランス',
 
     base_salary           DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',
-    health_insurance      DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '社保/健康保险',
-    welfare_pension       DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '厚生年金',
-    employment_insurance  DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '雇用保险',
-    income_tax            DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '所得税',
+    addition_items        JSON           NULL COMMENT '工资增加项明细',
+    deduction_items       JSON           NULL COMMENT '工资减少项明细',
 
-    valid_until_date      DATE           NULL COMMENT '有效期截止日',
     status                TINYINT        NOT NULL DEFAULT 1 COMMENT '状态：1-有效 0-无效',
 
     remark                TEXT           NULL COMMENT '备注',
@@ -56,6 +53,8 @@ CREATE TABLE IF NOT EXISTS payroll_monthly_calculation
     base_salary             DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',
     allowance_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '补贴',
     deduction_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '扣款',
+    addition_items          JSON           NULL COMMENT '工资增加项明细快照',
+    deduction_items         JSON           NULL COMMENT '工资减少项明细快照',
     social_insurance_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '社保/年金/保险',
     net_salary              DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '实发金额',
 

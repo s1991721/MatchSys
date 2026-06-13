@@ -6,21 +6,14 @@
     <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="../common.css">
     <link rel="stylesheet" href="../components.css">
-    <title>税率设置</title>
+    <title>年金保险</title>
 </head>
 <body class="order-page finance-page finance-module-page">
 <div class="page finance-module-page-shell">
     <section class="c-card c-card-pad finance-view" data-finance-panel="settings">
 
-    <div class="finance-section-head">
-        <div>
-            <h2 class="finance-section-title" data-i18n="finance.settings.title">财务设置</h2>
-            <p class="c-card-subtitle" data-i18n="finance.settings.subtitle">维护税率、费用科目、付款条件、银行账户与财务规则。</p>
-        </div>
-        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.save_settings">保存设置</button>
-    </div>
     <div class="finance-subtabs" role="tablist" aria-label="财务设置子功能">
-        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="tax">税率设置</button>
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="annuity">年金保险</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="accounts">费用科目</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="terms">付款条件</button>
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="banks">银行账户</button>
@@ -29,7 +22,7 @@
         <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="reminders">提醒规则</button>
     </div>
         <div class="finance-subframe-shell">
-            <iframe id="financeSubFrame" class="finance-subframe" src="settings/tax.html" title="税率设置"></iframe>
+            <iframe id="financeSubFrame" class="finance-subframe" src="settings/annuity.html" title="年金保险"></iframe>
         </div>
     </section>
 </div>
@@ -66,7 +59,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
         const routes = {
-        tax: { src: "settings/tax.html", title: "税率设置" },
+        annuity: { src: "settings/annuity.html", title: "年金保险" },
         accounts: { src: "settings/accounts.html", title: "费用科目" },
         terms: { src: "settings/terms.html", title: "付款条件" },
         banks: { src: "settings/banks.html", title: "银行账户" },
@@ -101,7 +94,7 @@
             frame.addEventListener("load", syncFrameLang);
         }
         window.addEventListener("i18n:change", syncFrameLang);
-        setSubtab("tax");
+        setSubtab("annuity");
     });
 }());
 </script>

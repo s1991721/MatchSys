@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>年金保险</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="settings.annuity">
+    <div class="finance-sheet-wrap" aria-label="年金保险表格展示区">
+        <table class="finance-sheet-table" id="annuitySheetTable">
+            <thead>
+                <tr>
+                    <th class="finance-sheet-corner"></th>
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                    <th>E</th>
+                    <th>F</th>
+                    <th>G</th>
+                    <th>H</th>
+                    <th>I</th>
+                    <th>J</th>
+                    <th>K</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="finance-sheet-title-row">
+                    <th>1</th>
+                    <td colspan="11">年金保险</td>
+                </tr>
+                <tr class="finance-sheet-group-row">
+                    <th>2</th>
+                    <td colspan="3">標準報酬</td>
+                    <td colspan="2">報酬月額</td>
+                    <td colspan="2">健康保険料</td>
+                    <td colspan="2">介護保険料</td>
+                    <td colspan="2"><span class="finance-sheet-new">NEW</span>子ども・子育て<br>支援金</td>
+                </tr>
+                <tr class="finance-sheet-subgroup-row">
+                    <th>3</th>
+                    <td colspan="3"></td>
+                    <td colspan="2"></td>
+                    <td>全額</td>
+                    <td>折半額</td>
+                    <td>全額</td>
+                    <td>折半額</td>
+                    <td>全額</td>
+                    <td>折半額</td>
+                </tr>
+                <tr class="finance-sheet-header-row">
+                    <th>4</th>
+                    <td>等級</td>
+                    <td>月額</td>
+                    <td>日額</td>
+                    <td>円以上</td>
+                    <td>円未満</td>
+                    <td>9.85%</td>
+                    <td>4.925%</td>
+                    <td>1.62%</td>
+                    <td>0.81%</td>
+                    <td>0.23%</td>
+                    <td>0.115%</td>
+                </tr>
+                <tr>
+                    <th>5</th>
+                    <td>1</td>
+                    <td>58,000</td>
+                    <td>1,930</td>
+                    <td>0</td>
+                    <td>63,000</td>
+                    <td>5,713</td>
+                    <td>2,856.5</td>
+                    <td>940</td>
+                    <td>470</td>
+                    <td>133</td>
+                    <td>66.5</td>
+                </tr>
+                <tr>
+                    <th>6</th>
+                    <td>2</td>
+                    <td>68,000</td>
+                    <td>2,270</td>
+                    <td>63,000</td>
+                    <td>73,000</td>
+                    <td>6,698</td>
+                    <td>3,349</td>
+                    <td>1,102</td>
+                    <td>551</td>
+                    <td>156</td>
+                    <td>78</td>
+                </tr>
+                <tr>
+                    <th>7</th>
+                    <td>3</td>
+                    <td>78,000</td>
+                    <td>2,600</td>
+                    <td>73,000</td>
+                    <td>83,000</td>
+                    <td>7,683</td>
+                    <td>3,841.5</td>
+                    <td>1,264</td>
+                    <td>632</td>
+                    <td>179</td>
+                    <td>89.5</td>
+                </tr>
+                <tr>
+                    <th>8</th>
+                    <td>4</td>
+                    <td>88,000</td>
+                    <td>2,930</td>
+                    <td>83,000</td>
+                    <td>93,000</td>
+                    <td>8,668</td>
+                    <td>4,334</td>
+                    <td>1,426</td>
+                    <td>713</td>
+                    <td>202</td>
+                    <td>101</td>
+                </tr>
+                <tr>
+                    <th>9</th>
+                    <td>5</td>
+                    <td>98,000</td>
+                    <td>3,270</td>
+                    <td>93,000</td>
+                    <td>101,000</td>
+                    <td>9,653</td>
+                    <td>4,826.5</td>
+                    <td>1,588</td>
+                    <td>794</td>
+                    <td>225</td>
+                    <td>112.5</td>
+                </tr>
+                <tr>
+                    <th>10</th>
+                    <td>6</td>
+                    <td>104,000</td>
+                    <td>3,470</td>
+                    <td>101,000</td>
+                    <td>107,000</td>
+                    <td>10,244</td>
+                    <td>5,122</td>
+                    <td>1,685</td>
+                    <td>842.5</td>
+                    <td>239</td>
+                    <td>119.5</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="finance-sheet-toolbar">
+        <input class="finance-sheet-file" id="annuityCsvInput" type="file" accept=".csv,text/csv">
+        <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityUploadBtn">上传</button>
+        <button class="c-btn c-btn-primary c-btn-sm" type="button" id="annuityDownloadBtn">下载</button>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const table = document.getElementById("annuitySheetTable");
+        const uploadButton = document.getElementById("annuityUploadBtn");
+        const downloadButton = document.getElementById("annuityDownloadBtn");
+        const fileInput = document.getElementById("annuityCsvInput");
+
+        const columnName = (index) => {
+            let name = "";
+            let value = index + 1;
+            while (value > 0) {
+                const remainder = (value - 1) % 26;
+                name = String.fromCharCode(65 + remainder) + name;
+                value = Math.floor((value - 1) / 26);
+            }
+            return name;
+        };
+
+        const parseCsv = (text) => {
+            const rows = [];
+            let row = [];
+            let cell = "";
+            let inQuotes = false;
+            for (let i = 0; i < text.length; i += 1) {
+                const char = text[i];
+                const next = text[i + 1];
+                if (char === "\"") {
+                    if (inQuotes && next === "\"") {
+                        cell += "\"";
+                        i += 1;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === "," && !inQuotes) {
+                    row.push(cell);
+                    cell = "";
+                } else if ((char === "\n" || char === "\r") && !inQuotes) {
+                    if (char === "\r" && next === "\n") i += 1;
+                    row.push(cell);
+                    rows.push(row);
+                    row = [];
+                    cell = "";
+                } else {
+                    cell += char;
+                }
+            }
+            if (cell || row.length) {
+                row.push(cell);
+                rows.push(row);
+            }
+            return rows.filter((items) => items.some((item) => item.trim() !== ""));
+        };
+
+        const escapeCsvCell = (value) => {
+            const text = String(value ?? "");
+            return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
+        };
+
+        const getSheetRows = () => {
+            if (!table) return [];
+            return Array.from(table.tBodies[0]?.rows || [])
+                .filter((row) => !row.classList.contains("finance-sheet-title-row"))
+                .map((row) => Array.from(row.cells).slice(1).map((cell) => cell.textContent.trim()));
+        };
+
+        const renderSheet = (rows) => {
+            if (!table || !rows.length) return;
+            const columnCount = Math.max(...rows.map((row) => row.length), 1);
+            table.tHead.innerHTML = "";
+            const letters = document.createElement("tr");
+            const corner = document.createElement("th");
+            corner.className = "finance-sheet-corner";
+            letters.appendChild(corner);
+            for (let i = 0; i < columnCount; i += 1) {
+                const th = document.createElement("th");
+                th.textContent = columnName(i);
+                letters.appendChild(th);
+            }
+            table.tHead.appendChild(letters);
+
+            const body = table.tBodies[0];
+            body.innerHTML = "";
+            const titleRow = document.createElement("tr");
+            titleRow.className = "finance-sheet-title-row";
+            const titleIndex = document.createElement("th");
+            titleIndex.textContent = "1";
+            const titleCell = document.createElement("td");
+            titleCell.colSpan = columnCount;
+            titleCell.textContent = "年金保险";
+            titleRow.append(titleIndex, titleCell);
+            body.appendChild(titleRow);
+
+            rows.forEach((items, rowIndex) => {
+                const tr = document.createElement("tr");
+                if (rowIndex === 0) tr.className = "finance-sheet-header-row";
+                const rowHead = document.createElement("th");
+                rowHead.textContent = String(rowIndex + 2);
+                tr.appendChild(rowHead);
+                for (let i = 0; i < columnCount; i += 1) {
+                    const td = document.createElement("td");
+                    td.textContent = items[i] || "";
+                    tr.appendChild(td);
+                }
+                body.appendChild(tr);
+            });
+        };
+
+        uploadButton?.addEventListener("click", () => fileInput?.click());
+        fileInput?.addEventListener("change", async () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            const text = await file.text();
+            const rows = parseCsv(text);
+            if (rows.length) renderSheet(rows);
+            fileInput.value = "";
+        });
+        downloadButton?.addEventListener("click", () => {
+            const csv = getSheetRows().map((row) => row.map(escapeCsvCell).join(",")).join("\r\n");
+            const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "annuity_insurance.csv";
+            document.body.appendChild(link);
+            link.click();
+            URL.revokeObjectURL(link.href);
+            link.remove();
+        });
+    });
+}());
+</script>
+</body>
+</html>

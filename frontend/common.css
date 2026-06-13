@@ -2055,6 +2055,105 @@ body.finance-subpage {
   gap: 16px;
   min-width: 0;
 }
+.finance-sheet-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+.finance-sheet-file {
+  display: none;
+}
+.finance-sheet-wrap {
+  width: 100%;
+  max-height: 560px;
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+.finance-sheet-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #0f172a;
+  font-size: 13px;
+  line-height: 1.35;
+  table-layout: fixed;
+}
+.finance-sheet-table th,
+.finance-sheet-table td {
+  height: 34px;
+  min-width: 120px;
+  padding: 7px 10px;
+  border-right: 1px solid #dbe3ef;
+  border-bottom: 1px solid #dbe3ef;
+  background: #fff;
+  text-align: left;
+  white-space: nowrap;
+}
+.finance-sheet-table thead th,
+.finance-sheet-table tbody th {
+  min-width: 44px;
+  width: 44px;
+  background: #f1f5f9;
+  color: #475569;
+  font-weight: 700;
+  text-align: center;
+  position: sticky;
+  z-index: 2;
+}
+.finance-sheet-table thead th {
+  top: 0;
+}
+.finance-sheet-table tbody th {
+  left: 0;
+}
+.finance-sheet-table .finance-sheet-corner {
+  left: 0;
+  z-index: 3;
+}
+.finance-sheet-title-row td {
+  background: #eef6ff;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 800;
+}
+.finance-sheet-group-row td {
+  height: 80px;
+  border-right-color: #111827;
+  border-right-width: 2px;
+  border-bottom-color: #111827;
+  color: #020617;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+  vertical-align: middle;
+}
+.finance-sheet-subgroup-row td {
+  border-bottom-color: #111827;
+  color: #020617;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+}
+.finance-sheet-header-row td {
+  background: #f8fafc;
+  border-bottom-color: #111827;
+  color: #020617;
+  font-weight: 800;
+  text-align: center;
+}
+.finance-sheet-new {
+  display: block;
+  color: #ff0000;
+  font-size: 16px;
+  line-height: 1.1;
+}
+.finance-sheet-table tbody tr:hover td {
+  background: #f8fbff;
+}
 .finance-overview-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);

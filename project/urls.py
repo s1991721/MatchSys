@@ -181,6 +181,12 @@ urlpatterns = [
         ),
     ),
     path(
+        "error_code.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/error_code.js", content_type="application/javascript")
+        ),
+    ),
+    path(
         "i18n.js",
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/i18n.js", content_type="application/javascript")),

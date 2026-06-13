@@ -89,6 +89,13 @@
                         </div>
                         <div class="payroll-items-panel payroll-basic-adjustment-panel">
                             <div class="payroll-items-header">
+                                <span data-i18n="payroll.basic.section.non_taxable_additions">非课税增加项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddNonTaxableAdditionItem" data-i18n="common.add">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollNonTaxableAdditionItems"></div>
+                        </div>
+                        <div class="payroll-items-panel payroll-basic-adjustment-panel">
+                            <div class="payroll-items-header">
                                 <span data-i18n="payroll.basic.section.deductions">减少项</span>
                                 <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem" data-i18n="common.add">添加</button>
                             </div>
@@ -176,8 +183,10 @@
         const cancelBtn = document.getElementById("payrollBasicCancel");
         const deleteBtn = document.getElementById("payrollBasicDelete");
         const additionItems = document.getElementById("payrollAdditionItems");
+        const nonTaxableAdditionItems = document.getElementById("payrollNonTaxableAdditionItems");
         const deductionItems = document.getElementById("payrollDeductionItems");
         const addAdditionItemBtn = document.getElementById("payrollAddAdditionItem");
+        const addNonTaxableAdditionItemBtn = document.getElementById("payrollAddNonTaxableAdditionItem");
         const addDeductionItemBtn = document.getElementById("payrollAddDeductionItem");
         const fields = {
             employeeName: document.getElementById("payrollEmployeeName"),
@@ -274,6 +283,7 @@
             modal.setAttribute("aria-hidden", "true");
             form.reset();
             renderItemRows(additionItems, []);
+            renderItemRows(nonTaxableAdditionItems, []);
             renderItemRows(deductionItems, []);
             editingId = null;
             editingEmployeeId = null;
@@ -288,14 +298,15 @@
                 const contract = contractLabel(Number(item.contract_type)) || item.contract_label || "";
                 const status = statusLabel(Number(item.status)) || item.status_label || "";
                 const additionTotal = sumItems(item.addition_items);
+                const nonTaxableAdditionTotal = sumItems(item.non_taxable_addition_items);
                 const deductionTotal = sumItems(item.deduction_items);
-                const estimatedNet = parseMoney(item.base_salary) + additionTotal - deductionTotal;
+                const estimatedNet = parseMoney(item.base_salary) + additionTotal + nonTaxableAdditionTotal - deductionTotal;
                 return `
                     <tr>
                         <td>${h(item.employee_name || item.employee_id)}</td>
                         <td>${h(contract)}</td>
                         <td>${h(formatMoney(item.base_salary))}</td>
-                        <td>${h(formatMoney(additionTotal))}</td>
+                        <td>${h(formatMoney(additionTotal + nonTaxableAdditionTotal))}</td>
                         <td>${h(formatMoney(deductionTotal))}</td>
                         <td>${h(formatMoney(estimatedNet))}</td>
                         <td>${h(status)}</td>
@@ -343,6 +354,7 @@
             fields.contractType.value = String(data?.contract_type ?? 0);
             fields.baseSalary.value = data?.base_salary || "0";
             renderItemRows(additionItems, data?.addition_items || []);
+            renderItemRows(nonTaxableAdditionItems, data?.non_taxable_addition_items || []);
             renderItemRows(deductionItems, data?.deduction_items || []);
             fields.status.value = String(data?.status ?? 1);
             fields.remark.value = data?.remark || "";
@@ -352,12 +364,14 @@
 
         const buildPayload = () => {
             const additions = collectItems(additionItems);
+            const nonTaxableAdditions = collectItems(nonTaxableAdditionItems);
             const deductions = collectItems(deductionItems);
             return {
                 employee_id: editingEmployeeId,
                 contract_type: Number(fields.contractType.value),
                 base_salary: fields.baseSalary.value || "0",
                 addition_items: additions,
+                non_taxable_addition_items: nonTaxableAdditions,
                 deduction_items: deductions,
                 status: Number(fields.status.value),
                 remark: fields.remark.value.trim()
@@ -422,6 +436,7 @@
             }
         });
         addAdditionItemBtn.addEventListener("click", () => addItemRow(additionItems));
+        addNonTaxableAdditionItemBtn.addEventListener("click", () => addItemRow(nonTaxableAdditionItems));
         addDeductionItemBtn.addEventListener("click", () => addItemRow(deductionItems));
         form.addEventListener("click", (event) => {
             const btn = event.target.closest("button[data-action='remove-payroll-item']");

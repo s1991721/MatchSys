@@ -1552,6 +1552,12 @@ def payroll_basic_info_api(request):
     addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
     if error:
         return error
+    non_taxable_addition_items, error = _parse_payroll_items(
+        payload.get("non_taxable_addition_items"),
+        "non_taxable_addition_items",
+    )
+    if error:
+        return error
     deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
     if error:
         return error
@@ -1565,6 +1571,7 @@ def payroll_basic_info_api(request):
         contract_type=contract_type,
         base_salary=base_salary,
         addition_items=addition_items,
+        non_taxable_addition_items=non_taxable_addition_items,
         deduction_items=deduction_items,
         status=status_value,
         remark=(payload.get("remark") or "").strip() or None,
@@ -1624,6 +1631,15 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
         if error:
             return error
         item.addition_items = addition_items
+
+    if "non_taxable_addition_items" in payload:
+        non_taxable_addition_items, error = _parse_payroll_items(
+            payload.get("non_taxable_addition_items"),
+            "non_taxable_addition_items",
+        )
+        if error:
+            return error
+        item.non_taxable_addition_items = non_taxable_addition_items
 
     if "deduction_items" in payload:
         deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
@@ -1686,6 +1702,12 @@ def _build_monthly_payload(payload, target_month=None):
     addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
     if error:
         return None, error
+    non_taxable_addition_items, error = _parse_payroll_items(
+        payload.get("non_taxable_addition_items"),
+        "non_taxable_addition_items",
+    )
+    if error:
+        return None, error
     deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
     if error:
         return None, error
@@ -1712,6 +1734,7 @@ def _build_monthly_payload(payload, target_month=None):
             "status": status_value,
             "bank_info": bank_info,
             "addition_items": addition_items,
+            "non_taxable_addition_items": non_taxable_addition_items,
             "deduction_items": deduction_items,
             "remark": (payload.get("remark") or "").strip() or None,
             **amount_values,
@@ -1806,8 +1829,9 @@ def payroll_monthly_calculate_api(request):
     created_items = []
     for basic in basic_items:
         addition_items = basic.addition_items or []
+        non_taxable_addition_items = basic.non_taxable_addition_items or []
         deduction_items = basic.deduction_items or []
-        allowance_amount = _sum_payroll_items(addition_items)
+        allowance_amount = _sum_payroll_items(addition_items) + _sum_payroll_items(non_taxable_addition_items)
         deduction_amount = _sum_payroll_items(deduction_items)
         social_insurance_amount = Decimal("0")
         net_salary = basic.base_salary + allowance_amount - deduction_amount - social_insurance_amount
@@ -1823,6 +1847,7 @@ def payroll_monthly_calculate_api(request):
                 allowance_amount=allowance_amount,
                 deduction_amount=deduction_amount,
                 addition_items=addition_items,
+                non_taxable_addition_items=non_taxable_addition_items,
                 deduction_items=deduction_items,
                 social_insurance_amount=social_insurance_amount,
                 net_salary=net_salary,
@@ -1914,6 +1939,14 @@ def payroll_monthly_detail_api(request, calculation_id):
         if error:
             return error
         item.addition_items = addition_items
+    if "non_taxable_addition_items" in payload:
+        non_taxable_addition_items, error = _parse_payroll_items(
+            payload.get("non_taxable_addition_items"),
+            "non_taxable_addition_items",
+        )
+        if error:
+            return error
+        item.non_taxable_addition_items = non_taxable_addition_items
     if "deduction_items" in payload:
         deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
         if error:

@@ -436,6 +436,7 @@ CREATE TABLE IF NOT EXISTS payroll_basic_info
 
     base_salary           DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',
     addition_items        JSON           NULL COMMENT '工资增加项明细',
+    non_taxable_addition_items JSON       NULL COMMENT '工资非课税增加项明细',
     deduction_items       JSON           NULL COMMENT '工资减少项明细',
 
     status                TINYINT        NOT NULL DEFAULT 1 COMMENT '状态：1-有效 0-无效',
@@ -470,6 +471,7 @@ CREATE TABLE IF NOT EXISTS payroll_monthly_calculation
     allowance_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '补贴',
     deduction_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '扣款',
     addition_items          JSON           NULL COMMENT '工资增加项明细快照',
+    non_taxable_addition_items JSON         NULL COMMENT '工资非课税增加项明细快照',
     deduction_items         JSON           NULL COMMENT '工资减少项明细快照',
     social_insurance_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '社保/年金/保险',
     net_salary              DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '实发金额',

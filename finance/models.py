@@ -315,6 +315,7 @@ class PayrollBasicInfo(models.Model):
     contract_type = models.SmallIntegerField(choices=CONTRACT_TYPE_CHOICES, default=0, verbose_name="契约类型")
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="基本工资")
     addition_items = models.JSONField(null=True, blank=True, verbose_name="工资增加项明细")
+    non_taxable_addition_items = models.JSONField(null=True, blank=True, verbose_name="工资非课税增加项明细")
     deduction_items = models.JSONField(null=True, blank=True, verbose_name="工资减少项明细")
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=1, verbose_name="状态")
     remark = models.TextField(null=True, blank=True, verbose_name="备注")
@@ -352,6 +353,7 @@ class PayrollBasicInfo(models.Model):
             "contract_label": contract_labels.get(item.contract_type, ""),
             "base_salary": str(item.base_salary),
             "addition_items": item.addition_items or [],
+            "non_taxable_addition_items": item.non_taxable_addition_items or [],
             "deduction_items": item.deduction_items or [],
             "status": item.status,
             "status_label": status_labels.get(item.status, ""),
@@ -376,6 +378,7 @@ class PayrollMonthlyCalculationBase(models.Model):
     allowance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="补贴")
     deduction_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="扣款")
     addition_items = models.JSONField(null=True, blank=True, verbose_name="工资增加项明细快照")
+    non_taxable_addition_items = models.JSONField(null=True, blank=True, verbose_name="工资非课税增加项明细快照")
     deduction_items = models.JSONField(null=True, blank=True, verbose_name="工资减少项明细快照")
     social_insurance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="社保/年金/保险")
     net_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="实发金额")
@@ -457,6 +460,7 @@ class PayrollMonthlyCalculationBase(models.Model):
             "allowance_amount": str(item.allowance_amount),
             "deduction_amount": str(item.deduction_amount),
             "addition_items": item.addition_items or [],
+            "non_taxable_addition_items": item.non_taxable_addition_items or [],
             "deduction_items": item.deduction_items or [],
             "social_insurance_amount": str(item.social_insurance_amount),
             "net_salary": str(item.net_salary),
@@ -507,6 +511,15 @@ def _get_payroll_monthly_calculation_model_for_year(suffix):
 def _ensure_payroll_yearly_table_exists(table_name, template_table, model):
     existing_tables = set(connection.introspection.table_names())
     if table_name in existing_tables:
+        with connection.cursor() as cursor:
+            existing_columns = {
+                column.name
+                for column in connection.introspection.get_table_description(cursor, table_name)
+            }
+        if "non_taxable_addition_items" not in existing_columns:
+            field = model._meta.get_field("non_taxable_addition_items")
+            with connection.schema_editor() as schema_editor:
+                schema_editor.add_field(model, field)
         return
 
     if connection.vendor == "mysql" and template_table in existing_tables:
@@ -514,6 +527,7 @@ def _ensure_payroll_yearly_table_exists(table_name, template_table, model):
         quoted_template = connection.ops.quote_name(template_table)
         with connection.cursor() as cursor:
             cursor.execute(f"CREATE TABLE IF NOT EXISTS {quoted_table} LIKE {quoted_template}")
+        _ensure_payroll_yearly_table_exists(table_name, template_table, model)
         return
 
     with connection.schema_editor() as schema_editor:

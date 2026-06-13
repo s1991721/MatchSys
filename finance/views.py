@@ -30,6 +30,8 @@ from .models import (
 
 
 FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
+FINANCE_EMPLOYMENT_SETTING_NAME = "employment_insurance"
+FINANCE_INCOME_TAX_SETTING_NAME = "income_tax"
 
 RECEIVABLE_DISPLAY_STATUS_LABELS = {
     0: "未收",
@@ -50,8 +52,13 @@ def _unwrap_annuity_settings_payload(payload):
         return None, _finance_settings_payload_error()
     if isinstance(payload.get("settings"), dict):
         return payload["settings"], None
-    if isinstance(payload.get(FINANCE_ANNUITY_SETTING_NAME), dict):
-        return payload[FINANCE_ANNUITY_SETTING_NAME], None
+    for setting_name in (
+        FINANCE_ANNUITY_SETTING_NAME,
+        FINANCE_EMPLOYMENT_SETTING_NAME,
+        FINANCE_INCOME_TAX_SETTING_NAME,
+    ):
+        if isinstance(payload.get(setting_name), dict):
+            return payload[setting_name], None
     return payload, None
 
 
@@ -261,9 +268,7 @@ def _quantize_amount(value):
     return Decimal(value or "0").quantize(Decimal("0.01"))
 
 
-@csrf_exempt
-@require_http_methods(["GET", "POST"])
-def finance_annuity_insurance_settings_api(request):
+def _finance_tax_table_settings_api(request, setting_name):
     login_id, error = require_login(request)
     if error:
         return error
@@ -271,12 +276,12 @@ def finance_annuity_insurance_settings_api(request):
     if request.method == "GET":
         record = (
             FinanceSettings.objects
-            .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+            .filter(name=setting_name, deleted_at__isnull=True)
             .order_by("id")
             .first()
         )
         return api_success(data={
-            "name": FINANCE_ANNUITY_SETTING_NAME,
+            "name": setting_name,
             "settings": record.settings if record else None,
         })
 
@@ -291,7 +296,7 @@ def finance_annuity_insurance_settings_api(request):
         record = (
             FinanceSettings.objects
             .select_for_update()
-            .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+            .filter(name=setting_name, deleted_at__isnull=True)
             .order_by("id")
             .first()
         )
@@ -301,7 +306,7 @@ def finance_annuity_insurance_settings_api(request):
             record.save(update_fields=["settings", "updated_by", "updated_at"])
         else:
             record = FinanceSettings.objects.create(
-                name=FINANCE_ANNUITY_SETTING_NAME,
+                name=setting_name,
                 settings=settings_payload,
                 created_by=login_id,
                 updated_by=login_id,
@@ -311,6 +316,24 @@ def finance_annuity_insurance_settings_api(request):
         "name": record.name,
         "settings": record.settings,
     })
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_annuity_insurance_settings_api(request):
+    return _finance_tax_table_settings_api(request, FINANCE_ANNUITY_SETTING_NAME)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_employment_insurance_settings_api(request):
+    return _finance_tax_table_settings_api(request, FINANCE_EMPLOYMENT_SETTING_NAME)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_income_tax_settings_api(request):
+    return _finance_tax_table_settings_api(request, FINANCE_INCOME_TAX_SETTING_NAME)
 
 
 def _get_receivable_display_status(item, today=None):

@@ -14,12 +14,8 @@
 
     <div class="finance-subtabs" role="tablist" aria-label="财务设置子功能">
         <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="annuity">年金保险</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="accounts">费用科目</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="terms">付款条件</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="banks">银行账户</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="payroll">工资规则</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="numbering">编号规则</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="reminders">提醒规则</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="employment">雇用保险</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="incomeTax">所得税</button>
     </div>
         <div class="finance-subframe-shell">
             <iframe id="financeSubFrame" class="finance-subframe" src="settings/annuity.html" title="年金保险"></iframe>
@@ -60,12 +56,8 @@
         applyI18n();
         const routes = {
         annuity: { src: "settings/annuity.html", title: "年金保险" },
-        accounts: { src: "settings/accounts.html", title: "费用科目" },
-        terms: { src: "settings/terms.html", title: "付款条件" },
-        banks: { src: "settings/banks.html", title: "银行账户" },
-        payroll: { src: "settings/payroll.html", title: "工资规则" },
-        numbering: { src: "settings/numbering.html", title: "编号规则" },
-        reminders: { src: "settings/reminders.html", title: "提醒规则" }
+        employment: { src: "settings/employment.html", title: "雇用保险" },
+        incomeTax: { src: "settings/income-tax.html", title: "所得税" }
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
         const frame = document.getElementById("financeSubFrame");

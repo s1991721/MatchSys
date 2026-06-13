@@ -1881,6 +1881,41 @@ body.finance-subpage {
 .payroll-basic-search-action {
   justify-content: flex-end;
 }
+.payroll-items-panel {
+  grid-column: 1 / -1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  background: #fbfcff;
+}
+.payroll-items-header,
+.payroll-item-row {
+  display: grid;
+  align-items: center;
+  gap: 10px;
+}
+.payroll-items-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  font-weight: 700;
+  color: var(--text);
+}
+.payroll-items-list {
+  display: grid;
+  gap: 8px;
+}
+.payroll-item-row {
+  grid-template-columns: minmax(0, 1.4fr) minmax(120px, 0.8fr) auto;
+}
+.payroll-item-row input {
+  width: 100%;
+}
+.payroll-item-empty {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 8px 0;
+}
 .finance-page .c-switch-wrap {
   max-width: 100%;
   overflow-x: auto;
@@ -2122,6 +2157,12 @@ body.finance-subpage {
   }
   .payroll-basic-search-action {
     justify-content: flex-start;
+  }
+  .payroll-item-row {
+    grid-template-columns: 1fr;
+  }
+  .payroll-item-row .c-btn {
+    width: 100%;
   }
   .finance-section-title {
     font-size: 18px;

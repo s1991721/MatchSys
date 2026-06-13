@@ -42,16 +42,14 @@
                 <th>员工</th>
                 <th>契约类型</th>
                 <th>基本工资</th>
-                <th>社保</th>
-                <th>年金</th>
-                <th>雇用保险</th>
-                <th>所得税</th>
-                <th>有效期截止日</th>
+                <th>增加项合计</th>
+                <th>减少项合计</th>
+                <th>预估实发</th>
                 <th>状态</th>
                 <th class="c-actions-col">操作</th>
             </tr>
             </thead>
-            <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="10">加载中...</td></tr></tbody>
+            <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="8">加载中...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -81,26 +79,20 @@
                         <span>基本工资</span>
                         <input id="payrollBaseSalary" type="number" min="0" step="1">
                     </label>
-                    <label>
-                        <span>社保</span>
-                        <input id="payrollHealthInsurance" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>年金</span>
-                        <input id="payrollWelfarePension" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>雇用保险</span>
-                        <input id="payrollEmploymentInsurance" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>所得税</span>
-                        <input id="payrollIncomeTax" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>有效期截止日</span>
-                        <input id="payrollValidUntilDate" type="date">
-                    </label>
+                    <div class="payroll-items-panel">
+                        <div class="payroll-items-header">
+                            <span>增加项</span>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem">添加</button>
+                        </div>
+                        <div class="payroll-items-list" id="payrollAdditionItems"></div>
+                    </div>
+                    <div class="payroll-items-panel">
+                        <div class="payroll-items-header">
+                            <span>减少项</span>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem">添加</button>
+                        </div>
+                        <div class="payroll-items-list" id="payrollDeductionItems"></div>
+                    </div>
                     <label>
                         <span>状态</span>
                         <select id="payrollFormStatus">
@@ -144,6 +136,18 @@
             maximumFractionDigits: 0
         });
     };
+    const parseMoney = (value) => {
+        const number = Number(value || 0);
+        return Number.isFinite(number) ? number : 0;
+    };
+    const normalizeItems = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.map((item) => ({
+            name: String(item?.name || "").trim(),
+            amount: String(item?.amount ?? "0").trim() || "0"
+        })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+    };
+    const sumItems = (items) => normalizeItems(items).reduce((total, item) => total + parseMoney(item.amount), 0);
     const showError = (message) => alert(message);
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -160,15 +164,14 @@
         const form = document.getElementById("payrollBasicForm");
         const closeBtn = document.getElementById("payrollBasicClose");
         const cancelBtn = document.getElementById("payrollBasicCancel");
+        const additionItems = document.getElementById("payrollAdditionItems");
+        const deductionItems = document.getElementById("payrollDeductionItems");
+        const addAdditionItemBtn = document.getElementById("payrollAddAdditionItem");
+        const addDeductionItemBtn = document.getElementById("payrollAddDeductionItem");
         const fields = {
             employeeName: document.getElementById("payrollEmployeeName"),
             contractType: document.getElementById("payrollFormContractType"),
             baseSalary: document.getElementById("payrollBaseSalary"),
-            healthInsurance: document.getElementById("payrollHealthInsurance"),
-            welfarePension: document.getElementById("payrollWelfarePension"),
-            employmentInsurance: document.getElementById("payrollEmploymentInsurance"),
-            incomeTax: document.getElementById("payrollIncomeTax"),
-            validUntilDate: document.getElementById("payrollValidUntilDate"),
             status: document.getElementById("payrollFormStatus"),
             remark: document.getElementById("payrollRemark")
         };
@@ -176,32 +179,86 @@
         let editingId = null;
         let editingEmployeeId = null;
 
+        const createItemRow = (item = {}) => {
+            const row = document.createElement("div");
+            row.className = "payroll-item-row";
+            const nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.dataset.field = "name";
+            nameInput.placeholder = "项目名";
+            nameInput.value = item.name || "";
+
+            const amountInput = document.createElement("input");
+            amountInput.type = "number";
+            amountInput.min = "0";
+            amountInput.step = "1";
+            amountInput.dataset.field = "amount";
+            amountInput.placeholder = "金额";
+            amountInput.value = item.amount ?? "0";
+
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "c-btn c-btn-danger c-btn-sm";
+            removeBtn.dataset.action = "remove-payroll-item";
+            removeBtn.textContent = "删除";
+
+            row.append(nameInput, amountInput, removeBtn);
+            return row;
+        };
+
+        const renderItemRows = (container, rows) => {
+            container.innerHTML = "";
+            const normalized = normalizeItems(rows);
+            if (!normalized.length) {
+                const empty = document.createElement("div");
+                empty.className = "payroll-item-empty";
+                empty.textContent = "暂无项目";
+                container.appendChild(empty);
+                return;
+            }
+            normalized.forEach((item) => container.appendChild(createItemRow(item)));
+        };
+
+        const addItemRow = (container) => {
+            const empty = container.querySelector(".payroll-item-empty");
+            if (empty) empty.remove();
+            container.appendChild(createItemRow({name: "", amount: "0"}));
+        };
+
+        const collectItems = (container) => Array.from(container.querySelectorAll(".payroll-item-row")).map((row) => ({
+            name: row.querySelector("[data-field='name']").value.trim(),
+            amount: row.querySelector("[data-field='amount']").value || "0"
+        })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+
         const closeModal = () => {
             modal.classList.remove("show");
             modal.setAttribute("aria-hidden", "true");
             form.reset();
+            renderItemRows(additionItems, []);
+            renderItemRows(deductionItems, []);
             editingId = null;
             editingEmployeeId = null;
         };
 
         const renderRows = () => {
             if (!items.length) {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">暂无基础信息</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">暂无基础信息</td></tr>`;
                 return;
             }
             tbody.innerHTML = items.map((item) => {
                 const contract = contractLabels[Number(item.contract_type)] || item.contract_label || "";
                 const status = statusLabels[Number(item.status)] || item.status_label || "";
+                const additionTotal = sumItems(item.addition_items);
+                const deductionTotal = sumItems(item.deduction_items);
+                const estimatedNet = parseMoney(item.base_salary) + additionTotal - deductionTotal;
                 return `
                     <tr>
                         <td>${h(item.employee_name || item.employee_id)}</td>
                         <td>${h(contract)}</td>
                         <td>${h(formatMoney(item.base_salary))}</td>
-                        <td>${h(formatMoney(item.health_insurance))}</td>
-                        <td>${h(formatMoney(item.welfare_pension))}</td>
-                        <td>${h(formatMoney(item.employment_insurance))}</td>
-                        <td>${h(formatMoney(item.income_tax))}</td>
-                        <td>${h(item.valid_until_date || "长期有效")}</td>
+                        <td>${h(formatMoney(additionTotal))}</td>
+                        <td>${h(formatMoney(deductionTotal))}</td>
+                        <td>${h(formatMoney(estimatedNet))}</td>
                         <td>${h(status)}</td>
                         <td class="c-actions-col">
                             <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">编辑</button>
@@ -212,7 +269,7 @@
         };
 
         const fetchList = async () => {
-            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">加载中...</td></tr>`;
+            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">加载中...</td></tr>`;
             const params = window.createParams([
                 ["keyword", keywordInput.value.trim()],
                 ["contract_type", contractTypeSelect.value],
@@ -255,29 +312,27 @@
             fields.employeeName.value = data?.employee_name || employee?.name || "";
             fields.contractType.value = String(data?.contract_type ?? 0);
             fields.baseSalary.value = data?.base_salary || "0";
-            fields.healthInsurance.value = data?.health_insurance || "0";
-            fields.welfarePension.value = data?.welfare_pension || "0";
-            fields.employmentInsurance.value = data?.employment_insurance || "0";
-            fields.incomeTax.value = data?.income_tax || "0";
-            fields.validUntilDate.value = data?.valid_until_date || "";
+            renderItemRows(additionItems, data?.addition_items || []);
+            renderItemRows(deductionItems, data?.deduction_items || []);
             fields.status.value = String(data?.status ?? 1);
             fields.remark.value = data?.remark || "";
             modal.classList.add("show");
             modal.setAttribute("aria-hidden", "false");
         };
 
-        const buildPayload = () => ({
-            employee_id: editingEmployeeId,
-            contract_type: Number(fields.contractType.value),
-            base_salary: fields.baseSalary.value || "0",
-            health_insurance: fields.healthInsurance.value || "0",
-            welfare_pension: fields.welfarePension.value || "0",
-            employment_insurance: fields.employmentInsurance.value || "0",
-            income_tax: fields.incomeTax.value || "0",
-            valid_until_date: fields.validUntilDate.value || "",
-            status: Number(fields.status.value),
-            remark: fields.remark.value.trim()
-        });
+        const buildPayload = () => {
+            const additions = collectItems(additionItems);
+            const deductions = collectItems(deductionItems);
+            return {
+                employee_id: editingEmployeeId,
+                contract_type: Number(fields.contractType.value),
+                base_salary: fields.baseSalary.value || "0",
+                addition_items: additions,
+                deduction_items: deductions,
+                status: Number(fields.status.value),
+                remark: fields.remark.value.trim()
+            };
+        };
 
         const handleEmployeeTrigger = async () => {
             const params = new URLSearchParams(window.location.search || "");
@@ -289,7 +344,7 @@
                 try {
                     if (sessionStorage.getItem(triggerKey) === "1") return;
                     sessionStorage.setItem(triggerKey, "1");
-                } catch (err) {
+                } catch {
                 }
             }
             const cleanUrl = `${window.location.pathname}`;
@@ -309,7 +364,7 @@
 
         searchBtn.addEventListener("click", () => {
             fetchList().catch((err) => {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">加载失败：${h(err.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">加载失败：${h(err.message)}</td></tr>`;
             });
         });
         tbody.addEventListener("click", (event) => {
@@ -320,6 +375,17 @@
         });
         closeBtn.addEventListener("click", closeModal);
         cancelBtn.addEventListener("click", closeModal);
+        addAdditionItemBtn.addEventListener("click", () => addItemRow(additionItems));
+        addDeductionItemBtn.addEventListener("click", () => addItemRow(deductionItems));
+        form.addEventListener("click", (event) => {
+            const btn = event.target.closest("button[data-action='remove-payroll-item']");
+            if (!btn) return;
+            const container = btn.closest(".payroll-items-list");
+            btn.closest(".payroll-item-row")?.remove();
+            if (container && !container.querySelector(".payroll-item-row")) {
+                renderItemRows(container, []);
+            }
+        });
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
             const payload = buildPayload();
@@ -342,7 +408,7 @@
         fetchList()
             .then(handleEmployeeTrigger)
             .catch((err) => {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">加载失败：${h(err.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">加载失败：${h(err.message)}</td></tr>`;
             });
     });
 }());

@@ -2145,6 +2145,21 @@ body.finance-subpage {
   font-weight: 800;
   text-align: center;
 }
+.finance-sheet-imported-cell {
+  background: #f8fafc;
+  color: #0f172a;
+}
+.finance-sheet-editable-cell {
+  cursor: text;
+}
+.finance-sheet-editable-cell:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+  background: #eff6ff;
+}
+.finance-sheet-default-cell {
+  background: #fff;
+}
 .finance-sheet-new {
   display: block;
   color: #ff0000;

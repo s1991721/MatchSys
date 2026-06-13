@@ -23,140 +23,38 @@
                     <th>F</th>
                     <th>G</th>
                     <th>H</th>
-                    <th>I</th>
-                    <th>J</th>
-                    <th>K</th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="finance-sheet-title-row">
-                    <th>1</th>
-                    <td colspan="11">年金保险</td>
-                </tr>
-                <tr class="finance-sheet-group-row">
-                    <th>2</th>
-                    <td colspan="3">標準報酬</td>
-                    <td colspan="2">報酬月額</td>
-                    <td colspan="2">健康保険料</td>
-                    <td colspan="2">介護保険料</td>
-                    <td colspan="2"><span class="finance-sheet-new">NEW</span>子ども・子育て<br>支援金</td>
-                </tr>
-                <tr class="finance-sheet-subgroup-row">
-                    <th>3</th>
-                    <td colspan="3"></td>
-                    <td colspan="2"></td>
-                    <td>全額</td>
-                    <td>折半額</td>
-                    <td>全額</td>
-                    <td>折半額</td>
-                    <td>全額</td>
-                    <td>折半額</td>
-                </tr>
-                <tr class="finance-sheet-header-row">
-                    <th>4</th>
-                    <td>等級</td>
-                    <td>月額</td>
-                    <td>日額</td>
-                    <td>円以上</td>
-                    <td>円未満</td>
-                    <td>9.85%</td>
-                    <td>4.925%</td>
-                    <td>1.62%</td>
-                    <td>0.81%</td>
-                    <td>0.23%</td>
-                    <td>0.115%</td>
-                </tr>
-                <tr>
-                    <th>5</th>
-                    <td>1</td>
-                    <td>58,000</td>
-                    <td>1,930</td>
-                    <td>0</td>
-                    <td>63,000</td>
-                    <td>5,713</td>
-                    <td>2,856.5</td>
-                    <td>940</td>
-                    <td>470</td>
-                    <td>133</td>
-                    <td>66.5</td>
-                </tr>
-                <tr>
-                    <th>6</th>
-                    <td>2</td>
-                    <td>68,000</td>
-                    <td>2,270</td>
-                    <td>63,000</td>
-                    <td>73,000</td>
-                    <td>6,698</td>
-                    <td>3,349</td>
-                    <td>1,102</td>
-                    <td>551</td>
-                    <td>156</td>
-                    <td>78</td>
-                </tr>
-                <tr>
-                    <th>7</th>
-                    <td>3</td>
-                    <td>78,000</td>
-                    <td>2,600</td>
-                    <td>73,000</td>
-                    <td>83,000</td>
-                    <td>7,683</td>
-                    <td>3,841.5</td>
-                    <td>1,264</td>
-                    <td>632</td>
-                    <td>179</td>
-                    <td>89.5</td>
-                </tr>
-                <tr>
-                    <th>8</th>
-                    <td>4</td>
-                    <td>88,000</td>
-                    <td>2,930</td>
-                    <td>83,000</td>
-                    <td>93,000</td>
-                    <td>8,668</td>
-                    <td>4,334</td>
-                    <td>1,426</td>
-                    <td>713</td>
-                    <td>202</td>
-                    <td>101</td>
-                </tr>
-                <tr>
-                    <th>9</th>
-                    <td>5</td>
-                    <td>98,000</td>
-                    <td>3,270</td>
-                    <td>93,000</td>
-                    <td>101,000</td>
-                    <td>9,653</td>
-                    <td>4,826.5</td>
-                    <td>1,588</td>
-                    <td>794</td>
-                    <td>225</td>
-                    <td>112.5</td>
-                </tr>
-                <tr>
-                    <th>10</th>
-                    <td>6</td>
-                    <td>104,000</td>
-                    <td>3,470</td>
-                    <td>101,000</td>
-                    <td>107,000</td>
-                    <td>10,244</td>
-                    <td>5,122</td>
-                    <td>1,685</td>
-                    <td>842.5</td>
-                    <td>239</td>
-                    <td>119.5</td>
-                </tr>
+            <tr class="finance-sheet-group-row">
+                <th>1</th>
+                <td colspan="3">標準報酬</td>
+                <td colspan="2">報酬月額</td>
+                <td class="finance-sheet-editable-cell" contenteditable="true">健康保険料</td>
+                <td class="finance-sheet-editable-cell" contenteditable="true">介護保険料</td>
+                <td class="finance-sheet-editable-cell" contenteditable="true"><span
+                        class="finance-sheet-new">NEW</span>子ども・子育て<br>支援金
+                </td>
+            </tr>
+            <tr class="finance-sheet-header-row">
+                <th>3</th>
+                <td>等級</td>
+                <td>月額</td>
+                <td>日額</td>
+                <td>円以上</td>
+                <td>円未満</td>
+                <td class="finance-sheet-editable-cell" contenteditable="true">9.85%</td>
+                <td class="finance-sheet-editable-cell" contenteditable="true">1.62%</td>
+                <td class="finance-sheet-editable-cell" contenteditable="true">0.23%</td>
+            </tr>
             </tbody>
         </table>
     </div>
     <div class="finance-sheet-toolbar">
         <input class="finance-sheet-file" id="annuityCsvInput" type="file" accept=".csv,text/csv">
-        <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityUploadBtn">上传</button>
+        <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityUploadBtn">保存</button>
         <button class="c-btn c-btn-primary c-btn-sm" type="button" id="annuityDownloadBtn">下载</button>
+        <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityAddTaxSubjectBtn">增加交税科目</button>
     </div>
 </div>
 
@@ -194,7 +92,9 @@
         const table = document.getElementById("annuitySheetTable");
         const uploadButton = document.getElementById("annuityUploadBtn");
         const downloadButton = document.getElementById("annuityDownloadBtn");
+        const addTaxSubjectButton = document.getElementById("annuityAddTaxSubjectBtn");
         const fileInput = document.getElementById("annuityCsvInput");
+        const CSV_COLUMNS = ["grade", "standard_salary", "daily_salary", "min_salary", "max_salary"];
 
         const columnName = (index) => {
             let name = "";
@@ -247,66 +147,224 @@
             return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, "\"\"")}"` : text;
         };
 
-        const getSheetRows = () => {
-            if (!table) return [];
-            return Array.from(table.tBodies[0]?.rows || [])
-                .filter((row) => !row.classList.contains("finance-sheet-title-row"))
-                .map((row) => Array.from(row.cells).slice(1).map((cell) => cell.textContent.trim()));
+        const normalizeHeader = (value) => String(value ?? "").replace(/^\ufeff/, "").trim();
+
+        const isCsvFile = (file) => {
+            const name = (file?.name || "").toLowerCase();
+            return name.endsWith(".csv");
         };
 
-        const renderSheet = (rows) => {
-            if (!table || !rows.length) return;
-            const columnCount = Math.max(...rows.map((row) => row.length), 1);
-            table.tHead.innerHTML = "";
-            const letters = document.createElement("tr");
-            const corner = document.createElement("th");
-            corner.className = "finance-sheet-corner";
-            letters.appendChild(corner);
-            for (let i = 0; i < columnCount; i += 1) {
-                const th = document.createElement("th");
-                th.textContent = columnName(i);
-                letters.appendChild(th);
-            }
-            table.tHead.appendChild(letters);
+        const isSystemCsvFormat = (rows) => {
+            const headers = rows[0] || [];
+            return CSV_COLUMNS.length === headers.length
+                && CSV_COLUMNS.every((column, index) => normalizeHeader(headers[index]) === column);
+        };
 
-            const body = table.tBodies[0];
-            body.innerHTML = "";
-            const titleRow = document.createElement("tr");
-            titleRow.className = "finance-sheet-title-row";
-            const titleIndex = document.createElement("th");
-            titleIndex.textContent = "1";
-            const titleCell = document.createElement("td");
-            titleCell.colSpan = columnCount;
-            titleCell.textContent = "年金保险";
-            titleRow.append(titleIndex, titleCell);
-            body.appendChild(titleRow);
+        const getDataRows = () => {
+            if (!table) return [];
+            return Array.from(table.tBodies[0]?.rows || [])
+                .filter((row) => !row.classList.contains("finance-sheet-group-row")
+                    && !row.classList.contains("finance-sheet-subgroup-row")
+                    && !row.classList.contains("finance-sheet-header-row"));
+        };
 
-            rows.forEach((items, rowIndex) => {
-                const tr = document.createElement("tr");
-                if (rowIndex === 0) tr.className = "finance-sheet-header-row";
-                const rowHead = document.createElement("th");
-                rowHead.textContent = String(rowIndex + 2);
-                tr.appendChild(rowHead);
-                for (let i = 0; i < columnCount; i += 1) {
-                    const td = document.createElement("td");
-                    td.textContent = items[i] || "";
-                    tr.appendChild(td);
-                }
-                body.appendChild(tr);
+        const getSheetColumnCount = () => table ? table.tHead.rows[0].cells.length - 1 : 0;
+
+        const getExportRows = () => [
+            CSV_COLUMNS,
+            ...getDataRows().map((row) => Array.from(row.cells).slice(1, 6).map((cell) => cell.textContent.trim()))
+        ];
+
+        const parseNumber = (value) => {
+            const normalized = String(value ?? "").replace(/,/g, "").trim();
+            if (!normalized) return 0;
+            const number = Number(normalized);
+            return Number.isFinite(number) ? number : 0;
+        };
+
+        const parseRate = (value) => {
+            const normalized = String(value ?? "").replace("%", "").trim();
+            if (!normalized) return 0;
+            const number = Number(normalized);
+            return Number.isFinite(number) ? number / 100 : 0;
+        };
+
+        const formatAmount = (value) => {
+            if (!Number.isFinite(value)) return "";
+            return value.toFixed(1);
+        };
+
+        const getTaxRateCells = () => {
+            const headerRow = table?.tBodies[0]?.querySelector(".finance-sheet-header-row");
+            return headerRow ? Array.from(headerRow.cells).slice(6) : [];
+        };
+
+        const setTaxDefaultCell = (cell, value) => {
+            cell.textContent = value;
+            cell.classList.add("finance-sheet-editable-cell", "finance-sheet-default-cell");
+            cell.contentEditable = "true";
+            cell.title = "默认值，可二次修改";
+        };
+
+        const calculateTaxDefaultColumn = (rateIndex, options = {}) => {
+            const rateCell = getTaxRateCells()[rateIndex];
+            const rate = parseRate(rateCell?.textContent);
+            getDataRows().forEach((row) => {
+                const cell = row.cells[6 + rateIndex];
+                if (!cell) return;
+                const isManualValue = cell.textContent.trim() && !cell.classList.contains("finance-sheet-default-cell");
+                if (options.preserveManual && isManualValue) return;
+                const standardSalary = parseNumber(row.cells[2]?.textContent);
+                setTaxDefaultCell(cell, rate ? formatAmount(standardSalary * rate) : "");
             });
         };
 
-        uploadButton?.addEventListener("click", () => fileInput?.click());
+        const calculateTaxDefaults = () => {
+            const rateCells = getTaxRateCells();
+            if (!rateCells.length) return;
+            rateCells.forEach((_, index) => {
+                calculateTaxDefaultColumn(index);
+            });
+        };
+
+        const createDataRow = (rowNumber) => {
+            const tr = document.createElement("tr");
+            const rowHead = document.createElement("th");
+            rowHead.textContent = String(rowNumber);
+            tr.appendChild(rowHead);
+            for (let i = 0; i < getSheetColumnCount(); i += 1) {
+                const td = document.createElement("td");
+                if (i >= CSV_COLUMNS.length) {
+                    td.className = "finance-sheet-editable-cell";
+                    td.contentEditable = "true";
+                }
+                tr.appendChild(td);
+            }
+            return tr;
+        };
+
+        const renderBaseColumns = (rows) => {
+            if (!table) return;
+            const body = table.tBodies[0];
+            const existingRows = getDataRows();
+            rows.forEach((items, rowIndex) => {
+                let tr = existingRows[rowIndex];
+                if (!tr) {
+                    tr = createDataRow(rowIndex + 4);
+                    body.appendChild(tr);
+                }
+                Array.from(tr.cells).slice(1, 6).forEach((cell, index) => {
+                    cell.textContent = items[index] || "";
+                    cell.classList.add("finance-sheet-imported-cell");
+                    cell.classList.remove("finance-sheet-editable-cell");
+                    cell.contentEditable = "false";
+                    cell.setAttribute("aria-readonly", "true");
+                    cell.title = "CSV上传识别项，不允许修改";
+                });
+                Array.from(tr.cells).slice(6).forEach((cell) => {
+                    cell.classList.add("finance-sheet-editable-cell");
+                    cell.contentEditable = "true";
+                });
+            });
+            calculateTaxDefaults();
+            existingRows.slice(rows.length).forEach((row) => {
+                Array.from(row.cells).slice(1, 6).forEach((cell) => {
+                    cell.textContent = "";
+                    cell.classList.remove("finance-sheet-imported-cell");
+                    cell.removeAttribute("aria-readonly");
+                    cell.removeAttribute("title");
+                });
+                if (Array.from(row.cells).slice(6).every((cell) => !cell.textContent.trim())) {
+                    row.remove();
+                }
+            });
+        };
+
+        const appendLetterHeaders = (count) => {
+            const letterRow = table?.tHead.rows[0];
+            if (!letterRow) return;
+            const start = letterRow.cells.length - 1;
+            for (let i = 0; i < count; i += 1) {
+                const th = document.createElement("th");
+                th.textContent = columnName(start + i);
+                letterRow.appendChild(th);
+            }
+        };
+
+        const appendEditableCell = (row, text, colspan = 1) => {
+            const td = document.createElement("td");
+            td.className = "finance-sheet-editable-cell";
+            td.contentEditable = "true";
+            td.textContent = text;
+            if (colspan > 1) td.colSpan = colspan;
+            row.appendChild(td);
+            return td;
+        };
+
+        const addTaxSubjectColumns = () => {
+            if (!table) return;
+            appendLetterHeaders(1);
+            const body = table.tBodies[0];
+            const groupRow = body.querySelector(".finance-sheet-group-row");
+            const headerRow = body.querySelector(".finance-sheet-header-row");
+            appendEditableCell(groupRow, "新交税科目");
+            appendEditableCell(headerRow, "0%");
+            getDataRows().forEach((row) => {
+                appendEditableCell(row, "");
+            });
+            calculateTaxDefaults();
+        };
+
+        table?.addEventListener("paste", (event) => {
+            const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            const cell = target?.closest(".finance-sheet-editable-cell");
+            if (!cell) return;
+            event.preventDefault();
+            const text = event.clipboardData?.getData("text/plain") || "";
+            document.execCommand("insertText", false, text);
+        });
+        table?.addEventListener("input", (event) => {
+            const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            const cell = target?.closest(".finance-sheet-editable-cell");
+            if (!cell) return;
+            const rateIndex = getTaxRateCells().indexOf(cell);
+            if (rateIndex >= 0) {
+                calculateTaxDefaultColumn(rateIndex, { preserveManual: true });
+                return;
+            }
+            const row = cell.closest("tr");
+            if (row && getDataRows().includes(row) && Array.from(row.cells).indexOf(cell) >= 6) {
+                cell.classList.remove("finance-sheet-default-cell");
+                cell.removeAttribute("title");
+            }
+        });
+        uploadButton?.addEventListener("click", () => {
+            uploadButton.textContent = "已保存";
+            window.setTimeout(() => {
+                uploadButton.textContent = "保存";
+            }, 1200);
+        });
         fileInput?.addEventListener("change", async () => {
             const file = fileInput.files && fileInput.files[0];
             if (!file) return;
-            const text = await file.text();
-            const rows = parseCsv(text);
-            if (rows.length) renderSheet(rows);
-            fileInput.value = "";
+            try {
+                if (!isCsvFile(file)) {
+                    alert("仅支持上传CSV文件。");
+                    return;
+                }
+                const text = await file.text();
+                const rows = parseCsv(text);
+                if (!rows.length || !isSystemCsvFormat(rows)) {
+                    alert(`CSV列名不符合系统格式。请使用：${CSV_COLUMNS.join(",")}`);
+                    return;
+                }
+                renderBaseColumns(rows.slice(1));
+            } finally {
+                fileInput.value = "";
+            }
         });
         downloadButton?.addEventListener("click", () => {
-            const csv = getSheetRows().map((row) => row.map(escapeCsvCell).join(",")).join("\r\n");
+            const csv = getExportRows().map((row) => row.map(escapeCsvCell).join(",")).join("\r\n");
             const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8" });
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
@@ -316,6 +374,7 @@
             URL.revokeObjectURL(link.href);
             link.remove();
         });
+        addTaxSubjectButton?.addEventListener("click", addTaxSubjectColumns);
     });
 }());
 </script>

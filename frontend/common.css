@@ -1884,6 +1884,18 @@ body.finance-subpage {
 .payroll-basic-delete-action {
   margin-right: auto;
 }
+.personnel-page .payroll-basic-modal-card {
+  width: min(1040px, 95%);
+}
+.payroll-basic-adjustments-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.payroll-basic-adjustments-grid .payroll-items-panel {
+  grid-column: auto;
+}
 .payroll-items-panel {
   grid-column: 1 / -1;
   border: 1px solid var(--border);
@@ -2172,6 +2184,9 @@ body.finance-subpage {
   }
   .payroll-item-row .c-btn {
     width: 100%;
+  }
+  .payroll-basic-adjustments-grid {
+    grid-template-columns: 1fr;
   }
   .finance-section-title {
     font-size: 18px;

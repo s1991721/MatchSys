@@ -56,7 +56,7 @@
 
 <div class="personnel-page c-form-page">
     <div class="modal" id="payrollBasicModal" aria-hidden="true">
-        <div class="modal-card c-card c-card-pad">
+        <div class="modal-card c-card c-card-pad payroll-basic-modal-card">
             <div class="modal-header">
                 <h4 id="payrollBasicModalTitle" data-i18n="payroll.basic.modal.add">新增薪资信息</h4>
                 <button class="modal-close" id="payrollBasicClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
@@ -79,19 +79,21 @@
                         <span data-i18n="payroll.basic.field.base_salary">基本工资</span>
                         <input id="payrollBaseSalary" type="number" min="0" step="1">
                     </label>
-                    <div class="payroll-items-panel">
-                        <div class="payroll-items-header">
-                            <span data-i18n="payroll.basic.section.additions">增加项</span>
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem" data-i18n="common.add">添加</button>
+                    <div class="payroll-basic-adjustments-grid">
+                        <div class="payroll-items-panel payroll-basic-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span data-i18n="payroll.basic.section.additions">增加项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem" data-i18n="common.add">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollAdditionItems"></div>
                         </div>
-                        <div class="payroll-items-list" id="payrollAdditionItems"></div>
-                    </div>
-                    <div class="payroll-items-panel">
-                        <div class="payroll-items-header">
-                            <span data-i18n="payroll.basic.section.deductions">减少项</span>
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem" data-i18n="common.add">添加</button>
+                        <div class="payroll-items-panel payroll-basic-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span data-i18n="payroll.basic.section.deductions">减少项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem" data-i18n="common.add">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollDeductionItems"></div>
                         </div>
-                        <div class="payroll-items-list" id="payrollDeductionItems"></div>
                     </div>
                     <label>
                         <span data-i18n="payroll.basic.field.status">状态</span>

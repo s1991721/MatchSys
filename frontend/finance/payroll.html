@@ -12,10 +12,10 @@
 <div class="page finance-module-page-shell">
     <section class="c-card c-card-pad finance-view" data-finance-panel="payroll">
 
-    <div class="finance-subtabs" role="tablist" aria-label="工资计算子功能">
-        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic">基础信息</button>
-        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly">月度计算</button>
-    </div>
+        <div class="finance-subtabs" role="tablist" aria-label="工资计算子功能" data-i18n-aria="payroll.tabs.aria">
+            <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic" data-i18n="payroll.tabs.basic">基础信息</button>
+            <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly" data-i18n="payroll.tabs.monthly">月度计算</button>
+        </div>
         <div class="finance-subframe-shell">
             <iframe id="financeSubFrame" class="finance-subframe" src="payroll/basic-info.html" title="基础信息"></iframe>
         </div>
@@ -53,9 +53,14 @@
     };
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
+        const t = (key, fallback) => {
+            if (!window.I18N || typeof window.I18N.t !== "function") return fallback;
+            const value = window.I18N.t(key);
+            return value && value !== key ? value : fallback;
+        };
         const routes = {
-        basic: { src: "payroll/basic-info.html", title: "基础信息" },
-        monthly: { src: "payroll/monthly-calculation.html", title: "月度计算" }
+            basic: { src: "payroll/basic-info.html", titleKey: "payroll.tabs.basic", fallbackTitle: "基础信息" },
+            monthly: { src: "payroll/monthly-calculation.html", titleKey: "payroll.tabs.monthly", fallbackTitle: "月度计算" }
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
         const frame = document.getElementById("financeSubFrame");
@@ -86,6 +91,16 @@
             if (!frame || !frame.contentWindow) return;
             try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
         };
+        const updateFrameTitle = () => {
+            const activeKey = buttons.find((button) => button.classList.contains("is-active"))?.dataset.financeSubtab;
+            const route = routes[activeKey];
+            if (frame && route) frame.setAttribute("title", t(route.titleKey, route.fallbackTitle));
+            document.title = t("finance.payroll.title", "工资计算");
+        };
+        const applyPayrollI18n = () => {
+            if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+            updateFrameTitle();
+        };
         const buildFrameSrc = (key, src) => {
             if (key !== "basic") return src;
             const employeeId = pageParams.get("employee_id");
@@ -108,7 +123,7 @@
             if (frame.getAttribute("src") !== targetSrc) {
                 frame.setAttribute("src", targetSrc);
             }
-            frame.setAttribute("title", route.title);
+            frame.setAttribute("title", t(route.titleKey, route.fallbackTitle));
             writeLastSubtab(key);
         };
         buttons.forEach((button) => {
@@ -117,9 +132,13 @@
         if (frame) {
             frame.addEventListener("load", syncFrameLang);
         }
-        window.addEventListener("i18n:change", syncFrameLang);
+        window.addEventListener("i18n:change", () => {
+            applyPayrollI18n();
+            syncFrameLang();
+        });
         const initialSubtab = routes[pageParams.get("subtab")] ? pageParams.get("subtab") : (readLastSubtab() || "basic");
         setSubtab(initialSubtab, true);
+        applyPayrollI18n();
     });
 }());
 </script>

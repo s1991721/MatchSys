@@ -12,26 +12,26 @@
 <div class="finance-subpage-content" data-finance-subpage="payroll.basic">
     <div class="c-inline-filters">
         <div class="c-inline-filters-grid-3 payroll-basic-filter-row">
-            <label class="c-inline-field"><span>员工</span><input id="payrollKeyword" type="text" placeholder="员工姓名"></label>
+            <label class="c-inline-field"><span data-i18n="payroll.basic.field.employee">员工</span><input id="payrollKeyword" type="text" placeholder="员工姓名" data-i18n-placeholder="payroll.basic.placeholder.employee"></label>
             <label class="c-inline-field">
-                <span>契约类型</span>
+                <span data-i18n="payroll.basic.field.contract_type">契约类型</span>
                 <select id="payrollContractType">
-                    <option value="">全部</option>
-                    <option value="0">正社员</option>
-                    <option value="1">契约社员</option>
-                    <option value="2">フリーランス</option>
+                    <option value="" data-i18n="common.all">全部</option>
+                    <option value="0" data-i18n="payroll.basic.contract.regular">正社员</option>
+                    <option value="1" data-i18n="payroll.basic.contract.contract">契约社员</option>
+                    <option value="2" data-i18n="payroll.basic.contract.freelance">フリーランス</option>
                 </select>
             </label>
             <label class="c-inline-field">
-                <span>状态</span>
+                <span data-i18n="payroll.basic.field.status">状态</span>
                 <select id="payrollStatus">
-                    <option value="">全部</option>
-                    <option value="1">有效</option>
-                    <option value="0">无效</option>
+                    <option value="" data-i18n="common.all">全部</option>
+                    <option value="1" data-i18n="payroll.basic.status.valid">有效</option>
+                    <option value="0" data-i18n="payroll.basic.status.invalid">无效</option>
                 </select>
             </label>
             <div class="c-filter-actions-group payroll-basic-search-action">
-                <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn">搜索</button>
+                <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" data-i18n="common.search">搜索</button>
             </div>
         </div>
     </div>
@@ -39,17 +39,17 @@
         <table class="c-table c-table-hover">
             <thead>
             <tr>
-                <th>员工</th>
-                <th>契约类型</th>
-                <th>基本工资</th>
-                <th>增加项合计</th>
-                <th>减少项合计</th>
-                <th>预估实发</th>
-                <th>状态</th>
-                <th class="c-actions-col">操作</th>
+                <th data-i18n="payroll.basic.field.employee">员工</th>
+                <th data-i18n="payroll.basic.field.contract_type">契约类型</th>
+                <th data-i18n="payroll.basic.field.base_salary">基本工资</th>
+                <th data-i18n="payroll.basic.table.addition_total">增加项合计</th>
+                <th data-i18n="payroll.basic.table.deduction_total">减少项合计</th>
+                <th data-i18n="payroll.basic.table.estimated_net">预估实发</th>
+                <th data-i18n="payroll.basic.field.status">状态</th>
+                <th class="c-actions-col" data-i18n="common.actions">操作</th>
             </tr>
             </thead>
-            <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="8">加载中...</td></tr></tbody>
+            <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="8" data-i18n="common.loading">加载中...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -58,56 +58,57 @@
     <div class="modal" id="payrollBasicModal" aria-hidden="true">
         <div class="modal-card c-card c-card-pad">
             <div class="modal-header">
-                <h4 id="payrollBasicModalTitle">新增薪资信息</h4>
-                <button class="modal-close" id="payrollBasicClose" aria-label="关闭">×</button>
+                <h4 id="payrollBasicModalTitle" data-i18n="payroll.basic.modal.add">新增薪资信息</h4>
+                <button class="modal-close" id="payrollBasicClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
             </div>
             <form id="payrollBasicForm" class="modal-body">
                 <div class="form-grid">
                     <label>
-                        <span>员工</span>
+                        <span data-i18n="payroll.basic.field.employee">员工</span>
                         <input id="payrollEmployeeName" type="text" readonly>
                     </label>
                     <label>
-                        <span>契约类型</span>
+                        <span data-i18n="payroll.basic.field.contract_type">契约类型</span>
                         <select id="payrollFormContractType">
-                            <option value="0">正社员</option>
-                            <option value="1">契约社员</option>
-                            <option value="2">フリーランス</option>
+                            <option value="0" data-i18n="payroll.basic.contract.regular">正社员</option>
+                            <option value="1" data-i18n="payroll.basic.contract.contract">契约社员</option>
+                            <option value="2" data-i18n="payroll.basic.contract.freelance">フリーランス</option>
                         </select>
                     </label>
                     <label>
-                        <span>基本工资</span>
+                        <span data-i18n="payroll.basic.field.base_salary">基本工资</span>
                         <input id="payrollBaseSalary" type="number" min="0" step="1">
                     </label>
                     <div class="payroll-items-panel">
                         <div class="payroll-items-header">
-                            <span>增加项</span>
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem">添加</button>
+                            <span data-i18n="payroll.basic.section.additions">增加项</span>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem" data-i18n="common.add">添加</button>
                         </div>
                         <div class="payroll-items-list" id="payrollAdditionItems"></div>
                     </div>
                     <div class="payroll-items-panel">
                         <div class="payroll-items-header">
-                            <span>减少项</span>
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem">添加</button>
+                            <span data-i18n="payroll.basic.section.deductions">减少项</span>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem" data-i18n="common.add">添加</button>
                         </div>
                         <div class="payroll-items-list" id="payrollDeductionItems"></div>
                     </div>
                     <label>
-                        <span>状态</span>
+                        <span data-i18n="payroll.basic.field.status">状态</span>
                         <select id="payrollFormStatus">
-                            <option value="1">有效</option>
-                            <option value="0">无效</option>
+                            <option value="1" data-i18n="payroll.basic.status.valid">有效</option>
+                            <option value="0" data-i18n="payroll.basic.status.invalid">无效</option>
                         </select>
                     </label>
                     <label>
-                        <span>备注</span>
+                        <span data-i18n="payroll.basic.field.remark">备注</span>
                         <input id="payrollRemark" type="text">
                     </label>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="c-btn c-btn-secondary" id="payrollBasicCancel">取消</button>
-                    <button type="submit" class="c-btn c-btn-primary">保存</button>
+                    <button type="button" class="c-btn c-btn-danger payroll-basic-delete-action" id="payrollBasicDelete" data-i18n="common.delete">删除</button>
+                    <button type="button" class="c-btn c-btn-secondary" id="payrollBasicCancel" data-i18n="common.cancel">取消</button>
+                    <button type="submit" class="c-btn c-btn-primary" data-i18n="common.save">保存</button>
                 </div>
             </form>
         </div>
@@ -116,18 +117,26 @@
 
 <script src="../../i18n.js"></script>
 <script>window.__routeNotified = true;</script>
+<script src="../../error_code.js"></script>
 <script src="../../common.js"></script>
 <script>
 (function () {
-    const contractLabels = {
+    const contractDefaults = {
         0: "正社员",
         1: "契约社员",
         2: "フリーランス"
     };
-    const statusLabels = {
+    const statusDefaults = {
         0: "无效",
         1: "有效"
     };
+    const t = (key, fallback) => {
+        if (!window.I18N || typeof window.I18N.t !== "function") return fallback;
+        const value = window.I18N.t(key);
+        return value && value !== key ? value : fallback;
+    };
+    const contractLabel = (value) => t(`payroll.basic.contract.${value}`, contractDefaults[value] || "");
+    const statusLabel = (value) => t(`payroll.basic.status.${value === 1 ? "valid" : "invalid"}`, statusDefaults[value] || "");
     const h = (value) => window.escapeHtml ? window.escapeHtml(value) : String(value == null ? "" : value);
     const formatMoney = (value) => {
         const number = Number(value || 0);
@@ -148,7 +157,6 @@
         })).filter((item) => item.name || parseMoney(item.amount) !== 0);
     };
     const sumItems = (items) => normalizeItems(items).reduce((total, item) => total + parseMoney(item.amount), 0);
-    const showError = (message) => alert(message);
 
     document.addEventListener("DOMContentLoaded", () => {
         if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
@@ -164,6 +172,7 @@
         const form = document.getElementById("payrollBasicForm");
         const closeBtn = document.getElementById("payrollBasicClose");
         const cancelBtn = document.getElementById("payrollBasicCancel");
+        const deleteBtn = document.getElementById("payrollBasicDelete");
         const additionItems = document.getElementById("payrollAdditionItems");
         const deductionItems = document.getElementById("payrollDeductionItems");
         const addAdditionItemBtn = document.getElementById("payrollAddAdditionItem");
@@ -179,13 +188,41 @@
         let editingId = null;
         let editingEmployeeId = null;
 
+        const updateModalTitle = () => {
+            modalTitle.textContent = editingId
+                ? t("payroll.basic.modal.edit", "编辑薪资信息")
+                : t("payroll.basic.modal.add", "新增薪资信息");
+        };
+
+        const localizeItemControls = () => {
+            form.querySelectorAll(".payroll-item-row").forEach((row) => {
+                const nameInput = row.querySelector("[data-field='name']");
+                const amountInput = row.querySelector("[data-field='amount']");
+                const removeBtn = row.querySelector("button[data-action='remove-payroll-item']");
+                if (nameInput) nameInput.placeholder = t("payroll.basic.item.name", "项目名");
+                if (amountInput) amountInput.placeholder = t("payroll.basic.item.amount", "金额");
+                if (removeBtn) removeBtn.textContent = t("common.delete", "删除");
+            });
+            form.querySelectorAll(".payroll-item-empty").forEach((empty) => {
+                empty.textContent = t("payroll.basic.item.empty", "暂无项目");
+            });
+        };
+
+        const applyPageI18n = (rerenderRows = true) => {
+            if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+            document.title = t("payroll.basic.title", "基础信息");
+            updateModalTitle();
+            localizeItemControls();
+            if (rerenderRows) renderRows();
+        };
+
         const createItemRow = (item = {}) => {
             const row = document.createElement("div");
             row.className = "payroll-item-row";
             const nameInput = document.createElement("input");
             nameInput.type = "text";
             nameInput.dataset.field = "name";
-            nameInput.placeholder = "项目名";
+            nameInput.placeholder = t("payroll.basic.item.name", "项目名");
             nameInput.value = item.name || "";
 
             const amountInput = document.createElement("input");
@@ -193,14 +230,14 @@
             amountInput.min = "0";
             amountInput.step = "1";
             amountInput.dataset.field = "amount";
-            amountInput.placeholder = "金额";
+            amountInput.placeholder = t("payroll.basic.item.amount", "金额");
             amountInput.value = item.amount ?? "0";
 
             const removeBtn = document.createElement("button");
             removeBtn.type = "button";
             removeBtn.className = "c-btn c-btn-danger c-btn-sm";
             removeBtn.dataset.action = "remove-payroll-item";
-            removeBtn.textContent = "删除";
+            removeBtn.textContent = t("common.delete", "删除");
 
             row.append(nameInput, amountInput, removeBtn);
             return row;
@@ -212,7 +249,7 @@
             if (!normalized.length) {
                 const empty = document.createElement("div");
                 empty.className = "payroll-item-empty";
-                empty.textContent = "暂无项目";
+                empty.textContent = t("payroll.basic.item.empty", "暂无项目");
                 container.appendChild(empty);
                 return;
             }
@@ -242,12 +279,12 @@
 
         const renderRows = () => {
             if (!items.length) {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">暂无基础信息</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("payroll.basic.empty", "暂无基础信息"))}</td></tr>`;
                 return;
             }
             tbody.innerHTML = items.map((item) => {
-                const contract = contractLabels[Number(item.contract_type)] || item.contract_label || "";
-                const status = statusLabels[Number(item.status)] || item.status_label || "";
+                const contract = contractLabel(Number(item.contract_type)) || item.contract_label || "";
+                const status = statusLabel(Number(item.status)) || item.status_label || "";
                 const additionTotal = sumItems(item.addition_items);
                 const deductionTotal = sumItems(item.deduction_items);
                 const estimatedNet = parseMoney(item.base_salary) + additionTotal - deductionTotal;
@@ -261,7 +298,7 @@
                         <td>${h(formatMoney(estimatedNet))}</td>
                         <td>${h(status)}</td>
                         <td class="c-actions-col">
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">编辑</button>
+                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">${h(t("common.edit", "编辑"))}</button>
                         </td>
                     </tr>
                 `;
@@ -269,7 +306,7 @@
         };
 
         const fetchList = async () => {
-            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">加载中...</td></tr>`;
+            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.loading", "加载中..."))}</td></tr>`;
             const params = window.createParams([
                 ["keyword", keywordInput.value.trim()],
                 ["contract_type", contractTypeSelect.value],
@@ -277,18 +314,12 @@
                 ["page_size", "100"]
             ]);
             const payload = await window.requestJson(window.buildUrl("/api/finance/payroll/basic-info", params), {method: "GET"});
-            if (!payload.success) {
-                throw new Error(payload.message || "加载失败");
-            }
             items = Array.isArray(payload.data?.items) ? payload.data.items : [];
             renderRows();
         };
 
         const fetchEmployee = async (employeeId) => {
             const payload = await window.requestJson(`/api/employees/${encodeURIComponent(employeeId)}`, {method: "GET"});
-            if (!payload.success) {
-                throw new Error(payload.message || "员工不存在");
-            }
             return payload.data?.item || {};
         };
 
@@ -298,9 +329,6 @@
                 ["page_size", "1"]
             ]);
             const payload = await window.requestJson(window.buildUrl("/api/finance/payroll/basic-info", params), {method: "GET"});
-            if (!payload.success) {
-                throw new Error(payload.message || "加载失败");
-            }
             const found = Array.isArray(payload.data?.items) ? payload.data.items : [];
             return found[0] || null;
         };
@@ -308,7 +336,7 @@
         const openModal = (mode, data, employee) => {
             editingId = mode === "edit" ? data?.id : null;
             editingEmployeeId = data?.employee_id || employee?.id || null;
-            modalTitle.textContent = mode === "edit" ? "编辑薪资信息" : "新增薪资信息";
+            updateModalTitle();
             fields.employeeName.value = data?.employee_name || employee?.name || "";
             fields.contractType.value = String(data?.contract_type ?? 0);
             fields.baseSalary.value = data?.base_salary || "0";
@@ -358,13 +386,13 @@
                 const employee = await fetchEmployee(employeeId);
                 openModal("add", {employee_id: employeeId}, employee);
             } catch (err) {
-                showError(err.message || "薪资信息加载失败");
+                window.alert(err.message || t("payroll.basic.error.load_salary", "薪资信息加载失败"));
             }
         };
 
         searchBtn.addEventListener("click", () => {
             fetchList().catch((err) => {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">加载失败：${h(err.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
             });
         });
         tbody.addEventListener("click", (event) => {
@@ -375,6 +403,22 @@
         });
         closeBtn.addEventListener("click", closeModal);
         cancelBtn.addEventListener("click", closeModal);
+        deleteBtn.addEventListener("click", async (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!editingId) return;
+            if (!window.confirm(t("payroll.basic.confirm.delete", "确定删除这条薪资信息吗？"))) return;
+            try {
+                await window.requestJson(`/api/finance/payroll/basic-info/${editingId}`, {
+                    method: "DELETE"
+                });
+                window.alert(t("payroll.basic.message.deleted", "薪资信息已删除。"));
+                closeModal();
+                await fetchList();
+            } catch (err) {
+                window.alert(err.message || t("common.delete_failed", "删除失败"));
+            }
+        });
         addAdditionItemBtn.addEventListener("click", () => addItemRow(additionItems));
         addDeductionItemBtn.addEventListener("click", () => addItemRow(deductionItems));
         form.addEventListener("click", (event) => {
@@ -391,25 +435,25 @@
             const payload = buildPayload();
             try {
                 const url = editingId ? `/api/finance/payroll/basic-info/${editingId}` : "/api/finance/payroll/basic-info";
-                const response = await window.requestJson(url, {
+                await window.requestJson(url, {
                     method: editingId ? "PUT" : "POST",
                     body: JSON.stringify(payload)
                 });
-                if (!response.success) {
-                    throw new Error(response.message || "保存失败");
-                }
                 closeModal();
                 await fetchList();
             } catch (err) {
-                showError(err.message || "保存失败");
+                window.alert(err.message || t("common.save_failed", "保存失败"));
             }
         });
+
+        applyPageI18n(false);
 
         fetchList()
             .then(handleEmployeeTrigger)
             .catch((err) => {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">加载失败：${h(err.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
             });
+        window.addEventListener("i18n:change", applyPageI18n);
     });
 }());
 </script>

@@ -16,6 +16,7 @@ from attendance.models import get_monthly_attendance_models
 from employee.models import Employee
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import is_workday, paginate_queryset, parse_date, parse_json_body, require_login, shift_month
+from project.error_codes import ErrorCode
 from .models import (
     FinancePayable,
     FinancePayment,
@@ -1428,6 +1429,42 @@ def _parse_payroll_status(value):
     return parsed, None
 
 
+def _parse_payroll_items(value, field_name):
+    if value in (None, ""):
+        return [], None
+    if not isinstance(value, list):
+        return None, api_error(f"Invalid field: {field_name}", status=400)
+
+    result = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, api_error(f"Invalid field: {field_name}", status=400)
+        name = (item.get("name") or "").strip()
+        raw_amount = item.get("amount")
+        if not name and raw_amount in (None, "", 0, "0"):
+            continue
+        if not name:
+            return None, api_error(f"Missing field: {field_name}[{index}].name", status=400)
+        try:
+            amount = Decimal(str(raw_amount or "0"))
+        except Exception:
+            return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
+        if amount < 0:
+            return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
+        result.append({"name": name, "amount": str(amount)})
+    return result, None
+
+
+def _sum_payroll_items(items):
+    total = Decimal("0")
+    for item in items or []:
+        try:
+            total += Decimal(str(item.get("amount") or "0"))
+        except Exception:
+            continue
+    return total
+
+
 def _serialize_payroll_basic_items(items):
     employee_ids = [item.employee_id for item in items]
     employees = {
@@ -1512,39 +1549,33 @@ def payroll_basic_info_api(request):
     status_value, error = _parse_payroll_status(payload.get("status", 1))
     if error:
         return error
-    valid_until_date, error = parse_date(payload.get("valid_until_date"), "valid_until_date")
+    addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
     if error:
         return error
-
-    amount_values = {}
-    for field_name in (
-        "base_salary",
-        "health_insurance",
-        "welfare_pension",
-        "employment_insurance",
-        "income_tax",
-    ):
-        value, error = _parse_decimal_field(payload, field_name)
-        if error:
-            return error
-        amount_values[field_name] = value
+    deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+    if error:
+        return error
+    base_salary, error = _parse_decimal_field(payload, "base_salary")
+    if error:
+        return error
 
     item = PayrollBasicInfo.objects.create(
         employee_id=employee_id,
         employee_name=employee.name,
         contract_type=contract_type,
-        valid_until_date=valid_until_date,
+        base_salary=base_salary,
+        addition_items=addition_items,
+        deduction_items=deduction_items,
         status=status_value,
         remark=(payload.get("remark") or "").strip() or None,
         created_by=login_id,
         updated_by=login_id,
-        **amount_values,
     )
     return api_success(data={"item": PayrollBasicInfo.serialize(item, employee)})
 
 
 @csrf_exempt
-@require_http_methods(["GET", "PUT"])
+@require_http_methods(["GET", "PUT", "DELETE"])
 def payroll_basic_info_detail_api(request, payroll_basic_id):
     item = PayrollBasicInfo.objects.filter(id=payroll_basic_id, deleted_at__isnull=True).first()
     if not item:
@@ -1557,6 +1588,14 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
     login_id, error = require_login(request)
     if error:
         return error
+
+    if request.method == "DELETE":
+        if item.status != 0:
+            return api_error(ErrorCode.PAYROLL_BASIC_DELETE_STATUS_INVALID)
+        item.deleted_at = timezone.now()
+        item.updated_by = login_id
+        item.save(update_fields=["deleted_at", "updated_by", "updated_at"])
+        return api_success(data={"id": payroll_basic_id})
 
     payload, error = parse_json_body(request)
     if error:
@@ -1574,24 +1613,23 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
             return error
         item.status = status_value
 
-    if "valid_until_date" in payload:
-        valid_until_date, error = parse_date(payload.get("valid_until_date"), "valid_until_date")
+    if "base_salary" in payload:
+        value, error = _parse_decimal_field(payload, "base_salary")
         if error:
             return error
-        item.valid_until_date = valid_until_date
+        item.base_salary = value
 
-    for field_name in (
-        "base_salary",
-        "health_insurance",
-        "welfare_pension",
-        "employment_insurance",
-        "income_tax",
-    ):
-        if field_name in payload:
-            value, error = _parse_decimal_field(payload, field_name)
-            if error:
-                return error
-            setattr(item, field_name, value)
+    if "addition_items" in payload:
+        addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+        if error:
+            return error
+        item.addition_items = addition_items
+
+    if "deduction_items" in payload:
+        deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+        if error:
+            return error
+        item.deduction_items = deduction_items
 
     if "remark" in payload:
         item.remark = (payload.get("remark") or "").strip() or None
@@ -1645,6 +1683,12 @@ def _build_monthly_payload(payload, target_month=None):
     bank_info, error = _parse_bank_info(payload.get("bank_info"))
     if error:
         return None, error
+    addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+    if error:
+        return None, error
+    deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+    if error:
+        return None, error
 
     amount_values = {}
     for field_name in (
@@ -1667,6 +1711,8 @@ def _build_monthly_payload(payload, target_month=None):
             "contract_type": contract_type,
             "status": status_value,
             "bank_info": bank_info,
+            "addition_items": addition_items,
+            "deduction_items": deduction_items,
             "remark": (payload.get("remark") or "").strip() or None,
             **amount_values,
         }
@@ -1759,13 +1805,11 @@ def payroll_monthly_calculate_api(request):
     attendance_map = _get_attendance_days_map(target_month, [item.employee_id for item in basic_items])
     created_items = []
     for basic in basic_items:
-        allowance_amount = Decimal("0")
-        deduction_amount = basic.income_tax
-        social_insurance_amount = (
-            basic.health_insurance
-            + basic.welfare_pension
-            + basic.employment_insurance
-        )
+        addition_items = basic.addition_items or []
+        deduction_items = basic.deduction_items or []
+        allowance_amount = _sum_payroll_items(addition_items)
+        deduction_amount = _sum_payroll_items(deduction_items)
+        social_insurance_amount = Decimal("0")
         net_salary = basic.base_salary + allowance_amount - deduction_amount - social_insurance_amount
         created_items.append(
             PayrollMonthlyCalculation.build_for_period(
@@ -1778,6 +1822,8 @@ def payroll_monthly_calculate_api(request):
                 base_salary=basic.base_salary,
                 allowance_amount=allowance_amount,
                 deduction_amount=deduction_amount,
+                addition_items=addition_items,
+                deduction_items=deduction_items,
                 social_insurance_amount=social_insurance_amount,
                 net_salary=net_salary,
                 bank_info=None,
@@ -1863,6 +1909,16 @@ def payroll_monthly_detail_api(request, calculation_id):
         if error:
             return error
         item.bank_info = bank_info
+    if "addition_items" in payload:
+        addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+        if error:
+            return error
+        item.addition_items = addition_items
+    if "deduction_items" in payload:
+        deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+        if error:
+            return error
+        item.deduction_items = deduction_items
     if "remark" in payload:
         item.remark = (payload.get("remark") or "").strip() or None
 

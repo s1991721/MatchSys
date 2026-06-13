@@ -1881,6 +1881,9 @@ body.finance-subpage {
 .payroll-basic-search-action {
   justify-content: flex-end;
 }
+.payroll-basic-delete-action {
+  margin-right: auto;
+}
 .payroll-items-panel {
   grid-column: 1 / -1;
   border: 1px solid var(--border);

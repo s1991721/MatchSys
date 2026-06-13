@@ -130,6 +130,9 @@ class ErrorCode(Enum):
     SETTINGS_SENDMSG_TEST_FAILED = (500603, "Send mail config test failed")
     SETTINGS_LINE_TEST_FAILED = (500701, "LINE notification test failed")
 
+    # Finance/payroll: 700xxx
+    PAYROLL_BASIC_DELETE_STATUS_INVALID = (700001, "Only invalid payroll basic info can be deleted")
+
     # BP match/mail/history: 600xxx
     MATCH_ID_REQUIRED = (600001, "Missing id")
     MATCH_MAIL_NOT_FOUND = (600002, "Mail not found")

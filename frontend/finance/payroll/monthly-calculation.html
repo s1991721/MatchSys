@@ -43,9 +43,9 @@
                 <th>员工</th>
                 <th>出勤日数</th>
                 <th>基本工资</th>
-                <th>补贴</th>
-                <th>扣款</th>
-                <th>社保/年金/保险</th>
+                <th>增加项合计</th>
+                <th>减少项合计</th>
+                <th>自动扣款合计</th>
                 <th>实发金额</th>
                 <th>状态</th>
                 <th class="c-actions-col">操作</th>
@@ -58,7 +58,7 @@
 
 <div class="personnel-page c-form-page">
     <div class="modal" id="payrollMonthlyModal" aria-hidden="true">
-        <div class="modal-card c-card c-card-pad">
+        <div class="modal-card c-card c-card-pad payroll-monthly-modal-card">
             <div class="modal-header">
                 <h4 id="payrollMonthlyModalTitle">新增月度工资</h4>
                 <button class="modal-close" id="payrollMonthlyClose" aria-label="关闭">×</button>
@@ -90,22 +90,6 @@
                         <input id="payrollFormBaseSalary" type="number" min="0" step="1">
                     </label>
                     <label>
-                        <span>补贴</span>
-                        <input id="payrollFormAllowance" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>扣款</span>
-                        <input id="payrollFormDeduction" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>社保/年金/保险</span>
-                        <input id="payrollFormSocialInsurance" type="number" min="0" step="1">
-                    </label>
-                    <label>
-                        <span>实发金额</span>
-                        <input id="payrollFormNetSalary" type="number" min="0" step="1">
-                    </label>
-                    <label>
                         <span>状态</span>
                         <select id="payrollFormStatus">
                             <option value="0">未确认</option>
@@ -117,6 +101,92 @@
                         <span>备注</span>
                         <input id="payrollFormRemark" type="text">
                     </label>
+                    <div class="payroll-monthly-detail-grid">
+                        <div class="payroll-items-panel payroll-monthly-calculated-panel">
+                            <div class="payroll-items-header">
+                                <span>自动计算扣款</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollRecalculateDeductions">按公式重算</button>
+                            </div>
+                            <div class="payroll-calculated-columns">
+                                <div class="payroll-calculated-group">
+                                    <div class="payroll-calculated-group-title">根据基本工资计算（固定档位）</div>
+                                    <div class="table-wrap payroll-calculated-table-wrap">
+                                        <table class="c-table payroll-calculated-table">
+                                            <thead>
+                                            <tr>
+                                                <th>项目</th>
+                                                <th>料率</th>
+                                                <th>金额</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="payrollFixedDeductions"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="payroll-calculated-group">
+                                    <div class="payroll-calculated-group-title">根据实际收入计算（浮动计算）</div>
+                                    <div class="table-wrap payroll-calculated-table-wrap">
+                                        <table class="c-table payroll-calculated-table">
+                                            <thead>
+                                            <tr>
+                                                <th>项目</th>
+                                                <th>计算基准</th>
+                                                <th>料率</th>
+                                                <th>金额</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="payrollVariableDeductions"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span>增加项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollAdditionItems"></div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span>非课税增加项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddNonTaxableAdditionItem">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollNonTaxableAdditionItems"></div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span>减少项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollDeductionItems"></div>
+                        </div>
+                    </div>
+                    <div class="payroll-items-panel payroll-monthly-summary-panel">
+                        <div class="payroll-summary-bar">
+                            <div class="payroll-summary-item">
+                                <span>增加项合计</span>
+                                <strong id="payrollFormAllowanceDisplay">¥0</strong>
+                            </div>
+                            <div class="payroll-summary-item">
+                                <span>减少项合计</span>
+                                <strong id="payrollFormDeductionDisplay">¥0</strong>
+                            </div>
+                            <div class="payroll-summary-item">
+                                <span>自动扣款合计</span>
+                                <strong id="payrollFormSocialInsuranceDisplay">¥0</strong>
+                            </div>
+                            <div class="payroll-summary-item payroll-summary-net">
+                                <span>实发金额</span>
+                                <strong id="payrollFormNetSalaryDisplay">¥0</strong>
+                            </div>
+                        </div>
+                        <input id="payrollFormAllowance" type="hidden">
+                        <input id="payrollFormDeduction" type="hidden">
+                        <input id="payrollFormSocialInsurance" type="hidden">
+                        <input id="payrollFormNetSalary" type="hidden">
+                    </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="c-btn c-btn-secondary" id="payrollMonthlyCancel">取消</button>
@@ -137,10 +207,21 @@
         1: "已确认",
         2: "已发放"
     };
+    const calculatedDeductionRules = [
+        {key: "healthInsurance", name: "健康保险料", rate: 0.05, base: "baseSalary", group: "fixed"},
+        {key: "careInsurance", name: "介护保险料", rate: 0.008, base: "baseSalary", group: "fixed"},
+        {key: "pension", name: "厚生年金等", rate: 0.0915, base: "baseSalary", group: "fixed"},
+        {key: "childSupport", name: "子育支援金", rate: 0.0018, base: "baseSalary", group: "fixed"},
+        {key: "employmentInsurance", name: "雇佣保险料", rate: 0.0055, base: "remaining", group: "variable"},
+        {key: "incomeTax", name: "所得税", rate: 0.05, base: "remainingAfterEmployment", group: "variable"}
+    ];
+    const calculatedDeductionNames = new Set(calculatedDeductionRules.map((rule) => rule.name));
     let monthlyRows = [];
     let monthlyCalculated = false;
     let selectedMonth = "";
     let editingId = null;
+    let manuallyEditedCalculatedDeductions = new Set();
+    let trackingOriginalValues = false;
 
     const h = (value) => {
         if (window.escapeHtml) return window.escapeHtml(value == null ? "" : String(value));
@@ -158,6 +239,31 @@
             currency: "JPY",
             maximumFractionDigits: 0
         });
+    };
+    const parseMoney = (value) => {
+        const number = Number(value || 0);
+        return Number.isFinite(number) ? number : 0;
+    };
+    const roundAmount = (value) => String(Math.max(0, Math.round(parseMoney(value))));
+    const normalizeItems = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.map((item) => ({
+            name: String(item?.name || "").trim(),
+            amount: String(item?.amount ?? "0").trim() || "0"
+        })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+    };
+    const sumItems = (items) => normalizeItems(items).reduce((total, item) => total + parseMoney(item.amount), 0);
+    const splitDeductionItems = (items) => {
+        const manual = [];
+        const calculated = {};
+        normalizeItems(items).forEach((item) => {
+            if (calculatedDeductionNames.has(item.name)) {
+                calculated[item.name] = item;
+            } else {
+                manual.push(item);
+            }
+        });
+        return {manual, calculated};
     };
     const getCurrentMonthValue = () => {
         const now = new Date();
@@ -287,8 +393,202 @@
         }
     };
 
+    const createItemRow = (item = {}) => {
+        const row = document.createElement("div");
+        row.className = "payroll-item-row";
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.dataset.field = "name";
+        nameInput.placeholder = "项目名";
+        nameInput.value = item.name || "";
+
+        const amountInput = document.createElement("input");
+        amountInput.type = "number";
+        amountInput.min = "0";
+        amountInput.step = "1";
+        amountInput.dataset.field = "amount";
+        amountInput.placeholder = "金额";
+        amountInput.value = item.amount ?? "0";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "c-btn c-btn-danger c-btn-sm";
+        removeBtn.dataset.action = "remove-payroll-item";
+        removeBtn.textContent = "删除";
+
+        row.append(nameInput, amountInput, removeBtn);
+        return row;
+    };
+
+    const renderItemRows = (container, rows) => {
+        container.innerHTML = "";
+        const normalized = normalizeItems(rows);
+        if (!normalized.length) {
+            const empty = document.createElement("div");
+            empty.className = "payroll-item-empty";
+            empty.textContent = "暂无项目";
+            container.appendChild(empty);
+            return;
+        }
+        normalized.forEach((item) => container.appendChild(createItemRow(item)));
+    };
+
+    const collectItems = (container) => Array.from(container.querySelectorAll(".payroll-item-row")).map((row) => ({
+        name: row.querySelector("[data-field='name']").value.trim(),
+        amount: row.querySelector("[data-field='amount']").value || "0"
+    })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+
+    const addItemRow = (container) => {
+        const empty = container.querySelector(".payroll-item-empty");
+        if (empty) empty.remove();
+        const row = createItemRow({name: "", amount: "0"});
+        container.appendChild(row);
+        if (trackingOriginalValues) {
+            row.querySelectorAll("input, select").forEach((input) => {
+                input.dataset.originalValue = "";
+            });
+            updateModifiedMarkers();
+        }
+    };
+
+    const renderCalculatedDeductions = (existing = {}) => {
+        const fixedContainer = document.getElementById("payrollFixedDeductions");
+        const variableContainer = document.getElementById("payrollVariableDeductions");
+        fixedContainer.innerHTML = "";
+        variableContainer.innerHTML = "";
+        calculatedDeductionRules.forEach((rule) => {
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = rule.name;
+
+            const baseCell = document.createElement("td");
+            baseCell.textContent = rule.base === "baseSalary"
+                ? "基本工资"
+                : rule.base === "remaining"
+                    ? "扣除社保后"
+                    : "扣除雇保后";
+
+            const rateCell = document.createElement("td");
+            rateCell.className = "payroll-calculated-rate";
+            rateCell.textContent = `${(rule.rate * 100).toFixed(2)}%`;
+
+            const amountCell = document.createElement("td");
+
+            const amountInput = document.createElement("input");
+            amountInput.type = "number";
+            amountInput.min = "0";
+            amountInput.step = "1";
+            amountInput.dataset.calculatedKey = rule.key;
+            amountInput.dataset.calculatedName = rule.name;
+            amountInput.value = existing[rule.name]?.amount ?? "0";
+
+            amountCell.appendChild(amountInput);
+            if (rule.group === "fixed") {
+                row.append(nameCell, rateCell, amountCell);
+                fixedContainer.appendChild(row);
+            } else {
+                row.append(nameCell, baseCell, rateCell, amountCell);
+                variableContainer.appendChild(row);
+            }
+        });
+    };
+
+    const collectCalculatedDeductionItems = () => Array.from(
+        document.querySelectorAll("[data-calculated-key]")
+    ).map((input) => ({
+        name: input.dataset.calculatedName,
+        amount: input.value || "0"
+    }));
+
+    const trackOriginalValues = () => {
+        const form = document.getElementById("payrollMonthlyForm");
+        form.querySelectorAll("input, select").forEach((input) => {
+            input.dataset.originalValue = input.value || "";
+            input.classList.remove("is-modified");
+        });
+        form.querySelectorAll(".payroll-item-row, .payroll-summary-item").forEach((item) => {
+            item.classList.remove("is-modified");
+        });
+        trackingOriginalValues = true;
+    };
+
+    const setInputModifiedState = (input) => {
+        if (!Object.prototype.hasOwnProperty.call(input.dataset, "originalValue")) return false;
+        const modified = String(input.value || "") !== String(input.dataset.originalValue || "");
+        input.classList.toggle("is-modified", modified);
+        return modified;
+    };
+
+    const updateModifiedMarkers = () => {
+        if (!trackingOriginalValues) return;
+        const form = document.getElementById("payrollMonthlyForm");
+        form.querySelectorAll("input, select").forEach(setInputModifiedState);
+        form.querySelectorAll(".payroll-item-row").forEach((row) => {
+            row.classList.toggle("is-modified", Boolean(row.querySelector(".is-modified")));
+        });
+        [
+            ["payrollFormAllowance", "payrollFormAllowanceDisplay"],
+            ["payrollFormDeduction", "payrollFormDeductionDisplay"],
+            ["payrollFormSocialInsurance", "payrollFormSocialInsuranceDisplay"],
+            ["payrollFormNetSalary", "payrollFormNetSalaryDisplay"]
+        ].forEach(([inputId, displayId]) => {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            if (!input || !display) return;
+            const modified = setInputModifiedState(input);
+            display.closest(".payroll-summary-item")?.classList.toggle("is-modified", modified);
+        });
+    };
+
+    const recalculatePayrollTotals = () => {
+        const baseSalary = parseMoney(document.getElementById("payrollFormBaseSalary").value);
+        const additionTotal = sumItems(collectItems(document.getElementById("payrollAdditionItems")));
+        const nonTaxableAdditionTotal = sumItems(collectItems(document.getElementById("payrollNonTaxableAdditionItems")));
+        const manualDeductionTotal = sumItems(collectItems(document.getElementById("payrollDeductionItems")));
+        const calculatedInputs = Array.from(document.querySelectorAll("[data-calculated-key]"));
+        const firstStageTotal = calculatedDeductionRules
+            .filter((rule) => rule.base === "baseSalary")
+            .reduce((total, rule) => total + Math.round(baseSalary * rule.rate), 0);
+        const remainingBase = Math.max(0, baseSalary - firstStageTotal);
+        let employmentAmount = 0;
+
+        calculatedInputs.forEach((input) => {
+            const rule = calculatedDeductionRules.find((item) => item.key === input.dataset.calculatedKey);
+            if (!rule) return;
+            if (manuallyEditedCalculatedDeductions.has(rule.key)) return;
+            let amount = 0;
+            if (rule.base === "baseSalary") {
+                amount = baseSalary * rule.rate;
+            } else if (rule.base === "remaining") {
+                amount = remainingBase * rule.rate;
+                employmentAmount = Math.round(amount);
+            } else if (rule.base === "remainingAfterEmployment") {
+                amount = Math.max(0, remainingBase - employmentAmount) * rule.rate;
+            }
+            input.value = roundAmount(amount);
+        });
+
+        const calculatedDeductionTotal = sumItems(collectCalculatedDeductionItems());
+        const deductionTotal = manualDeductionTotal + calculatedDeductionTotal;
+        const totalAdditions = additionTotal + nonTaxableAdditionTotal;
+        const netSalary = baseSalary + totalAdditions - deductionTotal;
+        document.getElementById("payrollFormAllowance").value = roundAmount(totalAdditions);
+        document.getElementById("payrollFormDeduction").value = roundAmount(deductionTotal);
+        document.getElementById("payrollFormSocialInsurance").value = roundAmount(calculatedDeductionTotal);
+        document.getElementById("payrollFormNetSalary").value = roundAmount(netSalary);
+        document.getElementById("payrollFormAllowanceDisplay").textContent = formatMoney(totalAdditions);
+        document.getElementById("payrollFormDeductionDisplay").textContent = formatMoney(deductionTotal);
+        document.getElementById("payrollFormSocialInsuranceDisplay").textContent = formatMoney(calculatedDeductionTotal);
+        document.getElementById("payrollFormNetSalaryDisplay").textContent = formatMoney(netSalary);
+        updateModifiedMarkers();
+    };
+
     const openModal = (mode, item = null) => {
         editingId = mode === "edit" ? item?.id : null;
+        const {manual: manualDeductions, calculated} = splitDeductionItems(item?.deduction_items || []);
+        manuallyEditedCalculatedDeductions = new Set();
         document.getElementById("payrollMonthlyModalTitle").textContent = mode === "edit" ? "编辑月度工资" : "新增月度工资";
         document.getElementById("payrollFormEmployeeId").value = item?.employee_id || "";
         document.getElementById("payrollFormEmployeeId").readOnly = mode === "edit";
@@ -296,12 +596,18 @@
         document.getElementById("payrollFormContractType").value = item?.contract_type ?? "0";
         document.getElementById("payrollFormAttendanceDays").value = item?.attendance_days || "0";
         document.getElementById("payrollFormBaseSalary").value = item?.base_salary || "0";
-        document.getElementById("payrollFormAllowance").value = item?.allowance_amount || "0";
-        document.getElementById("payrollFormDeduction").value = item?.deduction_amount || "0";
-        document.getElementById("payrollFormSocialInsurance").value = item?.social_insurance_amount || "0";
-        document.getElementById("payrollFormNetSalary").value = item?.net_salary || "0";
         document.getElementById("payrollFormStatus").value = item?.status ?? "0";
         document.getElementById("payrollFormRemark").value = item?.remark || "";
+        renderItemRows(document.getElementById("payrollAdditionItems"), item?.addition_items || []);
+        renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), item?.non_taxable_addition_items || []);
+        renderItemRows(document.getElementById("payrollDeductionItems"), manualDeductions);
+        renderCalculatedDeductions(calculated);
+        Object.keys(calculated).forEach((name) => {
+            const rule = calculatedDeductionRules.find((item) => item.name === name);
+            if (rule) manuallyEditedCalculatedDeductions.add(rule.key);
+        });
+        recalculatePayrollTotals();
+        trackOriginalValues();
         const modal = document.getElementById("payrollMonthlyModal");
         modal.classList.add("show");
         modal.setAttribute("aria-hidden", "false");
@@ -311,23 +617,42 @@
         const modal = document.getElementById("payrollMonthlyModal");
         modal.classList.remove("show");
         modal.setAttribute("aria-hidden", "true");
+        document.getElementById("payrollMonthlyForm").reset();
+        renderItemRows(document.getElementById("payrollAdditionItems"), []);
+        renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), []);
+        renderItemRows(document.getElementById("payrollDeductionItems"), []);
+        renderCalculatedDeductions();
+        manuallyEditedCalculatedDeductions = new Set();
+        trackingOriginalValues = false;
         editingId = null;
     };
 
-    const collectFormPayload = () => ({
-        month: selectedMonth,
-        employee_id: document.getElementById("payrollFormEmployeeId").value,
-        employee_name: document.getElementById("payrollFormEmployeeName").value,
-        contract_type: document.getElementById("payrollFormContractType").value,
-        attendance_days: document.getElementById("payrollFormAttendanceDays").value || "0",
-        base_salary: document.getElementById("payrollFormBaseSalary").value || "0",
-        allowance_amount: document.getElementById("payrollFormAllowance").value || "0",
-        deduction_amount: document.getElementById("payrollFormDeduction").value || "0",
-        social_insurance_amount: document.getElementById("payrollFormSocialInsurance").value || "0",
-        net_salary: document.getElementById("payrollFormNetSalary").value || "0",
-        status: document.getElementById("payrollFormStatus").value,
-        remark: document.getElementById("payrollFormRemark").value
-    });
+    const collectFormPayload = () => {
+        recalculatePayrollTotals();
+        const additionItems = collectItems(document.getElementById("payrollAdditionItems"));
+        const nonTaxableAdditionItems = collectItems(document.getElementById("payrollNonTaxableAdditionItems"));
+        const deductionItems = [
+            ...collectItems(document.getElementById("payrollDeductionItems")),
+            ...collectCalculatedDeductionItems()
+        ];
+        return {
+            month: selectedMonth,
+            employee_id: document.getElementById("payrollFormEmployeeId").value,
+            employee_name: document.getElementById("payrollFormEmployeeName").value,
+            contract_type: document.getElementById("payrollFormContractType").value,
+            attendance_days: document.getElementById("payrollFormAttendanceDays").value || "0",
+            base_salary: document.getElementById("payrollFormBaseSalary").value || "0",
+            allowance_amount: document.getElementById("payrollFormAllowance").value || "0",
+            deduction_amount: document.getElementById("payrollFormDeduction").value || "0",
+            addition_items: additionItems,
+            non_taxable_addition_items: nonTaxableAdditionItems,
+            deduction_items: deductionItems,
+            social_insurance_amount: document.getElementById("payrollFormSocialInsurance").value || "0",
+            net_salary: document.getElementById("payrollFormNetSalary").value || "0",
+            status: document.getElementById("payrollFormStatus").value,
+            remark: document.getElementById("payrollFormRemark").value
+        };
+    };
 
     document.addEventListener("DOMContentLoaded", () => {
         if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
@@ -343,6 +668,13 @@
         const form = document.getElementById("payrollMonthlyForm");
         const closeBtn = document.getElementById("payrollMonthlyClose");
         const cancelBtn = document.getElementById("payrollMonthlyCancel");
+        const additionItems = document.getElementById("payrollAdditionItems");
+        const nonTaxableAdditionItems = document.getElementById("payrollNonTaxableAdditionItems");
+        const deductionItems = document.getElementById("payrollDeductionItems");
+        const addAdditionItemBtn = document.getElementById("payrollAddAdditionItem");
+        const addNonTaxableAdditionItemBtn = document.getElementById("payrollAddNonTaxableAdditionItem");
+        const addDeductionItemBtn = document.getElementById("payrollAddDeductionItem");
+        const recalculateDeductionsBtn = document.getElementById("payrollRecalculateDeductions");
 
         const loadSelectedMonth = async () => {
             selectedMonth = monthInput.value;
@@ -385,6 +717,53 @@
         });
         closeBtn.addEventListener("click", closeModal);
         cancelBtn.addEventListener("click", closeModal);
+        addAdditionItemBtn.addEventListener("click", () => {
+            addItemRow(additionItems);
+            recalculatePayrollTotals();
+        });
+        addNonTaxableAdditionItemBtn.addEventListener("click", () => {
+            addItemRow(nonTaxableAdditionItems);
+            recalculatePayrollTotals();
+        });
+        addDeductionItemBtn.addEventListener("click", () => {
+            addItemRow(deductionItems);
+            recalculatePayrollTotals();
+        });
+        recalculateDeductionsBtn.addEventListener("click", () => {
+            manuallyEditedCalculatedDeductions = new Set();
+            recalculatePayrollTotals();
+            updateModifiedMarkers();
+        });
+        form.addEventListener("input", (event) => {
+            if (event.target.dataset.calculatedKey) {
+                manuallyEditedCalculatedDeductions.add(event.target.dataset.calculatedKey);
+                recalculatePayrollTotals();
+                updateModifiedMarkers();
+                return;
+            }
+            if (
+                event.target.closest("#payrollAdditionItems") ||
+                event.target.closest("#payrollNonTaxableAdditionItems") ||
+                event.target.closest("#payrollDeductionItems") ||
+                event.target.id === "payrollFormBaseSalary"
+            ) {
+                recalculatePayrollTotals();
+            } else {
+                updateModifiedMarkers();
+            }
+        });
+        form.addEventListener("change", updateModifiedMarkers);
+        form.addEventListener("click", (event) => {
+            const btn = event.target.closest("button[data-action='remove-payroll-item']");
+            if (!btn) return;
+            const container = btn.closest(".payroll-items-list");
+            btn.closest(".payroll-item-row")?.remove();
+            if (container && !container.querySelector(".payroll-item-row")) {
+                renderItemRows(container, []);
+            }
+            recalculatePayrollTotals();
+            updateModifiedMarkers();
+        });
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
             const payload = collectFormPayload();

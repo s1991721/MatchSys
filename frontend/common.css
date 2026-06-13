@@ -1914,6 +1914,12 @@ body.finance-subpage {
 .payroll-item-row input {
   width: 100%;
 }
+.payroll-calculated-rate {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: right;
+  white-space: nowrap;
+}
 .payroll-item-empty {
   color: var(--muted);
   font-size: 13px;
@@ -2259,6 +2265,11 @@ body.finance-subpage {
   display: flex;
   flex-direction: column;
 }
+.personnel-page .payroll-monthly-modal-card {
+  width: min(1180px, calc(100vw - 24px));
+  max-height: 94vh;
+  padding: 16px 24px 14px;
+}
 .personnel-page .modal-header {
   display: flex;
   justify-content: space-between;
@@ -2288,6 +2299,159 @@ body.finance-subpage {
   overflow-y: auto;
   max-height: calc(86vh - 120px);
   padding-right: 6px;
+}
+.personnel-page .payroll-monthly-modal-card .modal-body {
+  gap: 12px;
+  max-height: calc(94vh - 104px);
+}
+.personnel-page .payroll-monthly-modal-card .form-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.personnel-page .payroll-monthly-modal-card .payroll-items-panel {
+  padding: 10px 12px;
+  gap: 8px;
+}
+.personnel-page .payroll-monthly-modal-card .payroll-items-list {
+  gap: 6px;
+}
+.personnel-page .payroll-monthly-detail-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.personnel-page .payroll-monthly-detail-grid .payroll-items-panel {
+  grid-column: auto;
+}
+.personnel-page .payroll-monthly-detail-grid .payroll-monthly-calculated-panel {
+  grid-column: 1 / -1;
+}
+.personnel-page .payroll-monthly-calculated-panel,
+.personnel-page .payroll-monthly-summary-panel {
+  grid-column: 1 / -1;
+}
+.personnel-page .payroll-monthly-adjustment-panel .payroll-item-row {
+  grid-template-columns: minmax(0, 1fr) minmax(96px, 128px) auto;
+}
+.personnel-page .payroll-monthly-adjustment-panel input {
+  min-height: 34px;
+  padding-block: 6px;
+}
+.personnel-page .payroll-calculated-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.personnel-page .payroll-calculated-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+.personnel-page .payroll-calculated-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.personnel-page .payroll-calculated-group-title {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+.personnel-page .payroll-calculated-table {
+  margin: 0;
+}
+.personnel-page .payroll-calculated-table th,
+.personnel-page .payroll-calculated-table td {
+  padding: 7px 10px;
+}
+.personnel-page .payroll-calculated-table input {
+  width: 100%;
+  min-height: 30px;
+  padding-block: 4px;
+  background: #fff;
+}
+.personnel-page .payroll-monthly-modal-card input.is-modified,
+.personnel-page .payroll-monthly-modal-card select.is-modified {
+  border-color: #f59e0b;
+  background: #fff7ed;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+}
+.personnel-page .payroll-monthly-modal-card .payroll-item-row.is-modified {
+  border-radius: 8px;
+}
+.personnel-page .payroll-summary-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.personnel-page .payroll-summary-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fff;
+  display: grid;
+  gap: 4px;
+}
+.personnel-page .payroll-summary-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.personnel-page .payroll-summary-item strong {
+  font-size: 17px;
+  color: var(--text);
+}
+.personnel-page .payroll-summary-item.is-modified {
+  border-color: #f59e0b;
+  background: #fff7ed;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.08);
+}
+.personnel-page .payroll-summary-net {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: #f6f9ff;
+}
+.personnel-page .payroll-summary-net.is-modified {
+  border-color: #f59e0b;
+  background: #fff7ed;
+}
+.personnel-page .payroll-summary-net strong {
+  color: var(--primary);
+  font-size: 20px;
+}
+.personnel-page .payroll-monthly-modal-card .modal-actions {
+  padding-top: 10px;
+}
+@media (max-width: 900px) {
+  .personnel-page .payroll-monthly-modal-card .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .personnel-page .payroll-monthly-detail-grid,
+  .personnel-page .payroll-calculated-columns,
+  .personnel-page .payroll-summary-bar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .personnel-page .payroll-monthly-modal-card {
+    width: calc(100vw - 12px);
+    max-height: 96vh;
+    padding: 14px 16px 12px;
+  }
+  .personnel-page .payroll-monthly-modal-card .modal-body {
+    max-height: calc(96vh - 100px);
+  }
+  .personnel-page .payroll-monthly-modal-card .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .personnel-page .payroll-monthly-detail-grid,
+  .personnel-page .payroll-calculated-columns,
+  .personnel-page .payroll-summary-bar {
+    grid-template-columns: 1fr;
+  }
+  .personnel-page .payroll-monthly-modal-card .modal-actions {
+    margin-inline: -16px;
+    padding-inline: 16px;
+  }
 }
 .personnel-page .modal-actions {
   display: flex;

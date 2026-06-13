@@ -51,10 +51,22 @@
         </table>
     </div>
     <div class="finance-sheet-toolbar">
-        <input class="finance-sheet-file" id="annuityCsvInput" type="file" accept=".csv,text/csv">
-        <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityUploadBtn">保存</button>
-        <button class="c-btn c-btn-primary c-btn-sm" type="button" id="annuityDownloadBtn">下载</button>
-        <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityAddTaxSubjectBtn">增加交税科目</button>
+        <div class="finance-sheet-metadata">
+            <label class="finance-sheet-meta-field">
+                <span>年份</span>
+                <input class="c-input" id="annuityYearInput" type="number" min="1900" max="2100" step="1" placeholder="2026">
+            </label>
+            <label class="finance-sheet-meta-field">
+                <span>协会けんぽ</span>
+                <input class="c-input" id="annuityAssociationInput" type="text" placeholder="协会けんぽ">
+            </label>
+        </div>
+        <div class="finance-sheet-actions">
+            <input class="finance-sheet-file" id="annuityCsvInput" type="file" accept=".csv,text/csv">
+            <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityUploadBtn">保存</button>
+            <button class="c-btn c-btn-primary c-btn-sm" type="button" id="annuityDownloadBtn">下载</button>
+            <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityAddTaxSubjectBtn">增加交税科目</button>
+        </div>
     </div>
 </div>
 

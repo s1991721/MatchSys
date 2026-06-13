@@ -2057,7 +2057,36 @@ body.finance-subpage {
 }
 .finance-sheet-toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+.finance-sheet-metadata {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.finance-sheet-meta-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.finance-sheet-meta-field span {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.finance-sheet-meta-field .c-input {
+  width: 160px;
+  min-height: 38px;
+}
+.finance-sheet-actions {
+  display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 8px;
 }

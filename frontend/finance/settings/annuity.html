@@ -65,7 +65,6 @@
             <input class="finance-sheet-file" id="annuityCsvInput" type="file" accept=".csv,text/csv">
             <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityUploadBtn">保存</button>
             <button class="c-btn c-btn-primary c-btn-sm" type="button" id="annuityDownloadBtn">下载</button>
-            <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="annuityAddTaxSubjectBtn">增加交税科目</button>
         </div>
     </div>
 </div>
@@ -104,7 +103,6 @@
         const table = document.getElementById("annuitySheetTable");
         const uploadButton = document.getElementById("annuityUploadBtn");
         const downloadButton = document.getElementById("annuityDownloadBtn");
-        const addTaxSubjectButton = document.getElementById("annuityAddTaxSubjectBtn");
         const fileInput = document.getElementById("annuityCsvInput");
         const yearInput = document.getElementById("annuityYearInput");
         const associationInput = document.getElementById("annuityAssociationInput");
@@ -335,6 +333,7 @@
                     row.deleteCell(row.cells.length - 1);
                 }
             });
+            updateTaxSubjectControls();
         };
 
         const clearDataRows = () => {
@@ -369,6 +368,7 @@
                 cell.classList.add("finance-sheet-editable-cell");
                 cell.contentEditable = "true";
             });
+            updateTaxSubjectControls();
         };
 
         const applyAmountOverrides = (settings) => {
@@ -514,6 +514,7 @@
                 th.textContent = columnName(start + i);
                 letterRow.appendChild(th);
             }
+            updateTaxSubjectControls();
         };
 
         const appendEditableCell = (row, text, colspan = 1) => {
@@ -524,6 +525,41 @@
             if (colspan > 1) td.colSpan = colspan;
             row.appendChild(td);
             return td;
+        };
+
+        const updateTaxSubjectControls = () => {
+            const letterRow = table?.tHead.rows[0];
+            if (!letterRow) return;
+            Array.from(letterRow.cells).forEach((cell) => {
+                cell.classList.remove("finance-sheet-tax-action-cell");
+                cell.querySelector(".finance-sheet-tax-actions")?.remove();
+            });
+            const taxColumnCount = getTaxRateCells().length;
+            if (!taxColumnCount) {
+                const targetCell = letterRow.cells[CSV_COLUMNS.length] || letterRow.cells[letterRow.cells.length - 1];
+                if (!targetCell) return;
+                targetCell.classList.add("finance-sheet-tax-action-cell");
+                const actions = document.createElement("span");
+                actions.className = "finance-sheet-tax-actions";
+                actions.innerHTML = `
+                    <button class="finance-sheet-tax-action" type="button" data-annuity-tax-action="add" aria-label="增加交税科目" title="增加交税科目">+</button>
+                `;
+                targetCell.appendChild(actions);
+                return;
+            }
+            for (let taxIndex = 0; taxIndex < taxColumnCount; taxIndex += 1) {
+                const targetCell = letterRow.cells[CSV_COLUMNS.length + taxIndex + 1];
+                if (!targetCell) continue;
+                targetCell.classList.add("finance-sheet-tax-action-cell");
+                const actions = document.createElement("span");
+                actions.className = "finance-sheet-tax-actions";
+                const isLastTaxColumn = taxIndex === taxColumnCount - 1;
+                actions.innerHTML = `
+                    <button class="finance-sheet-tax-action" type="button" data-annuity-tax-action="remove" data-annuity-tax-index="${taxIndex}" aria-label="删除${targetCell.firstChild?.textContent || "当前"}列交税科目" title="删除当前交税科目">-</button>
+                    ${isLastTaxColumn ? `<button class="finance-sheet-tax-action" type="button" data-annuity-tax-action="add" aria-label="增加交税科目" title="增加交税科目">+</button>` : ""}
+                `;
+                targetCell.appendChild(actions);
+            }
         };
 
         const addTaxSubjectColumns = () => {
@@ -538,8 +574,36 @@
                 appendEditableCell(row, "");
             });
             calculateTaxDefaults();
+            updateTaxSubjectControls();
         };
 
+        const removeTaxSubjectColumn = (taxIndex) => {
+            const index = Number(taxIndex);
+            if (!table || !Number.isInteger(index) || index < 0 || index >= getTaxRateCells().length) return;
+            const letterRow = table.tHead.rows[0];
+            const body = table.tBodies[0];
+            const groupRow = body.querySelector(".finance-sheet-group-row");
+            const headerRow = body.querySelector(".finance-sheet-header-row");
+            letterRow?.deleteCell(CSV_COLUMNS.length + index + 1);
+            groupRow?.deleteCell(3 + index);
+            headerRow?.deleteCell(CSV_COLUMNS.length + index + 1);
+            getDataRows().forEach((row) => {
+                row.deleteCell(CSV_COLUMNS.length + index + 1);
+            });
+            updateTaxSubjectControls();
+        };
+
+        table?.addEventListener("click", (event) => {
+            const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            const button = target?.closest("[data-annuity-tax-action]");
+            if (!button) return;
+            event.preventDefault();
+            if (button.dataset.annuityTaxAction === "add") {
+                addTaxSubjectColumns();
+            } else if (button.dataset.annuityTaxAction === "remove") {
+                removeTaxSubjectColumn(button.dataset.annuityTaxIndex);
+            }
+        });
         table?.addEventListener("paste", (event) => {
             const target = event.target instanceof Element ? event.target : event.target?.parentElement;
             const cell = target?.closest(".finance-sheet-editable-cell");
@@ -596,7 +660,7 @@
             URL.revokeObjectURL(link.href);
             link.remove();
         });
-        addTaxSubjectButton?.addEventListener("click", addTaxSubjectColumns);
+        updateTaxSubjectControls();
         loadSettings();
     });
 }());

@@ -2136,6 +2136,40 @@ body.finance-subpage {
 .finance-sheet-table thead th {
   top: 0;
 }
+.finance-sheet-table thead th.finance-sheet-tax-action-cell {
+  padding-right: 64px;
+}
+.finance-sheet-tax-actions {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: inline-flex;
+  gap: 4px;
+  transform: translateY(-50%);
+}
+.finance-sheet-tax-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(28, 123, 255, 0.24);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--primary);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+.finance-sheet-tax-action:hover {
+  background: #eff6ff;
+}
+.finance-sheet-tax-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.38;
+}
 .finance-sheet-table tbody th {
   left: 0;
 }

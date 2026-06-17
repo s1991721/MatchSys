@@ -142,6 +142,8 @@
     let bulkAttachments = [];
     let isSendingBulkMail = false;
     let isSelectingAllRecipients = false;
+    let allRecipientSelectionKeySet = new Set();
+    let isAllRecipientScopeSelected = false;
     let customerPagination = {
         page: 1,
         totalPages: 1,
@@ -201,6 +203,13 @@
 
     bulkRecipientSelectAll.addEventListener("click", async () => {
         if (isSelectingAllRecipients) return;
+        if (isAllRecipientScopeSelected) {
+            selectedRecipientMap.clear();
+            isAllRecipientScopeSelected = false;
+            renderFilteredRecipients();
+            updateSelectAllButtonState();
+            return;
+        }
         setSelectAllState(true);
         try {
             const items = selectedCustomerIdSet.size
@@ -346,7 +355,18 @@
         bulkRecipientSelectAll.disabled = isSelectingAllRecipients;
         bulkRecipientSelectAll.textContent = isSelectingAllRecipients
             ? t("customer.bulk.status.selecting")
-            : t("customer.bulk.select_all");
+            : getSelectAllButtonLabel();
+    };
+
+    const getSelectAllButtonLabel = () => isAllRecipientScopeSelected
+        ? t("customer.bulk.clear_all")
+        : t("customer.bulk.select_all");
+
+    const updateSelectAllButtonState = () => {
+        if (!bulkRecipientSelectAll || isSelectingAllRecipients) return;
+        isAllRecipientScopeSelected = allRecipientSelectionKeySet.size > 0
+            && Array.from(allRecipientSelectionKeySet).every((key) => selectedRecipientMap.has(key));
+        bulkRecipientSelectAll.textContent = getSelectAllButtonLabel();
     };
 
     const extractRecipients = (items) => {
@@ -399,21 +419,38 @@
 
     const updateBulkSelected = () => {
         bulkMailSelected.textContent = format("customer.bulk.selected", {count: selectedRecipientMap.size});
+        updateSelectAllButtonState();
     };
 
     const selectRecipientsFromItems = (items) => {
+        const entries = getRecipientSelectionEntries(items);
+        allRecipientSelectionKeySet = new Set(entries.map((entry) => entry.key));
+        entries.forEach((entry) => {
+            selectedRecipientMap.set(entry.key, entry.recipient);
+        });
+        updateBulkSelected();
+    };
+
+    const getRecipientSelectionEntries = (items) => {
+        const entries = [];
         const groups = extractRecipients(items);
         groups.forEach((group) => {
             if (group.companyRecipient?.email) {
-                selectedRecipientMap.set(`company:${group.id}`, group.companyRecipient);
+                entries.push({
+                    key: `company:${group.id}`,
+                    recipient: group.companyRecipient,
+                });
             }
             group.contacts.forEach((contact) => {
                 if (contact.recipient?.email) {
-                    selectedRecipientMap.set(`contact:${contact.key}`, contact.recipient);
+                    entries.push({
+                        key: `contact:${contact.key}`,
+                        recipient: contact.recipient,
+                    });
                 }
             });
         });
-        updateBulkSelected();
+        return entries;
     };
 
     const renderBulkRecipients = (items) => {

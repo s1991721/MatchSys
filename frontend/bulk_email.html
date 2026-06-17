@@ -716,11 +716,7 @@
         if (!sourceText) return;
         const requestBody = prefill.source === "people"
             ? {
-                selection: {
-                    person: {
-                        intro: sourceText,
-                    },
-                },
+                body: sourceText,
             }
             : {
                 selection: {

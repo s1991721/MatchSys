@@ -4154,6 +4154,24 @@ body.notfound-page { margin: 0; font-family: "PingFang SC", "Hiragino Sans GB", 
             margin-bottom: 12px;
         }
 
+        .bulk-email-page .recipients-header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .bulk-email-page .recipients-header-actions .c-btn {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        .bulk-email-page .recipients-header-actions .recipients-meta {
+            min-width: 0;
+            white-space: nowrap;
+        }
+
         .bulk-email-page .group-header-main {
             min-width: 0;
             display: flex;

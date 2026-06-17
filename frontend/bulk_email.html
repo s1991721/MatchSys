@@ -81,7 +81,11 @@
                             <span class="recipients-title-bar" aria-hidden="true"></span>
                             <span class="recipients-title-text" data-i18n="customer.bulk.recipients">收件人</span>
                         </div>
-                        <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
+                        <div class="recipients-header-actions">
+                            <button class="c-btn c-btn-secondary c-btn-sm" id="bulk-recipient-select-all" type="button"
+                                    data-i18n="customer.bulk.select_all">全选</button>
+                            <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
+                        </div>
                     </div>
                     <div class="recipients-filter">
                         <input class="input" id="bulk-recipient-filter" type="search" placeholder="按公司名过滤"
@@ -114,6 +118,7 @@
     const bulkMailType = document.getElementById("bulk-mail-type");
     const bulkMailRecipients = document.getElementById("bulk-mail-recipients");
     const bulkMailSelected = document.getElementById("bulk-mail-selected");
+    const bulkRecipientSelectAll = document.getElementById("bulk-recipient-select-all");
     const bulkRecipientFilter = document.getElementById("bulk-recipient-filter");
     const bulkMailBodyMask = document.getElementById("bulk-mail-body-mask");
     const bulkMailSend = document.getElementById("bulk-mail-send");
@@ -136,6 +141,7 @@
     let prefill = null;
     let bulkAttachments = [];
     let isSendingBulkMail = false;
+    let isSelectingAllRecipients = false;
     let customerPagination = {
         page: 1,
         totalPages: 1,
@@ -191,6 +197,23 @@
             return;
         }
         debouncedReloadDefaultRecipientsFromFilter();
+    });
+
+    bulkRecipientSelectAll.addEventListener("click", async () => {
+        if (isSelectingAllRecipients) return;
+        setSelectAllState(true);
+        try {
+            const items = selectedCustomerIdSet.size
+                ? await fetchSelectedCustomers()
+                : await fetchAllCustomers();
+            selectRecipientsFromItems(items);
+            renderFilteredRecipients();
+        } catch (error) {
+            console.error("select all recipients failed", error);
+            alert(error.message || t("customer.bulk.alert.select_all_failed"));
+        } finally {
+            setSelectAllState(false);
+        }
     });
 
     bulkAttachmentSource.addEventListener("click", (event) => {
@@ -317,6 +340,15 @@
         }
     };
 
+    const setSelectAllState = (isSelecting) => {
+        isSelectingAllRecipients = Boolean(isSelecting);
+        if (!bulkRecipientSelectAll) return;
+        bulkRecipientSelectAll.disabled = isSelectingAllRecipients;
+        bulkRecipientSelectAll.textContent = isSelectingAllRecipients
+            ? t("customer.bulk.status.selecting")
+            : t("customer.bulk.select_all");
+    };
+
     const extractRecipients = (items) => {
         const groups = [];
         items.forEach((item) => {
@@ -367,6 +399,21 @@
 
     const updateBulkSelected = () => {
         bulkMailSelected.textContent = format("customer.bulk.selected", {count: selectedRecipientMap.size});
+    };
+
+    const selectRecipientsFromItems = (items) => {
+        const groups = extractRecipients(items);
+        groups.forEach((group) => {
+            if (group.companyRecipient?.email) {
+                selectedRecipientMap.set(`company:${group.id}`, group.companyRecipient);
+            }
+            group.contacts.forEach((contact) => {
+                if (contact.recipient?.email) {
+                    selectedRecipientMap.set(`contact:${contact.key}`, contact.recipient);
+                }
+            });
+        });
+        updateBulkSelected();
     };
 
     const renderBulkRecipients = (items) => {
@@ -476,6 +523,32 @@
             totalPages: Number(meta.total_pages || 1) || 1,
             totalCount: Number(meta.total || items.length) || 0,
         };
+        return items;
+    };
+
+    const fetchCustomersAllPage = async (page = 1) => {
+        const params = window.createParams([
+            ["page", String(page)],
+            ["page_size", "100"],
+        ]);
+        const payload = await window.requestJson(window.buildUrl("/api/customers", params), {method: "GET"});
+        if (!payload.success) {
+            throw new Error(payload.message || t("common.load_failed"));
+        }
+        return {
+            items: Array.isArray(payload.data?.items) ? payload.data.items : [],
+            meta: payload.meta || {},
+        };
+    };
+
+    const fetchAllCustomers = async () => {
+        const firstPage = await fetchCustomersAllPage(1);
+        const items = [...firstPage.items];
+        const totalPages = Number(firstPage.meta.total_pages || 1) || 1;
+        for (let page = 2; page <= totalPages; page += 1) {
+            const payload = await fetchCustomersAllPage(page);
+            items.push(...payload.items);
+        }
         return items;
     };
 

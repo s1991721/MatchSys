@@ -142,6 +142,28 @@
         totalCount: 0,
     };
 
+    const debounce = (fn, delay = 250) => {
+        let timer = null;
+        return (...args) => {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => fn(...args), delay);
+        };
+    };
+
+    const getRecipientFilterKeyword = () => String(bulkRecipientFilter ? bulkRecipientFilter.value.trim() : "");
+
+    const reloadDefaultRecipientsFromFilter = () => {
+        loadCustomers(1)
+            .catch((error) => {
+                console.error("load customers failed", error);
+                recipientSourceItems = [];
+                renderFilteredRecipients();
+                setRecipientPaginationVisible(false);
+            });
+    };
+
+    const debouncedReloadDefaultRecipientsFromFilter = debounce(reloadDefaultRecipientsFromFilter);
+
     bulkMailRecipients.addEventListener("change", (event) => {
         if (event.target.matches(".company-check, .contact-check")) {
             const isCompany = event.target.matches(".company-check");
@@ -164,7 +186,11 @@
     });
 
     bulkRecipientFilter.addEventListener("input", () => {
-        renderFilteredRecipients();
+        if (selectedCustomerIdSet.size) {
+            renderFilteredRecipients();
+            return;
+        }
+        debouncedReloadDefaultRecipientsFromFilter();
     });
 
     bulkAttachmentSource.addEventListener("click", (event) => {
@@ -416,7 +442,7 @@
     };
 
     const renderFilteredRecipients = () => {
-        const keyword = String(bulkRecipientFilter ? bulkRecipientFilter.value.trim() : "").toLowerCase();
+        const keyword = getRecipientFilterKeyword().toLowerCase();
         const items = keyword
             ? recipientSourceItems.filter((item) => String(item.company_name || "").toLowerCase().includes(keyword))
             : recipientSourceItems;
@@ -437,6 +463,7 @@
         const params = window.createParams([
             ["page", String(page)],
             ["page_size", String(CUSTOMER_PAGE_SIZE)],
+            ["company_name", getRecipientFilterKeyword()],
         ]);
         const payload = await window.requestJson(window.buildUrl("/api/customers", params), {method: "GET"});
         if (!payload.success) {

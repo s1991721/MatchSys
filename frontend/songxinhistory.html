@@ -240,7 +240,7 @@
             listEl.addEventListener('click', (e) => {
                 const item = e.target.closest('.songxinhistory-item');
                 if (!item) return;
-                const id = Number(item.dataset.id);
+                const id = item.dataset.id || '';
                 listEl.querySelectorAll('.songxinhistory-item').forEach(el => el.classList.remove('is-active'));
                 item.classList.add('is-active');
                 const record = records.find(r => r.id === id);

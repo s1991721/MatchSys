@@ -1733,8 +1733,8 @@ body.sidebar-collapsed .system-expiry-inline {
   place-items: center;
 }
 .top-actions .icon-btn {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
 }
 .icon-btn .top-action-icon {
   width: 20px;
@@ -1742,7 +1742,10 @@ body.sidebar-collapsed .system-expiry-inline {
   display: block;
 }
 .icon-btn.top-action-send {
-  color: #2563eb;
+  color: #10b981;
+}
+#noticeBtn {
+  color: #f59e0b;
 }
 .send-task-entry {
   position: relative;

@@ -273,8 +273,17 @@
             selectedRecord = null;
             await loadRecords(currentPage);
         } catch (error) {
-            actionMessage.textContent = error.message || t(isRetry
+            const message = error.message || t(isRetry
                 ? 'sendtask.alert.retry_failed' : 'sendtask.alert.discard_failed');
+            if (isRetry) {
+                await loadDetail(taskId);
+                if (!selectedRecord || !selectedRecord.error_message) {
+                    errorSection.hidden = false;
+                    errorEl.textContent = message;
+                }
+            } else {
+                actionMessage.textContent = message;
+            }
         } finally {
             setActionPending(false);
         }

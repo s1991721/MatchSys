@@ -1520,7 +1520,8 @@ body.sidebar-collapsed .handle-icon {
   gap: 6px;
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 .nav-item {
   position: relative;

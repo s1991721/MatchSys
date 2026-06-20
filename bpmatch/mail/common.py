@@ -301,11 +301,6 @@ def list_my_mails_from_db(
     return data, meta
 
 
-# 用户未读数
-def count_unread_mails_from_db(owner_id):
-    return MyMail.objects.filter(owner_id=owner_id, is_unread=True).count()
-
-
 def get_my_mail_detail_from_db(owner_id, mail_id):
     row = MyMail.objects.filter(owner_id=owner_id, id=mail_id).first()
     if not row:

@@ -471,8 +471,10 @@
         noticeBadge.textContent = safeCount > 99 ? "99+" : String(safeCount);
         noticeBadge.hidden = false;
       };
-      const applyUnreadData = (data) => {
-        setNoticeBadge(Number((data && data.unread_count) || 0));
+      const applyTopbarBadges = (data) => {
+        const badges = data && data.badges ? data.badges : {};
+        setSendTaskBadge(Number((badges.send_tasks && badges.send_tasks.count) || 0));
+        setNoticeBadge(Number((badges.my_mails && badges.my_mails.count) || 0));
       };
       const readNoticeBadgeCount = () => {
         if (!noticeBadge || noticeBadge.hidden) return 0;
@@ -784,11 +786,11 @@
         nav.addEventListener("click", handleRouteClick);
       }
       document.addEventListener("click", handleRouteClick);
-      // 使用 common.js 统一轮询，每 5 分钟刷新一次未读角标。
-      const mailUnreadPolling = window.startMailUnreadPolling
-        ? window.startMailUnreadPolling({
+      // 使用 common.js 统一轮询，每 5 分钟刷新一次顶部角标。
+      const topbarBadgePolling = window.startTopbarBadgePolling
+        ? window.startTopbarBadgePolling({
           intervalMs: 5 * 60 * 1000,
-          onData: applyUnreadData,
+          onData: applyTopbarBadges,
         })
         : null;
       window.addEventListener("message", (event) => {
@@ -815,8 +817,8 @@
       loadSystemExpiryStatus();
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
-          if (mailUnreadPolling && typeof mailUnreadPolling.tick === "function") {
-            mailUnreadPolling.tick();
+          if (topbarBadgePolling && typeof topbarBadgePolling.tick === "function") {
+            topbarBadgePolling.tick();
           }
           loadSystemExpiryStatus();
         }

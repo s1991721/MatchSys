@@ -1,6 +1,5 @@
 from .common import (
     MailToolError,
-    count_unread_mails_from_db,
     ensure_send_config_for_login,
     get_my_mail_detail_from_db,
     list_my_mails_from_db,
@@ -29,7 +28,6 @@ __all__ = [
     "MailSender",
     "SmtpMailSender",
     "Pop3Receiver",
-    "count_unread_mails_from_db",
     "ensure_send_config_for_login",
     "get_my_mail_detail_from_db",
     "list_my_mails_from_db",

@@ -416,42 +416,42 @@
     }
     window.addEventListener("i18n:change", initLocalizedFileInputs);
 
-    window.startMailUnreadPolling = function (options = {}) {
+    window.startTopbarBadgePolling = function (options = {}) {
         const intervalMs = Math.max(60 * 1000, Number(options.intervalMs || 5 * 60 * 1000));
         const onData = typeof options.onData === "function" ? options.onData : function () {};
         const autoStart = options.autoStart !== false;
 
-        if (window.__mailUnreadPollingTimer) {
-            clearInterval(window.__mailUnreadPollingTimer);
-            window.__mailUnreadPollingTimer = null;
+        if (window.__topbarBadgePollingTimer) {
+            clearInterval(window.__topbarBadgePollingTimer);
+            window.__topbarBadgePollingTimer = null;
         }
 
         const tick = async () => {
             try {
-                const payload = await window.requestJson("/api/my-mails/unread-count", {
+                const payload = await window.requestJson("/api/home/topbar-badges", {
                     method: "GET",
                     cache: "no-store",
                 });
                 if (!payload || payload.success === false) {
-                    onData({ unread_count: 0, has_mailbox: false, error: true });
+                    onData({ badges: {}, error: true });
                     return;
                 }
                 onData(payload.data || {});
             } catch (error) {
-                onData({ unread_count: 0, has_mailbox: false, error: true });
+                onData({ badges: {}, error: true });
             }
         };
 
         const start = () => {
-            if (window.__mailUnreadPollingTimer) return;
+            if (window.__topbarBadgePollingTimer) return;
             tick();
-            window.__mailUnreadPollingTimer = setInterval(tick, intervalMs);
+            window.__topbarBadgePollingTimer = setInterval(tick, intervalMs);
         };
 
         const stop = () => {
-            if (!window.__mailUnreadPollingTimer) return;
-            clearInterval(window.__mailUnreadPollingTimer);
-            window.__mailUnreadPollingTimer = null;
+            if (!window.__topbarBadgePollingTimer) return;
+            clearInterval(window.__topbarBadgePollingTimer);
+            window.__topbarBadgePollingTimer = null;
         };
 
         if (autoStart) {

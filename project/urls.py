@@ -46,7 +46,7 @@ from bpmatch.views import (
     my_mails_query_api,
     my_mails_sync_api,
     my_mail_detail_api,
-    my_mails_unread_count_api,
+    topbar_badges_api,
     gmail_attachment_open_api,
     extract_project_detail,
     extract_technician_detail,
@@ -251,7 +251,6 @@ urlpatterns = [
     path("api/my-mails", my_mails_api, name="my-mails"),
     path("api/my-mails/query", my_mails_query_api, name="my-mails-query"),
     path("api/my-mails/sync", my_mails_sync_api, name="my-mails-sync"),
-    path("api/my-mails/unread-count", my_mails_unread_count_api, name="my-mails-unread-count"),
     path("api/my-mails/<str:mail_id>", my_mail_detail_api, name="my-mail-detail"),
     path(
         "api/gmail/messages/<str:message_id>/attachments/<str:attachment_id>",
@@ -262,6 +261,7 @@ urlpatterns = [
     path("api/send-bulk-mail", send_bulk_mail, name="send_bulk_mail"),
     path("api/send-tasks", send_tasks, name="send_tasks"),
     path("api/send-history", send_history, name="send_history"),
+    path("api/home/topbar-badges", topbar_badges_api, name="home-topbar-badges"),
     path("api/home/stats", home_match_stats_api, name="home-match-stats"),
     path("api/analysis/stats", analysis_stats_api, name="analysis-stats"),
     # -------------------------------customer API-------------------------------

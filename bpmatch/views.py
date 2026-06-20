@@ -955,22 +955,25 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
 
 @csrf_exempt
 @require_GET
-# 我的邮件未读数（首页铃铛使用 DB 缓存统计）
-def my_mails_unread_count_api(request):
+# 首页顶部角标聚合
+def topbar_badges_api(request):
     login_id, error = require_login(request)
     if error:
         return error
-    try:
-        # 首页仅显示红点计数，若未配置邮箱则按 0 处理，避免顶部报错。
-        ensure_send_config_for_login(login_id)
-    except MailToolError:
-        return api_success(data={"unread_count": 0, "has_mailbox": False})
 
     try:
-        unread_count = count_unread_mails_from_db(login_id)
-        return api_success(data={"unread_count": int(unread_count), "has_mailbox": True})
+        return api_success(data={
+            "badges": {
+                "send_tasks": {
+                    "count": MailSendTask.objects.filter(created_by=login_id).count(),
+                },
+                "my_mails": {
+                    "count": MyMail.objects.filter(owner_id=login_id, is_unread=True).count(),
+                },
+            },
+        })
     except Exception as exc:
-        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
+        return api_error(ErrorCode.SERVER, str(exc), status=500)
 
 
 @csrf_exempt

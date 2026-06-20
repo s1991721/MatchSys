@@ -58,8 +58,13 @@
         </div>
 
         <div class="panel-right c-card c-card-pad">
-            <div class="panel-title c-panel-title">
+            <div class="panel-title c-panel-title match-person-list-header">
                 <span data-i18n="match.people">技术者列表</span>
+                <label class="match-person-select-all" for="person-select-all">
+                    <input id="person-select-all" type="checkbox">
+                    <span data-i18n="match.select_all_people">全选</span>
+                </label>
+                <span id="person-selected-count" class="match-person-selected-count"></span>
             </div>
             <ul class="list c-list c-list-spaced match-list persons" id="person-list">
             </ul>
@@ -173,6 +178,8 @@
     const personDetail = document.getElementById('person-detail');
     const personAttachments = document.getElementById('person-attachments');
     const personList = document.getElementById('person-list');
+    const personSelectAll = document.getElementById('person-select-all');
+    const personSelectedCount = document.getElementById('person-selected-count');
     const jobSender = document.getElementById('job-sender');
     const jobSearchBtn = document.getElementById('job-search-btn');
     const strictPrice = document.getElementById('strict-price');
@@ -192,6 +199,27 @@
     let openDetailFeedbackType = '';
     let currentJobItems = [];
     let currentPersonItems = [];
+    const selectedPersonIds = new Set();
+
+    const updatePersonSelectionUI = () => {
+        const availableIds = currentPersonItems.map((item) => String(item.id || '')).filter(Boolean);
+        const selectedCount = availableIds.filter((id) => selectedPersonIds.has(id)).length;
+        personSelectedCount.textContent = selectedCount
+            ? format('match.selected_people_count', {count: selectedCount})
+            : '';
+        personSelectAll.disabled = availableIds.length === 0;
+        personSelectAll.checked = availableIds.length > 0 && selectedCount === availableIds.length;
+        personSelectAll.indeterminate = selectedCount > 0 && selectedCount < availableIds.length;
+        sendBtn.disabled = selectedCount === 0;
+        sendBtn.textContent = selectedCount
+            ? format('match.process_selected_people', {count: selectedCount})
+            : t('match.send_to_tech');
+    };
+
+    const clearPersonSelection = () => {
+        selectedPersonIds.clear();
+        updatePersonSelectionUI();
+    };
 
     const detailFeedbackTargets = {
         job: {
@@ -440,10 +468,15 @@
         const personPayload = {
             id: personData.id || activePerson?.dataset?.id || '',
             name: personData.title || activePerson?.querySelector('.person-name')?.textContent.trim() || '',
+            title: personData.title || '',
+            subject: personData.subject || personData.title || '',
             address: personData.address || '',
             cc: personData.cc || '',
             detail: personData.body || activePerson?.dataset?.detail || '',
-            time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || ''
+            time: personData.date || activePerson?.querySelector('.person-time')?.textContent.trim() || '',
+            thread_id: personData.thread_id || '',
+            message_id_header: personData.message_id_header || '',
+            references_header: personData.references_header || ''
         };
 
         return {
@@ -550,6 +583,7 @@
             renderPersonAttachments([]);
             renderDetail(jobDetail, activeJobDetail, activeMatchedSkills);
             updateDetailFeedbackStates();
+            clearPersonSelection();
             return;
         }
 
@@ -569,6 +603,14 @@
 
             const main = document.createElement('div');
             main.className = 'item-main';
+
+            const select = document.createElement('input');
+            select.type = 'checkbox';
+            select.className = 'match-person-checkbox';
+            select.dataset.personSelect = '1';
+            select.dataset.personId = String(personId);
+            select.checked = selectedPersonIds.has(String(personId));
+            select.setAttribute('aria-label', `${item.title || t("match.untitled")} ${t('match.select_person')}`);
 
             const name = document.createElement('div');
             name.className = 'person-name';
@@ -613,6 +655,7 @@
                 </div>
             `;
 
+            li.appendChild(select);
             main.appendChild(name);
             main.appendChild(desc);
             li.appendChild(main);
@@ -639,6 +682,7 @@
             renderPersonAttachments([]);
         }
         updateDetailFeedbackStates();
+        updatePersonSelectionUI();
         scheduleFeedbackPlacement(personList);
     }
 
@@ -656,6 +700,19 @@
     };
 
     personList.addEventListener('click', async (event) => {
+        const select = event.target.closest('[data-person-select]');
+        if (select) {
+            event.stopImmediatePropagation();
+            const personId = String(select.dataset.personId || '');
+            if (select.checked) {
+                selectedPersonIds.add(personId);
+            } else {
+                selectedPersonIds.delete(personId);
+            }
+            updatePersonSelectionUI();
+            return;
+        }
+
         const toggleBtn = event.target.closest('[data-person-feedback-toggle]');
         if (toggleBtn) {
             event.stopPropagation();
@@ -703,27 +760,56 @@
     });
 
     sendBtn.addEventListener('click', () => {
-        const {activeJob, activePerson, jobPayload, personPayload} = buildActivePayloads();
+        const {activeJob, jobPayload} = buildActivePayloads();
+        const selectedPeople = currentPersonItems.filter((item) => selectedPersonIds.has(String(item.id || '')));
 
-        if (!activeJob || !activePerson) {
+        if (!activeJob || !selectedPeople.length) {
             alert(t("match.send_tip"));
             return;
         }
 
+        const persons = selectedPeople.map((person) => ({
+            id: person.id || '',
+            name: person.title || '',
+            title: person.title || '',
+            subject: person.subject || person.title || '',
+            address: person.address || '',
+            cc: person.cc || '',
+            detail: person.body || '',
+            time: person.date || '',
+            thread_id: person.thread_id || '',
+            message_id_header: person.message_id_header || '',
+            references_header: person.references_header || ''
+        }));
+
         const payload = {
             job: jobPayload,
-            person: personPayload,
+            persons,
             mail_type: 0,
             updatedAt: Date.now()
         };
 
         try {
-            window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
+            window.MatchSys.clearStoredKey('matchSelection');
+            window.MatchSys.writeJSONToSessionStorage('matchSelection', payload);
         } catch (err) {
             console.error(t("match.cache_failed"), err);
         }
 
         window.navigateAppRoute('bpsongxin.html?from=match');
+    });
+
+    personSelectAll.addEventListener('change', () => {
+        currentPersonItems.forEach((item) => {
+            const id = String(item.id || '');
+            if (!id) return;
+            if (personSelectAll.checked) {
+                selectedPersonIds.add(id);
+            } else {
+                selectedPersonIds.delete(id);
+            }
+        });
+        renderPersonList(currentPersonItems, {preserveSelection: true});
     });
 
     window.addEventListener('resize', () => {
@@ -834,7 +920,7 @@
         if (!list || !detail) return;
 
         list.addEventListener('click', function (e) {
-            if (e.target.closest('.mail-feedback-control')) {
+            if (e.target.closest('.mail-feedback-control') || e.target.closest('[data-person-select]')) {
                 return;
             }
             const item = e.target.closest('.item');
@@ -869,6 +955,7 @@
 
     const selectJobItem = async (item) => {
         if (!item) return;
+        clearPersonSelection();
         const requestSeq = ++matchRequestSeq;
         jobList.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
         item.classList.add('active');

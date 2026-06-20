@@ -420,27 +420,37 @@
         const intervalMs = Math.max(60 * 1000, Number(options.intervalMs || 5 * 60 * 1000));
         const onData = typeof options.onData === "function" ? options.onData : function () {};
         const autoStart = options.autoStart !== false;
+        let pendingTick = null;
 
         if (window.__topbarBadgePollingTimer) {
             clearInterval(window.__topbarBadgePollingTimer);
             window.__topbarBadgePollingTimer = null;
         }
 
-        const tick = async () => {
-            try {
-                const payload = await window.requestJson("/api/home/topbar-badges", {
-                    method: "GET",
-                    cache: "no-store",
-                });
-                if (!payload || payload.success === false) {
+        const tick = () => {
+            if (pendingTick) return pendingTick;
+            pendingTick = (async () => {
+                try {
+                    const payload = await window.requestJson("/api/home/topbar-badges", {
+                        method: "GET",
+                        cache: "no-store",
+                    });
+                    if (!payload || payload.success === false) {
+                        onData({ badges: {}, error: true });
+                        return;
+                    }
+                    onData(payload.data || {});
+                } catch (error) {
                     onData({ badges: {}, error: true });
-                    return;
                 }
-                onData(payload.data || {});
-            } catch (error) {
-                onData({ badges: {}, error: true });
-            }
+            })().finally(() => {
+                pendingTick = null;
+            });
+            return pendingTick;
         };
+
+        // 手动刷新复用轮询请求，不改变现有轮询周期。
+        window.refreshTopbarBadges = tick;
 
         const start = () => {
             if (window.__topbarBadgePollingTimer) return;

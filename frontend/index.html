@@ -807,6 +807,12 @@
         }
         if (data.type === "mail:mark-read") {
           markNoticeRead();
+          return;
+        }
+        if (data.type === "topbar-badges:refresh") {
+          if (typeof window.refreshTopbarBadges === "function") {
+            window.refreshTopbarBadges();
+          }
         }
       });
       window.addEventListener("hashchange", syncFromHash);

@@ -102,6 +102,8 @@ class MailSender:
             subject=subject,
             body=body,
             attachments=attachments,
+            in_reply_to=in_reply_to,
+            references=ref_to_use,
             mail_type=mail_type,
             created_by=created_by,
         )
@@ -164,6 +166,8 @@ class MailSender:
         subject: Optional[str],
         body: Optional[str],
         attachments: Optional[List[dict]],
+        in_reply_to: Optional[str],
+        references: Optional[str],
         mail_type: Optional[int],
         created_by: Optional[int],
     ):
@@ -185,6 +189,8 @@ class MailSender:
             "subject": subject or "",
             "body": body or "",
             "attachments": json.dumps(filenames, ensure_ascii=False),
+            "in_reply_to": in_reply_to or "",
+            "references": references or "",
         }
         if mail_type is not None:
             defaults["mail_type"] = mail_type
@@ -452,6 +458,56 @@ def queue_bulk_mail_by_login(login_id, payload):
     return {"queued_count": len(tasks)}
 
 
+def queue_mail_by_login(login_id, payload):
+    """校验一封邮件并创建独立发送任务；实际发送由后台消费者完成。"""
+    from bpmatch.models import MailSendTask
+
+    if not isinstance(payload, dict):
+        raise MailToolError("Invalid request payload")
+
+    to_addr = _validate_task_text(payload.get("to"), "to", 320, required=True)
+    cc_addr = _validate_task_text(payload.get("cc"), "cc", 1024)
+    subject = _validate_task_text(
+        payload.get("subject") or "送信页邮件", "subject", 512, required=True
+    )
+    body = str(payload.get("body") or "").strip()
+    if not body:
+        raise MailToolError("Missing field: body")
+    mail_type = _parse_mail_type(payload.get("mail_type"))
+    if mail_type is None:
+        mail_type = -1
+    in_reply_to = _validate_task_text(
+        payload.get("in_reply_to"), "in_reply_to", 998
+    )
+    references = _validate_task_text(payload.get("references"), "references", 8000)
+    persisted_attachments = _persist_task_attachments(payload.get("attachments"))
+
+    task = MailSendTask(
+        id=uuid.uuid4().hex,
+        to_email=to_addr,
+        cc=cc_addr,
+        subject=subject,
+        body=body,
+        attachments=persisted_attachments,
+        mail_type=mail_type,
+        in_reply_to=in_reply_to,
+        references=references,
+        error_message=None,
+        created_by=login_id,
+    )
+    with transaction.atomic():
+        task.save(force_insert=True)
+        send_thread = threading.Thread(
+            target=_consume_mail_send_tasks,
+            args=(int(login_id), [task]),
+            name=f"mail-send-{login_id}-{task.id}",
+            daemon=True,
+        )
+        transaction.on_commit(send_thread.start)
+
+    return {"task_id": task.id, "queued_count": 1}
+
+
 def _consume_mail_send_tasks(created_by, tasks):
     """直接消费内存中的整批任务并复用一个 SMTP 连接串行发送。"""
     from bpmatch.models import MailSendTask
@@ -481,6 +537,8 @@ def _consume_mail_send_tasks(created_by, tasks):
                             body=task.body,
                             sender=smtp_user,
                             attachments=normalized_atts,
+                            in_reply_to=task.in_reply_to or None,
+                            references=task.references or None,
                             mail_type=task.mail_type,
                             created_by=task.created_by,
                             smtp_client=smtp_client,

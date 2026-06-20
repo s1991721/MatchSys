@@ -390,7 +390,10 @@
 
         isSending = true;
         sendBtn.disabled = true;
-        setLoading(true, {title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub')});
+        setLoading(true, {
+            title: t('songxin.loading.queue_title'),
+            subtitle: t('songxin.loading.queue_sub')
+        });
         try {
             const attachmentsPayload = await Promise.all(
                 attachments.map(async (att) => ({
@@ -424,10 +427,10 @@
                 }
             }
 
-            await window.requestJson('/api/send-mail', {
+            await window.requestJson('/api/send-mail-task', {
                 body: JSON.stringify(payload)
             }, {
-                fallbackMessage: t('songxin.error.send_failed')
+                fallbackMessage: t('songxin.error.queue_failed')
             });
 
             if (isMatchFlow && replyQueue.length) {
@@ -436,15 +439,17 @@
                 if (replyQueue.length) {
                     await loadCurrentReply();
                 } else {
-                    window.navigateAppRoute('songxinhistory.html');
+                    window.navigateAppRoute('bpmatch.html');
                 }
             } else {
-                alert(t('songxin.alert.sent'));
-                window.navigateAppRoute('songxinhistory.html');
+                alert(t('songxin.alert.queued'));
+                window.navigateAppRoute('sendtask.html');
             }
         } catch (err) {
-            console.error('发送邮件失败', err);
-            alert(format('songxin.alert.send_failed', {error: err.message || err}));
+            console.error('创建发送任务失败', err);
+            alert(format('songxin.alert.queue_failed', {
+                error: err.message || err
+            }));
         } finally {
             isSending = false;
             sendBtn.disabled = false;

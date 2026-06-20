@@ -12,6 +12,8 @@ class SentEmailLog(models.Model):
     subject = models.CharField(max_length=512, blank=True, default="")
     body = models.TextField(blank=True, default="")
     attachments = models.TextField(blank=True, default="")  # JSON 序列化的附件名列表
+    in_reply_to = models.CharField(max_length=998, blank=True, default="")
+    references = models.TextField(blank=True, default="")
     mail_type = models.IntegerField()  # 邮件类型 0:bp 1:技术者送信 2:案件送信 3:发注 4:请求书 -1:其他
     sent_at = models.DateTimeField()
 
@@ -44,6 +46,8 @@ class MailSendTask(models.Model):
     mail_type = models.IntegerField(default=-1)
     company_name = models.CharField(max_length=255, blank=True, default="")
     contact_name = models.CharField(max_length=255, blank=True, default="")
+    in_reply_to = models.CharField(max_length=998, blank=True, default="")
+    references = models.TextField(blank=True, default="")
     error_message = models.TextField(null=True, blank=True)
     created_by = models.BigIntegerField()
     created_at = models.DateTimeField(auto_now_add=True)

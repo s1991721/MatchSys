@@ -22,6 +22,7 @@ from .gmailTool import GmailTool
 from .mailTool import (
     MailToolError,
     queue_bulk_mail_by_login,
+    queue_mail_by_login,
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
@@ -774,6 +775,25 @@ def send_bulk_mail(request):
 
 
 @csrf_exempt
+@require_POST
+def queue_mail(request):
+    """创建单封发送任务；接口只确认入队，不等待实际发送结果。"""
+    login_id, error = require_login(request)
+    if error:
+        return error
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    try:
+        data = queue_mail_by_login(login_id, payload)
+        return api_success(data=data, status=202)
+    except MailToolError as exc:
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
+
+
+@csrf_exempt
 @require_GET
 # 我的邮件列表
 def my_mails_api(request):
@@ -1079,6 +1099,8 @@ def send_task_detail(request, task_id):
         "mail_type": task.mail_type,
         "company_name": task.company_name or "",
         "contact_name": task.contact_name or "",
+        "in_reply_to": task.in_reply_to or "",
+        "references": task.references or "",
         "error_message": task.error_message or "",
         "status": "failed" if task.error_message else "pending",
         "time": timezone.localtime(task.created_at, current_tz).strftime("%Y-%m-%d %H:%M"),
@@ -1175,6 +1197,8 @@ def send_history(request):
                 ),
                 "content": log.body or "",
                 "attachments": attachments if isinstance(attachments, list) else [],
+                "in_reply_to": log.in_reply_to or "",
+                "references": log.references or "",
             }
         )
 

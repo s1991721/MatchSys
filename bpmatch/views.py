@@ -6,7 +6,7 @@ from io import StringIO
 from urllib.parse import quote
 
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -232,6 +232,10 @@ def mail_project_match_api(request):
     project_skills = _normalize_skills(project.skills)
     project_skill_set = {skill.lower() for skill in project_skills}
     tech_queryset = MailTechnicianInfo.objects.filter(country=project.country)
+    if project.price is not None:
+        tech_queryset = tech_queryset.filter(
+            Q(price__lt=project.price) | Q(price__isnull=True)
+        )
 
     scored_items = []
     for tech in tech_queryset:

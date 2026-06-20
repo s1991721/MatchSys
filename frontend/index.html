@@ -50,14 +50,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#songxinhistory.html" data-src="songxinhistory.html" data-title="送信历史" title="送信历史" data-i18n-title="nav.send_history">
-            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="currentColor" d="M12 8a1 1 0 0 1 1 1v3.6l2.4 1.4a1 1 0 1 1-1 1.7l-3-1.8A1 1 0 0 1 11 13V9a1 1 0 0 1 1-1zm0-6a10 10 0 1 1-7.1 17.1 1 1 0 1 1 1.4-1.4A8 8 0 1 0 12 4a7.9 7.9 0 0 0-5.4 2.1H9a1 1 0 0 1 0 2H3V2a1 1 0 1 1 2 0v2.6A9.9 9.9 0 0 1 12 2z"/>
-            </svg>
-            <span class="nav-label" data-i18n="nav.send_history">送信历史</span>
-          </a>
-        </li>
-        <li class="nav-item">
           <a href="#people.html" data-src="people.html" data-title="技术者管理" title="技术者管理" data-i18n-title="nav.people">
             <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/>
@@ -198,8 +190,14 @@
                 <span id="sendTaskTotalLabel">共0个任务</span>
               </div>
               <div class="send-task-list" id="sendTaskList"></div>
-              <div class="send-task-popover-foot">
-                <button id="sendTaskViewAll" type="button" data-i18n="send_task.popover.view_all">查看全部</button>
+              <div class="send-task-popover-foot" id="sendTaskPopoverFoot">
+                <button id="sendTaskViewAll" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm1-13h-2v6l5.2 3 1-1.7-4.2-2.4Z"/>
+                  </svg>
+                  <span data-i18n="send_task.popover.view_history">查看送信历史</span>
+                  <span class="send-task-foot-arrow" aria-hidden="true">→</span>
+                </button>
               </div>
             </section>
           </div>
@@ -253,6 +251,7 @@
       const sendTaskList = document.getElementById("sendTaskList");
       const sendTaskTotalLabel = document.getElementById("sendTaskTotalLabel");
       const sendTaskViewAll = document.getElementById("sendTaskViewAll");
+      const sendTaskPopoverFoot = document.getElementById("sendTaskPopoverFoot");
       const noticeBtn = document.getElementById("noticeBtn");
       const noticeBadge = document.getElementById("noticeBadge");
       const noticeDialog = document.getElementById("noticeDialog");
@@ -576,14 +575,23 @@
       if (sendTaskPopover) {
         sendTaskPopover.addEventListener("click", (event) => event.stopPropagation());
       }
+      const navigateToSendHistory = () => {
+        if (!isAllowedRoute(sendTaskRoute)) return;
+        closeSendTaskPopover();
+        if (location.hash !== "#" + sendTaskRoute) {
+          location.hash = sendTaskRoute;
+        } else {
+          applyRoute(sendTaskRoute);
+        }
+      };
       if (sendTaskViewAll) {
-        sendTaskViewAll.addEventListener("click", () => {
-          closeSendTaskPopover();
-          if (location.hash !== "#" + sendTaskRoute) {
-            location.hash = sendTaskRoute;
-          } else {
-            applyRoute(sendTaskRoute);
-          }
+        sendTaskViewAll.addEventListener("click", navigateToSendHistory);
+      }
+      if (sendTaskList) {
+        sendTaskList.addEventListener("click", (event) => {
+          const detailButton = event.target.closest(".send-task-detail");
+          if (!detailButton) return;
+          navigateToSendHistory();
         });
       }
       document.addEventListener("click", closeSendTaskPopover);
@@ -668,6 +676,9 @@
         if (workflowRoutes.has(normalized)) return true;
         return allowedMenuSet.has(normalized);
       };
+      if (sendTaskPopoverFoot) {
+        sendTaskPopoverFoot.hidden = !isAllowedRoute(sendTaskRoute);
+      }
       const applyMenuFilter = () => {
         if (!allowedMenuSet) return;
         links.forEach((link) => {
@@ -704,6 +715,9 @@
         }
         if (!match && route === "myattendance.html") {
           label = i18n ? i18n.t("nav.my_attendance") : "我的考勤";
+        }
+        if (!match && route === sendTaskRoute) {
+          label = i18n ? i18n.t("nav.send_history") : "送信历史";
         }
         if (!match && (route === "songxin.html" || route === "bpsongxin.html")) {
           label = i18n ? i18n.t("songxin.title") : "送信页";

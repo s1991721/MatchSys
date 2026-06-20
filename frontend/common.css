@@ -1858,17 +1858,36 @@ body.sidebar-collapsed .system-expiry-inline {
   border-top: 1px solid var(--border);
   background: #fbfcff;
 }
+.send-task-popover-foot[hidden] {
+  display: none;
+}
 .send-task-popover-foot button {
-  padding: 6px 16px;
+  width: 100%;
+  height: 100%;
+  padding: 0 16px;
   border: 0;
   background: transparent;
   color: var(--primary);
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   font-size: 13px;
   font-weight: 700;
 }
+.send-task-popover-foot button svg {
+  width: 16px;
+  height: 16px;
+}
+.send-task-foot-arrow {
+  transition: transform 0.18s ease;
+}
 .send-task-popover-foot button:hover {
-  text-decoration: underline;
+  background: #f3f7ff;
+}
+.send-task-popover-foot button:hover .send-task-foot-arrow {
+  transform: translateX(3px);
 }
 .icon-btn .badge {
   position: absolute;

@@ -64,3 +64,25 @@ SET settings = JSON_SET(
     deleted_at = NULL
 WHERE name = 'mail-template'
   AND deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS mail_send_tasks
+(
+    id                  BIGINT        NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '发送任务ID',
+
+    to_email            VARCHAR(320)  NOT NULL COMMENT '收件邮箱',
+    cc                  VARCHAR(1024) NOT NULL DEFAULT '' COMMENT '抄送',
+    subject             VARCHAR(512)  NOT NULL DEFAULT '' COMMENT '邮件主题',
+    body                LONGTEXT      NOT NULL COMMENT '最终邮件正文',
+    attachments         JSON          NOT NULL COMMENT '附件存储引用列表',
+    mail_type           INT           NOT NULL DEFAULT -1 COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信 3:发注 4:请求书 -1:其他',
+
+    company_name        VARCHAR(255)  NOT NULL DEFAULT '' COMMENT '公司名快照',
+    contact_name        VARCHAR(255)  NOT NULL DEFAULT '' COMMENT '联系人名快照',
+    error_message       TEXT          NULL COMMENT '邮件发送错误信息',
+
+    created_by          BIGINT        NOT NULL COMMENT '创建员工ID',
+    created_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = '邮件发送任务队列表';

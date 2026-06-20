@@ -30,6 +30,7 @@ from .mailTool import (
     sync_my_mails,
     get_my_mail_detail_from_db,
 )
+from .mail.sender import _consume_mail_send_tasks
 from .models import (
     MailProjectInfo,
     MailSendTask,
@@ -1072,6 +1073,30 @@ def send_task_detail(request, task_id):
         "status": "failed" if task.error_message else "pending",
         "time": timezone.localtime(task.created_at, current_tz).strftime("%Y-%m-%d %H:%M"),
     })
+
+
+@csrf_exempt
+@require_POST
+def retry_send_task(request, task_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    task = (
+        MailSendTask.objects.filter(id=task_id, created_by=login_id)
+        .exclude(error_message__isnull=True)
+        .exclude(error_message="")
+        .first()
+    )
+    if task is None:
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND, status=404)
+
+    task.error_message = None
+    _consume_mail_send_tasks(login_id, [task])
+    if task.error_message:
+        return api_error(ErrorCode.EXTERNAL_GMAIL, task.error_message, status=500)
+
+    return api_success(data={"id": task.id})
 
 
 @csrf_exempt

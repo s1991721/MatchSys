@@ -55,6 +55,7 @@ from bpmatch.views import (
     send_tasks,
     send_tasks_page,
     send_task_detail,
+    retry_send_task,
     discard_send_task,
     send_history,
 )
@@ -266,6 +267,11 @@ urlpatterns = [
     path("api/send-tasks", send_tasks, name="send_tasks"),
     path("api/send-tasks/page", send_tasks_page, name="send_tasks_page"),
     path("api/send-tasks/<str:task_id>", send_task_detail, name="send_task_detail"),
+    path(
+        "api/send-tasks/<str:task_id>/retry",
+        retry_send_task,
+        name="retry_send_task",
+    ),
     path(
         "api/send-tasks/<str:task_id>/discard",
         discard_send_task,

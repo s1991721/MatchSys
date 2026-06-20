@@ -506,6 +506,7 @@ def mail_project_search_api(request):
     sender = (payload.get("sender") or "").strip()
     date_range = (payload.get("date_range") or "all").strip().lower()
     intro = payload.get("intro") or ""
+    price = payload.get("price")
 
     parsed = {}
     if intro.strip():
@@ -525,6 +526,9 @@ def mail_project_search_api(request):
 
     if country:
         queryset = queryset.filter(country=country)
+
+    if price is not None:
+        queryset = queryset.filter(Q(price__gte=price) | Q(price__isnull=True))
 
     if sender:
         queryset = queryset.filter(address__icontains=sender)
@@ -584,6 +588,7 @@ def mail_project_search_api(request):
             "sender": sender,
             "date_range": date_range,
             "skills": input_skills,
+            "price": float(price) if price is not None else None,
         },
     }
     return api_success(data=payload)

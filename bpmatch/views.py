@@ -2,6 +2,7 @@ import csv
 import json
 import threading
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
 from io import StringIO
 from urllib.parse import quote
 
@@ -606,6 +607,15 @@ def mail_technician_search_api(request):
     sender = (payload.get("sender") or "").strip()
     date_range = (payload.get("date_range") or "all").strip().lower()
     intro = payload.get("intro") or ""
+    raw_price = payload.get("price")
+    price = None
+    if raw_price not in (None, ""):
+        try:
+            price = Decimal(str(raw_price))
+        except (InvalidOperation, TypeError, ValueError):
+            return api_error(ErrorCode.INVALID_REQUEST, "Invalid price", status=400)
+        if not price.is_finite() or price < 0:
+            return api_error(ErrorCode.INVALID_REQUEST, "Invalid price", status=400)
 
     parsed = {}
     if intro.strip():
@@ -628,6 +638,9 @@ def mail_technician_search_api(request):
 
     if parsed_country:
         queryset = queryset.filter(country=parsed_country)
+
+    if price is not None:
+        queryset = queryset.filter(Q(price__lt=price) | Q(price__isnull=True))
 
     if sender:
         queryset = queryset.filter(address__icontains=sender)
@@ -688,6 +701,7 @@ def mail_technician_search_api(request):
             "date_range": date_range,
             "country": parsed_country or "",
             "skills": input_skills,
+            "price": float(price) if price is not None else None,
         },
     }
     return api_success(data=payload)

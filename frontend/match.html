@@ -74,6 +74,11 @@
                 <h2 class="title c-panel-title" data-i18n="match.form.case_title">案件信息</h2>
                 <div class="form-grid form-grid-single form-grid-spaced">
                     <div class="form-field">
+                        <label for="case-price" data-i18n="common.field.amount">金额</label>
+                        <input id="case-price" type="number" min="0" step="0.01" placeholder="例如：50000"
+                               data-i18n-placeholder="common.field.amount_placeholder">
+                    </div>
+                    <div class="form-field">
                         <label for="case-info" data-i18n="match.form.case_info">案件信息</label>
                         <textarea id="case-info" rows="10" placeholder="请输入案件信息。"
                                   data-i18n-placeholder="match.form.case_info_placeholder"></textarea>
@@ -192,6 +197,7 @@
     const resumeFileInput = document.getElementById('resume-file');
     const resumeSource = document.getElementById('resume-source');
     const introInput = document.getElementById('intro');
+    const casePriceInput = document.getElementById('case-price');
     const caseInfoInput = document.getElementById('case-info');
     const sendBtn = document.getElementById('send-btn');
     const pageStateKey = 'match_page_state';
@@ -204,7 +210,7 @@
     };
     const viewInputs = {
         people: ['nation', 'age', 'price', 'intro'],
-        cases: ['case-info']
+        cases: ['case-price', 'case-info']
     };
     let senderTimer = null;
     let openFeedbackId = '';
@@ -435,6 +441,7 @@
         age: ageInput ? ageInput.value : '',
         price: priceInput ? priceInput.value : '',
         intro: introInput ? introInput.value : '',
+        casePrice: casePriceInput ? casePriceInput.value : '',
         caseInfo: caseInfoInput ? caseInfoInput.value : '',
         sender: senderInput ? senderInput.value : '',
         resumePrefill: resumeState.prefill || null,
@@ -915,6 +922,12 @@
             }
             payload.country = nationSelect ? nationSelect.value.trim() : '';
             payload.price = priceInput && priceInput.value !== '' ? priceInput.valueAsNumber : null;
+        } else {
+            if (casePriceInput && casePriceInput.value !== '' && !casePriceInput.checkValidity()) {
+                casePriceInput.reportValidity();
+                return;
+            }
+            payload.price = casePriceInput && casePriceInput.value !== '' ? casePriceInput.valueAsNumber : null;
         }
         setLoading(t('common.loading'));
         try {
@@ -959,6 +972,7 @@
         if (ageInput) ageInput.value = payload.age || '';
         if (priceInput) priceInput.value = payload.price || '';
         if (introInput) introInput.value = payload.intro || '';
+        if (casePriceInput) casePriceInput.value = payload.casePrice || '';
         if (caseInfoInput) caseInfoInput.value = payload.caseInfo || '';
         if (senderInput) senderInput.value = payload.sender || '';
         resumeState.prefill = payload.resumePrefill || null;

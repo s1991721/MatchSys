@@ -27,7 +27,6 @@ from .mailTool import (
     list_my_mails_from_db,
     mark_my_mail_as_read,
     query_my_mails,
-    count_unread_mails_from_db,
     sync_my_mails,
     get_my_mail_detail_from_db,
 )

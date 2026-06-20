@@ -1880,6 +1880,7 @@ body.sidebar-collapsed .system-expiry-inline {
   place-items: center;
   font-size: 10px;
   font-weight: 900;
+  color: #fff;
   border: 2px solid rgba(255, 255, 255, 0.92);
 }
 /* 角标在 JS 设为 hidden 时必须强制隐藏，避免被 .icon-btn .badge 的 display 覆盖。 */

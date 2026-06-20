@@ -224,6 +224,11 @@
     const h = (value) => window.escapeHtml ? window.escapeHtml(value) : String(value == null ? '' : value);
 
     const getNumberValue = (value) => value === '' ? null : Number(value);
+    const convertWanToYen = (value) => {
+        if (value === null || value === undefined || value === '') return '';
+        const amount = Number(value);
+        return Number.isFinite(amount) ? amount * 10000 : '';
+    };
 
     const applyFilters = () => {
         const keywordValue = (filterKeyword.value || '').trim();
@@ -262,7 +267,7 @@
         const payload = {
             nationality: normalizeNationalityValue(person.nationality),
             age: person.age ?? '',
-            price: person.price ?? '',
+            price: convertWanToYen(person.price),
             intro: person.intro || '',
             resume: person.ssUrl ? {
                 name: ssName,

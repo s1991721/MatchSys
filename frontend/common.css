@@ -2857,6 +2857,8 @@ svg {
 }
 .match-page .c-filter-grid {
   align-items: start;
+}
+.bpmatch-page .c-filter-grid {
   grid-template-columns: max-content minmax(max-content, 1.5fr) minmax(0, 3fr);
 }
 .match-page .price-filter-group {

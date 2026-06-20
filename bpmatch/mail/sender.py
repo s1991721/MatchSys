@@ -1,11 +1,16 @@
 import base64
+import binascii
 import json
 import smtplib
+import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import getaddresses, make_msgid
+from pathlib import Path
 from typing import List, Optional
+
+from django.db import transaction
 
 from .common import MailToolError, ensure_send_config_for_login
 from project import storage
@@ -316,6 +321,132 @@ def _build_bulk_body(body, recipient):
     if not salutation:
         return base_body
     return f"{salutation}\n\n{base_body}"
+
+
+def _validate_task_text(value, field, max_length, required=False):
+    text = str(value or "").strip()
+    if required and not text:
+        raise MailToolError(f"Missing field: {field}")
+    if len(text) > max_length:
+        raise MailToolError(f"Field too long: {field}")
+    return text
+
+
+def _persist_task_attachments(attachments):
+    """将请求内附件转换为可供异步任务读取的持久化引用。"""
+    if attachments in (None, ""):
+        return []
+    if not isinstance(attachments, list):
+        raise MailToolError("Invalid field: attachments")
+
+    persisted = []
+    for attachment in attachments:
+        if not isinstance(attachment, dict):
+            raise MailToolError("Invalid attachment")
+
+        original_name = Path(str(attachment.get("filename") or "attachment")).name
+        content_type = str(
+            attachment.get("content_type") or "application/octet-stream"
+        ).strip()
+        source_path = str(attachment.get("path") or "").strip()
+        encoded_content = attachment.get("content") or ""
+
+        if source_path and not encoded_content:
+            try:
+                storage.path(StorageArea.SS, source_path)
+            except ValueError:
+                raise MailToolError("Invalid attachment path")
+            if not storage.exists(StorageArea.SS, source_path):
+                raise MailToolError("Attachment file not found", status=404)
+            task_path = source_path
+        elif encoded_content:
+            try:
+                content = base64.b64decode(encoded_content, validate=True)
+            except (binascii.Error, ValueError, TypeError):
+                raise MailToolError("Invalid attachment content")
+            suffix = Path(original_name).suffix
+            task_path = (
+                f"mail_send_tasks/{datetime.now(tz=timezone.utc):%Y/%m/%d}/"
+                f"{uuid.uuid4().hex}{suffix}"
+            )
+            storage.save_bytes(StorageArea.SS, task_path, content)
+        else:
+            raise MailToolError("Missing attachment content")
+
+        persisted.append(
+            {
+                "filename": original_name,
+                "path": task_path,
+                "content_type": content_type,
+            }
+        )
+    return persisted
+
+
+def queue_bulk_mail_by_login(login_id, payload):
+    """校验群发请求并按收件人拆分写入 mail_send_tasks。"""
+    from bpmatch.models import MailSendTask
+
+    if not isinstance(payload, dict):
+        raise MailToolError("Invalid request payload")
+
+    subject = _validate_task_text(
+        payload.get("subject") or "群发邮件", "subject", 512, required=True
+    )
+    body = str(payload.get("body") or "").strip()
+    if not body:
+        raise MailToolError("Missing field: body")
+    cc_addr = _validate_task_text(payload.get("cc"), "cc", 1024)
+    mail_type = _parse_mail_type(payload.get("mail_type"))
+    if mail_type is None:
+        mail_type = -1
+
+    recipients = payload.get("recipients") or []
+    if not isinstance(recipients, list) or not recipients:
+        raise MailToolError("Missing field: recipients")
+
+    valid_recipients = []
+    for recipient in recipients:
+        if not isinstance(recipient, dict):
+            continue
+        to_email = _validate_task_text(
+            recipient.get("email"), "recipient.email", 320
+        )
+        if not to_email:
+            continue
+        company_name = _validate_task_text(
+            recipient.get("company_name"), "recipient.company_name", 255
+        )
+        contact_name = _validate_task_text(
+            recipient.get("contact_name"), "recipient.contact_name", 255
+        )
+        valid_recipients.append(
+            (recipient, to_email, company_name, contact_name)
+        )
+
+    if not valid_recipients:
+        raise MailToolError("Missing valid recipient email")
+
+    persisted_attachments = _persist_task_attachments(payload.get("attachments"))
+    tasks = [
+        MailSendTask(
+            to_email=to_email,
+            cc=cc_addr,
+            subject=subject,
+            body=_build_bulk_body(body, recipient),
+            attachments=persisted_attachments,
+            mail_type=mail_type,
+            company_name=company_name,
+            contact_name=contact_name,
+            error_message=None,
+            created_by=login_id,
+        )
+        for recipient, to_email, company_name, contact_name in valid_recipients
+    ]
+    with transaction.atomic():
+        MailSendTask.objects.bulk_create(tasks)
+
+    return {"queued_count": len(tasks)}
 
 
 # 根据登录ID获取用户的邮箱配置，从而送信

@@ -1757,7 +1757,7 @@ body.sidebar-collapsed .system-expiry-inline {
   top: calc(100% + 10px);
   right: 0;
   width: 360px;
-  height: 300px;
+  max-height: 300px;
   overflow: hidden;
   background: #fff;
   border: 1px solid var(--border);
@@ -1797,13 +1797,13 @@ body.sidebar-collapsed .system-expiry-inline {
   font-size: 12px;
 }
 .send-task-list {
-  height: 200px;
+  max-height: 200px;
   display: flex;
   flex-direction: column;
 }
 .send-task-item {
   min-height: 66px;
-  flex: 1 1 0;
+  flex: 0 0 auto;
   padding: 10px 14px;
   display: flex;
   align-items: center;
@@ -1845,7 +1845,7 @@ body.sidebar-collapsed .system-expiry-inline {
   text-decoration: underline;
 }
 .send-task-empty {
-  flex: 1 1 auto;
+  min-height: 100px;
   display: grid;
   place-items: center;
   color: var(--muted);

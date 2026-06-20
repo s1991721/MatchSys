@@ -1004,6 +1004,78 @@ def send_tasks(request):
 
 @csrf_exempt
 @require_GET
+# 发送任务页面：分页查询当前用户的发送任务
+def send_tasks_page(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    status = (request.GET.get("status") or "all").strip().lower()
+    queryset = MailSendTask.objects.filter(created_by=login_id)
+    if status == "failed":
+        queryset = queryset.exclude(error_message__isnull=True).exclude(error_message="")
+    elif status == "pending":
+        queryset = queryset.filter(error_message__isnull=True)
+    elif status != "all":
+        return api_error(ErrorCode.MATCH_MAIL_TYPE_INVALID)
+    queryset = queryset.order_by("-created_at", "-id")
+    tasks, total, page, page_size, total_pages = paginate_queryset(queryset, request)
+    current_tz = timezone.get_current_timezone()
+    items = [
+        {
+            "id": task.id,
+            "title": task.subject or "(无标题)",
+            "to": task.to_email or "",
+            "status": "failed" if task.error_message else "pending",
+            "time": timezone.localtime(task.created_at, current_tz).strftime(
+                "%Y-%m-%d %H:%M"
+            ),
+        }
+        for task in tasks
+    ]
+
+    return api_success(data={"items": items}, meta={
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    })
+
+
+@csrf_exempt
+@require_GET
+def send_task_detail(request, task_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    try:
+        task = MailSendTask.objects.get(id=task_id, created_by=login_id)
+    except MailSendTask.DoesNotExist:
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND, status=404)
+
+    current_tz = timezone.get_current_timezone()
+    return api_success(data={
+        "id": task.id,
+        "title": task.subject or "(无标题)",
+        "to": task.to_email or "",
+        "cc": task.cc or "",
+        "content": task.body or "",
+        "attachments": [
+            attachment.get("filename", "") if isinstance(attachment, dict) else str(attachment)
+            for attachment in (task.attachments if isinstance(task.attachments, list) else [])
+        ],
+        "mail_type": task.mail_type,
+        "company_name": task.company_name or "",
+        "contact_name": task.contact_name or "",
+        "error_message": task.error_message or "",
+        "status": "failed" if task.error_message else "pending",
+        "time": timezone.localtime(task.created_at, current_tz).strftime("%Y-%m-%d %H:%M"),
+    })
+
+
+@csrf_exempt
+@require_GET
 # 送信历史
 def send_history(request):
     login_id, error = require_login(request)

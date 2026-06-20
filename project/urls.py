@@ -53,6 +53,8 @@ from bpmatch.views import (
     send_mail,
     send_bulk_mail,
     send_tasks,
+    send_tasks_page,
+    send_task_detail,
     send_history,
 )
 from customer.views import (
@@ -152,6 +154,7 @@ urlpatterns = [
     path("bpsongxin.html", TemplateView.as_view(template_name="frontend/bpsongxin.html")),
     path("songxin.html", TemplateView.as_view(template_name="frontend/songxin.html")),
     path("songxinhistory.html", TemplateView.as_view(template_name="frontend/songxinhistory.html")),
+    path("sendtask.html", TemplateView.as_view(template_name="frontend/sendtask.html")),
     path("my_mail.html", TemplateView.as_view(template_name="frontend/my_mail.html")),
     # -------------------------------customer UI-------------------------------
     path("customer.html", TemplateView.as_view(template_name="frontend/customer.html")),
@@ -260,6 +263,8 @@ urlpatterns = [
     path("api/send-mail", send_mail, name="send_mail"),
     path("api/send-bulk-mail", send_bulk_mail, name="send_bulk_mail"),
     path("api/send-tasks", send_tasks, name="send_tasks"),
+    path("api/send-tasks/page", send_tasks_page, name="send_tasks_page"),
+    path("api/send-tasks/<str:task_id>", send_task_detail, name="send_task_detail"),
     path("api/send-history", send_history, name="send_history"),
     path("api/home/topbar-badges", topbar_badges_api, name="home-topbar-badges"),
     path("api/home/stats", home_match_stats_api, name="home-match-stats"),

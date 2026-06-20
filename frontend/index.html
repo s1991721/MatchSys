@@ -257,7 +257,8 @@
       const noticeDialog = document.getElementById("noticeDialog");
       const pageSubtitle = document.getElementById("pageSubtitle");
       const noticeRoute = "my_mail.html";
-      const sendTaskRoute = "songxinhistory.html";
+      const sendTaskRoute = "sendtask.html";
+      const sendHistoryRoute = "songxinhistory.html";
       const KEY = "chat_sidebar_collapsed";
       const LANG_KEY = "app_lang";
       const MENU_KEY = "app_menu_list";
@@ -582,12 +583,12 @@
         sendTaskPopover.addEventListener("click", (event) => event.stopPropagation());
       }
       const navigateToSendHistory = () => {
-        if (!isAllowedRoute(sendTaskRoute)) return;
+        if (!isAllowedRoute(sendHistoryRoute)) return;
         closeSendTaskPopover();
-        if (location.hash !== "#" + sendTaskRoute) {
-          location.hash = sendTaskRoute;
+        if (location.hash !== "#" + sendHistoryRoute) {
+          location.hash = sendHistoryRoute;
         } else {
-          applyRoute(sendTaskRoute);
+          applyRoute(sendHistoryRoute);
         }
       };
       if (sendTaskViewAll) {
@@ -597,7 +598,11 @@
         sendTaskList.addEventListener("click", (event) => {
           const detailButton = event.target.closest(".send-task-detail");
           if (!detailButton) return;
-          navigateToSendHistory();
+          const taskId = detailButton.dataset.taskId || "";
+          closeSendTaskPopover();
+          const route = `${sendTaskRoute}?id=${encodeURIComponent(taskId)}`;
+          if (location.hash !== "#" + route) location.hash = route;
+          else applyRoute(route);
         });
       }
       document.addEventListener("click", closeSendTaskPopover);
@@ -670,7 +675,7 @@
       const allowedMenuSet = buildAllowedMenuSet();
       const fallbackRoute = "profile.html";
       const bulkMailRoute = "bulk_email.html";
-      const workflowRoutes = new Set([bulkMailRoute, "songxin.html", "bpsongxin.html"]);
+      const workflowRoutes = new Set([bulkMailRoute, sendTaskRoute, "songxin.html", "bpsongxin.html"]);
       const isAllowedRoute = (src) => {
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
@@ -683,7 +688,7 @@
         return allowedMenuSet.has(normalized);
       };
       if (sendTaskPopoverFoot) {
-        sendTaskPopoverFoot.hidden = !isAllowedRoute(sendTaskRoute);
+        sendTaskPopoverFoot.hidden = !isAllowedRoute(sendHistoryRoute);
       }
       const applyMenuFilter = () => {
         if (!allowedMenuSet) return;
@@ -723,7 +728,7 @@
           label = i18n ? i18n.t("nav.my_attendance") : "我的考勤";
         }
         if (!match && route === sendTaskRoute) {
-          label = i18n ? i18n.t("nav.send_history") : "送信历史";
+          label = i18n ? i18n.t("sendtask.title") : "发送任务";
         }
         if (!match && (route === "songxin.html" || route === "bpsongxin.html")) {
           label = i18n ? i18n.t("songxin.title") : "送信页";

@@ -96,9 +96,6 @@
                 </div>
             </div>
             <div class="songxin-send-actions">
-                <button id="btn-clear" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.clear">
-                    清空内容
-                </button>
                 <button id="btn-send" class="c-btn c-btn-primary" type="button" aria-label="发送"
                         data-i18n-aria="songxin.action.send">
                     <span id="btn-send-label" data-i18n="songxin.action.send">发送</span>
@@ -146,7 +143,6 @@
     const subjectInput = document.getElementById('subject');
     const cc = document.getElementById('cc');
     const preview = document.getElementById('preview');
-    const clearBtn = document.getElementById('btn-clear');
     const sendBtn = document.getElementById('btn-send');
     const sendBtnLabel = document.getElementById('btn-send-label');
     const replyQueueStatus = document.getElementById('reply-queue-status');
@@ -307,17 +303,6 @@
         preview.textContent = content;
     };
 
-    clearBtn.addEventListener('click', () => {
-        editor.value = '';
-        email.value = '';
-        subjectInput.value = '';
-        cc.value = '';
-        attachments.length = 0;
-        renderAttachments();
-        renderPreview();
-        editor.focus();
-    });
-
     editor.addEventListener('input', renderPreview);
 
     uploadBtn.addEventListener('click', () => fileInput.click());
@@ -433,17 +418,12 @@
                 fallbackMessage: t('songxin.error.queue_failed')
             });
 
-            if (isMatchFlow && replyQueue.length) {
-                replyQueue.shift();
-                currentPerson = null;
-                if (replyQueue.length) {
-                    await loadCurrentReply();
-                } else {
-                    window.navigateAppRoute('bpmatch.html');
-                }
+            replyQueue.shift();
+            currentPerson = null;
+            if (replyQueue.length) {
+                await loadCurrentReply();
             } else {
-                alert(t('songxin.alert.queued'));
-                window.navigateAppRoute('sendtask.html');
+                window.navigateAppRoute('bpmatch.html');
             }
         } catch (err) {
             console.error('创建发送任务失败', err);

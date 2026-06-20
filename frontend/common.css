@@ -3231,6 +3231,38 @@ svg {
   font-size: 13px;
   color: #4a5568;
 }
+.sendtask-detail-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 24px;
+  margin-bottom: 10px;
+}
+.sendtask-detail-head .songxinhistory-detail-meta {
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  margin-bottom: 0;
+}
+.sendtask-detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
+  white-space: nowrap;
+}
+.sendtask-detail-actions[hidden] {
+  display: none;
+}
+@media (max-width: 720px) {
+  .sendtask-detail-head {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sendtask-detail-head .songxinhistory-detail-meta {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  .sendtask-detail-actions {
+    justify-self: end;
+  }
+}
 .songxinhistory-section-title {
   margin-top: 14px;
   margin-bottom: 8px;

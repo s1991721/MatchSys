@@ -32,7 +32,15 @@
 
         <div class="c-card c-card-pad">
             <div class="c-card-title" data-i18n="sendtask.detail.title">任务详情</div>
-            <div class="songxinhistory-detail-meta" id="detail-meta"></div>
+            <div class="sendtask-detail-head">
+                <div class="songxinhistory-detail-meta" id="detail-meta"></div>
+                <div id="detail-actions" class="sendtask-detail-actions" hidden>
+                    <button id="retry-task" class="c-btn c-btn-primary c-btn-sm" type="button"
+                            data-i18n="sendtask.action.retry">重发</button>
+                    <button id="discard-task" class="c-btn c-btn-danger c-btn-sm" type="button"
+                            data-i18n="sendtask.action.discard">丢弃</button>
+                </div>
+            </div>
             <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.body">正文</div>
             <div id="task-detail" class="songxin-preview songxinhistory-detail"></div>
             <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
@@ -40,6 +48,7 @@
             <div id="error-section" hidden>
                 <div class="c-page-subtitle songxinhistory-section-title" data-i18n="sendtask.detail.error">失败原因</div>
                 <div id="task-error" class="songxin-preview songxinhistory-detail"></div>
+                <div id="task-action-message" class="songxin-empty-tip" role="status" aria-live="polite"></div>
             </div>
         </div>
     </section>
@@ -59,6 +68,10 @@
     const attachEl = document.getElementById('detail-attachments');
     const errorSection = document.getElementById('error-section');
     const errorEl = document.getElementById('task-error');
+    const detailActions = document.getElementById('detail-actions');
+    const retryButton = document.getElementById('retry-task');
+    const discardButton = document.getElementById('discard-task');
+    const actionMessage = document.getElementById('task-action-message');
     const statusGroup = document.getElementById('status-group');
     const pagination = document.getElementById('task-pagination');
     const paginationPages = document.getElementById('task-pagination-pages');
@@ -72,6 +85,7 @@
     let currentPage = 1;
     let totalPages = 1;
     let totalCount = 0;
+    let actionPending = false;
 
     if (i18n) { i18n.init(); i18n.apply(); }
 
@@ -101,7 +115,9 @@
         metaEl.replaceChildren();
         detailEl.replaceChildren();
         errorEl.replaceChildren();
+        actionMessage.textContent = '';
         errorSection.hidden = true;
+        detailActions.hidden = true;
         if (!record) {
             const empty = document.createElement('span');
             empty.className = 'songxin-empty-tip';
@@ -110,17 +126,18 @@
             renderAttachments([]);
             return;
         }
-        const statusText = record.status === 'failed' ? t('common.status.failed') : t('sendtask.status.pending');
         [
             format('songxinhistory.meta.to', {value: record.to || '--'}),
             format('songxinhistory.meta.cc', {value: record.cc || t('songxinhistory.status.none')}),
-            format('songxinhistory.meta.time', {value: record.time || '--'}),
-            format('sendtask.meta.status', {value: statusText})
+            format('songxinhistory.meta.time', {value: record.time || '--'})
         ].forEach(value => {
             const span = document.createElement('span');
             span.textContent = value;
             metaEl.appendChild(span);
         });
+        if (record.status === 'failed') {
+            detailActions.hidden = false;
+        }
         const title = document.createElement('h4');
         title.textContent = record.title || t('songxinhistory.placeholder.title');
         const body = document.createElement('p');
@@ -229,6 +246,40 @@
         else selectRecord(null);
     };
 
+    const setActionPending = (pending, action = '') => {
+        actionPending = pending;
+        retryButton.disabled = pending;
+        discardButton.disabled = pending;
+        retryButton.textContent = t(pending && action === 'retry'
+            ? 'sendtask.action.retrying' : 'sendtask.action.retry');
+        discardButton.textContent = t(pending && action === 'discard'
+            ? 'sendtask.action.discarding' : 'sendtask.action.discard');
+    };
+
+    const runFailedTaskAction = async action => {
+        if (actionPending || !selectedRecord || selectedRecord.status !== 'failed') return;
+        const isRetry = action === 'retry';
+        const confirmKey = isRetry ? 'sendtask.confirm.retry' : 'sendtask.confirm.discard';
+        if (!window.confirm(t(confirmKey))) return;
+
+        const taskId = selectedRecord.id;
+        actionMessage.textContent = '';
+        setActionPending(true, action);
+        try {
+            await window.requestJson(`/api/send-tasks/${encodeURIComponent(taskId)}/${action}`, {
+                method: 'POST'
+            });
+            selectedId = isRetry ? taskId : '';
+            selectedRecord = null;
+            await loadRecords(currentPage);
+        } catch (error) {
+            actionMessage.textContent = error.message || t(isRetry
+                ? 'sendtask.alert.retry_failed' : 'sendtask.alert.discard_failed');
+        } finally {
+            setActionPending(false);
+        }
+    };
+
     listEl.addEventListener('click', event => {
         const item = event.target.closest('.songxinhistory-item[data-id]');
         if (!item) return;
@@ -244,6 +295,8 @@
         selectedId = '';
         loadRecords(1);
     });
+    retryButton.addEventListener('click', () => runFailedTaskAction('retry'));
+    discardButton.addEventListener('click', () => runFailedTaskAction('discard'));
     window.bindPagination(pagination, value => {
         const next = value === 'prev' ? Math.max(1, currentPage - 1)
             : value === 'next' ? Math.min(totalPages, currentPage + 1) : Number(value);

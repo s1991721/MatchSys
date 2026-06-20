@@ -2,6 +2,7 @@ import base64
 import binascii
 import json
 import smtplib
+import threading
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -10,7 +11,7 @@ from email.utils import getaddresses, make_msgid
 from pathlib import Path
 from typing import List, Optional
 
-from django.db import transaction
+from django.db import close_old_connections, transaction
 
 from .common import MailToolError, ensure_send_config_for_login
 from project import storage
@@ -169,37 +170,31 @@ class MailSender:
         if not message_id:
             return
 
-        try:
-            from bpmatch.models import SentEmailLog
-        except Exception:
-            return
+        from bpmatch.models import SentEmailLog
 
-        try:
-            filenames = []
-            for att in attachments or []:
-                if not isinstance(att, dict):
-                    continue
-                if att.get("filename"):
-                    filenames.append(str(att["filename"]))
-            defaults = {
-                "sent_at": sent_at,
-                "to": to or "",
-                "cc": cc or "",
-                "subject": subject or "",
-                "body": body or "",
-                "attachments": json.dumps(filenames, ensure_ascii=False),
-            }
-            if mail_type is not None:
-                defaults["mail_type"] = mail_type
-            if created_by is not None:
-                defaults["created_by"] = created_by
-                defaults["updated_by"] = created_by
-            SentEmailLog.objects.update_or_create(
-                message_id=message_id,
-                defaults=defaults,
-            )
-        except Exception as exc:
-            print(f"[smtp] 保存发送记录失败: {exc}")
+        filenames = []
+        for att in attachments or []:
+            if not isinstance(att, dict):
+                continue
+            if att.get("filename"):
+                filenames.append(str(att["filename"]))
+        defaults = {
+            "sent_at": sent_at,
+            "to": to or "",
+            "cc": cc or "",
+            "subject": subject or "",
+            "body": body or "",
+            "attachments": json.dumps(filenames, ensure_ascii=False),
+        }
+        if mail_type is not None:
+            defaults["mail_type"] = mail_type
+        if created_by is not None:
+            defaults["created_by"] = created_by
+            defaults["updated_by"] = created_by
+        SentEmailLog.objects.update_or_create(
+            message_id=message_id,
+            defaults=defaults,
+        )
 
 
 SmtpMailSender = MailSender
@@ -430,6 +425,7 @@ def queue_bulk_mail_by_login(login_id, payload):
     persisted_attachments = _persist_task_attachments(payload.get("attachments"))
     tasks = [
         MailSendTask(
+            id=uuid.uuid4().hex,
             to_email=to_email,
             cc=cc_addr,
             subject=subject,
@@ -445,8 +441,86 @@ def queue_bulk_mail_by_login(login_id, payload):
     ]
     with transaction.atomic():
         MailSendTask.objects.bulk_create(tasks)
+        send_thread = threading.Thread(
+            target=_consume_mail_send_tasks,
+            args=(int(login_id), tasks),
+            name=f"mail-send-{login_id}",
+            daemon=True,
+        )
+        transaction.on_commit(send_thread.start)
 
     return {"queued_count": len(tasks)}
+
+
+def _consume_mail_send_tasks(created_by, tasks):
+    """直接消费内存中的整批任务并复用一个 SMTP 连接串行发送。"""
+    from bpmatch.models import MailSendTask
+
+    close_old_connections()
+    try:
+        if not tasks:
+            return
+
+        try:
+            sender, smtp_user = _build_mail_sender(created_by)
+            normalized_atts = _normalize_attachments(tasks[0].attachments or [])
+        except Exception as exc:
+            _mark_mail_tasks_failed(tasks, exc)
+            return
+
+        succeeded_ids = []
+        failed_tasks = []
+        try:
+            with sender.smtp_session() as smtp_client:
+                for task in tasks:
+                    try:
+                        sender.send_message(
+                            to=task.to_email,
+                            cc=task.cc or None,
+                            subject=task.subject,
+                            body=task.body,
+                            sender=smtp_user,
+                            attachments=normalized_atts,
+                            mail_type=task.mail_type,
+                            created_by=task.created_by,
+                            smtp_client=smtp_client,
+                        )
+                        succeeded_ids.append(task.pk)
+                    except Exception as exc:
+                        task.error_message = _format_task_error(exc)
+                        failed_tasks.append(task)
+        except Exception as exc:
+            processed_ids = set(succeeded_ids)
+            failed_ids = {task.pk for task in failed_tasks}
+            for task in tasks:
+                if task.pk not in processed_ids and task.pk not in failed_ids:
+                    task.error_message = _format_task_error(exc)
+                    failed_tasks.append(task)
+
+        with transaction.atomic():
+            if succeeded_ids:
+                MailSendTask.objects.filter(
+                    pk__in=succeeded_ids,
+                    created_by=created_by,
+                ).delete()
+            if failed_tasks:
+                MailSendTask.objects.bulk_update(failed_tasks, ["error_message"])
+    finally:
+        close_old_connections()
+
+
+def _mark_mail_tasks_failed(tasks, exc):
+    from bpmatch.models import MailSendTask
+
+    error_message = _format_task_error(exc)
+    for task in tasks:
+        task.error_message = error_message
+    MailSendTask.objects.bulk_update(tasks, ["error_message"])
+
+
+def _format_task_error(exc):
+    message = str(exc).strip() or exc.__class__.__name__
+    return f"{exc.__class__.__name__}: {message}"[:8000]
 
 
 # 根据登录ID获取用户的邮箱配置，从而送信

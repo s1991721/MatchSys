@@ -35,6 +35,7 @@ class SentEmailLog(models.Model):
 class MailSendTask(models.Model):
     """待发送邮件；成功发送后由消费者迁移到 sent_email_logs 并删除。"""
 
+    id = models.CharField(primary_key=True, max_length=32)
     to_email = models.CharField(max_length=320)
     cc = models.CharField(max_length=1024, blank=True, default="")
     subject = models.CharField(max_length=512, blank=True, default="")

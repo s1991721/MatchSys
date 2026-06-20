@@ -67,7 +67,7 @@ WHERE name = 'mail-template'
 
 CREATE TABLE IF NOT EXISTS mail_send_tasks
 (
-    id                  BIGINT        NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '发送任务ID',
+    id                  CHAR(32)      NOT NULL PRIMARY KEY COMMENT '发送任务ID',
 
     to_email            VARCHAR(320)  NOT NULL COMMENT '收件邮箱',
     cc                  VARCHAR(1024) NOT NULL DEFAULT '' COMMENT '抄送',

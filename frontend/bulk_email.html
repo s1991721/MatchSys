@@ -222,6 +222,7 @@
             alert(error.message || t("customer.bulk.alert.select_all_failed"));
         } finally {
             setSelectAllState(false);
+            updateSelectAllButtonState();
         }
     });
 

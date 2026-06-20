@@ -291,6 +291,7 @@
             if (!payload.success) {
                 throw new Error(payload.message || t("customer.bulk.alert.send_failed"));
             }
+            window.top.postMessage({type: "topbar-badges:refresh"}, "*");
             alert(t("customer.bulk.alert.sent"));
             window.MatchSys.clearStoredKey(CONTEXT_KEY);
             window.MatchSys.clearStoredKey(PREFILL_KEY);

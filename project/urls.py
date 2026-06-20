@@ -55,6 +55,7 @@ from bpmatch.views import (
     send_tasks,
     send_tasks_page,
     send_task_detail,
+    discard_send_task,
     send_history,
 )
 from customer.views import (
@@ -265,6 +266,11 @@ urlpatterns = [
     path("api/send-tasks", send_tasks, name="send_tasks"),
     path("api/send-tasks/page", send_tasks_page, name="send_tasks_page"),
     path("api/send-tasks/<str:task_id>", send_task_detail, name="send_task_detail"),
+    path(
+        "api/send-tasks/<str:task_id>/discard",
+        discard_send_task,
+        name="discard_send_task",
+    ),
     path("api/send-history", send_history, name="send_history"),
     path("api/home/topbar-badges", topbar_badges_api, name="home-topbar-badges"),
     path("api/home/stats", home_match_stats_api, name="home-match-stats"),

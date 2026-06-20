@@ -1075,6 +1075,26 @@ def send_task_detail(request, task_id):
 
 
 @csrf_exempt
+@require_POST
+def discard_send_task(request, task_id):
+    """Physically delete one failed send task owned by the current user."""
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    deleted_count, _ = (
+        MailSendTask.objects.filter(id=task_id, created_by=login_id)
+        .exclude(error_message__isnull=True)
+        .exclude(error_message="")
+        .delete()
+    )
+    if deleted_count == 0:
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND, status=404)
+
+    return api_success(data={"id": task_id})
+
+
+@csrf_exempt
 @require_GET
 # 送信历史
 def send_history(request):

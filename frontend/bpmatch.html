@@ -27,6 +27,15 @@
                         </button>
                     </div>
                 </div>
+                <div class="filter-group c-filter-group price-filter-group">
+                    <span class="filter-label c-filter-label price-filter-spacer" aria-hidden="true">&nbsp;</span>
+                    <div class="strict-price-row">
+                        <label class="strict-price-check" for="strict-price">
+                            <input id="strict-price" type="checkbox" checked>
+                            <span data-i18n="match.strict_price">严格限制单价</span>
+                        </label>
+                    </div>
+                </div>
                 <div class="filter-group c-filter-group sender-group">
                     <span class="filter-label c-filter-label" data-i18n="match.sender">发件人</span>
                     <div class="search-row">
@@ -166,6 +175,7 @@
     const personList = document.getElementById('person-list');
     const jobSender = document.getElementById('job-sender');
     const jobSearchBtn = document.getElementById('job-search-btn');
+    const strictPrice = document.getElementById('strict-price');
     const dateButtons = Array.from(document.querySelectorAll('.chip[data-range]'));
     const pagination = document.getElementById('job-pagination');
     const paginationPages = document.getElementById('job-pagination-pages');
@@ -212,6 +222,7 @@
     let totalPages = 1;
     let totalCount = 0;
     let jobRequestSeq = 0;
+    let matchRequestSeq = 0;
 
     const filters = {
         range: 'today'
@@ -241,6 +252,11 @@
         openJobFeedbackId = '';
         openPersonFeedbackId = '';
         fetchJobs(1);
+    });
+
+    strictPrice.addEventListener('change', () => {
+        const activeItem = jobList.querySelector('.item.active');
+        if (activeItem) selectJobItem(activeItem);
     });
 
     const rerenderJobList = () => {
@@ -853,6 +869,7 @@
 
     const selectJobItem = async (item) => {
         if (!item) return;
+        const requestSeq = ++matchRequestSeq;
         jobList.querySelectorAll('.item').forEach(li => li.classList.remove('active'));
         item.classList.add('active');
         setDetailFeedbackOpen('');
@@ -872,10 +889,15 @@
         setPersonLoading(t("match.loading_match"));
         try {
             const projectId = payload?.id || '';
-            const url = `/api/mail-projects/match?id=${encodeURIComponent(projectId)}`;
+            const params = new URLSearchParams({
+                id: projectId,
+                strict_price: String(strictPrice.checked)
+            });
+            const url = `/api/mail-projects/match?${params.toString()}`;
             const responsePayload = await window.requestJson(url, {method: 'GET'}, {
                 fallbackMessage: t("match.match_failed")
             });
+            if (requestSeq !== matchRequestSeq) return;
             const result = responsePayload.data || {};
             const rawMatches = (result && result.matches) || [];
             const matchItems = Array.isArray(rawMatches)
@@ -886,6 +908,7 @@
 
             renderPersonList(matchItems);
         } catch (err) {
+            if (requestSeq !== matchRequestSeq) return;
             console.error('上报点击事件失败', err);
             if (personList) {
                 currentPersonItems = [];

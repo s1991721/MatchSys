@@ -220,6 +220,7 @@ def mail_projects_api(request):
 # 获取案件匹配的技术者
 def mail_project_match_api(request):
     project_id = (request.GET.get("id") or "").strip()
+    strict_price = request.GET.get("strict_price") == "true"
 
     if not project_id:
         return api_error(ErrorCode.MATCH_ID_REQUIRED)
@@ -232,7 +233,7 @@ def mail_project_match_api(request):
     project_skills = _normalize_skills(project.skills)
     project_skill_set = {skill.lower() for skill in project_skills}
     tech_queryset = MailTechnicianInfo.objects.filter(country=project.country)
-    if project.price is not None:
+    if strict_price and project.price is not None:
         tech_queryset = tech_queryset.filter(
             Q(price__lt=project.price) | Q(price__isnull=True)
         )

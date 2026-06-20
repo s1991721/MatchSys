@@ -2857,6 +2857,38 @@ svg {
 }
 .match-page .c-filter-grid {
   align-items: start;
+  grid-template-columns: max-content minmax(max-content, 1.5fr) minmax(0, 3fr);
+}
+.match-page .price-filter-group {
+  min-width: max-content;
+}
+.match-page .price-filter-spacer {
+  visibility: hidden;
+}
+.match-page .strict-price-row {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.match-page .strict-price-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+  color: #3b4a60;
+  user-select: none;
+}
+.match-page .strict-price-check input {
+  margin: 0;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  accent-color: var(--primary);
+  cursor: pointer;
 }
 .match-page .search-row .search-input {
   flex: 1 1 0;

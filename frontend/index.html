@@ -274,6 +274,7 @@
       const systemExpiryDate = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-date") : null;
       const systemExpiryLabel = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-label") : null;
       let sendTaskTotal = 0;
+      let isLoadingSendTasks = false;
 
       const renderSendTaskTotal = () => {
         if (!sendTaskTotalLabel) return;
@@ -512,12 +513,12 @@
       };
 
       const loadSendTasks = async () => {
-        if (!sendTaskList) return;
+        if (!sendTaskList || isLoadingSendTasks) return;
+        isLoadingSendTasks = true;
         sendTaskList.innerHTML = '<div class="send-task-empty" data-i18n="common.loading">加载中...</div>';
         if (i18n) i18n.apply(sendTaskList);
         try {
-          const params = new URLSearchParams({ page: "1", page_size: "3" });
-          const payload = await window.requestJson(`/api/send-history?${params.toString()}`, { method: "GET" });
+          const payload = await window.requestJson("/api/send-tasks", { method: "GET" });
           const items = payload && payload.data && Array.isArray(payload.data.items) ? payload.data.items : [];
           const total = payload && payload.meta && Number.isFinite(payload.meta.total)
             ? payload.meta.total
@@ -525,12 +526,13 @@
           sendTaskTotal = total;
           renderSendTasks(items);
           renderSendTaskTotal();
-          setSendTaskBadge(total);
         } catch (error) {
           sendTaskTotal = 0;
-          renderSendTasks([]);
           renderSendTaskTotal();
-          setSendTaskBadge(0);
+          sendTaskList.innerHTML = '<div class="send-task-empty" data-i18n="common.load_failed">加载失败</div>';
+          if (i18n) i18n.apply(sendTaskList);
+        } finally {
+          isLoadingSendTasks = false;
         }
       };
 
@@ -570,6 +572,7 @@
           const shouldOpen = sendTaskPopover && sendTaskPopover.hidden;
           if (sendTaskPopover) sendTaskPopover.hidden = !shouldOpen;
           sendTaskBtn.setAttribute("aria-expanded", String(Boolean(shouldOpen)));
+          if (shouldOpen) loadSendTasks();
         });
       }
       if (sendTaskPopover) {
@@ -775,7 +778,6 @@
       };
 
       initLang();
-      loadSendTasks();
       applyMenuFilter();
 
       if (nav) {

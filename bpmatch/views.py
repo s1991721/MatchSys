@@ -31,7 +31,15 @@ from .mailTool import (
     sync_my_mails,
     get_my_mail_detail_from_db,
 )
-from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo, MyMail, SavedMailInfo
+from .models import (
+    MailProjectInfo,
+    MailSendTask,
+    MailTechnicianInfo,
+    MyMail,
+    SavedMailInfo,
+    SentEmailLog,
+    WrongMailInfo,
+)
 
 
 def _mark_my_mail_as_read_async(login_id, mail_id):
@@ -963,6 +971,33 @@ def my_mails_unread_count_api(request):
         return api_success(data={"unread_count": int(unread_count), "has_mailbox": True})
     except Exception as exc:
         return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+# 顶部“发送任务”浮层：仅返回当前用户最新三条任务和任务总数
+def send_tasks(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    queryset = MailSendTask.objects.filter(created_by=login_id).order_by(
+        "-created_at", "-id"
+    )
+    total = queryset.count()
+    current_tz = timezone.get_current_timezone()
+    items = [
+        {
+            "id": task.id,
+            "title": task.subject or "(无标题)",
+            "time": timezone.localtime(task.created_at, current_tz).strftime(
+                "%Y-%m-%d %H:%M"
+            ),
+        }
+        for task in queryset[:3]
+    ]
+
+    return api_success(data={"items": items}, meta={"total": total})
 
 
 @csrf_exempt

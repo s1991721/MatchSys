@@ -1,6 +1,7 @@
 import base64
 import json
 import smtplib
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from email.message import EmailMessage
 from email.utils import getaddresses, make_msgid
@@ -44,6 +45,7 @@ class MailSender:
         references: Optional[str] = None,
         mail_type: Optional[int] = None,
         created_by: Optional[int] = None,
+        smtp_client=None,
     ) -> str:
         message = EmailMessage()
         message.set_content(body or "")
@@ -85,7 +87,7 @@ class MailSender:
             )
 
         recipients = self._collect_recipients(to, cc)
-        self._send_via_smtp(message, recipients)
+        self._send_via_smtp(message, recipients, smtp_client=smtp_client)
         self._persist_sent_log(
             message_id=message_id,
             sent_at=datetime.now(tz=timezone.utc),
@@ -99,19 +101,46 @@ class MailSender:
         )
         return message_id
 
-    def _send_via_smtp(self, message: EmailMessage, recipients: List[str]):
+    @contextmanager
+    def smtp_session(self):
         if self.use_ssl:
-            with smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout) as client:
-                client.login(self.username, self.password)
-                client.send_message(message, from_addr=self.username, to_addrs=recipients)
+            client = smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout)
+        else:
+            client = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+
+        try:
+            if not self.use_ssl:
+                client.ehlo()
+                client.starttls()
+                client.ehlo()
+            client.login(self.username, self.password)
+            yield client
+        finally:
+            try:
+                client.quit()
+            except Exception:
+                client.close()
+
+    def _send_via_smtp(
+        self,
+        message: EmailMessage,
+        recipients: List[str],
+        smtp_client=None,
+    ):
+        if smtp_client is not None:
+            smtp_client.send_message(
+                message,
+                from_addr=self.username,
+                to_addrs=recipients,
+            )
             return
 
-        with smtplib.SMTP(self.host, self.port, timeout=self.timeout) as client:
-            client.ehlo()
-            client.starttls()
-            client.ehlo()
-            client.login(self.username, self.password)
-            client.send_message(message, from_addr=self.username, to_addrs=recipients)
+        with self.smtp_session() as client:
+            client.send_message(
+                message,
+                from_addr=self.username,
+                to_addrs=recipients,
+            )
 
     def _collect_recipients(self, to: str, cc: Optional[str]) -> List[str]:
         recipients = []
@@ -341,29 +370,33 @@ def send_bulk_mail_by_login(login_id, payload):
     try:
         sender, smtp_user = _build_mail_sender(login_id)
         items = []
-        for recipient in recipients:
-            if not isinstance(recipient, dict):
-                continue
-            to_addr = str(recipient.get("email") or "").strip()
-            if not to_addr:
-                continue
-            final_body = _build_bulk_body(body, recipient)
-            message_id = sender.send_message(
-                to=to_addr,
-                cc=cc_addr or None,
-                subject=subject,
-                body=final_body,
-                sender=smtp_user,
-                attachments=normalized_atts,
-                mail_type=mail_type,
-                created_by=login_id,
-            )
-            items.append(
-                {
-                    "email": to_addr,
-                    "message_id": message_id,
-                }
-            )
+        valid_recipients = [
+            (recipient, str(recipient.get("email") or "").strip())
+            for recipient in recipients
+            if isinstance(recipient, dict)
+            and str(recipient.get("email") or "").strip()
+        ]
+        if valid_recipients:
+            with sender.smtp_session() as smtp_client:
+                for recipient, to_addr in valid_recipients:
+                    final_body = _build_bulk_body(body, recipient)
+                    message_id = sender.send_message(
+                        to=to_addr,
+                        cc=cc_addr or None,
+                        subject=subject,
+                        body=final_body,
+                        sender=smtp_user,
+                        attachments=normalized_atts,
+                        mail_type=mail_type,
+                        created_by=login_id,
+                        smtp_client=smtp_client,
+                    )
+                    items.append(
+                        {
+                            "email": to_addr,
+                            "message_id": message_id,
+                        }
+                    )
     except MailToolError:
         raise
     except Exception as exc:

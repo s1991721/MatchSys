@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS mail_send_tasks
 
     company_name        VARCHAR(255)  NOT NULL DEFAULT '' COMMENT '公司名快照',
     contact_name        VARCHAR(255)  NOT NULL DEFAULT '' COMMENT '联系人名快照',
+    in_reply_to         VARCHAR(998)  NOT NULL DEFAULT '' COMMENT '回复目标Message-ID',
+    `references`        TEXT          NOT NULL COMMENT '邮件线程References',
     error_message       TEXT          NULL COMMENT '邮件发送错误信息',
 
     created_by          BIGINT        NOT NULL COMMENT '创建员工ID',

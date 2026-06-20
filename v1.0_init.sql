@@ -432,6 +432,8 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
     subject     VARCHAR(512) NOT NULL DEFAULT '' COMMENT '邮件主题',
     body        TEXT         NOT NULL COMMENT '邮件正文',
     attachments TEXT         NOT NULL COMMENT '附件列表(JSON字符串)',
+    in_reply_to VARCHAR(998) NOT NULL DEFAULT '' COMMENT '回复目标Message-ID',
+    `references` TEXT        NOT NULL COMMENT '邮件线程References',
 
     mail_type   INT          NOT NULL COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信 3:发注 4:请求书 -1:其他',
     sent_at     DATETIME     NOT NULL COMMENT '邮件发送时间',

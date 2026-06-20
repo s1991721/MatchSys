@@ -526,6 +526,7 @@
             ? payload.meta.total
             : items.length;
           sendTaskTotal = total;
+          setSendTaskBadge(total);
           renderSendTasks(items);
           renderSendTaskTotal();
         } catch (error) {
@@ -810,6 +811,11 @@
           return;
         }
         if (data.type === "topbar-badges:refresh") {
+          const sendTasksCount = Number(data.send_tasks_count);
+          if (Number.isFinite(sendTasksCount) && sendTasksCount > 0) {
+            setSendTaskBadge(sendTasksCount);
+            return;
+          }
           if (typeof window.refreshTopbarBadges === "function") {
             window.refreshTopbarBadges();
           }

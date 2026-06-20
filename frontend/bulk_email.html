@@ -291,7 +291,11 @@
             if (!payload.success) {
                 throw new Error(payload.message || t("customer.bulk.alert.send_failed"));
             }
-            window.top.postMessage({type: "topbar-badges:refresh"}, "*");
+            window.top.postMessage({
+                type: "topbar-badges:refresh",
+                send_tasks_count: Number(payload.data && payload.data.pending_count) ||
+                    Number(payload.data && payload.data.queued_count) || 0,
+            }, "*");
             alert(t("customer.bulk.alert.queued"));
             window.MatchSys.clearStoredKey(CONTEXT_KEY);
             window.MatchSys.clearStoredKey(PREFILL_KEY);

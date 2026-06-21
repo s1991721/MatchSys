@@ -235,7 +235,7 @@
                 : `/api/mail-templates/${encodeURIComponent(templateName)}`;
             const contentPayload = mailType === "1"
                 ? {person_intro: String(prefill?.intro || "")}
-                : {};
+                : {project_detail: String(prefill?.body || "")};
             const requestOptions = applyToBody
                 ? {
                     body: JSON.stringify(contentPayload),

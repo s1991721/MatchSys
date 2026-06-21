@@ -787,7 +787,9 @@ def direct_project_mail_content(request):
     if not isinstance(payload, dict):
         return api_error(ErrorCode.INVALID_JSON)
 
-    body = _get_mail_template("direct_project")
+    template = _get_mail_template("direct_project")
+    project_detail = str(payload.get("project_detail") or "").strip()
+    body = template.replace("{project_detail}", project_detail)
     return api_success(data={
         "body": body,
         "template_name": "direct_project",

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>报销付款</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="reimbursements.payment">
+        <div class="table-wrap c-table-wrapper">
+            <table class="c-table c-table-hover">
+                <thead><tr><th>报销单号</th><th>申请人</th><th>应付金额</th><th>支付日</th><th>支付状态</th><th class="c-actions-col">操作</th></tr></thead>
+                <tbody><tr><td class="finance-empty-row" colspan="6">暂无待付款报销</td></tr></tbody>
+            </table>
+        </div>
+    
+</div>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+    });
+}());
+</script>
+</body>
+</html>

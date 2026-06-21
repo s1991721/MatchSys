@@ -300,6 +300,7 @@
             <div class="row-actions c-row-actions c-row-actions-nowrap">
               <button class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${item.id}">${t("personnel.action.edit")}</button>
               <button class="c-btn c-btn-success-lite c-btn-sm" data-action="tech-edit" data-id="${item.id}">${t("personnel.action.tech_edit")}</button>
+              <button class="c-btn c-btn-secondary c-btn-sm" data-action="salary-info" data-id="${item.id}">薪资信息</button>
               ${showPermission ? `<button class="c-btn c-btn-danger c-btn-sm" data-action="permission" data-id="${item.id}">${t("personnel.action.permission")}</button>` : ""}
               <button class="c-btn c-btn-warn-lite c-btn-sm" data-action="attendance-setting" data-id="${item.id}">${t("personnel.action.attendance")}</button>
             </div>
@@ -384,6 +385,9 @@
             } catch (err) {
             }
             window.navigateAppRoute("people.html");
+        } else if (action === "salary-info") {
+            const targetUrl = `finance.html?view=payroll&subtab=basic&employee_id=${encodeURIComponent(id)}&trigger=${Date.now()}`;
+            window.navigateAppRoute(targetUrl);
         } else if (action === "permission") {
             openPermissionModal(id);
         } else if (action === "attendance-setting") {

@@ -88,6 +88,28 @@ from employee.views import (
     user_logins_by_role_api,
     user_login_names_api,
 )
+from finance.views import (
+    finance_annuity_insurance_settings_api,
+    finance_employment_insurance_settings_api,
+    finance_income_tax_settings_api,
+    finance_payable_detail_api,
+    finance_payable_payments_api,
+    finance_payables_api,
+    finance_payables_overview_api,
+    finance_payment_detail_api,
+    finance_payments_api,
+    finance_receipt_detail_api,
+    finance_receivable_detail_api,
+    finance_receivable_receipts_api,
+    finance_receivables_api,
+    finance_receivables_overview_api,
+    payroll_basic_info_api,
+    payroll_basic_info_detail_api,
+    payroll_monthly_api,
+    payroll_monthly_calculate_api,
+    payroll_monthly_detail_api,
+    payroll_monthly_export_api,
+)
 from order.views import (
     pay_request_detail_api,
     pay_request_pdf_api,
@@ -167,6 +189,37 @@ urlpatterns = [
     # -------------------------------order UI-------------------------------
     path("order.html", TemplateView.as_view(template_name="frontend/order.html")),
     path("pay_request.html", TemplateView.as_view(template_name="frontend/pay_request.html")),
+    # -------------------------------finance UI-------------------------------
+    path("finance.html", TemplateView.as_view(template_name="frontend/finance.html")),
+    path("finance/finance.html", RedirectView.as_view(url="/finance.html", permanent=False)),
+    path("finance/receivables.html", TemplateView.as_view(template_name="frontend/finance/receivables.html")),
+    path("finance/receivables/overview.html", TemplateView.as_view(template_name="frontend/finance/receivables/overview.html")),
+    path("finance/receivables/list.html", TemplateView.as_view(template_name="frontend/finance/receivables/list.html")),
+    path("finance/payables.html", TemplateView.as_view(template_name="frontend/finance/payables.html")),
+    path("finance/payables/overview.html", TemplateView.as_view(template_name="frontend/finance/payables/overview.html")),
+    path("finance/payables/list.html", TemplateView.as_view(template_name="frontend/finance/payables/list.html")),
+    path("finance/reimbursements.html", TemplateView.as_view(template_name="frontend/finance/reimbursements.html")),
+    path("finance/reimbursements/requests.html", TemplateView.as_view(template_name="frontend/finance/reimbursements/requests.html")),
+    path("finance/reimbursements/approval.html", TemplateView.as_view(template_name="frontend/finance/reimbursements/approval.html")),
+    path("finance/reimbursements/receipts.html", TemplateView.as_view(template_name="frontend/finance/reimbursements/receipts.html")),
+    path("finance/reimbursements/payment.html", TemplateView.as_view(template_name="frontend/finance/reimbursements/payment.html")),
+    path("finance/reimbursements/stats.html", TemplateView.as_view(template_name="frontend/finance/reimbursements/stats.html")),
+    path("finance/payroll.html", TemplateView.as_view(template_name="frontend/finance/payroll.html")),
+    path("finance/payroll/basic-info.html", TemplateView.as_view(template_name="frontend/finance/payroll/basic-info.html")),
+    path("finance/payroll/monthly-calculation.html", TemplateView.as_view(template_name="frontend/finance/payroll/monthly-calculation.html")),
+    path("finance/payments.html", TemplateView.as_view(template_name="frontend/finance/payments.html")),
+    path("finance/payments/ledger.html", TemplateView.as_view(template_name="frontend/finance/payments/ledger.html")),
+    path("finance/reports.html", TemplateView.as_view(template_name="frontend/finance/reports.html")),
+    path("finance/reports/monthly.html", TemplateView.as_view(template_name="frontend/finance/reports/monthly.html")),
+    path("finance/reports/balance.html", TemplateView.as_view(template_name="frontend/finance/reports/balance.html")),
+    path("finance/reports/profit.html", TemplateView.as_view(template_name="frontend/finance/reports/profit.html")),
+    path("finance/reports/cashflow.html", TemplateView.as_view(template_name="frontend/finance/reports/cashflow.html")),
+    path("finance/reports/exports.html", TemplateView.as_view(template_name="frontend/finance/reports/exports.html")),
+    path("finance/settings.html", TemplateView.as_view(template_name="frontend/finance/settings.html")),
+    path("finance/settings/annuity.html", TemplateView.as_view(template_name="frontend/finance/settings/annuity.html")),
+    path("finance/settings/employment.html", TemplateView.as_view(template_name="frontend/finance/settings/employment.html")),
+    path("finance/settings/income-tax.html", TemplateView.as_view(template_name="frontend/finance/settings/income-tax.html")),
+    path("finance/my_salary.html", TemplateView.as_view(template_name="frontend/finance/my_salary.html")),
     # -------------------------------permission UI-------------------------------
     path("permission.html", TemplateView.as_view(template_name="frontend/permission.html")),
     # -------------------------------notification UI-------------------------------
@@ -214,6 +267,46 @@ urlpatterns = [
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/order_sales.js", content_type="application/javascript")),
     ),
+    path(
+        "finance/finance.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/finance.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/receivables.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/receivables.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/payables.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/payables.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/reimbursements.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/reimbursements.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/payroll.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/payroll.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/payments.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/payments.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/reports.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/reports.js", content_type="application/javascript")),
+    ),
+    path(
+        "finance/settings.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/settings.js", content_type="application/javascript")),
+    ),
     path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
     path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
     path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),
@@ -231,6 +324,26 @@ urlpatterns = [
     path("api/change-password", change_password_api, name="employee-change-password"),
     path("api/employees", employees_api, name="employee-list"),
     path("api/employees/departments", employee_departments_api, name="employee-departments"),
+    path("api/finance/receivables/overview", finance_receivables_overview_api, name="finance-receivables-overview"),
+    path("api/finance/receivables", finance_receivables_api, name="finance-receivables"),
+    path("api/finance/receivables/<int:receivable_id>", finance_receivable_detail_api, name="finance-receivable-detail"),
+    path("api/finance/receivables/<int:receivable_id>/receipts", finance_receivable_receipts_api, name="finance-receivable-receipts"),
+    path("api/finance/receipts/<int:receipt_id>", finance_receipt_detail_api, name="finance-receipt-detail"),
+    path("api/finance/payables/overview", finance_payables_overview_api, name="finance-payables-overview"),
+    path("api/finance/payables", finance_payables_api, name="finance-payables"),
+    path("api/finance/payables/<int:payable_id>", finance_payable_detail_api, name="finance-payable-detail"),
+    path("api/finance/payables/<int:payable_id>/payments", finance_payable_payments_api, name="finance-payable-payments"),
+    path("api/finance/payments", finance_payments_api, name="finance-payments"),
+    path("api/finance/payments/<int:payment_id>", finance_payment_detail_api, name="finance-payment-detail"),
+    path("api/finance/settings/annuity-insurance", finance_annuity_insurance_settings_api, name="finance-annuity-insurance-settings"),
+    path("api/finance/settings/employment-insurance", finance_employment_insurance_settings_api, name="finance-employment-insurance-settings"),
+    path("api/finance/settings/income-tax", finance_income_tax_settings_api, name="finance-income-tax-settings"),
+    path("api/finance/payroll/basic-info", payroll_basic_info_api, name="payroll-basic-info"),
+    path("api/finance/payroll/basic-info/<int:payroll_basic_id>", payroll_basic_info_detail_api, name="payroll-basic-info-detail"),
+    path("api/finance/payroll/monthly", payroll_monthly_api, name="payroll-monthly"),
+    path("api/finance/payroll/monthly/calculate", payroll_monthly_calculate_api, name="payroll-monthly-calculate"),
+    path("api/finance/payroll/monthly/export", payroll_monthly_export_api, name="payroll-monthly-export"),
+    path("api/finance/payroll/monthly/<int:calculation_id>", payroll_monthly_detail_api, name="payroll-monthly-detail"),
     path("api/technicians", technicians_api, name="technician-list"),
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),
     path("api/technicians/<int:employee_id>/ss", technician_ss_upload, name="technician-ss-upload"),

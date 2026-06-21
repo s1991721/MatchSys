@@ -114,11 +114,15 @@
         return i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN";
     };
 
-    const redirectTopOrSelf = (target) => {
+    const redirectAuthFailureTopOrSelf = (reason = "login") => {
+        const target = reason === "activation" ? "login.html?activation=1" : "login.html";
+
+        const cleanTarget = String(target || "").replace(/^\/+/, "");
+        const nextUrl = new URL(cleanTarget, `${window.location.origin}/`).toString();
         if (window.top && window.top !== window) {
-            window.top.location.href = target;
+            window.top.location.href = nextUrl;
         } else {
-            window.location.href = target;
+            window.location.href = nextUrl;
         }
     };
 
@@ -546,17 +550,16 @@
         if (window.__routeNotified) return;
         if (!window.top || window.top === window) return;
         const path = window.location.pathname || "";
-        const parts = path.split("/").filter(Boolean);
-        const filename = parts.length ? parts[parts.length - 1] : "";
-        if (!filename || !filename.endsWith(".html")) return;
+        const route = path.replace(/^\/+/, "");
+        if (!route || !route.endsWith(".html")) return;
         try {
             const topHash = (window.top.location && window.top.location.hash) || "";
             const normalizedTop = topHash.replace(/^#/, "").split("?")[0].split("#")[0];
-            if (normalizedTop === filename) {
+            if (normalizedTop === route) {
                 window.__routeNotified = true;
                 return;
             }
-            window.top.postMessage({ type: "route:change", src: filename }, "*");
+            window.top.postMessage({ type: "route:change", src: route }, "*");
             window.__routeNotified = true;
         } catch (e) {}
     };

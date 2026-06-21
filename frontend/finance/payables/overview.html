@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>应付概览</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payables.overview">
+    <div class="finance-overview-grid">
+        <section class="finance-overview-panel">
+            <h3 class="finance-overview-title">本月汇总</h3>
+            <div class="finance-month-grid">
+                <div class="finance-month-card">
+                    <span class="finance-month-label">本月应付</span>
+                    <span class="finance-month-value" id="overviewPayableAmount">¥0</span>
+                </div>
+                <div class="finance-month-card">
+                    <span class="finance-month-label">已付金额</span>
+                    <span class="finance-month-value" id="overviewPaidAmount">¥0</span>
+                </div>
+                <div class="finance-month-card">
+                    <span class="finance-month-label">未付金额</span>
+                    <span class="finance-month-value" id="overviewOutstandingAmount">¥0</span>
+                </div>
+            </div>
+            <p class="finance-overview-note" id="overviewStatusText">加载中...</p>
+        </section>
+
+        <section class="finance-overview-panel">
+            <h3 class="finance-overview-title">历史未平账月份</h3>
+            <div class="finance-month-list" id="unbalancedMonthList"></div>
+            <p class="finance-overview-note">点击月份后切换到应付列表，并按该月份筛选未平账数据。</p>
+        </section>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const $ = (selector) => document.querySelector(selector);
+    const toNumber = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    const openMonth = (month) => {
+        try {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: "payables:open-list", month }, "*");
+                return;
+            }
+        } catch (e) {}
+        window.location.href = `list.html?month=${encodeURIComponent(month)}`;
+    };
+    const renderUnbalancedMonths = (items) => {
+        const list = $("#unbalancedMonthList");
+        if (!items.length) {
+            list.innerHTML = `<div class="finance-month-item" role="status"><span>暂无历史未平账月份</span><span class="finance-month-amount">¥0</span></div>`;
+            return;
+        }
+        list.innerHTML = items.map((item) => `
+            <button class="finance-month-item" type="button" data-month="${escapeHtml(item.month)}">
+                <span>${escapeHtml(item.month)} · ${escapeHtml(item.count || 0)}条</span>
+                <span class="finance-month-amount">${escapeHtml(money(item.outstanding_amount))}</span>
+            </button>
+        `).join("");
+    };
+    const fetchOverview = async () => {
+        const params = window.createParams([
+            ["month", new URLSearchParams(window.location.search || "").get("month") || ""],
+        ]);
+        const payload = await window.requestJson(window.buildUrl("/api/finance/payables/overview", params), { method: "GET" });
+        const summary = payload.data?.summary || {};
+        $("#overviewPayableAmount").textContent = money(summary.payable_amount);
+        $("#overviewPaidAmount").textContent = money(summary.paid_amount);
+        $("#overviewOutstandingAmount").textContent = money(summary.outstanding_amount);
+        $("#overviewStatusText").textContent = `${payload.data?.month || ""} 汇总`;
+        renderUnbalancedMonths(Array.isArray(payload.data?.unbalanced_months) ? payload.data.unbalanced_months : []);
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        $("#unbalancedMonthList").addEventListener("click", (event) => {
+            const button = event.target.closest("[data-month]");
+            if (!button) return;
+            openMonth(button.dataset.month || "");
+        });
+        fetchOverview().catch((err) => {
+            $("#overviewStatusText").textContent = `加载失败：${err.message || "未知错误"}`;
+            renderUnbalancedMonths([]);
+        });
+    });
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>报销申请</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="reimbursements">
+
+    <div class="finance-section-head">
+        <div>
+            <h2 class="finance-section-title" data-i18n="finance.reimbursements.title">报销管理</h2>
+            <p class="c-card-subtitle" data-i18n="finance.reimbursements.subtitle">管理员工报销申请、凭证、审核状态与付款进度。</p>
+        </div>
+        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.add_reimbursement">新增报销</button>
+    </div>
+    <div class="finance-subtabs" role="tablist" aria-label="报销管理子功能">
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="requests">报销申请</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="approval">审核处理</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="receipts">凭证管理</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="payment">报销付款</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="stats">报销统计</button>
+    </div>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="reimbursements/requests.html" title="报销申请"></iframe>
+        </div>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+        requests: { src: "reimbursements/requests.html", title: "报销申请" },
+        approval: { src: "reimbursements/approval.html", title: "审核处理" },
+        receipts: { src: "reimbursements/receipts.html", title: "凭证管理" },
+        payment: { src: "reimbursements/payment.html", title: "报销付款" },
+        stats: { src: "reimbursements/stats.html", title: "报销统计" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const setSubtab = (key) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
+                frame.setAttribute("src", route.src);
+            }
+            frame.setAttribute("title", route.title);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        setSubtab("requests");
+    });
+}());
+</script>
+</body>
+</html>

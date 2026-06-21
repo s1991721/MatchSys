@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>月度收支</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="reports">
+
+    <div class="finance-section-head">
+        <div>
+            <h2 class="finance-section-title" data-i18n="finance.reports.title">财务报表</h2>
+            <p class="c-card-subtitle" data-i18n="finance.reports.subtitle">查看月度收支、应收应付与利润概览。</p>
+        </div>
+        <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" type="button" data-i18n="finance.action.export_report">导出报表</button>
+    </div>
+    <div class="finance-subtabs" role="tablist" aria-label="财务报表子功能">
+        <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="monthly">月度收支</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="balance">应收应付</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="profit">利润分析</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="cashflow">现金流</button>
+        <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="exports">导出中心</button>
+    </div>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="reports/monthly.html" title="月度收支"></iframe>
+        </div>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+        monthly: { src: "reports/monthly.html", title: "月度收支" },
+        balance: { src: "reports/balance.html", title: "应收应付" },
+        profit: { src: "reports/profit.html", title: "利润分析" },
+        cashflow: { src: "reports/cashflow.html", title: "现金流" },
+        exports: { src: "reports/exports.html", title: "导出中心" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const setSubtab = (key) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
+                frame.setAttribute("src", route.src);
+            }
+            frame.setAttribute("title", route.title);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        setSubtab("monthly");
+    });
+}());
+</script>
+</body>
+</html>

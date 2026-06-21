@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>支付流水</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="payments">
+
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="payments/ledger.html" title="支付流水"></iframe>
+        </div>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const frame = document.getElementById("financeSubFrame");
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+    });
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>支付流水</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payments.ledger">
+    <div class="finance-payment-topline">
+        <div class="finance-month-picker" id="monthPicker">
+            <input type="hidden" id="filterMonth">
+            <div class="finance-month-picker-panel" id="monthPickerPanel">
+                <input class="finance-month-picker-year" type="number" id="monthPickerYear" min="1900" max="2100" aria-label="年份">
+                <div class="finance-month-picker-grid" aria-label="月份选择">
+                    <button type="button" data-picker-month="1">Jan</button>
+                    <button type="button" data-picker-month="2">Feb</button>
+                    <button type="button" data-picker-month="3">Mar</button>
+                    <button type="button" data-picker-month="4">Apr</button>
+                    <button type="button" data-picker-month="5">May</button>
+                    <button type="button" data-picker-month="6">Jun</button>
+                    <button type="button" data-picker-month="7">Jul</button>
+                    <button type="button" data-picker-month="8">Aug</button>
+                    <button type="button" data-picker-month="9">Sep</button>
+                    <button type="button" data-picker-month="10">Oct</button>
+                    <button type="button" data-picker-month="11">Nov</button>
+                    <button type="button" data-picker-month="12">Dec</button>
+                </div>
+                <div class="finance-month-picker-actions">
+                    <button type="button" data-month-action="clear">清除</button>
+                    <button type="button" data-month-action="current">本月</button>
+                </div>
+            </div>
+        </div>
+        <div class="finance-payment-summary" aria-label="支付记录汇总">
+            <button class="finance-dialog-summary-item finance-payment-summary-button" type="button" data-summary-type=""><span class="finance-dialog-summary-label">支付金额</span><span class="finance-dialog-summary-value" id="summaryAmount">¥0</span></button>
+            <button class="finance-dialog-summary-item finance-payment-summary-button" type="button" data-summary-type="salary"><span class="finance-dialog-summary-label">工资</span><span class="finance-dialog-summary-value" id="summarySalary">¥0</span></button>
+            <button class="finance-dialog-summary-item finance-payment-summary-button" type="button" data-summary-type="payable"><span class="finance-dialog-summary-label">应付</span><span class="finance-dialog-summary-value" id="summaryPayable">¥0</span></button>
+            <button class="finance-dialog-summary-item finance-payment-summary-button" type="button" data-summary-type="reimbursement"><span class="finance-dialog-summary-label">报销</span><span class="finance-dialog-summary-value" id="summaryReimbursement">¥0</span></button>
+            <button class="finance-dialog-summary-item finance-payment-summary-button" type="button" data-summary-type="other"><span class="finance-dialog-summary-label">其他</span><span class="finance-dialog-summary-value" id="summaryOther">¥0</span></button>
+        </div>
+    </div>
+
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover finance-ledger-table finance-payment-table">
+            <thead>
+            <tr>
+                <th></th>
+                <th>支付编号</th>
+                <th>类型</th>
+                <th>收款方</th>
+                <th>金额</th>
+                <th>支付日</th>
+                <th>方式</th>
+                <th>银行流水号</th>
+                <th>来源</th>
+                <th>备注</th>
+                <th class="c-actions-col">操作</th>
+            </tr>
+            </thead>
+            <tbody id="paymentTableBody"><tr><td class="finance-empty-row" colspan="11">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    <div class="pagination c-pagination" id="paymentPagination">
+        <div class="pagination-summary" id="paymentPaginationSummary">共 0 条 · 第 1/1 页</div>
+        <div class="pagination-pages" id="paymentPaginationPages"></div>
+    </div>
+</div>
+
+<dialog class="c-dialog finance-payment-dialog" id="paymentDialog" aria-labelledby="paymentDialogTitle">
+    <div class="c-dialog-header">
+        <h3 id="paymentDialogTitle">支付详情</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <div class="finance-dialog-summary">
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">支付编号</span><span class="finance-dialog-summary-value" id="detailPaymentId">-</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">支付类型</span><span class="finance-dialog-summary-value" id="detailPaymentType">-</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">支付金额</span><span class="finance-dialog-summary-value" id="detailPaymentAmount">¥0</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">收款方</span><span class="finance-dialog-summary-value" id="detailPaymentPayee">-</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">支付日</span><span class="finance-dialog-summary-value" id="detailPaymentDate">-</span></div>
+            <div class="finance-dialog-summary-item"><span class="finance-dialog-summary-label">银行流水号</span><span class="finance-dialog-summary-value" id="detailPaymentBankNo">-</span></div>
+        </div>
+
+        <div class="finance-payment-readonly-section">
+            <div class="finance-detail-head">
+                <span>来源明细</span>
+                <span id="detailSourceTotal">来源合计 ¥0</span>
+            </div>
+            <div class="finance-detail-table">
+                <table class="c-table">
+                    <thead><tr><th>来源单号</th><th>来源说明</th><th>本次金额</th><th>备注</th></tr></thead>
+                    <tbody id="detailSourceBody"><tr><td class="finance-empty-row" colspan="4">暂无来源明细</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="finance-payment-readonly-section">
+            <div class="finance-detail-head"><span>支付备注</span></div>
+            <div class="finance-payment-note" id="detailPaymentRemark">-</div>
+        </div>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>关闭</button>
+        <button class="c-btn c-btn-primary" type="button" id="editDetailRemarkBtn">编辑备注</button>
+    </div>
+</dialog>
+
+<dialog class="c-dialog" id="remarkDialog" aria-labelledby="remarkDialogTitle">
+    <div class="c-dialog-header">
+        <h3 id="remarkDialogTitle">编辑备注</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <form class="finance-form-grid" id="remarkForm">
+            <input type="hidden" id="remarkPaymentId">
+            <input type="hidden" id="remarkDetailId">
+            <div class="c-inline-field c-inline-field-full"><span>备注</span><textarea id="remarkText" rows="5"></textarea></div>
+        </form>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>关闭</button>
+        <button class="c-btn c-btn-primary" type="button" id="saveRemarkBtn">保存</button>
+    </div>
+</dialog>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const typeLabels = {
+        salary: "工资",
+        payable: "应付",
+        reimbursement: "报销",
+        other: "其他",
+    };
+    const methodLabels = {
+        bank: "银行转账",
+        cash: "现金",
+        other: "其他",
+    };
+    const typeClasses = {
+        salary: "finance-source-salary",
+        payable: "",
+        reimbursement: "finance-source-reimbursement",
+        other: "finance-source-manual",
+    };
+    let payments = [];
+    let filteredPayments = [];
+    let expandedId = "";
+    let selectedPaymentId = "";
+    let currentPage = 1;
+    let activeType = "";
+    let paymentLoadTimer = 0;
+    let listTotal = 0;
+    let listTotalPages = 1;
+    let currentSummary = {
+        total_amount: "0",
+        salary_amount: "0",
+        payable_amount: "0",
+        reimbursement_amount: "0",
+        other_amount: "0",
+    };
+    const PAGE_SIZE = 10;
+
+    const $ = (selector) => document.querySelector(selector);
+    const ledgerContent = $("[data-finance-subpage='payments.ledger']");
+    const tableBody = $("#paymentTableBody");
+    const pagination = $("#paymentPagination");
+    const paginationPages = $("#paymentPaginationPages");
+    const paginationSummary = $("#paymentPaginationSummary");
+    const paymentDialog = $("#paymentDialog");
+    const remarkDialog = $("#remarkDialog");
+    const monthPickerPanel = $("#monthPickerPanel");
+    const monthPickerYear = $("#monthPickerYear");
+
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
+        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+    };
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+    const toNumber = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
+    const currentMonth = () => {
+        const date = new Date();
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    };
+    const monthParts = (value) => {
+        const match = /^(\d{4})-(\d{2})$/.exec(value || "");
+        if (!match) return null;
+        return { year: Number(match[1]), month: Number(match[2]) };
+    };
+    const updateMonthPicker = (options = {}) => {
+        const syncYear = options.syncYear !== false;
+        const value = $("#filterMonth").value;
+        const parts = monthParts(value);
+        const year = parts ? parts.year : new Date().getFullYear();
+        if (syncYear) monthPickerYear.value = String(year);
+        document.querySelectorAll("[data-picker-month]").forEach((button) => {
+            button.classList.toggle(
+                "is-active",
+                Boolean(parts) && Number(button.dataset.pickerMonth) === parts.month && Number(monthPickerYear.value) === parts.year,
+            );
+        });
+    };
+    const setMonthFilter = (value) => {
+        $("#filterMonth").value = value;
+        updateMonthPicker();
+        currentPage = 1;
+        loadPaymentRecords();
+    };
+    const setPaymentLoading = (isLoading) => {
+        ledgerContent.classList.toggle("is-payment-loading", isLoading);
+        ledgerContent.setAttribute("aria-busy", isLoading ? "true" : "false");
+        if (!isLoading) return;
+        tableBody.innerHTML = `
+            <tr>
+                <td class="finance-loading-row" colspan="11">
+                    <span class="finance-loading-spinner" aria-hidden="true"></span>
+                    <span>正在加载支付记录...</span>
+                </td>
+            </tr>
+        `;
+        if (paginationSummary) paginationSummary.textContent = "正在加载...";
+        if (paginationPages) paginationPages.innerHTML = "";
+    };
+    const normalizeDetail = (item) => ({
+        id: String(item.id || ""),
+        sourceNo: item.source_no || item.payable?.order_no || `PAYABLE-${item.payable_id || ""}`,
+        sourceName: item.source_name || item.payable?.customer_name || "-",
+        amount: item.payment_amount,
+        remark: item.remark || "",
+    });
+    const normalizePayment = (item) => ({
+        id: String(item.id || ""),
+        year: item.year,
+        type: item.type || "payable",
+        payee: item.payee_name || "-",
+        amount: item.payment_amount,
+        paymentDate: item.payment_date || "",
+        method: item.method || (item.bank_transaction_no ? "bank" : "other"),
+        bankNo: item.bank_transaction_no || "",
+        remark: item.remark || "",
+        details: Array.isArray(item.details) ? item.details.map(normalizeDetail) : [],
+        detailsCount: Number(item.details_count || (Array.isArray(item.details) ? item.details.length : 0)),
+        detailsAmount: item.details_amount || item.payment_amount || "0",
+        detailsLoaded: item.details_loaded === true,
+    });
+    const mergePayment = (item) => {
+        const normalized = normalizePayment(item);
+        const index = payments.findIndex((payment) => payment.id === normalized.id);
+        if (index >= 0) {
+            payments[index] = { ...payments[index], ...normalized };
+            return payments[index];
+        }
+        payments.push(normalized);
+        return normalized;
+    };
+    const getRequestYear = () => {
+        const month = $("#filterMonth").value;
+        if (month) return month.slice(0, 4);
+        return String(new Date().getFullYear());
+    };
+    const loadPaymentRecords = async () => {
+        window.clearTimeout(paymentLoadTimer);
+        setPaymentLoading(true);
+        paymentLoadTimer = window.setTimeout(async () => {
+            try {
+                const month = $("#filterMonth").value;
+                const params = window.createParams([
+                    ["month", month],
+                    ["year", month ? "" : getRequestYear()],
+                    ["type", activeType],
+                    ["page", String(currentPage)],
+                    ["page_size", String(PAGE_SIZE)],
+                ]);
+                const payload = await window.requestJson(window.buildUrl("/api/finance/payments", params), { method: "GET" });
+                payments = (payload.data?.items || []).map(normalizePayment);
+                filteredPayments = payments;
+                currentSummary = payload.data?.summary || currentSummary;
+                listTotal = Number(payload.meta?.total || 0);
+                listTotalPages = Math.max(1, Number(payload.meta?.total_pages || 1));
+                currentPage = Math.min(Math.max(1, Number(payload.meta?.page || currentPage)), listTotalPages);
+                if (!payments.some((item) => item.id === expandedId)) expandedId = "";
+                renderTable();
+            } catch (err) {
+                payments = [];
+                filteredPayments = [];
+                listTotal = 0;
+                listTotalPages = 1;
+                tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">${escapeHtml(err.message || "支付记录加载失败")}</td></tr>`;
+                renderSummary();
+                renderPaymentPagination();
+            } finally {
+                setPaymentLoading(false);
+            }
+        }, 120);
+    };
+    const openDialog = (dialog) => {
+        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
+    };
+    const closeDialog = (dialog) => {
+        if (dialog && typeof dialog.close === "function") dialog.close();
+    };
+    const getPayment = (id) => payments.find((item) => item.id === id);
+    const sourceTotal = (payment) => payment.detailsLoaded
+        ? payment.details.reduce((sum, detail) => sum + toNumber(detail.amount), 0)
+        : toNumber(payment.detailsAmount);
+    const totalPages = () => listTotalPages;
+    const pagedPayments = () => filteredPayments;
+    const renderSummary = () => {
+        $("#summaryAmount").textContent = money(currentSummary.total_amount);
+        $("#summarySalary").textContent = money(currentSummary.salary_amount);
+        $("#summaryPayable").textContent = money(currentSummary.payable_amount);
+        $("#summaryReimbursement").textContent = money(currentSummary.reimbursement_amount);
+        $("#summaryOther").textContent = money(currentSummary.other_amount);
+        document.querySelectorAll("[data-summary-type]").forEach((button) => {
+            button.classList.toggle("is-active", (button.dataset.summaryType || "") === activeType);
+        });
+    };
+    const renderPaymentPagination = () => {
+        const pages = totalPages();
+        currentPage = Math.min(Math.max(1, currentPage), pages);
+        if (paginationSummary) {
+            paginationSummary.textContent = `共 ${listTotal} 条 · 第 ${currentPage}/${pages} 页`;
+        }
+        if (window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, pages);
+        }
+    };
+    const renderDetailRows = (payment, includeActions = true) => {
+        if (!payment.details.length) {
+            return `<tr><td class="finance-empty-row" colspan="${includeActions ? 5 : 4}">暂无来源明细</td></tr>`;
+        }
+        return payment.details.map((detail) => `
+            <tr>
+                <td>${escapeHtml(detail.sourceNo || "-")}</td>
+                <td>${escapeHtml(detail.sourceName || "-")}</td>
+                <td>${escapeHtml(money(detail.amount))}</td>
+                <td class="finance-remark-cell">${escapeHtml(detail.remark || "-")}</td>
+                ${includeActions ? `<td class="c-actions-col"><button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit-detail-remark" data-id="${escapeHtml(payment.id)}" data-detail-id="${escapeHtml(detail.id)}">备注</button></td>` : ""}
+            </tr>
+        `).join("");
+    };
+    const renderTable = () => {
+        renderSummary();
+        renderPaymentPagination();
+        if (!filteredPayments.length) {
+            tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">暂无数据</td></tr>`;
+            return;
+        }
+        tableBody.innerHTML = pagedPayments().map((item) => {
+            const expanded = expandedId === item.id;
+            const detailTotal = sourceTotal(item);
+            const sourceText = `${item.detailsCount}条 / ${money(detailTotal)}`;
+            return `
+                <tr>
+                    <td><button class="c-btn c-btn-lite c-btn-sm finance-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" aria-label="展开来源明细">${expanded ? "−" : "+"}</button></td>
+                    <td>${escapeHtml(item.id)}</td>
+                    <td><span class="finance-source ${typeClasses[item.type] || ""}">${escapeHtml(typeLabels[item.type] || "-")}</span></td>
+                    <td class="finance-name-cell">${escapeHtml(item.payee || "-")}</td>
+                    <td>${escapeHtml(money(item.amount))}</td>
+                    <td>${escapeHtml(item.paymentDate || "-")}</td>
+                    <td>${escapeHtml(methodLabels[item.method] || "-")}</td>
+                    <td>${escapeHtml(item.bankNo || "-")}</td>
+                    <td>${escapeHtml(sourceText)}</td>
+                    <td class="finance-remark-cell">${escapeHtml(item.remark || "-")}</td>
+                    <td class="c-actions-col">
+                        <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="view" data-id="${escapeHtml(item.id)}">查看</button>
+                        <button class="c-btn c-btn-lite c-btn-sm" type="button" data-action="edit-remark" data-id="${escapeHtml(item.id)}">备注</button>
+                    </td>
+                </tr>
+                ${expanded ? `
+                    <tr class="finance-detail-row">
+                        <td colspan="11">
+                            <div class="finance-detail-panel">
+                                <div class="finance-detail-head">
+                                    <span>来源明细</span>
+                                    <span>支付金额 ${escapeHtml(money(item.amount))} · 来源合计 ${escapeHtml(money(detailTotal))}</span>
+                                </div>
+                                <div class="finance-detail-table">
+                                    <table class="c-table">
+                                        <thead><tr><th>来源单号</th><th>来源说明</th><th>本次金额</th><th>备注</th><th class="c-actions-col">操作</th></tr></thead>
+                                        <tbody>${renderDetailRows(item)}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                ` : ""}
+            `;
+        }).join("");
+    };
+    const loadPaymentDetail = async (paymentId) => {
+        const payment = getPayment(paymentId);
+        if (!payment) return null;
+        if (payment.detailsLoaded) return payment;
+        const params = window.createParams([["year", String(payment.year || getRequestYear())]]);
+        const payload = await window.requestJson(
+            window.buildUrl(`/api/finance/payments/${encodeURIComponent(paymentId)}`, params),
+            { method: "GET" },
+        );
+        return mergePayment(payload.data?.item || {});
+    };
+    const applyFilters = () => {
+        currentPage = 1;
+        loadPaymentRecords();
+    };
+    const openPaymentDetail = async (paymentId) => {
+        const payment = await loadPaymentDetail(paymentId);
+        if (!payment) return;
+        selectedPaymentId = paymentId;
+        $("#detailPaymentId").textContent = payment.id;
+        $("#detailPaymentType").textContent = typeLabels[payment.type] || "-";
+        $("#detailPaymentAmount").textContent = money(payment.amount);
+        $("#detailPaymentPayee").textContent = payment.payee || "-";
+        $("#detailPaymentDate").textContent = payment.paymentDate || "-";
+        $("#detailPaymentBankNo").textContent = payment.bankNo || "-";
+        $("#detailSourceTotal").textContent = `来源合计 ${money(sourceTotal(payment))}`;
+        $("#detailSourceBody").innerHTML = renderDetailRows(payment, false);
+        $("#detailPaymentRemark").textContent = payment.remark || "-";
+        openDialog(paymentDialog);
+    };
+    const openRemarkDialog = (paymentId, detailId = "") => {
+        const payment = getPayment(paymentId);
+        if (!payment) return;
+        const detail = detailId ? payment.details.find((item) => item.id === detailId) : null;
+        $("#remarkPaymentId").value = paymentId;
+        $("#remarkDetailId").value = detailId;
+        $("#remarkText").value = detail ? detail.remark : payment.remark;
+        $("#remarkDialogTitle").textContent = detail ? "编辑明细备注" : "编辑支付备注";
+        openDialog(remarkDialog);
+    };
+    const saveRemark = async () => {
+        const payment = getPayment($("#remarkPaymentId").value);
+        if (!payment) return;
+        const detailId = $("#remarkDetailId").value;
+        const params = window.createParams([["year", String(payment.year || getRequestYear())]]);
+        const payload = await window.requestJson(
+            window.buildUrl(`/api/finance/payments/${encodeURIComponent(payment.id)}`, params),
+            {
+                method: "PUT",
+                body: JSON.stringify({
+                    detail_id: detailId || null,
+                    remark: $("#remarkText").value.trim(),
+                }),
+            },
+        );
+        mergePayment(payload.data?.item || {});
+        closeDialog(remarkDialog);
+        if (paymentDialog.open && selectedPaymentId === payment.id) {
+            await openPaymentDetail(payment.id);
+        }
+        renderTable();
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        $("#filterMonth").value = currentMonth();
+        updateMonthPicker();
+        if (window.initDialogCloseBehavior) {
+            window.initDialogCloseBehavior({ dialogs: [paymentDialog, remarkDialog] });
+        }
+        monthPickerYear.addEventListener("input", () => updateMonthPicker({ syncYear: false }));
+        monthPickerPanel.addEventListener("click", (event) => {
+            const monthButton = event.target.closest("[data-picker-month]");
+            const actionButton = event.target.closest("[data-month-action]");
+            if (monthButton) {
+                const year = Number(monthPickerYear.value) || new Date().getFullYear();
+                const month = String(Number(monthButton.dataset.pickerMonth)).padStart(2, "0");
+                setMonthFilter(`${year}-${month}`);
+                return;
+            }
+            if (!actionButton) return;
+            if (actionButton.dataset.monthAction === "clear") {
+                setMonthFilter("");
+                return;
+            }
+            if (actionButton.dataset.monthAction === "current") {
+                setMonthFilter(currentMonth());
+            }
+        });
+        document.querySelectorAll("[data-summary-type]").forEach((button) => {
+            button.addEventListener("click", () => {
+                activeType = button.dataset.summaryType || "";
+                currentPage = 1;
+                applyFilters();
+            });
+        });
+        if (pagination && window.bindPagination) {
+            window.bindPagination(pagination, (value) => {
+                const pages = totalPages();
+                if (value === "prev") currentPage -= 1;
+                else if (value === "next") currentPage += 1;
+                else currentPage = Number(value) || 1;
+                currentPage = Math.min(Math.max(1, currentPage), pages);
+                loadPaymentRecords();
+            });
+        }
+        $("#editDetailRemarkBtn").addEventListener("click", () => {
+            if (selectedPaymentId) openRemarkDialog(selectedPaymentId);
+        });
+        $("#saveRemarkBtn").addEventListener("click", () => {
+            saveRemark().catch((err) => window.alert(err.message || "备注保存失败"));
+        });
+        tableBody.addEventListener("click", async (event) => {
+            const button = event.target.closest("[data-action]");
+            if (!button) return;
+            const action = button.dataset.action;
+            const paymentId = button.dataset.id;
+            if (action === "toggle") {
+                if (expandedId === paymentId) {
+                    expandedId = "";
+                    renderTable();
+                    return;
+                }
+                try {
+                    await loadPaymentDetail(paymentId);
+                } catch (err) {
+                    window.alert(err.message || "来源明细加载失败");
+                    return;
+                }
+                expandedId = paymentId;
+                renderTable();
+                return;
+            }
+            if (action === "view") {
+                openPaymentDetail(paymentId).catch((err) => window.alert(err.message || "支付详情加载失败"));
+                return;
+            }
+            if (action === "edit-remark") {
+                openRemarkDialog(paymentId);
+                return;
+            }
+            if (action === "edit-detail-remark") {
+                try {
+                    await loadPaymentDetail(paymentId);
+                } catch (err) {
+                    window.alert(err.message || "来源明细加载失败");
+                    return;
+                }
+                openRemarkDialog(paymentId, button.dataset.detailId || "");
+            }
+        });
+        applyFilters();
+    });
+}());
+</script>
+</body>
+</html>

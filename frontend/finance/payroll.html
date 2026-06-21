@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../common.css">
+    <link rel="stylesheet" href="../components.css">
+    <title>工资计算</title>
+</head>
+<body class="order-page finance-page finance-module-page">
+<div class="page finance-module-page-shell">
+    <section class="c-card c-card-pad finance-view" data-finance-panel="payroll">
+
+        <div class="finance-subtabs" role="tablist" aria-label="工资计算子功能" data-i18n-aria="payroll.tabs.aria">
+            <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic" data-i18n="payroll.tabs.basic">基础信息</button>
+            <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly" data-i18n="payroll.tabs.monthly">月度计算</button>
+        </div>
+        <div class="finance-subframe-shell">
+            <iframe id="financeSubFrame" class="finance-subframe" src="payroll/basic-info.html" title="基础信息"></iframe>
+        </div>
+    </section>
+</div>
+
+<script src="../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const t = (key, fallback) => {
+            if (!window.I18N || typeof window.I18N.t !== "function") return fallback;
+            const value = window.I18N.t(key);
+            return value && value !== key ? value : fallback;
+        };
+        const routes = {
+            basic: { src: "payroll/basic-info.html", titleKey: "payroll.tabs.basic", fallbackTitle: "基础信息" },
+            monthly: { src: "payroll/monthly-calculation.html", titleKey: "payroll.tabs.monthly", fallbackTitle: "月度计算" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
+        const frame = document.getElementById("financeSubFrame");
+        const pageParams = new URLSearchParams(window.location.search || "");
+        const LAST_SUBTAB_KEY = "finance:payroll:last-subtab";
+        const STATE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const readLastSubtab = () => {
+            try {
+                const stored = window.MatchSys && typeof window.MatchSys.readJSONFromSessionStorage === "function"
+                    ? window.MatchSys.readJSONFromSessionStorage(LAST_SUBTAB_KEY, STATE_MAX_AGE_MS)
+                    : null;
+                const subtab = stored && typeof stored === "object" ? stored.subtab : "";
+                return routes[subtab] ? subtab : "";
+            } catch (e) {
+                return "";
+            }
+        };
+        const writeLastSubtab = (subtab) => {
+            if (!routes[subtab]) return;
+            try {
+                if (window.MatchSys && typeof window.MatchSys.writeJSONToSessionStorage === "function") {
+                    window.MatchSys.writeJSONToSessionStorage(LAST_SUBTAB_KEY, { subtab, updatedAt: Date.now() });
+                }
+            } catch (e) {}
+        };
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const updateFrameTitle = () => {
+            const activeKey = buttons.find((button) => button.classList.contains("is-active"))?.dataset.financeSubtab;
+            const route = routes[activeKey];
+            if (frame && route) frame.setAttribute("title", t(route.titleKey, route.fallbackTitle));
+            document.title = t("finance.payroll.title", "工资计算");
+        };
+        const applyPayrollI18n = () => {
+            if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+            updateFrameTitle();
+        };
+        const buildFrameSrc = (key, src) => {
+            if (key !== "basic") return src;
+            const employeeId = pageParams.get("employee_id");
+            if (!employeeId) return src;
+            const params = new URLSearchParams();
+            params.set("employee_id", employeeId);
+            const trigger = pageParams.get("trigger");
+            if (trigger) params.set("trigger", trigger);
+            return `${src}?${params.toString()}`;
+        };
+        const setSubtab = (key, preserveParams = false) => {
+            const route = routes[key];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeSubtab === key;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            const targetSrc = preserveParams ? buildFrameSrc(key, route.src) : route.src;
+            if (frame.getAttribute("src") !== targetSrc) {
+                frame.setAttribute("src", targetSrc);
+            }
+            frame.setAttribute("title", t(route.titleKey, route.fallbackTitle));
+            writeLastSubtab(key);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", () => {
+            applyPayrollI18n();
+            syncFrameLang();
+        });
+        const initialSubtab = routes[pageParams.get("subtab")] ? pageParams.get("subtab") : (readLastSubtab() || "basic");
+        setSubtab(initialSubtab, true);
+        applyPayrollI18n();
+    });
+}());
+</script>
+</body>
+</html>

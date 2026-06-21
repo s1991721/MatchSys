@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title>财务管理</title>
+</head>
+<body class="order-page finance-page finance-shell">
+<div class="page finance-shell-page">
+    <div class="c-stack finance-shell-stack">
+        <div class="c-page-head-grid">
+            <div class="c-page-head-spacer" aria-hidden="true"></div>
+            <div class="c-switch-wrap">
+                <div class="c-switcher-group" role="tablist" aria-label="财务视角切换" data-i18n-aria="finance.title">
+                    <button class="c-toggle is-active" type="button" data-finance-view="receivables" role="tab" aria-selected="true" data-i18n="finance.tabs.receivables">应收管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="payables" role="tab" aria-selected="false" data-i18n="finance.tabs.payables">应付管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="reimbursements" role="tab" aria-selected="false" data-i18n="finance.tabs.reimbursements">报销管理</button>
+                    <button class="c-toggle" type="button" data-finance-view="payroll" role="tab" aria-selected="false" data-i18n="finance.tabs.payroll">工资计算</button>
+                    <button class="c-toggle" type="button" data-finance-view="payments" role="tab" aria-selected="false" data-i18n="finance.tabs.payments">支付记录</button>
+                    <button class="c-toggle" type="button" data-finance-view="reports" role="tab" aria-selected="false" data-i18n="finance.tabs.reports">财务报表</button>
+                    <button class="c-toggle" type="button" data-finance-view="settings" role="tab" aria-selected="false" data-i18n="finance.tabs.settings">财务设置</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="financeContent" class="finance-content">
+            <iframe id="financeModuleFrame" class="finance-module-frame" src="finance/receivables.html" title="应收管理"></iframe>
+        </div>
+    </div>
+</div>
+
+<script src="i18n.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const routes = {
+            receivables: { src: "finance/receivables.html", title: "应收管理" },
+            payables: { src: "finance/payables.html", title: "应付管理" },
+            reimbursements: { src: "finance/reimbursements.html", title: "报销管理" },
+            payroll: { src: "finance/payroll.html", title: "工资计算" },
+            payments: { src: "finance/payments.html", title: "支付记录" },
+            reports: { src: "finance/reports.html", title: "财务报表" },
+            settings: { src: "finance/settings.html", title: "财务设置" }
+        };
+        const buttons = Array.from(document.querySelectorAll("[data-finance-view]"));
+        const frame = document.getElementById("financeModuleFrame");
+        const pageParams = new URLSearchParams(window.location.search || "");
+        const LAST_VIEW_KEY = "finance:last-view";
+        const STATE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
+        const readLastView = () => {
+            try {
+                const stored = window.MatchSys.readJSONFromSessionStorage(LAST_VIEW_KEY, STATE_MAX_AGE_MS);
+                const view = stored && typeof stored === "object" ? stored.view : "";
+                return routes[view] ? view : "";
+            } catch (e) {
+                return "";
+            }
+        };
+        const writeLastView = (view) => {
+            if (!routes[view]) return;
+            try {
+                window.MatchSys.writeJSONToSessionStorage(LAST_VIEW_KEY, { view, updatedAt: Date.now() });
+            } catch (e) {}
+        };
+        const syncFrameLang = () => {
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
+        };
+        const buildFrameSrc = (view, src) => {
+            if (view !== "payroll") return src;
+            const params = new URLSearchParams();
+            ["subtab", "employee_id", "trigger"].forEach((key) => {
+                const value = pageParams.get(key);
+                if (value) params.set(key, value);
+            });
+            const query = params.toString();
+            return query ? `${src}?${query}` : src;
+        };
+        const setView = (view, preserveParams = false) => {
+            const route = routes[view];
+            if (!route || !frame) return;
+            buttons.forEach((button) => {
+                const active = button.dataset.financeView === view;
+                button.classList.toggle("is-active", active);
+                button.setAttribute("aria-selected", String(active));
+            });
+            const targetSrc = preserveParams ? buildFrameSrc(view, route.src) : route.src;
+            if (frame.getAttribute("src") !== targetSrc) {
+                frame.setAttribute("src", targetSrc);
+            }
+            frame.setAttribute("title", route.title);
+            writeLastView(view);
+        };
+        buttons.forEach((button) => {
+            button.addEventListener("click", () => setView(button.dataset.financeView));
+        });
+        if (frame) {
+            frame.addEventListener("load", syncFrameLang);
+        }
+        window.addEventListener("i18n:change", syncFrameLang);
+        const initialView = routes[pageParams.get("view")] ? pageParams.get("view") : (readLastView() || "receivables");
+        setView(initialView, true);
+    });
+}());
+</script>
+</body>
+</html>

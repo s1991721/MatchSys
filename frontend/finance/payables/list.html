@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>应付列表</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payables.list">
+    <div class="c-inline-filters">
+        <div class="c-inline-filters-grid-3 finance-filter-grid">
+            <div class="c-inline-field"><span data-i18n="finance.filter.month">月份</span><input type="month" id="filterMonth"></div>
+            <div class="c-inline-field"><span data-i18n="finance.filter.keyword">关键字</span><input type="text" id="filterKeyword" placeholder="对象 / 员工 / 单号" data-i18n-placeholder="finance.placeholder.payable_keyword"></div>
+            <div class="c-inline-field">
+                <span data-i18n="finance.filter.status">状态</span>
+                <select id="filterStatus">
+                    <option value="">全部</option>
+                    <option value="0">未付</option>
+                    <option value="1">部分支付</option>
+                    <option value="2">已付</option>
+                    <option value="3">逾期</option>
+                    <option value="5">异常</option>
+                    <option value="6">核销</option>
+                </select>
+            </div>
+            <div class="finance-filter-actions">
+                <button class="c-btn c-btn-success" type="button" id="addPayableBtn" data-i18n="finance.action.add_payable">新增应付</button>
+                <button class="c-btn c-btn-primary" type="button" id="searchBtn" data-i18n="common.search">搜索</button>
+            </div>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover finance-ledger-table">
+            <thead><tr><th></th><th>来源</th><th>发注单号</th><th>对象</th><th>月份</th><th>应付金额</th><th>已付金额</th><th>未付金额</th><th>预定支付日</th><th>状态</th><th class="c-actions-col">操作</th></tr></thead>
+            <tbody id="payableTableBody"><tr><td class="finance-empty-row" colspan="11" data-i18n="finance.empty">暂无数据</td></tr></tbody>
+        </table>
+    </div>
+    <div class="pagination c-pagination" id="payablePagination">
+        <div class="pagination-summary" id="payablePaginationSummary">共 0 条 · 第 1/1 页</div>
+        <div class="pagination-pages" id="payablePaginationPages"></div>
+    </div>
+</div>
+
+<dialog class="c-dialog" id="payableDialog" aria-labelledby="payableDialogTitle">
+    <div class="c-dialog-header">
+        <h3 id="payableDialogTitle">新增应付</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <form class="finance-form-grid" id="payableForm">
+            <input type="hidden" id="payableId">
+            <input type="hidden" id="payableYear">
+            <div class="c-inline-field c-inline-field-full"><span>支付对象</span><input type="text" id="payableCustomerName" placeholder="支付对象" required></div>
+            <div class="c-inline-field"><span>应付月份</span><input type="month" id="payableMonth" required></div>
+            <div class="c-inline-field"><span>应付金额</span><input type="number" id="payableAmount" min="0" step="0.01" required></div>
+            <div class="c-inline-field"><span>预定支付日</span><input type="date" id="payableDueDate"></div>
+            <div class="c-inline-field">
+                <span>财务处理</span>
+                <select id="payableStatus">
+                    <option value="0">正常</option>
+                    <option value="1">异常</option>
+                    <option value="2">核销</option>
+                </select>
+            </div>
+            <div class="c-inline-field c-inline-field-full"><span>备注</span><textarea id="payableRemark" rows="3"></textarea></div>
+        </form>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="savePayableBtn">保存</button>
+    </div>
+</dialog>
+
+<dialog class="c-dialog" id="paymentDialog" aria-labelledby="paymentDialogTitle">
+    <div class="c-dialog-header">
+        <h3 id="paymentDialogTitle">新增支付</h3>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <form class="finance-form-grid" id="paymentForm">
+            <input type="hidden" id="paymentPayableId">
+            <div class="c-inline-field"><span>收款方</span><input type="text" id="paymentPayeeName" placeholder="银行流水收款人"></div>
+            <div class="c-inline-field"><span>银行流水号</span><input type="text" id="paymentBankTransactionNo"></div>
+            <div class="c-inline-field"><span>支付金额</span><input type="number" id="paymentAmount" min="0" step="0.01" required></div>
+            <div class="c-inline-field"><span>支付日</span><input type="date" id="paymentDate" required></div>
+            <div class="c-inline-field c-inline-field-full"><span>备注</span><textarea id="paymentRemark" rows="3"></textarea></div>
+        </form>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
+        <button class="c-btn c-btn-primary" type="button" id="savePaymentBtn">保存</button>
+    </div>
+</dialog>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const statusLabels = {
+        0: "未付",
+        1: "部分支付",
+        2: "已付",
+        3: "逾期",
+        5: "异常",
+        6: "核销",
+    };
+    const statusClasses = {
+        0: "finance-status-open",
+        1: "finance-status-partial",
+        2: "finance-status-paid",
+        3: "finance-status-overdue",
+        5: "finance-status-exception",
+        6: "finance-status-writeoff",
+    };
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(document);
+        }
+    };
+    const PAGE_SIZE = 10;
+    const $ = (selector) => document.querySelector(selector);
+    const tableBody = $("#payableTableBody");
+    const pagination = $("#payablePagination");
+    const paginationPages = $("#payablePaginationPages");
+    const paginationSummary = $("#payablePaginationSummary");
+    const payableDialog = $("#payableDialog");
+    const paymentDialog = $("#paymentDialog");
+    let currentPage = 1;
+    let totalItems = 0;
+    let totalPages = 1;
+    let payables = [];
+    let expandedId = null;
+    let isLoading = false;
+    let tableErrorMessage = "";
+    const paymentsCache = new Map();
+    const paymentsLoading = new Set();
+
+    const toNumber = (value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+    const today = () => new Date().toISOString().slice(0, 10);
+    const setTableMessage = (message) => {
+        tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">${escapeHtml(message)}</td></tr>`;
+    };
+    const statusOf = (item) => Number(item.display_status ?? 0);
+    const sourceType = (item) => item.source_type || (item.purchase_order_id ? "purchase_order" : "manual");
+    const sourceLabel = (item) => item.source_label || (item.purchase_order_id ? "发注" : "手动");
+    const outstandingAmount = (item) => toNumber(item.outstanding_amount);
+    const refreshCachedPayable = (item) => {
+        if (!item || item.id === undefined || item.id === null) return;
+        payables = payables.map((row) => String(row.id) === String(item.id) && String(row.year) === String(item.year) ? item : row);
+    };
+    const renderPaymentRows = (item) => {
+        const key = `${item.year}:${item.id}`;
+        if (paymentsLoading.has(key)) {
+            return `<tr><td class="finance-empty-row" colspan="7">加载中...</td></tr>`;
+        }
+        const payments = paymentsCache.get(key) || [];
+        if (!payments.length) {
+            return `<tr><td class="finance-empty-row" colspan="7">暂无支付明细</td></tr>`;
+        }
+        return payments.map((detail) => {
+            const payment = detail.payment || {};
+            return `
+                <tr>
+                    <td>${escapeHtml(payment.id || detail.payment_id)}</td>
+                    <td>${escapeHtml(payment.payment_date || "-")}</td>
+                    <td>${escapeHtml(money(detail.payment_amount))}</td>
+                    <td>${escapeHtml(payment.payee_name || "-")}</td>
+                    <td>${escapeHtml(payment.bank_transaction_no || "-")}</td>
+                    <td>${escapeHtml(detail.remark || payment.remark || "-")}</td>
+                    <td class="c-actions-col">
+                        <button class="c-btn c-btn-danger c-btn-sm" type="button" data-action="delete-payment" data-id="${escapeHtml(payment.id || detail.payment_id)}" data-year="${escapeHtml(payment.year || item.year)}">删除</button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    };
+    const renderTable = () => {
+        if (paginationSummary) {
+            paginationSummary.textContent = `共 ${totalItems} 条 · 第 ${currentPage}/${totalPages} 页`;
+        }
+        if (window.renderPagination) {
+            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+        }
+        if (isLoading) {
+            setTableMessage("加载中...");
+            return;
+        }
+        if (tableErrorMessage) {
+            setTableMessage(tableErrorMessage);
+            return;
+        }
+        if (!payables.length) {
+            setTableMessage("暂无数据");
+            return;
+        }
+        tableBody.innerHTML = payables.map((item) => {
+            const status = statusOf(item);
+            const expanded = String(expandedId) === `${item.year}:${item.id}`;
+            return `
+                <tr data-id="${escapeHtml(item.id)}">
+                    <td><button class="c-btn c-btn-lite c-btn-sm finance-expand-btn" type="button" data-action="toggle" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" aria-label="展开支付明细">${expanded ? "−" : "+"}</button></td>
+                    <td><span class="finance-source ${sourceType(item) === "manual" ? "finance-source-manual" : ""}">${escapeHtml(sourceLabel(item))}</span></td>
+                    <td>${escapeHtml(item.order_no || "-")}</td>
+                    <td class="finance-name-cell">${escapeHtml(item.customer_name || "-")}</td>
+                    <td>${escapeHtml(item.payable_month || "-")}</td>
+                    <td>${escapeHtml(money(item.payable_amount))}</td>
+                    <td>${escapeHtml(money(item.paid_amount))}</td>
+                    <td>${escapeHtml(money(item.outstanding_amount))}</td>
+                    <td>${escapeHtml(item.due_date || "-")}</td>
+                    <td><span class="finance-status ${statusClasses[status] || ""}">${escapeHtml(statusLabels[status] || "-")}</span></td>
+                    <td class="c-actions-col">
+                        <button class="c-btn c-btn-secondary c-btn-sm" type="button" data-action="edit-payable" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" ${sourceType(item) !== "manual" ? "disabled" : ""}>编辑</button>
+                        <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="add-payment" data-id="${escapeHtml(item.id)}" data-year="${escapeHtml(item.year)}" ${outstandingAmount(item) <= 0 || Number(item.finance_status) === 2 ? "disabled" : ""}>支付</button>
+                    </td>
+                </tr>
+                ${expanded ? `
+                    <tr class="finance-detail-row">
+                        <td colspan="11">
+                            <div class="finance-detail-panel">
+                                <div class="finance-detail-head">
+                                    <span>支付明细</span>
+                                    <span>已支付 ${escapeHtml(money(item.paid_amount))}</span>
+                                </div>
+                                <div class="finance-detail-table">
+                                    <table class="c-table c-table-compact">
+                                        <thead><tr><th>支付ID</th><th>支付日</th><th>金额</th><th>收款方</th><th>银行流水号</th><th>备注</th><th class="c-actions-col">操作</th></tr></thead>
+                                        <tbody>${renderPaymentRows(item)}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                ` : ""}
+            `;
+        }).join("");
+    };
+    const fetchPayables = async () => {
+        isLoading = true;
+        renderTable();
+        const params = window.createParams([
+            ["month", $("#filterMonth").value],
+            ["keyword", $("#filterKeyword").value.trim()],
+            ["status", $("#filterStatus").value],
+            ["page", String(currentPage)],
+            ["page_size", String(PAGE_SIZE)],
+        ]);
+        try {
+            const payload = await window.requestJson(window.buildUrl("/api/finance/payables", params), { method: "GET" });
+            payables = Array.isArray(payload.data?.items) ? payload.data.items : [];
+            totalItems = Number(payload.meta?.total || 0);
+            currentPage = Number(payload.meta?.page || currentPage || 1);
+            totalPages = Math.max(Number(payload.meta?.total_pages || 1), 1);
+            tableErrorMessage = "";
+        } catch (err) {
+            payables = [];
+            totalItems = 0;
+            totalPages = 1;
+            tableErrorMessage = `加载失败：${err.message || "未知错误"}`;
+            throw err;
+        } finally {
+            isLoading = false;
+            renderTable();
+        }
+    };
+    const loadPayments = async (item, force = false) => {
+        const key = `${item.year}:${item.id}`;
+        if (!force && paymentsCache.has(key)) return paymentsCache.get(key);
+        paymentsLoading.add(key);
+        renderTable();
+        try {
+            const params = window.createParams([["year", String(item.year)]]);
+            const payload = await window.requestJson(window.buildUrl(`/api/finance/payables/${encodeURIComponent(item.id)}/payments`, params), { method: "GET" });
+            const payments = Array.isArray(payload.data?.items) ? payload.data.items : [];
+            paymentsCache.set(key, payments);
+            return payments;
+        } catch (err) {
+            paymentsCache.set(key, []);
+            window.alert(err.message || "支付明细加载失败");
+            return [];
+        } finally {
+            paymentsLoading.delete(key);
+            renderTable();
+        }
+    };
+    const openDialog = (dialog) => {
+        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
+    };
+    const openPayableDialog = (item = null) => {
+        $("#payableDialogTitle").textContent = item ? "编辑应付" : "新增应付";
+        $("#payableId").value = item ? item.id : "";
+        $("#payableYear").value = item ? item.year : "";
+        $("#payableCustomerName").value = item ? item.customer_name || "" : "";
+        $("#payableMonth").value = item ? item.payable_month || "" : ($("#filterMonth").value || today().slice(0, 7));
+        $("#payableAmount").value = item ? item.payable_amount : "";
+        $("#payableDueDate").value = item ? item.due_date || "" : "";
+        $("#payableStatus").value = item ? String(item.finance_status) : "0";
+        $("#payableRemark").value = item ? item.remark || "" : "";
+        openDialog(payableDialog);
+    };
+    const openPaymentDialog = (item) => {
+        const fallbackPaymentDate = `${item.year}-${String((item.payable_month || "").slice(5, 7) || "01").padStart(2, "0")}-01`;
+        const defaultPaymentDate = item.due_date && String(item.due_date).slice(0, 4) === String(item.year)
+            ? item.due_date
+            : (today().slice(0, 4) === String(item.year) ? today() : fallbackPaymentDate);
+        $("#paymentPayableId").value = item.id;
+        $("#paymentPayeeName").value = item.customer_name || "";
+        $("#paymentBankTransactionNo").value = "";
+        $("#paymentAmount").value = outstandingAmount(item);
+        $("#paymentDate").value = defaultPaymentDate;
+        $("#paymentRemark").value = "";
+        openDialog(paymentDialog);
+    };
+    const savePayable = async () => {
+        const customerName = $("#payableCustomerName").value.trim();
+        const amount = toNumber($("#payableAmount").value);
+        const month = $("#payableMonth").value;
+        if (!customerName) return window.alert("请输入支付对象");
+        if (!month) return window.alert("请选择应付月份");
+        if (amount <= 0) return window.alert("请输入有效的应付金额");
+        const id = Number($("#payableId").value);
+        const year = $("#payableYear").value || month.slice(0, 4);
+        const payload = {
+            customer_id: null,
+            customer_name: customerName,
+            payable_month: month,
+            payable_amount: String(amount),
+            due_date: $("#payableDueDate").value || "",
+            finance_status: Number($("#payableStatus").value),
+            remark: $("#payableRemark").value.trim(),
+        };
+        try {
+            const params = window.createParams([["year", year]]);
+            const response = await window.requestJson(
+                id ? window.buildUrl(`/api/finance/payables/${encodeURIComponent(id)}`, params) : "/api/finance/payables",
+                { method: id ? "PUT" : "POST", body: JSON.stringify(payload) }
+            );
+            if (id) refreshCachedPayable(response.data?.item);
+            payableDialog.close();
+            currentPage = id ? currentPage : 1;
+            await fetchPayables();
+        } catch (err) {
+            window.alert(err.message || "保存失败");
+        }
+    };
+    const savePayment = async () => {
+        const amount = toNumber($("#paymentAmount").value);
+        const paymentDate = $("#paymentDate").value;
+        if (amount <= 0) return window.alert("请输入有效的支付金额");
+        if (!paymentDate) return window.alert("请选择支付日");
+        const baseItem = payables.find((item) => String(item.id) === String($("#paymentPayableId").value));
+        if (!baseItem) return;
+        const payload = {
+            customer_id: baseItem && baseItem.customer_id ? Number(baseItem.customer_id) : null,
+            payee_name: $("#paymentPayeeName").value.trim(),
+            bank_transaction_no: $("#paymentBankTransactionNo").value.trim(),
+            payment_amount: String(amount),
+            payment_date: paymentDate,
+            remark: $("#paymentRemark").value.trim(),
+            allocations: [{ payable_id: Number(baseItem.id), payment_amount: String(amount) }],
+        };
+        try {
+            const response = await window.requestJson("/api/finance/payments", {
+                method: "POST",
+                body: JSON.stringify(payload),
+            });
+            (response.data?.payables || []).forEach(refreshCachedPayable);
+            paymentDialog.close();
+            paymentsCache.clear();
+            expandedId = `${baseItem.year}:${baseItem.id}`;
+            await fetchPayables();
+            const updatedItem = payables.find((item) => String(item.id) === String(baseItem.id) && String(item.year) === String(baseItem.year));
+            if (updatedItem) await loadPayments(updatedItem, true);
+        } catch (err) {
+            window.alert(err.message || "保存失败");
+        }
+    };
+    const deletePayment = async (paymentId, year) => {
+        if (!window.confirm("确定删除这条支付记录吗？")) return;
+        try {
+            const params = window.createParams([["year", String(year)]]);
+            const response = await window.requestJson(window.buildUrl(`/api/finance/payments/${encodeURIComponent(paymentId)}`, params), { method: "DELETE" });
+            (response.data?.payables || []).forEach(refreshCachedPayable);
+            const previousExpandedId = expandedId;
+            paymentsCache.clear();
+            await fetchPayables();
+            if (previousExpandedId) {
+                const updatedItem = payables.find((item) => `${item.year}:${item.id}` === previousExpandedId);
+                if (updatedItem) await loadPayments(updatedItem, true);
+            }
+        } catch (err) {
+            window.alert(err.message || "删除失败");
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+        const initialMonth = new URLSearchParams(window.location.search || "").get("month") || today().slice(0, 7);
+        $("#filterMonth").value = initialMonth;
+        if (window.initDialogCloseBehavior) {
+            window.initDialogCloseBehavior({ dialogs: [payableDialog, paymentDialog] });
+        }
+        $("#addPayableBtn").addEventListener("click", () => openPayableDialog());
+        $("#savePayableBtn").addEventListener("click", savePayable);
+        $("#savePaymentBtn").addEventListener("click", savePayment);
+        $("#searchBtn").addEventListener("click", () => {
+            currentPage = 1;
+            fetchPayables().catch(() => {});
+        });
+        ["#filterMonth", "#filterStatus"].forEach((selector) => {
+            $(selector).addEventListener("change", () => {
+                currentPage = 1;
+                fetchPayables().catch(() => {});
+            });
+        });
+        $("#filterKeyword").addEventListener("input", () => {
+            currentPage = 1;
+            fetchPayables().catch(() => {});
+        });
+        if (pagination && window.bindPagination) {
+            window.bindPagination(pagination, (value) => {
+                if (value === "prev") {
+                    currentPage = Math.max(currentPage - 1, 1);
+                } else if (value === "next") {
+                    currentPage = Math.min(currentPage + 1, totalPages);
+                } else {
+                    currentPage = Math.min(Math.max(Number(value) || 1, 1), totalPages);
+                }
+                fetchPayables().catch(() => {});
+            });
+        }
+        tableBody.addEventListener("click", async (event) => {
+            const button = event.target.closest("[data-action]");
+            if (!button) return;
+            const action = button.dataset.action;
+            const item = payables.find((target) => String(target.id) === String(button.dataset.id) && String(target.year) === String(button.dataset.year));
+            if (action === "toggle" && item) {
+                expandedId = String(expandedId) === `${item.year}:${item.id}` ? null : `${item.year}:${item.id}`;
+                renderTable();
+                if (expandedId) await loadPayments(item);
+            }
+            if (action === "edit-payable" && item) openPayableDialog(item);
+            if (action === "add-payment" && item) openPaymentDialog(item);
+            if (action === "delete-payment") await deletePayment(button.dataset.id, button.dataset.year);
+        });
+        fetchPayables().catch(() => {});
+    });
+}());
+</script>
+</body>
+</html>

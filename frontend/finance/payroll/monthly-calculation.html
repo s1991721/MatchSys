@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title>月度计算</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payroll.monthly">
+    <div class="c-inline-filters">
+        <div class="payroll-monthly-filter-row">
+            <label class="c-inline-field">
+                <span>月份</span>
+                <input id="payrollMonth" type="month">
+            </label>
+            <button type="button" class="c-btn c-btn-success" id="payrollCalculateBtn" disabled>一键计算薪资</button>
+            <label class="c-inline-field">
+                <span>契约类型</span>
+                <select id="payrollContractType" disabled>
+                    <option value="">全部</option>
+                    <option value="0">正社员</option>
+                    <option value="1">契约社员</option>
+                    <option value="2">フリーランス</option>
+                </select>
+            </label>
+            <label class="c-inline-field">
+                <span>员工姓名</span>
+                <input id="payrollKeyword" type="text" placeholder="员工姓名" disabled>
+            </label>
+            <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" disabled>搜索</button>
+            <button type="button" class="c-btn c-btn-success-lite" id="payrollAddBtn" hidden>新增</button>
+            <button type="button" class="c-btn c-btn-warn" id="payrollExportBtn" disabled>导出</button>
+        </div>
+    </div>
+    <div class="table-wrap c-table-wrapper">
+        <table class="c-table c-table-hover">
+            <thead>
+            <tr>
+                <th>月份</th>
+                <th>员工</th>
+                <th>出勤日数</th>
+                <th>基本工资</th>
+                <th>增加项合计</th>
+                <th>减少项合计</th>
+                <th>自动扣款合计</th>
+                <th>实发金额</th>
+                <th>状态</th>
+                <th class="c-actions-col">操作</th>
+            </tr>
+            </thead>
+            <tbody id="payrollMonthlyBody"><tr><td class="finance-empty-row" colspan="10">请先选择月份</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="personnel-page c-form-page">
+    <div class="modal" id="payrollMonthlyModal" aria-hidden="true">
+        <div class="modal-card c-card c-card-pad payroll-monthly-modal-card">
+            <div class="modal-header">
+                <h4 id="payrollMonthlyModalTitle">新增月度工资</h4>
+                <button class="modal-close" id="payrollMonthlyClose" aria-label="关闭">×</button>
+            </div>
+            <form id="payrollMonthlyForm" class="modal-body">
+                <div class="form-grid">
+                    <label>
+                        <span>员工ID（可选）</span>
+                        <input id="payrollFormEmployeeId" type="number" min="1" step="1">
+                    </label>
+                    <label>
+                        <span>员工姓名</span>
+                        <input id="payrollFormEmployeeName" type="text">
+                    </label>
+                    <label>
+                        <span>契约类型</span>
+                        <select id="payrollFormContractType">
+                            <option value="0">正社员</option>
+                            <option value="1">契约社员</option>
+                            <option value="2">フリーランス</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>出勤日数</span>
+                        <input id="payrollFormAttendanceDays" type="number" min="0" step="0.01">
+                    </label>
+                    <label>
+                        <span>基本工资</span>
+                        <input id="payrollFormBaseSalary" type="number" min="0" step="1">
+                    </label>
+                    <label>
+                        <span>状态</span>
+                        <select id="payrollFormStatus">
+                            <option value="0">未确认</option>
+                            <option value="1">已确认</option>
+                            <option value="2">已发放</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>备注</span>
+                        <input id="payrollFormRemark" type="text">
+                    </label>
+                    <div class="payroll-monthly-detail-grid">
+                        <div class="payroll-items-panel payroll-monthly-calculated-panel">
+                            <div class="payroll-items-header">
+                                <span>自动计算扣款</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollRecalculateDeductions">按公式重算</button>
+                            </div>
+                            <div class="payroll-calculated-columns">
+                                <div class="payroll-calculated-group">
+                                    <div class="payroll-calculated-group-title">根据基本工资计算（固定档位）</div>
+                                    <div class="table-wrap payroll-calculated-table-wrap">
+                                        <table class="c-table payroll-calculated-table">
+                                            <thead>
+                                            <tr>
+                                                <th>项目</th>
+                                                <th>料率</th>
+                                                <th>金额</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="payrollFixedDeductions"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="payroll-calculated-group">
+                                    <div class="payroll-calculated-group-title">根据实际收入计算（浮动计算）</div>
+                                    <div class="table-wrap payroll-calculated-table-wrap">
+                                        <table class="c-table payroll-calculated-table">
+                                            <thead>
+                                            <tr>
+                                                <th>项目</th>
+                                                <th>计算基准</th>
+                                                <th>料率</th>
+                                                <th>金额</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="payrollVariableDeductions"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span>增加项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollAdditionItems"></div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span>非课税增加项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddNonTaxableAdditionItem">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollNonTaxableAdditionItems"></div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-adjustment-panel">
+                            <div class="payroll-items-header">
+                                <span>减少项</span>
+                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem">添加</button>
+                            </div>
+                            <div class="payroll-items-list" id="payrollDeductionItems"></div>
+                        </div>
+                    </div>
+                    <div class="payroll-items-panel payroll-monthly-summary-panel">
+                        <div class="payroll-summary-bar">
+                            <div class="payroll-summary-item">
+                                <span>增加项合计</span>
+                                <strong id="payrollFormAllowanceDisplay">¥0</strong>
+                            </div>
+                            <div class="payroll-summary-item">
+                                <span>减少项合计</span>
+                                <strong id="payrollFormDeductionDisplay">¥0</strong>
+                            </div>
+                            <div class="payroll-summary-item">
+                                <span>自动扣款合计</span>
+                                <strong id="payrollFormSocialInsuranceDisplay">¥0</strong>
+                            </div>
+                            <div class="payroll-summary-item payroll-summary-net">
+                                <span>实发金额</span>
+                                <strong id="payrollFormNetSalaryDisplay">¥0</strong>
+                            </div>
+                        </div>
+                        <input id="payrollFormAllowance" type="hidden">
+                        <input id="payrollFormDeduction" type="hidden">
+                        <input id="payrollFormSocialInsurance" type="hidden">
+                        <input id="payrollFormNetSalary" type="hidden">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="c-btn c-btn-secondary" id="payrollMonthlyCancel">取消</button>
+                    <button type="submit" class="c-btn c-btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>window.__routeNotified = true;</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const statusLabels = {
+        0: "未确认",
+        1: "已确认",
+        2: "已发放"
+    };
+    const calculatedDeductionRules = [
+        {key: "healthInsurance", name: "健康保险料", rate: 0.05, base: "baseSalary", group: "fixed"},
+        {key: "careInsurance", name: "介护保险料", rate: 0.008, base: "baseSalary", group: "fixed"},
+        {key: "pension", name: "厚生年金等", rate: 0.0915, base: "baseSalary", group: "fixed"},
+        {key: "childSupport", name: "子育支援金", rate: 0.0018, base: "baseSalary", group: "fixed"},
+        {key: "employmentInsurance", name: "雇佣保险料", rate: 0.0055, base: "remaining", group: "variable"},
+        {key: "incomeTax", name: "所得税", rate: 0.05, base: "remainingAfterEmployment", group: "variable"}
+    ];
+    const calculatedDeductionNames = new Set(calculatedDeductionRules.map((rule) => rule.name));
+    let monthlyRows = [];
+    let monthlyCalculated = false;
+    let selectedMonth = "";
+    let editingId = null;
+    let manuallyEditedCalculatedDeductions = new Set();
+    let trackingOriginalValues = false;
+
+    const h = (value) => {
+        if (window.escapeHtml) return window.escapeHtml(value == null ? "" : String(value));
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+    const formatMoney = (value) => {
+        const number = Number(value || 0);
+        return number.toLocaleString("ja-JP", {
+            style: "currency",
+            currency: "JPY",
+            maximumFractionDigits: 0
+        });
+    };
+    const parseMoney = (value) => {
+        const number = Number(value || 0);
+        return Number.isFinite(number) ? number : 0;
+    };
+    const roundAmount = (value) => String(Math.max(0, Math.round(parseMoney(value))));
+    const normalizeItems = (items) => {
+        if (!Array.isArray(items)) return [];
+        return items.map((item) => ({
+            name: String(item?.name || "").trim(),
+            amount: String(item?.amount ?? "0").trim() || "0"
+        })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+    };
+    const sumItems = (items) => normalizeItems(items).reduce((total, item) => total + parseMoney(item.amount), 0);
+    const splitDeductionItems = (items) => {
+        const manual = [];
+        const calculated = {};
+        normalizeItems(items).forEach((item) => {
+            if (calculatedDeductionNames.has(item.name)) {
+                calculated[item.name] = item;
+            } else {
+                manual.push(item);
+            }
+        });
+        return {manual, calculated};
+    };
+    const getCurrentMonthValue = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        return `${year}-${month}`;
+    };
+
+    const setEmpty = (tbody, message) => {
+        tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">${h(message)}</td></tr>`;
+    };
+
+    const renderRows = (tbody, rows) => {
+        if (!rows.length) {
+            setEmpty(tbody, "没有符合条件的月度计算数据");
+            return;
+        }
+        tbody.innerHTML = rows.map((item) => `
+            <tr>
+                <td>${h(item.month)}</td>
+                <td>${h(item.employee_name)}</td>
+                <td>${h(item.attendance_days)}</td>
+                <td>${h(formatMoney(item.base_salary))}</td>
+                <td>${h(formatMoney(item.allowance_amount))}</td>
+                <td>${h(formatMoney(item.deduction_amount))}</td>
+                <td>${h(formatMoney(item.social_insurance_amount))}</td>
+                <td>${h(formatMoney(item.net_salary))}</td>
+                <td>${h(item.status_label || statusLabels[item.status] || "")}</td>
+                <td class="c-actions-col">
+                    <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">编辑</button>
+                    <button type="button" class="c-btn c-btn-danger c-btn-sm" data-action="delete" data-id="${h(item.id)}">删除</button>
+                </td>
+            </tr>
+        `).join("");
+    };
+
+    const setLoadingState = () => {
+        const monthInput = document.getElementById("payrollMonth");
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const keywordInput = document.getElementById("payrollKeyword");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const calculateBtn = document.getElementById("payrollCalculateBtn");
+        const addBtn = document.getElementById("payrollAddBtn");
+        const exportBtn = document.getElementById("payrollExportBtn");
+        const tbody = document.getElementById("payrollMonthlyBody");
+
+        contractTypeSelect.disabled = true;
+        keywordInput.disabled = true;
+        searchBtn.disabled = true;
+        calculateBtn.disabled = true;
+        addBtn.hidden = true;
+        exportBtn.disabled = true;
+        setEmpty(tbody, monthInput.value ? "正在加载中..." : "请先选择月份");
+    };
+
+    const applyState = () => {
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const keywordInput = document.getElementById("payrollKeyword");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const calculateBtn = document.getElementById("payrollCalculateBtn");
+        const addBtn = document.getElementById("payrollAddBtn");
+        const exportBtn = document.getElementById("payrollExportBtn");
+        const tbody = document.getElementById("payrollMonthlyBody");
+        const month = selectedMonth;
+
+        if (!month) {
+            contractTypeSelect.disabled = true;
+            keywordInput.disabled = true;
+            searchBtn.disabled = true;
+            calculateBtn.disabled = true;
+            addBtn.hidden = true;
+            exportBtn.disabled = true;
+            contractTypeSelect.value = "";
+            keywordInput.value = "";
+            setEmpty(tbody, "请先选择月份");
+            return;
+        }
+
+        contractTypeSelect.disabled = !monthlyCalculated;
+        keywordInput.disabled = !monthlyCalculated;
+        searchBtn.disabled = !monthlyCalculated;
+        calculateBtn.disabled = monthlyCalculated;
+        addBtn.hidden = !monthlyCalculated;
+        exportBtn.disabled = !monthlyCalculated;
+
+        if (!monthlyCalculated) {
+            contractTypeSelect.value = "";
+            keywordInput.value = "";
+            setEmpty(tbody, "此月份还没有进行工资计算");
+            return;
+        }
+
+        renderRows(tbody, monthlyRows);
+    };
+
+    const buildQueryParams = () => window.createParams([
+        ["month", selectedMonth],
+        ["contract_type", document.getElementById("payrollContractType").value],
+        ["keyword", document.getElementById("payrollKeyword").value.trim()],
+        ["page_size", "100"]
+    ]);
+
+    const loadMonthlyRows = async () => {
+        if (!selectedMonth) {
+            monthlyRows = [];
+            monthlyCalculated = false;
+            applyState();
+            return;
+        }
+        setLoadingState();
+        try {
+            const payload = await window.requestJson(
+                window.buildUrl("/api/finance/payroll/monthly", buildQueryParams()),
+                {method: "GET"},
+                {throwOnFailure: true}
+            );
+            monthlyRows = payload.data?.items || [];
+            monthlyCalculated = Boolean(payload.data?.calculated);
+            applyState();
+        } catch (err) {
+            monthlyRows = [];
+            monthlyCalculated = false;
+            document.getElementById("payrollCalculateBtn").disabled = true;
+            document.getElementById("payrollAddBtn").hidden = true;
+            document.getElementById("payrollExportBtn").disabled = true;
+            setEmpty(document.getElementById("payrollMonthlyBody"), `加载失败：${err.message}`);
+        }
+    };
+
+    const createItemRow = (item = {}) => {
+        const row = document.createElement("div");
+        row.className = "payroll-item-row";
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.dataset.field = "name";
+        nameInput.placeholder = "项目名";
+        nameInput.value = item.name || "";
+
+        const amountInput = document.createElement("input");
+        amountInput.type = "number";
+        amountInput.min = "0";
+        amountInput.step = "1";
+        amountInput.dataset.field = "amount";
+        amountInput.placeholder = "金额";
+        amountInput.value = item.amount ?? "0";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "c-btn c-btn-danger c-btn-sm";
+        removeBtn.dataset.action = "remove-payroll-item";
+        removeBtn.textContent = "删除";
+
+        row.append(nameInput, amountInput, removeBtn);
+        return row;
+    };
+
+    const renderItemRows = (container, rows) => {
+        container.innerHTML = "";
+        const normalized = normalizeItems(rows);
+        if (!normalized.length) {
+            const empty = document.createElement("div");
+            empty.className = "payroll-item-empty";
+            empty.textContent = "暂无项目";
+            container.appendChild(empty);
+            return;
+        }
+        normalized.forEach((item) => container.appendChild(createItemRow(item)));
+    };
+
+    const collectItems = (container) => Array.from(container.querySelectorAll(".payroll-item-row")).map((row) => ({
+        name: row.querySelector("[data-field='name']").value.trim(),
+        amount: row.querySelector("[data-field='amount']").value || "0"
+    })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+
+    const addItemRow = (container) => {
+        const empty = container.querySelector(".payroll-item-empty");
+        if (empty) empty.remove();
+        const row = createItemRow({name: "", amount: "0"});
+        container.appendChild(row);
+        if (trackingOriginalValues) {
+            row.querySelectorAll("input, select").forEach((input) => {
+                input.dataset.originalValue = "";
+            });
+            updateModifiedMarkers();
+        }
+    };
+
+    const renderCalculatedDeductions = (existing = {}) => {
+        const fixedContainer = document.getElementById("payrollFixedDeductions");
+        const variableContainer = document.getElementById("payrollVariableDeductions");
+        fixedContainer.innerHTML = "";
+        variableContainer.innerHTML = "";
+        calculatedDeductionRules.forEach((rule) => {
+            const row = document.createElement("tr");
+
+            const nameCell = document.createElement("td");
+            nameCell.textContent = rule.name;
+
+            const baseCell = document.createElement("td");
+            baseCell.textContent = rule.base === "baseSalary"
+                ? "基本工资"
+                : rule.base === "remaining"
+                    ? "扣除社保后"
+                    : "扣除雇保后";
+
+            const rateCell = document.createElement("td");
+            rateCell.className = "payroll-calculated-rate";
+            rateCell.textContent = `${(rule.rate * 100).toFixed(2)}%`;
+
+            const amountCell = document.createElement("td");
+
+            const amountInput = document.createElement("input");
+            amountInput.type = "number";
+            amountInput.min = "0";
+            amountInput.step = "1";
+            amountInput.dataset.calculatedKey = rule.key;
+            amountInput.dataset.calculatedName = rule.name;
+            amountInput.value = existing[rule.name]?.amount ?? "0";
+
+            amountCell.appendChild(amountInput);
+            if (rule.group === "fixed") {
+                row.append(nameCell, rateCell, amountCell);
+                fixedContainer.appendChild(row);
+            } else {
+                row.append(nameCell, baseCell, rateCell, amountCell);
+                variableContainer.appendChild(row);
+            }
+        });
+    };
+
+    const collectCalculatedDeductionItems = () => Array.from(
+        document.querySelectorAll("[data-calculated-key]")
+    ).map((input) => ({
+        name: input.dataset.calculatedName,
+        amount: input.value || "0"
+    }));
+
+    const trackOriginalValues = () => {
+        const form = document.getElementById("payrollMonthlyForm");
+        form.querySelectorAll("input, select").forEach((input) => {
+            input.dataset.originalValue = input.value || "";
+            input.classList.remove("is-modified");
+        });
+        form.querySelectorAll(".payroll-item-row, .payroll-summary-item").forEach((item) => {
+            item.classList.remove("is-modified");
+        });
+        trackingOriginalValues = true;
+    };
+
+    const setInputModifiedState = (input) => {
+        if (!Object.prototype.hasOwnProperty.call(input.dataset, "originalValue")) return false;
+        const modified = String(input.value || "") !== String(input.dataset.originalValue || "");
+        input.classList.toggle("is-modified", modified);
+        return modified;
+    };
+
+    const updateModifiedMarkers = () => {
+        if (!trackingOriginalValues) return;
+        const form = document.getElementById("payrollMonthlyForm");
+        form.querySelectorAll("input, select").forEach(setInputModifiedState);
+        form.querySelectorAll(".payroll-item-row").forEach((row) => {
+            row.classList.toggle("is-modified", Boolean(row.querySelector(".is-modified")));
+        });
+        [
+            ["payrollFormAllowance", "payrollFormAllowanceDisplay"],
+            ["payrollFormDeduction", "payrollFormDeductionDisplay"],
+            ["payrollFormSocialInsurance", "payrollFormSocialInsuranceDisplay"],
+            ["payrollFormNetSalary", "payrollFormNetSalaryDisplay"]
+        ].forEach(([inputId, displayId]) => {
+            const input = document.getElementById(inputId);
+            const display = document.getElementById(displayId);
+            if (!input || !display) return;
+            const modified = setInputModifiedState(input);
+            display.closest(".payroll-summary-item")?.classList.toggle("is-modified", modified);
+        });
+    };
+
+    const recalculatePayrollTotals = () => {
+        const baseSalary = parseMoney(document.getElementById("payrollFormBaseSalary").value);
+        const additionTotal = sumItems(collectItems(document.getElementById("payrollAdditionItems")));
+        const nonTaxableAdditionTotal = sumItems(collectItems(document.getElementById("payrollNonTaxableAdditionItems")));
+        const manualDeductionTotal = sumItems(collectItems(document.getElementById("payrollDeductionItems")));
+        const calculatedInputs = Array.from(document.querySelectorAll("[data-calculated-key]"));
+        const firstStageTotal = calculatedDeductionRules
+            .filter((rule) => rule.base === "baseSalary")
+            .reduce((total, rule) => total + Math.round(baseSalary * rule.rate), 0);
+        const remainingBase = Math.max(0, baseSalary - firstStageTotal);
+        let employmentAmount = 0;
+
+        calculatedInputs.forEach((input) => {
+            const rule = calculatedDeductionRules.find((item) => item.key === input.dataset.calculatedKey);
+            if (!rule) return;
+            if (manuallyEditedCalculatedDeductions.has(rule.key)) return;
+            let amount = 0;
+            if (rule.base === "baseSalary") {
+                amount = baseSalary * rule.rate;
+            } else if (rule.base === "remaining") {
+                amount = remainingBase * rule.rate;
+                employmentAmount = Math.round(amount);
+            } else if (rule.base === "remainingAfterEmployment") {
+                amount = Math.max(0, remainingBase - employmentAmount) * rule.rate;
+            }
+            input.value = roundAmount(amount);
+        });
+
+        const calculatedDeductionTotal = sumItems(collectCalculatedDeductionItems());
+        const deductionTotal = manualDeductionTotal + calculatedDeductionTotal;
+        const totalAdditions = additionTotal + nonTaxableAdditionTotal;
+        const netSalary = baseSalary + totalAdditions - deductionTotal;
+        document.getElementById("payrollFormAllowance").value = roundAmount(totalAdditions);
+        document.getElementById("payrollFormDeduction").value = roundAmount(deductionTotal);
+        document.getElementById("payrollFormSocialInsurance").value = roundAmount(calculatedDeductionTotal);
+        document.getElementById("payrollFormNetSalary").value = roundAmount(netSalary);
+        document.getElementById("payrollFormAllowanceDisplay").textContent = formatMoney(totalAdditions);
+        document.getElementById("payrollFormDeductionDisplay").textContent = formatMoney(deductionTotal);
+        document.getElementById("payrollFormSocialInsuranceDisplay").textContent = formatMoney(calculatedDeductionTotal);
+        document.getElementById("payrollFormNetSalaryDisplay").textContent = formatMoney(netSalary);
+        updateModifiedMarkers();
+    };
+
+    const openModal = (mode, item = null) => {
+        editingId = mode === "edit" ? item?.id : null;
+        const {manual: manualDeductions, calculated} = splitDeductionItems(item?.deduction_items || []);
+        manuallyEditedCalculatedDeductions = new Set();
+        document.getElementById("payrollMonthlyModalTitle").textContent = mode === "edit" ? "编辑月度工资" : "新增月度工资";
+        document.getElementById("payrollFormEmployeeId").value = item?.employee_id || "";
+        document.getElementById("payrollFormEmployeeId").readOnly = mode === "edit";
+        document.getElementById("payrollFormEmployeeName").value = item?.employee_name || "";
+        document.getElementById("payrollFormContractType").value = item?.contract_type ?? "0";
+        document.getElementById("payrollFormAttendanceDays").value = item?.attendance_days || "0";
+        document.getElementById("payrollFormBaseSalary").value = item?.base_salary || "0";
+        document.getElementById("payrollFormStatus").value = item?.status ?? "0";
+        document.getElementById("payrollFormRemark").value = item?.remark || "";
+        renderItemRows(document.getElementById("payrollAdditionItems"), item?.addition_items || []);
+        renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), item?.non_taxable_addition_items || []);
+        renderItemRows(document.getElementById("payrollDeductionItems"), manualDeductions);
+        renderCalculatedDeductions(calculated);
+        Object.keys(calculated).forEach((name) => {
+            const rule = calculatedDeductionRules.find((item) => item.name === name);
+            if (rule) manuallyEditedCalculatedDeductions.add(rule.key);
+        });
+        recalculatePayrollTotals();
+        trackOriginalValues();
+        const modal = document.getElementById("payrollMonthlyModal");
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+    };
+
+    const closeModal = () => {
+        const modal = document.getElementById("payrollMonthlyModal");
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+        document.getElementById("payrollMonthlyForm").reset();
+        renderItemRows(document.getElementById("payrollAdditionItems"), []);
+        renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), []);
+        renderItemRows(document.getElementById("payrollDeductionItems"), []);
+        renderCalculatedDeductions();
+        manuallyEditedCalculatedDeductions = new Set();
+        trackingOriginalValues = false;
+        editingId = null;
+    };
+
+    const collectFormPayload = () => {
+        recalculatePayrollTotals();
+        const additionItems = collectItems(document.getElementById("payrollAdditionItems"));
+        const nonTaxableAdditionItems = collectItems(document.getElementById("payrollNonTaxableAdditionItems"));
+        const deductionItems = [
+            ...collectItems(document.getElementById("payrollDeductionItems")),
+            ...collectCalculatedDeductionItems()
+        ];
+        return {
+            month: selectedMonth,
+            employee_id: document.getElementById("payrollFormEmployeeId").value,
+            employee_name: document.getElementById("payrollFormEmployeeName").value,
+            contract_type: document.getElementById("payrollFormContractType").value,
+            attendance_days: document.getElementById("payrollFormAttendanceDays").value || "0",
+            base_salary: document.getElementById("payrollFormBaseSalary").value || "0",
+            allowance_amount: document.getElementById("payrollFormAllowance").value || "0",
+            deduction_amount: document.getElementById("payrollFormDeduction").value || "0",
+            addition_items: additionItems,
+            non_taxable_addition_items: nonTaxableAdditionItems,
+            deduction_items: deductionItems,
+            social_insurance_amount: document.getElementById("payrollFormSocialInsurance").value || "0",
+            net_salary: document.getElementById("payrollFormNetSalary").value || "0",
+            status: document.getElementById("payrollFormStatus").value,
+            remark: document.getElementById("payrollFormRemark").value
+        };
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
+        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+
+        const monthInput = document.getElementById("payrollMonth");
+        const contractTypeSelect = document.getElementById("payrollContractType");
+        const keywordInput = document.getElementById("payrollKeyword");
+        const searchBtn = document.getElementById("payrollSearchBtn");
+        const calculateBtn = document.getElementById("payrollCalculateBtn");
+        const addBtn = document.getElementById("payrollAddBtn");
+        const exportBtn = document.getElementById("payrollExportBtn");
+        const form = document.getElementById("payrollMonthlyForm");
+        const closeBtn = document.getElementById("payrollMonthlyClose");
+        const cancelBtn = document.getElementById("payrollMonthlyCancel");
+        const additionItems = document.getElementById("payrollAdditionItems");
+        const nonTaxableAdditionItems = document.getElementById("payrollNonTaxableAdditionItems");
+        const deductionItems = document.getElementById("payrollDeductionItems");
+        const addAdditionItemBtn = document.getElementById("payrollAddAdditionItem");
+        const addNonTaxableAdditionItemBtn = document.getElementById("payrollAddNonTaxableAdditionItem");
+        const addDeductionItemBtn = document.getElementById("payrollAddDeductionItem");
+        const recalculateDeductionsBtn = document.getElementById("payrollRecalculateDeductions");
+
+        const loadSelectedMonth = async () => {
+            selectedMonth = monthInput.value;
+            await loadMonthlyRows();
+        };
+
+        monthInput.addEventListener("change", () => {
+            loadSelectedMonth();
+        });
+        searchBtn.addEventListener("click", loadMonthlyRows);
+        contractTypeSelect.addEventListener("change", loadMonthlyRows);
+        keywordInput.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") loadMonthlyRows();
+        });
+        calculateBtn.addEventListener("click", async () => {
+            const month = selectedMonth;
+            if (!month || monthlyCalculated) return;
+            calculateBtn.disabled = true;
+            calculateBtn.textContent = "薪资计算中...";
+            try {
+                const payload = await window.requestJson("/api/finance/payroll/monthly/calculate", {
+                    method: "POST",
+                    body: JSON.stringify({month})
+                }, {throwOnFailure: true});
+                if (!payload.data?.created) window.alert("没有可计算的有效薪资基础信息。");
+                await loadMonthlyRows();
+            } catch (err) {
+                window.alert(err.message || "薪资计算失败");
+                await loadMonthlyRows();
+            } finally {
+                calculateBtn.textContent = "一键计算薪资";
+            }
+        });
+        addBtn.addEventListener("click", () => {
+            openModal("add");
+        });
+        exportBtn.addEventListener("click", () => {
+            if (!selectedMonth || !monthlyCalculated) return;
+            window.location.href = window.buildUrl("/api/finance/payroll/monthly/export", buildQueryParams());
+        });
+        closeBtn.addEventListener("click", closeModal);
+        cancelBtn.addEventListener("click", closeModal);
+        addAdditionItemBtn.addEventListener("click", () => {
+            addItemRow(additionItems);
+            recalculatePayrollTotals();
+        });
+        addNonTaxableAdditionItemBtn.addEventListener("click", () => {
+            addItemRow(nonTaxableAdditionItems);
+            recalculatePayrollTotals();
+        });
+        addDeductionItemBtn.addEventListener("click", () => {
+            addItemRow(deductionItems);
+            recalculatePayrollTotals();
+        });
+        recalculateDeductionsBtn.addEventListener("click", () => {
+            manuallyEditedCalculatedDeductions = new Set();
+            recalculatePayrollTotals();
+            updateModifiedMarkers();
+        });
+        form.addEventListener("input", (event) => {
+            if (event.target.dataset.calculatedKey) {
+                manuallyEditedCalculatedDeductions.add(event.target.dataset.calculatedKey);
+                recalculatePayrollTotals();
+                updateModifiedMarkers();
+                return;
+            }
+            if (
+                event.target.closest("#payrollAdditionItems") ||
+                event.target.closest("#payrollNonTaxableAdditionItems") ||
+                event.target.closest("#payrollDeductionItems") ||
+                event.target.id === "payrollFormBaseSalary"
+            ) {
+                recalculatePayrollTotals();
+            } else {
+                updateModifiedMarkers();
+            }
+        });
+        form.addEventListener("change", updateModifiedMarkers);
+        form.addEventListener("click", (event) => {
+            const btn = event.target.closest("button[data-action='remove-payroll-item']");
+            if (!btn) return;
+            const container = btn.closest(".payroll-items-list");
+            btn.closest(".payroll-item-row")?.remove();
+            if (container && !container.querySelector(".payroll-item-row")) {
+                renderItemRows(container, []);
+            }
+            recalculatePayrollTotals();
+            updateModifiedMarkers();
+        });
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            const payload = collectFormPayload();
+            const url = editingId ? `/api/finance/payroll/monthly/${editingId}` : "/api/finance/payroll/monthly";
+            try {
+                await window.requestJson(url, {
+                    method: editingId ? "PUT" : "POST",
+                    body: JSON.stringify(payload)
+                }, {throwOnFailure: true});
+                closeModal();
+                await loadMonthlyRows();
+            } catch (err) {
+                window.alert(err.message || "保存失败");
+            }
+        });
+        document.getElementById("payrollMonthlyBody").addEventListener("click", async (event) => {
+            const button = event.target.closest("button[data-action]");
+            if (!button) return;
+            const action = button.dataset.action;
+            const target = monthlyRows.find((item) => String(item.id) === String(button.dataset.id));
+            if (!target) return;
+            if (action === "edit") {
+                openModal("edit", target);
+                return;
+            }
+            if (action === "delete") {
+                if (!window.confirm("确定删除这条月度工资数据吗？")) return;
+                try {
+                    await window.requestJson(window.buildUrl(`/api/finance/payroll/monthly/${button.dataset.id}`, window.createParams([
+                        ["month", selectedMonth]
+                    ])), {
+                        method: "DELETE"
+                    }, {throwOnFailure: true});
+                    await loadMonthlyRows();
+                } catch (err) {
+                    window.alert(err.message || "删除失败");
+                }
+            }
+        });
+
+        monthInput.value = getCurrentMonthValue();
+        loadSelectedMonth();
+    });
+}());
+</script>
+</body>
+</html>

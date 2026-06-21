@@ -354,7 +354,9 @@
                 to: target,
                 cc: cc.value.trim(),
                 subject,
-                body: content,
+                body: replyMeta
+                    ? window.MatchSys.buildQuotedReplyBody(content, replyMeta)
+                    : content,
                 attachments: attachmentsPayload
             };
             if (mailType !== null) {

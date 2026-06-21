@@ -74,6 +74,41 @@
         localStorage.removeItem(key);
     };
 
+    const ORIGINAL_MESSAGE_SEPARATOR = "---------- Original Message ----------";
+
+    MatchSys.buildQuotedReplyBody = function (replyBody, originalMail) {
+        const content = String(replyBody == null ? "" : replyBody)
+            .replace(/\r\n?/g, "\n")
+            .trimEnd();
+        if (!originalMail || content.includes(ORIGINAL_MESSAGE_SEPARATOR)) {
+            return content;
+        }
+
+        const from = String(originalMail.from || originalMail.address || "").trim();
+        const date = String(originalMail.date || originalMail.time || "").trim();
+        const subject = String(
+            originalMail.subject || originalMail.title || originalMail.name || ""
+        ).trim();
+        const originalBody = String(originalMail.body || originalMail.detail || "")
+            .replace(/\r\n?/g, "\n")
+            .trimEnd();
+        const quotedBody = originalBody
+            ? originalBody.split("\n").map((line) => line ? `> ${line}` : ">").join("\n")
+            : ">";
+
+        return [
+            content,
+            "",
+            "",
+            ORIGINAL_MESSAGE_SEPARATOR,
+            `From: ${from}`,
+            `Date: ${date}`,
+            `Subject: ${subject}`,
+            "",
+            quotedBody,
+        ].join("\n");
+    };
+
     window.getAppLocale = function () {
         const i18n = getI18n();
         return i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN";

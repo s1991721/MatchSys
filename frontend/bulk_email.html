@@ -192,6 +192,10 @@
         "1": "direct_technician",
         "2": "direct_project",
     };
+    const directMailContentEndpoints = {
+        "1": "/api/direct-technician-mail-content",
+        "2": "/api/direct-project-mail-content",
+    };
     let customerPagination = {
         page: 1,
         totalPages: 1,
@@ -226,13 +230,26 @@
             });
         }
         try {
-            const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
-                method: "GET",
-                cache: forceRefresh ? "no-store" : "default",
-            }, {
+            const requestUrl = applyToBody
+                ? directMailContentEndpoints[mailType]
+                : `/api/mail-templates/${encodeURIComponent(templateName)}`;
+            const contentPayload = mailType === "1"
+                ? {person_intro: String(prefill?.intro || "")}
+                : {};
+            const requestOptions = applyToBody
+                ? {
+                    body: JSON.stringify(contentPayload),
+                }
+                : {
+                    method: "GET",
+                    cache: forceRefresh ? "no-store" : "default",
+                };
+            const payload = await window.requestJson(requestUrl, requestOptions, {
                 fallbackMessage: t("customer.bulk.template.alert.load_failed"),
             });
-            const template = typeof payload.data?.template === "string" ? payload.data.template : "";
+            const template = applyToBody
+                ? (typeof payload.data?.body === "string" ? payload.data.body : "")
+                : (typeof payload.data?.template === "string" ? payload.data.template : "");
             if (applyToBody && requestSequence === templateBodyRequestSequence && String(bulkMailType?.value || "") === mailType) {
                 bulkMailBody.value = template;
             }
@@ -292,8 +309,8 @@
             }, {
                 fallbackMessage: t("customer.bulk.template.alert.save_failed"),
             });
-            bulkMailBody.value = template;
             bulkMailTemplateDialog.close();
+            await loadDirectMailTemplate({applyToBody: true, forceRefresh: true});
         } catch (error) {
             console.error("save direct mail template failed", error);
             alert(error.message || t("customer.bulk.template.alert.save_failed"));

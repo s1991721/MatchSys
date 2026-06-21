@@ -753,6 +753,49 @@ def extract_technician_detail(request):
 
 @csrf_exempt
 @require_POST
+def direct_technician_mail_content(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return api_error(ErrorCode.INVALID_JSON)
+
+    template = _get_mail_template("direct_technician")
+    person_intro = str(payload.get("person_intro") or "").strip()
+    body = template.replace("{person_intro}", person_intro)
+
+    return api_success(data={
+        "body": body,
+        "template_name": "direct_technician",
+    })
+
+
+@csrf_exempt
+@require_POST
+def direct_project_mail_content(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return api_error(ErrorCode.INVALID_JSON)
+
+    body = _get_mail_template("direct_project")
+    return api_success(data={
+        "body": body,
+        "template_name": "direct_project",
+    })
+
+
+@csrf_exempt
+@require_POST
 # 送信（接口入口在 views，SMTP 细节在 mailTool）
 def send_mail(request):
     login_id, error = require_login(request)

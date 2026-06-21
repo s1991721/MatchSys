@@ -65,6 +65,17 @@ SET settings = JSON_SET(
 WHERE name = 'mail-template'
   AND deleted_at IS NULL;
 
+UPDATE sys_settings
+SET settings = JSON_INSERT(
+        settings,
+        '$.direct_technician',
+        'いつもお世話になっております。\n\nこの度、下記の技術者をご紹介させていただきます。\n\n**************************************\n{person_intro}\n**************************************\n\nご興味をお持ちいただけましたら、面談の機会をいただけますと幸いです。\nご検討のほど、何卒よろしくお願い申し上げます。',
+        '$.direct_project',
+        ''
+    )
+WHERE name = 'mail-template'
+  AND deleted_at IS NULL;
+
 CREATE TABLE IF NOT EXISTS mail_send_tasks
 (
     id                  CHAR(32)      NOT NULL PRIMARY KEY COMMENT '发送任务ID',

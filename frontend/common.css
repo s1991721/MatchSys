@@ -2881,6 +2881,46 @@ svg {
 .match-page .match-person-checkbox {
   flex: 0 0 16px;
 }
+.match-page .match-result-list-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.match-page .match-result-list-header h2 {
+  margin: 0;
+  font: inherit;
+}
+.match-page .match-result-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  color: #435065;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.match-page .match-result-select-all input,
+.match-page .match-result-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.match-page .match-result-select-all input:disabled {
+  cursor: not-allowed;
+}
+.match-page .match-result-selected-count {
+  min-width: 72px;
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+.match-page .match-result-checkbox {
+  flex: 0 0 16px;
+}
 .match-page .search-row,
 .songxin-upload-bar,
 .songxinhistory-search-row {

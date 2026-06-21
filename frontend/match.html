@@ -98,7 +98,14 @@
         <section class="c-card c-card-pad">
             <div class="c-stack">
                 <div>
-                    <h2 class="title c-panel-title" id="list-title" data-i18n="match.jobs">案件列表</h2>
+                    <div class="title c-panel-title match-result-list-header">
+                        <h2 id="list-title" data-i18n="match.jobs">案件列表</h2>
+                        <label class="match-result-select-all" for="result-select-all">
+                            <input id="result-select-all" type="checkbox">
+                            <span data-i18n="match.select_all_results">全选</span>
+                        </label>
+                        <span id="result-selected-count" class="match-result-selected-count"></span>
+                    </div>
                     <div class="filters c-filter-grid">
                         <div class="filter-group c-filter-group">
                             <span class="filter-label c-filter-label" data-i18n="common.field.time">时间</span>
@@ -177,6 +184,7 @@
 <script>
     const i18n = window.I18N;
     const t = (key, fallback) => (i18n ? i18n.t(key) : (fallback || key));
+    const format = (key, vars) => (i18n ? i18n.format(key, vars) : key);
 
     const list = document.getElementById('case-list');
     const detail = document.getElementById('case-detail');
@@ -188,6 +196,8 @@
     const resetButtons = Array.from(document.querySelectorAll('.js-reset'));
     const searchButtons = Array.from(document.querySelectorAll('.js-search'));
     const listTitle = document.getElementById('list-title');
+    const resultSelectAll = document.getElementById('result-select-all');
+    const resultSelectedCount = document.getElementById('result-selected-count');
     const detailTitle = document.getElementById('detail-title');
     const detailFeedbackControl = document.getElementById('detail-feedback-control');
     const detailFeedbackButton = document.getElementById('detail-feedback-btn');
@@ -216,6 +226,7 @@
     let openFeedbackId = '';
     let detailFeedbackOpen = false;
     let currentItems = [];
+    const selectedResultIds = new Set();
     const detailFeedbackSubmitted = {
         people: new Set(),
         cases: new Set()
@@ -225,6 +236,26 @@
         keyword_missing: 3
     };
     const sanitize = window.escapeHtml;
+
+    const updateResultSelectionUI = () => {
+        const availableIds = currentItems.map((item) => String(item.id || '')).filter(Boolean);
+        const selectedCount = availableIds.filter((id) => selectedResultIds.has(id)).length;
+        resultSelectedCount.textContent = selectedCount
+            ? format('match.selected_results_count', {count: selectedCount})
+            : '';
+        resultSelectAll.disabled = availableIds.length === 0;
+        resultSelectAll.checked = availableIds.length > 0 && selectedCount === availableIds.length;
+        resultSelectAll.indeterminate = selectedCount > 0 && selectedCount < availableIds.length;
+        sendBtn.disabled = selectedCount === 0;
+        sendBtn.textContent = selectedCount
+            ? format('match.process_selected_results', {count: selectedCount})
+            : t('match.send');
+    };
+
+    const clearResultSelection = () => {
+        selectedResultIds.clear();
+        updateResultSelectionUI();
+    };
 
     viewButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -361,6 +392,19 @@
     };
 
     list.addEventListener('click', async (e) => {
+        const select = e.target.closest('[data-result-select]');
+        if (select) {
+            e.stopImmediatePropagation();
+            const itemId = String(select.dataset.resultId || '');
+            if (select.checked) {
+                selectedResultIds.add(itemId);
+            } else {
+                selectedResultIds.delete(itemId);
+            }
+            updateResultSelectionUI();
+            return;
+        }
+
         const toggleBtn = e.target.closest('[data-feedback-toggle]');
         if (toggleBtn) {
             e.stopPropagation();
@@ -416,6 +460,19 @@
         updateDetailFeedbackState();
     });
 
+    resultSelectAll.addEventListener('change', () => {
+        currentItems.forEach((item) => {
+            const id = String(item.id || '');
+            if (!id) return;
+            if (resultSelectAll.checked) {
+                selectedResultIds.add(id);
+            } else {
+                selectedResultIds.delete(id);
+            }
+        });
+        renderList(currentItems, {preserveSelection: true});
+    });
+
     const getActiveView = () => {
         const active = document.querySelector('.match-view:not(.hidden)');
         return active ? active.dataset.view : 'people';
@@ -457,18 +514,12 @@
 
     sendBtn.addEventListener('click', async () => {
         try {
-            const activeItem = list?.querySelector('.item.active');
-            if (!activeItem) {
+            const view = getActiveView();
+            const selectedItems = currentItems.filter((item) => selectedResultIds.has(String(item.id || '')));
+            if (!selectedItems.length) {
                 alert(t('match.send_tip'));
                 return;
             }
-
-            const view = getActiveView();
-            const itemData = parseDatasetJSON(activeItem, 'item') || {};
-            const itemTitle = itemData.title || activeItem.querySelector('.item-title')?.textContent.trim() || '';
-            const itemAddress = itemData.address || '';
-            const itemDetail = itemData.detail || activeItem.dataset.detail || '';
-            const itemDate = itemData.date || activeItem.querySelector('.item-time')?.textContent.trim() || '';
 
             let jobPayload = {};
             let personPayload = {};
@@ -477,15 +528,6 @@
 
             if (view === 'people') {
                 const nationLabel = nationSelect ? nationSelect.options[nationSelect.selectedIndex]?.textContent.trim() : '';
-
-                jobPayload = {
-                    id: itemData.id || activeItem.dataset.id || '',
-                    title: itemTitle,
-                    address: itemAddress,
-                    cc: itemData.cc || '',
-                    detail: itemDetail,
-                    time: itemDate
-                };
 
                 personPayload = {
                     country: nationSelect ? nationSelect.value.trim() : '',
@@ -524,29 +566,36 @@
                     detail: rawCaseInfo,
                 };
 
-                personPayload = {
-                    id: itemData.id || activeItem.dataset.id || '',
-                    name: itemTitle,
-                    subject: itemTitle,
-                    address: itemAddress,
-                    cc: itemData.cc || '',
-                    detail: itemDetail,
-                    time: itemDate
-                };
-
                 mailType = 2;
             }
 
+            const targets = selectedItems.map((item) => ({
+                id: item.id || '',
+                name: item.title || '',
+                title: item.title || '',
+                subject: item.subject || item.title || '',
+                address: item.address || '',
+                cc: item.cc || '',
+                detail: item.detail || item.body || '',
+                time: item.date || '',
+                thread_id: item.thread_id || '',
+                message_id_header: item.message_id_header || '',
+                references_header: item.references_header || ''
+            }));
+
             const payload = {
+                scene: view,
                 job: jobPayload,
                 person: personPayload,
+                targets,
                 resume_attachment: resumeAttachment,
                 mail_type: mailType,
                 updatedAt: Date.now()
             };
 
             persistPageState();
-            window.MatchSys.writeJSONToLocalStorage('matchSelection', payload);
+            window.MatchSys.clearStoredKey('matchSelection');
+            window.MatchSys.writeJSONToSessionStorage('matchSelection', payload);
         } catch (err) {
             console.error(t('match.cache_failed') || '保存失败', err);
             alert(err?.message || t('match.cache_failed'));
@@ -567,7 +616,9 @@
                 i18n.apply();
             }
             renderResumeSource();
+            renderViewLabels();
             updateDetailFeedbackState();
+            updateResultSelectionUI();
         });
     }
 
@@ -679,6 +730,7 @@
 
     const removeItemFromCurrentList = (itemId) => {
         currentItems = currentItems.filter((item) => String(item.id) !== String(itemId));
+        selectedResultIds.delete(String(itemId));
         openFeedbackId = '';
         setDetailFeedbackOpen(false);
         renderList(currentItems);
@@ -699,6 +751,7 @@
             renderDetail(detail, view === 'cases' ? t('match.empty_person_detail') : t('match.empty_job_detail'));
             renderAttachments([]);
             updateDetailFeedbackState();
+            updateResultSelectionUI();
             return;
         }
 
@@ -719,6 +772,14 @@
 
             const main = document.createElement('div');
             main.className = 'item-main';
+
+            const select = document.createElement('input');
+            select.type = 'checkbox';
+            select.className = 'match-result-checkbox';
+            select.dataset.resultSelect = '1';
+            select.dataset.resultId = String(itemId);
+            select.checked = selectedResultIds.has(String(itemId));
+            select.setAttribute('aria-label', `${item.title || t('match.untitled')} ${t('match.select_result')}`);
 
             const title = document.createElement('div');
             title.className = 'item-title';
@@ -770,6 +831,7 @@
 
             main.appendChild(title);
             main.appendChild(desc);
+            li.appendChild(select);
             li.appendChild(main);
             feedbackControl.appendChild(time);
             feedbackControl.appendChild(feedbackButton);
@@ -785,10 +847,13 @@
             renderAttachments(parseDatasetJSON(active, 'files') || []);
         }
         updateDetailFeedbackState();
+        updateResultSelectionUI();
         scheduleFeedbackPlacement(list);
     };
 
     const setLoading = (message) => {
+        selectedResultIds.clear();
+        currentItems = [];
         list.innerHTML = '';
         const empty = document.createElement('li');
         empty.className = 'empty';
@@ -797,6 +862,7 @@
         renderDetail(detail, '');
         renderAttachments([]);
         updateDetailFeedbackState();
+        updateResultSelectionUI();
     };
 
     const scheduleFeedbackControlPlacement = (control, boundaryEl = null) => {
@@ -948,6 +1014,12 @@
         }
     };
 
+    const renderViewLabels = () => {
+        const view = getActiveView();
+        listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
+        detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.case_detail');
+    };
+
     const setView = (view) => {
         views.forEach(section => {
             section.classList.toggle('hidden', section.dataset.view !== view);
@@ -958,8 +1030,8 @@
             btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
         });
 
-        listTitle.textContent = view === 'cases' ? t('match.people') : t('match.jobs');
-        detailTitle.textContent = view === 'cases' ? t('match.person_detail') : t('match.case_detail');
+        renderViewLabels();
+        clearResultSelection();
         updateDetailFeedbackState();
     };
 

@@ -23,7 +23,22 @@
                                data-i18n-placeholder="customer.bulk.subject_placeholder"/>
                     </div>
                     <div class="form-item">
-                        <div class="form-label" data-i18n="customer.bulk.mail_type">送信类型</div>
+                        <div class="bulk-mail-type-head">
+                            <div class="form-label" data-i18n="customer.bulk.mail_type">送信类型</div>
+                            <button
+                                    id="bulk-mail-template-edit"
+                                    class="songxin-template-trigger hidden"
+                                    type="button"
+                                    aria-label="编辑直接送信模板"
+                                    data-i18n-aria="customer.bulk.template.action.edit"
+                                    title="编辑直接送信模板"
+                                    data-i18n-title="customer.bulk.template.action.edit"
+                            >
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M6 2h8l5 5v4.25a1 1 0 1 1-2 0V8h-4V4H6v16h5.25a1 1 0 1 1 0 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm9 3.41V7h1.59L15 5.41zm-2.04 9.33 4.83-4.83 2.12 2.12-4.83 4.83-2.54.42.42-2.54zm6.24-6.24.71-.71a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1 0 1.41l-.71.71-2.12-2.12z"/>
+                                </svg>
+                            </button>
+                        </div>
                         <select class="input" id="bulk-mail-type">
                             <option value="-1" data-i18n="customer.bulk.mail_type.other">其他</option>
                             <option value="0">BP</option>
@@ -101,6 +116,29 @@
         </div>
     </section>
 </div>
+
+<dialog id="bulk-mail-template-dialog" class="c-dialog songxin-template-dialog">
+    <div class="c-dialog-header">
+        <div class="songxin-template-header-text">
+            <h3 data-i18n="customer.bulk.template.dialog.title">编辑直接送信模板</h3>
+            <p id="bulk-mail-template-subtitle" class="c-card-subtitle songxin-template-subtitle"></p>
+        </div>
+        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
+    </div>
+    <div class="c-dialog-body">
+        <textarea
+                id="bulk-mail-template-content"
+                class="songxin-template-textarea"
+                rows="14"
+                placeholder="请输入直接送信模板"
+                data-i18n-placeholder="customer.bulk.template.placeholder"
+        ></textarea>
+    </div>
+    <div class="c-dialog-actions">
+        <button class="c-btn c-btn-ghost" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+        <button id="bulk-mail-template-save" class="c-btn c-btn-primary" type="button" data-i18n="common.save">保存</button>
+    </div>
+</dialog>
 <script src="i18n.js"></script>
 <script src="error_code.js"></script>
 <script src="common.js"></script>
@@ -129,6 +167,11 @@
     const bulkRecipientPagination = document.getElementById("bulk-recipient-pagination");
     const bulkRecipientPaginationPages = document.getElementById("bulk-recipient-pagination-pages");
     const bulkRecipientPaginationSummary = document.getElementById("bulk-recipient-pagination-summary");
+    const bulkMailTemplateEdit = document.getElementById("bulk-mail-template-edit");
+    const bulkMailTemplateDialog = document.getElementById("bulk-mail-template-dialog");
+    const bulkMailTemplateSubtitle = document.getElementById("bulk-mail-template-subtitle");
+    const bulkMailTemplateContent = document.getElementById("bulk-mail-template-content");
+    const bulkMailTemplateSave = document.getElementById("bulk-mail-template-save");
 
     const CONTEXT_KEY = "bulkMailContext";
     const PREFILL_KEY = "bulkMailPrefill";
@@ -144,6 +187,11 @@
     let isSelectingAllRecipients = false;
     let allRecipientSelectionKeySet = new Set();
     let isAllRecipientScopeSelected = false;
+    let templateBodyRequestSequence = 0;
+    const directMailTemplateNames = {
+        "1": "direct_technician",
+        "2": "direct_project",
+    };
     let customerPagination = {
         page: 1,
         totalPages: 1,
@@ -157,6 +205,107 @@
             timer = window.setTimeout(() => fn(...args), delay);
         };
     };
+
+    const getDirectTemplateName = (mailType = bulkMailType?.value) => directMailTemplateNames[String(mailType)] || "";
+
+    const updateTemplateEditState = () => {
+        if (!bulkMailTemplateEdit) return;
+        bulkMailTemplateEdit.classList.toggle("hidden", !getDirectTemplateName());
+    };
+
+    const loadDirectMailTemplate = async ({applyToBody = false, forceRefresh = false} = {}) => {
+        const templateName = getDirectTemplateName();
+        const mailType = String(bulkMailType?.value || "");
+        const requestSequence = applyToBody ? ++templateBodyRequestSequence : 0;
+        if (!templateName) return "";
+        if (applyToBody) {
+            setBodyBusyState({
+                busy: true,
+                message: t("customer.bulk.template.status.loading"),
+                disableSend: true,
+            });
+        }
+        try {
+            const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
+                method: "GET",
+                cache: forceRefresh ? "no-store" : "default",
+            }, {
+                fallbackMessage: t("customer.bulk.template.alert.load_failed"),
+            });
+            const template = typeof payload.data?.template === "string" ? payload.data.template : "";
+            if (applyToBody && requestSequence === templateBodyRequestSequence && String(bulkMailType?.value || "") === mailType) {
+                bulkMailBody.value = template;
+            }
+            return template;
+        } finally {
+            if (applyToBody && requestSequence === templateBodyRequestSequence) {
+                setBodyBusyState({
+                    busy: false,
+                    message: t("customer.bulk.status.body_processing"),
+                    disableSend: false,
+                });
+            }
+        }
+    };
+
+    const renderDirectTemplateSubtitle = () => {
+        if (!bulkMailTemplateSubtitle) return;
+        bulkMailTemplateSubtitle.textContent = String(bulkMailType?.value) === "1"
+            ? t("customer.bulk.template.subtitle.technician")
+            : t("customer.bulk.template.subtitle.project");
+    };
+
+    bulkMailType.addEventListener("change", async () => {
+        updateTemplateEditState();
+        if (!getDirectTemplateName()) return;
+        try {
+            await loadDirectMailTemplate({applyToBody: true});
+        } catch (error) {
+            console.error("load direct mail template failed", error);
+            alert(error.message || t("customer.bulk.template.alert.load_failed"));
+        }
+    });
+
+    bulkMailTemplateEdit.addEventListener("click", async () => {
+        if (!getDirectTemplateName()) return;
+        bulkMailTemplateEdit.disabled = true;
+        try {
+            bulkMailTemplateContent.value = await loadDirectMailTemplate({forceRefresh: true});
+            renderDirectTemplateSubtitle();
+            bulkMailTemplateDialog.showModal();
+        } catch (error) {
+            console.error("load direct mail template failed", error);
+            alert(error.message || t("customer.bulk.template.alert.load_failed"));
+        } finally {
+            bulkMailTemplateEdit.disabled = false;
+        }
+    });
+
+    bulkMailTemplateSave.addEventListener("click", async () => {
+        const templateName = getDirectTemplateName();
+        if (!templateName) return;
+        bulkMailTemplateSave.disabled = true;
+        try {
+            const template = String(bulkMailTemplateContent.value || "").replace(/\r\n/g, "\n");
+            await window.requestJson(`/api/mail-templates/${encodeURIComponent(templateName)}`, {
+                body: JSON.stringify({template}),
+            }, {
+                fallbackMessage: t("customer.bulk.template.alert.save_failed"),
+            });
+            bulkMailBody.value = template;
+            bulkMailTemplateDialog.close();
+        } catch (error) {
+            console.error("save direct mail template failed", error);
+            alert(error.message || t("customer.bulk.template.alert.save_failed"));
+        } finally {
+            bulkMailTemplateSave.disabled = false;
+            bulkMailBody.focus();
+        }
+    });
+
+    if (window.initDialogCloseBehavior) {
+        window.initDialogCloseBehavior({dialogs: [bulkMailTemplateDialog]});
+    }
 
     const getRecipientFilterKeyword = () => String(bulkRecipientFilter ? bulkRecipientFilter.value.trim() : "");
 
@@ -714,6 +863,7 @@
             if (bulkMailType) bulkMailType.value = prefill.mailType || "-1";
         }
         bulkAttachmentFile.value = "";
+        updateTemplateEditState();
     };
 
     const renderAttachmentSource = () => {
@@ -745,71 +895,30 @@
         }).join("");
     };
 
-    const enrichPrefillFromDetail = async () => {
-        if (!prefill) return;
-        const extractApiBySource = {
-            bpmatch: "/api/extract-project-detail",
-            people: "/api/extract-technician-detail",
-        };
-        const extractApi = extractApiBySource[prefill.source];
-        if (!extractApi) return;
-        const sourceText = prefill.source === "people"
-            ? String(prefill.intro || "").trim()
-            : String(prefill.body || "").trim();
-        if (!sourceText) return;
-        const requestBody = prefill.source === "people"
-            ? {
-                body: sourceText,
-            }
-            : {
-                selection: {
-                    job: {
-                        detail: sourceText,
-                    },
-                },
-            };
-        setBodyBusyState({
-            busy: true,
-            message: t("customer.bulk.status.body_processing"),
-            disableSend: true,
-        });
-        try {
-            const payload = await window.requestJson(extractApi, {
-                body: JSON.stringify(requestBody),
-            });
-            if (!payload.success) return;
-            const formatted = String(payload.data?.body || "").trim();
-            if (!formatted) return;
-            prefill.body = formatted;
-            applyPrefillToForm();
-        } catch (error) {
-            console.error("extract prefill detail failed", error);
-        } finally {
-            setBodyBusyState({
-                busy: false,
-                message: t("customer.bulk.status.body_processing"),
-                disableSend: false,
-            });
-        }
-    };
-
     applyContextAndPrefill();
 
-    loadCustomers(1)
-        .then(() => {
-            applyPrefillToForm();
-            renderAttachmentSource();
-        })
-        .catch((error) => {
+    const initializeBulkMailPage = async () => {
+        try {
+            await loadCustomers(1);
+        } catch (error) {
             console.error("load customers failed", error);
             recipientSourceItems = [];
             renderFilteredRecipients();
             setRecipientPaginationVisible(false);
-            applyPrefillToForm();
-            renderAttachmentSource();
-        });
+        }
+        applyPrefillToForm();
+        renderAttachmentSource();
+        if (getDirectTemplateName()) {
+            try {
+                await loadDirectMailTemplate({applyToBody: true});
+            } catch (error) {
+                console.error("load direct mail template failed", error);
+                alert(error.message || t("customer.bulk.template.alert.load_failed"));
+            }
+        }
+    };
 
-    enrichPrefillFromDetail();
+    initializeBulkMailPage();
 </script>
 </body>
 </html>

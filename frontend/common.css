@@ -3619,6 +3619,17 @@ body.notfound-page { margin: 0; font-family: "PingFang SC", "Hiragino Sans GB", 
             align-items: flex-end;
         }
 
+        .bulk-email-page .bulk-mail-type-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .bulk-email-page .bulk-mail-type-head .form-label {
+            margin-bottom: 0;
+        }
+
         .bulk-email-page .bulk-mail-footer {
             display: grid;
             grid-template-columns: minmax(0, 1fr) auto;

@@ -74,6 +74,41 @@
         localStorage.removeItem(key);
     };
 
+    const ORIGINAL_MESSAGE_SEPARATOR = "---------- Original Message ----------";
+
+    MatchSys.buildQuotedReplyBody = function (replyBody, originalMail) {
+        const content = String(replyBody == null ? "" : replyBody)
+            .replace(/\r\n?/g, "\n")
+            .trimEnd();
+        if (!originalMail || content.includes(ORIGINAL_MESSAGE_SEPARATOR)) {
+            return content;
+        }
+
+        const from = String(originalMail.from || originalMail.address || "").trim();
+        const date = String(originalMail.date || originalMail.time || "").trim();
+        const subject = String(
+            originalMail.subject || originalMail.title || originalMail.name || ""
+        ).trim();
+        const originalBody = String(originalMail.body || originalMail.detail || "")
+            .replace(/\r\n?/g, "\n")
+            .trimEnd();
+        const quotedBody = originalBody
+            ? originalBody.split("\n").map((line) => line ? `> ${line}` : ">").join("\n")
+            : ">";
+
+        return [
+            content,
+            "",
+            "",
+            ORIGINAL_MESSAGE_SEPARATOR,
+            `From: ${from}`,
+            `Date: ${date}`,
+            `Subject: ${subject}`,
+            "",
+            quotedBody,
+        ].join("\n");
+    };
+
     window.getAppLocale = function () {
         const i18n = getI18n();
         return i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN";
@@ -420,42 +455,52 @@
     }
     window.addEventListener("i18n:change", initLocalizedFileInputs);
 
-    window.startMailUnreadPolling = function (options = {}) {
+    window.startTopbarBadgePolling = function (options = {}) {
         const intervalMs = Math.max(60 * 1000, Number(options.intervalMs || 5 * 60 * 1000));
         const onData = typeof options.onData === "function" ? options.onData : function () {};
         const autoStart = options.autoStart !== false;
+        let pendingTick = null;
 
-        if (window.__mailUnreadPollingTimer) {
-            clearInterval(window.__mailUnreadPollingTimer);
-            window.__mailUnreadPollingTimer = null;
+        if (window.__topbarBadgePollingTimer) {
+            clearInterval(window.__topbarBadgePollingTimer);
+            window.__topbarBadgePollingTimer = null;
         }
 
-        const tick = async () => {
-            try {
-                const payload = await window.requestJson("/api/my-mails/unread-count", {
-                    method: "GET",
-                    cache: "no-store",
-                });
-                if (!payload || payload.success === false) {
-                    onData({ unread_count: 0, has_mailbox: false, error: true });
-                    return;
+        const tick = () => {
+            if (pendingTick) return pendingTick;
+            pendingTick = (async () => {
+                try {
+                    const payload = await window.requestJson("/api/home/topbar-badges", {
+                        method: "GET",
+                        cache: "no-store",
+                    });
+                    if (!payload || payload.success === false) {
+                        onData({ badges: {}, error: true });
+                        return;
+                    }
+                    onData(payload.data || {});
+                } catch (error) {
+                    onData({ badges: {}, error: true });
                 }
-                onData(payload.data || {});
-            } catch (error) {
-                onData({ unread_count: 0, has_mailbox: false, error: true });
-            }
+            })().finally(() => {
+                pendingTick = null;
+            });
+            return pendingTick;
         };
 
+        // 手动刷新复用轮询请求，不改变现有轮询周期。
+        window.refreshTopbarBadges = tick;
+
         const start = () => {
-            if (window.__mailUnreadPollingTimer) return;
+            if (window.__topbarBadgePollingTimer) return;
             tick();
-            window.__mailUnreadPollingTimer = setInterval(tick, intervalMs);
+            window.__topbarBadgePollingTimer = setInterval(tick, intervalMs);
         };
 
         const stop = () => {
-            if (!window.__mailUnreadPollingTimer) return;
-            clearInterval(window.__mailUnreadPollingTimer);
-            window.__mailUnreadPollingTimer = null;
+            if (!window.__topbarBadgePollingTimer) return;
+            clearInterval(window.__topbarBadgePollingTimer);
+            window.__topbarBadgePollingTimer = null;
         };
 
         if (autoStart) {

@@ -2,11 +2,12 @@ import csv
 import json
 import threading
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
 from io import StringIO
 from urllib.parse import quote
 
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -21,17 +22,26 @@ from . import llmsTool
 from .gmailTool import GmailTool
 from .mailTool import (
     MailToolError,
-    send_bulk_mail_by_login,
+    queue_bulk_mail_by_login,
+    queue_mail_by_login,
     send_mail_by_login,
     ensure_send_config_for_login,
     list_my_mails_from_db,
     mark_my_mail_as_read,
     query_my_mails,
-    count_unread_mails_from_db,
     sync_my_mails,
     get_my_mail_detail_from_db,
 )
-from .models import SentEmailLog, MailProjectInfo, MailTechnicianInfo, WrongMailInfo, MyMail, SavedMailInfo
+from .mail.sender import _consume_mail_send_tasks
+from .models import (
+    MailProjectInfo,
+    MailSendTask,
+    MailTechnicianInfo,
+    MyMail,
+    SavedMailInfo,
+    SentEmailLog,
+    WrongMailInfo,
+)
 
 
 def _mark_my_mail_as_read_async(login_id, mail_id):
@@ -212,6 +222,7 @@ def mail_projects_api(request):
 # 获取案件匹配的技术者
 def mail_project_match_api(request):
     project_id = (request.GET.get("id") or "").strip()
+    strict_price = request.GET.get("strict_price") == "true"
 
     if not project_id:
         return api_error(ErrorCode.MATCH_ID_REQUIRED)
@@ -224,6 +235,10 @@ def mail_project_match_api(request):
     project_skills = _normalize_skills(project.skills)
     project_skill_set = {skill.lower() for skill in project_skills}
     tech_queryset = MailTechnicianInfo.objects.filter(country=project.country)
+    if strict_price and project.price is not None:
+        tech_queryset = tech_queryset.filter(
+            Q(price__lt=project.price) | Q(price__isnull=True)
+        )
 
     scored_items = []
     for tech in tech_queryset:
@@ -493,6 +508,7 @@ def mail_project_search_api(request):
     sender = (payload.get("sender") or "").strip()
     date_range = (payload.get("date_range") or "all").strip().lower()
     intro = payload.get("intro") or ""
+    price = payload.get("price")
 
     parsed = {}
     if intro.strip():
@@ -512,6 +528,9 @@ def mail_project_search_api(request):
 
     if country:
         queryset = queryset.filter(country=country)
+
+    if price is not None:
+        queryset = queryset.filter(Q(price__gte=price) | Q(price__isnull=True))
 
     if sender:
         queryset = queryset.filter(address__icontains=sender)
@@ -571,6 +590,7 @@ def mail_project_search_api(request):
             "sender": sender,
             "date_range": date_range,
             "skills": input_skills,
+            "price": float(price) if price is not None else None,
         },
     }
     return api_success(data=payload)
@@ -587,6 +607,15 @@ def mail_technician_search_api(request):
     sender = (payload.get("sender") or "").strip()
     date_range = (payload.get("date_range") or "all").strip().lower()
     intro = payload.get("intro") or ""
+    raw_price = payload.get("price")
+    price = None
+    if raw_price not in (None, ""):
+        try:
+            price = Decimal(str(raw_price))
+        except (InvalidOperation, TypeError, ValueError):
+            return api_error(ErrorCode.INVALID_REQUEST, "Invalid price", status=400)
+        if not price.is_finite() or price < 0:
+            return api_error(ErrorCode.INVALID_REQUEST, "Invalid price", status=400)
 
     parsed = {}
     if intro.strip():
@@ -609,6 +638,9 @@ def mail_technician_search_api(request):
 
     if parsed_country:
         queryset = queryset.filter(country=parsed_country)
+
+    if price is not None:
+        queryset = queryset.filter(Q(price__lt=price) | Q(price__isnull=True))
 
     if sender:
         queryset = queryset.filter(address__icontains=sender)
@@ -669,6 +701,7 @@ def mail_technician_search_api(request):
             "date_range": date_range,
             "country": parsed_country or "",
             "skills": input_skills,
+            "price": float(price) if price is not None else None,
         },
     }
     return api_success(data=payload)
@@ -720,6 +753,51 @@ def extract_technician_detail(request):
 
 @csrf_exempt
 @require_POST
+def direct_technician_mail_content(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return api_error(ErrorCode.INVALID_JSON)
+
+    template = _get_mail_template("direct_technician")
+    person_intro = str(payload.get("person_intro") or "").strip()
+    body = template.replace("{person_intro}", person_intro)
+
+    return api_success(data={
+        "body": body,
+        "template_name": "direct_technician",
+    })
+
+
+@csrf_exempt
+@require_POST
+def direct_project_mail_content(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return api_error(ErrorCode.INVALID_JSON)
+
+    template = _get_mail_template("direct_project")
+    project_detail = str(payload.get("project_detail") or "").strip()
+    body = template.replace("{project_detail}", project_detail)
+    return api_success(data={
+        "body": body,
+        "template_name": "direct_project",
+    })
+
+
+@csrf_exempt
+@require_POST
 # 送信（接口入口在 views，SMTP 细节在 mailTool）
 def send_mail(request):
     login_id, error = require_login(request)
@@ -747,8 +825,27 @@ def send_bulk_mail(request):
     if error:
         return error
     try:
-        data = send_bulk_mail_by_login(login_id, payload)
-        return api_success(data=data)
+        data = queue_bulk_mail_by_login(login_id, payload)
+        return api_success(data=data, status=202)
+    except MailToolError as exc:
+        return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
+    except Exception as exc:
+        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
+
+
+@csrf_exempt
+@require_POST
+def queue_mail(request):
+    """创建单封发送任务；接口只确认入队，不等待实际发送结果。"""
+    login_id, error = require_login(request)
+    if error:
+        return error
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    try:
+        data = queue_mail_by_login(login_id, payload)
+        return api_success(data=data, status=202)
     except MailToolError as exc:
         return api_error(ErrorCode.EXTERNAL_GMAIL, exc.message, status=exc.status)
     except Exception as exc:
@@ -947,22 +1044,170 @@ def gmail_attachment_open_api(request, message_id, attachment_id):
 
 @csrf_exempt
 @require_GET
-# 我的邮件未读数（首页铃铛使用 DB 缓存统计）
-def my_mails_unread_count_api(request):
+# 首页顶部角标聚合
+def topbar_badges_api(request):
     login_id, error = require_login(request)
     if error:
         return error
-    try:
-        # 首页仅显示红点计数，若未配置邮箱则按 0 处理，避免顶部报错。
-        ensure_send_config_for_login(login_id)
-    except MailToolError:
-        return api_success(data={"unread_count": 0, "has_mailbox": False})
 
     try:
-        unread_count = count_unread_mails_from_db(login_id)
-        return api_success(data={"unread_count": int(unread_count), "has_mailbox": True})
+        return api_success(data={
+            "badges": {
+                "send_tasks": {
+                    "count": MailSendTask.objects.filter(created_by=login_id).count(),
+                },
+                "my_mails": {
+                    "count": MyMail.objects.filter(owner_id=login_id, is_unread=True).count(),
+                },
+            },
+        })
     except Exception as exc:
-        return api_error(ErrorCode.EXTERNAL_GMAIL, str(exc), status=500)
+        return api_error(ErrorCode.SERVER, str(exc), status=500)
+
+
+@csrf_exempt
+@require_GET
+# 顶部“发送任务”浮层：仅返回当前用户最新三条任务和任务总数
+def send_tasks(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    queryset = MailSendTask.objects.filter(created_by=login_id).order_by(
+        "-created_at", "-id"
+    )
+    total = queryset.count()
+    current_tz = timezone.get_current_timezone()
+    items = [
+        {
+            "id": task.id,
+            "title": task.subject or "(无标题)",
+            "time": timezone.localtime(task.created_at, current_tz).strftime(
+                "%Y-%m-%d %H:%M"
+            ),
+        }
+        for task in queryset[:3]
+    ]
+
+    return api_success(data={"items": items}, meta={"total": total})
+
+
+@csrf_exempt
+@require_GET
+# 发送任务页面：分页查询当前用户的发送任务
+def send_tasks_page(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    status = (request.GET.get("status") or "all").strip().lower()
+    queryset = MailSendTask.objects.filter(created_by=login_id)
+    if status == "failed":
+        queryset = queryset.exclude(error_message__isnull=True).exclude(error_message="")
+    elif status == "pending":
+        queryset = queryset.filter(error_message__isnull=True)
+    elif status != "all":
+        return api_error(ErrorCode.MATCH_MAIL_TYPE_INVALID)
+    queryset = queryset.order_by("-created_at", "-id")
+    tasks, total, page, page_size, total_pages = paginate_queryset(queryset, request)
+    current_tz = timezone.get_current_timezone()
+    items = [
+        {
+            "id": task.id,
+            "title": task.subject or "(无标题)",
+            "to": task.to_email or "",
+            "status": "failed" if task.error_message else "pending",
+            "time": timezone.localtime(task.created_at, current_tz).strftime(
+                "%Y-%m-%d %H:%M"
+            ),
+        }
+        for task in tasks
+    ]
+
+    return api_success(data={"items": items}, meta={
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+    })
+
+
+@csrf_exempt
+@require_GET
+def send_task_detail(request, task_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    try:
+        task = MailSendTask.objects.get(id=task_id, created_by=login_id)
+    except MailSendTask.DoesNotExist:
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND, status=404)
+
+    current_tz = timezone.get_current_timezone()
+    return api_success(data={
+        "id": task.id,
+        "title": task.subject or "(无标题)",
+        "to": task.to_email or "",
+        "cc": task.cc or "",
+        "content": task.body or "",
+        "attachments": [
+            attachment.get("filename", "") if isinstance(attachment, dict) else str(attachment)
+            for attachment in (task.attachments if isinstance(task.attachments, list) else [])
+        ],
+        "mail_type": task.mail_type,
+        "company_name": task.company_name or "",
+        "contact_name": task.contact_name or "",
+        "in_reply_to": task.in_reply_to or "",
+        "references": task.references or "",
+        "error_message": task.error_message or "",
+        "status": "failed" if task.error_message else "pending",
+        "time": timezone.localtime(task.created_at, current_tz).strftime("%Y-%m-%d %H:%M"),
+    })
+
+
+@csrf_exempt
+@require_POST
+def retry_send_task(request, task_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    task = (
+        MailSendTask.objects.filter(id=task_id, created_by=login_id)
+        .exclude(error_message__isnull=True)
+        .exclude(error_message="")
+        .first()
+    )
+    if task is None:
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND, status=404)
+
+    task.error_message = None
+    _consume_mail_send_tasks(login_id, [task])
+    if task.error_message:
+        return api_error(ErrorCode.EXTERNAL_GMAIL, task.error_message, status=500)
+
+    return api_success(data={"id": task.id})
+
+
+@csrf_exempt
+@require_POST
+def discard_send_task(request, task_id):
+    """Physically delete one failed send task owned by the current user."""
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    deleted_count, _ = (
+        MailSendTask.objects.filter(id=task_id, created_by=login_id)
+        .exclude(error_message__isnull=True)
+        .exclude(error_message="")
+        .delete()
+    )
+    if deleted_count == 0:
+        return api_error(ErrorCode.MATCH_MAIL_NOT_FOUND, status=404)
+
+    return api_success(data={"id": task_id})
 
 
 @csrf_exempt
@@ -1011,6 +1256,8 @@ def send_history(request):
                 ),
                 "content": log.body or "",
                 "attachments": attachments if isinstance(attachments, list) else [],
+                "in_reply_to": log.in_reply_to or "",
+                "references": log.references or "",
             }
         )
 

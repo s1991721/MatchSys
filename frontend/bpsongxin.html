@@ -19,6 +19,10 @@
     </div>
 </div>
 <div class="page page-wide songxin-page">
+    <div id="reply-queue-status" class="songxin-queue-status" hidden>
+        <span data-i18n="songxin.queue.label">连续回复</span>
+        <strong id="reply-remaining-count"></strong>
+    </div>
     <section class="songxin-grid c-grid-3">
         <div class="c-card c-card-pad songxin-original-card">
             <div class="c-card-title">案件原文</div>
@@ -92,12 +96,9 @@
                 </div>
             </div>
             <div class="songxin-send-actions">
-                <button id="btn-clear" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.clear">
-                    清空内容
-                </button>
                 <button id="btn-send" class="c-btn c-btn-primary" type="button" aria-label="发送"
                         data-i18n-aria="songxin.action.send">
-                    <span data-i18n="songxin.action.send">发送</span>
+                    <span id="btn-send-label" data-i18n="songxin.action.send">发送</span>
                     <span aria-hidden="true">➤</span>
                 </button>
             </div>
@@ -142,8 +143,10 @@
     const subjectInput = document.getElementById('subject');
     const cc = document.getElementById('cc');
     const preview = document.getElementById('preview');
-    const clearBtn = document.getElementById('btn-clear');
     const sendBtn = document.getElementById('btn-send');
+    const sendBtnLabel = document.getElementById('btn-send-label');
+    const replyQueueStatus = document.getElementById('reply-queue-status');
+    const replyRemainingCount = document.getElementById('reply-remaining-count');
     const uploadBtn = document.getElementById('btn-upload');
     const fileInput = document.getElementById('file-input');
     const attachmentList = document.getElementById('attachment-list');
@@ -174,7 +177,10 @@
     const templateName = 'anjian';
     let loadingTimer = null;
     let currentSelection = null;
+    let replyQueue = [];
+    let currentPerson = null;
     let templateCache = null;
+    let isSending = false;
 
     const normalizeMultiline = (text) => {
         if (typeof text !== 'string') return '';
@@ -258,7 +264,7 @@
             });
             templateCache = template;
             templateInfoDialog.close();
-            await analyzeByScene(currentSelection.job.detail);
+            await analyzeByScene(currentSelection.job.detail, currentPerson);
         } catch (err) {
             console.error('保存模板失败', err);
             alert(t('songxin.template.alert.save_failed'));
@@ -296,17 +302,6 @@
         // 使用 textContent 搭配 pre-line 确保换行正常展示
         preview.textContent = content;
     };
-
-    clearBtn.addEventListener('click', () => {
-        editor.value = '';
-        email.value = '';
-        subjectInput.value = '';
-        cc.value = '';
-        attachments.length = 0;
-        renderAttachments();
-        renderPreview();
-        editor.focus();
-    });
 
     editor.addEventListener('input', renderPreview);
 
@@ -357,6 +352,7 @@
     };
 
     sendBtn.addEventListener('click', async () => {
+        if (isSending) return;
         const target = email.value.trim();
         if (!target) {
             alert(t('songxin.alert.email_required'));
@@ -371,13 +367,18 @@
         }
 
         const selection = currentSelection;
-        const personMeta = selection?.person || null;
+        const personMeta = currentPerson || selection?.person || null;
         const rawMailType = selection?.mail_type;
         const mailType = Number.isFinite(Number(rawMailType))
             ? Number(rawMailType)
             : (isMatchFlow ? matchMailType : null);
 
-        setLoading(true, {title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub')});
+        isSending = true;
+        sendBtn.disabled = true;
+        setLoading(true, {
+            title: t('songxin.loading.queue_title'),
+            subtitle: t('songxin.loading.queue_sub')
+        });
         try {
             const attachmentsPayload = await Promise.all(
                 attachments.map(async (att) => ({
@@ -393,7 +394,9 @@
                 to: target,
                 cc: cc.value.trim(),
                 subject,
-                body: content,
+                body: personMeta
+                    ? window.MatchSys.buildQuotedReplyBody(content, personMeta)
+                    : content,
                 attachments: attachmentsPayload
             };
             if (mailType !== null) {
@@ -411,18 +414,27 @@
                 }
             }
 
-            await window.requestJson('/api/send-mail', {
+            await window.requestJson('/api/send-mail-task', {
                 body: JSON.stringify(payload)
             }, {
-                fallbackMessage: t('songxin.error.send_failed')
+                fallbackMessage: t('songxin.error.queue_failed')
             });
 
-            alert(t('songxin.alert.sent'));
-            window.navigateAppRoute('songxinhistory.html');
+            replyQueue.shift();
+            currentPerson = null;
+            if (replyQueue.length) {
+                await loadCurrentReply();
+            } else {
+                window.navigateAppRoute('bpmatch.html');
+            }
         } catch (err) {
-            console.error('发送邮件失败', err);
-            alert(format('songxin.alert.send_failed', {error: err.message || err}));
+            console.error('创建发送任务失败', err);
+            alert(format('songxin.alert.queue_failed', {
+                error: err.message || err
+            }));
         } finally {
+            isSending = false;
+            sendBtn.disabled = false;
             setLoading(false);
         }
     });
@@ -434,10 +446,11 @@
             }
             renderAttachments();
             renderPreview();
+            updateQueueStatus();
         });
     }
 
-    const analyzeByScene = async (jobText) => {
+    const analyzeByScene = async (jobText, expectedPerson = currentPerson) => {
         if (!jobText) return;
         setLoading(true, {title: t('songxin.loading.analyze_title'), subtitle: t('songxin.loading.analyze_sub')});
         try {
@@ -452,6 +465,7 @@
                 ? result.body.trim()
                 : (typeof result.data === 'string' ? result.data.trim() : '');
             const normalized = normalizeMultiline(formatted);
+            if (expectedPerson && expectedPerson !== currentPerson) return;
             editor.value = normalized || t('songxin.preview.unavailable');
             renderPreview();
         } catch (err) {
@@ -473,35 +487,68 @@
         }
     };
 
-    const applySelectionFromMatch = () => {
-        currentSelection = window.MatchSys.readJSONFromLocalStorage(selectionKey);
-        if (!currentSelection || !currentSelection.job || !currentSelection.person) return;
-
-        const person = currentSelection.person || {};
-
-        const personSubject = person.subject || person.title || person.name || '';
-        if (personSubject) {
-            subjectInput.value = personSubject.startsWith('Re:')
-                ? personSubject
-                : `Re: ${personSubject}`;
+    const updateQueueStatus = () => {
+        const remaining = replyQueue.length;
+        replyQueueStatus.hidden = !isMatchFlow || remaining === 0;
+        replyRemainingCount.textContent = format('songxin.queue.remaining', {count: remaining});
+        if (isMatchFlow) {
+            sendBtnLabel.removeAttribute('data-i18n');
+            sendBtnLabel.textContent = t('songxin.action.send_and_next');
+            sendBtn.removeAttribute('data-i18n-aria');
+            sendBtn.setAttribute('aria-label', t('songxin.action.send_and_next'));
         }
-
-        if (!email.value) {
-            const replyTo = person.address || '';
-            if (replyTo) {
-                email.value = replyTo;
-            }
-        }
-        if (!cc.value && person.cc) {
-            cc.value = String(person.cc || '').trim();
-        }
-
-        templateDialogSubtitle.textContent = t('songxin.template.subtitle.project');
     };
 
-    applySelectionFromMatch();
-    renderOriginal(currentSelection.job.detail, currentSelection.person.detail)
-    analyzeByScene(currentSelection.job.detail);
+    const loadCurrentReply = async () => {
+        currentPerson = replyQueue[0] || null;
+        if (!currentPerson) {
+            window.navigateAppRoute('songxinhistory.html');
+            return;
+        }
+
+        const person = currentPerson;
+        editor.value = '';
+        email.value = String(person.address || '').trim();
+        cc.value = String(person.cc || '').trim();
+        attachments.length = 0;
+        fileInput.value = '';
+        renderAttachments();
+        renderPreview();
+
+        const personSubject = person.subject || person.title || person.name || '';
+        subjectInput.value = personSubject
+            ? (personSubject.startsWith('Re:') ? personSubject : `Re: ${personSubject}`)
+            : '';
+
+        templateDialogSubtitle.textContent = t('songxin.template.subtitle.project');
+        renderOriginal(currentSelection.job.detail, person.detail);
+        updateQueueStatus();
+        await analyzeByScene(currentSelection.job.detail, person);
+    };
+
+    const applySelectionFromMatch = async () => {
+        currentSelection = window.MatchSys.readJSONFromSessionStorage(selectionKey);
+        window.MatchSys.clearStoredKey(selectionKey);
+        if (!currentSelection || !currentSelection.job) {
+            alert(t('songxin.queue.missing'));
+            window.navigateAppRoute('bpmatch.html');
+            return;
+        }
+
+        replyQueue = Array.isArray(currentSelection.persons)
+            ? currentSelection.persons.filter(Boolean)
+            : (currentSelection.person ? [currentSelection.person] : []);
+        if (!replyQueue.length) {
+            alert(t('songxin.queue.missing'));
+            window.navigateAppRoute('bpmatch.html');
+            return;
+        }
+        await loadCurrentReply();
+    };
+
+    if (isMatchFlow) {
+        applySelectionFromMatch();
+    }
 
 </script>
 </body>

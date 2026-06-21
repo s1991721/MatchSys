@@ -679,7 +679,9 @@
         const payload = {
           to,
           subject: subject || (composeMode === "forward" ? "转发邮件" : "回复邮件"),
-          body,
+          body: composeMode === "reply" && activeMail
+            ? window.MatchSys.buildQuotedReplyBody(body, activeMail)
+            : body,
           mail_type: -1,
         };
         // 带上回复链字段，便于对方邮箱客户端识别为同一会话线程。

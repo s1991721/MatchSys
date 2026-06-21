@@ -19,6 +19,10 @@
     </div>
 </div>
 <div class="page page-wide songxin-page">
+    <div id="reply-queue-status" class="songxin-queue-status" hidden>
+        <span data-i18n="songxin.queue.label">连续回复</span>
+        <strong id="reply-remaining-count"></strong>
+    </div>
     <section class="songxin-grid songxin-grid-half">
         <div class="songxin-editor-card c-card c-card-pad">
             <div class="songxin-card-head">
@@ -86,12 +90,9 @@
                 </div>
             </div>
             <div class="songxin-send-actions">
-                <button id="btn-clear" class="c-btn c-btn-ghost" type="button" data-i18n="songxin.action.clear">
-                    清空内容
-                </button>
                 <button id="btn-send" class="c-btn c-btn-primary" type="button" aria-label="发送"
                         data-i18n-aria="songxin.action.send">
-                    <span data-i18n="songxin.action.send">发送</span>
+                    <span id="btn-send-label" data-i18n="songxin.action.send">发送</span>
                     <span aria-hidden="true">➤</span>
                 </button>
             </div>
@@ -136,8 +137,10 @@
     const subjectInput = document.getElementById('subject');
     const cc = document.getElementById('cc');
     const preview = document.getElementById('preview');
-    const clearBtn = document.getElementById('btn-clear');
     const sendBtn = document.getElementById('btn-send');
+    const sendBtnLabel = document.getElementById('btn-send-label');
+    const replyQueueStatus = document.getElementById('reply-queue-status');
+    const replyRemainingCount = document.getElementById('reply-remaining-count');
     const uploadBtn = document.getElementById('btn-upload');
     const fileInput = document.getElementById('file-input');
     const attachmentList = document.getElementById('attachment-list');
@@ -160,12 +163,16 @@
     }
     const fetchWithAuth = window.fetchWithAuth;
     const attachments = [];
+    const selectionKey = 'matchSelection';
     const matchMailType = 2;
     const queryParams = new URLSearchParams(window.location.search);
     const isMatchFlow = queryParams.get('from') === 'match';
     let sceneParam = 'project';
     let loadingTimer = null;
     let currentSelection = null;
+    let replyQueue = [];
+    let currentTarget = null;
+    let isSending = false;
     const templateCache = {};
 
     const renderPreview = () => {
@@ -228,8 +235,8 @@
             });
             templateCache[templateName] = template;
             templateInfoDialog.close();
-            if (currentSelection) {
-                await analyzeByScene();
+            if (currentSelection && currentTarget) {
+                await analyzeByScene(currentTarget);
             }
         } catch (err) {
             console.error('保存模板失败', err);
@@ -241,13 +248,6 @@
     });
 
     editor.addEventListener('input', renderPreview);
-
-    clearBtn.addEventListener('click', () => {
-        email.value = '';
-        subjectInput.value = '';
-        cc.value = '';
-        attachments.length = 0;
-    });
 
     uploadBtn.addEventListener('click', () => fileInput.click());
 
@@ -291,6 +291,7 @@
     });
 
     sendBtn.addEventListener('click', async () => {
+        if (isSending) return;
         const target = email.value.trim();
         if (!target) {
             alert(t('songxin.alert.email_required'));
@@ -305,12 +306,14 @@
         }
 
         const rawMailType = currentSelection?.mail_type;
-        const personMeta = currentSelection?.person || null;
+        const replyMeta = currentTarget || null;
         const mailType = Number.isFinite(Number(rawMailType))
             ? Number(rawMailType)
             : (isMatchFlow ? matchMailType : null);
 
-        setLoading(true, {title: t('songxin.loading.sending_title'), subtitle: t('songxin.loading.sending_sub')});
+        isSending = true;
+        sendBtn.disabled = true;
+        setLoading(true, {title: t('songxin.loading.queue_title'), subtitle: t('songxin.loading.queue_sub')});
         try {
             const attachmentsPayload = await Promise.all(
                 attachments.map(async (att) => {
@@ -344,43 +347,58 @@
                 })
             );
 
-            const subject = subjectInput.value.trim();
+            const subject = subjectInput.value.trim()
+                || (content.split('\n').map((line) => line.trim()).find(Boolean) || t('songxin.subject.default')).slice(0, 60);
 
             const payload = {
                 to: target,
                 cc: cc.value.trim(),
                 subject,
-                body: content,
+                body: replyMeta
+                    ? window.MatchSys.buildQuotedReplyBody(content, replyMeta)
+                    : content,
                 attachments: attachmentsPayload
             };
             if (mailType !== null) {
                 payload.mail_type = mailType;
             }
 
-            if (personMeta) {
-                if (personMeta.thread_id) {
-                    payload.thread_id = personMeta.thread_id;
+            if (replyMeta) {
+                if (replyMeta.thread_id) {
+                    payload.thread_id = replyMeta.thread_id;
                 }
-                if (personMeta.message_id_header) {
-                    payload.in_reply_to = personMeta.message_id_header;
+                if (replyMeta.message_id_header) {
+                    payload.in_reply_to = replyMeta.message_id_header;
                 }
-                if (personMeta.references_header) {
-                    payload.references = personMeta.references_header;
+                if (replyMeta.references_header) {
+                    payload.references = replyMeta.references_header;
                 }
             }
 
-            await window.requestJson('/api/send-mail', {
+            await window.requestJson('/api/send-mail-task', {
                 body: JSON.stringify(payload)
             }, {
-                fallbackMessage: t('songxin.error.send_failed')
+                fallbackMessage: t('songxin.error.queue_failed')
             });
 
-            alert(t('songxin.alert.sent'));
-            window.navigateAppRoute('songxinhistory.html');
+            if (isMatchFlow) {
+                replyQueue.shift();
+                currentTarget = null;
+                if (replyQueue.length) {
+                    await loadCurrentReply();
+                } else {
+                    window.navigateAppRoute('match.html');
+                }
+            } else {
+                alert(t('songxin.alert.queued'));
+                window.navigateAppRoute('sendtask.html');
+            }
         } catch (err) {
-            console.error('发送邮件失败', err);
-            alert(format('songxin.alert.send_failed', {error: err.message || err}));
+            console.error('创建发送任务失败', err);
+            alert(format('songxin.alert.queue_failed', {error: err.message || err}));
         } finally {
+            isSending = false;
+            sendBtn.disabled = false;
             setLoading(false);
         }
     });
@@ -394,12 +412,15 @@
             renderTemplateSubtitle();
             renderAttachments();
             renderPreview();
+            updateQueueStatus();
         });
     }
 
     const readSelection = () => {
         try {
-            currentSelection = window.MatchSys.readJSONFromLocalStorage('matchSelection');
+            currentSelection = window.MatchSys.readJSONFromSessionStorage(selectionKey)
+                || window.MatchSys.readJSONFromLocalStorage(selectionKey);
+            window.MatchSys.clearStoredKey(selectionKey);
         } catch {
             currentSelection = null;
         }
@@ -435,9 +456,9 @@
 
         attachmentList.innerHTML = attachments.map((file, idx) => `
                     <div class="songxin-attachment-item" data-idx="${idx}">
-                        <div class="songxin-attachment-name">${file.name}</div>
+                        <div class="songxin-attachment-name">${window.escapeHtml(file.name)}</div>
                         <div class="songxin-attachment-meta">
-                            <span>${file.sizeLabel}</span>
+                            <span>${window.escapeHtml(file.sizeLabel)}</span>
                             <span class="songxin-remove-link" data-remove="${idx}">${t('common.remove')}</span>
                         </div>
                     </div>
@@ -459,28 +480,6 @@
             : t('songxin.template.subtitle.project');
     };
 
-    const applySelectionMailMeta = () => {
-        if (!currentSelection) return;
-        const targetMail = sceneParam === 'technician'
-            ? (currentSelection.job || {})
-            : (currentSelection.person || {});
-        const subject = (targetMail.subject || targetMail.title || targetMail.name || '').trim();
-        const replyTo = targetMail.address || '';
-        const replyCc = String(targetMail.cc || '').trim();
-
-        if (!subjectInput.value && subject) {
-            subjectInput.value = subject.startsWith('Re:')
-                ? subject
-                : `Re: ${subject}`;
-        }
-        if (!email.value && replyTo) {
-            email.value = replyTo;
-        }
-        if (!cc.value && replyCc) {
-            cc.value = replyCc;
-        }
-    };
-
     const normalizeMultiline = (text) => {
         if (typeof text !== 'string') return '';
         let clean = text
@@ -495,13 +494,7 @@
     };
 
     const getOriginalTextFromSelection = () => {
-        if (!currentSelection) return '';
-        const job = currentSelection.job || {};
-        const person = currentSelection.person || {};
-        if (sceneParam === 'project') {
-            return normalizeMultiline(person.detail || '');
-        }
-        return normalizeMultiline(job.detail || '');
+        return normalizeMultiline(currentTarget?.detail || '');
     };
 
     const renderOriginal = (text) => {
@@ -542,8 +535,8 @@
         loadingMask.setAttribute('aria-busy', 'false');
     };
 
-    const analyzeByScene = async () => {
-        if (!currentSelection) return;
+    const analyzeByScene = async (expectedTarget = currentTarget) => {
+        if (!currentSelection || !expectedTarget) return;
         const body = sceneParam === 'project'
             ? (currentSelection.job?.detail || '')
             : (currentSelection.person?.intro || currentSelection.person?.detail || '');
@@ -558,6 +551,7 @@
                 fallbackMessage: t('songxin.error.analyze_failed')
             });
 
+            if (expectedTarget !== currentTarget) return;
             applyRenderedResult(payload.data || {});
         } catch (err) {
             console.error('调用 extract_qiuren_detail 失败', err);
@@ -567,14 +561,84 @@
         }
     };
 
-    readSelection();
-    preloadResumeAttachment();
-    renderAttachments();
-    renderOriginalTitle();
-    renderTemplateSubtitle();
-    applySelectionMailMeta();
-    renderOriginal(getOriginalTextFromSelection());
-    analyzeByScene();
+    const updateQueueStatus = () => {
+        const remaining = replyQueue.length;
+        replyQueueStatus.hidden = !isMatchFlow || remaining === 0;
+        replyRemainingCount.textContent = format('songxin.queue.remaining', {count: remaining});
+        if (isMatchFlow) {
+            sendBtnLabel.removeAttribute('data-i18n');
+            sendBtnLabel.textContent = t('songxin.action.send_and_next_item');
+            sendBtn.removeAttribute('data-i18n-aria');
+            sendBtn.setAttribute('aria-label', t('songxin.action.send_and_next_item'));
+        }
+    };
+
+    const loadCurrentReply = async () => {
+        currentTarget = replyQueue[0] || null;
+        if (!currentTarget) {
+            window.navigateAppRoute('match.html');
+            return;
+        }
+
+        editor.value = '';
+        email.value = String(currentTarget.address || '').trim();
+        cc.value = String(currentTarget.cc || '').trim();
+        const targetSubject = String(currentTarget.subject || currentTarget.title || currentTarget.name || '').trim();
+        subjectInput.value = targetSubject
+            ? (/^Re:/i.test(targetSubject) ? targetSubject : `Re: ${targetSubject}`)
+            : '';
+
+        attachments.length = 0;
+        fileInput.value = '';
+        preloadResumeAttachment();
+        renderAttachments();
+        renderOriginalTitle();
+        renderTemplateSubtitle();
+        renderOriginal(getOriginalTextFromSelection());
+        renderPreview();
+        updateQueueStatus();
+        await analyzeByScene(currentTarget);
+    };
+
+    const applySelectionFromMatch = async () => {
+        readSelection();
+        if (!currentSelection) {
+            alert(t('songxin.queue.missing'));
+            window.navigateAppRoute('match.html');
+            return;
+        }
+
+        const legacyTarget = sceneParam === 'technician'
+            ? currentSelection.job
+            : currentSelection.person;
+        replyQueue = Array.isArray(currentSelection.targets)
+            ? currentSelection.targets.filter(Boolean)
+            : (legacyTarget ? [legacyTarget] : []);
+        if (!replyQueue.length) {
+            alert(t('songxin.queue.missing'));
+            window.navigateAppRoute('match.html');
+            return;
+        }
+        await loadCurrentReply();
+    };
+
+    if (isMatchFlow) {
+        applySelectionFromMatch();
+    } else {
+        readSelection();
+        const standaloneTarget = sceneParam === 'technician'
+            ? currentSelection?.job
+            : currentSelection?.person;
+        replyQueue = standaloneTarget ? [standaloneTarget] : [];
+        if (replyQueue.length) {
+            loadCurrentReply();
+        } else {
+            renderAttachments();
+            renderOriginalTitle();
+            renderTemplateSubtitle();
+            renderPreview();
+        }
+    }
 
 </script>
 </body>

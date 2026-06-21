@@ -50,14 +50,6 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#songxinhistory.html" data-src="songxinhistory.html" data-title="送信历史" title="送信历史" data-i18n-title="nav.send_history">
-            <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill="currentColor" d="M12 8a1 1 0 0 1 1 1v3.6l2.4 1.4a1 1 0 1 1-1 1.7l-3-1.8A1 1 0 0 1 11 13V9a1 1 0 0 1 1-1zm0-6a10 10 0 1 1-7.1 17.1 1 1 0 1 1 1.4-1.4A8 8 0 1 0 12 4a7.9 7.9 0 0 0-5.4 2.1H9a1 1 0 0 1 0 2H3V2a1 1 0 1 1 2 0v2.6A9.9 9.9 0 0 1 12 2z"/>
-            </svg>
-            <span class="nav-label" data-i18n="nav.send_history">送信历史</span>
-          </a>
-        </li>
-        <li class="nav-item">
           <a href="#people.html" data-src="people.html" data-title="技术者管理" title="技术者管理" data-i18n-title="nav.people">
             <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="currentColor" d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4zm0 2c-4.4 0-8 2.2-8 5v1h16v-1c0-2.8-3.6-5-8-5z"/>
@@ -190,8 +182,39 @@
             <button class="c-toggle" type="button" data-lang="zh-CN" aria-pressed="true">中文</button>
             <button class="c-toggle" type="button" data-lang="ja" aria-pressed="false">日本語</button>
           </div>
-          <button class="icon-btn c-btn c-btn-icon c-btn-ghost" id="noticeBtn" aria-label="通知" data-i18n-aria="topbar.notice">
-            🔔
+          <div class="send-task-entry">
+            <button class="icon-btn top-action-send c-btn c-btn-icon c-btn-ghost" id="sendTaskBtn" type="button"
+              title="发送任务" aria-label="发送任务" aria-haspopup="true" aria-expanded="false"
+              aria-controls="sendTaskPopover"
+              data-i18n-title="topbar.send_task" data-i18n-aria="topbar.send_task">
+              <svg class="top-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M21.7 2.3a1 1 0 0 0-1-.24l-18 7a1 1 0 0 0 .08 1.89l7.06 2.35 2.35 7.06a1 1 0 0 0 .91.68h.04a1 1 0 0 0 .92-.6l7.99-17a1 1 0 0 0-.35-1.14zM5.95 10.1l11.19-4.35-6.57 5.65-4.62-1.3zm7.33 7.27-1.3-3.9 6.57-5.65-5.27 9.55z"/>
+              </svg>
+              <span class="badge" id="sendTaskBadge" hidden></span>
+            </button>
+            <section class="send-task-popover" id="sendTaskPopover" aria-labelledby="sendTaskPopoverTitle" hidden>
+              <div class="send-task-popover-head">
+                <strong id="sendTaskPopoverTitle" data-i18n="send_task.popover.title">发送任务</strong>
+                <span id="sendTaskTotalLabel">共0个任务</span>
+              </div>
+              <div class="send-task-list" id="sendTaskList"></div>
+              <div class="send-task-popover-foot" id="sendTaskPopoverFoot">
+                <button id="sendTaskViewAll" type="button">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm1-13h-2v6l5.2 3 1-1.7-4.2-2.4Z"/>
+                  </svg>
+                  <span data-i18n="send_task.popover.view_history">查看送信历史</span>
+                  <span class="send-task-foot-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </section>
+          </div>
+          <button class="icon-btn c-btn c-btn-icon c-btn-ghost" id="noticeBtn" type="button"
+            title="我的邮件" aria-label="我的邮件"
+            data-i18n-title="topbar.my_mail" data-i18n-aria="topbar.my_mail">
+            <svg class="top-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6v-5a7 7 0 0 0-5-6.71V3a2 2 0 0 0-4 0v1.29A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Zm-12.17 1A3 3 0 0 0 7 16v-5a5 5 0 0 1 10 0v5c0 .34.06.68.17 1H6.83Z"/>
+            </svg>
             <span class="badge" id="noticeBadge" hidden></span>
           </button>
 
@@ -230,11 +253,20 @@
       const nav = document.getElementById("nav");
       const frame = document.getElementById("mainFrame");
       const topDate = document.getElementById("topDate");
+      const sendTaskBtn = document.getElementById("sendTaskBtn");
+      const sendTaskBadge = document.getElementById("sendTaskBadge");
+      const sendTaskPopover = document.getElementById("sendTaskPopover");
+      const sendTaskList = document.getElementById("sendTaskList");
+      const sendTaskTotalLabel = document.getElementById("sendTaskTotalLabel");
+      const sendTaskViewAll = document.getElementById("sendTaskViewAll");
+      const sendTaskPopoverFoot = document.getElementById("sendTaskPopoverFoot");
       const noticeBtn = document.getElementById("noticeBtn");
       const noticeBadge = document.getElementById("noticeBadge");
       const noticeDialog = document.getElementById("noticeDialog");
       const pageSubtitle = document.getElementById("pageSubtitle");
       const noticeRoute = "my_mail.html";
+      const sendTaskRoute = "sendtask.html";
+      const sendHistoryRoute = "songxinhistory.html";
       const KEY = "chat_sidebar_collapsed";
       const LANG_KEY = "app_lang";
       const MENU_KEY = "app_menu_list";
@@ -250,6 +282,15 @@
       const systemExpiryStatus = document.getElementById("systemExpiryStatus");
       const systemExpiryDate = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-date") : null;
       const systemExpiryLabel = systemExpiryStatus ? systemExpiryStatus.querySelector(".system-expiry-label") : null;
+      let sendTaskTotal = 0;
+      let isLoadingSendTasks = false;
+
+      const renderSendTaskTotal = () => {
+        if (!sendTaskTotalLabel) return;
+        sendTaskTotalLabel.textContent = i18n
+          ? i18n.format("send_task.popover.total", { count: sendTaskTotal })
+          : `共${sendTaskTotal}个任务`;
+      };
       const activationSettingsApi = "/api/sys-settings/activation";
       let activationExpiryRaw = "";
       let activationSystemVersion = "";
@@ -390,6 +431,7 @@
           i18n.apply();
         }
         renderSystemExpiryStatus();
+        renderSendTaskTotal();
         if (topDate) topDate.textContent = formatTopDate(safeLang);
         setSubtitle(resolveFromHash() || "home.html");
         syncFrameLang(safeLang);
@@ -438,8 +480,10 @@
         noticeBadge.textContent = safeCount > 99 ? "99+" : String(safeCount);
         noticeBadge.hidden = false;
       };
-      const applyUnreadData = (data) => {
-        setNoticeBadge(Number((data && data.unread_count) || 0));
+      const applyTopbarBadges = (data) => {
+        const badges = data && data.badges ? data.badges : {};
+        setSendTaskBadge(Number((badges.send_tasks && badges.send_tasks.count) || 0));
+        setNoticeBadge(Number((badges.my_mails && badges.my_mails.count) || 0));
       };
       const readNoticeBadgeCount = () => {
         if (!noticeBadge || noticeBadge.hidden) return 0;
@@ -451,6 +495,63 @@
       };
       const markNoticeRead = () => {
         setNoticeBadge(Math.max(0, readNoticeBadgeCount() - 1));
+      };
+
+      const setSendTaskBadge = (count) => {
+        if (!sendTaskBadge) return;
+        const safeCount = Number.isFinite(count) ? Math.max(0, Math.floor(count)) : 0;
+        sendTaskBadge.textContent = safeCount > 99 ? "99+" : String(safeCount);
+        sendTaskBadge.hidden = safeCount <= 0;
+      };
+
+      const renderSendTasks = (items) => {
+        if (!sendTaskList) return;
+        if (!items.length) {
+          sendTaskList.innerHTML = '<div class="send-task-empty" data-i18n="send_task.popover.empty">暂无发送任务</div>';
+        } else {
+          sendTaskList.innerHTML = items.slice(0, 3).map((item) => `
+            <div class="send-task-item">
+              <div class="send-task-content">
+                <strong title="${window.escapeHtml(item.title || "")}">${window.escapeHtml(item.title || "--")}</strong>
+                <span>${window.escapeHtml(item.time || "--")}</span>
+              </div>
+              <button class="send-task-detail" type="button" data-task-id="${window.escapeHtml(item.id || "")}"
+                data-i18n="send_task.popover.detail">查看详情</button>
+            </div>
+          `).join("");
+        }
+        if (i18n) i18n.apply(sendTaskList);
+      };
+
+      const loadSendTasks = async () => {
+        if (!sendTaskList || isLoadingSendTasks) return;
+        isLoadingSendTasks = true;
+        sendTaskList.innerHTML = '<div class="send-task-empty" data-i18n="common.loading">加载中...</div>';
+        if (i18n) i18n.apply(sendTaskList);
+        try {
+          const payload = await window.requestJson("/api/send-tasks", { method: "GET" });
+          const items = payload && payload.data && Array.isArray(payload.data.items) ? payload.data.items : [];
+          const total = payload && payload.meta && Number.isFinite(payload.meta.total)
+            ? payload.meta.total
+            : items.length;
+          sendTaskTotal = total;
+          setSendTaskBadge(total);
+          renderSendTasks(items);
+          renderSendTaskTotal();
+        } catch (error) {
+          sendTaskTotal = 0;
+          renderSendTaskTotal();
+          sendTaskList.innerHTML = '<div class="send-task-empty" data-i18n="common.load_failed">加载失败</div>';
+          if (i18n) i18n.apply(sendTaskList);
+        } finally {
+          isLoadingSendTasks = false;
+        }
+      };
+
+      const closeSendTaskPopover = () => {
+        if (!sendTaskPopover || !sendTaskBtn) return;
+        sendTaskPopover.hidden = true;
+        sendTaskBtn.setAttribute("aria-expanded", "false");
       };
 
       const readCollapsed = () => {
@@ -477,6 +578,45 @@
           }
         });
       }
+      if (sendTaskBtn) {
+        sendTaskBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const shouldOpen = sendTaskPopover && sendTaskPopover.hidden;
+          if (sendTaskPopover) sendTaskPopover.hidden = !shouldOpen;
+          sendTaskBtn.setAttribute("aria-expanded", String(Boolean(shouldOpen)));
+          if (shouldOpen) loadSendTasks();
+        });
+      }
+      if (sendTaskPopover) {
+        sendTaskPopover.addEventListener("click", (event) => event.stopPropagation());
+      }
+      const navigateToSendHistory = () => {
+        if (!isAllowedRoute(sendHistoryRoute)) return;
+        closeSendTaskPopover();
+        if (location.hash !== "#" + sendHistoryRoute) {
+          location.hash = sendHistoryRoute;
+        } else {
+          applyRoute(sendHistoryRoute);
+        }
+      };
+      if (sendTaskViewAll) {
+        sendTaskViewAll.addEventListener("click", navigateToSendHistory);
+      }
+      if (sendTaskList) {
+        sendTaskList.addEventListener("click", (event) => {
+          const detailButton = event.target.closest(".send-task-detail");
+          if (!detailButton) return;
+          const taskId = detailButton.dataset.taskId || "";
+          closeSendTaskPopover();
+          const route = `${sendTaskRoute}?id=${encodeURIComponent(taskId)}`;
+          if (location.hash !== "#" + route) location.hash = route;
+          else applyRoute(route);
+        });
+      }
+      document.addEventListener("click", closeSendTaskPopover);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeSendTaskPopover();
+      });
       if (window.initDialogCloseBehavior) {
         window.initDialogCloseBehavior({
           dialogs: [noticeDialog]
@@ -543,7 +683,7 @@
       const allowedMenuSet = buildAllowedMenuSet();
       const fallbackRoute = "profile.html";
       const bulkMailRoute = "bulk_email.html";
-      const workflowRoutes = new Set([bulkMailRoute, "songxin.html", "bpsongxin.html"]);
+      const workflowRoutes = new Set([bulkMailRoute, sendTaskRoute, "songxin.html", "bpsongxin.html"]);
       const isAllowedRoute = (src) => {
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);
@@ -555,6 +695,9 @@
         if (workflowRoutes.has(normalized)) return true;
         return allowedMenuSet.has(normalized);
       };
+      if (sendTaskPopoverFoot) {
+        sendTaskPopoverFoot.hidden = !isAllowedRoute(sendHistoryRoute);
+      }
       const applyMenuFilter = () => {
         if (!allowedMenuSet) return;
         links.forEach((link) => {
@@ -591,6 +734,9 @@
         }
         if (!match && route === "myattendance.html") {
           label = i18n ? i18n.t("nav.my_attendance") : "我的考勤";
+        }
+        if (!match && route === sendTaskRoute) {
+          label = i18n ? i18n.t("sendtask.title") : "发送任务";
         }
         if (!match && route === "finance/my_salary.html") {
           label = i18n ? i18n.t("nav.my_salary") : "我的薪资";
@@ -657,11 +803,11 @@
         nav.addEventListener("click", handleRouteClick);
       }
       document.addEventListener("click", handleRouteClick);
-      // 使用 common.js 统一轮询，每 5 分钟刷新一次未读角标。
-      const mailUnreadPolling = window.startMailUnreadPolling
-        ? window.startMailUnreadPolling({
+      // 使用 common.js 统一轮询，每 5 分钟刷新一次顶部角标。
+      const topbarBadgePolling = window.startTopbarBadgePolling
+        ? window.startTopbarBadgePolling({
           intervalMs: 5 * 60 * 1000,
-          onData: applyUnreadData,
+          onData: applyTopbarBadges,
         })
         : null;
       window.addEventListener("message", (event) => {
@@ -678,6 +824,17 @@
         }
         if (data.type === "mail:mark-read") {
           markNoticeRead();
+          return;
+        }
+        if (data.type === "topbar-badges:refresh") {
+          const sendTasksCount = Number(data.send_tasks_count);
+          if (Number.isFinite(sendTasksCount) && sendTasksCount > 0) {
+            setSendTaskBadge(sendTasksCount);
+            return;
+          }
+          if (typeof window.refreshTopbarBadges === "function") {
+            window.refreshTopbarBadges();
+          }
         }
       });
       window.addEventListener("hashchange", syncFromHash);
@@ -688,8 +845,8 @@
       loadSystemExpiryStatus();
       document.addEventListener("visibilitychange", () => {
         if (!document.hidden) {
-          if (mailUnreadPolling && typeof mailUnreadPolling.tick === "function") {
-            mailUnreadPolling.tick();
+          if (topbarBadgePolling && typeof topbarBadgePolling.tick === "function") {
+            topbarBadgePolling.tick();
           }
           loadSystemExpiryStatus();
         }

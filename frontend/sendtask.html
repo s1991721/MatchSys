@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="components.css">
+    <title data-i18n="sendtask.title">发送任务</title>
+</head>
+<body>
+<div class="page page-wide songxinhistory-page">
+    <section class="c-split-grid-wide">
+        <div class="c-card c-card-pad">
+            <div class="c-card-title" data-i18n="sendtask.list.title">任务列表</div>
+            <div class="c-filter-grid">
+                <div class="c-filter-group">
+                    <span class="c-filter-label" data-i18n="sendtask.filter.status">状态</span>
+                    <div class="c-chip-row" id="status-group">
+                        <button class="c-chip active" data-status="all" type="button" data-i18n="common.all">全部</button>
+                        <button class="c-chip" data-status="pending" type="button" data-i18n="sendtask.status.pending">发送中</button>
+                        <button class="c-chip" data-status="failed" type="button" data-i18n="common.status.failed">失败</button>
+                    </div>
+                </div>
+            </div>
+            <ul id="task-list" class="c-list c-list-spaced songxinhistory-list"></ul>
+            <div class="pagination c-pagination" id="task-pagination">
+                <div class="pagination-summary"><span id="task-page-summary">共 0 条 · 第 1/1 页</span></div>
+                <div class="pagination-pages" id="task-pagination-pages"></div>
+            </div>
+        </div>
+
+        <div class="c-card c-card-pad">
+            <div class="c-card-title" data-i18n="sendtask.detail.title">任务详情</div>
+            <div class="sendtask-detail-head">
+                <div class="songxinhistory-detail-meta" id="detail-meta"></div>
+                <div id="detail-actions" class="sendtask-detail-actions" hidden>
+                    <button id="retry-task" class="c-btn c-btn-primary c-btn-sm" type="button"
+                            data-i18n="sendtask.action.retry">重发</button>
+                    <button id="discard-task" class="c-btn c-btn-danger c-btn-sm" type="button"
+                            data-i18n="sendtask.action.discard">丢弃</button>
+                </div>
+            </div>
+            <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.body">正文</div>
+            <div id="task-detail" class="songxin-preview songxinhistory-detail"></div>
+            <div class="c-page-subtitle songxinhistory-section-title" data-i18n="songxinhistory.detail.attachments">附件</div>
+            <div id="detail-attachments" class="c-chip-row songxinhistory-attachments"></div>
+            <div id="error-section" hidden>
+                <div class="c-page-subtitle songxinhistory-section-title" data-i18n="sendtask.detail.error">失败原因</div>
+                <div id="task-error" class="songxin-preview songxinhistory-detail"></div>
+                <div id="task-action-message" class="songxin-empty-tip" role="status" aria-live="polite"></div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="i18n.js"></script>
+<script src="error_code.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+    const i18n = window.I18N;
+    const t = key => i18n ? i18n.t(key) : key;
+    const format = (key, vars) => i18n ? i18n.format(key, vars) : key;
+    const listEl = document.getElementById('task-list');
+    const detailEl = document.getElementById('task-detail');
+    const metaEl = document.getElementById('detail-meta');
+    const attachEl = document.getElementById('detail-attachments');
+    const errorSection = document.getElementById('error-section');
+    const errorEl = document.getElementById('task-error');
+    const detailActions = document.getElementById('detail-actions');
+    const retryButton = document.getElementById('retry-task');
+    const discardButton = document.getElementById('discard-task');
+    const actionMessage = document.getElementById('task-action-message');
+    const statusGroup = document.getElementById('status-group');
+    const pagination = document.getElementById('task-pagination');
+    const paginationPages = document.getElementById('task-pagination-pages');
+    const pageSummary = document.getElementById('task-page-summary');
+    const requestedId = new URLSearchParams(location.search).get('id') || '';
+    const PAGE_SIZE = 10;
+    let records = [];
+    let selectedRecord = null;
+    let selectedId = requestedId;
+    let activeStatus = 'all';
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalCount = 0;
+    let actionPending = false;
+
+    if (i18n) { i18n.init(); i18n.apply(); }
+
+    const attachmentName = file => typeof file === 'string'
+        ? file
+        : (file && (file.filename || file.name)) || '--';
+
+    const renderAttachments = files => {
+        attachEl.replaceChildren();
+        if (!Array.isArray(files) || !files.length) {
+            const empty = document.createElement('div');
+            empty.className = 'songxin-empty-tip';
+            empty.textContent = t('common.empty.attachments');
+            attachEl.appendChild(empty);
+            return;
+        }
+        files.forEach(file => {
+            const chip = document.createElement('span');
+            chip.className = 'c-chip';
+            chip.textContent = attachmentName(file);
+            attachEl.appendChild(chip);
+        });
+    };
+
+    const renderDetail = record => {
+        selectedRecord = record || null;
+        metaEl.replaceChildren();
+        detailEl.replaceChildren();
+        errorEl.replaceChildren();
+        actionMessage.textContent = '';
+        errorSection.hidden = true;
+        detailActions.hidden = true;
+        if (!record) {
+            const empty = document.createElement('span');
+            empty.className = 'songxin-empty-tip';
+            empty.textContent = t('sendtask.empty.detail');
+            metaEl.appendChild(empty);
+            renderAttachments([]);
+            return;
+        }
+        [
+            format('songxinhistory.meta.to', {value: record.to || '--'}),
+            format('songxinhistory.meta.cc', {value: record.cc || t('songxinhistory.status.none')}),
+            format('songxinhistory.meta.time', {value: record.time || '--'})
+        ].forEach(value => {
+            const span = document.createElement('span');
+            span.textContent = value;
+            metaEl.appendChild(span);
+        });
+        if (record.status === 'failed') {
+            detailActions.hidden = false;
+        }
+        const title = document.createElement('h4');
+        title.textContent = record.title || t('songxinhistory.placeholder.title');
+        const body = document.createElement('p');
+        body.textContent = record.content || '';
+        body.style.whiteSpace = 'pre-wrap';
+        detailEl.append(title, body);
+        renderAttachments(record.attachments);
+        if (record.error_message) {
+            errorSection.hidden = false;
+            errorEl.textContent = record.error_message;
+        }
+    };
+
+    const normalizeRecord = item => ({
+        id: String(item.id || ''), title: item.title || '', to: item.to || '', cc: item.cc || '',
+        content: item.content || '', attachments: Array.isArray(item.attachments) ? item.attachments : [],
+        status: item.status || 'pending', error_message: item.error_message || '', time: item.time || ''
+    });
+
+    const selectRecord = record => {
+        selectedId = record ? record.id : '';
+        listEl.querySelectorAll('.songxinhistory-item').forEach(el => {
+            el.classList.toggle('is-active', el.dataset.id === selectedId);
+        });
+        renderDetail(record);
+    };
+
+    const loadDetail = async id => {
+        if (!id) { selectRecord(null); return; }
+        try {
+            const payload = await window.requestJson(`/api/send-tasks/${encodeURIComponent(id)}`, {method: 'GET'});
+            selectRecord(normalizeRecord(payload.data || {}));
+        } catch (error) {
+            console.error('加载发送任务详情失败', error);
+            selectRecord(null);
+        }
+    };
+
+    const renderList = () => {
+        listEl.replaceChildren();
+        if (!records.length) {
+            const item = document.createElement('li');
+            item.className = 'songxinhistory-item songxinhistory-item-empty';
+            item.textContent = t('sendtask.empty.list');
+            listEl.appendChild(item);
+            pagination.classList.add('hidden');
+            if (!selectedRecord) renderDetail(null);
+            return;
+        }
+        pagination.classList.remove('hidden');
+        records.forEach(record => {
+            const item = document.createElement('li');
+            item.className = 'songxinhistory-item';
+            item.classList.toggle('is-active', record.id === selectedId);
+            item.dataset.id = record.id;
+            const main = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'songxinhistory-title';
+            title.textContent = record.title || t('songxinhistory.placeholder.title');
+            const recipient = document.createElement('div');
+            recipient.className = 'c-chip-row songxinhistory-meta';
+            const chip = document.createElement('span');
+            chip.className = 'c-chip';
+            chip.textContent = format('songxinhistory.meta.to', {value: record.to || '--'});
+            recipient.appendChild(chip);
+            main.append(title, recipient);
+            const side = document.createElement('div');
+            side.className = 'songxinhistory-time';
+            const tag = document.createElement('div');
+            tag.className = `c-tag ${record.status === 'failed' ? 'c-tag-danger' : 'c-tag-info'}`;
+            tag.textContent = record.status === 'failed' ? t('common.status.failed') : t('sendtask.status.pending');
+            const time = document.createElement('div');
+            time.textContent = record.time || '--';
+            side.append(tag, time);
+            item.append(main, side);
+            listEl.appendChild(item);
+        });
+        if (selectedRecord && selectedRecord.id === selectedId) renderDetail(selectedRecord);
+    };
+
+    const updatePagination = () => {
+        pageSummary.textContent = format('common.summary.page', {count: totalCount, page: currentPage, total: totalPages});
+        if (window.renderPagination) window.renderPagination(pagination, paginationPages, currentPage, totalPages);
+    };
+
+    const loadRecords = async (page = 1) => {
+        currentPage = page;
+        const params = window.createParams([
+            ['page', String(page)], ['page_size', String(PAGE_SIZE)], ['status', activeStatus]
+        ]);
+        try {
+            const payload = await window.requestJson(window.buildUrl('/api/send-tasks/page', params), {method: 'GET'});
+            records = ((payload.data && payload.data.items) || []).map(normalizeRecord);
+            const meta = payload.meta || {};
+            totalCount = Number(meta.total) || 0;
+            totalPages = Number(meta.total_pages) || 1;
+            currentPage = Number(meta.page) || page;
+        } catch (error) {
+            console.error('加载发送任务失败', error);
+            records = []; totalCount = 0; totalPages = 1;
+        }
+        renderList();
+        updatePagination();
+        if (selectedId) await loadDetail(selectedId);
+        else if (records.length) await loadDetail(records[0].id);
+        else selectRecord(null);
+    };
+
+    const setActionPending = (pending, action = '') => {
+        actionPending = pending;
+        retryButton.disabled = pending;
+        discardButton.disabled = pending;
+        retryButton.textContent = t(pending && action === 'retry'
+            ? 'sendtask.action.retrying' : 'sendtask.action.retry');
+        discardButton.textContent = t(pending && action === 'discard'
+            ? 'sendtask.action.discarding' : 'sendtask.action.discard');
+    };
+
+    const runFailedTaskAction = async action => {
+        if (actionPending || !selectedRecord || selectedRecord.status !== 'failed') return;
+        const isRetry = action === 'retry';
+        const confirmKey = isRetry ? 'sendtask.confirm.retry' : 'sendtask.confirm.discard';
+        if (!window.confirm(t(confirmKey))) return;
+
+        const taskId = selectedRecord.id;
+        actionMessage.textContent = '';
+        setActionPending(true, action);
+        try {
+            await window.requestJson(`/api/send-tasks/${encodeURIComponent(taskId)}/${action}`, {
+                method: 'POST'
+            });
+            selectedId = isRetry ? taskId : '';
+            selectedRecord = null;
+            await loadRecords(currentPage);
+        } catch (error) {
+            const message = error.message || t(isRetry
+                ? 'sendtask.alert.retry_failed' : 'sendtask.alert.discard_failed');
+            if (isRetry) {
+                await loadDetail(taskId);
+                if (!selectedRecord || !selectedRecord.error_message) {
+                    errorSection.hidden = false;
+                    errorEl.textContent = message;
+                }
+            } else {
+                actionMessage.textContent = message;
+            }
+        } finally {
+            setActionPending(false);
+        }
+    };
+
+    listEl.addEventListener('click', event => {
+        const item = event.target.closest('.songxinhistory-item[data-id]');
+        if (!item) return;
+        loadDetail(item.dataset.id);
+    });
+    statusGroup.addEventListener('click', event => {
+        const button = event.target.closest('.c-chip[data-status]');
+        if (!button) return;
+        statusGroup.querySelectorAll('.c-chip').forEach(item => item.classList.remove('active'));
+        button.classList.add('active');
+        activeStatus = button.dataset.status || 'all';
+        selectedRecord = null;
+        selectedId = '';
+        loadRecords(1);
+    });
+    retryButton.addEventListener('click', () => runFailedTaskAction('retry'));
+    discardButton.addEventListener('click', () => runFailedTaskAction('discard'));
+    window.bindPagination(pagination, value => {
+        const next = value === 'prev' ? Math.max(1, currentPage - 1)
+            : value === 'next' ? Math.min(totalPages, currentPage + 1) : Number(value);
+        if (Number.isFinite(next) && next !== currentPage) loadRecords(next);
+    });
+    window.addEventListener('i18n:change', () => { if (i18n) i18n.apply(); renderList(); updatePagination(); });
+
+    loadRecords(1);
+})();
+</script>
+</body>
+</html>

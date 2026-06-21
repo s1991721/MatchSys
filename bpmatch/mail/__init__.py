@@ -1,6 +1,5 @@
 from .common import (
     MailToolError,
-    count_unread_mails_from_db,
     ensure_send_config_for_login,
     get_my_mail_detail_from_db,
     list_my_mails_from_db,
@@ -14,7 +13,15 @@ from .receiver import (
     test_receive_connection,
 )
 from .pop3_receiver import Pop3Receiver
-from .sender import MailSender, SmtpMailSender, send_bulk_mail_by_login, send_mail_by_login, test_smtp_connection
+from .sender import (
+    MailSender,
+    SmtpMailSender,
+    queue_bulk_mail_by_login,
+    queue_mail_by_login,
+    send_bulk_mail_by_login,
+    send_mail_by_login,
+    test_smtp_connection,
+)
 
 __all__ = [
     "MailToolError",
@@ -22,7 +29,6 @@ __all__ = [
     "MailSender",
     "SmtpMailSender",
     "Pop3Receiver",
-    "count_unread_mails_from_db",
     "ensure_send_config_for_login",
     "get_my_mail_detail_from_db",
     "list_my_mails_from_db",
@@ -30,6 +36,8 @@ __all__ = [
     "query_my_mails",
     "resolve_sendmsg_sync_targets",
     "send_bulk_mail_by_login",
+    "queue_bulk_mail_by_login",
+    "queue_mail_by_login",
     "send_mail_by_login",
     "sync_my_mails",
     "test_receive_connection",

@@ -6,11 +6,11 @@
     <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
-    <title>年金保险</title>
+    <title>年金保险基数设置</title>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="settings.annuity">
-    <div class="finance-sheet-wrap" aria-label="年金保险表格展示区">
+    <div class="finance-sheet-wrap" aria-label="年金保险基数设置表格展示区">
         <table class="finance-sheet-table" id="annuitySheetTable">
             <thead>
                 <tr>
@@ -418,7 +418,7 @@
                 const payload = await window.requestJson(settingsApi, { method: "GET" });
                 renderSavedSettings(payload?.data?.settings);
             } catch (err) {
-                window.alert(err.message || "年金保险设置加载失败");
+                window.alert(err.message || "年金保险基数设置加载失败");
             }
         };
 

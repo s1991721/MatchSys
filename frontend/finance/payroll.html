@@ -13,12 +13,12 @@
     <section class="c-card c-card-pad finance-view" data-finance-panel="payroll">
 
         <div class="finance-subtabs" role="tablist" aria-label="工资计算子功能" data-i18n-aria="payroll.tabs.aria">
-            <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic" data-i18n="payroll.tabs.basic">基础信息</button>
+            <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic" data-i18n="payroll.tabs.basic">基本工资</button>
             <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly" data-i18n="payroll.tabs.monthly">月度计算</button>
             <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="annuity" data-i18n="payroll.tabs.annuity">年金保险基数设置</button>
         </div>
         <div class="finance-subframe-shell">
-            <iframe id="financeSubFrame" class="finance-subframe" src="payroll/basic-info.html" title="基础信息"></iframe>
+            <iframe id="financeSubFrame" class="finance-subframe" src="payroll/basic-info.html" title="基本工资"></iframe>
         </div>
     </section>
 </div>
@@ -60,7 +60,7 @@
             return value && value !== key ? value : fallback;
         };
         const routes = {
-            basic: { src: "payroll/basic-info.html", titleKey: "payroll.tabs.basic", fallbackTitle: "基础信息" },
+            basic: { src: "payroll/basic-info.html", titleKey: "payroll.tabs.basic", fallbackTitle: "基本工资" },
             monthly: { src: "payroll/monthly-calculation.html", titleKey: "payroll.tabs.monthly", fallbackTitle: "月度计算" },
             annuity: { src: "settings/annuity.html", titleKey: "payroll.tabs.annuity", fallbackTitle: "年金保险基数设置" }
         };

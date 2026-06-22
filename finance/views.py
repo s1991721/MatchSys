@@ -1818,7 +1818,7 @@ def _parse_payroll_status(value):
     return parsed, None
 
 
-def _parse_payroll_items(value, field_name):
+def _parse_payroll_items(value, field_name, omit_zero=False):
     if value in (None, ""):
         return [], None
     if not isinstance(value, list):
@@ -1840,6 +1840,8 @@ def _parse_payroll_items(value, field_name):
             return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
         if amount < 0:
             return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
+        if omit_zero and amount == 0:
+            continue
         result.append({"name": name, "amount": str(amount)})
     return result, None
 
@@ -1938,16 +1940,17 @@ def payroll_basic_info_api(request):
     status_value, error = _parse_payroll_status(payload.get("status", 1))
     if error:
         return error
-    addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+    addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items", omit_zero=True)
     if error:
         return error
     non_taxable_addition_items, error = _parse_payroll_items(
         payload.get("non_taxable_addition_items"),
         "non_taxable_addition_items",
+        omit_zero=True,
     )
     if error:
         return error
-    deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+    deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items", omit_zero=True)
     if error:
         return error
     base_salary, error = _parse_decimal_field(payload, "base_salary")
@@ -2016,7 +2019,7 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
         item.base_salary = value
 
     if "addition_items" in payload:
-        addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+        addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items", omit_zero=True)
         if error:
             return error
         item.addition_items = addition_items
@@ -2025,13 +2028,14 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
         non_taxable_addition_items, error = _parse_payroll_items(
             payload.get("non_taxable_addition_items"),
             "non_taxable_addition_items",
+            omit_zero=True,
         )
         if error:
             return error
         item.non_taxable_addition_items = non_taxable_addition_items
 
     if "deduction_items" in payload:
-        deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+        deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items", omit_zero=True)
         if error:
             return error
         item.deduction_items = deduction_items

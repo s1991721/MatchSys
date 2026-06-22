@@ -83,21 +83,18 @@
                         <div class="payroll-items-panel payroll-basic-adjustment-panel">
                             <div class="payroll-items-header">
                                 <span data-i18n="payroll.basic.section.additions">增加项</span>
-                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddAdditionItem" data-i18n="common.add">添加</button>
                             </div>
                             <div class="payroll-items-list" id="payrollAdditionItems"></div>
                         </div>
                         <div class="payroll-items-panel payroll-basic-adjustment-panel">
                             <div class="payroll-items-header">
                                 <span data-i18n="payroll.basic.section.non_taxable_additions">非课税增加项</span>
-                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddNonTaxableAdditionItem" data-i18n="common.add">添加</button>
                             </div>
                             <div class="payroll-items-list" id="payrollNonTaxableAdditionItems"></div>
                         </div>
                         <div class="payroll-items-panel payroll-basic-adjustment-panel">
                             <div class="payroll-items-header">
                                 <span data-i18n="payroll.basic.section.deductions">减少项</span>
-                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem" data-i18n="common.add">添加</button>
                             </div>
                             <div class="payroll-items-list" id="payrollDeductionItems"></div>
                         </div>
@@ -139,6 +136,7 @@
         0: "无效",
         1: "有效"
     };
+    const basicItemSettingsApi = "/api/finance/settings/payroll-basic-items";
     const t = (key, fallback) => {
         if (!window.I18N || typeof window.I18N.t !== "function") return fallback;
         const value = window.I18N.t(key);
@@ -185,9 +183,6 @@
         const additionItems = document.getElementById("payrollAdditionItems");
         const nonTaxableAdditionItems = document.getElementById("payrollNonTaxableAdditionItems");
         const deductionItems = document.getElementById("payrollDeductionItems");
-        const addAdditionItemBtn = document.getElementById("payrollAddAdditionItem");
-        const addNonTaxableAdditionItemBtn = document.getElementById("payrollAddNonTaxableAdditionItem");
-        const addDeductionItemBtn = document.getElementById("payrollAddDeductionItem");
         const fields = {
             employeeName: document.getElementById("payrollEmployeeName"),
             contractType: document.getElementById("payrollFormContractType"),
@@ -207,12 +202,8 @@
 
         const localizeItemControls = () => {
             form.querySelectorAll(".payroll-item-row").forEach((row) => {
-                const nameInput = row.querySelector("[data-field='name']");
                 const amountInput = row.querySelector("[data-field='amount']");
-                const removeBtn = row.querySelector("button[data-action='remove-payroll-item']");
-                if (nameInput) nameInput.placeholder = t("payroll.basic.item.name", "项目名");
                 if (amountInput) amountInput.placeholder = t("payroll.basic.item.amount", "金额");
-                if (removeBtn) removeBtn.textContent = t("common.delete", "删除");
             });
             form.querySelectorAll(".payroll-item-empty").forEach((empty) => {
                 empty.textContent = t("payroll.basic.item.empty", "暂无项目");
@@ -230,11 +221,11 @@
         const createItemRow = (item = {}) => {
             const row = document.createElement("div");
             row.className = "payroll-item-row";
-            const nameInput = document.createElement("input");
-            nameInput.type = "text";
-            nameInput.dataset.field = "name";
-            nameInput.placeholder = t("payroll.basic.item.name", "项目名");
-            nameInput.value = item.name || "";
+            const nameLabel = document.createElement("span");
+            nameLabel.className = "payroll-item-name";
+            nameLabel.dataset.field = "name";
+            nameLabel.dataset.value = item.name || "";
+            nameLabel.textContent = item.name || "";
 
             const amountInput = document.createElement("input");
             amountInput.type = "number";
@@ -244,13 +235,7 @@
             amountInput.placeholder = t("payroll.basic.item.amount", "金额");
             amountInput.value = item.amount ?? "0";
 
-            const removeBtn = document.createElement("button");
-            removeBtn.type = "button";
-            removeBtn.className = "c-btn c-btn-danger c-btn-sm";
-            removeBtn.dataset.action = "remove-payroll-item";
-            removeBtn.textContent = t("common.delete", "删除");
-
-            row.append(nameInput, amountInput, removeBtn);
+            row.append(nameLabel, amountInput);
             return row;
         };
 
@@ -267,16 +252,33 @@
             normalized.forEach((item) => container.appendChild(createItemRow(item)));
         };
 
-        const addItemRow = (container) => {
-            const empty = container.querySelector(".payroll-item-empty");
-            if (empty) empty.remove();
-            container.appendChild(createItemRow({name: "", amount: "0"}));
+        const collectItems = (container) => Array.from(container.querySelectorAll(".payroll-item-row")).map((row) => ({
+            name: row.querySelector("[data-field='name']").dataset.value.trim(),
+            amount: row.querySelector("[data-field='amount']").value || "0"
+        })).filter((item) => item.name && parseMoney(item.amount) !== 0);
+
+        const fetchBasicItemSettings = async () => {
+            const payload = await window.requestJson(basicItemSettingsApi, {method: "GET", cache: "no-store"});
+            return payload?.data?.settings || {};
         };
 
-        const collectItems = (container) => Array.from(container.querySelectorAll(".payroll-item-row")).map((row) => ({
-            name: row.querySelector("[data-field='name']").value.trim(),
-            amount: row.querySelector("[data-field='amount']").value || "0"
-        })).filter((item) => item.name || parseMoney(item.amount) !== 0);
+        const mergeItems = (basicItemNames, employeeItems) => {
+            const names = Array.isArray(basicItemNames)
+                ? basicItemNames.map((name) => String(name || "").trim()).filter(Boolean)
+                : [];
+            const savedItems = normalizeItems(employeeItems).filter((item) => item.name);
+            const consumed = new Set();
+            const merged = names.map((name) => {
+                const savedIndex = savedItems.findIndex((item, index) => !consumed.has(index) && item.name === name);
+                if (savedIndex < 0) return {name, amount: "0"};
+                consumed.add(savedIndex);
+                return {name, amount: savedItems[savedIndex].amount};
+            });
+            savedItems.forEach((item, index) => {
+                if (!consumed.has(index)) merged.push(item);
+            });
+            return merged;
+        };
 
         const closeModal = () => {
             modal.classList.remove("show");
@@ -346,16 +348,17 @@
             return found[0] || null;
         };
 
-        const openModal = (mode, data, employee) => {
+        const openModal = async (mode, data, employee) => {
+            const settings = await fetchBasicItemSettings();
             editingId = mode === "edit" ? data?.id : null;
             editingEmployeeId = data?.employee_id || employee?.id || null;
             updateModalTitle();
             fields.employeeName.value = data?.employee_name || employee?.name || "";
             fields.contractType.value = String(data?.contract_type ?? 0);
             fields.baseSalary.value = data?.base_salary || "0";
-            renderItemRows(additionItems, data?.addition_items || []);
-            renderItemRows(nonTaxableAdditionItems, data?.non_taxable_addition_items || []);
-            renderItemRows(deductionItems, data?.deduction_items || []);
+            renderItemRows(additionItems, mergeItems(settings.increase_items, data?.addition_items));
+            renderItemRows(nonTaxableAdditionItems, mergeItems(settings.non_taxable_increase_items, data?.non_taxable_addition_items));
+            renderItemRows(deductionItems, mergeItems(settings.decrease_items, data?.deduction_items));
             fields.status.value = String(data?.status ?? 1);
             fields.remark.value = data?.remark || "";
             modal.classList.add("show");
@@ -396,11 +399,11 @@
             try {
                 const existing = await fetchPayrollByEmployee(employeeId);
                 if (existing) {
-                    openModal("edit", existing);
+                    await openModal("edit", existing);
                     return;
                 }
                 const employee = await fetchEmployee(employeeId);
-                openModal("add", {employee_id: employeeId}, employee);
+                await openModal("add", {employee_id: employeeId}, employee);
             } catch (err) {
                 window.alert(err.message || t("payroll.basic.error.load_salary", "薪资信息加载失败"));
             }
@@ -411,11 +414,16 @@
                 tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
             });
         });
-        tbody.addEventListener("click", (event) => {
+        tbody.addEventListener("click", async (event) => {
             const btn = event.target.closest("button[data-action='edit']");
             if (!btn) return;
             const item = items.find((row) => String(row.id) === String(btn.dataset.id));
-            if (item) openModal("edit", item);
+            if (!item) return;
+            try {
+                await openModal("edit", item);
+            } catch (err) {
+                window.alert(err.message || t("payroll.basic.error.load_salary", "薪资信息加载失败"));
+            }
         });
         closeBtn.addEventListener("click", closeModal);
         cancelBtn.addEventListener("click", closeModal);
@@ -433,18 +441,6 @@
                 await fetchList();
             } catch (err) {
                 window.alert(err.message || t("common.delete_failed", "删除失败"));
-            }
-        });
-        addAdditionItemBtn.addEventListener("click", () => addItemRow(additionItems));
-        addNonTaxableAdditionItemBtn.addEventListener("click", () => addItemRow(nonTaxableAdditionItems));
-        addDeductionItemBtn.addEventListener("click", () => addItemRow(deductionItems));
-        form.addEventListener("click", (event) => {
-            const btn = event.target.closest("button[data-action='remove-payroll-item']");
-            if (!btn) return;
-            const container = btn.closest(".payroll-items-list");
-            btn.closest(".payroll-item-row")?.remove();
-            if (container && !container.querySelector(".payroll-item-row")) {
-                renderItemRows(container, []);
             }
         });
         form.addEventListener("submit", async (event) => {

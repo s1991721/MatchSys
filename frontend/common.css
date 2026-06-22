@@ -2044,8 +2044,8 @@ body.finance-subpage {
 .payroll-basic-delete-action {
   margin-right: auto;
 }
-.personnel-page .payroll-basic-modal-card {
-  width: min(1180px, 95%);
+.personnel-page .modal-card.payroll-basic-modal-card {
+  width: min(1440px, calc(100vw - 32px));
 }
 .payroll-basic-adjustments-grid {
   grid-column: 1 / -1;
@@ -2085,6 +2085,14 @@ body.finance-subpage {
 }
 .payroll-item-row input {
   width: 100%;
+}
+.payroll-basic-adjustment-panel .payroll-item-row {
+  grid-template-columns: minmax(0, 1.4fr) minmax(120px, 0.8fr);
+}
+.payroll-item-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
 }
 .payroll-calculated-rate {
   color: var(--muted);
@@ -2641,6 +2649,9 @@ body.finance-subpage {
     justify-content: flex-start;
   }
   .payroll-item-row {
+    grid-template-columns: 1fr;
+  }
+  .payroll-basic-adjustment-panel .payroll-item-row {
     grid-template-columns: 1fr;
   }
   .payroll-item-row .c-btn {

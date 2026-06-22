@@ -98,7 +98,7 @@
                         </div>
                         <div class="recipients-header-actions">
                             <button class="c-btn c-btn-secondary c-btn-sm" id="bulk-recipient-select-all" type="button"
-                                    data-i18n="customer.bulk.select_all">全选</button>
+                                    data-i18n="customer.bulk.select_all">全选公司邮箱</button>
                             <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
                         </div>
                     </div>
@@ -370,7 +370,9 @@
     bulkRecipientSelectAll.addEventListener("click", async () => {
         if (isSelectingAllRecipients) return;
         if (isAllRecipientScopeSelected) {
-            selectedRecipientMap.clear();
+            allRecipientSelectionKeySet.forEach((key) => {
+                selectedRecipientMap.delete(key);
+            });
             isAllRecipientScopeSelected = false;
             renderFilteredRecipients();
             updateSelectAllButtonState();
@@ -613,14 +615,6 @@
                     recipient: group.companyRecipient,
                 });
             }
-            group.contacts.forEach((contact) => {
-                if (contact.recipient?.email) {
-                    entries.push({
-                        key: `contact:${contact.key}`,
-                        recipient: contact.recipient,
-                    });
-                }
-            });
         });
         return entries;
     };

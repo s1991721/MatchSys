@@ -10,7 +10,54 @@
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payroll.basic-item-settings">
-    <div class="finance-empty-row" data-i18n="payroll.basic_item_settings.empty">暂无基础项目设置</div>
+    <p class="basic-item-settings-description">设置基本工资中使用的共通项目名。各列中的项目顺序将作为基本工资页面的显示顺序。</p>
+
+    <div class="basic-item-settings-grid">
+        <section class="c-card basic-item-settings-column" data-category="increase_items" aria-labelledby="additionItemsTitle">
+            <header class="basic-item-settings-column-head">
+                <div>
+                    <h3 id="additionItemsTitle">增加项</h3>
+                    <p>课税工资的增加项目</p>
+                </div>
+                <div class="basic-item-settings-column-actions">
+                    <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="add">添加一行</button>
+                    <button type="button" class="c-btn c-btn-primary c-btn-sm" data-action="save" disabled>保存</button>
+                </div>
+            </header>
+            <div class="basic-item-settings-list"><div class="basic-item-settings-empty">加载中...</div></div>
+            <div class="basic-item-settings-status" aria-live="polite"></div>
+        </section>
+
+        <section class="c-card basic-item-settings-column" data-category="non_taxable_increase_items" aria-labelledby="nonTaxableItemsTitle">
+            <header class="basic-item-settings-column-head">
+                <div>
+                    <h3 id="nonTaxableItemsTitle">非课税增加项</h3>
+                    <p>不计入课税工资的增加项目</p>
+                </div>
+                <div class="basic-item-settings-column-actions">
+                    <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="add">添加一行</button>
+                    <button type="button" class="c-btn c-btn-primary c-btn-sm" data-action="save" disabled>保存</button>
+                </div>
+            </header>
+            <div class="basic-item-settings-list"><div class="basic-item-settings-empty">加载中...</div></div>
+            <div class="basic-item-settings-status" aria-live="polite"></div>
+        </section>
+
+        <section class="c-card basic-item-settings-column" data-category="decrease_items" aria-labelledby="deductionItemsTitle">
+            <header class="basic-item-settings-column-head">
+                <div>
+                    <h3 id="deductionItemsTitle">减少项</h3>
+                    <p>从工资中扣除的项目</p>
+                </div>
+                <div class="basic-item-settings-column-actions">
+                    <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="add">添加一行</button>
+                    <button type="button" class="c-btn c-btn-primary c-btn-sm" data-action="save" disabled>保存</button>
+                </div>
+            </header>
+            <div class="basic-item-settings-list"><div class="basic-item-settings-empty">加载中...</div></div>
+            <div class="basic-item-settings-status" aria-live="polite"></div>
+        </section>
+    </div>
 </div>
 
 <script src="../../i18n.js"></script>
@@ -32,6 +79,179 @@
 }());
 </script>
 <script src="../../common.js"></script>
+<script>
+(function () {
+    const settingsApi = "/api/finance/settings/payroll-basic-items";
+    const columns = Array.from(document.querySelectorAll(".basic-item-settings-column[data-category]"));
+
+    const getList = (column) => column.querySelector(".basic-item-settings-list");
+    const getStatus = (column) => column.querySelector(".basic-item-settings-status");
+    const getSaveButton = (column) => column.querySelector('[data-action="save"]');
+
+    const setStatus = (column, message = "", type = "") => {
+        const status = getStatus(column);
+        if (!status) return;
+        status.textContent = message;
+        status.classList.toggle("is-success", type === "success");
+        status.classList.toggle("is-error", type === "error");
+    };
+
+    const setDirty = (column, dirty) => {
+        column.dataset.dirty = dirty ? "true" : "false";
+        const saveButton = getSaveButton(column);
+        if (saveButton) saveButton.disabled = !dirty;
+        if (dirty) setStatus(column);
+    };
+
+    const updateOrder = (column) => {
+        const categoryLabel = column.querySelector("h3")?.textContent?.trim() || "项目";
+        const rows = Array.from(getList(column).querySelectorAll(".basic-item-settings-row"));
+        rows.forEach((row, index) => {
+            const order = row.querySelector(".basic-item-settings-order");
+            const input = row.querySelector("input");
+            if (order) order.textContent = String(index + 1).padStart(2, "0");
+            if (input) input.setAttribute("aria-label", `${categoryLabel}项目名 ${index + 1}`);
+        });
+    };
+
+    const renderEmpty = (column) => {
+        const list = getList(column);
+        if (list.querySelector(".basic-item-settings-row")) return;
+        list.innerHTML = '<div class="basic-item-settings-empty">暂无项目，请添加一行。</div>';
+    };
+
+    const createRow = (column, value = "") => {
+        const list = getList(column);
+        list.querySelector(".basic-item-settings-empty")?.remove();
+
+        const row = document.createElement("div");
+        row.className = "basic-item-settings-row";
+
+        const order = document.createElement("span");
+        order.className = "basic-item-settings-order";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.maxLength = 100;
+        input.autocomplete = "off";
+        input.value = typeof value === "string" ? value : "";
+        input.addEventListener("input", () => {
+            input.classList.remove("is-invalid");
+            setDirty(column, true);
+        });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "c-btn c-btn-danger c-btn-sm";
+        deleteButton.textContent = "删除";
+        deleteButton.addEventListener("click", () => {
+            row.remove();
+            updateOrder(column);
+            renderEmpty(column);
+            setDirty(column, true);
+        });
+
+        row.append(order, input, deleteButton);
+        list.appendChild(row);
+        updateOrder(column);
+        return input;
+    };
+
+    const renderColumn = (column, items) => {
+        getList(column).innerHTML = "";
+        (Array.isArray(items) ? items : []).forEach((item) => createRow(column, item));
+        renderEmpty(column);
+        setDirty(column, false);
+        setStatus(column);
+    };
+
+    const collectItems = (column) => {
+        const inputs = Array.from(getList(column).querySelectorAll("input"));
+        const items = [];
+        const seen = new Set();
+        for (const input of inputs) {
+            const itemName = input.value.trim();
+            input.classList.remove("is-invalid");
+            if (!itemName) {
+                input.classList.add("is-invalid");
+                input.focus();
+                throw new Error("项目名不能为空。");
+            }
+            if (seen.has(itemName)) {
+                input.classList.add("is-invalid");
+                input.focus();
+                throw new Error(`项目名“${itemName}”重复。`);
+            }
+            seen.add(itemName);
+            input.value = itemName;
+            items.push(itemName);
+        }
+        return items;
+    };
+
+    const setSaving = (column, saving) => {
+        column.classList.toggle("is-saving", saving);
+        column.querySelectorAll("button, input").forEach((control) => {
+            control.disabled = saving;
+        });
+    };
+
+    const saveColumn = async (column) => {
+        const saveButton = getSaveButton(column);
+        const originalText = saveButton?.textContent || "保存";
+        try {
+            const items = collectItems(column);
+            setSaving(column, true);
+            if (saveButton) saveButton.textContent = "保存中...";
+            const payload = await window.requestJson(settingsApi, {
+                method: "POST",
+                body: JSON.stringify({category: column.dataset.category, items}),
+            });
+            renderColumn(column, payload?.data?.settings?.[column.dataset.category] ?? items);
+            setStatus(column, "已保存", "success");
+        } catch (err) {
+            setStatus(column, err.message || "保存失败", "error");
+        } finally {
+            setSaving(column, false);
+            if (saveButton) {
+                saveButton.textContent = originalText;
+                saveButton.disabled = column.dataset.dirty !== "true";
+            }
+        }
+    };
+
+    const loadSettings = async () => {
+        columns.forEach((column) => {
+            column.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+        });
+        try {
+            const payload = await window.requestJson(settingsApi, {method: "GET", cache: "no-store"});
+            const settings = payload?.data?.settings || {};
+            columns.forEach((column) => renderColumn(column, settings[column.dataset.category]));
+        } catch (err) {
+            columns.forEach((column) => {
+                renderColumn(column, []);
+                setStatus(column, err.message || "加载失败", "error");
+            });
+        } finally {
+            columns.forEach((column) => {
+                column.querySelector('[data-action="add"]').disabled = false;
+            });
+        }
+    };
+
+    columns.forEach((column) => {
+        column.querySelector('[data-action="add"]')?.addEventListener("click", () => {
+            const input = createRow(column);
+            setDirty(column, true);
+            input.focus();
+        });
+        getSaveButton(column)?.addEventListener("click", () => saveColumn(column));
+    });
+
+    loadSettings();
+}());
+</script>
 <script>
 (function () {
     const applyI18n = () => {

@@ -32,6 +32,12 @@ from .models import (
 FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
 FINANCE_EMPLOYMENT_SETTING_NAME = "employment_insurance"
 FINANCE_INCOME_TAX_SETTING_NAME = "income_tax"
+FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME = "payroll_basic_items"
+PAYROLL_BASIC_ITEM_CATEGORIES = (
+    "increase_items",
+    "non_taxable_increase_items",
+    "decrease_items",
+)
 
 RECEIVABLE_DISPLAY_STATUS_LABELS = {
     0: "未收",
@@ -334,6 +340,95 @@ def finance_employment_insurance_settings_api(request):
 @require_http_methods(["GET", "POST"])
 def finance_income_tax_settings_api(request):
     return _finance_tax_table_settings_api(request, FINANCE_INCOME_TAX_SETTING_NAME)
+
+
+def _normalize_payroll_basic_item_names(value, category):
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error(f"Invalid field: {category}")
+
+    items = []
+    seen = set()
+    for index, value_item in enumerate(value):
+        if not isinstance(value_item, str):
+            return None, _finance_settings_payload_error(f"Invalid field: {category}[{index}]")
+        item_name = value_item.strip()
+        if not item_name or len(item_name) > 100:
+            return None, _finance_settings_payload_error(f"Invalid field: {category}[{index}]")
+        if item_name in seen:
+            return None, _finance_settings_payload_error(f"Duplicate item: {item_name}")
+        seen.add(item_name)
+        items.append(item_name)
+    return items, None
+
+
+def _read_payroll_basic_item_settings(value):
+    source = value if isinstance(value, dict) else {}
+    settings = {}
+    for category in PAYROLL_BASIC_ITEM_CATEGORIES:
+        raw_items = source.get(category)
+        settings[category] = raw_items if isinstance(raw_items, list) else []
+    return settings
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_payroll_basic_item_settings_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        return api_success(data={
+            "name": FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
+            "settings": _read_payroll_basic_item_settings(record.settings if record else None),
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return _finance_settings_payload_error("Invalid payroll basic item settings")
+
+    category = payload.get("category")
+    if category not in PAYROLL_BASIC_ITEM_CATEGORIES:
+        return _finance_settings_payload_error("Invalid field: category")
+    items, error = _normalize_payroll_basic_item_names(payload.get("items"), category)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        settings = _read_payroll_basic_item_settings(record.settings if record else None)
+        settings[category] = items
+        if record:
+            record.settings = settings
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
+                settings=settings,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
+        "saved_category": category,
+    })
 
 
 def _get_receivable_display_status(item, today=None):

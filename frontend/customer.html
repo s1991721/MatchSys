@@ -66,11 +66,8 @@
                     </th>
                     <th data-i18n="customer.table.company">公司名称</th>
                     <th data-i18n="customer.table.address">公司地址</th>
+                    <th data-i18n="customer.table.company_email">公司邮箱</th>
                     <th data-i18n="common.field.note">备注</th>
-                    <th data-i18n="customer.table.contact">联系人</th>
-                    <th data-i18n="common.field.position">职位</th>
-                    <th data-i18n="common.field.email">邮箱</th>
-                    <th data-i18n="customer.table.phone">电话</th>
                     <th data-i18n="common.field.owner">负责人</th>
                     <th data-i18n="common.field.created_at">创建时间</th>
                     <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
@@ -836,7 +833,7 @@
             pageSummary.textContent = format("customer.summary", {count, page: currentPage});
         }
         if (!items.length) {
-            tableBody.innerHTML = `<tr><td colspan="11" class="c-empty">${escapeHtml(t("common.no_data"))}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="c-empty">${escapeHtml(t("common.no_data"))}</td></tr>`;
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
                 selectAllCheckbox.indeterminate = false;
@@ -854,11 +851,8 @@
               </td>
               <td>${escapeHtml(item.company_name || "-")}</td>
               <td>${escapeHtml(item.company_address || "-")}</td>
+              <td>${escapeHtml(item.company_email || "-")}</td>
               <td>${escapeHtml(item.remark || "-")}</td>
-              <td>${escapeHtml(item.contact1_name || "-")}</td>
-              <td>${escapeHtml(item.contact1_position || "-")}</td>
-              <td>${escapeHtml(item.contact1_email || "-")}</td>
-              <td>${escapeHtml(item.contact1_phone || "-")}</td>
               <td>${escapeHtml(item.person_in_charge || "-")}</td>
               <td>${escapeHtml(item.created_at || "-")}</td>
               <td>

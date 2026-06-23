@@ -99,7 +99,7 @@
                         <div class="recipients-header-actions">
                             <button class="c-btn c-btn-secondary c-btn-sm" id="bulk-recipient-select-all" type="button"
                                     data-i18n="customer.bulk.select_all">全选公司邮箱</button>
-                            <div class="recipients-meta" id="bulk-mail-selected">已选 0 个客户</div>
+                            <div class="recipients-meta" id="bulk-mail-selected">已选 0 个收件对象</div>
                         </div>
                     </div>
                     <div class="recipients-filter">
@@ -784,7 +784,11 @@
         if (!bulkRecipientPagination || !window.renderPagination) return;
         setRecipientPaginationVisible(!selectedCustomerIdSet.size);
         if (bulkRecipientPaginationSummary) {
-            bulkRecipientPaginationSummary.textContent = `共 ${customerPagination.totalCount} 条 · 第 ${customerPagination.page}/${customerPagination.totalPages} 页`;
+            bulkRecipientPaginationSummary.textContent = format("common.summary.page", {
+                count: customerPagination.totalCount,
+                page: customerPagination.page,
+                total: customerPagination.totalPages,
+            });
         }
         window.renderPagination(
             bulkRecipientPagination,
@@ -921,6 +925,30 @@
     };
 
     applyContextAndPrefill();
+    updateBulkSelected();
+
+    const refreshI18n = () => {
+        if (i18n) {
+            i18n.apply();
+        }
+        renderRecipientPagination();
+        renderFilteredRecipients();
+        renderAttachmentSource();
+        renderDirectTemplateSubtitle();
+        if (bulkRecipientSelectAll && isSelectingAllRecipients) {
+            bulkRecipientSelectAll.textContent = t("customer.bulk.status.selecting");
+        }
+        if (bulkMailSendText && isSendingBulkMail) {
+            bulkMailSendText.textContent = t("customer.bulk.status.sending_short");
+        }
+        if (bulkMailBodyMask) {
+            bulkMailBodyMask.textContent = t("customer.bulk.status.body_processing");
+        }
+    };
+
+    if (window && window.addEventListener) {
+        window.addEventListener("i18n:change", refreshI18n);
+    }
 
     const initializeBulkMailPage = async () => {
         try {

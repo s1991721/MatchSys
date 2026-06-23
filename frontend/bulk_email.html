@@ -187,6 +187,7 @@
     let isSelectingAllRecipients = false;
     let allRecipientSelectionKeySet = new Set();
     let isAllRecipientScopeSelected = false;
+    let shouldAutoSelectAllCustomerRecipients = false;
     let templateBodyRequestSequence = 0;
     const directMailTemplateNames = {
         "1": "direct_technician",
@@ -829,6 +830,9 @@
         if (context && Array.isArray(context.selected_ids)) {
             selectedCustomerIdSet = new Set(context.selected_ids.map((id) => String(id)));
         }
+        if (context && context.scope === "all" && !selectedCustomerIdSet.size) {
+            shouldAutoSelectAllCustomerRecipients = true;
+        }
 
         if (prefillCandidate) {
             prefill = {
@@ -848,7 +852,17 @@
     };
 
     const loadCustomers = async (page = 1) => {
-        if (selectedCustomerIdSet.size) {
+        if (shouldAutoSelectAllCustomerRecipients) {
+            recipientSourceItems = await fetchAllCustomers();
+            selectRecipientsFromItems(recipientSourceItems);
+            customerPagination = {
+                page: 1,
+                totalPages: 1,
+                totalCount: recipientSourceItems.length,
+            };
+            setRecipientPaginationVisible(false);
+            shouldAutoSelectAllCustomerRecipients = false;
+        } else if (selectedCustomerIdSet.size) {
             recipientSourceItems = await fetchSelectedCustomers();
             customerPagination = {
                 page: 1,

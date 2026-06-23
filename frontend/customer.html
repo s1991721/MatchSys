@@ -30,7 +30,7 @@
                         新增客户
                     </button>
                     <button class="c-btn c-btn-secondary c-btn-lg" id="btn-bulk-email" type="button"
-                            data-i18n="customer.action.bulk_email">群发邮件
+                            data-i18n="customer.action.bulk_email_all">群发全部客户
                     </button>
                 </div>
                 <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
@@ -46,13 +46,23 @@
                 </div>
             </div>
         </div>
-        <div class="table-actions c-table-actions"></div>
+        <div class="table-actions c-table-actions">
+            <span class="c-pill c-pill-info" id="selected-customers-summary"
+                  data-i18n="customer.selection.selected">已选择 0 个客户</span>
+        </div>
         <div class="table-wrapper c-table-wrapper">
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
                     <th class="c-checkbox-col">
-                        <input id="select-all-customers" type="checkbox" aria-label="选择全部"/>
+                        <div class="customer-select-all-head">
+                            <input id="select-all-customers" type="checkbox" aria-label="选择当前页客户"
+                                   data-i18n-aria="customer.selection.select_current_page"
+                                   title="选择当前页客户"
+                                   data-i18n-title="customer.selection.select_current_page"/>
+                            <span class="customer-select-current-page-hint"
+                                  data-i18n="customer.selection.current_page_hint">仅选中当前页</span>
+                        </div>
                     </th>
                     <th data-i18n="customer.table.company">公司名称</th>
                     <th data-i18n="customer.table.address">公司地址</th>
@@ -241,6 +251,7 @@
     const paginationPages = document.getElementById("customer-pagination-pages");
     const pageSummary = document.getElementById("page-summary");
     const selectAllCheckbox = document.getElementById("select-all-customers");
+    const selectedCustomersSummary = document.getElementById("selected-customers-summary");
     const editDialog = document.getElementById("edit-dialog");
     const dialogTitle = document.getElementById("dialog-title");
     const dialogSave = document.getElementById("dialog-save");
@@ -334,12 +345,12 @@
     });
 
     bulkEmailButton.addEventListener("click", () => {
-        if (selectedCustomerIds.size === 0) return;
         try {
             window.MatchSys.clearStoredKey("bulkMailPrefill");
             const contextPayload = {
-                selected_ids: Array.from(selectedCustomerIds),
                 source: "customer",
+                scope: selectedCustomerIds.size > 0 ? "selected" : "all",
+                selected_ids: Array.from(selectedCustomerIds),
                 updatedAt: Date.now(),
             };
             window.MatchSys.writeJSONToSessionStorage("bulkMailContext", contextPayload);
@@ -797,8 +808,14 @@
     };
 
     const updateBulkButtonState = () => {
-        const enabled = selectedCustomerIds.size > 0;
-        bulkEmailButton.disabled = !enabled;
+        const selectedCount = selectedCustomerIds.size;
+        bulkEmailButton.disabled = false;
+        bulkEmailButton.textContent = selectedCount > 0
+            ? t("customer.action.bulk_email_selected")
+            : t("customer.action.bulk_email_all");
+        if (selectedCustomersSummary) {
+            selectedCustomersSummary.textContent = format("customer.selection.selected", {count: selectedCount});
+        }
     };
 
     const syncSelectAllState = () => {

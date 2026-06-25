@@ -16,6 +16,7 @@
             <button class="finance-subtab is-active" type="button" role="tab" aria-selected="true" data-finance-subtab="basic" data-i18n="payroll.tabs.basic">基本工资</button>
             <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="monthly" data-i18n="payroll.tabs.monthly">月度计算</button>
             <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="annuity" data-i18n="payroll.tabs.annuity">年金保险基数设置</button>
+            <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="withholdingTax" data-i18n="payroll.tabs.withholding_tax">源泉徴収税額表</button>
             <button class="finance-subtab" type="button" role="tab" aria-selected="false" data-finance-subtab="basicItemSettings" data-i18n="payroll.tabs.basic_item_settings">基础项目设置</button>
         </div>
         <div class="finance-subframe-shell">
@@ -64,6 +65,7 @@
             basic: { src: "payroll/basic-info.html", titleKey: "payroll.tabs.basic", fallbackTitle: "基本工资" },
             monthly: { src: "payroll/monthly-calculation.html", titleKey: "payroll.tabs.monthly", fallbackTitle: "月度计算" },
             annuity: { src: "settings/annuity.html", titleKey: "payroll.tabs.annuity", fallbackTitle: "年金保险基数设置" },
+            withholdingTax: { src: "payroll/withholding-tax-table.html", titleKey: "payroll.tabs.withholding_tax", fallbackTitle: "源泉徴収税額表" },
             basicItemSettings: { src: "payroll/basic-item-settings.html", titleKey: "payroll.tabs.basic_item_settings", fallbackTitle: "基础项目设置" }
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));

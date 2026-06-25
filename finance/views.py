@@ -188,9 +188,11 @@ def _normalize_annuity_tax_items(value):
         if rate > Decimal("1"):
             return None, _finance_settings_payload_error(f"Invalid field: tax_items[{index}].rate")
 
+        remark = str(item.get("remark") or item.get("note") or "").strip()
         items.append({
             "key": key,
             "name": name,
+            "remark": remark,
             "rate": _decimal_to_json_number(rate),
         })
 

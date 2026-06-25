@@ -6,12 +6,87 @@
     <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
+    <style>
+        .annuity-sheet-wrap {
+            --annuity-letter-row-height: 34px;
+            --annuity-group-row-height: 96px;
+        }
+        .annuity-sheet-wrap .finance-sheet-table thead th {
+            top: 0;
+            z-index: 12;
+        }
+        .annuity-sheet-wrap .finance-sheet-group-row th,
+        .annuity-sheet-wrap .finance-sheet-group-row td {
+            position: sticky;
+            top: var(--annuity-letter-row-height);
+            z-index: 10;
+            background: #fff;
+        }
+        .annuity-sheet-wrap .finance-sheet-header-row th,
+        .annuity-sheet-wrap .finance-sheet-header-row td {
+            position: sticky;
+            top: calc(var(--annuity-letter-row-height) + var(--annuity-group-row-height));
+            z-index: 9;
+            background: #f8fafc;
+        }
+        .annuity-sheet-wrap .finance-sheet-table tbody th {
+            z-index: 11;
+        }
+        .annuity-sheet-wrap .finance-sheet-table .finance-sheet-corner {
+            z-index: 13;
+        }
+        .annuity-sheet-wrap .finance-sheet-tax-subject-cell {
+            min-width: 174px;
+            padding: 8px 10px;
+            white-space: normal;
+        }
+        .annuity-sheet-wrap .finance-sheet-tax-subject {
+            display: flex;
+            min-height: 72px;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: center;
+            gap: 6px;
+        }
+        .annuity-sheet-wrap .finance-sheet-tax-name {
+            display: block;
+            min-height: 24px;
+            outline-offset: 2px;
+            text-align: center;
+        }
+        .annuity-sheet-wrap .finance-sheet-tax-name:focus {
+            outline: 2px solid #2563eb;
+            border-radius: 4px;
+            background: #eff6ff;
+        }
+        .annuity-sheet-wrap .finance-sheet-tax-note {
+            width: 100%;
+            min-height: 34px;
+            resize: vertical;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 5px 7px;
+            background: #fff;
+            color: #334155;
+            font: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.35;
+            text-align: left;
+            white-space: normal;
+        }
+        .annuity-sheet-wrap .finance-sheet-tax-note:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: 0;
+            border-color: #2563eb;
+        }
+    </style>
     <title>年金保险基数设置</title>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="settings.annuity">
-    <div class="finance-sheet-wrap" aria-label="年金保险基数设置表格展示区">
-        <table class="finance-sheet-table" id="annuitySheetTable">
+    <div class="finance-sheet-wrap annuity-sheet-wrap" aria-label="年金保险基数设置表格展示区">
+        <table class="finance-sheet-table annuity-sheet-table" id="annuitySheetTable">
             <thead>
                 <tr>
                     <th class="finance-sheet-corner"></th>
@@ -30,10 +105,24 @@
                 <th>1</th>
                 <td colspan="3">標準報酬</td>
                 <td colspan="2">報酬月額</td>
-                <td class="finance-sheet-editable-cell" contenteditable="true">健康保険料</td>
-                <td class="finance-sheet-editable-cell" contenteditable="true">介護保険料</td>
-                <td class="finance-sheet-editable-cell" contenteditable="true"><span
-                        class="finance-sheet-new">NEW</span>子ども・子育て<br>支援金
+                <td class="finance-sheet-editable-cell finance-sheet-tax-subject-cell">
+                    <div class="finance-sheet-tax-subject">
+                        <span class="finance-sheet-tax-name" contenteditable="true">健康保険料</span>
+                        <textarea class="finance-sheet-tax-note" rows="2" placeholder="备注"></textarea>
+                    </div>
+                </td>
+                <td class="finance-sheet-editable-cell finance-sheet-tax-subject-cell">
+                    <div class="finance-sheet-tax-subject">
+                        <span class="finance-sheet-tax-name" contenteditable="true">介護保険料</span>
+                        <textarea class="finance-sheet-tax-note" rows="2" placeholder="备注"></textarea>
+                    </div>
+                </td>
+                <td class="finance-sheet-editable-cell finance-sheet-tax-subject-cell">
+                    <div class="finance-sheet-tax-subject">
+                        <span class="finance-sheet-tax-name" contenteditable="true"><span
+                                class="finance-sheet-new">NEW</span>子ども・子育て<br>支援金</span>
+                        <textarea class="finance-sheet-tax-note" rows="2" placeholder="备注"></textarea>
+                    </div>
                 </td>
             </tr>
             <tr class="finance-sheet-header-row">
@@ -210,7 +299,48 @@
             if (!cell) return "";
             const clone = cell.cloneNode(true);
             clone.querySelectorAll(".finance-sheet-new").forEach((el) => el.remove());
+            clone.querySelectorAll(".finance-sheet-tax-note").forEach((el) => el.remove());
+            clone.querySelectorAll(".finance-sheet-tax-actions").forEach((el) => el.remove());
             return clone.textContent.replace(/\s+/g, " ").trim();
+        };
+
+        const getTaxSubjectName = (cell) => {
+            const nameNode = cell?.querySelector?.(".finance-sheet-tax-name");
+            return (nameNode ? nameNode.textContent : cleanCellText(cell)).replace(/\s+/g, " ").trim();
+        };
+
+        const getTaxSubjectRemark = (cell) => {
+            const noteNode = cell?.querySelector?.(".finance-sheet-tax-note");
+            return (noteNode?.value || "").trim();
+        };
+
+        const renderTaxSubjectCell = (cell, name, remark = "") => {
+            if (!cell) return;
+            cell.classList.add("finance-sheet-editable-cell", "finance-sheet-tax-subject-cell");
+            cell.removeAttribute("contenteditable");
+            cell.innerHTML = "";
+            const wrapper = document.createElement("div");
+            wrapper.className = "finance-sheet-tax-subject";
+            const nameNode = document.createElement("span");
+            nameNode.className = "finance-sheet-tax-name";
+            nameNode.contentEditable = "true";
+            nameNode.textContent = name;
+            const noteNode = document.createElement("textarea");
+            noteNode.className = "finance-sheet-tax-note";
+            noteNode.rows = 2;
+            noteNode.placeholder = "备注";
+            noteNode.value = remark || "";
+            wrapper.append(nameNode, noteNode);
+            cell.appendChild(wrapper);
+        };
+
+        const updateStickyHeaderOffsets = () => {
+            const wrap = table?.closest(".annuity-sheet-wrap");
+            const letterRow = table?.tHead?.rows?.[0];
+            const groupRow = table?.tBodies?.[0]?.querySelector(".finance-sheet-group-row");
+            if (!wrap || !letterRow || !groupRow) return;
+            wrap.style.setProperty("--annuity-letter-row-height", `${letterRow.getBoundingClientRect().height}px`);
+            wrap.style.setProperty("--annuity-group-row-height", `${groupRow.getBoundingClientRect().height}px`);
         };
 
         const formatAmount = (value) => {
@@ -359,9 +489,11 @@
             }
 
             Array.from(groupRow.cells).slice(3).forEach((cell, index) => {
-                cell.textContent = items[index]?.name || `扣税项目${index + 1}`;
-                cell.classList.add("finance-sheet-editable-cell");
-                cell.contentEditable = "true";
+                renderTaxSubjectCell(
+                    cell,
+                    items[index]?.name || `扣税项目${index + 1}`,
+                    items[index]?.remark || items[index]?.note || ""
+                );
             });
             Array.from(headerRow.cells).slice(6).forEach((cell, index) => {
                 cell.textContent = formatRate(items[index]?.rate);
@@ -369,6 +501,7 @@
                 cell.contentEditable = "true";
             });
             updateTaxSubjectControls();
+            updateStickyHeaderOffsets();
         };
 
         const applyAmountOverrides = (settings) => {
@@ -449,7 +582,8 @@
             const taxRateCells = getTaxRateCells();
             const taxItems = taxRateCells.map((cell, index) => ({
                 key: buildTaxItemKey(index),
-                name: cleanCellText(taxSubjectCells[index]) || `扣税项目${index + 1}`,
+                name: getTaxSubjectName(taxSubjectCells[index]) || `扣税项目${index + 1}`,
+                remark: getTaxSubjectRemark(taxSubjectCells[index]),
                 rate: parseRate(cell.textContent),
             }));
 
@@ -527,6 +661,13 @@
             return td;
         };
 
+        const appendTaxSubjectCell = (row, name, remark = "") => {
+            const td = document.createElement("td");
+            renderTaxSubjectCell(td, name, remark);
+            row.appendChild(td);
+            return td;
+        };
+
         const updateTaxSubjectControls = () => {
             const letterRow = table?.tHead.rows[0];
             if (!letterRow) return;
@@ -555,7 +696,7 @@
                 actions.className = "finance-sheet-tax-actions";
                 const isLastTaxColumn = taxIndex === taxColumnCount - 1;
                 actions.innerHTML = `
-                    <button class="finance-sheet-tax-action" type="button" data-annuity-tax-action="remove" data-annuity-tax-index="${taxIndex}" aria-label="删除${targetCell.firstChild?.textContent || "当前"}列交税科目" title="删除当前交税科目">-</button>
+                    <button class="finance-sheet-tax-action" type="button" data-annuity-tax-action="remove" data-annuity-tax-index="${taxIndex}" aria-label="删除${getTaxSubjectName(getTaxSubjectCells()[taxIndex]) || "当前"}列交税科目" title="删除当前交税科目">-</button>
                     ${isLastTaxColumn ? `<button class="finance-sheet-tax-action" type="button" data-annuity-tax-action="add" aria-label="增加交税科目" title="增加交税科目">+</button>` : ""}
                 `;
                 targetCell.appendChild(actions);
@@ -568,13 +709,14 @@
             const body = table.tBodies[0];
             const groupRow = body.querySelector(".finance-sheet-group-row");
             const headerRow = body.querySelector(".finance-sheet-header-row");
-            appendEditableCell(groupRow, "新交税科目");
+            appendTaxSubjectCell(groupRow, "新交税科目");
             appendEditableCell(headerRow, "0%");
             getDataRows().forEach((row) => {
                 appendEditableCell(row, "");
             });
             calculateTaxDefaults();
             updateTaxSubjectControls();
+            updateStickyHeaderOffsets();
         };
 
         const removeTaxSubjectColumn = (taxIndex) => {
@@ -591,6 +733,7 @@
                 row.deleteCell(CSV_COLUMNS.length + index + 1);
             });
             updateTaxSubjectControls();
+            updateStickyHeaderOffsets();
         };
 
         table?.addEventListener("click", (event) => {
@@ -606,6 +749,7 @@
         });
         table?.addEventListener("paste", (event) => {
             const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            if (target?.closest("textarea,input")) return;
             const cell = target?.closest(".finance-sheet-editable-cell");
             if (!cell) return;
             event.preventDefault();
@@ -614,6 +758,7 @@
         });
         table?.addEventListener("input", (event) => {
             const target = event.target instanceof Element ? event.target : event.target?.parentElement;
+            if (target?.closest("textarea,input")) return;
             const cell = target?.closest(".finance-sheet-editable-cell");
             if (!cell) return;
             const rateIndex = getTaxRateCells().indexOf(cell);
@@ -660,7 +805,9 @@
             URL.revokeObjectURL(link.href);
             link.remove();
         });
+        window.addEventListener("resize", updateStickyHeaderOffsets);
         updateTaxSubjectControls();
+        updateStickyHeaderOffsets();
         loadSettings();
     });
 }());

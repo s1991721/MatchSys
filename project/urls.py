@@ -110,6 +110,7 @@ from finance.views import (
     payroll_monthly_calculate_api,
     payroll_monthly_detail_api,
     payroll_monthly_export_api,
+    payroll_monthly_recalculate_api,
 )
 from order.views import (
     pay_request_detail_api,
@@ -346,6 +347,7 @@ urlpatterns = [
     path("api/finance/payroll/monthly", payroll_monthly_api, name="payroll-monthly"),
     path("api/finance/payroll/monthly/calculate", payroll_monthly_calculate_api, name="payroll-monthly-calculate"),
     path("api/finance/payroll/monthly/export", payroll_monthly_export_api, name="payroll-monthly-export"),
+    path("api/finance/payroll/monthly/<int:calculation_id>/recalculate", payroll_monthly_recalculate_api, name="payroll-monthly-recalculate"),
     path("api/finance/payroll/monthly/<int:calculation_id>", payroll_monthly_detail_api, name="payroll-monthly-detail"),
     path("api/technicians", technicians_api, name="technician-list"),
     path("api/technicians/<int:employee_id>", technician_detail_api, name="technician-detail"),

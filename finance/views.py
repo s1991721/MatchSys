@@ -1,5 +1,5 @@
-from datetime import datetime
-from decimal import Decimal
+from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 from io import BytesIO
 from urllib.parse import quote
 
@@ -1844,7 +1844,21 @@ def _parse_payroll_items(value, field_name, omit_zero=False):
             return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
         if omit_zero and amount == 0:
             continue
-        result.append({"name": name, "amount": str(amount)})
+        parsed_item = {"name": name, "amount": str(amount)}
+        if item.get("payroll_calculated") is True:
+            parsed_item["payroll_calculated"] = True
+        if item.get("calculation_group") in ("fixed", "variable"):
+            parsed_item["calculation_group"] = item.get("calculation_group")
+        calculation_key = str(item.get("calculation_key") or "").strip()
+        if calculation_key:
+            parsed_item["calculation_key"] = calculation_key
+        if item.get("calculation_rate") not in (None, ""):
+            rate = _decimal_from_setting(item.get("calculation_rate"))
+            parsed_item["calculation_rate"] = str(rate)
+        calculation_base_label = str(item.get("calculation_base_label") or "").strip()
+        if calculation_base_label:
+            parsed_item["calculation_base_label"] = calculation_base_label
+        result.append(parsed_item)
     return result, None
 
 
@@ -1856,6 +1870,257 @@ def _sum_payroll_items(items):
         except Exception:
             continue
     return total
+
+
+PAYROLL_VARIABLE_DEDUCTION_RULES = (
+    {
+        "key": "employmentInsurance",
+        "name": "雇佣保险料",
+        "rate": Decimal("0.0055"),
+        "base": "remaining",
+        "base_label": "扣除社保后",
+        "group": "variable",
+    },
+    {
+        "key": "incomeTax",
+        "name": "所得税",
+        "rate": Decimal("0.05"),
+        "base": "remaining_after_employment",
+        "base_label": "扣除雇保后",
+        "group": "variable",
+    },
+)
+PAYROLL_VARIABLE_DEDUCTION_NAMES = {
+    item["name"] for item in PAYROLL_VARIABLE_DEDUCTION_RULES
+}
+PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE = Decimal("0.5")
+PAYROLL_CARE_INSURANCE_MIN_AGE = 40
+
+
+def _round_payroll_amount(value):
+    return Decimal(value or "0").quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+
+def _decimal_from_setting(value, default="0"):
+    try:
+        return Decimal(str(value if value not in (None, "") else default))
+    except Exception:
+        return Decimal(default)
+
+
+def _annuity_tax_item_names(settings):
+    if not settings:
+        return set()
+    return {
+        str(item.get("name") or "").strip()
+        for item in settings.get("tax_items") or []
+        if str(item.get("name") or "").strip()
+    }
+
+
+def _strip_calculated_deduction_items(items, annuity_settings=None):
+    annuity_names = _annuity_tax_item_names(annuity_settings)
+    return [
+        item for item in (items or [])
+        if item.get("payroll_calculated") is not True
+        and item.get("calculation_group") not in ("fixed", "variable")
+        and (item.get("name") or "").strip() not in PAYROLL_VARIABLE_DEDUCTION_NAMES
+        and (item.get("name") or "").strip() not in annuity_names
+    ]
+
+
+def _get_annuity_settings():
+    record = (
+        FinanceSettings.objects
+        .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+    return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _find_annuity_standard(settings, remuneration_base):
+    if not settings:
+        return None
+    rows = settings.get("base_standards")
+    if not isinstance(rows, list):
+        return None
+    valid_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        valid_rows.append(row)
+        salary_min = _decimal_from_setting(row.get("salary_min", row.get("min_salary")))
+        salary_max = _decimal_from_setting(row.get("salary_max", row.get("max_salary")))
+        upper_matches = salary_max <= 0 or remuneration_base < salary_max
+        if remuneration_base >= salary_min and upper_matches:
+            return row
+    if not valid_rows:
+        return None
+    valid_rows.sort(key=lambda item: _decimal_from_setting(item.get("salary_min", item.get("min_salary"))))
+    first = valid_rows[0]
+    if remuneration_base < _decimal_from_setting(first.get("salary_min", first.get("min_salary"))):
+        return first
+    return valid_rows[-1]
+
+
+def _find_annuity_amount_override(settings, grade, tax_item_key):
+    if not settings or grade in (None, "") or not tax_item_key:
+        return None
+    for item in settings.get("amount_overrides") or []:
+        if str(item.get("grade")) == str(grade) and str(item.get("tax_item_key") or item.get("key") or "") == str(tax_item_key):
+            return _decimal_from_setting(item.get("amount"))
+    return None
+
+
+def _age_at(birthday, target_date):
+    if not birthday or not target_date:
+        return None
+    return target_date.year - birthday.year - (
+        (target_date.month, target_date.day) < (birthday.month, birthday.day)
+    )
+
+
+def _get_employee_birthday(source, overrides=None):
+    employee_id = (overrides or {}).get("employee_id", getattr(source, "employee_id", None))
+    if not employee_id:
+        return None
+    return (
+        Employee.objects
+        .filter(id=employee_id, deleted_at__isnull=True)
+        .values_list("birthday", flat=True)
+        .first()
+    )
+
+
+def _is_care_insurance_tax_item(tax_item):
+    key = str(tax_item.get("key") or "").strip().lower()
+    name = str(tax_item.get("name") or "").strip()
+    return "care" in key or "介護" in name or "介护" in name
+
+
+def _should_apply_care_insurance(tax_item, birthday, target_month):
+    if not _is_care_insurance_tax_item(tax_item):
+        return True
+    if not birthday or not target_month:
+        return False
+    month_end = shift_month(target_month, 1) - timedelta(days=1)
+    age = _age_at(birthday, month_end)
+    return age is not None and age >= PAYROLL_CARE_INSURANCE_MIN_AGE
+
+
+def _calculate_annuity_tax_item_total_amount(settings, standard_row, tax_item):
+    if not standard_row:
+        return Decimal("0")
+    standard_salary = _decimal_from_setting(standard_row.get("monthly_amount", standard_row.get("standard_salary")))
+    override = _find_annuity_amount_override(
+        settings,
+        standard_row.get("grade"),
+        tax_item.get("key"),
+    )
+    if override is not None:
+        return _round_payroll_amount(override)
+    return _round_payroll_amount(standard_salary * _decimal_from_setting(tax_item.get("rate")))
+
+
+def _calculate_annuity_tax_item_employee_amount(settings, standard_row, tax_item, birthday=None, target_month=None):
+    if not _should_apply_care_insurance(tax_item, birthday, target_month):
+        return Decimal("0")
+    total_amount = _calculate_annuity_tax_item_total_amount(settings, standard_row, tax_item)
+    return _round_payroll_amount(total_amount * PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE)
+
+
+def _calculate_annuity_tax_item_employee_rate(tax_item):
+    return _decimal_from_setting(tax_item.get("rate")) * PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE
+
+
+def _build_payroll_calculation_values(source, target_month=None, overrides=None):
+    overrides = overrides or {}
+    base_salary = overrides.get("base_salary", getattr(source, "base_salary", Decimal("0")))
+    addition_items = overrides.get("addition_items", getattr(source, "addition_items", None) or [])
+    non_taxable_addition_items = overrides.get(
+        "non_taxable_addition_items",
+        getattr(source, "non_taxable_addition_items", None) or [],
+    )
+    annuity_settings = _get_annuity_settings()
+    manual_deduction_items = _strip_calculated_deduction_items(
+        overrides.get("deduction_items", getattr(source, "deduction_items", None) or []),
+        annuity_settings=annuity_settings,
+    )
+
+    addition_total = _sum_payroll_items(addition_items)
+    non_taxable_addition_total = _sum_payroll_items(non_taxable_addition_items)
+    manual_deduction_total = _sum_payroll_items(manual_deduction_items)
+    gross_salary = base_salary + addition_total + non_taxable_addition_total
+    remuneration_base = max(Decimal("0"), gross_salary - manual_deduction_total)
+
+    annuity_standard = _find_annuity_standard(annuity_settings, base_salary)
+    employee_birthday = _get_employee_birthday(source, overrides)
+    calculated_items = []
+    first_stage_total = Decimal("0")
+    employment_amount = Decimal("0")
+
+    if annuity_settings:
+        annuity_tax_items = annuity_settings.get("tax_items") or []
+    else:
+        annuity_tax_items = []
+    for tax_item in annuity_tax_items:
+        tax_item_name = str(tax_item.get("name") or "").strip()
+        if not tax_item_name:
+            continue
+        amount = _calculate_annuity_tax_item_employee_amount(
+            annuity_settings,
+            annuity_standard,
+            tax_item,
+            birthday=employee_birthday,
+            target_month=target_month,
+        )
+        first_stage_total += amount
+        calculated_items.append({
+            "name": tax_item_name,
+            "amount": str(amount),
+            "payroll_calculated": True,
+            "calculation_group": "fixed",
+            "calculation_key": str(tax_item.get("key") or ""),
+            "calculation_rate": str(_calculate_annuity_tax_item_employee_rate(tax_item)),
+        })
+
+    for rule in PAYROLL_VARIABLE_DEDUCTION_RULES:
+        if rule["base"] == "remaining":
+            amount = _round_payroll_amount(max(Decimal("0"), remuneration_base - first_stage_total) * rule["rate"])
+            employment_amount = amount
+        else:
+            amount = _round_payroll_amount(
+                max(Decimal("0"), remuneration_base - first_stage_total - employment_amount) * rule["rate"]
+            )
+        calculated_items.append({
+            "name": rule["name"],
+            "amount": str(amount),
+            "payroll_calculated": True,
+            "calculation_group": "variable",
+            "calculation_key": rule["key"],
+            "calculation_rate": str(rule["rate"]),
+            "calculation_base_label": rule["base_label"],
+        })
+
+    calculated_total = _sum_payroll_items(calculated_items)
+    deduction_amount = manual_deduction_total + calculated_total
+    allowance_amount = addition_total + non_taxable_addition_total
+    net_salary = base_salary + allowance_amount - deduction_amount
+
+    values = {
+        "base_salary": base_salary,
+        "allowance_amount": allowance_amount,
+        "deduction_amount": deduction_amount,
+        "addition_items": addition_items,
+        "non_taxable_addition_items": non_taxable_addition_items,
+        "deduction_items": [*manual_deduction_items, *calculated_items],
+        "social_insurance_amount": calculated_total,
+        "net_salary": net_salary,
+    }
+    if target_month is not None:
+        values["payroll_month"] = target_month
+    return values
 
 
 def _serialize_payroll_basic_items(items):
@@ -2223,34 +2488,20 @@ def payroll_monthly_calculate_api(request):
     attendance_map = _get_attendance_days_map(target_month, [item.employee_id for item in basic_items])
     created_items = []
     for basic in basic_items:
-        addition_items = basic.addition_items or []
-        non_taxable_addition_items = basic.non_taxable_addition_items or []
-        deduction_items = basic.deduction_items or []
-        allowance_amount = _sum_payroll_items(addition_items) + _sum_payroll_items(non_taxable_addition_items)
-        deduction_amount = _sum_payroll_items(deduction_items)
-        social_insurance_amount = Decimal("0")
-        net_salary = basic.base_salary + allowance_amount - deduction_amount - social_insurance_amount
+        calculated_values = _build_payroll_calculation_values(basic, target_month=target_month)
         created_items.append(
             PayrollMonthlyCalculation.build_for_period(
                 target_month,
-                payroll_month=target_month,
                 employee_id=basic.employee_id,
                 employee_name=basic.employee_name,
                 contract_type=basic.contract_type,
                 attendance_days=attendance_map.get(basic.employee_id, Decimal("0")),
-                base_salary=basic.base_salary,
-                allowance_amount=allowance_amount,
-                deduction_amount=deduction_amount,
-                addition_items=addition_items,
-                non_taxable_addition_items=non_taxable_addition_items,
-                deduction_items=deduction_items,
-                social_insurance_amount=social_insurance_amount,
-                net_salary=net_salary,
                 bank_info=None,
                 status=0,
                 remark=None,
                 created_by=login_id,
                 updated_by=login_id,
+                **calculated_values,
             )
         )
     if created_items:
@@ -2267,6 +2518,44 @@ def payroll_monthly_calculate_api(request):
             "items": _serialize_monthly_items(items),
         }
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def payroll_monthly_recalculate_api(request, calculation_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    target_month, error = _parse_payroll_month(payload.get("month"))
+    if error:
+        return error
+
+    monthly_objects = PayrollMonthlyCalculation.objects_for_period(target_month)
+    item = monthly_objects.filter(
+        id=calculation_id,
+        payroll_month=target_month,
+        deleted_at__isnull=True,
+    ).first()
+    if not item:
+        return api_error("Payroll monthly calculation not found", status=404)
+
+    values, error = _build_monthly_payload(payload, target_month=target_month)
+    if error:
+        return error
+    calculated_values = _build_payroll_calculation_values(item, target_month=target_month, overrides=values)
+    for key, value in calculated_values.items():
+        setattr(item, key, value)
+    item.employee_id = values["employee_id"]
+    item.employee_name = values["employee_name"]
+    item.contract_type = values["contract_type"]
+    item.attendance_days = values["attendance_days"]
+    item.status = values["status"]
+    item.bank_info = values["bank_info"]
+    item.remark = values["remark"]
+    return api_success(data={"item": PayrollMonthlyCalculation.serialize(item)})
 
 
 @csrf_exempt

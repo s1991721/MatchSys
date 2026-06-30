@@ -1996,6 +1996,27 @@ def _parse_payroll_status(value):
     return parsed, None
 
 
+def _parse_payroll_withholding_tax_type(value):
+    if value in (None, ""):
+        return None, api_error("Missing field: withholding_tax_type", status=400)
+    parsed = str(value).strip()
+    if parsed not in ("kou", "otsu"):
+        return None, api_error("Invalid field: withholding_tax_type", status=400)
+    return parsed, None
+
+
+def _parse_payroll_dependent_count(value):
+    if value in (None, ""):
+        return None, api_error("Missing field: dependent_count", status=400)
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None, api_error("Invalid field: dependent_count", status=400)
+    if parsed < 0 or parsed > 7:
+        return None, api_error("Invalid field: dependent_count", status=400)
+    return parsed, None
+
+
 def _parse_payroll_items(value, field_name, omit_zero=False):
     if value in (None, ""):
         return [], None
@@ -2383,6 +2404,14 @@ def payroll_basic_info_api(request):
     status_value, error = _parse_payroll_status(payload.get("status", 1))
     if error:
         return error
+    withholding_tax_type, error = _parse_payroll_withholding_tax_type(payload.get("withholding_tax_type"))
+    if error:
+        return error
+    dependent_count, error = _parse_payroll_dependent_count(payload.get("dependent_count"))
+    if error:
+        return error
+    if withholding_tax_type == "otsu":
+        dependent_count = 0
     addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items", omit_zero=True)
     if error:
         return error
@@ -2405,6 +2434,8 @@ def payroll_basic_info_api(request):
         employee_name=employee.name,
         contract_type=contract_type,
         base_salary=base_salary,
+        withholding_tax_type=withholding_tax_type,
+        dependent_count=dependent_count,
         addition_items=addition_items,
         non_taxable_addition_items=non_taxable_addition_items,
         deduction_items=deduction_items,
@@ -2461,6 +2492,18 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
             return error
         item.base_salary = value
 
+    if "withholding_tax_type" in payload:
+        withholding_tax_type, error = _parse_payroll_withholding_tax_type(payload.get("withholding_tax_type"))
+        if error:
+            return error
+        item.withholding_tax_type = withholding_tax_type
+
+    if "dependent_count" in payload:
+        dependent_count, error = _parse_payroll_dependent_count(payload.get("dependent_count"))
+        if error:
+            return error
+        item.dependent_count = dependent_count
+
     if "addition_items" in payload:
         addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items", omit_zero=True)
         if error:
@@ -2485,6 +2528,9 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
 
     if "remark" in payload:
         item.remark = (payload.get("remark") or "").strip() or None
+
+    if item.withholding_tax_type == "otsu":
+        item.dependent_count = 0
 
     item.updated_by = login_id
     item.save()

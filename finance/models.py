@@ -324,6 +324,10 @@ class PayrollBasicInfo(models.Model):
         (1, "契约社员"),
         (2, "フリーランス"),
     )
+    WITHHOLDING_TAX_TYPE_CHOICES = (
+        ("kou", "甲栏"),
+        ("otsu", "乙栏"),
+    )
     STATUS_CHOICES = (
         (0, "无效"),
         (1, "有效"),
@@ -333,6 +337,8 @@ class PayrollBasicInfo(models.Model):
     employee_name = models.CharField(max_length=100, verbose_name="员工姓名")
     contract_type = models.SmallIntegerField(choices=CONTRACT_TYPE_CHOICES, default=0, verbose_name="契约类型")
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="基本工资")
+    withholding_tax_type = models.CharField(max_length=8, choices=WITHHOLDING_TAX_TYPE_CHOICES, default="kou", verbose_name="源泉税区分")
+    dependent_count = models.PositiveSmallIntegerField(default=0, verbose_name="扶养亲族等人数")
     addition_items = models.JSONField(null=True, blank=True, verbose_name="工资增加项明细")
     non_taxable_addition_items = models.JSONField(null=True, blank=True, verbose_name="工资非课税增加项明细")
     deduction_items = models.JSONField(null=True, blank=True, verbose_name="工资减少项明细")
@@ -371,6 +377,8 @@ class PayrollBasicInfo(models.Model):
             "contract_type": item.contract_type,
             "contract_label": contract_labels.get(item.contract_type, ""),
             "base_salary": str(item.base_salary),
+            "withholding_tax_type": item.withholding_tax_type,
+            "dependent_count": item.dependent_count,
             "addition_items": item.addition_items or [],
             "non_taxable_addition_items": item.non_taxable_addition_items or [],
             "deduction_items": item.deduction_items or [],

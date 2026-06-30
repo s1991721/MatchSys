@@ -153,7 +153,6 @@
         otsu: "乙栏"
     };
     const basicItemSettingsApi = "/api/finance/settings/payroll-basic-items";
-    const withholdingTaxStorageKey = "finance_payroll_basic_withholding_tax_mvp";
     const t = (key, fallback) => {
         if (!window.I18N || typeof window.I18N.t !== "function") return fallback;
         const value = window.I18N.t(key);
@@ -217,22 +216,6 @@
         let editingId = null;
         let editingEmployeeId = null;
 
-        const readWithholdingTaxStore = () => {
-            try {
-                const parsed = JSON.parse(localStorage.getItem(withholdingTaxStorageKey) || "{}");
-                return parsed && typeof parsed === "object" ? parsed : {};
-            } catch {
-                return {};
-            }
-        };
-
-        const writeWithholdingTaxStore = (store) => {
-            try {
-                localStorage.setItem(withholdingTaxStorageKey, JSON.stringify(store || {}));
-            } catch {
-            }
-        };
-
         const normalizeWithholdingTaxInfo = (value = {}) => {
             const type = value.withholding_tax_type === "otsu" ? "otsu" : "kou";
             const count = Number(value.dependent_count ?? 0);
@@ -242,31 +225,6 @@
                     ? Math.min(count, 7)
                     : 0
             };
-        };
-
-        const getWithholdingTaxKey = (item) => {
-            const employeeId = item?.employee_id || editingEmployeeId;
-            if (!employeeId) return "";
-            return String(employeeId);
-        };
-
-        const getStoredWithholdingTaxInfo = (item) => {
-            const store = readWithholdingTaxStore();
-            return normalizeWithholdingTaxInfo(store[getWithholdingTaxKey(item)] || item);
-        };
-
-        const storeWithholdingTaxInfo = (employeeId, info) => {
-            if (!employeeId) return;
-            const store = readWithholdingTaxStore();
-            store[String(employeeId)] = normalizeWithholdingTaxInfo(info);
-            writeWithholdingTaxStore(store);
-        };
-
-        const removeStoredWithholdingTaxInfo = (employeeId) => {
-            if (!employeeId) return;
-            const store = readWithholdingTaxStore();
-            delete store[String(employeeId)];
-            writeWithholdingTaxStore(store);
         };
 
         const applyWithholdingTaxFieldsState = () => {
@@ -384,7 +342,7 @@
             tbody.innerHTML = items.map((item) => {
                 const contract = contractLabel(Number(item.contract_type)) || item.contract_label || "";
                 const status = statusLabel(Number(item.status)) || item.status_label || "";
-                const withholdingTaxInfo = getStoredWithholdingTaxInfo(item);
+                const withholdingTaxInfo = normalizeWithholdingTaxInfo(item);
                 const withholdingTaxLabel = withholdingTaxInfo.withholding_tax_type === "kou"
                     ? `${withholdingTaxTypeLabel("kou")} / ${withholdingTaxInfo.dependent_count}${t("payroll.basic.dependent_count.unit", "人")}`
                     : withholdingTaxTypeLabel("otsu");
@@ -446,7 +404,7 @@
             fields.employeeName.value = data?.employee_name || employee?.name || "";
             fields.contractType.value = String(data?.contract_type ?? 0);
             fields.baseSalary.value = data?.base_salary || "0";
-            const withholdingTaxInfo = getStoredWithholdingTaxInfo(data || {employee_id: editingEmployeeId});
+            const withholdingTaxInfo = normalizeWithholdingTaxInfo(data);
             fields.withholdingTaxType.value = withholdingTaxInfo.withholding_tax_type;
             fields.dependentCount.value = String(withholdingTaxInfo.dependent_count);
             applyWithholdingTaxFieldsState();
@@ -537,7 +495,6 @@
                 await window.requestJson(`/api/finance/payroll/basic-info/${editingId}`, {
                     method: "DELETE"
                 });
-                removeStoredWithholdingTaxInfo(editingEmployeeId);
                 window.alert(t("payroll.basic.message.deleted", "薪资信息已删除。"));
                 closeModal();
                 await fetchList();
@@ -550,12 +507,10 @@
             const payload = buildPayload();
             try {
                 const url = editingId ? `/api/finance/payroll/basic-info/${editingId}` : "/api/finance/payroll/basic-info";
-                const response = await window.requestJson(url, {
+                await window.requestJson(url, {
                     method: editingId ? "PUT" : "POST",
                     body: JSON.stringify(payload)
                 });
-                const savedEmployeeId = response?.data?.item?.employee_id || payload.employee_id;
-                storeWithholdingTaxInfo(savedEmployeeId, payload);
                 closeModal();
                 await fetchList();
             } catch (err) {

@@ -453,6 +453,8 @@ CREATE TABLE IF NOT EXISTS payroll_basic_info
     contract_type         TINYINT        NOT NULL DEFAULT 0 COMMENT '契约类型：0-正社员 1-契约社员 2-フリーランス',
 
     base_salary           DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',
+    withholding_tax_type  VARCHAR(8)     NOT NULL DEFAULT 'kou' COMMENT '源泉税区分：kou-甲栏 otsu-乙栏',
+    dependent_count       TINYINT        NOT NULL DEFAULT 0 COMMENT '扶养亲族等人数：0-7（乙栏固定0）',
     addition_items        JSON           NULL COMMENT '工资增加项明细',
     non_taxable_addition_items JSON       NULL COMMENT '工资非课税增加项明细',
     deduction_items       JSON           NULL COMMENT '工资减少项明细',

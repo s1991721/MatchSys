@@ -6,14 +6,74 @@
     <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
+    <style>
+        .withholding-sheet-wrap .finance-sheet-table thead th {
+            top: 0;
+            z-index: 12;
+        }
+        .withholding-sheet-wrap .finance-sheet-table tbody th {
+            z-index: 11;
+        }
+        .withholding-sheet-wrap .finance-sheet-table .finance-sheet-corner {
+            z-index: 13;
+        }
+        .withholding-sheet-wrap .finance-sheet-table th,
+        .withholding-sheet-wrap .finance-sheet-table td {
+            min-width: 88px;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .withholding-sheet-wrap .finance-sheet-table thead th {
+            text-align: center;
+        }
+        .withholding-sheet-wrap .finance-sheet-table td.is-attention {
+            background: #fff7ed;
+            color: #9a3412;
+            font-weight: 800;
+        }
+    </style>
     <title data-i18n="payroll.tabs.withholding_tax">源泉徴収税額表</title>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payroll.withholding-tax">
-    <section class="c-card c-card-pad">
-        <h3 data-i18n="payroll.tabs.withholding_tax">源泉徴収税額表</h3>
-        <p class="basic-item-settings-description" data-i18n="payroll.withholding_tax.placeholder">页面准备中。</p>
-    </section>
+    <div class="finance-sheet-wrap withholding-sheet-wrap" aria-label="源泉徴収税額表预览区">
+        <table class="finance-sheet-table withholding-sheet-table" id="withholdingSheetTable">
+            <thead>
+                <tr>
+                    <th class="finance-sheet-corner"></th>
+                    <th>以上</th>
+                    <th>未満</th>
+                    <th>甲0人</th>
+                    <th>甲1人</th>
+                    <th>甲2人</th>
+                    <th>甲3人</th>
+                    <th>甲4人</th>
+                    <th>甲5人</th>
+                    <th>甲6人</th>
+                    <th>甲7人</th>
+                    <th>乙</th>
+                </tr>
+            </thead>
+            <tbody id="withholdingPreviewBody">
+                <tr>
+                    <th>1</th>
+                    <td colspan="11" style="position: static; text-align: center; color: #64748b; font-weight: 700;">上传 Excel 后生成预览。</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="finance-sheet-toolbar">
+        <div class="finance-sheet-metadata">
+            <label class="finance-sheet-meta-field">
+                <span>年份</span>
+                <input class="c-input" id="withholdingYearInput" type="number" min="1900" max="2100" step="1" placeholder="2026">
+            </label>
+        </div>
+        <div class="finance-sheet-actions">
+            <input class="finance-sheet-file" id="withholdingFileInput" type="file" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            <button class="c-btn c-btn-secondary c-btn-sm" type="button" id="withholdingUploadBtn">上传</button>
+        </div>
+    </div>
 </div>
 
 <script src="../../i18n.js"></script>
@@ -34,6 +94,7 @@
     } catch (e) {}
 }());
 </script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="../../common.js"></script>
 <script>
 (function () {
@@ -45,7 +106,189 @@
             window.I18N.apply(document);
         }
     };
-    document.addEventListener("DOMContentLoaded", applyI18n);
+
+    const isExcelFile = (file) => {
+        const name = (file?.name || "").toLowerCase();
+        return name.endsWith(".xls") || name.endsWith(".xlsx");
+    };
+
+    const normalizeCell = (value) => String(value ?? "")
+        .replace(/\s+/g, "")
+        .replace(/[　,，]/g, "")
+        .trim();
+
+    const formatCell = (value) => String(value ?? "").trim();
+
+    const parseAmount = (value) => {
+        const normalized = normalizeCell(value).replace(/[^\d.-]/g, "");
+        if (!normalized) return null;
+        const number = Number(normalized);
+        return Number.isFinite(number) ? number : null;
+    };
+
+    const looksLikeDataRow = (row, mapping) => {
+        const from = normalizeCell(row[mapping.from]);
+        const to = normalizeCell(row[mapping.to]);
+        return from !== "" && to !== "" && /\d/.test(from) && /\d/.test(to);
+    };
+
+    const getHeaderText = (rows, rowIndex, columnIndex) => {
+        const values = [];
+        const start = Math.max(0, rowIndex - 5);
+        for (let i = start; i <= rowIndex; i += 1) {
+            const value = normalizeCell(rows[i]?.[columnIndex]);
+            if (value && !values.includes(value)) values.push(value);
+        }
+        return values.join("");
+    };
+
+    const findColumn = (rows, rowIndex, matcher, usedColumns = new Set()) => {
+        const width = Math.max(...rows.slice(0, Math.min(rows.length, rowIndex + 1)).map((row) => row.length), 0);
+        for (let columnIndex = 0; columnIndex < width; columnIndex += 1) {
+            if (usedColumns.has(columnIndex)) continue;
+            if (matcher(getHeaderText(rows, rowIndex, columnIndex), columnIndex)) return columnIndex;
+        }
+        return -1;
+    };
+
+    const detectColumnMapping = (rows) => {
+        const limit = Math.min(rows.length, 80);
+        for (let rowIndex = 0; rowIndex < limit; rowIndex += 1) {
+            const usedColumns = new Set();
+            const from = findColumn(rows, rowIndex, (text) => /以上/.test(text), usedColumns);
+            if (from < 0) continue;
+            usedColumns.add(from);
+            const to = findColumn(rows, rowIndex, (text) => /未満|未满/.test(text), usedColumns);
+            if (to < 0) continue;
+            usedColumns.add(to);
+
+            const dependents = [];
+            for (let count = 0; count <= 7; count += 1) {
+                const columnIndex = findColumn(rows, rowIndex, (text) => {
+                    const hasCount = new RegExp(`(^|[^0-9])${count}(人|名)?($|[^0-9])`).test(text);
+                    return hasCount && (/甲/.test(text) || !/乙/.test(text));
+                }, usedColumns);
+                if (columnIndex >= 0) {
+                    usedColumns.add(columnIndex);
+                    dependents.push(columnIndex);
+                }
+            }
+            const otsu = findColumn(rows, rowIndex, (text) => /乙/.test(text), usedColumns);
+            if (dependents.length >= 4 && otsu >= 0) {
+                return { headerRowIndex: rowIndex, from, to, dependents, otsu };
+            }
+        }
+        return null;
+    };
+
+    const buildFixedRule = (row, mapping) => ({
+        salary_min: parseAmount(row[mapping.from]),
+        salary_max: parseAmount(row[mapping.to]),
+        display: {
+            salary_min: formatCell(row[mapping.from]),
+            salary_max: formatCell(row[mapping.to]),
+        },
+        ko: Array.from({ length: 8 }, (_, index) => ({
+            dependents: index,
+            amount: parseAmount(row[mapping.dependents[index]]),
+            display_amount: formatCell(row[mapping.dependents[index]])
+        })),
+        otsu: {
+            amount: parseAmount(row[mapping.otsu]),
+            display_amount: formatCell(row[mapping.otsu])
+        }
+    });
+
+    const parseWorkbookFixedRules = (workbook) => {
+        for (const sheetName of workbook.SheetNames) {
+            const sheet = workbook.Sheets[sheetName];
+            const rows = window.XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false, blankrows: false });
+            const mapping = detectColumnMapping(rows);
+            if (!mapping) continue;
+            const fixedRules = [];
+            for (let rowIndex = mapping.headerRowIndex + 1; rowIndex < rows.length; rowIndex += 1) {
+                const row = rows[rowIndex] || [];
+                if (!looksLikeDataRow(row, mapping)) continue;
+                fixedRules.push(buildFixedRule(row, mapping));
+            }
+            if (fixedRules.length) return fixedRules;
+        }
+        return [];
+    };
+
+    const getRulePreviewCells = (rule) => [
+        rule.display.salary_min,
+        rule.display.salary_max,
+        ...rule.ko.map((item) => item.display_amount),
+        rule.otsu.display_amount
+    ];
+
+    const renderPreview = (fixedRules, previewBody) => {
+        previewBody.innerHTML = "";
+        if (!fixedRules.length) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = '<th>1</th><td colspan="11" style="position: static; text-align: center; color: #64748b; font-weight: 700;">未识别到可预览的数据。</td>';
+            previewBody.appendChild(tr);
+            return;
+        }
+        fixedRules.forEach((rule, rowIndex) => {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.textContent = String(rowIndex + 1);
+            tr.appendChild(th);
+            getRulePreviewCells(rule).forEach((value) => {
+                const td = document.createElement("td");
+                td.textContent = value || "-";
+                if (!value || /特殊|確認|确认|計算|算出/.test(value)) td.classList.add("is-attention");
+                tr.appendChild(td);
+            });
+            previewBody.appendChild(tr);
+        });
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+
+        const fileInput = document.getElementById("withholdingFileInput");
+        const uploadButton = document.getElementById("withholdingUploadBtn");
+        const previewBody = document.getElementById("withholdingPreviewBody");
+        const yearInput = document.getElementById("withholdingYearInput");
+
+        if (yearInput && !yearInput.value) {
+            yearInput.value = String(new Date().getFullYear());
+        }
+
+        const updateFileInfo = async (file) => {
+            if (!file) return;
+            if (!isExcelFile(file)) {
+                window.alert("请选择 .xls 或 .xlsx 文件。");
+                fileInput.value = "";
+                return;
+            }
+            if (!window.XLSX) {
+                window.alert("Excel 解析库加载失败，请检查网络后重试。");
+                return;
+            }
+            uploadButton.disabled = true;
+            uploadButton.textContent = "解析中...";
+            try {
+                const buffer = await file.arrayBuffer();
+                const workbook = window.XLSX.read(buffer, { type: "array" });
+                const fixedRules = parseWorkbookFixedRules(workbook);
+                window.withholdingTaxFixedRules = fixedRules;
+                renderPreview(fixedRules, previewBody);
+            } catch (err) {
+                window.alert(err.message || "Excel 预览解析失败。");
+            } finally {
+                uploadButton.disabled = false;
+                uploadButton.textContent = "上传";
+            }
+        };
+
+        uploadButton?.addEventListener("click", () => fileInput?.click());
+        fileInput?.addEventListener("change", () => updateFileInfo(fileInput.files && fileInput.files[0]));
+    });
+
     window.addEventListener("i18n:change", applyI18n);
 }());
 </script>

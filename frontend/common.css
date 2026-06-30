@@ -2767,6 +2767,8 @@ body.finance-subpage {
   width: min(1180px, calc(100vw - 24px));
   max-height: 94vh;
   padding: 16px 24px 14px;
+  min-width: 0;
+  overflow: hidden;
 }
 .personnel-page .modal-header {
   display: flex;
@@ -2801,14 +2803,24 @@ body.finance-subpage {
 .personnel-page .payroll-monthly-modal-card .modal-body {
   gap: 12px;
   max-height: calc(94vh - 104px);
+  overflow-x: hidden;
 }
 .personnel-page .payroll-monthly-modal-card .form-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px 12px;
 }
+.personnel-page .payroll-monthly-modal-card .form-grid > *,
+.personnel-page .payroll-monthly-detail-grid > *,
+.personnel-page .payroll-calculated-columns > *,
+.personnel-page .payroll-monthly-modal-card label,
+.personnel-page .payroll-monthly-modal-card input,
+.personnel-page .payroll-monthly-modal-card select {
+  min-width: 0;
+}
 .personnel-page .payroll-monthly-modal-card .payroll-items-panel {
   padding: 10px 12px;
   gap: 8px;
+  min-width: 0;
 }
 .personnel-page .payroll-monthly-modal-card .payroll-items-list {
   gap: 6px;
@@ -2839,7 +2851,8 @@ body.finance-subpage {
 .personnel-page .payroll-calculated-table-wrap {
   border: 1px solid var(--line);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  max-width: 100%;
 }
 .personnel-page .payroll-calculated-columns {
   display: grid;
@@ -2858,13 +2871,17 @@ body.finance-subpage {
 }
 .personnel-page .payroll-calculated-table {
   margin: 0;
+  table-layout: fixed;
 }
 .personnel-page .payroll-calculated-table th,
 .personnel-page .payroll-calculated-table td {
   padding: 7px 10px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .personnel-page .payroll-calculated-table input {
   width: 100%;
+  min-width: 0;
   min-height: 30px;
   padding-block: 4px;
   background: #fff;

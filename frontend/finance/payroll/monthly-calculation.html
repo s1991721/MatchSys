@@ -131,7 +131,6 @@
                                             <tr>
                                                 <th>项目</th>
                                                 <th>计算基准</th>
-                                                <th>料率</th>
                                                 <th>金额</th>
                                             </tr>
                                             </thead>
@@ -175,7 +174,7 @@
                             </div>
                             <div class="payroll-summary-item">
                                 <span>自动扣款合计</span>
-                                <strong id="payrollFormSocialInsuranceDisplay">¥0</strong>
+                                <strong id="payrollFormAutomaticDeductionDisplay">¥0</strong>
                             </div>
                             <div class="payroll-summary-item payroll-summary-net">
                                 <span>实发金额</span>
@@ -184,7 +183,7 @@
                         </div>
                         <input id="payrollFormAllowance" type="hidden">
                         <input id="payrollFormDeduction" type="hidden">
-                        <input id="payrollFormSocialInsurance" type="hidden">
+                        <input id="payrollFormAutomaticDeduction" type="hidden">
                         <input id="payrollFormNetSalary" type="hidden">
                     </div>
                 </div>
@@ -268,17 +267,14 @@
         })).filter((item) => item.name || parseMoney(item.amount) !== 0);
     };
     const sumItems = (items) => normalizeItems(items).reduce((total, item) => total + parseMoney(item.amount), 0);
-    const splitDeductionItems = (items) => {
-        const manual = [];
+    const keyedItems = (items) => {
         const calculated = {};
         normalizeItems(items).forEach((item) => {
             if (item.payroll_calculated || item.calculation_group) {
                 calculated[item.name] = item;
-            } else {
-                manual.push(item);
             }
         });
-        return {manual, calculated};
+        return calculated;
     };
     const getCurrentMonthValue = () => {
         const now = new Date();
@@ -304,7 +300,7 @@
                 <td>${h(formatMoney(item.base_salary))}</td>
                 <td>${h(formatMoney(item.allowance_amount))}</td>
                 <td>${h(formatMoney(item.deduction_amount))}</td>
-                <td>${h(formatMoney(item.social_insurance_amount))}</td>
+                <td>${h(formatMoney(item.automatic_deduction_amount))}</td>
                 <td>${h(formatMoney(item.net_salary))}</td>
                 <td>${h(item.status_label || statusLabels[item.status] || "")}</td>
                 <td class="c-actions-col">
@@ -503,7 +499,7 @@
                 row.append(nameCell, rateCell, amountCell);
                 fixedContainer.appendChild(row);
             } else {
-                row.append(nameCell, baseCell, rateCell, amountCell);
+                row.append(nameCell, baseCell, amountCell);
                 variableContainer.appendChild(row);
             }
         };
@@ -556,7 +552,7 @@
         [
             ["payrollFormAllowance", "payrollFormAllowanceDisplay"],
             ["payrollFormDeduction", "payrollFormDeductionDisplay"],
-            ["payrollFormSocialInsurance", "payrollFormSocialInsuranceDisplay"],
+            ["payrollFormAutomaticDeduction", "payrollFormAutomaticDeductionDisplay"],
             ["payrollFormNetSalary", "payrollFormNetSalaryDisplay"]
         ].forEach(([inputId, displayId]) => {
             const input = document.getElementById(inputId);
@@ -573,23 +569,22 @@
         const nonTaxableAdditionTotal = sumItems(collectItems(document.getElementById("payrollNonTaxableAdditionItems")));
         const manualDeductionTotal = sumItems(collectItems(document.getElementById("payrollDeductionItems")));
         const calculatedDeductionTotal = sumItems(collectCalculatedDeductionItems());
-        const deductionTotal = manualDeductionTotal + calculatedDeductionTotal;
         const totalAdditions = additionTotal + nonTaxableAdditionTotal;
-        const netSalary = baseSalary + totalAdditions - deductionTotal;
+        const netSalary = baseSalary + totalAdditions - manualDeductionTotal - calculatedDeductionTotal;
         document.getElementById("payrollFormAllowance").value = roundAmount(totalAdditions);
-        document.getElementById("payrollFormDeduction").value = roundAmount(deductionTotal);
-        document.getElementById("payrollFormSocialInsurance").value = roundAmount(calculatedDeductionTotal);
+        document.getElementById("payrollFormDeduction").value = roundAmount(manualDeductionTotal);
+        document.getElementById("payrollFormAutomaticDeduction").value = roundAmount(calculatedDeductionTotal);
         document.getElementById("payrollFormNetSalary").value = roundAmount(netSalary);
         document.getElementById("payrollFormAllowanceDisplay").textContent = formatMoney(totalAdditions);
-        document.getElementById("payrollFormDeductionDisplay").textContent = formatMoney(deductionTotal);
-        document.getElementById("payrollFormSocialInsuranceDisplay").textContent = formatMoney(calculatedDeductionTotal);
+        document.getElementById("payrollFormDeductionDisplay").textContent = formatMoney(manualDeductionTotal);
+        document.getElementById("payrollFormAutomaticDeductionDisplay").textContent = formatMoney(calculatedDeductionTotal);
         document.getElementById("payrollFormNetSalaryDisplay").textContent = formatMoney(netSalary);
         updateModifiedMarkers();
     };
 
     const openModal = (mode, item = null) => {
         editingId = mode === "edit" ? item?.id : null;
-        const {manual: manualDeductions, calculated} = splitDeductionItems(item?.deduction_items || []);
+        const calculated = keyedItems(item?.automatic_deduction_items || []);
         document.getElementById("payrollMonthlyModalTitle").textContent = mode === "edit" ? "编辑月度工资" : "新增月度工资";
         document.getElementById("payrollFormEmployeeId").value = item?.employee_id || "";
         document.getElementById("payrollFormEmployeeId").readOnly = mode === "edit";
@@ -601,7 +596,7 @@
         document.getElementById("payrollFormRemark").value = item?.remark || "";
         renderItemRows(document.getElementById("payrollAdditionItems"), item?.addition_items || []);
         renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), item?.non_taxable_addition_items || []);
-        renderItemRows(document.getElementById("payrollDeductionItems"), manualDeductions);
+        renderItemRows(document.getElementById("payrollDeductionItems"), item?.deduction_items || []);
         renderCalculatedDeductions(calculated);
         refreshPayrollTotals();
         trackOriginalValues();
@@ -627,10 +622,8 @@
         refreshPayrollTotals();
         const additionItems = collectItems(document.getElementById("payrollAdditionItems"));
         const nonTaxableAdditionItems = collectItems(document.getElementById("payrollNonTaxableAdditionItems"));
-        const deductionItems = [
-            ...collectItems(document.getElementById("payrollDeductionItems")),
-            ...collectCalculatedDeductionItems()
-        ];
+        const deductionItems = collectItems(document.getElementById("payrollDeductionItems"));
+        const automaticDeductionItems = collectCalculatedDeductionItems();
         return {
             month: selectedMonth,
             employee_id: document.getElementById("payrollFormEmployeeId").value,
@@ -643,7 +636,8 @@
             addition_items: additionItems,
             non_taxable_addition_items: nonTaxableAdditionItems,
             deduction_items: deductionItems,
-            social_insurance_amount: document.getElementById("payrollFormSocialInsurance").value || "0",
+            automatic_deduction_items: automaticDeductionItems,
+            automatic_deduction_amount: document.getElementById("payrollFormAutomaticDeduction").value || "0",
             net_salary: document.getElementById("payrollFormNetSalary").value || "0",
             status: document.getElementById("payrollFormStatus").value,
             remark: document.getElementById("payrollFormRemark").value
@@ -651,7 +645,7 @@
     };
 
     const applyMonthlyItemToForm = (item) => {
-        const {manual: manualDeductions, calculated} = splitDeductionItems(item?.deduction_items || []);
+        const calculated = keyedItems(item?.automatic_deduction_items || []);
         document.getElementById("payrollFormEmployeeId").value = item?.employee_id || "";
         document.getElementById("payrollFormEmployeeName").value = item?.employee_name || "";
         document.getElementById("payrollFormContractType").value = item?.contract_type ?? "0";
@@ -661,7 +655,7 @@
         document.getElementById("payrollFormRemark").value = item?.remark || "";
         renderItemRows(document.getElementById("payrollAdditionItems"), item?.addition_items || []);
         renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), item?.non_taxable_addition_items || []);
-        renderItemRows(document.getElementById("payrollDeductionItems"), manualDeductions);
+        renderItemRows(document.getElementById("payrollDeductionItems"), item?.deduction_items || []);
         renderCalculatedDeductions(calculated);
         refreshPayrollTotals();
     };

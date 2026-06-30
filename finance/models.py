@@ -402,12 +402,15 @@ class PayrollMonthlyCalculationBase(models.Model):
     contract_type = models.SmallIntegerField(choices=CONTRACT_TYPE_CHOICES, default=0, verbose_name="契约类型")
     attendance_days = models.DecimalField(max_digits=5, decimal_places=2, default=0, verbose_name="出勤日数")
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="基本工资")
+    withholding_tax_type = models.CharField(max_length=8, choices=PayrollBasicInfo.WITHHOLDING_TAX_TYPE_CHOICES, default="kou", verbose_name="源泉税区分快照")
+    dependent_count = models.PositiveSmallIntegerField(default=0, verbose_name="扶养亲族等人数快照")
     allowance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="补贴")
     deduction_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="扣款")
     addition_items = models.JSONField(null=True, blank=True, verbose_name="工资增加项明细快照")
     non_taxable_addition_items = models.JSONField(null=True, blank=True, verbose_name="工资非课税增加项明细快照")
     deduction_items = models.JSONField(null=True, blank=True, verbose_name="工资减少项明细快照")
-    social_insurance_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="社保/年金/保险")
+    automatic_deduction_items = models.JSONField(null=True, blank=True, verbose_name="自动扣款明细快照")
+    automatic_deduction_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="自动扣款合计")
     net_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="实发金额")
     bank_info = models.JSONField(null=True, blank=True, verbose_name="员工银行信息快照")
     status = models.SmallIntegerField(choices=STATUS_CHOICES, default=0, verbose_name="状态")
@@ -484,12 +487,15 @@ class PayrollMonthlyCalculationBase(models.Model):
             "contract_label": contract_labels.get(item.contract_type, ""),
             "attendance_days": str(item.attendance_days),
             "base_salary": str(item.base_salary),
+            "withholding_tax_type": item.withholding_tax_type,
+            "dependent_count": item.dependent_count,
             "allowance_amount": str(item.allowance_amount),
             "deduction_amount": str(item.deduction_amount),
             "addition_items": item.addition_items or [],
             "non_taxable_addition_items": item.non_taxable_addition_items or [],
             "deduction_items": item.deduction_items or [],
-            "social_insurance_amount": str(item.social_insurance_amount),
+            "automatic_deduction_items": item.automatic_deduction_items or [],
+            "automatic_deduction_amount": str(item.automatic_deduction_amount),
             "net_salary": str(item.net_salary),
             "bank_info": item.bank_info,
             "status": item.status,
@@ -543,10 +549,22 @@ def _ensure_payroll_yearly_table_exists(table_name, template_table, model):
                 column.name
                 for column in connection.introspection.get_table_description(cursor, table_name)
             }
-        if "non_taxable_addition_items" not in existing_columns:
-            field = model._meta.get_field("non_taxable_addition_items")
+        missing_field_names = [
+            field_name
+            for field_name in (
+                "withholding_tax_type",
+                "dependent_count",
+                "non_taxable_addition_items",
+                "automatic_deduction_items",
+                "automatic_deduction_amount",
+            )
+            if field_name not in existing_columns
+        ]
+        if missing_field_names:
             with connection.schema_editor() as schema_editor:
-                schema_editor.add_field(model, field)
+                for field_name in missing_field_names:
+                    field = model._meta.get_field(field_name)
+                    schema_editor.add_field(model, field)
         return
 
     if connection.vendor == "mysql" and template_table in existing_tables:

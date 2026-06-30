@@ -2078,20 +2078,14 @@ PAYROLL_VARIABLE_DEDUCTION_RULES = (
         "base_label": "扣除社保后",
         "group": "variable",
     },
-    {
-        "key": "incomeTax",
-        "name": "所得税",
-        "rate": Decimal("0.05"),
-        "base": "remaining_after_employment",
-        "base_label": "扣除雇保后",
-        "group": "variable",
-    },
 )
 PAYROLL_VARIABLE_DEDUCTION_NAMES = {
     item["name"] for item in PAYROLL_VARIABLE_DEDUCTION_RULES
-}
+} | {"所得税"}
 PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE = Decimal("0.5")
 PAYROLL_CARE_INSURANCE_MIN_AGE = 40
+PAYROLL_INCOME_TAX_NAME = "所得税"
+PAYROLL_INCOME_TAX_KEY = "incomeTax"
 
 
 def _round_payroll_amount(value):
@@ -2115,7 +2109,7 @@ def _annuity_tax_item_names(settings):
     }
 
 
-def _strip_calculated_deduction_items(items, annuity_settings=None):
+def _strip_calculated_payroll_items(items, annuity_settings=None):
     annuity_names = _annuity_tax_item_names(annuity_settings)
     return [
         item for item in (items or [])
@@ -2130,6 +2124,16 @@ def _get_annuity_settings():
     record = (
         FinanceSettings.objects
         .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+    return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _get_income_tax_settings():
+    record = (
+        FinanceSettings.objects
+        .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
         .order_by("id")
         .first()
     )
@@ -2231,6 +2235,68 @@ def _calculate_annuity_tax_item_employee_rate(tax_item):
     return _decimal_from_setting(tax_item.get("rate")) * PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE
 
 
+def _get_payroll_withholding_info(source, overrides=None):
+    overrides = overrides or {}
+    withholding_tax_type = overrides.get("withholding_tax_type", getattr(source, "withholding_tax_type", None))
+    dependent_count = overrides.get("dependent_count", getattr(source, "dependent_count", None))
+
+    if withholding_tax_type in (None, "") or dependent_count in (None, ""):
+        employee_id = overrides.get("employee_id", getattr(source, "employee_id", None))
+        basic = None
+        if employee_id:
+            basic = (
+                PayrollBasicInfo.objects
+                .filter(employee_id=employee_id, deleted_at__isnull=True)
+                .order_by("id")
+                .first()
+            )
+        if basic:
+            withholding_tax_type = basic.withholding_tax_type
+            dependent_count = basic.dependent_count
+
+    withholding_tax_type = "otsu" if withholding_tax_type == "otsu" else "kou"
+    try:
+        dependent_count = int(dependent_count)
+    except (TypeError, ValueError):
+        dependent_count = 0
+    dependent_count = max(0, min(7, dependent_count))
+    if withholding_tax_type == "otsu":
+        dependent_count = 0
+    return withholding_tax_type, dependent_count
+
+
+def _find_income_tax_monthly_row(settings, taxable_salary_after_deductions):
+    if not settings:
+        return None
+    rows = settings.get("monthly_rows")
+    if not isinstance(rows, list):
+        return None
+    valid_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        valid_rows.append(row)
+        salary_min = _decimal_from_setting(row.get("salary_min"))
+        salary_max = _decimal_from_setting(row.get("salary_max"))
+        if taxable_salary_after_deductions >= salary_min and taxable_salary_after_deductions < salary_max:
+            return row
+    if not valid_rows:
+        return None
+    valid_rows.sort(key=lambda item: _decimal_from_setting(item.get("salary_min")))
+    first = valid_rows[0]
+    if taxable_salary_after_deductions < _decimal_from_setting(first.get("salary_min")):
+        return first
+    return valid_rows[-1]
+
+
+def _calculate_income_tax_amount(settings, taxable_salary_after_deductions, withholding_tax_type, dependent_count):
+    row = _find_income_tax_monthly_row(settings, taxable_salary_after_deductions)
+    if not row:
+        return Decimal("0")
+    column = "otsu" if withholding_tax_type == "otsu" else f"kou_{dependent_count}"
+    return _round_payroll_amount(_decimal_from_setting(row.get(column)))
+
+
 def _build_payroll_calculation_values(source, target_month=None, overrides=None):
     overrides = overrides or {}
     base_salary = overrides.get("base_salary", getattr(source, "base_salary", Decimal("0")))
@@ -2240,7 +2306,8 @@ def _build_payroll_calculation_values(source, target_month=None, overrides=None)
         getattr(source, "non_taxable_addition_items", None) or [],
     )
     annuity_settings = _get_annuity_settings()
-    manual_deduction_items = _strip_calculated_deduction_items(
+    income_tax_settings = _get_income_tax_settings()
+    manual_deduction_items = _strip_calculated_payroll_items(
         overrides.get("deduction_items", getattr(source, "deduction_items", None) or []),
         annuity_settings=annuity_settings,
     )
@@ -2248,11 +2315,13 @@ def _build_payroll_calculation_values(source, target_month=None, overrides=None)
     addition_total = _sum_payroll_items(addition_items)
     non_taxable_addition_total = _sum_payroll_items(non_taxable_addition_items)
     manual_deduction_total = _sum_payroll_items(manual_deduction_items)
+    taxable_salary = base_salary + addition_total
     gross_salary = base_salary + addition_total + non_taxable_addition_total
     remuneration_base = max(Decimal("0"), gross_salary - manual_deduction_total)
 
     annuity_standard = _find_annuity_standard(annuity_settings, base_salary)
     employee_birthday = _get_employee_birthday(source, overrides)
+    withholding_tax_type, dependent_count = _get_payroll_withholding_info(source, overrides)
     calculated_items = []
     first_stage_total = Decimal("0")
     employment_amount = Decimal("0")
@@ -2300,19 +2369,37 @@ def _build_payroll_calculation_values(source, target_month=None, overrides=None)
             "calculation_base_label": rule["base_label"],
         })
 
+    income_tax_base = max(Decimal("0"), taxable_salary - first_stage_total - employment_amount)
+    income_tax_amount = _calculate_income_tax_amount(
+        income_tax_settings,
+        income_tax_base,
+        withholding_tax_type,
+        dependent_count,
+    )
+    calculated_items.append({
+        "name": PAYROLL_INCOME_TAX_NAME,
+        "amount": str(income_tax_amount),
+        "payroll_calculated": True,
+        "calculation_group": "variable",
+        "calculation_key": PAYROLL_INCOME_TAX_KEY,
+        "calculation_base_label": "源泉税表",
+    })
+
     calculated_total = _sum_payroll_items(calculated_items)
-    deduction_amount = manual_deduction_total + calculated_total
     allowance_amount = addition_total + non_taxable_addition_total
-    net_salary = base_salary + allowance_amount - deduction_amount
+    net_salary = base_salary + allowance_amount - manual_deduction_total - calculated_total
 
     values = {
         "base_salary": base_salary,
+        "withholding_tax_type": withholding_tax_type,
+        "dependent_count": dependent_count,
         "allowance_amount": allowance_amount,
-        "deduction_amount": deduction_amount,
+        "deduction_amount": manual_deduction_total,
         "addition_items": addition_items,
         "non_taxable_addition_items": non_taxable_addition_items,
-        "deduction_items": [*manual_deduction_items, *calculated_items],
-        "social_insurance_amount": calculated_total,
+        "deduction_items": manual_deduction_items,
+        "automatic_deduction_items": calculated_items,
+        "automatic_deduction_amount": calculated_total,
         "net_salary": net_salary,
     }
     if target_month is not None:
@@ -2593,6 +2680,12 @@ def _build_monthly_payload(payload, target_month=None):
     deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
     if error:
         return None, error
+    automatic_deduction_items, error = _parse_payroll_items(
+        payload.get("automatic_deduction_items"),
+        "automatic_deduction_items",
+    )
+    if error:
+        return None, error
 
     amount_values = {}
     for field_name in (
@@ -2600,7 +2693,7 @@ def _build_monthly_payload(payload, target_month=None):
         "base_salary",
         "allowance_amount",
         "deduction_amount",
-        "social_insurance_amount",
+        "automatic_deduction_amount",
         "net_salary",
     ):
         value, error = _parse_decimal_field(payload, field_name)
@@ -2618,6 +2711,7 @@ def _build_monthly_payload(payload, target_month=None):
             "addition_items": addition_items,
             "non_taxable_addition_items": non_taxable_addition_items,
             "deduction_items": deduction_items,
+            "automatic_deduction_items": automatic_deduction_items,
             "remark": (payload.get("remark") or "").strip() or None,
             **amount_values,
         }
@@ -2673,6 +2767,12 @@ def payroll_monthly_api(request):
             deleted_at__isnull=True,
     ).exists():
         return api_error("Payroll monthly calculation already exists", status=409)
+    withholding_tax_type, dependent_count = _get_payroll_withholding_info(
+        None,
+        overrides={"employee_id": values["employee_id"]},
+    )
+    values["withholding_tax_type"] = withholding_tax_type
+    values["dependent_count"] = dependent_count
     item = PayrollMonthlyCalculation.create_for_period(
         values["payroll_month"],
         created_by=login_id,
@@ -2777,6 +2877,8 @@ def payroll_monthly_recalculate_api(request, calculation_id):
     item.status = values["status"]
     item.bank_info = values["bank_info"]
     item.remark = values["remark"]
+    item.updated_by = login_id
+    item.save()
     return api_success(data={"item": PayrollMonthlyCalculation.serialize(item)})
 
 
@@ -2858,6 +2960,14 @@ def payroll_monthly_detail_api(request, calculation_id):
         if error:
             return error
         item.deduction_items = deduction_items
+    if "automatic_deduction_items" in payload:
+        automatic_deduction_items, error = _parse_payroll_items(
+            payload.get("automatic_deduction_items"),
+            "automatic_deduction_items",
+        )
+        if error:
+            return error
+        item.automatic_deduction_items = automatic_deduction_items
     if "remark" in payload:
         item.remark = (payload.get("remark") or "").strip() or None
 
@@ -2866,7 +2976,7 @@ def payroll_monthly_detail_api(request, calculation_id):
         "base_salary",
         "allowance_amount",
         "deduction_amount",
-        "social_insurance_amount",
+        "automatic_deduction_amount",
         "net_salary",
     ):
         if field_name in payload:
@@ -2907,7 +3017,7 @@ def payroll_monthly_export_api(request):
         "基本工资",
         "补贴",
         "扣款",
-        "社保/年金/保险",
+        "自动扣款合计",
         "实发金额",
         "状态",
     ]
@@ -2922,7 +3032,7 @@ def payroll_monthly_export_api(request):
                 float(item.base_salary),
                 float(item.allowance_amount),
                 float(item.deduction_amount),
-                float(item.social_insurance_amount),
+                float(item.automatic_deduction_amount),
                 float(item.net_salary),
                 serialized["status_label"],
             ]

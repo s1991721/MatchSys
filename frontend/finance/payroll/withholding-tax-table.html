@@ -98,14 +98,16 @@
 <script src="../../common.js"></script>
 <script>
 (function () {
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
-        }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
+        const applyI18n = () => {
+            if (window.I18N && typeof window.I18N.init === "function") {
+                window.I18N.init();
+            }
+            if (window.I18N && typeof window.I18N.apply === "function") {
+                window.I18N.apply(document);
+            }
+        };
+        const settingsApi = "/api/finance/settings/income-tax";
+        const MONTHLY_COLUMNS = ["salary_min", "salary_max", "kou_0", "kou_1", "kou_2", "kou_3", "kou_4", "kou_5", "kou_6", "kou_7", "otsu"];
 
     const isExcelFile = (file) => {
         const name = (file?.name || "").toLowerCase();
@@ -174,12 +176,12 @@
                 }
             }
             const otsu = findColumn(rows, rowIndex, (text) => /乙/.test(text), usedColumns);
-            if (dependents.length >= 4 && otsu >= 0) {
-                return { headerRowIndex: rowIndex, from, to, dependents, otsu };
+                if (dependents.length === 8 && otsu >= 0) {
+                    return { headerRowIndex: rowIndex, from, to, dependents, otsu };
+                }
             }
-        }
-        return null;
-    };
+            return null;
+        };
 
     const buildFixedRule = (row, mapping) => ({
         salary_min: parseAmount(row[mapping.from]),
@@ -216,15 +218,92 @@
         return [];
     };
 
-    const getRulePreviewCells = (rule) => [
-        rule.display.salary_min,
-        rule.display.salary_max,
-        ...rule.ko.map((item) => item.display_amount),
-        rule.otsu.display_amount
-    ];
+        const getRulePreviewCells = (rule) => [
+            rule.display.salary_min,
+            rule.display.salary_max,
+            ...rule.ko.map((item) => item.display_amount),
+            rule.otsu.display_amount
+        ];
 
-    const renderPreview = (fixedRules, previewBody) => {
-        previewBody.innerHTML = "";
+        const formatAmount = (value) => {
+            const number = Number(value);
+            if (!Number.isFinite(number)) return "";
+            return number.toLocaleString("ja-JP");
+        };
+
+        const toStoredInteger = (value, fieldName) => {
+            const number = Number(value);
+            if (!Number.isFinite(number) || number < 0 || !Number.isInteger(number)) {
+                throw new Error(`${fieldName} 必须是非负整数。`);
+            }
+            return number;
+        };
+
+        const buildSettingsRows = (fixedRules) => {
+            if (!Array.isArray(fixedRules) || !fixedRules.length) {
+                throw new Error("没有可保存的月額表数据。");
+            }
+            return fixedRules.map((rule, index) => {
+                const rowNumber = index + 1;
+                const row = {
+                    row_order: rowNumber,
+                    salary_min: toStoredInteger(rule.salary_min, `第${rowNumber}行 salary_min`),
+                    salary_max: toStoredInteger(rule.salary_max, `第${rowNumber}行 salary_max`),
+                };
+                if (row.salary_max <= row.salary_min) {
+                    throw new Error(`第${rowNumber}行工资区间无效。`);
+                }
+                for (let dependentCount = 0; dependentCount <= 7; dependentCount += 1) {
+                    row[`kou_${dependentCount}`] = toStoredInteger(
+                        rule.ko?.[dependentCount]?.amount,
+                        `第${rowNumber}行 kou_${dependentCount}`
+                    );
+                }
+                row.otsu = toStoredInteger(rule.otsu?.amount, `第${rowNumber}行 otsu`);
+                return row;
+            });
+        };
+
+        const buildSettingsPayload = (fixedRules, yearInput) => {
+            const year = Number(yearInput?.value);
+            if (!Number.isInteger(year) || year < 1900 || year > 2100) {
+                throw new Error("请输入有效年份。");
+            }
+            const monthlyRows = buildSettingsRows(fixedRules);
+            return {
+                metadata: {
+                    year,
+                    table_type: "monthly",
+                    columns: MONTHLY_COLUMNS,
+                    row_count: monthlyRows.length
+                },
+                monthly_rows: monthlyRows
+            };
+        };
+
+        const toPreviewRules = (settings) => {
+            const rows = Array.isArray(settings?.monthly_rows) ? settings.monthly_rows : [];
+            return rows.map((row) => ({
+                salary_min: Number(row.salary_min),
+                salary_max: Number(row.salary_max),
+                display: {
+                    salary_min: formatAmount(row.salary_min),
+                    salary_max: formatAmount(row.salary_max),
+                },
+                ko: Array.from({ length: 8 }, (_, index) => ({
+                    dependents: index,
+                    amount: Number(row[`kou_${index}`]),
+                    display_amount: formatAmount(row[`kou_${index}`])
+                })),
+                otsu: {
+                    amount: Number(row.otsu),
+                    display_amount: formatAmount(row.otsu)
+                }
+            }));
+        };
+
+        const renderPreview = (fixedRules, previewBody) => {
+            previewBody.innerHTML = "";
         if (!fixedRules.length) {
             const tr = document.createElement("tr");
             tr.innerHTML = '<th>1</th><td colspan="11" style="position: static; text-align: center; color: #64748b; font-weight: 700;">未识别到可预览的数据。</td>';
@@ -243,51 +322,108 @@
                 tr.appendChild(td);
             });
             previewBody.appendChild(tr);
-        });
-    };
+            });
+        };
+
+        const loadSettings = async (previewBody, yearInput) => {
+            try {
+                const payload = await window.requestJson(settingsApi, { method: "GET", cache: "no-store" });
+                const settings = payload?.data?.settings;
+                if (!settings || typeof settings !== "object") return;
+                if (yearInput && settings.metadata?.year) {
+                    yearInput.value = String(settings.metadata.year);
+                }
+                const fixedRules = toPreviewRules(settings);
+                window.withholdingTaxFixedRules = fixedRules;
+                renderPreview(fixedRules, previewBody);
+            } catch (err) {
+                window.alert(err.message || "源泉徴収税額表加载失败。");
+            }
+        };
+
+        const saveSettings = async (fixedRules, yearInput, uploadButton) => {
+            const originalText = uploadButton.textContent;
+            uploadButton.disabled = true;
+            uploadButton.textContent = "保存中...";
+            try {
+                const settings = buildSettingsPayload(fixedRules, yearInput);
+                const payload = await window.requestJson(settingsApi, {
+                    method: "POST",
+                    body: JSON.stringify({ settings }),
+                });
+                window.withholdingTaxFixedRules = toPreviewRules(payload?.data?.settings || settings);
+                uploadButton.textContent = "已保存";
+                window.setTimeout(() => {
+                    uploadButton.textContent = originalText || "上传";
+                }, 1200);
+            } catch (err) {
+                uploadButton.textContent = originalText || "上传";
+                throw err;
+            } finally {
+                uploadButton.disabled = false;
+            }
+        };
 
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
 
-        const fileInput = document.getElementById("withholdingFileInput");
-        const uploadButton = document.getElementById("withholdingUploadBtn");
-        const previewBody = document.getElementById("withholdingPreviewBody");
-        const yearInput = document.getElementById("withholdingYearInput");
+	        const fileInput = document.getElementById("withholdingFileInput");
+	        const uploadButton = document.getElementById("withholdingUploadBtn");
+	        const previewBody = document.getElementById("withholdingPreviewBody");
+	        const yearInput = document.getElementById("withholdingYearInput");
+	        let pendingFixedRules = null;
 
         if (yearInput && !yearInput.value) {
             yearInput.value = String(new Date().getFullYear());
         }
 
-        const updateFileInfo = async (file) => {
-            if (!file) return;
-            if (!isExcelFile(file)) {
-                window.alert("请选择 .xls 或 .xlsx 文件。");
-                fileInput.value = "";
-                return;
+	        const updateFileInfo = async (file) => {
+	            if (!file) return;
+	            if (!isExcelFile(file)) {
+	                window.alert("请选择 .xls 或 .xlsx 文件。");
+	                fileInput.value = "";
+	                return;
             }
             if (!window.XLSX) {
                 window.alert("Excel 解析库加载失败，请检查网络后重试。");
                 return;
-            }
-            uploadButton.disabled = true;
-            uploadButton.textContent = "解析中...";
-            try {
-                const buffer = await file.arrayBuffer();
-                const workbook = window.XLSX.read(buffer, { type: "array" });
-                const fixedRules = parseWorkbookFixedRules(workbook);
-                window.withholdingTaxFixedRules = fixedRules;
-                renderPreview(fixedRules, previewBody);
-            } catch (err) {
-                window.alert(err.message || "Excel 预览解析失败。");
-            } finally {
-                uploadButton.disabled = false;
-                uploadButton.textContent = "上传";
-            }
-        };
+	            }
+	            uploadButton.disabled = true;
+	            uploadButton.textContent = "解析中...";
+	                try {
+	                    const buffer = await file.arrayBuffer();
+	                    const workbook = window.XLSX.read(buffer, { type: "array" });
+	                    const fixedRules = parseWorkbookFixedRules(workbook);
+	                    pendingFixedRules = fixedRules;
+	                    renderPreview(fixedRules, previewBody);
+	                } catch (err) {
+	                    pendingFixedRules = null;
+	                    window.alert(err.message || "Excel 预览解析失败。");
+	                } finally {
+	                    if (uploadButton.disabled) uploadButton.disabled = false;
+	                    if (uploadButton.textContent === "解析中...") {
+	                        uploadButton.textContent = "上传";
+	                    }
+	                }
+	            };
 
-        uploadButton?.addEventListener("click", () => fileInput?.click());
-        fileInput?.addEventListener("change", () => updateFileInfo(fileInput.files && fileInput.files[0]));
-    });
+	        uploadButton?.addEventListener("click", async () => {
+	            if (!pendingFixedRules) {
+	                fileInput?.click();
+	                return;
+	            }
+	            try {
+	                await saveSettings(pendingFixedRules, yearInput, uploadButton);
+	                window.withholdingTaxFixedRules = pendingFixedRules;
+	                pendingFixedRules = null;
+	                fileInput.value = "";
+	            } catch (err) {
+	                window.alert(err.message || "保存失败。");
+	            }
+	        });
+	        fileInput?.addEventListener("change", () => updateFileInfo(fileInput.files && fileInput.files[0]));
+	        loadSettings(previewBody, yearInput);
+	    });
 
     window.addEventListener("i18n:change", applyI18n);
 }());

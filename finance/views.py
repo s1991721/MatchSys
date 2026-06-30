@@ -32,6 +32,19 @@ from .models import (
 FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
 FINANCE_EMPLOYMENT_SETTING_NAME = "employment_insurance"
 FINANCE_INCOME_TAX_SETTING_NAME = "income_tax"
+INCOME_TAX_MONTHLY_COLUMNS = (
+    "salary_min",
+    "salary_max",
+    "kou_0",
+    "kou_1",
+    "kou_2",
+    "kou_3",
+    "kou_4",
+    "kou_5",
+    "kou_6",
+    "kou_7",
+    "otsu",
+)
 FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME = "payroll_basic_items"
 PAYROLL_BASIC_ITEM_CATEGORIES = (
     "increase_items",
@@ -84,6 +97,21 @@ def _decimal_to_json_number(value):
     if value == value.to_integral_value():
         return int(value)
     return float(value)
+
+
+def _parse_json_integer(value, field_name, allow_zero=True):
+    if value in (None, ""):
+        return None, _finance_settings_payload_error(f"Missing field: {field_name}")
+    try:
+        parsed = Decimal(str(value).replace(",", "").strip())
+    except Exception:
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    if not parsed.is_finite() or parsed != parsed.to_integral_value():
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    parsed = int(parsed)
+    if parsed < 0 or (not allow_zero and parsed == 0):
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    return parsed, None
 
 
 def _normalize_annuity_metadata(value):
@@ -272,6 +300,108 @@ def _normalize_annuity_settings(payload):
     }, None
 
 
+def _unwrap_income_tax_settings_payload(payload):
+    if not isinstance(payload, dict):
+        return None, _finance_settings_payload_error("Invalid income tax settings")
+    if isinstance(payload.get("settings"), dict):
+        return payload["settings"], None
+    if isinstance(payload.get(FINANCE_INCOME_TAX_SETTING_NAME), dict):
+        return payload[FINANCE_INCOME_TAX_SETTING_NAME], None
+    return payload, None
+
+
+def _normalize_income_tax_metadata(value):
+    if not isinstance(value, dict):
+        return None, _finance_settings_payload_error("Missing field: metadata")
+
+    year, error = _parse_json_integer(value.get("year"), "metadata.year", allow_zero=False)
+    if error:
+        return None, error
+
+    table_type = str(value.get("table_type") or "").strip()
+    if table_type != "monthly":
+        return None, _finance_settings_payload_error("Invalid field: metadata.table_type")
+
+    columns = value.get("columns")
+    if not isinstance(columns, list) or tuple(columns) != INCOME_TAX_MONTHLY_COLUMNS:
+        return None, _finance_settings_payload_error("Invalid field: metadata.columns")
+
+    row_count, error = _parse_json_integer(value.get("row_count"), "metadata.row_count")
+    if error:
+        return None, error
+
+    return {
+        "year": year,
+        "table_type": table_type,
+        "columns": list(INCOME_TAX_MONTHLY_COLUMNS),
+        "row_count": row_count,
+    }, None
+
+
+def _normalize_income_tax_monthly_rows(value):
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error("Invalid field: monthly_rows")
+
+    rows = []
+    seen_orders = set()
+    previous_max = None
+    tax_columns = INCOME_TAX_MONTHLY_COLUMNS[2:]
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, _finance_settings_payload_error(f"Invalid field: monthly_rows[{index}]")
+
+        row_order, error = _parse_json_integer(item.get("row_order"), f"monthly_rows[{index}].row_order", allow_zero=False)
+        if error:
+            return None, error
+        if row_order in seen_orders:
+            return None, _finance_settings_payload_error(f"Duplicate row_order: {row_order}")
+        seen_orders.add(row_order)
+
+        salary_min, error = _parse_json_integer(item.get("salary_min"), f"monthly_rows[{index}].salary_min")
+        if error:
+            return None, error
+        salary_max, error = _parse_json_integer(item.get("salary_max"), f"monthly_rows[{index}].salary_max")
+        if error:
+            return None, error
+        if salary_max <= salary_min:
+            return None, _finance_settings_payload_error(f"Invalid salary range in monthly_rows[{index}]")
+        if previous_max is not None and salary_min < previous_max:
+            return None, _finance_settings_payload_error(f"Overlapping salary range in monthly_rows[{index}]")
+        previous_max = salary_max
+
+        row = {
+            "row_order": row_order,
+            "salary_min": salary_min,
+            "salary_max": salary_max,
+        }
+        for column in tax_columns:
+            amount, error = _parse_json_integer(item.get(column), f"monthly_rows[{index}].{column}")
+            if error:
+                return None, error
+            row[column] = amount
+        rows.append(row)
+
+    return rows, None
+
+
+def _normalize_income_tax_settings(payload):
+    settings_payload, error = _unwrap_income_tax_settings_payload(payload)
+    if error:
+        return None, error
+
+    metadata, error = _normalize_income_tax_metadata(settings_payload.get("metadata"))
+    if error:
+        return None, error
+    monthly_rows, error = _normalize_income_tax_monthly_rows(settings_payload.get("monthly_rows"))
+    if error:
+        return None, error
+
+    return {
+        "metadata": metadata,
+        "monthly_rows": monthly_rows,
+    }, None
+
+
 def _quantize_amount(value):
     return Decimal(value or "0").quantize(Decimal("0.01"))
 
@@ -341,7 +471,53 @@ def finance_employment_insurance_settings_api(request):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def finance_income_tax_settings_api(request):
-    return _finance_tax_table_settings_api(request, FINANCE_INCOME_TAX_SETTING_NAME)
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        return api_success(data={
+            "name": FINANCE_INCOME_TAX_SETTING_NAME,
+            "settings": record.settings if record else None,
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    settings_payload, error = _normalize_income_tax_settings(payload)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        if record:
+            record.settings = settings_payload
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_INCOME_TAX_SETTING_NAME,
+                settings=settings_payload,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
+    })
 
 
 def _normalize_payroll_basic_item_names(value, category):

@@ -2153,19 +2153,9 @@ def _sum_payroll_items(items):
     return total
 
 
-PAYROLL_VARIABLE_DEDUCTION_RULES = (
-    {
-        "key": "employmentInsurance",
-        "name": "雇佣保险料",
-        "rate": Decimal("0.0055"),
-        "base": "remaining",
-        "base_label": "扣除社保后",
-        "group": "variable",
-    },
-)
-PAYROLL_VARIABLE_DEDUCTION_NAMES = {
-    item["name"] for item in PAYROLL_VARIABLE_DEDUCTION_RULES
-} | {"所得税"}
+PAYROLL_EMPLOYMENT_INSURANCE_NAME = "雇佣保险料"
+PAYROLL_EMPLOYMENT_INSURANCE_KEY = "employmentInsurance"
+PAYROLL_VARIABLE_DEDUCTION_NAMES = {PAYROLL_EMPLOYMENT_INSURANCE_NAME, "所得税"}
 PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE = Decimal("0.5")
 PAYROLL_CARE_INSURANCE_MIN_AGE = 40
 PAYROLL_INCOME_TAX_NAME = "所得税"
@@ -2222,6 +2212,24 @@ def _get_income_tax_settings():
         .first()
     )
     return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _get_payroll_employment_insurance_settings():
+    record = (
+        FinanceSettings.objects
+        .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+    return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _get_payroll_employment_insurance_employee_rate():
+    settings = _get_payroll_employment_insurance_settings() or {}
+    rate = _decimal_from_setting(settings.get("employee_rate"))
+    if rate < 0 or rate > 1:
+        return Decimal("0")
+    return rate
 
 
 def _find_annuity_standard(settings, remuneration_base):
@@ -2435,23 +2443,19 @@ def _build_payroll_calculation_values(source, target_month=None, overrides=None)
             "calculation_rate": str(_calculate_annuity_tax_item_employee_rate(tax_item)),
         })
 
-    for rule in PAYROLL_VARIABLE_DEDUCTION_RULES:
-        if rule["base"] == "remaining":
-            amount = _round_payroll_amount(max(Decimal("0"), remuneration_base - first_stage_total) * rule["rate"])
-            employment_amount = amount
-        else:
-            amount = _round_payroll_amount(
-                max(Decimal("0"), remuneration_base - first_stage_total - employment_amount) * rule["rate"]
-            )
-        calculated_items.append({
-            "name": rule["name"],
-            "amount": str(amount),
-            "payroll_calculated": True,
-            "calculation_group": "variable",
-            "calculation_key": rule["key"],
-            "calculation_rate": str(rule["rate"]),
-            "calculation_base_label": rule["base_label"],
-        })
+    employment_rate = _get_payroll_employment_insurance_employee_rate()
+    employment_amount = _round_payroll_amount(
+        remuneration_base * employment_rate
+    )
+    calculated_items.append({
+        "name": PAYROLL_EMPLOYMENT_INSURANCE_NAME,
+        "amount": str(employment_amount),
+        "payroll_calculated": True,
+        "calculation_group": "variable",
+        "calculation_key": PAYROLL_EMPLOYMENT_INSURANCE_KEY,
+        "calculation_rate": str(employment_rate),
+        "calculation_base_label": "賃金総額",
+    })
 
     income_tax_base = max(Decimal("0"), taxable_salary - first_stage_total - employment_amount)
     income_tax_amount = _calculate_income_tax_amount(

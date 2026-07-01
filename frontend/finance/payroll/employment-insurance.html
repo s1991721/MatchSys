@@ -75,9 +75,7 @@
 <script src="../../common.js"></script>
 <script>
 (function () {
-    const STORAGE_KEY = "finance:payroll:employment-insurance-settings";
-    const DEFAULT_EMPLOYEE_RATE_PERCENT = "0.5";
-    const DEFAULT_COMPANY_RATE_PERCENT = "0.85";
+    const settingsApi = "/api/finance/settings/payroll-employment-insurance";
 
     const applyI18n = () => {
         if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
@@ -95,29 +93,23 @@
         return decimal.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0";
     };
 
-    const readSettings = () => {
-        try {
-            const raw = window.localStorage.getItem(STORAGE_KEY);
-            const parsed = raw ? JSON.parse(raw) : null;
-            const employeeRate = normalizeRate(parsed?.employeeRatePercent);
-            const companyRate = normalizeRate(parsed?.companyRatePercent);
-            return {
-                employeeRatePercent: employeeRate !== null ? String(employeeRate) : DEFAULT_EMPLOYEE_RATE_PERCENT,
-                companyRatePercent: companyRate !== null ? String(companyRate) : DEFAULT_COMPANY_RATE_PERCENT
-            };
-        } catch (e) {}
-        return {
-            employeeRatePercent: DEFAULT_EMPLOYEE_RATE_PERCENT,
-            companyRatePercent: DEFAULT_COMPANY_RATE_PERCENT
-        };
+    const formatPercentFromDecimal = (rate) => {
+        const percent = rate * 100;
+        return percent.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0";
     };
 
-    const writeSettings = (settings) => {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-            employeeRatePercent: settings.employeeRatePercent,
-            companyRatePercent: settings.companyRatePercent,
-            updatedAt: new Date().toISOString()
-        }));
+    const normalizeSettings = (settings) => {
+        if (!settings || typeof settings !== "object") {
+            return { employeeRatePercent: "", companyRatePercent: "" };
+        }
+        const employeeDecimal = Number(settings.employee_rate);
+        const companyDecimal = Number(settings.company_rate);
+        const employeeRate = normalizeRate(formatPercentFromDecimal(employeeDecimal));
+        const companyRate = normalizeRate(formatPercentFromDecimal(companyDecimal));
+        return {
+            employeeRatePercent: employeeRate !== null ? String(employeeRate) : "",
+            companyRatePercent: companyRate !== null ? String(companyRate) : ""
+        };
     };
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -130,7 +122,7 @@
         const totalRate = document.getElementById("employmentInsuranceTotalRate");
         const saveButton = document.getElementById("employmentInsuranceSave");
         const status = document.getElementById("employmentInsuranceStatus");
-        let savedSettings = readSettings();
+        let savedSettings = normalizeSettings();
 
         const setStatus = (message, type = "") => {
             status.textContent = message;
@@ -139,10 +131,13 @@
         };
 
         const refresh = () => {
-            const employeeRate = normalizeRate(employeeRateInput.value);
-            const companyRate = normalizeRate(companyRateInput.value);
-            const employeeValid = employeeRate !== null;
-            const companyValid = companyRate !== null;
+            const employeeHasValue = String(employeeRateInput.value || "").trim() !== "";
+            const companyHasValue = String(companyRateInput.value || "").trim() !== "";
+            const employeeRate = employeeHasValue ? normalizeRate(employeeRateInput.value) : null;
+            const companyRate = companyHasValue ? normalizeRate(companyRateInput.value) : null;
+            const employeeValid = !employeeHasValue || employeeRate !== null;
+            const companyValid = !companyHasValue || companyRate !== null;
+            const complete = employeeHasValue && companyHasValue;
             const isValid = employeeValid && companyValid;
 
             [
@@ -153,23 +148,51 @@
                 input.closest(".employment-insurance-rate-input")?.classList.toggle("is-invalid", !valid);
             });
 
-            employeeDecimalRate.textContent = employeeValid ? formatDecimalRate(employeeRate) : "-";
-            companyDecimalRate.textContent = companyValid ? formatDecimalRate(companyRate) : "-";
-            totalRate.textContent = isValid ? `${(employeeRate + companyRate).toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}%` : "-";
+            employeeDecimalRate.textContent = employeeHasValue && employeeRate !== null ? formatDecimalRate(employeeRate) : "-";
+            companyDecimalRate.textContent = companyHasValue && companyRate !== null ? formatDecimalRate(companyRate) : "-";
+            totalRate.textContent = complete && isValid ? `${(employeeRate + companyRate).toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}%` : "-";
 
             const changed = String(employeeRateInput.value || "") !== String(savedSettings.employeeRatePercent || "")
                 || String(companyRateInput.value || "") !== String(savedSettings.companyRatePercent || "");
-            saveButton.disabled = !isValid || !changed;
-            if (isValid) setStatus("");
+            saveButton.disabled = !complete || !isValid || !changed;
         };
 
-        employeeRateInput.value = savedSettings.employeeRatePercent;
-        companyRateInput.value = savedSettings.companyRatePercent;
-        refresh();
+        const applySettings = (settings) => {
+            savedSettings = normalizeSettings(settings);
+            employeeRateInput.value = savedSettings.employeeRatePercent;
+            companyRateInput.value = savedSettings.companyRatePercent;
+            refresh();
+        };
 
-        employeeRateInput.addEventListener("input", refresh);
-        companyRateInput.addEventListener("input", refresh);
-        saveButton.addEventListener("click", () => {
+        const setLoading = (loading) => {
+            employeeRateInput.disabled = loading;
+            companyRateInput.disabled = loading;
+            saveButton.disabled = true;
+        };
+
+        const loadSettings = async () => {
+            setLoading(true);
+            try {
+                const payload = await window.requestJson(settingsApi, {method: "GET", cache: "no-store"});
+                applySettings(payload?.data?.settings);
+            } catch (err) {
+                applySettings();
+                setStatus(err.message || "加载失败", "error");
+            } finally {
+                employeeRateInput.disabled = false;
+                companyRateInput.disabled = false;
+                refresh();
+            }
+        };
+
+        const handleInput = () => {
+            setStatus("");
+            refresh();
+        };
+
+        employeeRateInput.addEventListener("input", handleInput);
+        companyRateInput.addEventListener("input", handleInput);
+        saveButton.addEventListener("click", async () => {
             const employeeRate = normalizeRate(employeeRateInput.value);
             const companyRate = normalizeRate(companyRateInput.value);
             if (employeeRate === null || companyRate === null) {
@@ -177,17 +200,34 @@
                 (employeeRate === null ? employeeRateInput : companyRateInput).focus();
                 return;
             }
-            savedSettings = {
+            const pendingSettings = {
                 employeeRatePercent: String(employeeRate),
                 companyRatePercent: String(companyRate)
             };
-            employeeRateInput.value = savedSettings.employeeRatePercent;
-            companyRateInput.value = savedSettings.companyRatePercent;
-            writeSettings(savedSettings);
-            refresh();
-            setStatus("已保存到前端临时设置。", "success");
+            setLoading(true);
+            const originalText = saveButton.textContent;
+            saveButton.textContent = "保存中...";
+            try {
+                const payload = await window.requestJson(settingsApi, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        employee_rate: formatDecimalRate(employeeRate),
+                        company_rate: formatDecimalRate(companyRate)
+                    })
+                });
+                applySettings(payload?.data?.settings);
+                setStatus("已保存", "success");
+            } catch (err) {
+                setStatus(err.message || "保存失败", "error");
+            } finally {
+                employeeRateInput.disabled = false;
+                companyRateInput.disabled = false;
+                saveButton.textContent = originalText;
+                refresh();
+            }
         });
 
+        loadSettings();
         window.addEventListener("i18n:change", applyI18n);
     });
 }());

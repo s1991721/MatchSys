@@ -32,6 +32,7 @@ from .models import (
 FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
 FINANCE_EMPLOYMENT_SETTING_NAME = "employment_insurance"
 FINANCE_INCOME_TAX_SETTING_NAME = "income_tax"
+FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME = "payroll_employment_insurance"
 INCOME_TAX_MONTHLY_COLUMNS = (
     "salary_min",
     "salary_max",
@@ -548,6 +549,34 @@ def _read_payroll_basic_item_settings(value):
     return settings
 
 
+def _normalize_payroll_employment_rate_settings(payload):
+    if not isinstance(payload, dict):
+        return None, _finance_settings_payload_error("Invalid employment insurance settings")
+    source = payload.get("settings") if isinstance(payload.get("settings"), dict) else payload
+
+    employee_rate, error = _parse_json_decimal(
+        source.get("employee_rate"),
+        "employee_rate",
+    )
+    if error:
+        return None, error
+    company_rate, error = _parse_json_decimal(
+        source.get("company_rate"),
+        "company_rate",
+    )
+    if error:
+        return None, error
+    if employee_rate > 1:
+        return None, _finance_settings_payload_error("Invalid field: employee_rate")
+    if company_rate > 1:
+        return None, _finance_settings_payload_error("Invalid field: company_rate")
+
+    return {
+        "employee_rate": _decimal_to_json_number(employee_rate),
+        "company_rate": _decimal_to_json_number(company_rate),
+    }, None
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def finance_payroll_basic_item_settings_api(request):
@@ -606,6 +635,61 @@ def finance_payroll_basic_item_settings_api(request):
         "name": record.name,
         "settings": record.settings,
         "saved_category": category,
+    })
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_payroll_employment_insurance_settings_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        settings = None
+        if record:
+            settings, _ = _normalize_payroll_employment_rate_settings(record.settings)
+        return api_success(data={
+            "name": FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME,
+            "settings": settings,
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    settings, error = _normalize_payroll_employment_rate_settings(payload)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        if record:
+            record.settings = settings
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME,
+                settings=settings,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
     })
 
 

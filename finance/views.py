@@ -1,16 +1,12 @@
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP
-from io import BytesIO
-from urllib.parse import quote
 
 from django.db import transaction
-from django.http import HttpResponse
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods
-from openpyxl import Workbook
 
 from attendance.models import get_monthly_attendance_models
 from employee.models import Employee
@@ -3076,70 +3072,3 @@ def payroll_monthly_detail_api(request, calculation_id):
     item.updated_by = login_id
     item.save()
     return api_success(data={"item": PayrollMonthlyCalculation.serialize(item)})
-
-
-@require_GET
-def payroll_monthly_export_api(request):
-    _login_id, error = require_login(request)
-    if error:
-        return error
-    target_month, error = _parse_payroll_month(request.GET.get("month"))
-    if error:
-        return error
-    qs = PayrollMonthlyCalculation.objects_for_period(target_month).filter(
-        payroll_month=target_month,
-        deleted_at__isnull=True,
-    )
-    qs, error = _apply_monthly_filters(qs, request)
-    if error:
-        return error
-    items = list(qs.order_by("employee_id", "id"))
-
-    workbook = Workbook()
-    worksheet = workbook.active
-    worksheet.title = "月度工资"
-    headers = [
-        "月份",
-        "员工",
-        "出勤日数",
-        "基本工资",
-        "补贴",
-        "扣款",
-        "自动扣款合计",
-        "实发金额",
-        "状态",
-    ]
-    worksheet.append(headers)
-    for item in items:
-        serialized = PayrollMonthlyCalculation.serialize(item)
-        worksheet.append(
-            [
-                serialized["month"],
-                serialized["employee_name"],
-                float(item.attendance_days),
-                float(item.base_salary),
-                float(item.allowance_amount),
-                float(item.deduction_amount),
-                float(item.automatic_deduction_amount),
-                float(item.net_salary),
-                serialized["status_label"],
-            ]
-        )
-    for column in worksheet.columns:
-        max_length = max(len(str(cell.value or "")) for cell in column)
-        worksheet.column_dimensions[column[0].column_letter].width = min(max(max_length + 2, 10), 24)
-
-    output = BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    month_label = target_month.strftime("%Y-%m")
-    safe_filename = f"payroll_monthly_{month_label}.xlsx"
-    display_filename = f"月度工资_{month_label}.xlsx"
-    response = HttpResponse(
-        output.getvalue(),
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-    response["Content-Disposition"] = (
-        f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{quote(display_filename)}"
-    )
-    return response

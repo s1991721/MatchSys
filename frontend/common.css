@@ -2239,6 +2239,147 @@ body.finance-subpage {
   color: var(--muted);
   font-size: 13px;
 }
+.employment-insurance-layout {
+  display: grid;
+  grid-template-columns: minmax(420px, 720px) minmax(240px, 320px);
+  gap: 16px;
+  align-items: start;
+  width: min(100%, 1080px);
+  margin: 18px auto 0;
+}
+.employment-insurance-settings,
+.employment-insurance-summary {
+  overflow: hidden;
+  box-shadow: none;
+}
+.employment-insurance-title-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.employment-insurance-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: #f8fafc;
+}
+.employment-insurance-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+}
+.employment-insurance-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.employment-insurance-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+.employment-insurance-field {
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.employment-insurance-rate-input {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+.employment-insurance-rate-input input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+.employment-insurance-rate-input input:focus {
+  outline: 0;
+}
+.employment-insurance-rate-input:focus-within {
+  border-color: rgba(28, 123, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(28, 123, 255, 0.1);
+}
+.employment-insurance-rate-input.is-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+.employment-insurance-rate-input span {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.employment-insurance-summary {
+  display: grid;
+  gap: 0;
+}
+.employment-insurance-summary-item {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.employment-insurance-summary-item:last-child {
+  border-bottom: 0;
+}
+.employment-insurance-summary-item span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.employment-insurance-summary-item strong {
+  color: var(--text);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.employment-insurance-summary-item.is-total {
+  background: #f8fafc;
+}
+.employment-insurance-summary-item.is-total strong {
+  color: var(--primary);
+  font-size: 22px;
+}
+.employment-insurance-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 18px 16px;
+}
+.employment-insurance-status {
+  min-width: 0;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: right;
+}
+.employment-insurance-status.is-success {
+  color: var(--success);
+}
+.employment-insurance-status.is-error {
+  color: var(--danger);
+}
 .basic-item-settings-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2339,6 +2480,21 @@ body.finance-subpage {
   opacity: 0.78;
 }
 @media (max-width: 1100px) {
+  .employment-insurance-layout {
+    grid-template-columns: 1fr;
+    width: 100%;
+    margin-top: 0;
+  }
+  .employment-insurance-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .employment-insurance-summary-item {
+    border-right: 1px solid var(--border);
+    border-bottom: 0;
+  }
+  .employment-insurance-summary-item:last-child {
+    border-right: 0;
+  }
   .basic-item-settings-grid {
     grid-template-columns: 1fr;
   }
@@ -2347,8 +2503,22 @@ body.finance-subpage {
   }
 }
 @media (max-width: 560px) {
+  .employment-insurance-header,
   .basic-item-settings-column-head {
     flex-direction: column;
+  }
+  .employment-insurance-body {
+    grid-template-columns: 1fr;
+  }
+  .employment-insurance-summary {
+    grid-template-columns: 1fr;
+  }
+  .employment-insurance-summary-item {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .employment-insurance-summary-item:last-child {
+    border-bottom: 0;
   }
   .basic-item-settings-row {
     grid-template-columns: 24px minmax(0, 1fr);

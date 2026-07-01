@@ -7,62 +7,190 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>基础信息</title>
+    <style>
+        html,
+        body.finance-subpage {
+            height: 100%;
+            min-height: 0;
+        }
+        body.finance-subpage {
+            overflow: hidden;
+        }
+        .finance-subpage-content[data-finance-subpage="payroll.basic"] {
+            display: block;
+            height: 100%;
+            min-height: 0;
+        }
+        .payroll-basic-layout {
+            display: grid;
+            grid-template-columns: minmax(640px, 1fr) minmax(320px, 34%);
+            gap: 18px;
+            align-items: stretch;
+            height: 100%;
+            min-height: 0;
+        }
+        .payroll-basic-left,
+        .payroll-basic-list-panel {
+            min-width: 0;
+            min-height: 0;
+        }
+        .payroll-basic-left {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .payroll-basic-detail-panel,
+        .payroll-basic-list-panel {
+            border-radius: 8px;
+        }
+        .payroll-basic-search-panel {
+            margin-bottom: 18px;
+        }
+        .payroll-basic-detail-panel {
+            min-width: 0;
+            padding: 16px;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+            border: 1px solid #dbe4f3;
+            background: #f5f8fc;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+        }
+        .payroll-basic-detail-title[hidden] {
+            display: none;
+        }
+        .payroll-basic-detail-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .payroll-basic-detail-form[hidden] {
+            display: none;
+        }
+        .payroll-basic-form-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .payroll-basic-detail-empty {
+            min-height: 300px;
+            display: grid;
+            place-items: center;
+            color: #6b7894;
+            border: 1px dashed #d8e1ef;
+            border-radius: 8px;
+            background: #f8fbff;
+        }
+        .payroll-basic-detail-empty[hidden] {
+            display: none;
+        }
+        .payroll-basic-list-panel {
+            min-width: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            background: #fff;
+        }
+        .payroll-basic-list-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .payroll-basic-list-scroll.table-wrap,
+        .payroll-basic-list-scroll.c-table-wrapper {
+            padding: 0;
+            margin: 0;
+        }
+        .payroll-basic-list-scroll .c-table th,
+        .payroll-basic-list-scroll .c-table td {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        .payroll-basic-list-row {
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .payroll-basic-list-row.is-active td {
+            background: #eaf2ff;
+            color: #0f2f6f;
+            font-weight: 700;
+        }
+        .payroll-basic-list-row.is-active td:first-child {
+            box-shadow: inset 4px 0 0 #2d7ef7;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        .payroll-basic-list-row.is-active td:last-child {
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        .payroll-basic-list-row:focus-visible {
+            outline: 2px solid #2d7ef7;
+            outline-offset: -2px;
+        }
+        .payroll-basic-form-actions {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) auto auto;
+            align-items: end;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .payroll-basic-form-actions .payroll-basic-remark-field {
+            min-width: 0;
+        }
+        @media (max-width: 1100px) {
+            body.finance-subpage {
+                overflow: auto;
+            }
+            .payroll-basic-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+                min-height: 0;
+            }
+            .payroll-basic-list-panel {
+                order: -1;
+            }
+            .payroll-basic-list-scroll {
+                min-height: 320px;
+            }
+        }
+    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payroll.basic">
-    <div class="c-inline-filters">
-        <div class="c-inline-filters-grid-3 payroll-basic-filter-row">
-            <label class="c-inline-field"><span data-i18n="payroll.basic.field.employee">员工</span><input id="payrollKeyword" type="text" placeholder="员工姓名" data-i18n-placeholder="payroll.basic.placeholder.employee"></label>
-            <label class="c-inline-field">
-                <span data-i18n="payroll.basic.field.contract_type">契约类型</span>
-                <select id="payrollContractType">
-                    <option value="" data-i18n="common.all">全部</option>
-                    <option value="0" data-i18n="payroll.basic.contract.regular">正社员</option>
-                    <option value="1" data-i18n="payroll.basic.contract.contract">契约社员</option>
-                    <option value="2" data-i18n="payroll.basic.contract.freelance">フリーランス</option>
-                </select>
-            </label>
-            <label class="c-inline-field">
-                <span data-i18n="payroll.basic.field.status">状态</span>
-                <select id="payrollStatus">
-                    <option value="" data-i18n="common.all">全部</option>
-                    <option value="1" data-i18n="payroll.basic.status.valid">有效</option>
-                    <option value="0" data-i18n="payroll.basic.status.invalid">无效</option>
-                </select>
-            </label>
-            <div class="c-filter-actions-group payroll-basic-search-action">
-                <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" data-i18n="common.search">搜索</button>
+    <div class="payroll-basic-layout">
+        <div class="payroll-basic-left">
+            <div class="payroll-basic-search-panel">
+                <div class="c-inline-filters-grid-3 payroll-basic-filter-row">
+                    <label class="c-inline-field"><span data-i18n="payroll.basic.field.employee">员工</span><input id="payrollKeyword" type="text" placeholder="员工姓名" data-i18n-placeholder="payroll.basic.placeholder.employee"></label>
+                    <label class="c-inline-field">
+                        <span data-i18n="payroll.basic.field.contract_type">契约类型</span>
+                        <select id="payrollContractType">
+                            <option value="" data-i18n="common.all">全部</option>
+                            <option value="0" data-i18n="payroll.basic.contract.regular">正社员</option>
+                            <option value="1" data-i18n="payroll.basic.contract.contract">契约社员</option>
+                            <option value="2" data-i18n="payroll.basic.contract.freelance">フリーランス</option>
+                        </select>
+                    </label>
+                    <label class="c-inline-field">
+                        <span data-i18n="payroll.basic.field.status">状态</span>
+                        <select id="payrollStatus">
+                            <option value="" data-i18n="common.all">全部</option>
+                            <option value="1" data-i18n="payroll.basic.status.valid">有效</option>
+                            <option value="0" data-i18n="payroll.basic.status.invalid">无效</option>
+                        </select>
+                    </label>
+                    <div class="c-filter-actions-group payroll-basic-search-action">
+                        <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" data-i18n="common.search">搜索</button>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead>
-            <tr>
-                <th data-i18n="payroll.basic.field.employee">员工</th>
-                <th data-i18n="payroll.basic.field.contract_type">契约类型</th>
-                <th data-i18n="payroll.basic.field.withholding_tax_type">源泉税区分</th>
-                <th data-i18n="payroll.basic.field.base_salary">基本工资</th>
-                <th data-i18n="payroll.basic.table.addition_total">增加项合计</th>
-                <th data-i18n="payroll.basic.table.deduction_total">减少项合计</th>
-                <th data-i18n="payroll.basic.table.estimated_net">预估实发</th>
-                <th data-i18n="payroll.basic.field.status">状态</th>
-                <th class="c-actions-col" data-i18n="common.actions">操作</th>
-            </tr>
-            </thead>
-            <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="9" data-i18n="common.loading">加载中...</td></tr></tbody>
-        </table>
-    </div>
-</div>
-
-<div class="personnel-page c-form-page">
-    <div class="modal" id="payrollBasicModal" aria-hidden="true">
-        <div class="modal-card c-card c-card-pad payroll-basic-modal-card">
-            <div class="modal-header">
-                <h4 id="payrollBasicModalTitle" data-i18n="payroll.basic.modal.add">新增薪资信息</h4>
-                <button class="modal-close" id="payrollBasicClose" aria-label="关闭" data-i18n-aria="common.close">×</button>
-            </div>
-            <form id="payrollBasicForm" class="modal-body">
+            <div class="payroll-basic-detail-panel personnel-page c-form-page">
+                <span id="payrollBasicModalTitle" class="payroll-basic-detail-title" data-i18n="payroll.basic.modal.add" hidden>新增薪资信息</span>
+                <div id="payrollBasicEmptyDetail" class="payroll-basic-detail-empty">请选择右侧员工</div>
+                <form id="payrollBasicForm" class="payroll-basic-detail-form" hidden>
                 <div class="form-grid payroll-basic-form-grid">
                     <label>
                         <span data-i18n="payroll.basic.field.employee">员工</span>
@@ -74,6 +202,13 @@
                             <option value="0" data-i18n="payroll.basic.contract.regular">正社员</option>
                             <option value="1" data-i18n="payroll.basic.contract.contract">契约社员</option>
                             <option value="2" data-i18n="payroll.basic.contract.freelance">フリーランス</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span data-i18n="payroll.basic.field.status">状态</span>
+                        <select id="payrollFormStatus">
+                            <option value="1" data-i18n="payroll.basic.status.valid">有效</option>
+                            <option value="0" data-i18n="payroll.basic.status.invalid">无效</option>
                         </select>
                     </label>
                     <label>
@@ -90,13 +225,6 @@
                     <label>
                         <span data-i18n="payroll.basic.field.dependent_count">扶养亲族等人数</span>
                         <input id="payrollDependentCount" type="number" min="0" max="7" step="1">
-                    </label>
-                    <label>
-                        <span data-i18n="payroll.basic.field.status">状态</span>
-                        <select id="payrollFormStatus">
-                            <option value="1" data-i18n="payroll.basic.status.valid">有效</option>
-                            <option value="0" data-i18n="payroll.basic.status.invalid">无效</option>
-                        </select>
                     </label>
                     <div class="payroll-basic-adjustments-grid">
                         <div class="payroll-items-panel payroll-basic-adjustment-panel">
@@ -118,17 +246,32 @@
                             <div class="payroll-items-list" id="payrollDeductionItems"></div>
                         </div>
                     </div>
-                    <label>
+                </div>
+                <div class="payroll-basic-form-actions">
+                    <label class="payroll-basic-remark-field">
                         <span data-i18n="payroll.basic.field.remark">备注</span>
                         <input id="payrollRemark" type="text">
                     </label>
-                </div>
-                <div class="modal-actions">
                     <button type="button" class="c-btn c-btn-danger payroll-basic-delete-action" id="payrollBasicDelete" data-i18n="common.delete">删除</button>
-                    <button type="button" class="c-btn c-btn-secondary" id="payrollBasicCancel" data-i18n="common.cancel">取消</button>
                     <button type="submit" class="c-btn c-btn-primary" data-i18n="common.save">保存</button>
                 </div>
             </form>
+            </div>
+        </div>
+        <div class="payroll-basic-list-panel">
+            <div class="payroll-basic-list-scroll table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead>
+                    <tr>
+                        <th data-i18n="payroll.basic.field.employee">员工</th>
+                        <th data-i18n="payroll.basic.field.contract_type">契约类型</th>
+                        <th data-i18n="payroll.basic.field.base_salary">基本工资</th>
+                        <th data-i18n="payroll.basic.field.status">状态</th>
+                    </tr>
+                    </thead>
+                    <tbody id="payrollBasicBody"><tr><td class="finance-empty-row" colspan="4" data-i18n="common.loading">加载中...</td></tr></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -194,12 +337,10 @@
         const statusSelect = document.getElementById("payrollStatus");
         const searchBtn = document.getElementById("payrollSearchBtn");
         const tbody = document.getElementById("payrollBasicBody");
-        const modal = document.getElementById("payrollBasicModal");
         const modalTitle = document.getElementById("payrollBasicModalTitle");
         const form = document.getElementById("payrollBasicForm");
-        const closeBtn = document.getElementById("payrollBasicClose");
-        const cancelBtn = document.getElementById("payrollBasicCancel");
         const deleteBtn = document.getElementById("payrollBasicDelete");
+        const emptyDetail = document.getElementById("payrollBasicEmptyDetail");
         const additionItems = document.getElementById("payrollAdditionItems");
         const nonTaxableAdditionItems = document.getElementById("payrollNonTaxableAdditionItems");
         const deductionItems = document.getElementById("payrollDeductionItems");
@@ -215,6 +356,7 @@
         let items = [];
         let editingId = null;
         let editingEmployeeId = null;
+        let selectedKey = "";
 
         const normalizeWithholdingTaxInfo = (value = {}) => {
             const type = value.withholding_tax_type === "otsu" ? "otsu" : "kou";
@@ -320,9 +462,12 @@
             return merged;
         };
 
-        const closeModal = () => {
-            modal.classList.remove("show");
-            modal.setAttribute("aria-hidden", "true");
+        const itemKey = (item) => item?.id ? `payroll:${item.id}` : `employee:${item?.employee_id || ""}`;
+
+        const showEmptyDetail = (message) => {
+            form.hidden = true;
+            emptyDetail.hidden = false;
+            emptyDetail.textContent = message || t("payroll.basic.detail.empty", "请选择右侧员工");
             form.reset();
             fields.withholdingTaxType.value = "kou";
             fields.dependentCount.value = "0";
@@ -332,44 +477,71 @@
             renderItemRows(deductionItems, []);
             editingId = null;
             editingEmployeeId = null;
+            selectedKey = "";
+            updateModalTitle();
+            deleteBtn.hidden = true;
+        };
+
+        const refreshSelectedRow = () => {
+            tbody.querySelectorAll(".payroll-basic-list-row").forEach((row) => {
+                const active = row.dataset.key === selectedKey;
+                row.classList.toggle("is-active", active);
+                row.setAttribute("aria-selected", String(active));
+            });
         };
 
         const renderRows = () => {
             if (!items.length) {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="9">${h(t("payroll.basic.empty", "暂无基础信息"))}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="4">${h(t("payroll.basic.empty", "暂无基础信息"))}</td></tr>`;
                 return;
             }
             tbody.innerHTML = items.map((item) => {
                 const contract = contractLabel(Number(item.contract_type)) || item.contract_label || "";
                 const status = statusLabel(Number(item.status)) || item.status_label || "";
-                const withholdingTaxInfo = normalizeWithholdingTaxInfo(item);
-                const withholdingTaxLabel = withholdingTaxInfo.withholding_tax_type === "kou"
-                    ? `${withholdingTaxTypeLabel("kou")} / ${withholdingTaxInfo.dependent_count}${t("payroll.basic.dependent_count.unit", "人")}`
-                    : withholdingTaxTypeLabel("otsu");
-                const additionTotal = sumItems(item.addition_items);
-                const nonTaxableAdditionTotal = sumItems(item.non_taxable_addition_items);
-                const deductionTotal = sumItems(item.deduction_items);
-                const estimatedNet = parseMoney(item.base_salary) + additionTotal + nonTaxableAdditionTotal - deductionTotal;
+                const key = itemKey(item);
                 return `
-                    <tr>
+                    <tr class="payroll-basic-list-row${key === selectedKey ? " is-active" : ""}" data-action="select" data-key="${h(key)}" tabindex="0" aria-selected="${key === selectedKey ? "true" : "false"}">
                         <td>${h(item.employee_name || item.employee_id)}</td>
                         <td>${h(contract)}</td>
-                        <td>${h(withholdingTaxLabel)}</td>
                         <td>${h(formatMoney(item.base_salary))}</td>
-                        <td>${h(formatMoney(additionTotal + nonTaxableAdditionTotal))}</td>
-                        <td>${h(formatMoney(deductionTotal))}</td>
-                        <td>${h(formatMoney(estimatedNet))}</td>
                         <td>${h(status)}</td>
-                        <td class="c-actions-col">
-                            <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">${h(t("common.edit", "编辑"))}</button>
-                        </td>
                     </tr>
                 `;
             }).join("");
+            refreshSelectedRow();
         };
 
-        const fetchList = async () => {
-            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.loading", "加载中..."))}</td></tr>`;
+        const selectItem = async (item) => {
+            if (!item) {
+                showEmptyDetail(t("payroll.basic.detail.empty", "请选择右侧员工"));
+                renderRows();
+                return;
+            }
+            const settings = await fetchBasicItemSettings();
+            selectedKey = itemKey(item);
+            editingId = item?.id || null;
+            editingEmployeeId = item?.employee_id || null;
+            updateModalTitle();
+            fields.employeeName.value = item?.employee_name || "";
+            fields.contractType.value = String(item?.contract_type ?? 0);
+            fields.baseSalary.value = item?.base_salary || "0";
+            const withholdingTaxInfo = normalizeWithholdingTaxInfo(item);
+            fields.withholdingTaxType.value = withholdingTaxInfo.withholding_tax_type;
+            fields.dependentCount.value = String(withholdingTaxInfo.dependent_count);
+            applyWithholdingTaxFieldsState();
+            renderItemRows(additionItems, mergeItems(settings.increase_items, item?.addition_items));
+            renderItemRows(nonTaxableAdditionItems, mergeItems(settings.non_taxable_increase_items, item?.non_taxable_addition_items));
+            renderItemRows(deductionItems, mergeItems(settings.decrease_items, item?.deduction_items));
+            fields.status.value = String(item?.status ?? 1);
+            fields.remark.value = item?.remark || "";
+            deleteBtn.hidden = !editingId;
+            emptyDetail.hidden = true;
+            form.hidden = false;
+            refreshSelectedRow();
+        };
+
+        const fetchList = async (options = {}) => {
+            tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="4">${h(t("common.loading", "加载中..."))}</td></tr>`;
             const params = window.createParams([
                 ["keyword", keywordInput.value.trim()],
                 ["contract_type", contractTypeSelect.value],
@@ -379,6 +551,14 @@
             const payload = await window.requestJson(window.buildUrl("/api/finance/payroll/basic-info", params), {method: "GET"});
             items = Array.isArray(payload.data?.items) ? payload.data.items : [];
             renderRows();
+            if (options.keepSelection) {
+                const current = items.find((item) => itemKey(item) === selectedKey);
+                if (current) {
+                    await selectItem(current);
+                    return;
+                }
+            }
+            await selectItem(items[0] || null);
         };
 
         const fetchEmployee = async (employeeId) => {
@@ -400,6 +580,7 @@
             const settings = await fetchBasicItemSettings();
             editingId = mode === "edit" ? data?.id : null;
             editingEmployeeId = data?.employee_id || employee?.id || null;
+            selectedKey = itemKey({id: editingId, employee_id: editingEmployeeId});
             updateModalTitle();
             fields.employeeName.value = data?.employee_name || employee?.name || "";
             fields.contractType.value = String(data?.contract_type ?? 0);
@@ -413,8 +594,10 @@
             renderItemRows(deductionItems, mergeItems(settings.decrease_items, data?.deduction_items));
             fields.status.value = String(data?.status ?? 1);
             fields.remark.value = data?.remark || "";
-            modal.classList.add("show");
-            modal.setAttribute("aria-hidden", "false");
+            deleteBtn.hidden = !editingId;
+            emptyDetail.hidden = true;
+            form.hidden = false;
+            refreshSelectedRow();
         };
 
         const buildPayload = () => {
@@ -457,11 +640,34 @@
             try {
                 const existing = await fetchPayrollByEmployee(employeeId);
                 if (existing) {
+                    keywordInput.value = existing.employee_name || "";
+                    contractTypeSelect.value = "";
+                    statusSelect.value = "";
+                    items = [existing];
+                    renderRows();
                     await openModal("edit", existing);
                     return;
                 }
                 const employee = await fetchEmployee(employeeId);
-                await openModal("add", {employee_id: employeeId}, employee);
+                const draft = {
+                    employee_id: employeeId,
+                    employee_name: employee?.name || "",
+                    contract_type: 0,
+                    base_salary: "0",
+                    withholding_tax_type: "kou",
+                    dependent_count: 0,
+                    addition_items: [],
+                    non_taxable_addition_items: [],
+                    deduction_items: [],
+                    status: 1,
+                    remark: ""
+                };
+                keywordInput.value = draft.employee_name;
+                contractTypeSelect.value = "";
+                statusSelect.value = "";
+                items = [draft];
+                renderRows();
+                await openModal("add", draft, employee);
             } catch (err) {
                 window.alert(err.message || t("payroll.basic.error.load_salary", "薪资信息加载失败"));
             }
@@ -469,22 +675,33 @@
 
         searchBtn.addEventListener("click", () => {
             fetchList().catch((err) => {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="4">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
+                showEmptyDetail(t("common.load_failed", "加载失败"));
             });
         });
         tbody.addEventListener("click", async (event) => {
-            const btn = event.target.closest("button[data-action='edit']");
-            if (!btn) return;
-            const item = items.find((row) => String(row.id) === String(btn.dataset.id));
+            const row = event.target.closest("tr[data-action='select']");
+            if (!row) return;
+            const item = items.find((item) => itemKey(item) === row.dataset.key);
             if (!item) return;
             try {
-                await openModal("edit", item);
+                await selectItem(item);
             } catch (err) {
                 window.alert(err.message || t("payroll.basic.error.load_salary", "薪资信息加载失败"));
             }
         });
-        closeBtn.addEventListener("click", closeModal);
-        cancelBtn.addEventListener("click", closeModal);
+        tbody.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            const row = event.target.closest("tr[data-action='select']");
+            if (!row) return;
+            event.preventDefault();
+            row.click();
+        });
+        keywordInput.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            event.preventDefault();
+            searchBtn.click();
+        });
         fields.withholdingTaxType.addEventListener("change", applyWithholdingTaxFieldsState);
         deleteBtn.addEventListener("click", async (event) => {
             event.preventDefault();
@@ -496,7 +713,6 @@
                     method: "DELETE"
                 });
                 window.alert(t("payroll.basic.message.deleted", "薪资信息已删除。"));
-                closeModal();
                 await fetchList();
             } catch (err) {
                 window.alert(err.message || t("common.delete_failed", "删除失败"));
@@ -511,8 +727,7 @@
                     method: editingId ? "PUT" : "POST",
                     body: JSON.stringify(payload)
                 });
-                closeModal();
-                await fetchList();
+                await fetchList({keepSelection: true});
             } catch (err) {
                 window.alert(err.message || t("common.save_failed", "保存失败"));
             }
@@ -523,7 +738,8 @@
         fetchList()
             .then(handleEmployeeTrigger)
             .catch((err) => {
-                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="8">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="4">${h(t("common.load_failed", "加载失败"))}：${h(err.message)}</td></tr>`;
+                showEmptyDetail(t("common.load_failed", "加载失败"));
             });
         window.addEventListener("i18n:change", applyPageI18n);
     });

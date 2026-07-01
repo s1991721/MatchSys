@@ -7,63 +7,267 @@
     <link rel="stylesheet" href="../../common.css">
     <link rel="stylesheet" href="../../components.css">
     <title>月度计算</title>
+    <style>
+        html,
+        body.finance-subpage {
+            height: 100%;
+            min-height: 0;
+        }
+        body.finance-subpage {
+            overflow: hidden;
+        }
+        .finance-subpage-content[data-finance-subpage="payroll.monthly"] {
+            display: block;
+            height: 100%;
+            min-height: 0;
+        }
+        .payroll-monthly-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 34%);
+            gap: 18px;
+            align-items: stretch;
+            height: 100%;
+            min-height: 0;
+        }
+        .payroll-monthly-left,
+        .payroll-monthly-right {
+            min-width: 0;
+            min-height: 0;
+        }
+        .payroll-monthly-left,
+        .payroll-monthly-right {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .payroll-monthly-search-panel,
+        .payroll-monthly-actions-panel {
+            margin-bottom: 18px;
+        }
+        .payroll-monthly-search-row {
+            display: grid;
+            grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+        }
+        .payroll-monthly-actions-row {
+            display: grid;
+            grid-template-columns: minmax(180px, 1fr) auto auto;
+            align-items: center;
+            gap: 12px;
+        }
+        .payroll-monthly-actions-row .c-btn,
+        .payroll-monthly-search-row .c-btn {
+            min-height: 44px;
+            white-space: nowrap;
+        }
+        .payroll-monthly-detail-panel {
+            box-sizing: border-box;
+            min-width: 0;
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: auto;
+            border: 1px solid #dbe4f3;
+            border-radius: 8px;
+            background: #f5f8fc;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+            padding: 16px 16px 28px;
+        }
+        .payroll-monthly-detail-empty {
+            min-height: 300px;
+            display: grid;
+            place-items: center;
+            color: #6b7894;
+            border: 1px dashed #d8e1ef;
+            border-radius: 8px;
+            background: #f8fbff;
+        }
+        .payroll-monthly-detail-empty[hidden],
+        .payroll-monthly-detail-title[hidden],
+        .payroll-monthly-detail-form[hidden] {
+            display: none;
+        }
+        .payroll-monthly-detail-title {
+            display: block;
+            margin-bottom: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .payroll-monthly-detail-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-bottom: 40px;
+        }
+        .payroll-monthly-detail-form::after {
+            content: "";
+            display: block;
+            height: 24px;
+            flex: 0 0 24px;
+        }
+        .payroll-monthly-detail-form .form-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px 12px;
+        }
+        .payroll-monthly-detail-panel .payroll-monthly-detail-card,
+        .payroll-monthly-detail-panel .form-grid > *,
+        .payroll-monthly-detail-panel .payroll-monthly-detail-grid > *,
+        .payroll-monthly-detail-panel .payroll-calculated-columns > *,
+        .payroll-monthly-detail-panel label,
+        .payroll-monthly-detail-panel input,
+        .payroll-monthly-detail-panel select {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .payroll-monthly-detail-panel .payroll-calculated-columns {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+        }
+        .payroll-monthly-detail-panel .payroll-calculated-action-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+        }
+        .payroll-monthly-detail-panel .payroll-calculated-table {
+            width: 100%;
+        }
+        .payroll-monthly-detail-panel .payroll-calculated-table-wrap {
+            overflow: visible;
+            padding-bottom: 12px;
+        }
+        .payroll-monthly-detail-panel .payroll-calculated-table th,
+        .payroll-monthly-detail-panel .payroll-calculated-table td {
+            height: 44px;
+            vertical-align: middle;
+        }
+        .payroll-monthly-detail-panel .payroll-calculated-table input {
+            box-sizing: border-box;
+            min-height: 34px;
+        }
+        .payroll-monthly-detail-panel .payroll-monthly-adjustment-panel .payroll-item-row {
+            grid-template-columns: minmax(0, 1fr) minmax(88px, 120px) auto;
+        }
+        .payroll-monthly-list-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .payroll-monthly-list-scroll.table-wrap,
+        .payroll-monthly-list-scroll.c-table-wrapper {
+            padding: 0;
+            margin: 0;
+        }
+        .payroll-monthly-list-scroll .c-table th,
+        .payroll-monthly-list-scroll .c-table td {
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        .payroll-monthly-list-row {
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .payroll-monthly-list-row.is-active td {
+            background: #eaf2ff;
+            color: #0f2f6f;
+            font-weight: 700;
+        }
+        .payroll-monthly-list-row.is-active td:first-child {
+            box-shadow: inset 4px 0 0 #2d7ef7;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        .payroll-monthly-list-row.is-active td:last-child {
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        .payroll-monthly-list-row:focus-visible {
+            outline: 2px solid #2d7ef7;
+            outline-offset: -2px;
+        }
+        .payroll-monthly-detail-card input.is-modified,
+        .payroll-monthly-detail-card select.is-modified {
+            border-color: #f59e0b;
+            background: #fff7ed;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.12);
+        }
+        .payroll-monthly-detail-card .payroll-item-row.is-modified {
+            border-radius: 8px;
+        }
+        .personnel-page.payroll-monthly-detail-panel .payroll-monthly-detail-card .modal-actions {
+            margin: 0;
+            padding: 12px 0 0;
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(160px, 220px) auto auto;
+            gap: 12px;
+            align-items: end;
+        }
+        .payroll-monthly-remark-field,
+        .payroll-monthly-status-field {
+            min-width: 0;
+        }
+        @media (max-width: 1100px) {
+            body.finance-subpage {
+                overflow: auto;
+            }
+            .payroll-monthly-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .payroll-monthly-detail-form .form-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .payroll-monthly-right {
+                order: -1;
+            }
+            .payroll-monthly-list-scroll {
+                min-height: 320px;
+            }
+        }
+        @media (max-width: 720px) {
+            .payroll-monthly-search-row,
+            .payroll-monthly-actions-row,
+            .payroll-monthly-detail-form .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .payroll-monthly-detail-panel .payroll-monthly-adjustment-panel .payroll-item-row {
+                grid-template-columns: 1fr;
+            }
+            .personnel-page.payroll-monthly-detail-panel .payroll-monthly-detail-card .modal-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body class="order-page finance-subpage">
 <div class="finance-subpage-content" data-finance-subpage="payroll.monthly">
-    <div class="c-inline-filters">
-        <div class="payroll-monthly-filter-row">
-            <label class="c-inline-field">
-                <span>月份</span>
-                <input id="payrollMonth" type="month">
-            </label>
-            <button type="button" class="c-btn c-btn-success" id="payrollCalculateBtn" disabled>一键计算薪资</button>
-            <label class="c-inline-field">
-                <span>契约类型</span>
-                <select id="payrollContractType" disabled>
-                    <option value="">全部</option>
-                    <option value="0">正社员</option>
-                    <option value="1">契约社员</option>
-                    <option value="2">フリーランス</option>
-                </select>
-            </label>
-            <label class="c-inline-field">
-                <span>员工姓名</span>
-                <input id="payrollKeyword" type="text" placeholder="员工姓名" disabled>
-            </label>
-            <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" disabled>搜索</button>
-            <button type="button" class="c-btn c-btn-success-lite" id="payrollAddBtn" hidden>新增</button>
-            <button type="button" class="c-btn c-btn-warn" id="payrollExportBtn" disabled>导出</button>
-        </div>
-    </div>
-    <div class="table-wrap c-table-wrapper">
-        <table class="c-table c-table-hover">
-            <thead>
-            <tr>
-                <th>月份</th>
-                <th>员工</th>
-                <th>出勤日数</th>
-                <th>基本工资</th>
-                <th>增加项合计</th>
-                <th>减少项合计</th>
-                <th>自动扣款合计</th>
-                <th>实发金额</th>
-                <th>状态</th>
-                <th class="c-actions-col">操作</th>
-            </tr>
-            </thead>
-            <tbody id="payrollMonthlyBody"><tr><td class="finance-empty-row" colspan="10">请先选择月份</td></tr></tbody>
-        </table>
-    </div>
-</div>
-
-<div class="personnel-page c-form-page">
-    <div class="modal" id="payrollMonthlyModal" aria-hidden="true">
-        <div class="modal-card c-card c-card-pad payroll-monthly-modal-card">
-            <div class="modal-header">
-                <h4 id="payrollMonthlyModalTitle">新增月度工资</h4>
-                <button class="modal-close" id="payrollMonthlyClose" aria-label="关闭">×</button>
+    <div class="payroll-monthly-layout">
+        <div class="payroll-monthly-left">
+            <div class="payroll-monthly-search-panel">
+                <div class="payroll-monthly-search-row">
+                    <label class="c-inline-field">
+                        <span>契约类型</span>
+                        <select id="payrollContractType" disabled>
+                            <option value="">全部</option>
+                            <option value="0">正社员</option>
+                            <option value="1">契约社员</option>
+                            <option value="2">フリーランス</option>
+                        </select>
+                    </label>
+                    <label class="c-inline-field">
+                        <span>员工姓名</span>
+                        <input id="payrollKeyword" type="text" placeholder="员工姓名" disabled>
+                    </label>
+                    <button type="button" class="c-btn c-btn-primary" id="payrollSearchBtn" disabled>搜索</button>
+                </div>
             </div>
-            <form id="payrollMonthlyForm" class="modal-body">
+            <div class="personnel-page c-form-page payroll-monthly-detail-panel">
+                <div id="payrollMonthlyEmptyDetail" class="payroll-monthly-detail-empty">请选择右侧员工或点击新增</div>
+                <div class="payroll-monthly-detail-card">
+                    <form id="payrollMonthlyForm" class="payroll-monthly-detail-form" hidden>
                 <div class="form-grid">
                     <label>
                         <span>员工ID（可选）</span>
@@ -89,57 +293,7 @@
                         <span>基本工资</span>
                         <input id="payrollFormBaseSalary" type="number" min="0" step="1">
                     </label>
-                    <label>
-                        <span>状态</span>
-                        <select id="payrollFormStatus">
-                            <option value="0">未确认</option>
-                            <option value="1">已确认</option>
-                            <option value="2">已发放</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>备注</span>
-                        <input id="payrollFormRemark" type="text">
-                    </label>
                     <div class="payroll-monthly-detail-grid">
-                        <div class="payroll-items-panel payroll-monthly-calculated-panel">
-                            <div class="payroll-items-header">
-                                <span>自动计算扣款</span>
-                                <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollRecalculateDeductions">按公式重算</button>
-                            </div>
-                            <div class="payroll-calculated-columns">
-                                <div class="payroll-calculated-group">
-                                    <div class="payroll-calculated-group-title">根据基本工资计算（固定档位）</div>
-                                    <div class="table-wrap payroll-calculated-table-wrap">
-                                        <table class="c-table payroll-calculated-table">
-                                            <thead>
-                                            <tr>
-                                                <th>项目</th>
-                                                <th>料率</th>
-                                                <th>金额</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody id="payrollFixedDeductions"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="payroll-calculated-group">
-                                    <div class="payroll-calculated-group-title">根据实际收入计算（浮动计算）</div>
-                                    <div class="table-wrap payroll-calculated-table-wrap">
-                                        <table class="c-table payroll-calculated-table">
-                                            <thead>
-                                            <tr>
-                                                <th>项目</th>
-                                                <th>计算基准</th>
-                                                <th>金额</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody id="payrollVariableDeductions"></tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="payroll-items-panel payroll-monthly-adjustment-panel">
                             <div class="payroll-items-header">
                                 <span>增加项</span>
@@ -160,6 +314,41 @@
                                 <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollAddDeductionItem">添加</button>
                             </div>
                             <div class="payroll-items-list" id="payrollDeductionItems"></div>
+                        </div>
+                        <div class="payroll-items-panel payroll-monthly-calculated-panel">
+                            <div class="payroll-calculated-columns">
+                                <div class="payroll-calculated-group">
+                                    <div class="table-wrap payroll-calculated-table-wrap">
+                                        <table class="c-table payroll-calculated-table">
+                                            <thead>
+                                            <tr>
+                                                <th>项目</th>
+                                                <th>料率</th>
+                                                <th>金额</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="payrollFixedDeductions"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="payroll-calculated-group">
+                                    <div class="payroll-calculated-action-row">
+                                        <button type="button" class="c-btn c-btn-secondary c-btn-sm" id="payrollRecalculateDeductions">按公式重算</button>
+                                    </div>
+                                    <div class="table-wrap payroll-calculated-table-wrap">
+                                        <table class="c-table payroll-calculated-table">
+                                            <thead>
+                                            <tr>
+                                                <th>项目</th>
+                                                <th>计算基准</th>
+                                                <th>金额</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="payrollVariableDeductions"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="payroll-items-panel payroll-monthly-summary-panel">
@@ -188,10 +377,47 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="c-btn c-btn-secondary" id="payrollMonthlyCancel">取消</button>
+                    <label class="payroll-monthly-remark-field">
+                        <span>备注</span>
+                        <input id="payrollFormRemark" type="text">
+                    </label>
+                    <label class="payroll-monthly-status-field">
+                        <span>状态</span>
+                        <select id="payrollFormStatus">
+                            <option value="0">未确认</option>
+                            <option value="1">已确认</option>
+                            <option value="2">已发放</option>
+                        </select>
+                    </label>
+                    <button type="button" class="c-btn c-btn-danger" id="payrollMonthlyDelete" disabled>删除</button>
                     <button type="submit" class="c-btn c-btn-primary">保存</button>
                 </div>
             </form>
+                </div>
+            </div>
+        </div>
+        <div class="payroll-monthly-right">
+            <div class="payroll-monthly-actions-panel">
+                <div class="payroll-monthly-actions-row">
+                    <label class="c-inline-field">
+                        <span>月份</span>
+                        <input id="payrollMonth" type="month">
+                    </label>
+                    <button type="button" class="c-btn c-btn-success" id="payrollCalculateBtn" disabled>一键计算薪资</button>
+                    <button type="button" class="c-btn c-btn-success-lite" id="payrollAddBtn" disabled>新增</button>
+                </div>
+            </div>
+            <div class="payroll-monthly-list-scroll table-wrap c-table-wrapper">
+                <table class="c-table c-table-hover">
+                    <thead>
+                    <tr>
+                        <th>员工</th>
+                        <th>状态</th>
+                    </tr>
+                    </thead>
+                    <tbody id="payrollMonthlyBody"><tr><td class="finance-empty-row" colspan="2">请先选择月份</td></tr></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -210,6 +436,7 @@
     let monthlyCalculated = false;
     let selectedMonth = "";
     let editingId = null;
+    let selectedPayrollId = null;
     let trackingOriginalValues = false;
 
     const h = (value) => {
@@ -284,7 +511,7 @@
     };
 
     const setEmpty = (tbody, message) => {
-        tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="10">${h(message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td class="finance-empty-row" colspan="2">${h(message)}</td></tr>`;
     };
 
     const renderRows = (tbody, rows) => {
@@ -293,20 +520,9 @@
             return;
         }
         tbody.innerHTML = rows.map((item) => `
-            <tr>
-                <td>${h(item.month)}</td>
+            <tr class="payroll-monthly-list-row${String(item.id) === String(selectedPayrollId) ? " is-active" : ""}" tabindex="0" data-id="${h(item.id)}">
                 <td>${h(item.employee_name)}</td>
-                <td>${h(item.attendance_days)}</td>
-                <td>${h(formatMoney(item.base_salary))}</td>
-                <td>${h(formatMoney(item.allowance_amount))}</td>
-                <td>${h(formatMoney(item.deduction_amount))}</td>
-                <td>${h(formatMoney(item.automatic_deduction_amount))}</td>
-                <td>${h(formatMoney(item.net_salary))}</td>
                 <td>${h(item.status_label || statusLabels[item.status] || "")}</td>
-                <td class="c-actions-col">
-                    <button type="button" class="c-btn c-btn-secondary c-btn-sm" data-action="edit" data-id="${h(item.id)}">编辑</button>
-                    <button type="button" class="c-btn c-btn-danger c-btn-sm" data-action="delete" data-id="${h(item.id)}">删除</button>
-                </td>
             </tr>
         `).join("");
     };
@@ -318,15 +534,13 @@
         const searchBtn = document.getElementById("payrollSearchBtn");
         const calculateBtn = document.getElementById("payrollCalculateBtn");
         const addBtn = document.getElementById("payrollAddBtn");
-        const exportBtn = document.getElementById("payrollExportBtn");
         const tbody = document.getElementById("payrollMonthlyBody");
 
         contractTypeSelect.disabled = true;
         keywordInput.disabled = true;
         searchBtn.disabled = true;
         calculateBtn.disabled = true;
-        addBtn.hidden = true;
-        exportBtn.disabled = true;
+        addBtn.disabled = true;
         setEmpty(tbody, monthInput.value ? "正在加载中..." : "请先选择月份");
     };
 
@@ -336,7 +550,6 @@
         const searchBtn = document.getElementById("payrollSearchBtn");
         const calculateBtn = document.getElementById("payrollCalculateBtn");
         const addBtn = document.getElementById("payrollAddBtn");
-        const exportBtn = document.getElementById("payrollExportBtn");
         const tbody = document.getElementById("payrollMonthlyBody");
         const month = selectedMonth;
 
@@ -345,10 +558,10 @@
             keywordInput.disabled = true;
             searchBtn.disabled = true;
             calculateBtn.disabled = true;
-            addBtn.hidden = true;
-            exportBtn.disabled = true;
+            addBtn.disabled = true;
             contractTypeSelect.value = "";
             keywordInput.value = "";
+            closeModal();
             setEmpty(tbody, "请先选择月份");
             return;
         }
@@ -357,12 +570,12 @@
         keywordInput.disabled = !monthlyCalculated;
         searchBtn.disabled = !monthlyCalculated;
         calculateBtn.disabled = monthlyCalculated;
-        addBtn.hidden = !monthlyCalculated;
-        exportBtn.disabled = !monthlyCalculated;
+        addBtn.disabled = !monthlyCalculated;
 
         if (!monthlyCalculated) {
             contractTypeSelect.value = "";
             keywordInput.value = "";
+            closeModal();
             setEmpty(tbody, "此月份还没有进行工资计算");
             return;
         }
@@ -398,8 +611,8 @@
             monthlyRows = [];
             monthlyCalculated = false;
             document.getElementById("payrollCalculateBtn").disabled = true;
-            document.getElementById("payrollAddBtn").hidden = true;
-            document.getElementById("payrollExportBtn").disabled = true;
+            document.getElementById("payrollAddBtn").disabled = true;
+            closeModal();
             setEmpty(document.getElementById("payrollMonthlyBody"), `加载失败：${err.message}`);
         }
     };
@@ -584,8 +797,11 @@
 
     const openModal = (mode, item = null) => {
         editingId = mode === "edit" ? item?.id : null;
+        selectedPayrollId = editingId;
         const calculated = keyedItems(item?.automatic_deduction_items || []);
-        document.getElementById("payrollMonthlyModalTitle").textContent = mode === "edit" ? "编辑月度工资" : "新增月度工资";
+        document.getElementById("payrollMonthlyDelete").disabled = !editingId;
+        document.getElementById("payrollMonthlyEmptyDetail").hidden = true;
+        document.getElementById("payrollMonthlyForm").hidden = false;
         document.getElementById("payrollFormEmployeeId").value = item?.employee_id || "";
         document.getElementById("payrollFormEmployeeId").readOnly = mode === "edit";
         document.getElementById("payrollFormEmployeeName").value = item?.employee_name || "";
@@ -600,15 +816,15 @@
         renderCalculatedDeductions(calculated);
         refreshPayrollTotals();
         trackOriginalValues();
-        const modal = document.getElementById("payrollMonthlyModal");
-        modal.classList.add("show");
-        modal.setAttribute("aria-hidden", "false");
+        renderRows(document.getElementById("payrollMonthlyBody"), monthlyRows);
     };
 
     const closeModal = () => {
-        const modal = document.getElementById("payrollMonthlyModal");
-        modal.classList.remove("show");
-        modal.setAttribute("aria-hidden", "true");
+        const form = document.getElementById("payrollMonthlyForm");
+        const emptyDetail = document.getElementById("payrollMonthlyEmptyDetail");
+        if (!form || !emptyDetail) return;
+        form.hidden = true;
+        emptyDetail.hidden = false;
         document.getElementById("payrollMonthlyForm").reset();
         renderItemRows(document.getElementById("payrollAdditionItems"), []);
         renderItemRows(document.getElementById("payrollNonTaxableAdditionItems"), []);
@@ -616,6 +832,9 @@
         renderCalculatedDeductions();
         trackingOriginalValues = false;
         editingId = null;
+        selectedPayrollId = null;
+        document.getElementById("payrollMonthlyDelete").disabled = true;
+        renderRows(document.getElementById("payrollMonthlyBody"), monthlyRows);
     };
 
     const collectFormPayload = () => {
@@ -670,10 +889,8 @@
         const searchBtn = document.getElementById("payrollSearchBtn");
         const calculateBtn = document.getElementById("payrollCalculateBtn");
         const addBtn = document.getElementById("payrollAddBtn");
-        const exportBtn = document.getElementById("payrollExportBtn");
         const form = document.getElementById("payrollMonthlyForm");
-        const closeBtn = document.getElementById("payrollMonthlyClose");
-        const cancelBtn = document.getElementById("payrollMonthlyCancel");
+        const deleteBtn = document.getElementById("payrollMonthlyDelete");
         const additionItems = document.getElementById("payrollAdditionItems");
         const nonTaxableAdditionItems = document.getElementById("payrollNonTaxableAdditionItems");
         const deductionItems = document.getElementById("payrollDeductionItems");
@@ -717,12 +934,23 @@
         addBtn.addEventListener("click", () => {
             openModal("add");
         });
-        exportBtn.addEventListener("click", () => {
-            if (!selectedMonth || !monthlyCalculated) return;
-            window.location.href = window.buildUrl("/api/finance/payroll/monthly/export", buildQueryParams());
+        deleteBtn.addEventListener("click", async () => {
+            if (!editingId) return;
+            if (!window.confirm("确定删除这条月度工资数据吗？")) return;
+            deleteBtn.disabled = true;
+            try {
+                await window.requestJson(window.buildUrl(`/api/finance/payroll/monthly/${encodeURIComponent(editingId)}`, window.createParams([
+                    ["month", selectedMonth]
+                ])), {
+                    method: "DELETE"
+                }, {throwOnFailure: true});
+                closeModal();
+                await loadMonthlyRows();
+            } catch (err) {
+                window.alert(err.message || "删除失败");
+                deleteBtn.disabled = !editingId;
+            }
         });
-        closeBtn.addEventListener("click", closeModal);
-        cancelBtn.addEventListener("click", closeModal);
         addAdditionItemBtn.addEventListener("click", () => {
             addItemRow(additionItems);
             refreshPayrollTotals();
@@ -798,28 +1026,19 @@
                 window.alert(err.message || "保存失败");
             }
         });
-        document.getElementById("payrollMonthlyBody").addEventListener("click", async (event) => {
-            const button = event.target.closest("button[data-action]");
-            if (!button) return;
-            const action = button.dataset.action;
-            const target = monthlyRows.find((item) => String(item.id) === String(button.dataset.id));
+        const openSelectedRow = (row) => {
+            if (!row) return;
+            const target = monthlyRows.find((item) => String(item.id) === String(row.dataset.id));
             if (!target) return;
-            if (action === "edit") {
-                openModal("edit", target);
-                return;
-            }
-            if (action === "delete") {
-                if (!window.confirm("确定删除这条月度工资数据吗？")) return;
-                try {
-                    await window.requestJson(window.buildUrl(`/api/finance/payroll/monthly/${button.dataset.id}`, window.createParams([
-                        ["month", selectedMonth]
-                    ])), {
-                        method: "DELETE"
-                    }, {throwOnFailure: true});
-                    await loadMonthlyRows();
-                } catch (err) {
-                    window.alert(err.message || "删除失败");
-                }
+            openModal("edit", target);
+        };
+        document.getElementById("payrollMonthlyBody").addEventListener("click", (event) => {
+            openSelectedRow(event.target.closest(".payroll-monthly-list-row"));
+        });
+        document.getElementById("payrollMonthlyBody").addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openSelectedRow(event.target.closest(".payroll-monthly-list-row"));
             }
         });
 

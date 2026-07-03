@@ -1,6 +1,6 @@
 services:
   db:
-    image: jef4267/matchsys-mysql:1.3
+    image: jef4267/matchsys-mysql:1.7
     container_name: matchsys-mysql
     restart: unless-stopped
     # 容器内存上限（8G机器建议先给 6G）
@@ -22,7 +22,7 @@ services:
       - matchsys-net
 
   web:
-    image: jef4267/matchsys-web:1.3
+    image: jef4267/matchsys-web:1.7
     container_name: matchsys-web
     restart: unless-stopped
     command: >
@@ -44,7 +44,7 @@ services:
       - web_logs:/app/logs
 
   nginx:
-    image: jef4267/matchsys-nginx:1.3
+    image: jef4267/matchsys-nginx:1.7
     container_name: matchsys-nginx
     restart: unless-stopped
     depends_on:

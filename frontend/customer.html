@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="components.css">
     <title data-i18n="customer.title">客户管理</title>
 </head>
-<body class="c-form-page">
+<body class="c-form-page customer-page">
 <div class="page">
     <section class="c-card">
         <div class="filters c-filter-panel">
@@ -30,7 +30,7 @@
                         新增客户
                     </button>
                     <button class="c-btn c-btn-secondary c-btn-lg" id="btn-bulk-email" type="button"
-                            data-i18n="customer.action.bulk_email">群发邮件
+                            data-i18n="customer.action.bulk_email_all">群发全部客户
                     </button>
                 </div>
                 <div class="filter-actions-right c-filter-actions-right c-filter-actions-group">
@@ -46,21 +46,28 @@
                 </div>
             </div>
         </div>
-        <div class="table-actions c-table-actions"></div>
+        <div class="table-actions c-table-actions">
+            <span class="c-pill c-pill-info" id="selected-customers-summary"
+                  data-i18n="customer.selection.selected">已选择 0 个客户</span>
+        </div>
         <div class="table-wrapper c-table-wrapper">
             <table class="c-table c-table-hover c-table-center">
                 <thead>
                 <tr>
                     <th class="c-checkbox-col">
-                        <input id="select-all-customers" type="checkbox" aria-label="选择全部"/>
+                        <div class="customer-select-all-head">
+                            <input id="select-all-customers" type="checkbox" aria-label="选择当前页客户"
+                                   data-i18n-aria="customer.selection.select_current_page"
+                                   title="选择当前页客户"
+                                   data-i18n-title="customer.selection.select_current_page"/>
+                            <span class="customer-select-current-page-hint"
+                                  data-i18n="customer.selection.current_page_hint">仅选中当前页</span>
+                        </div>
                     </th>
                     <th data-i18n="customer.table.company">公司名称</th>
                     <th data-i18n="customer.table.address">公司地址</th>
+                    <th data-i18n="customer.table.company_email">公司邮箱</th>
                     <th data-i18n="common.field.note">备注</th>
-                    <th data-i18n="customer.table.contact">联系人</th>
-                    <th data-i18n="common.field.position">职位</th>
-                    <th data-i18n="common.field.email">邮箱</th>
-                    <th data-i18n="customer.table.phone">电话</th>
                     <th data-i18n="common.field.owner">负责人</th>
                     <th data-i18n="common.field.created_at">创建时间</th>
                     <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
@@ -281,6 +288,7 @@
     const paginationPages = document.getElementById("customer-pagination-pages");
     const pageSummary = document.getElementById("page-summary");
     const selectAllCheckbox = document.getElementById("select-all-customers");
+    const selectedCustomersSummary = document.getElementById("selected-customers-summary");
     const editDialog = document.getElementById("edit-dialog");
     const paymentDialog = document.getElementById("payment-dialog");
     const dialogTitle = document.getElementById("dialog-title");
@@ -389,12 +397,12 @@
     });
 
     bulkEmailButton.addEventListener("click", () => {
-        if (selectedCustomerIds.size === 0) return;
         try {
             window.MatchSys.clearStoredKey("bulkMailPrefill");
             const contextPayload = {
-                selected_ids: Array.from(selectedCustomerIds),
                 source: "customer",
+                scope: selectedCustomerIds.size > 0 ? "selected" : "all",
+                selected_ids: Array.from(selectedCustomerIds),
                 updatedAt: Date.now(),
             };
             window.MatchSys.writeJSONToSessionStorage("bulkMailContext", contextPayload);
@@ -902,8 +910,14 @@
     };
 
     const updateBulkButtonState = () => {
-        const enabled = selectedCustomerIds.size > 0;
-        bulkEmailButton.disabled = !enabled;
+        const selectedCount = selectedCustomerIds.size;
+        bulkEmailButton.disabled = false;
+        bulkEmailButton.textContent = selectedCount > 0
+            ? t("customer.action.bulk_email_selected")
+            : t("customer.action.bulk_email_all");
+        if (selectedCustomersSummary) {
+            selectedCustomersSummary.textContent = format("customer.selection.selected", {count: selectedCount});
+        }
     };
 
     const syncSelectAllState = () => {
@@ -924,7 +938,7 @@
             pageSummary.textContent = format("customer.summary", {count, page: currentPage});
         }
         if (!items.length) {
-            tableBody.innerHTML = `<tr><td colspan="11" class="c-empty">${escapeHtml(t("common.no_data"))}</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="8" class="c-empty">${escapeHtml(t("common.no_data"))}</td></tr>`;
             if (selectAllCheckbox) {
                 selectAllCheckbox.checked = false;
                 selectAllCheckbox.indeterminate = false;
@@ -942,11 +956,8 @@
               </td>
               <td>${escapeHtml(item.company_name || "-")}</td>
               <td>${escapeHtml(item.company_address || "-")}</td>
+              <td>${escapeHtml(item.company_email || "-")}</td>
               <td>${escapeHtml(item.remark || "-")}</td>
-              <td>${escapeHtml(item.contact1_name || "-")}</td>
-              <td>${escapeHtml(item.contact1_position || "-")}</td>
-              <td>${escapeHtml(item.contact1_email || "-")}</td>
-              <td>${escapeHtml(item.contact1_phone || "-")}</td>
               <td>${escapeHtml(item.person_in_charge || "-")}</td>
               <td>${escapeHtml(item.created_at || "-")}</td>
               <td>

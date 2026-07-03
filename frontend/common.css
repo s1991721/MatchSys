@@ -5035,6 +5035,37 @@ body.notfound-page { margin: 0; font-family: "PingFang SC", "Hiragino Sans GB", 
 
 
 /* customer page */
+.customer-page .c-table input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            padding: 0;
+            margin: 0;
+            border-radius: 4px;
+            vertical-align: middle;
+            accent-color: var(--primary);
+        }
+
+        .customer-page .c-table input[type="checkbox"]:focus {
+            box-shadow: none;
+        }
+
+.customer-page .customer-select-all-head {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            min-width: 56px;
+        }
+
+.customer-page .customer-select-current-page-hint {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            font-weight: 500;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
 .customer-card-upload {
             margin-bottom: 12px;
         }

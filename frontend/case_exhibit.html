@@ -12,11 +12,10 @@
       --exhibit-ink: #172033;
       --exhibit-muted: #647084;
       --exhibit-line: #e0e6ef;
-      --exhibit-soft: #f5f8fc;
       --exhibit-panel: #ffffff;
-      --exhibit-mint: #0f766e;
+      --exhibit-accent: #1d4ed8;
+      --exhibit-accent-soft: #eaf2ff;
       --exhibit-blue: #2563eb;
-      --exhibit-amber: #b45309;
     }
 
     body {
@@ -28,7 +27,7 @@
       min-height: 100vh;
       overflow-x: hidden;
       background:
-        linear-gradient(120deg, rgba(15, 118, 110, 0.12), transparent 36%),
+        linear-gradient(120deg, rgba(28, 123, 255, 0.12), transparent 36%),
         linear-gradient(180deg, #ffffff 0%, #f3f6fa 100%);
     }
 
@@ -189,9 +188,9 @@
     }
 
     .case-pill.is-status {
-      color: #fff;
-      background: var(--exhibit-mint);
-      border-color: transparent;
+      color: var(--exhibit-accent);
+      background: var(--exhibit-accent-soft);
+      border-color: rgba(28, 123, 255, 0.22);
     }
 
     .case-pill.is-urgent {
@@ -369,9 +368,9 @@
     }
 
     .case-tab.is-active {
-      color: #fff;
-      background: var(--exhibit-mint);
-      border-color: transparent;
+      color: var(--exhibit-accent);
+      background: var(--exhibit-accent-soft);
+      border-color: rgba(28, 123, 255, 0.22);
     }
 
     .case-carousel-controls {
@@ -595,12 +594,8 @@
 
       .case-slide {
         grid-template-columns: 1fr;
-        height: 760px;
-        padding: 0;
-      }
-
-      .case-slide.is-expanded {
         min-height: 760px;
+        padding: 0;
       }
 
       .case-card-grid {
@@ -1099,10 +1094,9 @@
   document.getElementById("otherCaseCount").textContent = `${caseList.length}件`;
   document.getElementById("recommendContact").href = `mailto:${contactEmail}?subject=${encodeURIComponent("候補者推薦")}`;
 
-  renderFocusSlides();
+  setActiveCase(0);
   renderOtherCards();
   renderOtherList();
-  setActiveCase(0);
   startAutoPlay();
 
   document.getElementById("focusTabs").addEventListener("click", (event) => {

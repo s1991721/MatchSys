@@ -1,16 +1,12 @@
-from datetime import datetime
-from decimal import Decimal
-from io import BytesIO
-from urllib.parse import quote
+from datetime import datetime, timedelta
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
-from django.http import HttpResponse
 from django.db.models import Count, Q, Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods
-from openpyxl import Workbook
 
 from attendance.models import get_monthly_attendance_models
 from employee.models import Employee
@@ -32,6 +28,26 @@ from .models import (
 FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
 FINANCE_EMPLOYMENT_SETTING_NAME = "employment_insurance"
 FINANCE_INCOME_TAX_SETTING_NAME = "income_tax"
+FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME = "payroll_employment_insurance"
+INCOME_TAX_MONTHLY_COLUMNS = (
+    "salary_min",
+    "salary_max",
+    "kou_0",
+    "kou_1",
+    "kou_2",
+    "kou_3",
+    "kou_4",
+    "kou_5",
+    "kou_6",
+    "kou_7",
+    "otsu",
+)
+FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME = "payroll_basic_items"
+PAYROLL_BASIC_ITEM_CATEGORIES = (
+    "increase_items",
+    "non_taxable_increase_items",
+    "decrease_items",
+)
 
 RECEIVABLE_DISPLAY_STATUS_LABELS = {
     0: "未收",
@@ -78,6 +94,21 @@ def _decimal_to_json_number(value):
     if value == value.to_integral_value():
         return int(value)
     return float(value)
+
+
+def _parse_json_integer(value, field_name, allow_zero=True):
+    if value in (None, ""):
+        return None, _finance_settings_payload_error(f"Missing field: {field_name}")
+    try:
+        parsed = Decimal(str(value).replace(",", "").strip())
+    except Exception:
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    if not parsed.is_finite() or parsed != parsed.to_integral_value():
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    parsed = int(parsed)
+    if parsed < 0 or (not allow_zero and parsed == 0):
+        return None, _finance_settings_payload_error(f"Invalid field: {field_name}")
+    return parsed, None
 
 
 def _normalize_annuity_metadata(value):
@@ -182,9 +213,11 @@ def _normalize_annuity_tax_items(value):
         if rate > Decimal("1"):
             return None, _finance_settings_payload_error(f"Invalid field: tax_items[{index}].rate")
 
+        remark = str(item.get("remark") or item.get("note") or "").strip()
         items.append({
             "key": key,
             "name": name,
+            "remark": remark,
             "rate": _decimal_to_json_number(rate),
         })
 
@@ -264,6 +297,108 @@ def _normalize_annuity_settings(payload):
     }, None
 
 
+def _unwrap_income_tax_settings_payload(payload):
+    if not isinstance(payload, dict):
+        return None, _finance_settings_payload_error("Invalid income tax settings")
+    if isinstance(payload.get("settings"), dict):
+        return payload["settings"], None
+    if isinstance(payload.get(FINANCE_INCOME_TAX_SETTING_NAME), dict):
+        return payload[FINANCE_INCOME_TAX_SETTING_NAME], None
+    return payload, None
+
+
+def _normalize_income_tax_metadata(value):
+    if not isinstance(value, dict):
+        return None, _finance_settings_payload_error("Missing field: metadata")
+
+    year, error = _parse_json_integer(value.get("year"), "metadata.year", allow_zero=False)
+    if error:
+        return None, error
+
+    table_type = str(value.get("table_type") or "").strip()
+    if table_type != "monthly":
+        return None, _finance_settings_payload_error("Invalid field: metadata.table_type")
+
+    columns = value.get("columns")
+    if not isinstance(columns, list) or tuple(columns) != INCOME_TAX_MONTHLY_COLUMNS:
+        return None, _finance_settings_payload_error("Invalid field: metadata.columns")
+
+    row_count, error = _parse_json_integer(value.get("row_count"), "metadata.row_count")
+    if error:
+        return None, error
+
+    return {
+        "year": year,
+        "table_type": table_type,
+        "columns": list(INCOME_TAX_MONTHLY_COLUMNS),
+        "row_count": row_count,
+    }, None
+
+
+def _normalize_income_tax_monthly_rows(value):
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error("Invalid field: monthly_rows")
+
+    rows = []
+    seen_orders = set()
+    previous_max = None
+    tax_columns = INCOME_TAX_MONTHLY_COLUMNS[2:]
+    for index, item in enumerate(value):
+        if not isinstance(item, dict):
+            return None, _finance_settings_payload_error(f"Invalid field: monthly_rows[{index}]")
+
+        row_order, error = _parse_json_integer(item.get("row_order"), f"monthly_rows[{index}].row_order", allow_zero=False)
+        if error:
+            return None, error
+        if row_order in seen_orders:
+            return None, _finance_settings_payload_error(f"Duplicate row_order: {row_order}")
+        seen_orders.add(row_order)
+
+        salary_min, error = _parse_json_integer(item.get("salary_min"), f"monthly_rows[{index}].salary_min")
+        if error:
+            return None, error
+        salary_max, error = _parse_json_integer(item.get("salary_max"), f"monthly_rows[{index}].salary_max")
+        if error:
+            return None, error
+        if salary_max <= salary_min:
+            return None, _finance_settings_payload_error(f"Invalid salary range in monthly_rows[{index}]")
+        if previous_max is not None and salary_min < previous_max:
+            return None, _finance_settings_payload_error(f"Overlapping salary range in monthly_rows[{index}]")
+        previous_max = salary_max
+
+        row = {
+            "row_order": row_order,
+            "salary_min": salary_min,
+            "salary_max": salary_max,
+        }
+        for column in tax_columns:
+            amount, error = _parse_json_integer(item.get(column), f"monthly_rows[{index}].{column}")
+            if error:
+                return None, error
+            row[column] = amount
+        rows.append(row)
+
+    return rows, None
+
+
+def _normalize_income_tax_settings(payload):
+    settings_payload, error = _unwrap_income_tax_settings_payload(payload)
+    if error:
+        return None, error
+
+    metadata, error = _normalize_income_tax_metadata(settings_payload.get("metadata"))
+    if error:
+        return None, error
+    monthly_rows, error = _normalize_income_tax_monthly_rows(settings_payload.get("monthly_rows"))
+    if error:
+        return None, error
+
+    return {
+        "metadata": metadata,
+        "monthly_rows": monthly_rows,
+    }, None
+
+
 def _quantize_amount(value):
     return Decimal(value or "0").quantize(Decimal("0.01"))
 
@@ -333,7 +468,225 @@ def finance_employment_insurance_settings_api(request):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def finance_income_tax_settings_api(request):
-    return _finance_tax_table_settings_api(request, FINANCE_INCOME_TAX_SETTING_NAME)
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        return api_success(data={
+            "name": FINANCE_INCOME_TAX_SETTING_NAME,
+            "settings": record.settings if record else None,
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    settings_payload, error = _normalize_income_tax_settings(payload)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        if record:
+            record.settings = settings_payload
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_INCOME_TAX_SETTING_NAME,
+                settings=settings_payload,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
+    })
+
+
+def _normalize_payroll_basic_item_names(value, category):
+    if not isinstance(value, list):
+        return None, _finance_settings_payload_error(f"Invalid field: {category}")
+
+    items = []
+    seen = set()
+    for index, value_item in enumerate(value):
+        if not isinstance(value_item, str):
+            return None, _finance_settings_payload_error(f"Invalid field: {category}[{index}]")
+        item_name = value_item.strip()
+        if not item_name or len(item_name) > 100:
+            return None, _finance_settings_payload_error(f"Invalid field: {category}[{index}]")
+        if item_name in seen:
+            return None, _finance_settings_payload_error(f"Duplicate item: {item_name}")
+        seen.add(item_name)
+        items.append(item_name)
+    return items, None
+
+
+def _read_payroll_basic_item_settings(value):
+    source = value if isinstance(value, dict) else {}
+    settings = {}
+    for category in PAYROLL_BASIC_ITEM_CATEGORIES:
+        raw_items = source.get(category)
+        settings[category] = raw_items if isinstance(raw_items, list) else []
+    return settings
+
+
+def _normalize_payroll_employment_rate_settings(payload):
+    if not isinstance(payload, dict):
+        return None, _finance_settings_payload_error("Invalid employment insurance settings")
+    source = payload.get("settings") if isinstance(payload.get("settings"), dict) else payload
+
+    employee_rate, error = _parse_json_decimal(
+        source.get("employee_rate"),
+        "employee_rate",
+    )
+    if error:
+        return None, error
+    company_rate, error = _parse_json_decimal(
+        source.get("company_rate"),
+        "company_rate",
+    )
+    if error:
+        return None, error
+    if employee_rate > 1:
+        return None, _finance_settings_payload_error("Invalid field: employee_rate")
+    if company_rate > 1:
+        return None, _finance_settings_payload_error("Invalid field: company_rate")
+
+    return {
+        "employee_rate": _decimal_to_json_number(employee_rate),
+        "company_rate": _decimal_to_json_number(company_rate),
+    }, None
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_payroll_basic_item_settings_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        return api_success(data={
+            "name": FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
+            "settings": _read_payroll_basic_item_settings(record.settings if record else None),
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    if not isinstance(payload, dict):
+        return _finance_settings_payload_error("Invalid payroll basic item settings")
+
+    category = payload.get("category")
+    if category not in PAYROLL_BASIC_ITEM_CATEGORIES:
+        return _finance_settings_payload_error("Invalid field: category")
+    items, error = _normalize_payroll_basic_item_names(payload.get("items"), category)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        settings = _read_payroll_basic_item_settings(record.settings if record else None)
+        settings[category] = items
+        if record:
+            record.settings = settings
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
+                settings=settings,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
+        "saved_category": category,
+    })
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def finance_payroll_employment_insurance_settings_api(request):
+    login_id, error = require_login(request)
+    if error:
+        return error
+
+    if request.method == "GET":
+        record = (
+            FinanceSettings.objects
+            .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        settings = None
+        if record:
+            settings, _ = _normalize_payroll_employment_rate_settings(record.settings)
+        return api_success(data={
+            "name": FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME,
+            "settings": settings,
+        })
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    settings, error = _normalize_payroll_employment_rate_settings(payload)
+    if error:
+        return error
+
+    with transaction.atomic():
+        record = (
+            FinanceSettings.objects
+            .select_for_update()
+            .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
+            .order_by("id")
+            .first()
+        )
+        if record:
+            record.settings = settings
+            record.updated_by = login_id
+            record.save(update_fields=["settings", "updated_by", "updated_at"])
+        else:
+            record = FinanceSettings.objects.create(
+                name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME,
+                settings=settings,
+                created_by=login_id,
+                updated_by=login_id,
+            )
+
+    return api_success(data={
+        "name": record.name,
+        "settings": record.settings,
+    })
 
 
 def _get_receivable_display_status(item, today=None):
@@ -1723,7 +2076,28 @@ def _parse_payroll_status(value):
     return parsed, None
 
 
-def _parse_payroll_items(value, field_name):
+def _parse_payroll_withholding_tax_type(value):
+    if value in (None, ""):
+        return None, api_error("Missing field: withholding_tax_type", status=400)
+    parsed = str(value).strip()
+    if parsed not in ("kou", "otsu"):
+        return None, api_error("Invalid field: withholding_tax_type", status=400)
+    return parsed, None
+
+
+def _parse_payroll_dependent_count(value):
+    if value in (None, ""):
+        return None, api_error("Missing field: dependent_count", status=400)
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None, api_error("Invalid field: dependent_count", status=400)
+    if parsed < 0 or parsed > 7:
+        return None, api_error("Invalid field: dependent_count", status=400)
+    return parsed, None
+
+
+def _parse_payroll_items(value, field_name, omit_zero=False):
     if value in (None, ""):
         return [], None
     if not isinstance(value, list):
@@ -1745,7 +2119,23 @@ def _parse_payroll_items(value, field_name):
             return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
         if amount < 0:
             return None, api_error(f"Invalid field: {field_name}[{index}].amount", status=400)
-        result.append({"name": name, "amount": str(amount)})
+        if omit_zero and amount == 0:
+            continue
+        parsed_item = {"name": name, "amount": str(amount)}
+        if item.get("payroll_calculated") is True:
+            parsed_item["payroll_calculated"] = True
+        if item.get("calculation_group") in ("fixed", "variable"):
+            parsed_item["calculation_group"] = item.get("calculation_group")
+        calculation_key = str(item.get("calculation_key") or "").strip()
+        if calculation_key:
+            parsed_item["calculation_key"] = calculation_key
+        if item.get("calculation_rate") not in (None, ""):
+            rate = _decimal_from_setting(item.get("calculation_rate"))
+            parsed_item["calculation_rate"] = str(rate)
+        calculation_base_label = str(item.get("calculation_base_label") or "").strip()
+        if calculation_base_label:
+            parsed_item["calculation_base_label"] = calculation_base_label
+        result.append(parsed_item)
     return result, None
 
 
@@ -1757,6 +2147,348 @@ def _sum_payroll_items(items):
         except Exception:
             continue
     return total
+
+
+PAYROLL_EMPLOYMENT_INSURANCE_NAME = "雇佣保险料"
+PAYROLL_EMPLOYMENT_INSURANCE_KEY = "employmentInsurance"
+PAYROLL_VARIABLE_DEDUCTION_NAMES = {PAYROLL_EMPLOYMENT_INSURANCE_NAME, "所得税"}
+PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE = Decimal("0.5")
+PAYROLL_CARE_INSURANCE_MIN_AGE = 40
+PAYROLL_INCOME_TAX_NAME = "所得税"
+PAYROLL_INCOME_TAX_KEY = "incomeTax"
+
+
+def _round_payroll_amount(value):
+    return Decimal(value or "0").quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+
+
+def _decimal_from_setting(value, default="0"):
+    try:
+        return Decimal(str(value if value not in (None, "") else default))
+    except Exception:
+        return Decimal(default)
+
+
+def _annuity_tax_item_names(settings):
+    if not settings:
+        return set()
+    return {
+        str(item.get("name") or "").strip()
+        for item in settings.get("tax_items") or []
+        if str(item.get("name") or "").strip()
+    }
+
+
+def _strip_calculated_payroll_items(items, annuity_settings=None):
+    annuity_names = _annuity_tax_item_names(annuity_settings)
+    return [
+        item for item in (items or [])
+        if item.get("payroll_calculated") is not True
+        and item.get("calculation_group") not in ("fixed", "variable")
+        and (item.get("name") or "").strip() not in PAYROLL_VARIABLE_DEDUCTION_NAMES
+        and (item.get("name") or "").strip() not in annuity_names
+    ]
+
+
+def _get_annuity_settings():
+    record = (
+        FinanceSettings.objects
+        .filter(name=FINANCE_ANNUITY_SETTING_NAME, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+    return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _get_income_tax_settings():
+    record = (
+        FinanceSettings.objects
+        .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+    return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _get_payroll_employment_insurance_settings():
+    record = (
+        FinanceSettings.objects
+        .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+    return record.settings if record and isinstance(record.settings, dict) else None
+
+
+def _get_payroll_employment_insurance_employee_rate():
+    settings = _get_payroll_employment_insurance_settings() or {}
+    rate = _decimal_from_setting(settings.get("employee_rate"))
+    if rate < 0 or rate > 1:
+        return Decimal("0")
+    return rate
+
+
+def _find_annuity_standard(settings, remuneration_base):
+    if not settings:
+        return None
+    rows = settings.get("base_standards")
+    if not isinstance(rows, list):
+        return None
+    valid_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        valid_rows.append(row)
+        salary_min = _decimal_from_setting(row.get("salary_min", row.get("min_salary")))
+        salary_max = _decimal_from_setting(row.get("salary_max", row.get("max_salary")))
+        upper_matches = salary_max <= 0 or remuneration_base < salary_max
+        if remuneration_base >= salary_min and upper_matches:
+            return row
+    if not valid_rows:
+        return None
+    valid_rows.sort(key=lambda item: _decimal_from_setting(item.get("salary_min", item.get("min_salary"))))
+    first = valid_rows[0]
+    if remuneration_base < _decimal_from_setting(first.get("salary_min", first.get("min_salary"))):
+        return first
+    return valid_rows[-1]
+
+
+def _find_annuity_amount_override(settings, grade, tax_item_key):
+    if not settings or grade in (None, "") or not tax_item_key:
+        return None
+    for item in settings.get("amount_overrides") or []:
+        if str(item.get("grade")) == str(grade) and str(item.get("tax_item_key") or item.get("key") or "") == str(tax_item_key):
+            return _decimal_from_setting(item.get("amount"))
+    return None
+
+
+def _age_at(birthday, target_date):
+    if not birthday or not target_date:
+        return None
+    return target_date.year - birthday.year - (
+        (target_date.month, target_date.day) < (birthday.month, birthday.day)
+    )
+
+
+def _get_employee_birthday(source, overrides=None):
+    employee_id = (overrides or {}).get("employee_id", getattr(source, "employee_id", None))
+    if not employee_id:
+        return None
+    return (
+        Employee.objects
+        .filter(id=employee_id, deleted_at__isnull=True)
+        .values_list("birthday", flat=True)
+        .first()
+    )
+
+
+def _is_care_insurance_tax_item(tax_item):
+    key = str(tax_item.get("key") or "").strip().lower()
+    name = str(tax_item.get("name") or "").strip()
+    return "care" in key or "介護" in name or "介护" in name
+
+
+def _should_apply_care_insurance(tax_item, birthday, target_month):
+    if not _is_care_insurance_tax_item(tax_item):
+        return True
+    if not birthday or not target_month:
+        return False
+    month_end = shift_month(target_month, 1) - timedelta(days=1)
+    age = _age_at(birthday, month_end)
+    return age is not None and age >= PAYROLL_CARE_INSURANCE_MIN_AGE
+
+
+def _calculate_annuity_tax_item_total_amount(settings, standard_row, tax_item):
+    if not standard_row:
+        return Decimal("0")
+    standard_salary = _decimal_from_setting(standard_row.get("monthly_amount", standard_row.get("standard_salary")))
+    override = _find_annuity_amount_override(
+        settings,
+        standard_row.get("grade"),
+        tax_item.get("key"),
+    )
+    if override is not None:
+        return _round_payroll_amount(override)
+    return _round_payroll_amount(standard_salary * _decimal_from_setting(tax_item.get("rate")))
+
+
+def _calculate_annuity_tax_item_employee_amount(settings, standard_row, tax_item, birthday=None, target_month=None):
+    if not _should_apply_care_insurance(tax_item, birthday, target_month):
+        return Decimal("0")
+    total_amount = _calculate_annuity_tax_item_total_amount(settings, standard_row, tax_item)
+    return _round_payroll_amount(total_amount * PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE)
+
+
+def _calculate_annuity_tax_item_employee_rate(tax_item):
+    return _decimal_from_setting(tax_item.get("rate")) * PAYROLL_FIXED_DEDUCTION_EMPLOYEE_SHARE
+
+
+def _get_payroll_withholding_info(source, overrides=None):
+    overrides = overrides or {}
+    withholding_tax_type = overrides.get("withholding_tax_type", getattr(source, "withholding_tax_type", None))
+    dependent_count = overrides.get("dependent_count", getattr(source, "dependent_count", None))
+
+    if withholding_tax_type in (None, "") or dependent_count in (None, ""):
+        employee_id = overrides.get("employee_id", getattr(source, "employee_id", None))
+        basic = None
+        if employee_id:
+            basic = (
+                PayrollBasicInfo.objects
+                .filter(employee_id=employee_id, deleted_at__isnull=True)
+                .order_by("id")
+                .first()
+            )
+        if basic:
+            withholding_tax_type = basic.withholding_tax_type
+            dependent_count = basic.dependent_count
+
+    withholding_tax_type = "otsu" if withholding_tax_type == "otsu" else "kou"
+    try:
+        dependent_count = int(dependent_count)
+    except (TypeError, ValueError):
+        dependent_count = 0
+    dependent_count = max(0, min(7, dependent_count))
+    if withholding_tax_type == "otsu":
+        dependent_count = 0
+    return withholding_tax_type, dependent_count
+
+
+def _find_income_tax_monthly_row(settings, taxable_salary_after_deductions):
+    if not settings:
+        return None
+    rows = settings.get("monthly_rows")
+    if not isinstance(rows, list):
+        return None
+    valid_rows = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        valid_rows.append(row)
+        salary_min = _decimal_from_setting(row.get("salary_min"))
+        salary_max = _decimal_from_setting(row.get("salary_max"))
+        if taxable_salary_after_deductions >= salary_min and taxable_salary_after_deductions < salary_max:
+            return row
+    if not valid_rows:
+        return None
+    valid_rows.sort(key=lambda item: _decimal_from_setting(item.get("salary_min")))
+    first = valid_rows[0]
+    if taxable_salary_after_deductions < _decimal_from_setting(first.get("salary_min")):
+        return first
+    return valid_rows[-1]
+
+
+def _calculate_income_tax_amount(settings, taxable_salary_after_deductions, withholding_tax_type, dependent_count):
+    row = _find_income_tax_monthly_row(settings, taxable_salary_after_deductions)
+    if not row:
+        return Decimal("0")
+    column = "otsu" if withholding_tax_type == "otsu" else f"kou_{dependent_count}"
+    return _round_payroll_amount(_decimal_from_setting(row.get(column)))
+
+
+def _build_payroll_calculation_values(source, target_month=None, overrides=None):
+    overrides = overrides or {}
+    base_salary = overrides.get("base_salary", getattr(source, "base_salary", Decimal("0")))
+    addition_items = overrides.get("addition_items", getattr(source, "addition_items", None) or [])
+    non_taxable_addition_items = overrides.get(
+        "non_taxable_addition_items",
+        getattr(source, "non_taxable_addition_items", None) or [],
+    )
+    annuity_settings = _get_annuity_settings()
+    income_tax_settings = _get_income_tax_settings()
+    manual_deduction_items = _strip_calculated_payroll_items(
+        overrides.get("deduction_items", getattr(source, "deduction_items", None) or []),
+        annuity_settings=annuity_settings,
+    )
+
+    addition_total = _sum_payroll_items(addition_items)
+    non_taxable_addition_total = _sum_payroll_items(non_taxable_addition_items)
+    manual_deduction_total = _sum_payroll_items(manual_deduction_items)
+    taxable_salary = base_salary + addition_total
+    gross_salary = base_salary + addition_total + non_taxable_addition_total
+    remuneration_base = max(Decimal("0"), gross_salary - manual_deduction_total)
+
+    annuity_standard = _find_annuity_standard(annuity_settings, base_salary)
+    employee_birthday = _get_employee_birthday(source, overrides)
+    withholding_tax_type, dependent_count = _get_payroll_withholding_info(source, overrides)
+    calculated_items = []
+    first_stage_total = Decimal("0")
+    employment_amount = Decimal("0")
+
+    if annuity_settings:
+        annuity_tax_items = annuity_settings.get("tax_items") or []
+    else:
+        annuity_tax_items = []
+    for tax_item in annuity_tax_items:
+        tax_item_name = str(tax_item.get("name") or "").strip()
+        if not tax_item_name:
+            continue
+        amount = _calculate_annuity_tax_item_employee_amount(
+            annuity_settings,
+            annuity_standard,
+            tax_item,
+            birthday=employee_birthday,
+            target_month=target_month,
+        )
+        first_stage_total += amount
+        calculated_items.append({
+            "name": tax_item_name,
+            "amount": str(amount),
+            "payroll_calculated": True,
+            "calculation_group": "fixed",
+            "calculation_key": str(tax_item.get("key") or ""),
+            "calculation_rate": str(_calculate_annuity_tax_item_employee_rate(tax_item)),
+        })
+
+    employment_rate = _get_payroll_employment_insurance_employee_rate()
+    employment_amount = _round_payroll_amount(
+        remuneration_base * employment_rate
+    )
+    calculated_items.append({
+        "name": PAYROLL_EMPLOYMENT_INSURANCE_NAME,
+        "amount": str(employment_amount),
+        "payroll_calculated": True,
+        "calculation_group": "variable",
+        "calculation_key": PAYROLL_EMPLOYMENT_INSURANCE_KEY,
+        "calculation_rate": str(employment_rate),
+        "calculation_base_label": "賃金総額",
+    })
+
+    income_tax_base = max(Decimal("0"), taxable_salary - first_stage_total - employment_amount)
+    income_tax_amount = _calculate_income_tax_amount(
+        income_tax_settings,
+        income_tax_base,
+        withholding_tax_type,
+        dependent_count,
+    )
+    calculated_items.append({
+        "name": PAYROLL_INCOME_TAX_NAME,
+        "amount": str(income_tax_amount),
+        "payroll_calculated": True,
+        "calculation_group": "variable",
+        "calculation_key": PAYROLL_INCOME_TAX_KEY,
+        "calculation_base_label": "源泉税表",
+    })
+
+    calculated_total = _sum_payroll_items(calculated_items)
+    allowance_amount = addition_total + non_taxable_addition_total
+    net_salary = base_salary + allowance_amount - manual_deduction_total - calculated_total
+
+    values = {
+        "base_salary": base_salary,
+        "withholding_tax_type": withholding_tax_type,
+        "dependent_count": dependent_count,
+        "allowance_amount": allowance_amount,
+        "deduction_amount": manual_deduction_total,
+        "addition_items": addition_items,
+        "non_taxable_addition_items": non_taxable_addition_items,
+        "deduction_items": manual_deduction_items,
+        "automatic_deduction_items": calculated_items,
+        "automatic_deduction_amount": calculated_total,
+        "net_salary": net_salary,
+    }
+    if target_month is not None:
+        values["payroll_month"] = target_month
+    return values
 
 
 def _serialize_payroll_basic_items(items):
@@ -1843,16 +2575,25 @@ def payroll_basic_info_api(request):
     status_value, error = _parse_payroll_status(payload.get("status", 1))
     if error:
         return error
-    addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+    withholding_tax_type, error = _parse_payroll_withholding_tax_type(payload.get("withholding_tax_type"))
+    if error:
+        return error
+    dependent_count, error = _parse_payroll_dependent_count(payload.get("dependent_count"))
+    if error:
+        return error
+    if withholding_tax_type == "otsu":
+        dependent_count = 0
+    addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items", omit_zero=True)
     if error:
         return error
     non_taxable_addition_items, error = _parse_payroll_items(
         payload.get("non_taxable_addition_items"),
         "non_taxable_addition_items",
+        omit_zero=True,
     )
     if error:
         return error
-    deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+    deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items", omit_zero=True)
     if error:
         return error
     base_salary, error = _parse_decimal_field(payload, "base_salary")
@@ -1864,6 +2605,8 @@ def payroll_basic_info_api(request):
         employee_name=employee.name,
         contract_type=contract_type,
         base_salary=base_salary,
+        withholding_tax_type=withholding_tax_type,
+        dependent_count=dependent_count,
         addition_items=addition_items,
         non_taxable_addition_items=non_taxable_addition_items,
         deduction_items=deduction_items,
@@ -1920,8 +2663,20 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
             return error
         item.base_salary = value
 
+    if "withholding_tax_type" in payload:
+        withholding_tax_type, error = _parse_payroll_withholding_tax_type(payload.get("withholding_tax_type"))
+        if error:
+            return error
+        item.withholding_tax_type = withholding_tax_type
+
+    if "dependent_count" in payload:
+        dependent_count, error = _parse_payroll_dependent_count(payload.get("dependent_count"))
+        if error:
+            return error
+        item.dependent_count = dependent_count
+
     if "addition_items" in payload:
-        addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items")
+        addition_items, error = _parse_payroll_items(payload.get("addition_items"), "addition_items", omit_zero=True)
         if error:
             return error
         item.addition_items = addition_items
@@ -1930,19 +2685,23 @@ def payroll_basic_info_detail_api(request, payroll_basic_id):
         non_taxable_addition_items, error = _parse_payroll_items(
             payload.get("non_taxable_addition_items"),
             "non_taxable_addition_items",
+            omit_zero=True,
         )
         if error:
             return error
         item.non_taxable_addition_items = non_taxable_addition_items
 
     if "deduction_items" in payload:
-        deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
+        deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items", omit_zero=True)
         if error:
             return error
         item.deduction_items = deduction_items
 
     if "remark" in payload:
         item.remark = (payload.get("remark") or "").strip() or None
+
+    if item.withholding_tax_type == "otsu":
+        item.dependent_count = 0
 
     item.updated_by = login_id
     item.save()
@@ -2005,6 +2764,12 @@ def _build_monthly_payload(payload, target_month=None):
     deduction_items, error = _parse_payroll_items(payload.get("deduction_items"), "deduction_items")
     if error:
         return None, error
+    automatic_deduction_items, error = _parse_payroll_items(
+        payload.get("automatic_deduction_items"),
+        "automatic_deduction_items",
+    )
+    if error:
+        return None, error
 
     amount_values = {}
     for field_name in (
@@ -2012,7 +2777,7 @@ def _build_monthly_payload(payload, target_month=None):
         "base_salary",
         "allowance_amount",
         "deduction_amount",
-        "social_insurance_amount",
+        "automatic_deduction_amount",
         "net_salary",
     ):
         value, error = _parse_decimal_field(payload, field_name)
@@ -2030,6 +2795,7 @@ def _build_monthly_payload(payload, target_month=None):
             "addition_items": addition_items,
             "non_taxable_addition_items": non_taxable_addition_items,
             "deduction_items": deduction_items,
+            "automatic_deduction_items": automatic_deduction_items,
             "remark": (payload.get("remark") or "").strip() or None,
             **amount_values,
         }
@@ -2085,6 +2851,12 @@ def payroll_monthly_api(request):
             deleted_at__isnull=True,
     ).exists():
         return api_error("Payroll monthly calculation already exists", status=409)
+    withholding_tax_type, dependent_count = _get_payroll_withholding_info(
+        None,
+        overrides={"employee_id": values["employee_id"]},
+    )
+    values["withholding_tax_type"] = withholding_tax_type
+    values["dependent_count"] = dependent_count
     item = PayrollMonthlyCalculation.create_for_period(
         values["payroll_month"],
         created_by=login_id,
@@ -2122,34 +2894,20 @@ def payroll_monthly_calculate_api(request):
     attendance_map = _get_attendance_days_map(target_month, [item.employee_id for item in basic_items])
     created_items = []
     for basic in basic_items:
-        addition_items = basic.addition_items or []
-        non_taxable_addition_items = basic.non_taxable_addition_items or []
-        deduction_items = basic.deduction_items or []
-        allowance_amount = _sum_payroll_items(addition_items) + _sum_payroll_items(non_taxable_addition_items)
-        deduction_amount = _sum_payroll_items(deduction_items)
-        social_insurance_amount = Decimal("0")
-        net_salary = basic.base_salary + allowance_amount - deduction_amount - social_insurance_amount
+        calculated_values = _build_payroll_calculation_values(basic, target_month=target_month)
         created_items.append(
             PayrollMonthlyCalculation.build_for_period(
                 target_month,
-                payroll_month=target_month,
                 employee_id=basic.employee_id,
                 employee_name=basic.employee_name,
                 contract_type=basic.contract_type,
                 attendance_days=attendance_map.get(basic.employee_id, Decimal("0")),
-                base_salary=basic.base_salary,
-                allowance_amount=allowance_amount,
-                deduction_amount=deduction_amount,
-                addition_items=addition_items,
-                non_taxable_addition_items=non_taxable_addition_items,
-                deduction_items=deduction_items,
-                social_insurance_amount=social_insurance_amount,
-                net_salary=net_salary,
                 bank_info=None,
                 status=0,
                 remark=None,
                 created_by=login_id,
                 updated_by=login_id,
+                **calculated_values,
             )
         )
     if created_items:
@@ -2166,6 +2924,46 @@ def payroll_monthly_calculate_api(request):
             "items": _serialize_monthly_items(items),
         }
     )
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def payroll_monthly_recalculate_api(request, calculation_id):
+    login_id, error = require_login(request)
+    if error:
+        return error
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    target_month, error = _parse_payroll_month(payload.get("month"))
+    if error:
+        return error
+
+    monthly_objects = PayrollMonthlyCalculation.objects_for_period(target_month)
+    item = monthly_objects.filter(
+        id=calculation_id,
+        payroll_month=target_month,
+        deleted_at__isnull=True,
+    ).first()
+    if not item:
+        return api_error("Payroll monthly calculation not found", status=404)
+
+    values, error = _build_monthly_payload(payload, target_month=target_month)
+    if error:
+        return error
+    calculated_values = _build_payroll_calculation_values(item, target_month=target_month, overrides=values)
+    for key, value in calculated_values.items():
+        setattr(item, key, value)
+    item.employee_id = values["employee_id"]
+    item.employee_name = values["employee_name"]
+    item.contract_type = values["contract_type"]
+    item.attendance_days = values["attendance_days"]
+    item.status = values["status"]
+    item.bank_info = values["bank_info"]
+    item.remark = values["remark"]
+    item.updated_by = login_id
+    item.save()
+    return api_success(data={"item": PayrollMonthlyCalculation.serialize(item)})
 
 
 @csrf_exempt
@@ -2246,6 +3044,14 @@ def payroll_monthly_detail_api(request, calculation_id):
         if error:
             return error
         item.deduction_items = deduction_items
+    if "automatic_deduction_items" in payload:
+        automatic_deduction_items, error = _parse_payroll_items(
+            payload.get("automatic_deduction_items"),
+            "automatic_deduction_items",
+        )
+        if error:
+            return error
+        item.automatic_deduction_items = automatic_deduction_items
     if "remark" in payload:
         item.remark = (payload.get("remark") or "").strip() or None
 
@@ -2254,7 +3060,7 @@ def payroll_monthly_detail_api(request, calculation_id):
         "base_salary",
         "allowance_amount",
         "deduction_amount",
-        "social_insurance_amount",
+        "automatic_deduction_amount",
         "net_salary",
     ):
         if field_name in payload:
@@ -2266,70 +3072,3 @@ def payroll_monthly_detail_api(request, calculation_id):
     item.updated_by = login_id
     item.save()
     return api_success(data={"item": PayrollMonthlyCalculation.serialize(item)})
-
-
-@require_GET
-def payroll_monthly_export_api(request):
-    _login_id, error = require_login(request)
-    if error:
-        return error
-    target_month, error = _parse_payroll_month(request.GET.get("month"))
-    if error:
-        return error
-    qs = PayrollMonthlyCalculation.objects_for_period(target_month).filter(
-        payroll_month=target_month,
-        deleted_at__isnull=True,
-    )
-    qs, error = _apply_monthly_filters(qs, request)
-    if error:
-        return error
-    items = list(qs.order_by("employee_id", "id"))
-
-    workbook = Workbook()
-    worksheet = workbook.active
-    worksheet.title = "月度工资"
-    headers = [
-        "月份",
-        "员工",
-        "出勤日数",
-        "基本工资",
-        "补贴",
-        "扣款",
-        "社保/年金/保险",
-        "实发金额",
-        "状态",
-    ]
-    worksheet.append(headers)
-    for item in items:
-        serialized = PayrollMonthlyCalculation.serialize(item)
-        worksheet.append(
-            [
-                serialized["month"],
-                serialized["employee_name"],
-                float(item.attendance_days),
-                float(item.base_salary),
-                float(item.allowance_amount),
-                float(item.deduction_amount),
-                float(item.social_insurance_amount),
-                float(item.net_salary),
-                serialized["status_label"],
-            ]
-        )
-    for column in worksheet.columns:
-        max_length = max(len(str(cell.value or "")) for cell in column)
-        worksheet.column_dimensions[column[0].column_letter].width = min(max(max_length + 2, 10), 24)
-
-    output = BytesIO()
-    workbook.save(output)
-    output.seek(0)
-    month_label = target_month.strftime("%Y-%m")
-    safe_filename = f"payroll_monthly_{month_label}.xlsx"
-    display_filename = f"月度工资_{month_label}.xlsx"
-    response = HttpResponse(
-        output.getvalue(),
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-    response["Content-Disposition"] = (
-        f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{quote(display_filename)}"
-    )
-    return response

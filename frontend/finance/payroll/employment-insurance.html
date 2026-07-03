@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="icon" href="../../favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="stylesheet" href="../../common.css">
+    <link rel="stylesheet" href="../../components.css">
+    <title data-i18n="payroll.tabs.employment_insurance">雇佣保险</title>
+</head>
+<body class="order-page finance-subpage">
+<div class="finance-subpage-content" data-finance-subpage="payroll.employment-insurance">
+    <div class="employment-insurance-layout">
+        <section class="c-card employment-insurance-settings" aria-labelledby="employmentInsuranceTitle">
+            <h3 id="employmentInsuranceTitle" class="employment-insurance-title-hidden">雇佣保险</h3>
+
+            <div class="employment-insurance-body">
+                <label class="employment-insurance-field" for="employmentInsuranceEmployeeRate">
+                    <span>员工负担率</span>
+                    <div class="employment-insurance-rate-input">
+                        <input id="employmentInsuranceEmployeeRate" type="number" min="0" max="100" step="0.001" inputmode="decimal">
+                        <span>%</span>
+                    </div>
+                </label>
+                <label class="employment-insurance-field" for="employmentInsuranceCompanyRate">
+                    <span>公司负担率</span>
+                    <div class="employment-insurance-rate-input">
+                        <input id="employmentInsuranceCompanyRate" type="number" min="0" max="100" step="0.001" inputmode="decimal">
+                        <span>%</span>
+                    </div>
+                </label>
+            </div>
+
+            <footer class="employment-insurance-footer">
+                <button type="button" class="c-btn c-btn-primary c-btn-sm" id="employmentInsuranceSave" disabled>保存</button>
+                <span id="employmentInsuranceStatus" class="employment-insurance-status" aria-live="polite"></span>
+            </footer>
+        </section>
+
+        <aside class="c-card employment-insurance-summary" aria-live="polite">
+            <div class="employment-insurance-summary-item">
+                <span>员工计算用小数</span>
+                <strong id="employmentInsuranceEmployeeDecimalRate">0.005</strong>
+            </div>
+            <div class="employment-insurance-summary-item">
+                <span>公司计算用小数</span>
+                <strong id="employmentInsuranceCompanyDecimalRate">0.0085</strong>
+            </div>
+            <div class="employment-insurance-summary-item is-total">
+                <span>合计费率</span>
+                <strong id="employmentInsuranceTotalRate">1.35%</strong>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<script src="../../i18n.js"></script>
+<script>
+(function () {
+    const route = (window.location.pathname || "").replace(/^\/+/, "");
+    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
+    window.__routeNotified = true;
+    try {
+        if (!window.top || window.top === window) return;
+        const topHash = ((window.top.location && window.top.location.hash) || "")
+            .replace(/^#/, "")
+            .split("?")[0]
+            .split("#")[0];
+        if (topHash === route) {
+            window.top.location.hash = "finance.html";
+        }
+    } catch (e) {}
+}());
+</script>
+<script src="../../common.js"></script>
+<script>
+(function () {
+    const settingsApi = "/api/finance/settings/payroll-employment-insurance";
+
+    const applyI18n = () => {
+        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
+        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+    };
+
+    const normalizeRate = (value) => {
+        const numeric = Number(String(value || "").trim());
+        if (!Number.isFinite(numeric) || numeric < 0 || numeric > 100) return null;
+        return numeric;
+    };
+
+    const formatDecimalRate = (percent) => {
+        const decimal = percent / 100;
+        return decimal.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0";
+    };
+
+    const formatPercentFromDecimal = (rate) => {
+        const percent = rate * 100;
+        return percent.toFixed(6).replace(/0+$/, "").replace(/\.$/, "") || "0";
+    };
+
+    const normalizeSettings = (settings) => {
+        if (!settings || typeof settings !== "object") {
+            return { employeeRatePercent: "", companyRatePercent: "" };
+        }
+        const employeeDecimal = Number(settings.employee_rate);
+        const companyDecimal = Number(settings.company_rate);
+        const employeeRate = normalizeRate(formatPercentFromDecimal(employeeDecimal));
+        const companyRate = normalizeRate(formatPercentFromDecimal(companyDecimal));
+        return {
+            employeeRatePercent: employeeRate !== null ? String(employeeRate) : "",
+            companyRatePercent: companyRate !== null ? String(companyRate) : ""
+        };
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        applyI18n();
+
+        const employeeRateInput = document.getElementById("employmentInsuranceEmployeeRate");
+        const companyRateInput = document.getElementById("employmentInsuranceCompanyRate");
+        const employeeDecimalRate = document.getElementById("employmentInsuranceEmployeeDecimalRate");
+        const companyDecimalRate = document.getElementById("employmentInsuranceCompanyDecimalRate");
+        const totalRate = document.getElementById("employmentInsuranceTotalRate");
+        const saveButton = document.getElementById("employmentInsuranceSave");
+        const status = document.getElementById("employmentInsuranceStatus");
+        let savedSettings = normalizeSettings();
+
+        const setStatus = (message, type = "") => {
+            status.textContent = message;
+            status.classList.toggle("is-success", type === "success");
+            status.classList.toggle("is-error", type === "error");
+        };
+
+        const refresh = () => {
+            const employeeHasValue = String(employeeRateInput.value || "").trim() !== "";
+            const companyHasValue = String(companyRateInput.value || "").trim() !== "";
+            const employeeRate = employeeHasValue ? normalizeRate(employeeRateInput.value) : null;
+            const companyRate = companyHasValue ? normalizeRate(companyRateInput.value) : null;
+            const employeeValid = !employeeHasValue || employeeRate !== null;
+            const companyValid = !companyHasValue || companyRate !== null;
+            const complete = employeeHasValue && companyHasValue;
+            const isValid = employeeValid && companyValid;
+
+            [
+                [employeeRateInput, employeeValid],
+                [companyRateInput, companyValid]
+            ].forEach(([input, valid]) => {
+                input.classList.toggle("is-invalid", !valid);
+                input.closest(".employment-insurance-rate-input")?.classList.toggle("is-invalid", !valid);
+            });
+
+            employeeDecimalRate.textContent = employeeHasValue && employeeRate !== null ? formatDecimalRate(employeeRate) : "-";
+            companyDecimalRate.textContent = companyHasValue && companyRate !== null ? formatDecimalRate(companyRate) : "-";
+            totalRate.textContent = complete && isValid ? `${(employeeRate + companyRate).toFixed(3).replace(/0+$/, "").replace(/\.$/, "")}%` : "-";
+
+            const changed = String(employeeRateInput.value || "") !== String(savedSettings.employeeRatePercent || "")
+                || String(companyRateInput.value || "") !== String(savedSettings.companyRatePercent || "");
+            saveButton.disabled = !complete || !isValid || !changed;
+        };
+
+        const applySettings = (settings) => {
+            savedSettings = normalizeSettings(settings);
+            employeeRateInput.value = savedSettings.employeeRatePercent;
+            companyRateInput.value = savedSettings.companyRatePercent;
+            refresh();
+        };
+
+        const setLoading = (loading) => {
+            employeeRateInput.disabled = loading;
+            companyRateInput.disabled = loading;
+            saveButton.disabled = true;
+        };
+
+        const loadSettings = async () => {
+            setLoading(true);
+            try {
+                const payload = await window.requestJson(settingsApi, {method: "GET", cache: "no-store"});
+                applySettings(payload?.data?.settings);
+            } catch (err) {
+                applySettings();
+                setStatus(err.message || "加载失败", "error");
+            } finally {
+                employeeRateInput.disabled = false;
+                companyRateInput.disabled = false;
+                refresh();
+            }
+        };
+
+        const handleInput = () => {
+            setStatus("");
+            refresh();
+        };
+
+        employeeRateInput.addEventListener("input", handleInput);
+        companyRateInput.addEventListener("input", handleInput);
+        saveButton.addEventListener("click", async () => {
+            const employeeRate = normalizeRate(employeeRateInput.value);
+            const companyRate = normalizeRate(companyRateInput.value);
+            if (employeeRate === null || companyRate === null) {
+                setStatus("员工负担率和公司负担率请输入 0 到 100 之间的数字。", "error");
+                (employeeRate === null ? employeeRateInput : companyRateInput).focus();
+                return;
+            }
+            const pendingSettings = {
+                employeeRatePercent: String(employeeRate),
+                companyRatePercent: String(companyRate)
+            };
+            setLoading(true);
+            const originalText = saveButton.textContent;
+            saveButton.textContent = "保存中...";
+            try {
+                const payload = await window.requestJson(settingsApi, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        employee_rate: formatDecimalRate(employeeRate),
+                        company_rate: formatDecimalRate(companyRate)
+                    })
+                });
+                applySettings(payload?.data?.settings);
+                setStatus("已保存", "success");
+            } catch (err) {
+                setStatus(err.message || "保存失败", "error");
+            } finally {
+                employeeRateInput.disabled = false;
+                companyRateInput.disabled = false;
+                saveButton.textContent = originalText;
+                refresh();
+            }
+        });
+
+        loadSettings();
+        window.addEventListener("i18n:change", applyI18n);
+    });
+}());
+</script>
+</body>
+</html>

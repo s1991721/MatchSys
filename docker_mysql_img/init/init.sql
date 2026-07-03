@@ -453,6 +453,8 @@ CREATE TABLE IF NOT EXISTS payroll_basic_info
     contract_type         TINYINT        NOT NULL DEFAULT 0 COMMENT '契约类型：0-正社员 1-契约社员 2-フリーランス',
 
     base_salary           DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',
+    withholding_tax_type  VARCHAR(8)     NOT NULL DEFAULT 'kou' COMMENT '源泉税区分：kou-甲栏 otsu-乙栏',
+    dependent_count       TINYINT        NOT NULL DEFAULT 0 COMMENT '扶养亲族等人数：0-7（乙栏固定0）',
     addition_items        JSON           NULL COMMENT '工资增加项明细',
     non_taxable_addition_items JSON       NULL COMMENT '工资非课税增加项明细',
     deduction_items       JSON           NULL COMMENT '工资减少项明细',
@@ -486,12 +488,15 @@ CREATE TABLE IF NOT EXISTS payroll_monthly_calculation
     attendance_days         DECIMAL(5, 2)  NOT NULL DEFAULT 0 COMMENT '出勤日数，允许小数',
 
     base_salary             DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '基本工资',
-    allowance_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '补贴',
-    deduction_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '扣款',
+    withholding_tax_type    VARCHAR(8)     NOT NULL DEFAULT 'kou' COMMENT '源泉税区分快照：kou-甲栏 otsu-乙栏',
+    dependent_count         TINYINT        NOT NULL DEFAULT 0 COMMENT '扶养亲族等人数快照：0-7（乙栏固定0）',
     addition_items          JSON           NULL COMMENT '工资增加项明细快照',
     non_taxable_addition_items JSON         NULL COMMENT '工资非课税增加项明细快照',
     deduction_items         JSON           NULL COMMENT '工资减少项明细快照',
-    social_insurance_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '社保/年金/保险',
+    automatic_deduction_items JSON          NULL COMMENT '自动扣款明细快照',
+    allowance_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '增加项合计',
+    deduction_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '减少项合计',
+    automatic_deduction_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '自动扣款合计',
     net_salary              DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '实发金额',
 
     bank_info               JSON           NULL COMMENT '员工银行信息快照，用于工资导出',

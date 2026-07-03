@@ -42,6 +42,7 @@ class SessionLoginRequiredMiddleware:
             "/components.css",
             "/common.js",
             "/i18n.js",
+            "/case_exhibit.html",
         }:
             return True
 

@@ -632,9 +632,15 @@
       }
 
       const links = nav ? Array.from(nav.querySelectorAll("a[data-src]")) : [];
-      const normalizeMenuItem = (value) => (value || "")
-        .replace(/^#/, "")
-        .replace(/^\//, "")
+      const normalizeAppRoute = (value) => {
+        const raw = String(value || "").trim().replace(/^#/, "");
+        if (!raw) return "";
+        if (window.MatchSys && typeof window.MatchSys.normalizeAppRoute === "function") {
+          return window.MatchSys.normalizeAppRoute(raw);
+        }
+        return raw.replace(/^\//, "");
+      };
+      const normalizeMenuItem = (value) => normalizeAppRoute(value || "")
         .split("?")[0]
         .split("#")[0]
         .trim();
@@ -762,17 +768,18 @@
       };
 
       const applyRoute = (src) => {
-        if (!src) return;
-        setActive(src);
-        const label = setSubtitle(src);
-        if (frame.src !== src) {
-          frame.src = src;
-          frame.setAttribute("title", label || src);
+        const route = normalizeAppRoute(src);
+        if (!route) return;
+        setActive(route);
+        const label = setSubtitle(route);
+        if (normalizeAppRoute(frame.getAttribute("src") || "") !== route) {
+          frame.src = route;
+          frame.setAttribute("title", label || route);
         }
       };
 
       const resolveFromHash = () => {
-        const raw = (location.hash || "").replace(/^#/, "").trim();
+        const raw = normalizeAppRoute(location.hash || "");
         if (!raw) return null;
         return raw || null;
       };
@@ -795,7 +802,7 @@
         if (!target) return;
         if (!(nav.contains(target) || target.classList.contains("avatar"))) return;
         event.preventDefault();
-        const src = target.getAttribute("data-src");
+        const src = normalizeAppRoute(target.getAttribute("data-src"));
         if (!src) return;
         if (location.hash !== "#" + src) {
           location.hash = src;
@@ -821,7 +828,7 @@
       window.addEventListener("message", (event) => {
         const data = event.data || {};
         if (data.type === "route:change") {
-          const src = (data.src || "").trim();
+          const src = normalizeAppRoute(data.src || "");
           if (!src || !isAllowedRoute(src)) return;
           if (location.hash !== "#" + src) {
             location.hash = src;

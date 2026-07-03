@@ -19,6 +19,58 @@
     const pad2 = (value) => String(value).padStart(2, "0");
     window.pad2 = pad2;
 
+    const getCommonScriptUrl = () => {
+        const current = document.currentScript && document.currentScript.src;
+        if (current) return current;
+        const scripts = Array.from(document.scripts || []);
+        const commonScript = scripts.find((script) => {
+            const src = script.getAttribute("src") || "";
+            return /(^|\/)common\.js(?:[?#].*)?$/.test(src);
+        });
+        return commonScript ? commonScript.src : "";
+    };
+
+    const commonScriptUrl = getCommonScriptUrl();
+    const appBaseUrl = (() => {
+        try {
+            return new URL(".", commonScriptUrl || window.location.href);
+        } catch (e) {
+            return new URL(".", window.location.href);
+        }
+    })();
+
+    MatchSys.getAppBaseUrl = function () {
+        return appBaseUrl.toString();
+    };
+
+    MatchSys.normalizeAppRoute = function (value) {
+        const raw = String(value || "").trim().replace(/^#/, "");
+        if (!raw) return "";
+        let url;
+        try {
+            url = new URL(raw, appBaseUrl);
+        } catch (e) {
+            return raw.replace(/^#/, "").replace(/^\/+/, "");
+        }
+        if (url.origin !== window.location.origin) return raw;
+        const basePath = appBaseUrl.pathname.endsWith("/") ? appBaseUrl.pathname : `${appBaseUrl.pathname}/`;
+        let path = url.pathname || "";
+        if (path.startsWith(basePath)) {
+            path = path.slice(basePath.length);
+        } else {
+            path = path.replace(/^\/+/, "");
+        }
+        const baseSegment = basePath.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean).pop();
+        if (baseSegment && path.startsWith(`${baseSegment}/`)) {
+            path = path.slice(baseSegment.length + 1);
+        }
+        return `${path}${url.search || ""}${url.hash || ""}`.replace(/^\/+/, "");
+    };
+
+    MatchSys.buildAppUrl = function (route) {
+        return new URL(MatchSys.normalizeAppRoute(route), appBaseUrl).toString();
+    };
+
     window.escapeHtml = function (value) {
         return String(value == null ? "" : value)
             .replace(/&/g, "&amp;")
@@ -116,9 +168,7 @@
 
     const redirectAuthFailureTopOrSelf = (reason = "login") => {
         const target = reason === "activation" ? "login.html?activation=1" : "login.html";
-
-        const cleanTarget = String(target || "").replace(/^\/+/, "");
-        const nextUrl = new URL(cleanTarget, `${window.location.origin}/`).toString();
+        const nextUrl = MatchSys.buildAppUrl(target);
         if (window.top && window.top !== window) {
             window.top.location.href = nextUrl;
         } else {
@@ -127,12 +177,12 @@
     };
 
     MatchSys.navigateAppRoute = function (src) {
-        const route = String(src || "").trim();
+        const route = MatchSys.normalizeAppRoute(src);
         if (!route) return;
         if (window.top && window.top !== window) {
             window.top.postMessage({type: "route:change", src: route}, "*");
         } else {
-            window.location.href = route;
+            window.location.href = MatchSys.buildAppUrl(route);
         }
     };
     window.navigateAppRoute = MatchSys.navigateAppRoute;
@@ -236,14 +286,14 @@
             const payload = await res.json().catch(() => ({}));
             const message = translateApiError(payload, `HTTP ${res.status}`);
             if (res.status === 401) {
-                redirectTopOrSelf("login.html");
+                redirectAuthFailureTopOrSelf("login");
                 const error = new Error(message);
                 error.payload = payload;
                 error.code = payload?.code;
                 throw error;
             }
             if (res.status === 403) {
-                redirectTopOrSelf("login.html?activation=1");
+                redirectAuthFailureTopOrSelf("activation");
             }
             const error = new Error(message);
             error.payload = payload;
@@ -549,13 +599,14 @@
     const notifyParentRoute = () => {
         if (window.__routeNotified) return;
         if (!window.top || window.top === window) return;
-        const path = window.location.pathname || "";
-        const route = path.replace(/^\/+/, "");
-        if (!route || !route.endsWith(".html")) return;
+        if (window.parent && window.parent !== window.top) return;
+        const route = MatchSys.normalizeAppRoute(window.location.href);
+        const routePath = route.split("?")[0].split("#")[0];
+        if (!routePath || !routePath.endsWith(".html")) return;
         try {
             const topHash = (window.top.location && window.top.location.hash) || "";
-            const normalizedTop = topHash.replace(/^#/, "").split("?")[0].split("#")[0];
-            if (normalizedTop === route) {
+            const normalizedTop = MatchSys.normalizeAppRoute(topHash).split("?")[0].split("#")[0];
+            if (normalizedTop === routePath) {
                 window.__routeNotified = true;
                 return;
             }

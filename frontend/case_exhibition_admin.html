@@ -62,6 +62,20 @@
       color: #0f5fd7;
     }
 
+    .exhibit-head-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .exhibit-head-actions .c-btn {
+      min-height: 32px;
+      padding: 7px 12px;
+      font-size: 12px;
+    }
+
     .exhibit-filters {
       min-width: 0;
       display: flex;
@@ -698,7 +712,10 @@
       <section class="c-card exhibit-panel display-panel">
         <div class="exhibit-panel-head">
           <h2>展示列表数据</h2>
-          <a class="exhibit-page-link" href="case_exhibit.html" target="_blank" rel="noopener noreferrer">打开展示页</a>
+          <div class="exhibit-head-actions">
+            <button class="c-btn c-btn-ghost" type="button" id="downloadCsvBtn">下载CSV</button>
+            <a class="exhibit-page-link" href="case_exhibit.html" target="_blank" rel="noopener noreferrer" id="openExhibitPageLink">打开展示页</a>
+          </div>
         </div>
         <div class="display-list-wrap" id="displayList"></div>
       </section>
@@ -735,6 +752,8 @@
     const casePaginationPages = document.getElementById("casePaginationPages");
     const casePageSummary = document.getElementById("casePageSummary");
     const displayList = document.getElementById("displayList");
+    const downloadCsvBtn = document.getElementById("downloadCsvBtn");
+    const openExhibitPageLink = document.getElementById("openExhibitPageLink");
     const editorForm = document.getElementById("editorForm");
     const sourceTitle = document.getElementById("sourceTitle");
     const sourceDetail = document.getElementById("sourceDetail");
@@ -751,6 +770,10 @@
     const saveExhibitBtn = document.getElementById("saveExhibitBtn");
     const editorMessage = document.getElementById("editorMessage");
     const editorInputs = [titleInput, summaryInput, typeInput, statusInput, unitPriceInput, locationInput, startAtInput, interviewInput, tagsInput, factsInput];
+    const caseExhibitApiBase = String(window.CASE_EXHIBIT_API_BASE || localStorage.getItem("caseExhibitApiBase") || "").replace(/\/$/, "");
+    const caseExhibitPublicUrl = String(window.CASE_EXHIBIT_PUBLIC_URL || localStorage.getItem("caseExhibitPublicUrl") || "case_exhibit.html");
+    const caseExhibitsCsvApi = `${caseExhibitApiBase}/api/case-exhibits-csv`;
+    openExhibitPageLink.href = caseExhibitPublicUrl;
 
     const escapeHtml = (value) => String(value == null ? "" : value)
       .replace(/&/g, "&amp;")
@@ -775,6 +798,83 @@
           value: (parts.join("｜") || row).trim()
         };
       });
+
+    const normalizeDisplayCase = (item) => ({
+      sourceId: item.sourceId || "",
+      id: item.sourceId || item.id || "",
+      type: item.type || "",
+      title: item.title || "",
+      sourceTitle: item.sourceTitle || "",
+      status: item.status || "",
+      updatedAt: item.updatedAt || "",
+      summary: item.summary || "",
+      unitPrice: item.unitPrice || "",
+      location: item.location || "",
+      startAt: item.startAt || "",
+      interview: item.interview || "",
+      tags: Array.isArray(item.tags) ? item.tags : [],
+      facts: Array.isArray(item.facts) ? item.facts : [],
+      sourceDetail: item.sourceDetail || "",
+      sourceAddress: item.sourceAddress || ""
+    });
+
+    const loadDisplayCasesFromCsv = async () => {
+      try {
+        const payload = await window.requestJson(caseExhibitsCsvApi, {method: "GET"}, {
+          fallbackMessage: "展示 CSV 读取失败"
+        });
+        displayCases = (((payload.data || {}).items) || []).map(normalizeDisplayCase);
+        renderDisplayList();
+      } catch (err) {
+        displayCases = [];
+      }
+    };
+
+    const persistDisplayCases = async () => {
+      const payload = await window.requestJson(caseExhibitsCsvApi, {
+        method: "PUT",
+        body: JSON.stringify({items: displayCases})
+      }, {
+        fallbackMessage: "展示 CSV 保存失败"
+      });
+      return payload.data || {};
+    };
+
+    const deleteDisplayCaseOnServer = async (sourceId) => {
+      await window.requestJson(caseExhibitsCsvApi, {
+        method: "DELETE",
+        body: JSON.stringify({sourceId})
+      }, {
+        fallbackMessage: "展示 CSV 删除失败"
+      });
+    };
+
+    const downloadCsvForNginx = async () => {
+      downloadCsvBtn.disabled = true;
+      const originalText = downloadCsvBtn.textContent;
+      downloadCsvBtn.textContent = "下载中...";
+      try {
+        const response = await window.fetchWithAuth(`${caseExhibitsCsvApi}?download=1`, {
+          method: "GET",
+          headers: {}
+        });
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "case_exhibits.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        setEditorMessage("CSV 已下载，请发布到 Nginx 中 case_exhibit.html 的同目录。", "success");
+      } catch (err) {
+        setEditorMessage(err.message || "CSV 下载失败", "error");
+      } finally {
+        downloadCsvBtn.textContent = originalText;
+        downloadCsvBtn.disabled = false;
+      }
+    };
 
     const setEditorMessage = (message = "", type = "") => {
       editorMessage.textContent = message;
@@ -967,23 +1067,23 @@
       const detail = item.detail || "";
       const normalized = normalizeDetailText(detail);
       const sourceId = String(item.id || "");
+      const saved = displayCases.find((displayItem) => getSourceId(displayItem) === sourceId) || {};
       return {
         id: sourceId,
         sourceId,
-        sourceNo: formatSourceNo(item.id),
-        type: "",
-        title: "",
+        type: saved.type || "",
+        title: saved.title || "",
         sourceTitle: item.title || "未命名案件",
         date: item.date || "",
-        status: "",
-        updatedAt: formatUpdatedAt(item.date),
-        summary: "",
-        unitPrice: "",
-        location: "",
-        startAt: "",
-        interview: "",
-        facts: [],
-        tags: [],
+        status: saved.status || "",
+        updatedAt: saved.updatedAt || formatUpdatedAt(item.date),
+        summary: saved.summary || "",
+        unitPrice: saved.unitPrice || "",
+        location: saved.location || "",
+        startAt: saved.startAt || "",
+        interview: saved.interview || "",
+        facts: [...(saved.facts || [])],
+        tags: [...(saved.tags || [])],
         sourceDetail: normalized,
         sourceAddress: item.address || ""
       };
@@ -1130,11 +1230,19 @@
       return true;
     };
 
-    const removeDisplayCase = (id) => {
+    const removeDisplayCase = async (id) => {
       const index = displayCases.findIndex((item) => getSourceId(item) === id);
       if (index < 0) return;
-      displayCases.splice(index, 1);
+      const [removed] = displayCases.splice(index, 1);
       renderDisplayList();
+      try {
+        await deleteDisplayCaseOnServer(id);
+        setEditorMessage("已从服务器 CSV 删除。", "success");
+      } catch (err) {
+        displayCases.splice(index, 0, removed);
+        renderDisplayList();
+        setEditorMessage(err.message || "展示 CSV 删除失败", "error");
+      }
     };
 
     const setLoading = () => {
@@ -1157,7 +1265,7 @@
         if (date) params.set("date", date);
         params.set("page", String(currentPage));
         params.set("page_size", String(CASE_PAGE_SIZE));
-        const payload = await window.requestJson(window.buildUrl("/api/mail-projects", params), {method: "GET"}, {
+        const payload = await window.requestJson(window.buildUrl(`${caseExhibitApiBase}/api/mail-projects`, params), {method: "GET"}, {
           fallbackMessage: "案件列表加载失败"
         });
         if (requestSeq !== caseRequestSeq) return;
@@ -1208,6 +1316,8 @@
       removeDisplayCase(button.dataset.removeDisplay);
     });
 
+    downloadCsvBtn.addEventListener("click", downloadCsvForNginx);
+
     const handleEditorChange = (event) => {
       const target = event.target;
       if (target && target.classList) {
@@ -1221,12 +1331,21 @@
     editorForm.addEventListener("input", handleEditorChange);
     editorForm.addEventListener("change", handleEditorChange);
 
-    saveExhibitBtn.addEventListener("click", () => {
+    saveExhibitBtn.addEventListener("click", async () => {
       if (!saveActiveToDisplayList()) return;
       const originalText = saveExhibitBtn.textContent;
-      saveExhibitBtn.textContent = "已保存";
+      saveExhibitBtn.textContent = "保存中...";
       saveExhibitBtn.disabled = true;
-      setEditorMessage("已保存到右侧展示列表。", "success");
+      try {
+        await persistDisplayCases();
+        saveExhibitBtn.textContent = "已保存";
+        setEditorMessage("已保存到服务器 CSV。", "success");
+      } catch (err) {
+        saveExhibitBtn.textContent = originalText;
+        saveExhibitBtn.disabled = !activeCase;
+        setEditorMessage(err.message || "展示 CSV 保存失败", "error");
+        return;
+      }
       window.setTimeout(() => {
         saveExhibitBtn.textContent = originalText;
         saveExhibitBtn.disabled = !activeCase;
@@ -1257,7 +1376,7 @@
       }
     });
 
-    loadSystemCases();
+    loadDisplayCasesFromCsv().finally(() => loadSystemCases());
   </script>
 </body>
 </html>

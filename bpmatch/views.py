@@ -1,18 +1,20 @@
 import csv
 import json
+import os
 import threading
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 from io import StringIO
 from urllib.parse import quote
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from project.api import api_error, api_paginated, api_success
 from project.common_tools import paginate_queryset, parse_json_body, require_login
@@ -42,6 +44,108 @@ from .models import (
     SentEmailLog,
     WrongMailInfo,
 )
+
+CASE_EXHIBIT_CSV_FIELDS = [
+    "sourceId",
+    "type",
+    "title",
+    "sourceTitle",
+    "status",
+    "updatedAt",
+    "summary",
+    "unitPrice",
+    "location",
+    "startAt",
+    "interview",
+    "tags",
+    "facts",
+]
+CASE_EXHIBIT_CSV_PATH = settings.UPLOAD_ROOT / "case_exhibits.csv"
+CASE_EXHIBIT_CSV_LOCK = threading.Lock()
+
+
+def _case_exhibit_row(item):
+    row = {}
+    for field in CASE_EXHIBIT_CSV_FIELDS:
+        value = item.get(field, "")
+        if field in {"tags", "facts"}:
+            value = json.dumps(value if isinstance(value, list) else [], ensure_ascii=False)
+        row[field] = "" if value is None else str(value)
+    return row
+
+
+def _read_case_exhibit_rows():
+    if not CASE_EXHIBIT_CSV_PATH.exists():
+        return []
+    with CASE_EXHIBIT_CSV_PATH.open("r", encoding="utf-8-sig", newline="") as fp:
+        return list(csv.DictReader(fp))
+
+
+def _case_exhibit_item(row):
+    item = dict(row)
+    for field in ("tags", "facts"):
+        try:
+            parsed = json.loads(item.get(field) or "[]")
+            item[field] = parsed if isinstance(parsed, list) else []
+        except json.JSONDecodeError:
+            item[field] = []
+    return item
+
+
+def _write_case_exhibit_rows(rows):
+    CASE_EXHIBIT_CSV_PATH.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = CASE_EXHIBIT_CSV_PATH.with_suffix(".csv.tmp")
+    with temp_path.open("w", encoding="utf-8-sig", newline="") as fp:
+        writer = csv.DictWriter(fp, fieldnames=CASE_EXHIBIT_CSV_FIELDS)
+        writer.writeheader()
+        writer.writerows(rows)
+    os.replace(temp_path, CASE_EXHIBIT_CSV_PATH)
+
+
+@csrf_exempt
+@require_http_methods(["GET", "PUT", "DELETE"])
+def case_exhibits_csv_api(request):
+    if request.method == "GET":
+        with CASE_EXHIBIT_CSV_LOCK:
+            rows = _read_case_exhibit_rows()
+        if request.GET.get("download") == "1":
+            output = StringIO()
+            writer = csv.DictWriter(output, fieldnames=CASE_EXHIBIT_CSV_FIELDS)
+            writer.writeheader()
+            writer.writerows(rows)
+            response = HttpResponse(output.getvalue(), content_type="text/csv; charset=utf-8")
+            response["Content-Disposition"] = 'attachment; filename="case_exhibits.csv"'
+            return response
+        return api_success(data={
+            "items": [_case_exhibit_item(row) for row in rows],
+            "path": str(CASE_EXHIBIT_CSV_PATH),
+        })
+
+    if request.method == "PUT":
+        payload, error = parse_json_body(request)
+        if error:
+            return error
+        items = payload.get("items")
+        if not isinstance(items, list):
+            return api_error(ErrorCode.INVALID_REQUEST, "items must be a list", status=400)
+        rows = [_case_exhibit_row(item) for item in items if isinstance(item, dict)]
+        with CASE_EXHIBIT_CSV_LOCK:
+            _write_case_exhibit_rows(rows)
+        return api_success(data={"count": len(rows), "path": "case_exhibits.csv"})
+
+    payload, error = parse_json_body(request)
+    if error:
+        return error
+    source_id = str(payload.get("sourceId") or "").strip()
+    if not source_id:
+        return api_error(ErrorCode.INVALID_REQUEST, "sourceId is required", status=400)
+    with CASE_EXHIBIT_CSV_LOCK:
+        rows = [
+            row for row in _read_case_exhibit_rows()
+            if str(row.get("sourceId") or "").strip() != source_id
+        ]
+        _write_case_exhibit_rows(rows)
+    return api_success(data={"sourceId": source_id, "count": len(rows)})
 
 
 def _mark_my_mail_as_read_async(login_id, mail_id):

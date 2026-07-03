@@ -16,41 +16,15 @@
       height: 100vh;
       min-height: 0;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: 16px;
-      padding: 18px;
-    }
-
-    .exhibit-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      min-width: 0;
-    }
-
-    .exhibit-title-block {
-      min-width: 0;
-    }
-
-    .exhibit-title-block h1 {
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.25;
-      color: var(--text);
-    }
-
-    .exhibit-title-block p {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 13px;
+      grid-template-rows: minmax(0, 1fr);
+      padding: 8px 6px;
     }
 
     .exhibit-shell {
       min-height: 0;
       display: grid;
-      grid-template-columns: 280px minmax(420px, 0.95fr) minmax(360px, 1.05fr);
-      gap: 16px;
+      grid-template-columns: 380px minmax(420px, 1fr) 380px;
+      gap: 8px;
     }
 
     .exhibit-panel {
@@ -61,20 +35,38 @@
     }
 
     .exhibit-panel-head {
-      padding: 16px 16px 12px;
+      padding: 16px;
       border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
     }
 
     .exhibit-panel-head h2 {
       margin: 0;
       font-size: 15px;
       color: var(--text);
+      white-space: nowrap;
     }
 
-    .exhibit-panel-head p {
-      margin: 5px 0 0;
-      color: var(--muted);
-      font-size: 12px;
+    .exhibit-page-link {
+      color: #1c7bff;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .exhibit-page-link:hover {
+      color: #0f5fd7;
+    }
+
+    .exhibit-filters {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .exhibit-list,
@@ -90,7 +82,34 @@
       gap: 10px;
     }
 
+    .exhibit-filters .c-chip-row {
+      flex-wrap: nowrap;
+      gap: 6px;
+    }
+
+    .exhibit-filters .c-chip {
+      padding: 7px 11px;
+      border-radius: 10px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .exhibit-pagination {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 12px 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .exhibit-pagination .pagination-summary {
+      flex: 1 0 100%;
+      margin: 0;
+      text-align: center;
+    }
+
     .exhibit-item {
+      position: relative;
       width: 100%;
       text-align: left;
       border: 1px solid var(--border);
@@ -104,11 +123,30 @@
       transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     }
 
+    .exhibit-item-time {
+      justify-self: end;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
     .exhibit-item:hover,
     .exhibit-item.is-active {
-      border-color: rgba(28, 123, 255, 0.34);
-      box-shadow: 0 10px 20px rgba(31, 53, 90, 0.08);
+      border-color: #1d4ed8;
+      background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.18), 0 12px 24px rgba(31, 53, 90, 0.12);
       transform: translateY(-1px);
+    }
+
+    .exhibit-item.is-active::before {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: 10px;
+      bottom: 10px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: #1d4ed8;
     }
 
     .exhibit-item strong {
@@ -142,20 +180,119 @@
       color: #475569;
     }
 
-    .exhibit-editor {
-      display: grid;
-      align-content: start;
-      gap: 14px;
+    .exhibit-status.is-focus,
+    .exhibit-status.is-summary {
+      background: #f8fafc;
+      color: #334155;
     }
 
-    .exhibit-field {
+    .exhibit-status.is-priority {
+      background: #eef2ff;
+      color: #1d4ed8;
+    }
+
+    .exhibit-empty {
+      padding: 18px 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .exhibit-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 18px 16px;
+      background: #f6f8fb;
+    }
+
+    .exhibit-editor-workspace {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(320px, 0.42fr) minmax(420px, 0.58fr);
+      background: #f6f8fb;
+      overflow: hidden;
+    }
+
+    .source-panel {
+      min-height: 0;
+      overflow: hidden;
+      padding: 14px 10px 14px 16px;
+      border-right: 1px solid #e3e9f2;
+      background: #f6f8fb;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 10px;
+    }
+
+    .source-block {
+      min-height: 0;
       display: grid;
       gap: 7px;
     }
 
+    .source-block:last-child {
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .source-block h3 {
+      margin: 0;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .source-title,
+    .source-detail {
+      border: 1px solid #dfe7f2;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .source-title {
+      max-height: 96px;
+      overflow: auto;
+      padding: 10px 12px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .source-detail {
+      min-height: 0;
+      height: 100%;
+      overflow: auto;
+      margin: 0;
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    .source-detail .skill-highlight {
+      background: #ffe59e;
+      color: #8a4b00;
+      padding: 0 4px;
+      border-radius: 6px;
+      box-shadow: 0 0 0 1px #f3c763 inset;
+    }
+
+    .exhibit-field {
+      display: grid;
+      gap: 6px;
+    }
+
     .exhibit-field label {
-      color: #334155;
-      font-size: 12px;
+      color: #475569;
+      font-size: 11px;
       font-weight: 800;
     }
 
@@ -163,19 +300,30 @@
     .exhibit-field textarea,
     .exhibit-field select {
       width: 100%;
-      border: 1px solid var(--border);
+      border: 1px solid #dfe7f2;
       border-radius: 8px;
       background: #fff;
       color: var(--text);
       font: inherit;
       padding: 10px 12px;
       outline: none;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02);
+    }
+
+    .exhibit-field input,
+    .exhibit-field select {
+      height: 44px;
     }
 
     .exhibit-field textarea {
       resize: vertical;
-      min-height: 78px;
+      min-height: 76px;
       line-height: 1.55;
+    }
+
+    .exhibit-field input::placeholder,
+    .exhibit-field textarea::placeholder {
+      color: #94a3b8;
     }
 
     .exhibit-field input:focus,
@@ -188,7 +336,51 @@
     .exhibit-field-row {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 14px;
+    }
+
+    .exhibit-title-row {
+      grid-template-columns: minmax(0, 1.7fr) minmax(170px, 0.8fr);
+    }
+
+    .exhibit-editor-actions {
+      margin-top: auto;
+      padding-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
       gap: 12px;
+    }
+
+    .exhibit-save-btn {
+      min-width: 112px;
+      height: 42px;
+      border-radius: 8px;
+      font-weight: 800;
+    }
+
+    .exhibit-form-message {
+      min-width: 0;
+      flex: 1 1 auto;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      text-align: right;
+    }
+
+    .exhibit-form-message.is-error {
+      color: #b42318;
+    }
+
+    .exhibit-form-message.is-success {
+      color: #166534;
+    }
+
+    .exhibit-field input.is-invalid,
+    .exhibit-field textarea.is-invalid,
+    .exhibit-field select.is-invalid {
+      border-color: #f04438;
+      box-shadow: 0 0 0 4px rgba(240, 68, 56, 0.1);
     }
 
     .module-list {
@@ -221,162 +413,150 @@
       font-size: 12px;
     }
 
-    .preview-wrap {
+    .display-list-wrap {
       min-height: 0;
       overflow: auto;
       padding: 14px;
-      background: #e8e5dc;
+      background: #f8fafc;
     }
 
-    .public-preview {
-      min-height: 100%;
-      background: #f9f6ee;
-      color: #1f2933;
-      border: 1px solid rgba(83, 72, 52, 0.18);
-      box-shadow: 0 18px 40px rgba(83, 72, 52, 0.18);
-      font-family: Georgia, "Times New Roman", "PingFang SC", "Microsoft YaHei", serif;
-    }
-
-    .public-hero {
-      min-height: 250px;
+    .display-group {
       display: grid;
-      align-content: end;
-      padding: 32px;
-      background:
-        linear-gradient(180deg, rgba(16, 24, 32, 0.12), rgba(16, 24, 32, 0.78)),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='700' viewBox='0 0 1200 700'%3E%3Crect width='1200' height='700' fill='%234b5563'/%3E%3Cpath d='M0 460c180-90 310-120 470-70 190 60 340-20 530-90 95-35 155-43 200-38v438H0z' fill='%237c6f55'/%3E%3Cpath d='M100 150h340v34H100zm0 70h520v22H100zm0 48h430v22H100z' fill='%23d6cfbd' opacity='.38'/%3E%3Ccircle cx='920' cy='170' r='88' fill='%23c8b788' opacity='.55'/%3E%3C/svg%3E") center/cover;
+      gap: 10px;
+      margin-bottom: 16px;
     }
 
-    .public-kicker {
-      width: fit-content;
-      margin-bottom: 12px;
-      padding: 5px 10px;
-      border: 1px solid rgba(255, 255, 255, 0.42);
-      color: rgba(255, 255, 255, 0.86);
-      font: 700 12px/1.2 "PingFang SC", "Microsoft YaHei", sans-serif;
-      letter-spacing: 0.08em;
+    .display-group:last-child {
+      margin-bottom: 0;
     }
 
-    .public-hero h3 {
-      max-width: 760px;
+    .display-group-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .display-group-head h3 {
       margin: 0;
-      color: #fff;
-      font-size: 34px;
-      line-height: 1.16;
-      letter-spacing: 0;
+      color: #0f172a;
+      font-size: 14px;
     }
 
-    .public-hero p {
-      max-width: 680px;
-      margin: 14px 0 0;
-      color: rgba(255, 255, 255, 0.84);
-      font-size: 15px;
-      line-height: 1.7;
-      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    .display-group-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
     }
 
-    .public-body {
-      padding: 28px 32px 34px;
-      display: grid;
-      gap: 26px;
-    }
-
-    .public-meta {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      border-top: 1px solid rgba(83, 72, 52, 0.18);
-      border-bottom: 1px solid rgba(83, 72, 52, 0.18);
-    }
-
-    .public-meta div {
-      padding: 14px 12px;
-      border-right: 1px solid rgba(83, 72, 52, 0.18);
-    }
-
-    .public-meta div:last-child {
-      border-right: 0;
-    }
-
-    .public-meta span {
-      display: block;
-      margin-bottom: 5px;
-      color: #766b57;
-      font: 700 11px/1.2 "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .public-meta strong {
-      font-size: 15px;
-      line-height: 1.4;
-    }
-
-    .public-section h4 {
-      margin: 0 0 10px;
-      font-size: 20px;
-      line-height: 1.3;
-    }
-
-    .public-section p {
-      margin: 0;
-      color: #374151;
-      font: 14px/1.85 "PingFang SC", "Microsoft YaHei", sans-serif;
-    }
-
-    .timeline {
-      display: grid;
-      gap: 14px;
-      border-left: 2px solid rgba(83, 72, 52, 0.22);
-      padding-left: 18px;
-    }
-
-    .timeline-item {
+    .display-card {
       position: relative;
+      width: 100%;
+      text-align: left;
       display: grid;
-      gap: 4px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      min-height: 56px;
+      align-items: center;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      box-shadow: none;
     }
 
-    .timeline-item::before {
+    .display-card.is-active {
+      border-color: #1d4ed8;
+      background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.18), 0 12px 24px rgba(31, 53, 90, 0.12);
+    }
+
+    .display-card.is-active::before {
       content: "";
       position: absolute;
-      left: -24px;
-      top: 4px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #8f7a4f;
-      box-shadow: 0 0 0 4px #f9f6ee;
+      left: -1px;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-radius: 0 4px 4px 0;
+      background: #1d4ed8;
     }
 
-    .timeline-item time {
-      color: #766b57;
-      font: 700 12px/1.2 "PingFang SC", "Microsoft YaHei", sans-serif;
+    .display-card h4 {
+      margin: 0;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .timeline-item strong {
-      font-size: 15px;
+    .display-card-remove {
+      width: 44px;
+      height: 32px;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #b42318;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
     }
 
-    .gallery {
+    .display-card-remove:hover,
+    .display-card-remove:focus-visible {
+      background: #fff1f0;
+      outline: none;
+    }
+
+    .display-facts {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
     }
 
-    .gallery div {
-      min-height: 100px;
-      display: grid;
-      place-items: end start;
-      padding: 12px;
-      background: linear-gradient(135deg, #d9d2c1, #8a8171);
-      color: #fff;
-      font: 700 12px/1.3 "PingFang SC", "Microsoft YaHei", sans-serif;
+    .display-fact {
+      min-width: 0;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #f8fafc;
     }
 
-    @media (max-width: 1280px) {
+    .display-fact span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .display-fact strong {
+      display: block;
+      margin-top: 4px;
+      color: #172033;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .display-empty {
+      padding: 18px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1220px) {
       .exhibit-shell {
-        grid-template-columns: 260px minmax(360px, 1fr);
+        grid-template-columns: 340px minmax(360px, 1fr);
       }
 
-      .preview-panel {
+      .display-panel {
         display: none;
       }
     }
@@ -385,159 +565,142 @@
       .exhibit-page {
         height: auto;
         min-height: 100vh;
-        padding: 12px;
+        padding: 8px;
       }
 
-      .exhibit-header,
       .exhibit-shell {
         display: grid;
         grid-template-columns: 1fr;
       }
 
+      .exhibit-panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .exhibit-filters .c-chip-row {
+        flex-wrap: wrap;
+      }
+
       .exhibit-field-row,
-      .public-meta,
-      .gallery {
+      .display-facts,
+      .exhibit-editor-workspace {
         grid-template-columns: 1fr;
+      }
+
+      .source-panel {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
       }
     }
   </style>
 </head>
 <body>
   <main class="exhibit-page">
-    <header class="exhibit-header">
-      <div class="exhibit-title-block">
-        <h1>案件展示</h1>
-        <p>从社内案件整理公开展示稿，发布前可编辑标题、摘要、时间线与展示模块。</p>
-      </div>
-      <div class="c-table-actions">
-        <button class="c-btn c-btn-ghost" type="button" id="previewBtn">预览公开页</button>
-        <button class="c-btn c-btn-primary" type="button" id="publishBtn">发布更新</button>
-      </div>
-    </header>
-
     <section class="exhibit-shell">
       <aside class="c-card exhibit-panel">
         <div class="exhibit-panel-head">
-          <h2>展页列表</h2>
-          <p>示例数据，后续接入案件接口。</p>
+          <h2>系统内案件列表</h2>
+          <div class="exhibit-filters">
+            <div class="c-chip-row">
+              <button class="c-chip" data-range="all" type="button">全部</button>
+              <button class="c-chip" data-range="yesterday" type="button">昨天</button>
+              <button class="c-chip active" data-range="today" type="button">今天</button>
+            </div>
+          </div>
         </div>
         <div class="exhibit-list" id="caseList"></div>
+        <div class="pagination c-pagination exhibit-pagination" id="casePagination">
+          <div class="pagination-summary">
+            <span id="casePageSummary">第 1 页</span>
+          </div>
+          <div class="pagination-pages" id="casePaginationPages"></div>
+        </div>
       </aside>
 
       <section class="c-card exhibit-panel">
         <div class="exhibit-panel-head">
-          <h2>展示稿编辑</h2>
-          <p>仅编辑公开内容，不直接暴露内部案件字段。</p>
+          <h2>案件编辑区</h2>
         </div>
-        <form class="exhibit-editor" id="editorForm">
-          <div class="exhibit-field">
-            <label for="titleInput">展页标题</label>
-            <input id="titleInput" name="title" autocomplete="off">
-          </div>
-          <div class="exhibit-field">
-            <label for="summaryInput">公开摘要</label>
-            <textarea id="summaryInput" name="summary"></textarea>
-          </div>
-          <div class="exhibit-field-row">
-            <div class="exhibit-field">
-              <label for="dateInput">展示日期</label>
-              <input id="dateInput" name="date" autocomplete="off">
+        <div class="exhibit-editor-workspace">
+          <aside class="source-panel">
+            <div class="source-block">
+              <h3>原标题</h3>
+              <div class="source-title" id="sourceTitle">--</div>
+            </div>
+            <div class="source-block">
+              <h3>案件原文</h3>
+              <pre class="source-detail" id="sourceDetail">--</pre>
+            </div>
+          </aside>
+          <form class="exhibit-editor" id="editorForm">
+            <div class="exhibit-field-row exhibit-title-row">
+              <div class="exhibit-field">
+                <label for="titleInput">案件标题</label>
+                <input id="titleInput" name="title" autocomplete="off">
+              </div>
+              <div class="exhibit-field">
+                <label for="typeInput">展示分组</label>
+                <select id="typeInput" name="type">
+                  <option value="">请选择</option>
+                  <option value="priority">重点推荐</option>
+                  <option value="focus">注力案件</option>
+                  <option value="summary">简易列表</option>
+                </select>
+              </div>
             </div>
             <div class="exhibit-field">
-              <label for="locationInput">地点</label>
-              <input id="locationInput" name="location" autocomplete="off">
+              <label for="summaryInput">案件概要</label>
+              <textarea id="summaryInput" name="summary"></textarea>
             </div>
-          </div>
-          <div class="exhibit-field-row">
+            <div class="exhibit-field-row">
+              <div class="exhibit-field">
+                <label for="statusInput">募集状态</label>
+                <input id="statusInput" name="status" autocomplete="off" placeholder="例：募集中">
+              </div>
+              <div class="exhibit-field">
+                <label for="unitPriceInput">单价</label>
+                <input id="unitPriceInput" name="unitPrice" autocomplete="off" placeholder="例：65万〜78万円 / 月">
+              </div>
+            </div>
+            <div class="exhibit-field-row">
+              <div class="exhibit-field">
+                <label for="locationInput">地点</label>
+                <input id="locationInput" name="location" autocomplete="off" placeholder="例：東京 週2出社 + リモート">
+              </div>
+              <div class="exhibit-field">
+                <label for="startAtInput">开始时期</label>
+                <input id="startAtInput" name="startAt" autocomplete="off" placeholder="例：2026年8月随時">
+              </div>
+            </div>
+            <div class="exhibit-field-row">
+              <div class="exhibit-field">
+                <label for="interviewInput">面谈</label>
+                <input id="interviewInput" name="interview" autocomplete="off" placeholder="例：1〜2回">
+              </div>
+              <div class="exhibit-field">
+                <label for="tagsInput">关键词</label>
+                <input id="tagsInput" name="tags" autocomplete="off" placeholder="PHP/Laravel/MySQL/EC">
+              </div>
+            </div>
             <div class="exhibit-field">
-              <label for="statusInput">发布状态</label>
-              <select id="statusInput" name="status">
-                <option value="draft">草稿</option>
-                <option value="published">已发布</option>
-                <option value="offline">已下线</option>
-              </select>
+              <label for="factsInput">条件概要</label>
+              <textarea id="factsInput" name="facts" placeholder="契约形态｜準委任&#10;募集人数｜1〜2名&#10;期间｜6か月以上&#10;日本语｜要件确认 N2 以上&#10;商流｜所属または一社先優先&#10;外国籍｜可、業務コミュニケーション必須"></textarea>
             </div>
-            <div class="exhibit-field">
-              <label for="slugInput">公开地址</label>
-              <input id="slugInput" name="slug" autocomplete="off">
+            <div class="exhibit-editor-actions">
+              <div class="exhibit-form-message" id="editorMessage" role="status" aria-live="polite"></div>
+              <button class="c-btn c-btn-primary exhibit-save-btn" type="button" id="saveExhibitBtn">保存</button>
             </div>
-          </div>
-          <div class="exhibit-field">
-            <label for="introInput">导语</label>
-            <textarea id="introInput" name="intro"></textarea>
-          </div>
-          <div class="exhibit-field">
-            <label for="timelineInput">时间线</label>
-            <textarea id="timelineInput" name="timeline" placeholder="每行一个节点，例如：2026-07-01｜初步确认案件范围"></textarea>
-          </div>
-          <div class="exhibit-field">
-            <label>公开模块</label>
-            <div class="module-list">
-              <label class="module-row">
-                <input type="checkbox" name="modules" value="overview" checked>
-                <strong>案件概览</strong>
-                <span>标题、导语、关键信息</span>
-              </label>
-              <label class="module-row">
-                <input type="checkbox" name="modules" value="timeline" checked>
-                <strong>时间线</strong>
-                <span>公开叙事节点</span>
-              </label>
-              <label class="module-row">
-                <input type="checkbox" name="modules" value="gallery" checked>
-                <strong>材料展柜</strong>
-                <span>图片与公开附件</span>
-              </label>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </section>
 
-      <section class="c-card exhibit-panel preview-panel">
+      <section class="c-card exhibit-panel display-panel">
         <div class="exhibit-panel-head">
-          <h2>公开页预览</h2>
-          <p id="publicUrl">/exhibits/--</p>
+          <h2>展示列表数据</h2>
+          <a class="exhibit-page-link" href="case_exhibit.html" target="_blank" rel="noopener noreferrer">打开展示页</a>
         </div>
-        <div class="preview-wrap">
-          <article class="public-preview">
-            <section class="public-hero">
-              <div class="public-kicker">CASE EXHIBIT</div>
-              <h3 id="previewTitle"></h3>
-              <p id="previewSummary"></p>
-            </section>
-            <section class="public-body">
-              <div class="public-meta">
-                <div>
-                  <span>DATE</span>
-                  <strong id="previewDate"></strong>
-                </div>
-                <div>
-                  <span>LOCATION</span>
-                  <strong id="previewLocation"></strong>
-                </div>
-                <div>
-                  <span>STATUS</span>
-                  <strong id="previewStatus"></strong>
-                </div>
-              </div>
-              <section class="public-section" data-module-preview="overview">
-                <h4>案件导语</h4>
-                <p id="previewIntro"></p>
-              </section>
-              <section class="public-section" data-module-preview="timeline">
-                <h4>时间线</h4>
-                <div class="timeline" id="previewTimeline"></div>
-              </section>
-              <section class="public-section" data-module-preview="gallery">
-                <h4>材料展柜</h4>
-                <div class="gallery">
-                  <div>公开资料 01</div>
-                  <div>现场记录 02</div>
-                </div>
-              </section>
-            </section>
-          </article>
-        </div>
+        <div class="display-list-wrap" id="displayList"></div>
       </section>
     </section>
   </main>
@@ -546,162 +709,555 @@
   <script src="error_code.js"></script>
   <script src="common.js"></script>
   <script>
-    const cases = [
-      {
-        id: "case-001",
-        title: "金融系统重构支援案件",
-        summary: "围绕老旧金融业务系统的分阶段重构，展示需求整理、人员匹配与交付推进过程。",
-        date: "2026.07",
-        location: "东京 / 远程",
-        status: "draft",
-        slug: "finance-modernization-2026",
-        intro: "本展页将内部案件信息整理为可公开阅读的专题内容，重点呈现案件背景、推进阶段与可公开材料。敏感客户名、联系人、单价与内部备注不进入公开页。",
-        timeline: "2026-06-12｜收到案件初始需求\n2026-06-18｜完成技术栈与人员画像整理\n2026-06-25｜公开展示稿进入编辑阶段"
-      },
-      {
-        id: "case-002",
-        title: "制造业数据平台导入案件",
-        summary: "以数据采集、可视化和权限整理为主线，展示项目公开叙事与材料归档方式。",
-        date: "2026.06",
-        location: "大阪",
-        status: "published",
-        slug: "manufacturing-data-platform",
-        intro: "该案件展示页用于向外部说明数据平台导入的背景、阶段成果和公开材料。页面以时间线与材料展柜为核心，避免以表格形式呈现内部字段。",
-        timeline: "2026-05-20｜整理业务场景\n2026-06-03｜确认公开展示范围\n2026-06-18｜完成第一版发布"
-      },
-      {
-        id: "case-003",
-        title: "社内人员调配案例",
-        summary: "展示社内 Match 场景中人员调配、候选比较与结果沉淀的公开化样例。",
-        date: "2026.05",
-        location: "社内",
-        status: "offline",
-        slug: "internal-staffing-case",
-        intro: "该案例已下线，保留编辑稿用于后续复用。重新发布前需要确认人员信息匿名化和材料授权状态。",
-        timeline: "2026-04-28｜创建展示稿\n2026-05-02｜完成匿名化处理\n2026-05-15｜展页下线归档"
-      }
-    ];
+    let cases = [];
+    let displayCases = [];
 
-    const statusText = {
-      draft: "草稿",
-      published: "已发布",
-      offline: "已下线"
+    const typeText = {
+      priority: "重点推荐",
+      focus: "注力案件",
+      summary: "简易列表"
     };
 
-    let activeCase = {...cases[0]};
+    let activeCase = null;
+    const CASE_PAGE_SIZE = 10;
+    const filters = {
+      range: "today"
+    };
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalCount = 0;
+    let hasNextPage = false;
+    let caseRequestSeq = 0;
 
     const caseList = document.getElementById("caseList");
+    const dateButtons = Array.from(document.querySelectorAll(".c-chip[data-range]"));
+    const casePagination = document.getElementById("casePagination");
+    const casePaginationPages = document.getElementById("casePaginationPages");
+    const casePageSummary = document.getElementById("casePageSummary");
+    const displayList = document.getElementById("displayList");
     const editorForm = document.getElementById("editorForm");
+    const sourceTitle = document.getElementById("sourceTitle");
+    const sourceDetail = document.getElementById("sourceDetail");
     const titleInput = document.getElementById("titleInput");
     const summaryInput = document.getElementById("summaryInput");
-    const dateInput = document.getElementById("dateInput");
-    const locationInput = document.getElementById("locationInput");
+    const typeInput = document.getElementById("typeInput");
     const statusInput = document.getElementById("statusInput");
-    const slugInput = document.getElementById("slugInput");
-    const introInput = document.getElementById("introInput");
-    const timelineInput = document.getElementById("timelineInput");
-    const publicUrl = document.getElementById("publicUrl");
+    const unitPriceInput = document.getElementById("unitPriceInput");
+    const locationInput = document.getElementById("locationInput");
+    const startAtInput = document.getElementById("startAtInput");
+    const interviewInput = document.getElementById("interviewInput");
+    const tagsInput = document.getElementById("tagsInput");
+    const factsInput = document.getElementById("factsInput");
+    const saveExhibitBtn = document.getElementById("saveExhibitBtn");
+    const editorMessage = document.getElementById("editorMessage");
+    const editorInputs = [titleInput, summaryInput, typeInput, statusInput, unitPriceInput, locationInput, startAtInput, interviewInput, tagsInput, factsInput];
 
-    const escapeHtml = window.escapeHtml || ((value) => String(value == null ? "" : value));
+    const escapeHtml = (value) => String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
 
-    const getEnabledModules = () => Array.from(editorForm.querySelectorAll("input[name='modules']:checked")).map((input) => input.value);
+    const parseTags = (value) => String(value || "")
+      .split(/[、,，/]+/)
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+
+    const parseFacts = (value) => String(value || "")
+      .split(/\n+/)
+      .map((row) => row.trim())
+      .filter(Boolean)
+      .map((row) => {
+        const parts = row.split("｜");
+        return {
+          label: (parts.length > 1 ? parts.shift() : "条件").trim(),
+          value: (parts.join("｜") || row).trim()
+        };
+      });
+
+    const setEditorMessage = (message = "", type = "") => {
+      editorMessage.textContent = message;
+      editorMessage.classList.toggle("is-error", type === "error");
+      editorMessage.classList.toggle("is-success", type === "success");
+    };
+
+    const clearInvalidFields = () => {
+      editorInputs.forEach((input) => {
+        input.classList.remove("is-invalid");
+        input.removeAttribute("aria-invalid");
+      });
+    };
+
+    const markInvalidField = (input) => {
+      if (!input) return;
+      input.classList.add("is-invalid");
+      input.setAttribute("aria-invalid", "true");
+    };
+
+    const getFactFormatError = (value) => {
+      const rows = String(value || "").split(/\n+/);
+      for (let index = 0; index < rows.length; index += 1) {
+        const row = rows[index].trim();
+        if (!row) continue;
+        if (!row.includes("｜")) {
+          return `条件概要第 ${index + 1} 行格式不正确，请使用「项目｜内容」。`;
+        }
+        const [label, ...valueParts] = row.split("｜");
+        if (!label.trim() || !valueParts.join("｜").trim()) {
+          return `条件概要第 ${index + 1} 行缺少项目或内容。`;
+        }
+      }
+      return "";
+    };
+
+    const validateEditorForm = () => {
+      clearInvalidFields();
+      if (!activeCase) {
+        return {valid: false, message: "请先从左侧选择一个案件。"};
+      }
+
+      const errors = [];
+      const title = titleInput.value.trim();
+      const summary = summaryInput.value.trim();
+      const selectedType = typeInput.value;
+      const tags = parseTags(tagsInput.value);
+      const factError = getFactFormatError(factsInput.value);
+
+      if (!selectedType) {
+        errors.push({input: typeInput, message: "请选择展示分组，保存后会显示在对应的右侧列表中。"});
+      }
+      if (title.length > 80) {
+        errors.push({input: titleInput, message: "案件标题请控制在 80 个字以内。"});
+      }
+      if ((selectedType === "priority" || selectedType === "focus") && !summary) {
+        errors.push({input: summaryInput, message: "重点推荐或注力案件需要填写案件概要。"});
+      }
+      if (summary.length > 500) {
+        errors.push({input: summaryInput, message: "案件概要请控制在 500 个字以内。"});
+      }
+      if (unitPriceInput.value.trim().length > 40) {
+        errors.push({input: unitPriceInput, message: "单价内容过长，请控制在 40 个字以内。"});
+      }
+      if (tags.length > 8) {
+        errors.push({input: tagsInput, message: "关键词最多填写 8 个。"});
+      }
+      if (factError) {
+        errors.push({input: factsInput, message: factError});
+      }
+
+      if (!errors.length) return {valid: true};
+      const firstError = errors[0];
+      markInvalidField(firstError.input);
+      firstError.input.focus({preventScroll: true});
+      firstError.input.scrollIntoView({behavior: "smooth", block: "center"});
+      return {valid: false, message: firstError.message};
+    };
+
+    const formatFacts = (facts) => (facts || [])
+      .map((fact) => `${fact.label || ""}｜${fact.value || ""}`)
+      .join("\n");
+
+    const formatSourceNo = (id) => {
+      const text = String(id || "").trim();
+      return text ? `MS-${text}` : "";
+    };
+
+    const formatUpdatedAt = (value) => {
+      const date = new Date(value || "");
+      if (Number.isNaN(date.getTime())) return "";
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}.${m}.${d}`;
+    };
+
+    const formatDateParam = (date) => {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    };
+
+    const currentFilterDate = () => {
+      if (filters.range === "all") return "";
+      const date = new Date();
+      if (filters.range === "yesterday") {
+        date.setDate(date.getDate() - 1);
+      }
+      return formatDateParam(date);
+    };
+
+    const firstMatch = (text, patterns) => {
+      for (const pattern of patterns) {
+        const matched = text.match(pattern);
+        if (matched && matched[1]) return matched[1].trim();
+      }
+      return "";
+    };
+
+    const normalizeDetailText = (text) => String(text || "")
+      .replace(/\r\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+    const sourceKeywordPattern = [
+      "Spring Boot", "JavaScript", "TypeScript", "PostgreSQL", "Salesforce",
+      "DynamoDB", "RabbitMQ", "Amazon MQ", "AWS Step Functions", "AWS SDK",
+      "Spring", "Java", "Python", "Django", "PHP", "Laravel", "React", "Vue",
+      "Angular", "Node", "AWS", "Azure", "GCP", "SQL", "MySQL", "Oracle",
+      "Linux", "Windows", "SAP", "SQS", "MQ", "PMO", "PM", "SE", "PL"
+    ]
+      .sort((a, b) => b.length - a.length)
+      .map((keyword) => keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|");
+
+    const renderSourceDetail = (value) => {
+      const escaped = escapeHtml(value || "--");
+      const keywordRe = new RegExp(`(^|[^A-Za-z0-9])(${sourceKeywordPattern})(?=[^A-Za-z0-9]|$)`, "gi");
+      return escaped.replace(keywordRe, (match, prefix, keyword) => (
+        `${prefix}<mark class="skill-highlight">${keyword}</mark>`
+      ));
+    };
+
+    const buildSummary = (detail) => {
+      const normalized = normalizeDetailText(detail);
+      if (!normalized) return "";
+      const lines = normalized
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .filter((line) => !/^(お世話|いつも|以上|よろしく|-{2,}|={2,})/.test(line));
+      return (lines[0] || normalized).slice(0, 180);
+    };
+
+    const extractFacts = (detail) => {
+      const text = normalizeDetailText(detail);
+      const fields = [
+        ["契約形態", [/契約(?:形態)?\s*[：:]\s*([^\n]+)/, /雇用形態\s*[：:]\s*([^\n]+)/]],
+        ["募集人数", [/募集(?:人数|枠)?\s*[：:]\s*([^\n]+)/, /人数\s*[：:]\s*([^\n]+)/]],
+        ["期間", [/(?:期間|案件期間)\s*[：:]\s*([^\n]+)/]],
+        ["日本語", [/日本語\s*[：:]\s*([^\n]+)/, /語学\s*[：:]\s*([^\n]+)/]],
+        ["外国籍", [/外国籍\s*[：:]\s*([^\n]+)/]],
+        ["商流", [/商流\s*[：:]\s*([^\n]+)/]]
+      ];
+      return fields
+        .map(([label, patterns]) => ({label, value: firstMatch(text, patterns)}))
+        .filter((item) => item.value);
+    };
+
+    const extractTags = (item) => {
+      const text = `${item.title || ""}\n${item.detail || ""}`;
+      const keywords = [
+        "Java", "Spring", "Python", "Django", "PHP", "Laravel", "JavaScript", "TypeScript",
+        "React", "Vue", "Angular", "Node", "AWS", "Azure", "GCP", "SQL", "MySQL", "PostgreSQL",
+        "Oracle", "Linux", "Windows", "SAP", "Salesforce", "PM", "PMO", "SE", "PL"
+      ];
+      const found = [];
+      keywords.forEach((keyword) => {
+        const re = new RegExp(`(^|[^A-Za-z0-9])${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^A-Za-z0-9]|$)`, "i");
+        if (re.test(text) && !found.includes(keyword)) found.push(keyword);
+      });
+      return found.slice(0, 6);
+    };
+
+    const getSourceId = (item) => String((item && (item.sourceId || item.id)) || "");
+
+    const mapProjectToCase = (item, index) => {
+      const detail = item.detail || "";
+      const normalized = normalizeDetailText(detail);
+      const sourceId = String(item.id || "");
+      return {
+        id: sourceId,
+        sourceId,
+        sourceNo: formatSourceNo(item.id),
+        type: "",
+        title: "",
+        sourceTitle: item.title || "未命名案件",
+        date: item.date || "",
+        status: "",
+        updatedAt: formatUpdatedAt(item.date),
+        summary: "",
+        unitPrice: "",
+        location: "",
+        startAt: "",
+        interview: "",
+        facts: [],
+        tags: [],
+        sourceDetail: normalized,
+        sourceAddress: item.address || ""
+      };
+    };
+
+    const syncActiveCase = () => {
+      if (!activeCase) return;
+      const index = cases.findIndex((item) => item.id === activeCase.id);
+      if (index >= 0) cases[index] = {...activeCase};
+    };
 
     const renderList = () => {
+      if (!cases.length) {
+        caseList.innerHTML = '<div class="exhibit-empty">暂无系统案件</div>';
+        return;
+      }
+      const activeSourceId = getSourceId(activeCase);
       caseList.innerHTML = cases.map((item) => `
-        <button class="exhibit-item ${item.id === activeCase.id ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
-          <span class="exhibit-status is-${escapeHtml(item.status)}">${escapeHtml(statusText[item.status] || item.status)}</span>
-          <strong>${escapeHtml(item.title)}</strong>
-          <span>${escapeHtml(item.date)} · ${escapeHtml(item.location)}</span>
+        <button class="exhibit-item ${activeSourceId && getSourceId(item) === activeSourceId ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+          <strong>${escapeHtml(item.sourceTitle || "未命名案件")}</strong>
+          <span class="exhibit-item-time">${escapeHtml(window.formatMonthDayTime(item.date, ""))}</span>
         </button>
       `).join("");
     };
 
+    const updatePaginationUI = () => {
+      casePageSummary.textContent = `共 ${totalCount} 件 · 第 ${currentPage} / ${totalPages} 页`;
+      window.renderPagination(casePagination, casePaginationPages, currentPage, totalPages);
+    };
+
     const fillForm = () => {
-      titleInput.value = activeCase.title || "";
-      summaryInput.value = activeCase.summary || "";
-      dateInput.value = activeCase.date || "";
-      locationInput.value = activeCase.location || "";
-      statusInput.value = activeCase.status || "draft";
-      slugInput.value = activeCase.slug || "";
-      introInput.value = activeCase.intro || "";
-      timelineInput.value = activeCase.timeline || "";
-      updatePreview();
+      const item = activeCase || {};
+      clearInvalidFields();
+      setEditorMessage("");
+      titleInput.value = item.title || "";
+      summaryInput.value = item.summary || "";
+      typeInput.value = item.type || "";
+      statusInput.value = item.status || "";
+      unitPriceInput.value = item.unitPrice || "";
+      locationInput.value = item.location || "";
+      startAtInput.value = item.startAt || "";
+      interviewInput.value = item.interview || "";
+      tagsInput.value = (item.tags || []).join(" / ");
+      factsInput.value = formatFacts(item.facts);
+      sourceTitle.textContent = item.sourceTitle || "--";
+      sourceDetail.innerHTML = renderSourceDetail(item.sourceDetail);
+      saveExhibitBtn.disabled = !activeCase;
+      updateDisplay();
     };
 
     const readForm = () => {
+      if (!activeCase) return;
       activeCase = {
         ...activeCase,
         title: titleInput.value.trim(),
         summary: summaryInput.value.trim(),
-        date: dateInput.value.trim(),
+        type: typeInput.value,
+        status: statusInput.value.trim(),
+        unitPrice: unitPriceInput.value.trim(),
         location: locationInput.value.trim(),
-        status: statusInput.value,
-        slug: slugInput.value.trim(),
-        intro: introInput.value.trim(),
-        timeline: timelineInput.value.trim()
+        startAt: startAtInput.value.trim(),
+        interview: interviewInput.value.trim(),
+        tags: parseTags(tagsInput.value),
+        facts: parseFacts(factsInput.value)
       };
     };
 
-    const renderTimeline = (value) => {
-      const rows = String(value || "").split(/\n+/).map((row) => row.trim()).filter(Boolean);
-      if (!rows.length) {
-        return '<div class="timeline-item"><time>--</time><strong>暂无时间线节点</strong></div>';
+    const renderFactGrid = (item) => {
+      const facts = item.facts || [];
+      if (!facts.length) {
+        return "";
       }
-      return rows.map((row) => {
-        const parts = row.split("｜");
-        const time = parts.length > 1 ? parts.shift() : "--";
-        const text = parts.join("｜") || row;
-        return `<div class="timeline-item"><time>${escapeHtml(time)}</time><strong>${escapeHtml(text)}</strong></div>`;
-      }).join("");
+      return `
+        <div class="display-facts">
+          ${facts.map((fact) => `
+            <div class="display-fact">
+              <span>${escapeHtml(fact.label)}</span>
+              <strong>${escapeHtml(fact.value)}</strong>
+            </div>
+          `).join("")}
+        </div>
+      `;
     };
 
-    const updatePreview = () => {
-      readForm();
-      document.getElementById("previewTitle").textContent = activeCase.title || "未命名案件展示";
-      document.getElementById("previewSummary").textContent = activeCase.summary || "请输入公开摘要。";
-      document.getElementById("previewDate").textContent = activeCase.date || "--";
-      document.getElementById("previewLocation").textContent = activeCase.location || "--";
-      document.getElementById("previewStatus").textContent = statusText[activeCase.status] || "--";
-      document.getElementById("previewIntro").textContent = activeCase.intro || "请输入导语。";
-      document.getElementById("previewTimeline").innerHTML = renderTimeline(activeCase.timeline);
-      publicUrl.textContent = `/exhibits/${activeCase.slug || "--"}`;
+    const renderDisplayCard = (item) => `
+      <article class="display-card ${getSourceId(activeCase) && getSourceId(item) === getSourceId(activeCase) ? "is-active" : ""}" data-source-id="${escapeHtml(getSourceId(item))}">
+        <h4>${escapeHtml(item.title || item.sourceTitle || "未命名案件")}</h4>
+        <button class="display-card-remove" type="button" data-remove-display="${escapeHtml(getSourceId(item))}" aria-label="删除${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">删除</button>
+      </article>
+    `;
 
-      const enabledModules = new Set(getEnabledModules());
-      document.querySelectorAll("[data-module-preview]").forEach((section) => {
-        section.hidden = !enabledModules.has(section.dataset.modulePreview);
-      });
+    const renderDisplayGroup = (type, title, compact = false) => {
+      const items = displayCases.filter((item) => item.type === type);
+      return `
+        <section class="display-group">
+          <div class="display-group-head">
+            <h3>${escapeHtml(title)}</h3>
+            <span>${items.length} 件</span>
+          </div>
+          ${items.length ? items.map((item) => renderDisplayCard(item, compact)).join("") : '<div class="display-empty">暂无展示数据</div>'}
+        </section>
+      `;
+    };
+
+    const renderDisplayList = () => {
+      displayList.innerHTML = [
+        renderDisplayGroup("priority", "重点推荐案件"),
+        renderDisplayGroup("focus", "注力案件"),
+        renderDisplayGroup("summary", "简易展示列表", true)
+      ].join("");
+    };
+
+    const updateDisplay = () => {
+      readForm();
+      syncActiveCase();
+      renderList();
+      renderDisplayList();
+    };
+
+    const saveActiveToDisplayList = () => {
+      if (!activeCase) return false;
+      const validation = validateEditorForm();
+      if (!validation.valid) {
+        setEditorMessage("");
+        return false;
+      }
+      readForm();
+      const sourceId = getSourceId(activeCase);
+      const savedCase = {
+        ...activeCase,
+        sourceId,
+        facts: [...(activeCase.facts || [])],
+        tags: [...(activeCase.tags || [])]
+      };
+      const index = displayCases.findIndex((item) => getSourceId(item) === sourceId);
+      if (index >= 0) {
+        displayCases[index] = savedCase;
+      } else {
+        displayCases.push(savedCase);
+      }
+      syncActiveCase();
+      renderList();
+      renderDisplayList();
+      return true;
+    };
+
+    const removeDisplayCase = (id) => {
+      const index = displayCases.findIndex((item) => getSourceId(item) === id);
+      if (index < 0) return;
+      displayCases.splice(index, 1);
+      renderDisplayList();
+    };
+
+    const setLoading = () => {
+      caseList.innerHTML = '<div class="exhibit-empty">加载系统案件中...</div>';
+      updatePaginationUI();
+    };
+
+    const setLoadError = (message) => {
+      caseList.innerHTML = `<div class="exhibit-empty">${escapeHtml(message || "案件列表加载失败")}</div>`;
+      updatePaginationUI();
+    };
+
+    const loadSystemCases = async (page = 1) => {
+      const requestSeq = ++caseRequestSeq;
+      currentPage = page;
+      setLoading();
+      try {
+        const params = new URLSearchParams();
+        const date = currentFilterDate();
+        if (date) params.set("date", date);
+        params.set("page", String(currentPage));
+        params.set("page_size", String(CASE_PAGE_SIZE));
+        const payload = await window.requestJson(window.buildUrl("/api/mail-projects", params), {method: "GET"}, {
+          fallbackMessage: "案件列表加载失败"
+        });
+        if (requestSeq !== caseRequestSeq) return;
+        const items = (payload.data && payload.data.items) || [];
+        const meta = payload.meta || {};
+        currentPage = Number.isFinite(meta.page) ? meta.page : currentPage;
+        totalCount = Number.isFinite(meta.total) ? meta.total : items.length;
+        totalPages = Number.isFinite(meta.total_pages) ? Math.max(1, meta.total_pages) : 1;
+        hasNextPage = currentPage < totalPages;
+        cases = items.map(mapProjectToCase);
+        activeCase = cases.length
+          ? {...cases[0], facts: [...(cases[0].facts || [])], tags: [...(cases[0].tags || [])]}
+          : null;
+        renderList();
+        updatePaginationUI();
+        fillForm();
+      } catch (err) {
+        if (requestSeq !== caseRequestSeq) return;
+        cases = [];
+        activeCase = null;
+        totalCount = 0;
+        totalPages = 1;
+        hasNextPage = false;
+        fillForm();
+        setLoadError(err.message);
+      }
     };
 
     caseList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-id]");
       if (!button) return;
+      readForm();
+      syncActiveCase();
       const selected = cases.find((item) => item.id === button.dataset.id);
       if (!selected) return;
-      activeCase = {...selected};
+      activeCase = {
+        ...selected,
+        facts: [...(selected.facts || [])],
+        tags: [...(selected.tags || [])]
+      };
       renderList();
       fillForm();
     });
 
-    editorForm.addEventListener("input", updatePreview);
-    editorForm.addEventListener("change", updatePreview);
-
-    document.getElementById("publishBtn").addEventListener("click", () => {
-      readForm();
-      activeCase.status = "published";
-      statusInput.value = "published";
-      const index = cases.findIndex((item) => item.id === activeCase.id);
-      if (index >= 0) cases[index] = {...activeCase};
-      renderList();
-      updatePreview();
+    displayList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-remove-display]");
+      if (!button) return;
+      removeDisplayCase(button.dataset.removeDisplay);
     });
 
-    document.getElementById("previewBtn").addEventListener("click", () => {
-      updatePreview();
-      document.querySelector(".preview-panel").scrollIntoView({behavior: "smooth", block: "nearest"});
+    const handleEditorChange = (event) => {
+      const target = event.target;
+      if (target && target.classList) {
+        target.classList.remove("is-invalid");
+        target.removeAttribute("aria-invalid");
+      }
+      setEditorMessage("");
+      updateDisplay();
+    };
+
+    editorForm.addEventListener("input", handleEditorChange);
+    editorForm.addEventListener("change", handleEditorChange);
+
+    saveExhibitBtn.addEventListener("click", () => {
+      if (!saveActiveToDisplayList()) return;
+      const originalText = saveExhibitBtn.textContent;
+      saveExhibitBtn.textContent = "已保存";
+      saveExhibitBtn.disabled = true;
+      setEditorMessage("已保存到右侧展示列表。", "success");
+      window.setTimeout(() => {
+        saveExhibitBtn.textContent = originalText;
+        saveExhibitBtn.disabled = !activeCase;
+      }, 1200);
     });
 
-    renderList();
-    fillForm();
+    dateButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        dateButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        filters.range = button.dataset.range || "today";
+        loadSystemCases(1);
+      });
+    });
+
+    window.bindPagination(casePagination, (value) => {
+      if (value === "prev") {
+        if (currentPage > 1) loadSystemCases(currentPage - 1);
+        return;
+      }
+      if (value === "next") {
+        if (hasNextPage) loadSystemCases(currentPage + 1);
+        return;
+      }
+      const page = Number(value);
+      if (Number.isFinite(page) && page >= 1 && page !== currentPage) {
+        loadSystemCases(page);
+      }
+    });
+
+    loadSystemCases();
   </script>
 </body>
 </html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="stylesheet" href="common.css">
+  <link rel="stylesheet" href="components.css">
+  <title>案件展示</title>
+  <style>
+    body {
+      background: transparent;
+    }
+
+    .exhibit-page {
+      height: 100vh;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+      padding: 18px;
+    }
+
+    .exhibit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    .exhibit-title-block {
+      min-width: 0;
+    }
+
+    .exhibit-title-block h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+      color: var(--text);
+    }
+
+    .exhibit-title-block p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .exhibit-shell {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 280px minmax(420px, 0.95fr) minmax(360px, 1.05fr);
+      gap: 16px;
+    }
+
+    .exhibit-panel {
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .exhibit-panel-head {
+      padding: 16px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .exhibit-panel-head h2 {
+      margin: 0;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .exhibit-panel-head p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .exhibit-list,
+    .exhibit-editor {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+    }
+
+    .exhibit-list {
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .exhibit-item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      display: grid;
+      gap: 8px;
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+
+    .exhibit-item:hover,
+    .exhibit-item.is-active {
+      border-color: rgba(28, 123, 255, 0.34);
+      box-shadow: 0 10px 20px rgba(31, 53, 90, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .exhibit-item strong {
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .exhibit-item span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .exhibit-status {
+      width: fit-content;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #eef2ff;
+      color: #1d4ed8;
+    }
+
+    .exhibit-status.is-draft {
+      background: rgba(245, 158, 11, 0.14);
+      color: #b45309;
+    }
+
+    .exhibit-status.is-offline {
+      background: rgba(100, 116, 139, 0.14);
+      color: #475569;
+    }
+
+    .exhibit-editor {
+      display: grid;
+      align-content: start;
+      gap: 14px;
+    }
+
+    .exhibit-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .exhibit-field label {
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .exhibit-field input,
+    .exhibit-field textarea,
+    .exhibit-field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font: inherit;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .exhibit-field textarea {
+      resize: vertical;
+      min-height: 78px;
+      line-height: 1.55;
+    }
+
+    .exhibit-field input:focus,
+    .exhibit-field textarea:focus,
+    .exhibit-field select:focus {
+      border-color: rgba(28, 123, 255, 0.45);
+      box-shadow: 0 0 0 4px rgba(28, 123, 255, 0.1);
+    }
+
+    .exhibit-field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .module-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .module-row {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    .module-row input {
+      width: 16px;
+      height: 16px;
+    }
+
+    .module-row strong {
+      font-size: 13px;
+    }
+
+    .module-row span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .preview-wrap {
+      min-height: 0;
+      overflow: auto;
+      padding: 14px;
+      background: #e8e5dc;
+    }
+
+    .public-preview {
+      min-height: 100%;
+      background: #f9f6ee;
+      color: #1f2933;
+      border: 1px solid rgba(83, 72, 52, 0.18);
+      box-shadow: 0 18px 40px rgba(83, 72, 52, 0.18);
+      font-family: Georgia, "Times New Roman", "PingFang SC", "Microsoft YaHei", serif;
+    }
+
+    .public-hero {
+      min-height: 250px;
+      display: grid;
+      align-content: end;
+      padding: 32px;
+      background:
+        linear-gradient(180deg, rgba(16, 24, 32, 0.12), rgba(16, 24, 32, 0.78)),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='700' viewBox='0 0 1200 700'%3E%3Crect width='1200' height='700' fill='%234b5563'/%3E%3Cpath d='M0 460c180-90 310-120 470-70 190 60 340-20 530-90 95-35 155-43 200-38v438H0z' fill='%237c6f55'/%3E%3Cpath d='M100 150h340v34H100zm0 70h520v22H100zm0 48h430v22H100z' fill='%23d6cfbd' opacity='.38'/%3E%3Ccircle cx='920' cy='170' r='88' fill='%23c8b788' opacity='.55'/%3E%3C/svg%3E") center/cover;
+    }
+
+    .public-kicker {
+      width: fit-content;
+      margin-bottom: 12px;
+      padding: 5px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      color: rgba(255, 255, 255, 0.86);
+      font: 700 12px/1.2 "PingFang SC", "Microsoft YaHei", sans-serif;
+      letter-spacing: 0.08em;
+    }
+
+    .public-hero h3 {
+      max-width: 760px;
+      margin: 0;
+      color: #fff;
+      font-size: 34px;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }
+
+    .public-hero p {
+      max-width: 680px;
+      margin: 14px 0 0;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 15px;
+      line-height: 1.7;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .public-body {
+      padding: 28px 32px 34px;
+      display: grid;
+      gap: 26px;
+    }
+
+    .public-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-top: 1px solid rgba(83, 72, 52, 0.18);
+      border-bottom: 1px solid rgba(83, 72, 52, 0.18);
+    }
+
+    .public-meta div {
+      padding: 14px 12px;
+      border-right: 1px solid rgba(83, 72, 52, 0.18);
+    }
+
+    .public-meta div:last-child {
+      border-right: 0;
+    }
+
+    .public-meta span {
+      display: block;
+      margin-bottom: 5px;
+      color: #766b57;
+      font: 700 11px/1.2 "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .public-meta strong {
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .public-section h4 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .public-section p {
+      margin: 0;
+      color: #374151;
+      font: 14px/1.85 "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 14px;
+      border-left: 2px solid rgba(83, 72, 52, 0.22);
+      padding-left: 18px;
+    }
+
+    .timeline-item {
+      position: relative;
+      display: grid;
+      gap: 4px;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #8f7a4f;
+      box-shadow: 0 0 0 4px #f9f6ee;
+    }
+
+    .timeline-item time {
+      color: #766b57;
+      font: 700 12px/1.2 "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .timeline-item strong {
+      font-size: 15px;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+    }
+
+    .gallery div {
+      min-height: 100px;
+      display: grid;
+      place-items: end start;
+      padding: 12px;
+      background: linear-gradient(135deg, #d9d2c1, #8a8171);
+      color: #fff;
+      font: 700 12px/1.3 "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    @media (max-width: 1280px) {
+      .exhibit-shell {
+        grid-template-columns: 260px minmax(360px, 1fr);
+      }
+
+      .preview-panel {
+        display: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .exhibit-page {
+        height: auto;
+        min-height: 100vh;
+        padding: 12px;
+      }
+
+      .exhibit-header,
+      .exhibit-shell {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .exhibit-field-row,
+      .public-meta,
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="exhibit-page">
+    <header class="exhibit-header">
+      <div class="exhibit-title-block">
+        <h1>案件展示</h1>
+        <p>从社内案件整理公开展示稿，发布前可编辑标题、摘要、时间线与展示模块。</p>
+      </div>
+      <div class="c-table-actions">
+        <button class="c-btn c-btn-ghost" type="button" id="previewBtn">预览公开页</button>
+        <button class="c-btn c-btn-primary" type="button" id="publishBtn">发布更新</button>
+      </div>
+    </header>
+
+    <section class="exhibit-shell">
+      <aside class="c-card exhibit-panel">
+        <div class="exhibit-panel-head">
+          <h2>展页列表</h2>
+          <p>示例数据，后续接入案件接口。</p>
+        </div>
+        <div class="exhibit-list" id="caseList"></div>
+      </aside>
+
+      <section class="c-card exhibit-panel">
+        <div class="exhibit-panel-head">
+          <h2>展示稿编辑</h2>
+          <p>仅编辑公开内容，不直接暴露内部案件字段。</p>
+        </div>
+        <form class="exhibit-editor" id="editorForm">
+          <div class="exhibit-field">
+            <label for="titleInput">展页标题</label>
+            <input id="titleInput" name="title" autocomplete="off">
+          </div>
+          <div class="exhibit-field">
+            <label for="summaryInput">公开摘要</label>
+            <textarea id="summaryInput" name="summary"></textarea>
+          </div>
+          <div class="exhibit-field-row">
+            <div class="exhibit-field">
+              <label for="dateInput">展示日期</label>
+              <input id="dateInput" name="date" autocomplete="off">
+            </div>
+            <div class="exhibit-field">
+              <label for="locationInput">地点</label>
+              <input id="locationInput" name="location" autocomplete="off">
+            </div>
+          </div>
+          <div class="exhibit-field-row">
+            <div class="exhibit-field">
+              <label for="statusInput">发布状态</label>
+              <select id="statusInput" name="status">
+                <option value="draft">草稿</option>
+                <option value="published">已发布</option>
+                <option value="offline">已下线</option>
+              </select>
+            </div>
+            <div class="exhibit-field">
+              <label for="slugInput">公开地址</label>
+              <input id="slugInput" name="slug" autocomplete="off">
+            </div>
+          </div>
+          <div class="exhibit-field">
+            <label for="introInput">导语</label>
+            <textarea id="introInput" name="intro"></textarea>
+          </div>
+          <div class="exhibit-field">
+            <label for="timelineInput">时间线</label>
+            <textarea id="timelineInput" name="timeline" placeholder="每行一个节点，例如：2026-07-01｜初步确认案件范围"></textarea>
+          </div>
+          <div class="exhibit-field">
+            <label>公开模块</label>
+            <div class="module-list">
+              <label class="module-row">
+                <input type="checkbox" name="modules" value="overview" checked>
+                <strong>案件概览</strong>
+                <span>标题、导语、关键信息</span>
+              </label>
+              <label class="module-row">
+                <input type="checkbox" name="modules" value="timeline" checked>
+                <strong>时间线</strong>
+                <span>公开叙事节点</span>
+              </label>
+              <label class="module-row">
+                <input type="checkbox" name="modules" value="gallery" checked>
+                <strong>材料展柜</strong>
+                <span>图片与公开附件</span>
+              </label>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="c-card exhibit-panel preview-panel">
+        <div class="exhibit-panel-head">
+          <h2>公开页预览</h2>
+          <p id="publicUrl">/exhibits/--</p>
+        </div>
+        <div class="preview-wrap">
+          <article class="public-preview">
+            <section class="public-hero">
+              <div class="public-kicker">CASE EXHIBIT</div>
+              <h3 id="previewTitle"></h3>
+              <p id="previewSummary"></p>
+            </section>
+            <section class="public-body">
+              <div class="public-meta">
+                <div>
+                  <span>DATE</span>
+                  <strong id="previewDate"></strong>
+                </div>
+                <div>
+                  <span>LOCATION</span>
+                  <strong id="previewLocation"></strong>
+                </div>
+                <div>
+                  <span>STATUS</span>
+                  <strong id="previewStatus"></strong>
+                </div>
+              </div>
+              <section class="public-section" data-module-preview="overview">
+                <h4>案件导语</h4>
+                <p id="previewIntro"></p>
+              </section>
+              <section class="public-section" data-module-preview="timeline">
+                <h4>时间线</h4>
+                <div class="timeline" id="previewTimeline"></div>
+              </section>
+              <section class="public-section" data-module-preview="gallery">
+                <h4>材料展柜</h4>
+                <div class="gallery">
+                  <div>公开资料 01</div>
+                  <div>现场记录 02</div>
+                </div>
+              </section>
+            </section>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="error_code.js"></script>
+  <script src="common.js"></script>
+  <script>
+    const cases = [
+      {
+        id: "case-001",
+        title: "金融系统重构支援案件",
+        summary: "围绕老旧金融业务系统的分阶段重构，展示需求整理、人员匹配与交付推进过程。",
+        date: "2026.07",
+        location: "东京 / 远程",
+        status: "draft",
+        slug: "finance-modernization-2026",
+        intro: "本展页将内部案件信息整理为可公开阅读的专题内容，重点呈现案件背景、推进阶段与可公开材料。敏感客户名、联系人、单价与内部备注不进入公开页。",
+        timeline: "2026-06-12｜收到案件初始需求\n2026-06-18｜完成技术栈与人员画像整理\n2026-06-25｜公开展示稿进入编辑阶段"
+      },
+      {
+        id: "case-002",
+        title: "制造业数据平台导入案件",
+        summary: "以数据采集、可视化和权限整理为主线，展示项目公开叙事与材料归档方式。",
+        date: "2026.06",
+        location: "大阪",
+        status: "published",
+        slug: "manufacturing-data-platform",
+        intro: "该案件展示页用于向外部说明数据平台导入的背景、阶段成果和公开材料。页面以时间线与材料展柜为核心，避免以表格形式呈现内部字段。",
+        timeline: "2026-05-20｜整理业务场景\n2026-06-03｜确认公开展示范围\n2026-06-18｜完成第一版发布"
+      },
+      {
+        id: "case-003",
+        title: "社内人员调配案例",
+        summary: "展示社内 Match 场景中人员调配、候选比较与结果沉淀的公开化样例。",
+        date: "2026.05",
+        location: "社内",
+        status: "offline",
+        slug: "internal-staffing-case",
+        intro: "该案例已下线，保留编辑稿用于后续复用。重新发布前需要确认人员信息匿名化和材料授权状态。",
+        timeline: "2026-04-28｜创建展示稿\n2026-05-02｜完成匿名化处理\n2026-05-15｜展页下线归档"
+      }
+    ];
+
+    const statusText = {
+      draft: "草稿",
+      published: "已发布",
+      offline: "已下线"
+    };
+
+    let activeCase = {...cases[0]};
+
+    const caseList = document.getElementById("caseList");
+    const editorForm = document.getElementById("editorForm");
+    const titleInput = document.getElementById("titleInput");
+    const summaryInput = document.getElementById("summaryInput");
+    const dateInput = document.getElementById("dateInput");
+    const locationInput = document.getElementById("locationInput");
+    const statusInput = document.getElementById("statusInput");
+    const slugInput = document.getElementById("slugInput");
+    const introInput = document.getElementById("introInput");
+    const timelineInput = document.getElementById("timelineInput");
+    const publicUrl = document.getElementById("publicUrl");
+
+    const escapeHtml = window.escapeHtml || ((value) => String(value == null ? "" : value));
+
+    const getEnabledModules = () => Array.from(editorForm.querySelectorAll("input[name='modules']:checked")).map((input) => input.value);
+
+    const renderList = () => {
+      caseList.innerHTML = cases.map((item) => `
+        <button class="exhibit-item ${item.id === activeCase.id ? "is-active" : ""}" type="button" data-id="${escapeHtml(item.id)}">
+          <span class="exhibit-status is-${escapeHtml(item.status)}">${escapeHtml(statusText[item.status] || item.status)}</span>
+          <strong>${escapeHtml(item.title)}</strong>
+          <span>${escapeHtml(item.date)} · ${escapeHtml(item.location)}</span>
+        </button>
+      `).join("");
+    };
+
+    const fillForm = () => {
+      titleInput.value = activeCase.title || "";
+      summaryInput.value = activeCase.summary || "";
+      dateInput.value = activeCase.date || "";
+      locationInput.value = activeCase.location || "";
+      statusInput.value = activeCase.status || "draft";
+      slugInput.value = activeCase.slug || "";
+      introInput.value = activeCase.intro || "";
+      timelineInput.value = activeCase.timeline || "";
+      updatePreview();
+    };
+
+    const readForm = () => {
+      activeCase = {
+        ...activeCase,
+        title: titleInput.value.trim(),
+        summary: summaryInput.value.trim(),
+        date: dateInput.value.trim(),
+        location: locationInput.value.trim(),
+        status: statusInput.value,
+        slug: slugInput.value.trim(),
+        intro: introInput.value.trim(),
+        timeline: timelineInput.value.trim()
+      };
+    };
+
+    const renderTimeline = (value) => {
+      const rows = String(value || "").split(/\n+/).map((row) => row.trim()).filter(Boolean);
+      if (!rows.length) {
+        return '<div class="timeline-item"><time>--</time><strong>暂无时间线节点</strong></div>';
+      }
+      return rows.map((row) => {
+        const parts = row.split("｜");
+        const time = parts.length > 1 ? parts.shift() : "--";
+        const text = parts.join("｜") || row;
+        return `<div class="timeline-item"><time>${escapeHtml(time)}</time><strong>${escapeHtml(text)}</strong></div>`;
+      }).join("");
+    };
+
+    const updatePreview = () => {
+      readForm();
+      document.getElementById("previewTitle").textContent = activeCase.title || "未命名案件展示";
+      document.getElementById("previewSummary").textContent = activeCase.summary || "请输入公开摘要。";
+      document.getElementById("previewDate").textContent = activeCase.date || "--";
+      document.getElementById("previewLocation").textContent = activeCase.location || "--";
+      document.getElementById("previewStatus").textContent = statusText[activeCase.status] || "--";
+      document.getElementById("previewIntro").textContent = activeCase.intro || "请输入导语。";
+      document.getElementById("previewTimeline").innerHTML = renderTimeline(activeCase.timeline);
+      publicUrl.textContent = `/exhibits/${activeCase.slug || "--"}`;
+
+      const enabledModules = new Set(getEnabledModules());
+      document.querySelectorAll("[data-module-preview]").forEach((section) => {
+        section.hidden = !enabledModules.has(section.dataset.modulePreview);
+      });
+    };
+
+    caseList.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-id]");
+      if (!button) return;
+      const selected = cases.find((item) => item.id === button.dataset.id);
+      if (!selected) return;
+      activeCase = {...selected};
+      renderList();
+      fillForm();
+    });
+
+    editorForm.addEventListener("input", updatePreview);
+    editorForm.addEventListener("change", updatePreview);
+
+    document.getElementById("publishBtn").addEventListener("click", () => {
+      readForm();
+      activeCase.status = "published";
+      statusInput.value = "published";
+      const index = cases.findIndex((item) => item.id === activeCase.id);
+      if (index >= 0) cases[index] = {...activeCase};
+      renderList();
+      updatePreview();
+    });
+
+    document.getElementById("previewBtn").addEventListener("click", () => {
+      updatePreview();
+      document.querySelector(".preview-panel").scrollIntoView({behavior: "smooth", block: "nearest"});
+    });
+
+    renderList();
+    fillForm();
+  </script>
+</body>
+</html>

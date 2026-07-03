@@ -180,6 +180,8 @@ urlpatterns = [
     # -------------------------------bpmatch UI-------------------------------
     path("bpmatch.html", TemplateView.as_view(template_name="frontend/bpmatch.html")),
     path("match.html", TemplateView.as_view(template_name="frontend/match.html")),
+    path("case_exhibition_admin.html", TemplateView.as_view(template_name="frontend/case_exhibition_admin.html")),
+    path("case_exhibit.html", TemplateView.as_view(template_name="frontend/case_exhibit.html")),
     path("bpsongxin.html", TemplateView.as_view(template_name="frontend/bpsongxin.html")),
     path("songxin.html", TemplateView.as_view(template_name="frontend/songxin.html")),
     path("songxinhistory.html", TemplateView.as_view(template_name="frontend/songxinhistory.html")),

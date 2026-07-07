@@ -35,6 +35,7 @@ from attendance.views import (
 )
 from bpmatch.views import (
     case_exhibits_csv_api,
+    case_exhibits_csv_file_api,
     mail_projects_api,
     mail_project_match_api,
     mail_project_search_api,
@@ -371,6 +372,7 @@ urlpatterns = [
     # -------------------------------bpmatch API-------------------------------
     path("api/mail-projects", mail_projects_api, name="mail-projects"),
     path("api/case-exhibits-csv", case_exhibits_csv_api, name="case-exhibits-csv"),
+    path("api/case-exhibits.csv", case_exhibits_csv_file_api, name="case-exhibits-csv-file"),
     path("api/mail-projects/match", mail_project_match_api, name="mail-projects-match"),
     path("api/mail-projects/search", mail_project_search_api, name="mail-projects-search"),
     path("api/wrong-mails", wrong_mail_info_api, name="wrong-mails"),

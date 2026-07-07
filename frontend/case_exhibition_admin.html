@@ -62,6 +62,14 @@
       color: #0f5fd7;
     }
 
+    .exhibit-add-btn {
+      min-width: 92px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
     .exhibit-head-actions {
       display: flex;
       align-items: center;
@@ -713,6 +721,7 @@
         <div class="exhibit-panel-head">
           <h2>展示列表数据</h2>
           <div class="exhibit-head-actions">
+            <button class="c-btn c-btn-ghost exhibit-add-btn" type="button" id="addManualDisplayBtn">+ 手动添加</button>
             <a class="exhibit-page-link" href="case_exhibit.html" target="_blank" rel="noopener noreferrer" id="openExhibitPageLink">打开展示页</a>
           </div>
         </div>
@@ -751,6 +760,7 @@
     const casePaginationPages = document.getElementById("casePaginationPages");
     const casePageSummary = document.getElementById("casePageSummary");
     const displayList = document.getElementById("displayList");
+    const addManualDisplayBtn = document.getElementById("addManualDisplayBtn");
     const openExhibitPageLink = document.getElementById("openExhibitPageLink");
     const editorForm = document.getElementById("editorForm");
     const sourceTitle = document.getElementById("sourceTitle");
@@ -771,6 +781,7 @@
     const caseExhibitApiBase = String(window.CASE_EXHIBIT_API_BASE || localStorage.getItem("caseExhibitApiBase") || "").replace(/\/$/, "");
     const caseExhibitPublicUrl = String(window.CASE_EXHIBIT_PUBLIC_URL || localStorage.getItem("caseExhibitPublicUrl") || "case_exhibit.html");
     const caseExhibitsCsvApi = `${caseExhibitApiBase}/api/case-exhibits-csv`;
+    let displayKeySeq = 0;
     openExhibitPageLink.href = caseExhibitPublicUrl;
 
     const escapeHtml = (value) => String(value == null ? "" : value)
@@ -797,24 +808,56 @@
         };
       });
 
-    const normalizeDisplayCase = (item) => ({
-      sourceId: item.sourceId || "",
-      id: item.sourceId || item.id || "",
-      type: item.type || "",
-      title: item.title || "",
-      sourceTitle: item.sourceTitle || "",
-      status: item.status || "",
-      updatedAt: item.updatedAt || "",
-      summary: item.summary || "",
-      unitPrice: item.unitPrice || "",
-      location: item.location || "",
-      startAt: item.startAt || "",
-      interview: item.interview || "",
-      tags: Array.isArray(item.tags) ? item.tags : [],
-      facts: Array.isArray(item.facts) ? item.facts : [],
-      sourceDetail: item.sourceDetail || "",
-      sourceAddress: item.sourceAddress || ""
-    });
+    const createDisplayKey = () => `display:${Date.now()}:${displayKeySeq += 1}`;
+
+    const createManualSourceId = () => {
+      const date = new Date();
+      const parts = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        String(date.getDate()).padStart(2, "0"),
+        String(date.getHours()).padStart(2, "0"),
+        String(date.getMinutes()).padStart(2, "0"),
+        String(date.getSeconds()).padStart(2, "0")
+      ];
+      return `manual:${parts.join("")}:${displayKeySeq += 1}`;
+    };
+
+    const getSourceId = (item) => String((item && (item.sourceId || item.id)) || "");
+
+    const isManualSourceId = (sourceId) => String(sourceId || "").startsWith("manual:");
+
+    const ensureDisplayKey = (item) => {
+      if (!item) return "";
+      if (!item.__displayKey) {
+        item.__displayKey = getSourceId(item) || createDisplayKey();
+      }
+      return item.__displayKey;
+    };
+
+    const normalizeDisplayCase = (item) => {
+      const sourceId = String(item.sourceId || "");
+      const normalized = {
+        sourceId,
+        id: sourceId,
+        type: item.type || "",
+        title: item.title || "",
+        sourceTitle: item.sourceTitle || "",
+        status: item.status || "",
+        updatedAt: item.updatedAt || "",
+        summary: item.summary || "",
+        unitPrice: item.unitPrice || "",
+        location: item.location || "",
+        startAt: item.startAt || "",
+        interview: item.interview || "",
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        facts: Array.isArray(item.facts) ? item.facts : [],
+        sourceDetail: item.sourceDetail || "",
+        sourceAddress: item.sourceAddress || ""
+      };
+      ensureDisplayKey(normalized);
+      return normalized;
+    };
 
     const loadDisplayCasesFromCsv = async () => {
       try {
@@ -1032,8 +1075,6 @@
       return found.slice(0, 6);
     };
 
-    const getSourceId = (item) => String((item && (item.sourceId || item.id)) || "");
-
     const mapProjectToCase = (item, index) => {
       const detail = item.detail || "";
       const normalized = normalizeDetailText(detail);
@@ -1087,6 +1128,7 @@
 
     const fillForm = () => {
       const item = activeCase || {};
+      const isManual = item.__isManual === true || isManualSourceId(getSourceId(item));
       clearInvalidFields();
       setEditorMessage("");
       titleInput.value = item.title || "";
@@ -1099,8 +1141,8 @@
       interviewInput.value = item.interview || "";
       tagsInput.value = (item.tags || []).join(" / ");
       factsInput.value = formatFacts(item.facts);
-      sourceTitle.textContent = item.sourceTitle || "--";
-      sourceDetail.innerHTML = renderSourceDetail(item.sourceDetail);
+      sourceTitle.textContent = isManual ? "" : (item.sourceTitle || "--");
+      sourceDetail.innerHTML = isManual ? "" : renderSourceDetail(item.sourceDetail);
       saveExhibitBtn.disabled = !activeCase;
       updateDisplay();
     };
@@ -1139,12 +1181,16 @@
       `;
     };
 
-    const renderDisplayCard = (item) => `
-      <article class="display-card ${getSourceId(activeCase) && getSourceId(item) === getSourceId(activeCase) ? "is-active" : ""}" data-source-id="${escapeHtml(getSourceId(item))}" role="button" tabindex="0" aria-label="编辑${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">
+    const renderDisplayCard = (item) => {
+      const displayKey = ensureDisplayKey(item);
+      const activeDisplayKey = activeCase ? ensureDisplayKey(activeCase) : "";
+      return `
+      <article class="display-card ${displayKey && displayKey === activeDisplayKey ? "is-active" : ""}" data-display-key="${escapeHtml(displayKey)}" role="button" tabindex="0" aria-label="编辑${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">
         <h4>${escapeHtml(item.title || item.sourceTitle || "未命名案件")}</h4>
-        <button class="display-card-remove" type="button" data-remove-display="${escapeHtml(getSourceId(item))}" aria-label="删除${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">删除</button>
+        <button class="display-card-remove" type="button" data-remove-display="${escapeHtml(displayKey)}" aria-label="删除${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">删除</button>
       </article>
     `;
+    };
 
     const renderDisplayGroup = (type, title, compact = false) => {
       const items = displayCases.filter((item) => item.type === type);
@@ -1183,13 +1229,16 @@
       }
       readForm();
       const sourceId = getSourceId(activeCase);
+      const displayKey = ensureDisplayKey(activeCase);
       const savedCase = {
         ...activeCase,
         sourceId,
+        id: sourceId,
+        __displayKey: displayKey,
         facts: [...(activeCase.facts || [])],
         tags: [...(activeCase.tags || [])]
       };
-      const index = displayCases.findIndex((item) => getSourceId(item) === sourceId);
+      const index = displayCases.findIndex((item) => ensureDisplayKey(item) === displayKey);
       if (index >= 0) {
         displayCases[index] = savedCase;
       } else {
@@ -1201,19 +1250,51 @@
       return true;
     };
 
-    const removeDisplayCase = async (id) => {
-      const index = displayCases.findIndex((item) => getSourceId(item) === id);
+    const removeDisplayCase = async (displayKey) => {
+      const index = displayCases.findIndex((item) => ensureDisplayKey(item) === displayKey);
       if (index < 0) return;
       const [removed] = displayCases.splice(index, 1);
       renderDisplayList();
       try {
-        await deleteDisplayCaseOnServer(id);
+        const sourceId = getSourceId(removed);
+        if (sourceId) {
+          await deleteDisplayCaseOnServer(sourceId);
+        } else {
+          await persistDisplayCases();
+        }
         setEditorMessage("已从服务器 CSV 删除。", "success");
       } catch (err) {
         displayCases.splice(index, 0, removed);
         renderDisplayList();
         setEditorMessage(err.message || "展示 CSV 删除失败", "error");
       }
+    };
+
+    const createManualCase = () => {
+      const sourceId = createManualSourceId();
+      activeCase = {
+        id: sourceId,
+        sourceId,
+        __displayKey: sourceId,
+        __isManual: true,
+        type: "",
+        title: "",
+        sourceTitle: "",
+        date: "",
+        status: "",
+        updatedAt: formatUpdatedAt(new Date().toISOString()),
+        summary: "",
+        unitPrice: "",
+        location: "",
+        startAt: "",
+        interview: "",
+        facts: [],
+        tags: [],
+        sourceDetail: "",
+        sourceAddress: ""
+      };
+      renderList();
+      fillForm();
     };
 
     const selectSystemCase = (selected) => {
@@ -1226,17 +1307,21 @@
       fillForm();
     };
 
-    const selectDisplayCase = (sourceId) => {
+    const selectDisplayCase = (displayKey) => {
       readForm();
       syncActiveCase();
-      const selected = displayCases.find((item) => getSourceId(item) === sourceId);
+      const selected = displayCases.find((item) => ensureDisplayKey(item) === displayKey);
       if (!selected) return;
-      const linkedSystemCase = cases.find((item) => getSourceId(item) === sourceId);
+      const sourceId = getSourceId(selected);
+      const isManual = isManualSourceId(sourceId);
+      const linkedSystemCase = isManual ? null : cases.find((item) => getSourceId(item) === sourceId);
       activeCase = {
         ...(linkedSystemCase || {}),
         ...selected,
         id: sourceId,
         sourceId,
+        __displayKey: ensureDisplayKey(selected),
+        __isManual: isManual,
         sourceTitle: selected.sourceTitle || (linkedSystemCase && linkedSystemCase.sourceTitle) || selected.title || "未命名案件",
         sourceDetail: selected.sourceDetail || (linkedSystemCase && linkedSystemCase.sourceDetail) || "",
         sourceAddress: selected.sourceAddress || (linkedSystemCase && linkedSystemCase.sourceAddress) || "",
@@ -1313,18 +1398,24 @@
         removeDisplayCase(button.dataset.removeDisplay);
         return;
       }
-      const card = event.target.closest("[data-source-id]");
+      const card = event.target.closest("[data-display-key]");
       if (!card) return;
-      selectDisplayCase(card.dataset.sourceId);
+      selectDisplayCase(card.dataset.displayKey);
     });
 
     displayList.addEventListener("keydown", (event) => {
       if (event.key !== "Enter" && event.key !== " ") return;
       if (event.target.closest("[data-remove-display]")) return;
-      const card = event.target.closest("[data-source-id]");
+      const card = event.target.closest("[data-display-key]");
       if (!card) return;
       event.preventDefault();
-      selectDisplayCase(card.dataset.sourceId);
+      selectDisplayCase(card.dataset.displayKey);
+    });
+
+    addManualDisplayBtn.addEventListener("click", () => {
+      readForm();
+      syncActiveCase();
+      createManualCase();
     });
 
     const handleEditorChange = (event) => {

@@ -176,37 +176,6 @@
       line-height: 1.4;
     }
 
-    .exhibit-status {
-      width: fit-content;
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: 800;
-      background: #eef2ff;
-      color: #1d4ed8;
-    }
-
-    .exhibit-status.is-draft {
-      background: rgba(245, 158, 11, 0.14);
-      color: #b45309;
-    }
-
-    .exhibit-status.is-offline {
-      background: rgba(100, 116, 139, 0.14);
-      color: #475569;
-    }
-
-    .exhibit-status.is-focus,
-    .exhibit-status.is-summary {
-      background: #f8fafc;
-      color: #334155;
-    }
-
-    .exhibit-status.is-priority {
-      background: #eef2ff;
-      color: #1d4ed8;
-    }
-
     .exhibit-empty {
       padding: 18px 12px;
       color: var(--muted);
@@ -399,36 +368,6 @@
       box-shadow: 0 0 0 4px rgba(240, 68, 56, 0.1);
     }
 
-    .module-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .module-row {
-      display: grid;
-      grid-template-columns: 28px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
-      background: #f8fafc;
-    }
-
-    .module-row input {
-      width: 16px;
-      height: 16px;
-    }
-
-    .module-row strong {
-      font-size: 13px;
-    }
-
-    .module-row span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
     .display-list-wrap {
       min-height: 0;
       overflow: auto;
@@ -470,7 +409,7 @@
       width: 100%;
       text-align: left;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-columns: 18px minmax(0, 1fr) auto;
       gap: 8px;
       min-height: 56px;
       align-items: center;
@@ -480,7 +419,7 @@
       background: #fff;
       color: var(--text);
       box-shadow: none;
-      cursor: pointer;
+      cursor: grab;
       transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.15s ease;
     }
 
@@ -494,6 +433,23 @@
       transform: translateY(-1px);
     }
 
+    .display-card:active {
+      cursor: grabbing;
+    }
+
+    .display-card.is-dragging {
+      opacity: 0.45;
+      transform: scale(0.99);
+    }
+
+    .display-card.is-drop-before {
+      box-shadow: 0 -3px 0 #1d4ed8, 0 12px 24px rgba(31, 53, 90, 0.12);
+    }
+
+    .display-card.is-drop-after {
+      box-shadow: 0 3px 0 #1d4ed8, 0 12px 24px rgba(31, 53, 90, 0.12);
+    }
+
     .display-card.is-active::before {
       content: "";
       position: absolute;
@@ -503,6 +459,14 @@
       width: 4px;
       border-radius: 0 4px 4px 0;
       background: #1d4ed8;
+    }
+
+    .display-card-drag {
+      color: #94a3b8;
+      font-size: 16px;
+      line-height: 1;
+      text-align: center;
+      user-select: none;
     }
 
     .display-card h4 {
@@ -533,35 +497,6 @@
     .display-card-remove:focus-visible {
       background: #fff1f0;
       outline: none;
-    }
-
-    .display-facts {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .display-fact {
-      min-width: 0;
-      padding: 9px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #f8fafc;
-    }
-
-    .display-fact span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 800;
-    }
-
-    .display-fact strong {
-      display: block;
-      margin-top: 4px;
-      color: #172033;
-      font-size: 12px;
-      line-height: 1.35;
     }
 
     .display-empty {
@@ -605,7 +540,6 @@
       }
 
       .exhibit-field-row,
-      .display-facts,
       .exhibit-editor-workspace {
         grid-template-columns: 1fr;
       }
@@ -737,12 +671,6 @@
     let cases = [];
     let displayCases = [];
 
-    const typeText = {
-      priority: "重点推荐",
-      focus: "注力案件",
-      summary: "简易列表"
-    };
-
     let activeCase = null;
     const CASE_PAGE_SIZE = 10;
     const filters = {
@@ -782,6 +710,9 @@
     const caseExhibitPublicUrl = String(window.CASE_EXHIBIT_PUBLIC_URL || localStorage.getItem("caseExhibitPublicUrl") || "case_exhibit.html");
     const caseExhibitsCsvApi = `${caseExhibitApiBase}/api/case-exhibits-csv`;
     let displayKeySeq = 0;
+    let draggedDisplayKey = "";
+    let dragDropPosition = "after";
+    let suppressDisplayClick = false;
     openExhibitPageLink.href = caseExhibitPublicUrl;
 
     const escapeHtml = (value) => String(value == null ? "" : value)
@@ -972,11 +903,6 @@
       .map((fact) => `${fact.label || ""}｜${fact.value || ""}`)
       .join("\n");
 
-    const formatSourceNo = (id) => {
-      const text = String(id || "").trim();
-      return text ? `MS-${text}` : "";
-    };
-
     const formatUpdatedAt = (value) => {
       const date = new Date(value || "");
       if (Number.isNaN(date.getTime())) return "";
@@ -1000,14 +926,6 @@
         date.setDate(date.getDate() - 1);
       }
       return formatDateParam(date);
-    };
-
-    const firstMatch = (text, patterns) => {
-      for (const pattern of patterns) {
-        const matched = text.match(pattern);
-        if (matched && matched[1]) return matched[1].trim();
-      }
-      return "";
     };
 
     const normalizeDetailText = (text) => String(text || "")
@@ -1034,48 +952,7 @@
       ));
     };
 
-    const buildSummary = (detail) => {
-      const normalized = normalizeDetailText(detail);
-      if (!normalized) return "";
-      const lines = normalized
-        .split(/\n+/)
-        .map((line) => line.trim())
-        .filter(Boolean)
-        .filter((line) => !/^(お世話|いつも|以上|よろしく|-{2,}|={2,})/.test(line));
-      return (lines[0] || normalized).slice(0, 180);
-    };
-
-    const extractFacts = (detail) => {
-      const text = normalizeDetailText(detail);
-      const fields = [
-        ["契約形態", [/契約(?:形態)?\s*[：:]\s*([^\n]+)/, /雇用形態\s*[：:]\s*([^\n]+)/]],
-        ["募集人数", [/募集(?:人数|枠)?\s*[：:]\s*([^\n]+)/, /人数\s*[：:]\s*([^\n]+)/]],
-        ["期間", [/(?:期間|案件期間)\s*[：:]\s*([^\n]+)/]],
-        ["日本語", [/日本語\s*[：:]\s*([^\n]+)/, /語学\s*[：:]\s*([^\n]+)/]],
-        ["外国籍", [/外国籍\s*[：:]\s*([^\n]+)/]],
-        ["商流", [/商流\s*[：:]\s*([^\n]+)/]]
-      ];
-      return fields
-        .map(([label, patterns]) => ({label, value: firstMatch(text, patterns)}))
-        .filter((item) => item.value);
-    };
-
-    const extractTags = (item) => {
-      const text = `${item.title || ""}\n${item.detail || ""}`;
-      const keywords = [
-        "Java", "Spring", "Python", "Django", "PHP", "Laravel", "JavaScript", "TypeScript",
-        "React", "Vue", "Angular", "Node", "AWS", "Azure", "GCP", "SQL", "MySQL", "PostgreSQL",
-        "Oracle", "Linux", "Windows", "SAP", "Salesforce", "PM", "PMO", "SE", "PL"
-      ];
-      const found = [];
-      keywords.forEach((keyword) => {
-        const re = new RegExp(`(^|[^A-Za-z0-9])${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^A-Za-z0-9]|$)`, "i");
-        if (re.test(text) && !found.includes(keyword)) found.push(keyword);
-      });
-      return found.slice(0, 6);
-    };
-
-    const mapProjectToCase = (item, index) => {
+    const mapProjectToCase = (item) => {
       const detail = item.detail || "";
       const normalized = normalizeDetailText(detail);
       const sourceId = String(item.id || "");
@@ -1164,35 +1041,19 @@
       };
     };
 
-    const renderFactGrid = (item) => {
-      const facts = item.facts || [];
-      if (!facts.length) {
-        return "";
-      }
-      return `
-        <div class="display-facts">
-          ${facts.map((fact) => `
-            <div class="display-fact">
-              <span>${escapeHtml(fact.label)}</span>
-              <strong>${escapeHtml(fact.value)}</strong>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    };
-
     const renderDisplayCard = (item) => {
       const displayKey = ensureDisplayKey(item);
       const activeDisplayKey = activeCase ? ensureDisplayKey(activeCase) : "";
       return `
-      <article class="display-card ${displayKey && displayKey === activeDisplayKey ? "is-active" : ""}" data-display-key="${escapeHtml(displayKey)}" role="button" tabindex="0" aria-label="编辑${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">
+      <article class="display-card ${displayKey && displayKey === activeDisplayKey ? "is-active" : ""}" draggable="true" data-display-key="${escapeHtml(displayKey)}" data-display-type="${escapeHtml(item.type || "")}" role="button" tabindex="0" aria-label="编辑${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">
+        <span class="display-card-drag" aria-hidden="true">⋮⋮</span>
         <h4>${escapeHtml(item.title || item.sourceTitle || "未命名案件")}</h4>
         <button class="display-card-remove" type="button" data-remove-display="${escapeHtml(displayKey)}" aria-label="删除${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">删除</button>
       </article>
     `;
     };
 
-    const renderDisplayGroup = (type, title, compact = false) => {
+    const renderDisplayGroup = (type, title) => {
       const items = displayCases.filter((item) => item.type === type);
       return `
         <section class="display-group">
@@ -1200,7 +1061,7 @@
             <h3>${escapeHtml(title)}</h3>
             <span>${items.length} 件</span>
           </div>
-          ${items.length ? items.map((item) => renderDisplayCard(item, compact)).join("") : '<div class="display-empty">暂无展示数据</div>'}
+          ${items.length ? items.map((item) => renderDisplayCard(item)).join("") : '<div class="display-empty">暂无展示数据</div>'}
         </section>
       `;
     };
@@ -1209,7 +1070,7 @@
       displayList.innerHTML = [
         renderDisplayGroup("priority", "重点推荐案件"),
         renderDisplayGroup("focus", "注力案件"),
-        renderDisplayGroup("summary", "简易展示列表", true)
+        renderDisplayGroup("summary", "简易展示列表")
       ].join("");
     };
 
@@ -1267,6 +1128,54 @@
         displayCases.splice(index, 0, removed);
         renderDisplayList();
         setEditorMessage(err.message || "展示 CSV 删除失败", "error");
+      }
+    };
+
+    const clearDisplayDragState = () => {
+      displayList.querySelectorAll(".display-card.is-dragging, .display-card.is-drop-before, .display-card.is-drop-after").forEach((card) => {
+        card.classList.remove("is-dragging", "is-drop-before", "is-drop-after");
+      });
+    };
+
+    const findDisplayCardElement = (displayKey) => (
+      Array.from(displayList.querySelectorAll("[data-display-key]"))
+        .find((card) => card.dataset.displayKey === displayKey) || null
+    );
+
+    const getDropPosition = (event, card) => {
+      const rect = card.getBoundingClientRect();
+      return event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    };
+
+    const canDropOnDisplayCard = (card) => {
+      if (!draggedDisplayKey || !card) return false;
+      if (card.dataset.displayKey === draggedDisplayKey) return false;
+      const dragged = displayCases.find((item) => ensureDisplayKey(item) === draggedDisplayKey);
+      if (!dragged) return false;
+      return card.dataset.displayType === dragged.type;
+    };
+
+    const moveDisplayCase = (dragKey, targetKey, position) => {
+      const sourceIndex = displayCases.findIndex((item) => ensureDisplayKey(item) === dragKey);
+      const targetIndex = displayCases.findIndex((item) => ensureDisplayKey(item) === targetKey);
+      if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
+      if (displayCases[sourceIndex].type !== displayCases[targetIndex].type) return false;
+
+      const [moved] = displayCases.splice(sourceIndex, 1);
+      const nextTargetIndex = displayCases.findIndex((item) => ensureDisplayKey(item) === targetKey);
+      const insertIndex = position === "before" ? nextTargetIndex : nextTargetIndex + 1;
+      displayCases.splice(insertIndex, 0, moved);
+      return true;
+    };
+
+    const persistDisplayOrder = async (previousDisplayCases) => {
+      try {
+        await persistDisplayCases();
+        setEditorMessage("排序已保存到服务器 CSV。", "success");
+      } catch (err) {
+        displayCases = previousDisplayCases;
+        renderDisplayList();
+        setEditorMessage(err.message || "展示 CSV 排序保存失败", "error");
       }
     };
 
@@ -1391,7 +1300,66 @@
       selectSystemCase(selected);
     });
 
+    displayList.addEventListener("dragstart", (event) => {
+      const card = event.target.closest("[data-display-key]");
+      if (!card || event.target.closest("[data-remove-display]")) {
+        event.preventDefault();
+        return;
+      }
+      draggedDisplayKey = card.dataset.displayKey || "";
+      card.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", draggedDisplayKey);
+    });
+
+    displayList.addEventListener("dragover", (event) => {
+      const card = event.target.closest("[data-display-key]");
+      clearDisplayDragState();
+      const draggedCard = draggedDisplayKey ? findDisplayCardElement(draggedDisplayKey) : null;
+      if (draggedCard) draggedCard.classList.add("is-dragging");
+      if (!canDropOnDisplayCard(card)) return;
+      event.preventDefault();
+      dragDropPosition = getDropPosition(event, card);
+      card.classList.add(dragDropPosition === "before" ? "is-drop-before" : "is-drop-after");
+      event.dataTransfer.dropEffect = "move";
+    });
+
+    displayList.addEventListener("dragleave", (event) => {
+      if (displayList.contains(event.relatedTarget)) return;
+      clearDisplayDragState();
+    });
+
+    displayList.addEventListener("drop", (event) => {
+      const card = event.target.closest("[data-display-key]");
+      if (!canDropOnDisplayCard(card)) return;
+      event.preventDefault();
+      const previousDisplayCases = displayCases.map((item) => ({
+        ...item,
+        facts: [...(item.facts || [])],
+        tags: [...(item.tags || [])]
+      }));
+      const moved = moveDisplayCase(draggedDisplayKey, card.dataset.displayKey, dragDropPosition);
+      draggedDisplayKey = "";
+      clearDisplayDragState();
+      suppressDisplayClick = moved;
+      if (!moved) return;
+      renderDisplayList();
+      persistDisplayOrder(previousDisplayCases);
+    });
+
+    displayList.addEventListener("dragend", () => {
+      draggedDisplayKey = "";
+      clearDisplayDragState();
+      window.setTimeout(() => {
+        suppressDisplayClick = false;
+      }, 0);
+    });
+
     displayList.addEventListener("click", (event) => {
+      if (suppressDisplayClick) {
+        suppressDisplayClick = false;
+        return;
+      }
       const button = event.target.closest("[data-remove-display]");
       if (button) {
         event.stopPropagation();

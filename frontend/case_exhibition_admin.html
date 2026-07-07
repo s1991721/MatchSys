@@ -478,12 +478,18 @@
       background: #fff;
       color: var(--text);
       box-shadow: none;
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, transform 0.15s ease;
     }
 
+    .display-card:hover,
+    .display-card:focus-visible,
     .display-card.is-active {
       border-color: #1d4ed8;
       background: #eff6ff;
       box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.18), 0 12px 24px rgba(31, 53, 90, 0.12);
+      outline: none;
+      transform: translateY(-1px);
     }
 
     .display-card.is-active::before {
@@ -1169,7 +1175,7 @@
     };
 
     const renderDisplayCard = (item) => `
-      <article class="display-card ${getSourceId(activeCase) && getSourceId(item) === getSourceId(activeCase) ? "is-active" : ""}" data-source-id="${escapeHtml(getSourceId(item))}">
+      <article class="display-card ${getSourceId(activeCase) && getSourceId(item) === getSourceId(activeCase) ? "is-active" : ""}" data-source-id="${escapeHtml(getSourceId(item))}" role="button" tabindex="0" aria-label="编辑${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">
         <h4>${escapeHtml(item.title || item.sourceTitle || "未命名案件")}</h4>
         <button class="display-card-remove" type="button" data-remove-display="${escapeHtml(getSourceId(item))}" aria-label="删除${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">删除</button>
       </article>
@@ -1245,6 +1251,37 @@
       }
     };
 
+    const selectSystemCase = (selected) => {
+      activeCase = {
+        ...selected,
+        facts: [...(selected.facts || [])],
+        tags: [...(selected.tags || [])]
+      };
+      renderList();
+      fillForm();
+    };
+
+    const selectDisplayCase = (sourceId) => {
+      readForm();
+      syncActiveCase();
+      const selected = displayCases.find((item) => getSourceId(item) === sourceId);
+      if (!selected) return;
+      const linkedSystemCase = cases.find((item) => getSourceId(item) === sourceId);
+      activeCase = {
+        ...(linkedSystemCase || {}),
+        ...selected,
+        id: sourceId,
+        sourceId,
+        sourceTitle: selected.sourceTitle || (linkedSystemCase && linkedSystemCase.sourceTitle) || selected.title || "未命名案件",
+        sourceDetail: selected.sourceDetail || (linkedSystemCase && linkedSystemCase.sourceDetail) || "",
+        sourceAddress: selected.sourceAddress || (linkedSystemCase && linkedSystemCase.sourceAddress) || "",
+        facts: [...(selected.facts || [])],
+        tags: [...(selected.tags || [])]
+      };
+      renderList();
+      fillForm();
+    };
+
     const setLoading = () => {
       caseList.innerHTML = '<div class="exhibit-empty">加载系统案件中...</div>';
       updatePaginationUI();
@@ -1301,19 +1338,28 @@
       syncActiveCase();
       const selected = cases.find((item) => item.id === button.dataset.id);
       if (!selected) return;
-      activeCase = {
-        ...selected,
-        facts: [...(selected.facts || [])],
-        tags: [...(selected.tags || [])]
-      };
-      renderList();
-      fillForm();
+      selectSystemCase(selected);
     });
 
     displayList.addEventListener("click", (event) => {
       const button = event.target.closest("[data-remove-display]");
-      if (!button) return;
-      removeDisplayCase(button.dataset.removeDisplay);
+      if (button) {
+        event.stopPropagation();
+        removeDisplayCase(button.dataset.removeDisplay);
+        return;
+      }
+      const card = event.target.closest("[data-source-id]");
+      if (!card) return;
+      selectDisplayCase(card.dataset.sourceId);
+    });
+
+    displayList.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      if (event.target.closest("[data-remove-display]")) return;
+      const card = event.target.closest("[data-source-id]");
+      if (!card) return;
+      event.preventDefault();
+      selectDisplayCase(card.dataset.sourceId);
     });
 
     downloadCsvBtn.addEventListener("click", downloadCsvForNginx);

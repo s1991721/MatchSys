@@ -70,12 +70,6 @@
       justify-content: flex-end;
     }
 
-    .exhibit-head-actions .c-btn {
-      min-height: 32px;
-      padding: 7px 12px;
-      font-size: 12px;
-    }
-
     .exhibit-filters {
       min-width: 0;
       display: flex;
@@ -719,7 +713,6 @@
         <div class="exhibit-panel-head">
           <h2>展示列表数据</h2>
           <div class="exhibit-head-actions">
-            <button class="c-btn c-btn-ghost" type="button" id="downloadCsvBtn">下载CSV</button>
             <a class="exhibit-page-link" href="case_exhibit.html" target="_blank" rel="noopener noreferrer" id="openExhibitPageLink">打开展示页</a>
           </div>
         </div>
@@ -758,7 +751,6 @@
     const casePaginationPages = document.getElementById("casePaginationPages");
     const casePageSummary = document.getElementById("casePageSummary");
     const displayList = document.getElementById("displayList");
-    const downloadCsvBtn = document.getElementById("downloadCsvBtn");
     const openExhibitPageLink = document.getElementById("openExhibitPageLink");
     const editorForm = document.getElementById("editorForm");
     const sourceTitle = document.getElementById("sourceTitle");
@@ -853,33 +845,6 @@
       }, {
         fallbackMessage: "展示 CSV 删除失败"
       });
-    };
-
-    const downloadCsvForNginx = async () => {
-      downloadCsvBtn.disabled = true;
-      const originalText = downloadCsvBtn.textContent;
-      downloadCsvBtn.textContent = "下载中...";
-      try {
-        const response = await window.fetchWithAuth(`${caseExhibitsCsvApi}?download=1`, {
-          method: "GET",
-          headers: {}
-        });
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "case_exhibits.csv";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-        setEditorMessage("CSV 已下载，请发布到 Nginx 中 case_exhibit.html 的同目录。", "success");
-      } catch (err) {
-        setEditorMessage(err.message || "CSV 下载失败", "error");
-      } finally {
-        downloadCsvBtn.textContent = originalText;
-        downloadCsvBtn.disabled = false;
-      }
     };
 
     const setEditorMessage = (message = "", type = "") => {
@@ -1361,8 +1326,6 @@
       event.preventDefault();
       selectDisplayCase(card.dataset.sourceId);
     });
-
-    downloadCsvBtn.addEventListener("click", downloadCsvForNginx);
 
     const handleEditorChange = (event) => {
       const target = event.target;

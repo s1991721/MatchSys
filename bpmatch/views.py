@@ -102,20 +102,23 @@ def _write_case_exhibit_rows(rows):
     os.replace(temp_path, CASE_EXHIBIT_CSV_PATH)
 
 
+@require_GET
+def case_exhibits_csv_file_api(request):
+    with CASE_EXHIBIT_CSV_LOCK:
+        rows = _read_case_exhibit_rows()
+    output = StringIO()
+    writer = csv.DictWriter(output, fieldnames=CASE_EXHIBIT_CSV_FIELDS)
+    writer.writeheader()
+    writer.writerows(rows)
+    return HttpResponse(output.getvalue(), content_type="text/csv; charset=utf-8")
+
+
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "DELETE"])
 def case_exhibits_csv_api(request):
     if request.method == "GET":
         with CASE_EXHIBIT_CSV_LOCK:
             rows = _read_case_exhibit_rows()
-        if request.GET.get("download") == "1":
-            output = StringIO()
-            writer = csv.DictWriter(output, fieldnames=CASE_EXHIBIT_CSV_FIELDS)
-            writer.writeheader()
-            writer.writerows(rows)
-            response = HttpResponse(output.getvalue(), content_type="text/csv; charset=utf-8")
-            response["Content-Disposition"] = 'attachment; filename="case_exhibits.csv"'
-            return response
         return api_success(data={
             "items": [_case_exhibit_item(row) for row in rows],
             "path": str(CASE_EXHIBIT_CSV_PATH),

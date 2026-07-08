@@ -56,9 +56,6 @@
             background: #f5f8fc;
             box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
         }
-        .payroll-basic-detail-title[hidden] {
-            display: none;
-        }
         .payroll-basic-detail-form {
             display: flex;
             flex-direction: column;
@@ -188,7 +185,6 @@
                 </div>
             </div>
             <div class="payroll-basic-detail-panel personnel-page c-form-page">
-                <span id="payrollBasicModalTitle" class="payroll-basic-detail-title" data-i18n="payroll.basic.modal.add" hidden>新增薪资信息</span>
                 <div id="payrollBasicEmptyDetail" class="payroll-basic-detail-empty">请选择右侧员工</div>
                 <form id="payrollBasicForm" class="payroll-basic-detail-form" hidden>
                 <div class="form-grid payroll-basic-form-grid">
@@ -337,7 +333,6 @@
         const statusSelect = document.getElementById("payrollStatus");
         const searchBtn = document.getElementById("payrollSearchBtn");
         const tbody = document.getElementById("payrollBasicBody");
-        const modalTitle = document.getElementById("payrollBasicModalTitle");
         const form = document.getElementById("payrollBasicForm");
         const deleteBtn = document.getElementById("payrollBasicDelete");
         const emptyDetail = document.getElementById("payrollBasicEmptyDetail");
@@ -376,12 +371,6 @@
             if (!isKou) fields.dependentCount.value = "0";
         };
 
-        const updateModalTitle = () => {
-            modalTitle.textContent = editingId
-                ? t("payroll.basic.modal.edit", "编辑薪资信息")
-                : t("payroll.basic.modal.add", "新增薪资信息");
-        };
-
         const localizeItemControls = () => {
             form.querySelectorAll(".payroll-item-row").forEach((row) => {
                 const amountInput = row.querySelector("[data-field='amount']");
@@ -395,7 +384,6 @@
         const applyPageI18n = (rerenderRows = true) => {
             if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
             document.title = t("payroll.basic.title", "基础信息");
-            updateModalTitle();
             localizeItemControls();
             if (rerenderRows) renderRows();
         };
@@ -478,7 +466,6 @@
             editingId = null;
             editingEmployeeId = null;
             selectedKey = "";
-            updateModalTitle();
             deleteBtn.hidden = true;
         };
 
@@ -521,7 +508,6 @@
             selectedKey = itemKey(item);
             editingId = item?.id || null;
             editingEmployeeId = item?.employee_id || null;
-            updateModalTitle();
             fields.employeeName.value = item?.employee_name || "";
             fields.contractType.value = String(item?.contract_type ?? 0);
             fields.baseSalary.value = item?.base_salary || "0";
@@ -581,7 +567,6 @@
             editingId = mode === "edit" ? data?.id : null;
             editingEmployeeId = data?.employee_id || employee?.id || null;
             selectedKey = itemKey({id: editingId, employee_id: editingEmployeeId});
-            updateModalTitle();
             fields.employeeName.value = data?.employee_name || employee?.name || "";
             fields.contractType.value = String(data?.contract_type ?? 0);
             fields.baseSalary.value = data?.base_salary || "0";

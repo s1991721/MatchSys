@@ -19,48 +19,13 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script>
-(function () {
-    const route = (window.location.pathname || "").replace(/^\/+/, "");
-    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
-    window.__routeNotified = true;
-    try {
-        if (!window.top || window.top === window) return;
-        const topHash = ((window.top.location && window.top.location.hash) || "")
-            .replace(/^#/, "")
-            .split("?")[0]
-            .split("#")[0];
-        if (topHash === route) {
-            window.top.location.hash = "finance.html";
-        }
-    } catch (e) {}
-}());
-</script>
+<script src="finance-common.js"></script>
 <script src="../common.js"></script>
 <script>
-(function () {
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
-        }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
-    document.addEventListener("DOMContentLoaded", () => {
-        applyI18n();
-        const frame = document.getElementById("financeSubFrame");
-        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
-        const syncFrameLang = () => {
-            if (!frame || !frame.contentWindow) return;
-            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
-        };
-        if (frame) {
-            frame.addEventListener("load", syncFrameLang);
-        }
-        window.addEventListener("i18n:change", syncFrameLang);
-    });
-}());
+FinanceUI.onReady(() => {
+    FinanceUI.applyI18n();
+    FinanceUI.initFrameLangSync(document.getElementById("financeSubFrame"));
+});
 </script>
 </body>
 </html>

@@ -27,41 +27,11 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script>
-(function () {
-    const route = (window.location.pathname || "").replace(/^\/+/, "");
-    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
-    window.__routeNotified = true;
-    try {
-        if (!window.top || window.top === window) return;
-        const topHash = ((window.top.location && window.top.location.hash) || "")
-            .replace(/^#/, "")
-            .split("?")[0]
-            .split("#")[0];
-        if (topHash === route) {
-            window.top.location.hash = "finance.html";
-        }
-    } catch (e) {}
-}());
-</script>
+<script src="finance-common.js"></script>
 <script src="../common.js"></script>
 <script>
 (function () {
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
-        }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
-    document.addEventListener("DOMContentLoaded", () => {
-        applyI18n();
-        const t = (key, fallback) => {
-            if (!window.I18N || typeof window.I18N.t !== "function") return fallback;
-            const value = window.I18N.t(key);
-            return value && value !== key ? value : fallback;
-        };
+    FinanceUI.onReady(() => {
         const routes = {
             basic: { src: "payroll/basic-info.html", titleKey: "payroll.tabs.basic", fallbackTitle: "基本工资" },
             monthly: { src: "payroll/monthly-calculation.html", titleKey: "payroll.tabs.monthly", fallbackTitle: "月度计算" },
@@ -70,12 +40,9 @@
             employmentInsurance: { src: "payroll/employment-insurance.html", titleKey: "payroll.tabs.employment_insurance", fallbackTitle: "雇佣保险" },
             basicItemSettings: { src: "payroll/basic-item-settings.html", titleKey: "payroll.tabs.basic_item_settings", fallbackTitle: "基础项目设置" }
         };
-        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
-        const frame = document.getElementById("financeSubFrame");
         const pageParams = new URLSearchParams(window.location.search || "");
         const LAST_SUBTAB_KEY = "finance:payroll:last-subtab";
         const STATE_MAX_AGE_MS = 12 * 60 * 60 * 1000;
-        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
         const readLastSubtab = () => {
             try {
                 const stored = window.MatchSys && typeof window.MatchSys.readJSONFromSessionStorage === "function"
@@ -95,20 +62,6 @@
                 }
             } catch (e) {}
         };
-        const syncFrameLang = () => {
-            if (!frame || !frame.contentWindow) return;
-            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
-        };
-        const updateFrameTitle = () => {
-            const activeKey = buttons.find((button) => button.classList.contains("is-active"))?.dataset.financeSubtab;
-            const route = routes[activeKey];
-            if (frame && route) frame.setAttribute("title", t(route.titleKey, route.fallbackTitle));
-            document.title = t("finance.payroll.title", "工资计算");
-        };
-        const applyPayrollI18n = () => {
-            if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
-            updateFrameTitle();
-        };
         const buildFrameSrc = (key, src) => {
             if (key !== "basic") return src;
             const employeeId = pageParams.get("employee_id");
@@ -119,34 +72,20 @@
             if (trigger) params.set("trigger", trigger);
             return `${src}?${params.toString()}`;
         };
-        const setSubtab = (key, preserveParams = false) => {
-            const route = routes[key];
-            if (!route || !frame) return;
-            buttons.forEach((button) => {
-                const active = button.dataset.financeSubtab === key;
-                button.classList.toggle("is-active", active);
-                button.setAttribute("aria-selected", String(active));
-            });
-            const targetSrc = preserveParams ? buildFrameSrc(key, route.src) : route.src;
-            if (frame.getAttribute("src") !== targetSrc) {
-                frame.setAttribute("src", targetSrc);
-            }
-            frame.setAttribute("title", t(route.titleKey, route.fallbackTitle));
-            writeLastSubtab(key);
-        };
-        buttons.forEach((button) => {
-            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
-        });
-        if (frame) {
-            frame.addEventListener("load", syncFrameLang);
-        }
-        window.addEventListener("i18n:change", () => {
-            applyPayrollI18n();
-            syncFrameLang();
-        });
         const initialSubtab = routes[pageParams.get("subtab")] ? pageParams.get("subtab") : (readLastSubtab() || "basic");
-        setSubtab(initialSubtab, true);
-        applyPayrollI18n();
+        FinanceUI.initSubtabFrame({
+            initialKey: initialSubtab,
+            titleKey: "finance.payroll.title",
+            fallbackTitle: "工资计算",
+            routes,
+            buildFrameSrc: (key, route, params = {}) => {
+                if (params.preservePageParams) return buildFrameSrc(key, route.src);
+                return route.src;
+            },
+            initialParams: { preservePageParams: true },
+            onSubtabChange: (key) => writeLastSubtab(key)
+        });
+        document.title = FinanceUI.t("finance.payroll.title", "工资计算");
     });
 }());
 </script>

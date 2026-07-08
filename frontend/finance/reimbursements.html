@@ -33,73 +33,21 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script>
-(function () {
-    const route = (window.location.pathname || "").replace(/^\/+/, "");
-    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
-    window.__routeNotified = true;
-    try {
-        if (!window.top || window.top === window) return;
-        const topHash = ((window.top.location && window.top.location.hash) || "")
-            .replace(/^#/, "")
-            .split("?")[0]
-            .split("#")[0];
-        if (topHash === route) {
-            window.top.location.hash = "finance.html";
-        }
-    } catch (e) {}
-}());
-</script>
+<script src="finance-common.js"></script>
 <script src="../common.js"></script>
 <script>
-(function () {
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
+FinanceUI.onReady(() => {
+    FinanceUI.initSubtabFrame({
+        initialKey: "requests",
+        routes: {
+            requests: { src: "reimbursements/requests.html", title: "报销申请" },
+            approval: { src: "reimbursements/approval.html", title: "审核处理" },
+            receipts: { src: "reimbursements/receipts.html", title: "凭证管理" },
+            payment: { src: "reimbursements/payment.html", title: "报销付款" },
+            stats: { src: "reimbursements/stats.html", title: "报销统计" }
         }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
-    document.addEventListener("DOMContentLoaded", () => {
-        applyI18n();
-        const routes = {
-        requests: { src: "reimbursements/requests.html", title: "报销申请" },
-        approval: { src: "reimbursements/approval.html", title: "审核处理" },
-        receipts: { src: "reimbursements/receipts.html", title: "凭证管理" },
-        payment: { src: "reimbursements/payment.html", title: "报销付款" },
-        stats: { src: "reimbursements/stats.html", title: "报销统计" }
-        };
-        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
-        const frame = document.getElementById("financeSubFrame");
-        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
-        const syncFrameLang = () => {
-            if (!frame || !frame.contentWindow) return;
-            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
-        };
-        const setSubtab = (key) => {
-            const route = routes[key];
-            if (!route || !frame) return;
-            buttons.forEach((button) => {
-                const active = button.dataset.financeSubtab === key;
-                button.classList.toggle("is-active", active);
-                button.setAttribute("aria-selected", String(active));
-            });
-            if (!frame.getAttribute("src") || !frame.getAttribute("src").endsWith(route.src)) {
-                frame.setAttribute("src", route.src);
-            }
-            frame.setAttribute("title", route.title);
-        };
-        buttons.forEach((button) => {
-            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
-        });
-        if (frame) {
-            frame.addEventListener("load", syncFrameLang);
-        }
-        window.addEventListener("i18n:change", syncFrameLang);
-        setSubtab("requests");
     });
-}());
+});
 </script>
 </body>
 </html>

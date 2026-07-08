@@ -23,86 +23,23 @@
 </div>
 
 <script src="../i18n.js"></script>
-<script>
-(function () {
-    const route = (window.location.pathname || "").replace(/^\/+/, "");
-    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
-    window.__routeNotified = true;
-    try {
-        if (!window.top || window.top === window) return;
-        const topHash = ((window.top.location && window.top.location.hash) || "")
-            .replace(/^#/, "")
-            .split("?")[0]
-            .split("#")[0];
-        if (topHash === route) {
-            window.top.location.hash = "finance.html";
-        }
-    } catch (e) {}
-}());
-</script>
+<script src="finance-common.js"></script>
 <script src="../common.js"></script>
 <script>
-(function () {
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
+FinanceUI.onReady(() => {
+    const tabs = FinanceUI.initSubtabFrame({
+        initialKey: "overview",
+        routes: {
+            overview: { src: "receivables/overview.html", title: "应收概览" },
+            list: { src: "receivables/list.html", title: "应收列表" }
         }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
-    document.addEventListener("DOMContentLoaded", () => {
-        applyI18n();
-        const routes = {
-        overview: { src: "receivables/overview.html", title: "应收概览" },
-        list: { src: "receivables/list.html", title: "应收列表" }
-        };
-        const buttons = Array.from(document.querySelectorAll("[data-finance-subtab]"));
-        const frame = document.getElementById("financeSubFrame");
-        const currentLang = () => window.I18N && typeof window.I18N.getLang === "function" ? window.I18N.getLang() : "zh-CN";
-        const syncFrameLang = () => {
-            if (!frame || !frame.contentWindow) return;
-            try { frame.contentWindow.postMessage({ type: "i18n:change", lang: currentLang() }, "*"); } catch (e) {}
-        };
-        const buildFrameSrc = (route, params = {}) => {
-            const search = new URLSearchParams();
-            Object.entries(params).forEach(([name, value]) => {
-                if (value !== undefined && value !== null && value !== "") {
-                    search.set(name, value);
-                }
-            });
-            const query = search.toString();
-            return query ? `${route.src}?${query}` : route.src;
-        };
-        const setSubtab = (key, params = {}) => {
-            const route = routes[key];
-            if (!route || !frame) return;
-            buttons.forEach((button) => {
-                const active = button.dataset.financeSubtab === key;
-                button.classList.toggle("is-active", active);
-                button.setAttribute("aria-selected", String(active));
-            });
-            const targetSrc = buildFrameSrc(route, params);
-            if (frame.getAttribute("src") !== targetSrc) {
-                frame.setAttribute("src", targetSrc);
-            }
-            frame.setAttribute("title", route.title);
-        };
-        buttons.forEach((button) => {
-            button.addEventListener("click", () => setSubtab(button.dataset.financeSubtab));
-        });
-        if (frame) {
-            frame.addEventListener("load", syncFrameLang);
-        }
-        window.addEventListener("i18n:change", syncFrameLang);
+    });
         window.addEventListener("message", (event) => {
             const data = event.data || {};
             if (!data || data.type !== "receivables:open-list") return;
-            setSubtab("list", { month: data.month || "" });
+            tabs.setSubtab("list", { month: data.month || "" });
         });
-        setSubtab("overview");
-    });
-}());
+});
 </script>
 </body>
 </html>

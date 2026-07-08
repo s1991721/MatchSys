@@ -16,6 +16,14 @@
         const value = t(key, fallback);
         return value === key ? fallback : value;
     };
+    MatchSys.applyI18n = function (root = document) {
+        if (window.I18N && typeof window.I18N.init === "function") {
+            window.I18N.init();
+        }
+        if (window.I18N && typeof window.I18N.apply === "function") {
+            window.I18N.apply(root);
+        }
+    };
     const pad2 = (value) => String(value).padStart(2, "0");
     window.pad2 = pad2;
 

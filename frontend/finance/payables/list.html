@@ -96,23 +96,7 @@
 </dialog>
 
 <script src="../../i18n.js"></script>
-<script>
-(function () {
-    const route = (window.location.pathname || "").replace(/^\/+/, "");
-    if (!route.startsWith("finance/") || route === "finance/my_salary.html") return;
-    window.__routeNotified = true;
-    try {
-        if (!window.top || window.top === window) return;
-        const topHash = ((window.top.location && window.top.location.hash) || "")
-            .replace(/^#/, "")
-            .split("?")[0]
-            .split("#")[0];
-        if (topHash === route) {
-            window.top.location.hash = "finance.html";
-        }
-    } catch (e) {}
-}());
-</script>
+<script src="../finance-common.js"></script>
 <script src="../../common.js"></script>
 <script>
 (function () {

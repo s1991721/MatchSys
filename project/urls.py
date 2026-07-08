@@ -278,6 +278,11 @@ urlpatterns = [
             TemplateView.as_view(template_name="frontend/finance/finance.js", content_type="application/javascript")),
     ),
     path(
+        "finance/finance-common.js",
+        cache_static_asset(
+            TemplateView.as_view(template_name="frontend/finance/finance-common.js", content_type="application/javascript")),
+    ),
+    path(
         "finance/receivables.js",
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/finance/receivables.js", content_type="application/javascript")),

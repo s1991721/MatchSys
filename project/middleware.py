@@ -42,6 +42,7 @@ class SessionLoginRequiredMiddleware:
             "/components.css",
             "/common.js",
             "/i18n.js",
+            "/finance/finance-common.js",
         }:
             return True
 

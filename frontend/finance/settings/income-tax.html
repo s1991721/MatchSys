@@ -74,14 +74,7 @@
 <script src="../../common.js"></script>
 <script>
 (function () {
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
-        }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
+    const applyI18n = () => FinanceUI.applyI18n();
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
         const table = document.getElementById("incomeTaxSheetTable");

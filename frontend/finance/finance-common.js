@@ -41,6 +41,16 @@
         return value && value !== key ? value : fallback;
     };
 
+    FinanceUI.escapeHtml = function (value) {
+        if (typeof window.escapeHtml === "function") return window.escapeHtml(value);
+        return String(value == null ? "" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    };
+
     FinanceUI.buildFrameSrc = function (route, params = {}) {
         const search = new URLSearchParams();
         Object.entries(params).forEach(([name, value]) => {

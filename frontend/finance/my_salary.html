@@ -108,10 +108,7 @@
 <script>
 (function () {
     const i18n = window.I18N;
-    if (i18n) {
-        i18n.init();
-        i18n.apply();
-    }
+    if (window.MatchSys && typeof window.MatchSys.applyI18n === "function") window.MatchSys.applyI18n();
 
     const monthInput = document.getElementById("salaryMonth");
     const refreshBtn = document.getElementById("refreshSalaryBtn");
@@ -126,7 +123,7 @@
 
     const setEmptyState = () => {
         const empty = t("my_salary.empty", "暂无薪资数据");
-        historyBody.innerHTML = `<tr><td class="c-empty my-salary-empty-row" colspan="5">${window.escapeHtml ? window.escapeHtml(empty) : empty}</td></tr>`;
+        historyBody.innerHTML = `<tr><td class="c-empty my-salary-empty-row" colspan="5">${window.escapeHtml(empty)}</td></tr>`;
     };
 
     const refresh = () => {

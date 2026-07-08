@@ -177,13 +177,7 @@
         return Number.isFinite(parsed) ? parsed : 0;
     };
     const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
-    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;",
-    }[char]));
+    const escapeHtml = FinanceUI.escapeHtml;
     const today = () => new Date().toISOString().slice(0, 10);
     const debounce = (fn, delay = 250) => {
         let timer = null;
@@ -504,14 +498,7 @@
             window.alert(err.message || "删除失败");
         }
     };
-    const applyI18n = () => {
-        if (window.I18N && typeof window.I18N.init === "function") {
-            window.I18N.init();
-        }
-        if (window.I18N && typeof window.I18N.apply === "function") {
-            window.I18N.apply(document);
-        }
-    };
+    const applyI18n = () => FinanceUI.applyI18n();
     document.addEventListener("DOMContentLoaded", () => {
         applyI18n();
         const initialMonth = new URLSearchParams(window.location.search || "").get("month") || today().slice(0, 7);

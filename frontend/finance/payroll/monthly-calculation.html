@@ -439,15 +439,7 @@
     let selectedPayrollId = null;
     let trackingOriginalValues = false;
 
-    const h = (value) => {
-        if (window.escapeHtml) return window.escapeHtml(value == null ? "" : String(value));
-        return String(value == null ? "" : value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-    };
+    const h = FinanceUI.escapeHtml;
     const formatMoney = (value) => {
         const number = Number(value || 0);
         return number.toLocaleString("ja-JP", {
@@ -880,8 +872,7 @@
     };
 
     document.addEventListener("DOMContentLoaded", () => {
-        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
-        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+        FinanceUI.applyI18n();
 
         const monthInput = document.getElementById("payrollMonth");
         const contractTypeSelect = document.getElementById("payrollContractType");

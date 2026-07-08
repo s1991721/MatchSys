@@ -307,7 +307,7 @@
         `payroll.basic.withholding_tax_type.${value}`,
         withholdingTaxTypeDefaults[value] || withholdingTaxTypeDefaults.kou
     );
-    const h = (value) => window.escapeHtml ? window.escapeHtml(value) : String(value == null ? "" : value);
+    const h = FinanceUI.escapeHtml;
     const formatMoney = (value) => {
         const number = Number(value || 0);
         if (!Number.isFinite(number)) return "0";
@@ -329,8 +329,7 @@
     const sumItems = (items) => normalizeItems(items).reduce((total, item) => total + parseMoney(item.amount), 0);
 
     document.addEventListener("DOMContentLoaded", () => {
-        if (window.I18N && typeof window.I18N.init === "function") window.I18N.init();
-        if (window.I18N && typeof window.I18N.apply === "function") window.I18N.apply(document);
+        FinanceUI.applyI18n();
 
         const keywordInput = document.getElementById("payrollKeyword");
         const contractTypeSelect = document.getElementById("payrollContractType");

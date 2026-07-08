@@ -51,6 +51,93 @@
             .replace(/'/g, "&#39;");
     };
 
+    FinanceUI.toNumber = function (value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    };
+
+    FinanceUI.money = function (value) {
+        return `¥${Math.round(FinanceUI.toNumber(value)).toLocaleString("ja-JP")}`;
+    };
+
+    FinanceUI.today = function () {
+        return new Date().toISOString().slice(0, 10);
+    };
+
+    FinanceUI.currentMonth = function () {
+        return FinanceUI.today().slice(0, 7);
+    };
+
+    FinanceUI.debounce = function (fn, delay = 250) {
+        let timer = null;
+        return (...args) => {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(() => fn(...args), delay);
+        };
+    };
+
+    FinanceUI.setTableMessage = function (tableBody, colspan, message, className = "finance-empty-row") {
+        if (!tableBody) return;
+        tableBody.innerHTML = `<tr><td class="${className}" colspan="${FinanceUI.escapeHtml(colspan)}">${FinanceUI.escapeHtml(message)}</td></tr>`;
+    };
+
+    FinanceUI.updatePagination = function ({ pagination, pages, summary, currentPage, totalPages, totalItems }) {
+        const normalizedTotalPages = Math.max(Number(totalPages || 1), 1);
+        const normalizedCurrentPage = Math.min(Math.max(Number(currentPage || 1), 1), normalizedTotalPages);
+        if (summary) {
+            summary.textContent = `共 ${Number(totalItems || 0)} 条 · 第 ${normalizedCurrentPage}/${normalizedTotalPages} 页`;
+        }
+        if (pagination && pages && typeof window.renderPagination === "function") {
+            window.renderPagination(pagination, pages, normalizedCurrentPage, normalizedTotalPages);
+        }
+        return { currentPage: normalizedCurrentPage, totalPages: normalizedTotalPages };
+    };
+
+    FinanceUI.bindPagination = function ({ pagination, getTotalPages, onChange }) {
+        if (!pagination || typeof window.bindPagination !== "function" || typeof onChange !== "function") return;
+        window.bindPagination(pagination, (value) => {
+            const totalPages = Math.max(Number(typeof getTotalPages === "function" ? getTotalPages() : 1) || 1, 1);
+            let page;
+            if (value === "prev") {
+                page = -1;
+            } else if (value === "next") {
+                page = 1;
+            } else {
+                page = Number(value) || 1;
+            }
+            onChange(value, page, totalPages);
+        });
+    };
+
+    FinanceUI.openDialog = function (dialog) {
+        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
+    };
+
+    FinanceUI.closeDialog = function (dialog) {
+        if (dialog && typeof dialog.close === "function") dialog.close();
+    };
+
+    FinanceUI.alert = function (message) {
+        window.alert(message);
+    };
+
+    FinanceUI.confirm = function (message) {
+        return window.confirm(message);
+    };
+
+    FinanceUI.createRequestGuard = function () {
+        let sequence = 0;
+        return {
+            next() {
+                sequence += 1;
+                return sequence;
+            },
+            isLatest(token) {
+                return token === sequence;
+            },
+        };
+    };
+
     FinanceUI.buildFrameSrc = function (route, params = {}) {
         const search = new URLSearchParams();
         Object.entries(params).forEach(([name, value]) => {

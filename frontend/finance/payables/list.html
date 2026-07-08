@@ -134,17 +134,13 @@
     let tableErrorMessage = "";
     const paymentsCache = new Map();
     const paymentsLoading = new Set();
+    const fetchGuard = FinanceUI.createRequestGuard();
 
-    const toNumber = (value) => {
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : 0;
-    };
-    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
+    const toNumber = FinanceUI.toNumber;
+    const money = FinanceUI.money;
     const escapeHtml = FinanceUI.escapeHtml;
-    const today = () => new Date().toISOString().slice(0, 10);
-    const setTableMessage = (message) => {
-        tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">${escapeHtml(message)}</td></tr>`;
-    };
+    const today = FinanceUI.today;
+    const setTableMessage = (message) => FinanceUI.setTableMessage(tableBody, 11, message);
     const statusOf = (item) => Number(item.display_status ?? 0);
     const sourceType = (item) => item.source_type || (item.purchase_order_id ? "purchase_order" : "manual");
     const sourceLabel = (item) => item.source_label || (item.purchase_order_id ? "发注" : "手动");
@@ -180,12 +176,14 @@
         }).join("");
     };
     const renderTable = () => {
-        if (paginationSummary) {
-            paginationSummary.textContent = `共 ${totalItems} 条 · 第 ${currentPage}/${totalPages} 页`;
-        }
-        if (window.renderPagination) {
-            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
-        }
+        ({ currentPage, totalPages } = FinanceUI.updatePagination({
+            pagination,
+            pages: paginationPages,
+            summary: paginationSummary,
+            currentPage,
+            totalPages,
+            totalItems,
+        }));
         if (isLoading) {
             setTableMessage("加载中...");
             return;
@@ -240,6 +238,7 @@
         }).join("");
     };
     const fetchPayables = async () => {
+        const requestToken = fetchGuard.next();
         isLoading = true;
         renderTable();
         const params = window.createParams([
@@ -251,18 +250,21 @@
         ]);
         try {
             const payload = await window.requestJson(window.buildUrl("/api/finance/payables", params), { method: "GET" });
+            if (!fetchGuard.isLatest(requestToken)) return;
             payables = Array.isArray(payload.data?.items) ? payload.data.items : [];
             totalItems = Number(payload.meta?.total || 0);
             currentPage = Number(payload.meta?.page || currentPage || 1);
             totalPages = Math.max(Number(payload.meta?.total_pages || 1), 1);
             tableErrorMessage = "";
         } catch (err) {
+            if (!fetchGuard.isLatest(requestToken)) return;
             payables = [];
             totalItems = 0;
             totalPages = 1;
             tableErrorMessage = `加载失败：${err.message || "未知错误"}`;
             throw err;
         } finally {
+            if (!fetchGuard.isLatest(requestToken)) return;
             isLoading = false;
             renderTable();
         }
@@ -280,15 +282,12 @@
             return payments;
         } catch (err) {
             paymentsCache.set(key, []);
-            window.alert(err.message || "支付明细加载失败");
+            FinanceUI.alert(err.message || "支付明细加载失败");
             return [];
         } finally {
             paymentsLoading.delete(key);
             renderTable();
         }
-    };
-    const openDialog = (dialog) => {
-        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
     };
     const openPayableDialog = (item = null) => {
         $("#payableDialogTitle").textContent = item ? "编辑应付" : "新增应付";
@@ -300,7 +299,7 @@
         $("#payableDueDate").value = item ? item.due_date || "" : "";
         $("#payableStatus").value = item ? String(item.finance_status) : "0";
         $("#payableRemark").value = item ? item.remark || "" : "";
-        openDialog(payableDialog);
+        FinanceUI.openDialog(payableDialog);
     };
     const openPaymentDialog = (item) => {
         const fallbackPaymentDate = `${item.year}-${String((item.payable_month || "").slice(5, 7) || "01").padStart(2, "0")}-01`;
@@ -313,15 +312,15 @@
         $("#paymentAmount").value = outstandingAmount(item);
         $("#paymentDate").value = defaultPaymentDate;
         $("#paymentRemark").value = "";
-        openDialog(paymentDialog);
+        FinanceUI.openDialog(paymentDialog);
     };
     const savePayable = async () => {
         const customerName = $("#payableCustomerName").value.trim();
         const amount = toNumber($("#payableAmount").value);
         const month = $("#payableMonth").value;
-        if (!customerName) return window.alert("请输入支付对象");
-        if (!month) return window.alert("请选择应付月份");
-        if (amount <= 0) return window.alert("请输入有效的应付金额");
+        if (!customerName) return FinanceUI.alert("请输入支付对象");
+        if (!month) return FinanceUI.alert("请选择应付月份");
+        if (amount <= 0) return FinanceUI.alert("请输入有效的应付金额");
         const id = Number($("#payableId").value);
         const year = $("#payableYear").value || month.slice(0, 4);
         const payload = {
@@ -344,14 +343,14 @@
             currentPage = id ? currentPage : 1;
             await fetchPayables();
         } catch (err) {
-            window.alert(err.message || "保存失败");
+            FinanceUI.alert(err.message || "保存失败");
         }
     };
     const savePayment = async () => {
         const amount = toNumber($("#paymentAmount").value);
         const paymentDate = $("#paymentDate").value;
-        if (amount <= 0) return window.alert("请输入有效的支付金额");
-        if (!paymentDate) return window.alert("请选择支付日");
+        if (amount <= 0) return FinanceUI.alert("请输入有效的支付金额");
+        if (!paymentDate) return FinanceUI.alert("请选择支付日");
         const baseItem = payables.find((item) => String(item.id) === String($("#paymentPayableId").value));
         if (!baseItem) return;
         const payload = {
@@ -376,11 +375,11 @@
             const updatedItem = payables.find((item) => String(item.id) === String(baseItem.id) && String(item.year) === String(baseItem.year));
             if (updatedItem) await loadPayments(updatedItem, true);
         } catch (err) {
-            window.alert(err.message || "保存失败");
+            FinanceUI.alert(err.message || "保存失败");
         }
     };
     const deletePayment = async (paymentId, year) => {
-        if (!window.confirm("确定删除这条支付记录吗？")) return;
+        if (!FinanceUI.confirm("确定删除这条支付记录吗？")) return;
         try {
             const params = window.createParams([["year", String(year)]]);
             const response = await window.requestJson(window.buildUrl(`/api/finance/payments/${encodeURIComponent(paymentId)}`, params), { method: "DELETE" });
@@ -393,7 +392,7 @@
                 if (updatedItem) await loadPayments(updatedItem, true);
             }
         } catch (err) {
-            window.alert(err.message || "删除失败");
+            FinanceUI.alert(err.message || "删除失败");
         }
     };
 
@@ -421,18 +420,20 @@
             currentPage = 1;
             fetchPayables().catch(() => {});
         });
-        if (pagination && window.bindPagination) {
-            window.bindPagination(pagination, (value) => {
+        FinanceUI.bindPagination({
+            pagination,
+            getTotalPages: () => totalPages,
+            onChange: (value, page, maxPages) => {
                 if (value === "prev") {
                     currentPage = Math.max(currentPage - 1, 1);
                 } else if (value === "next") {
-                    currentPage = Math.min(currentPage + 1, totalPages);
+                    currentPage = Math.min(currentPage + 1, maxPages);
                 } else {
-                    currentPage = Math.min(Math.max(Number(value) || 1, 1), totalPages);
+                    currentPage = Math.min(Math.max(page, 1), maxPages);
                 }
                 fetchPayables().catch(() => {});
-            });
-        }
+            },
+        });
         tableBody.addEventListener("click", async (event) => {
             const button = event.target.closest("[data-action]");
             if (!button) return;

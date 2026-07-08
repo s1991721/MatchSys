@@ -163,6 +163,7 @@
     let tableErrorMessage = "";
     const receiptsCache = new Map();
     const receiptsLoading = new Set();
+    const fetchGuard = FinanceUI.createRequestGuard();
 
     const $ = (selector) => document.querySelector(selector);
     const tableBody = $("#receivableTableBody");
@@ -172,20 +173,11 @@
     const paginationPages = $("#receivablePaginationPages");
     const paginationSummary = $("#receivablePaginationSummary");
     const receivableCustomerMap = new Map();
-    const toNumber = (value) => {
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : 0;
-    };
-    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
+    const toNumber = FinanceUI.toNumber;
+    const money = FinanceUI.money;
     const escapeHtml = FinanceUI.escapeHtml;
-    const today = () => new Date().toISOString().slice(0, 10);
-    const debounce = (fn, delay = 250) => {
-        let timer = null;
-        return (...args) => {
-            window.clearTimeout(timer);
-            timer = window.setTimeout(() => fn(...args), delay);
-        };
-    };
+    const today = FinanceUI.today;
+    const debounce = FinanceUI.debounce;
     const confirmedTotal = (item) => toNumber(item.received_amount);
     const outstandingAmount = (item) => toNumber(item.outstanding_amount);
     const sourceType = (item) => item.source_type || (item.pay_request_id ? "request" : "manual");
@@ -207,9 +199,7 @@
         if (!item || item.id === undefined || item.id === null) return;
         receivables = receivables.map((row) => String(row.id) === String(item.id) ? item : row);
     };
-    const setTableMessage = (message) => {
-        tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">${escapeHtml(message)}</td></tr>`;
-    };
+    const setTableMessage = (message) => FinanceUI.setTableMessage(tableBody, 11, message);
     const renderReceiptRows = (item) => {
         const key = String(item.id);
         if (receiptsLoading.has(key)) {
@@ -235,12 +225,14 @@
         `).join("");
     };
     const renderTable = () => {
-        if (paginationSummary) {
-            paginationSummary.textContent = `共 ${totalItems} 条 · 第 ${currentPage}/${totalPages} 页`;
-        }
-        if (pagination && window.renderPagination) {
-            window.renderPagination(pagination, paginationPages, currentPage, totalPages);
-        }
+        ({ currentPage, totalPages } = FinanceUI.updatePagination({
+            pagination,
+            pages: paginationPages,
+            summary: paginationSummary,
+            currentPage,
+            totalPages,
+            totalItems,
+        }));
         if (isLoading) {
             setTableMessage("加载中...");
             return;
@@ -295,6 +287,7 @@
         }).join("");
     };
     const fetchReceivables = async () => {
+        const requestToken = fetchGuard.next();
         isLoading = true;
         renderTable();
         const params = window.createParams([
@@ -306,18 +299,21 @@
         ]);
         try {
             const payload = await window.requestJson(window.buildUrl("/api/finance/receivables", params), { method: "GET" });
+            if (!fetchGuard.isLatest(requestToken)) return;
             receivables = Array.isArray(payload.data?.items) ? payload.data.items : [];
             totalItems = Number(payload.meta?.total || 0);
             currentPage = Number(payload.meta?.page || currentPage || 1);
             totalPages = Math.max(Number(payload.meta?.total_pages || 1), 1);
             tableErrorMessage = "";
         } catch (err) {
+            if (!fetchGuard.isLatest(requestToken)) return;
             receivables = [];
             totalItems = 0;
             totalPages = 1;
             tableErrorMessage = `加载失败：${err.message || "未知错误"}`;
             throw err;
         } finally {
+            if (!fetchGuard.isLatest(requestToken)) return;
             isLoading = false;
             renderTable();
         }
@@ -334,7 +330,7 @@
             return receipts;
         } catch (err) {
             receiptsCache.set(key, []);
-            window.alert(err.message || "入金明细加载失败");
+            FinanceUI.alert(err.message || "入金明细加载失败");
             return [];
         } finally {
             receiptsLoading.delete(key);
@@ -378,9 +374,6 @@
         const id = receivableCustomerMap.get(name) || "";
         $("#receivableCustomerId").value = id ? String(id) : "";
     };
-    const openDialog = (dialog) => {
-        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
-    };
     const openReceivableDialog = (item = null) => {
         $("#receivableDialogTitle").textContent = item ? "编辑应收" : "新增应收";
         $("#receivableId").value = item ? item.id : "";
@@ -390,7 +383,7 @@
         $("#receivableDueDate").value = item ? item.due_date || "" : "";
         $("#receivableStatus").value = item ? String(item.finance_status) : "0";
         $("#receivableRemark").value = item ? item.remark || "" : "";
-        openDialog(receivableDialog);
+        FinanceUI.openDialog(receivableDialog);
     };
     const openReceiptDialog = (item, receipt = null) => {
         $("#receiptDialogTitle").textContent = receipt ? "编辑入金" : "新增入金";
@@ -404,18 +397,18 @@
         $("#receiptAmount").value = receipt ? receipt.receipt_amount : outstandingAmount(item);
         $("#receiptDate").value = receipt ? receipt.receipt_date || "" : today();
         $("#receiptRemark").value = receipt ? receipt.remark || "" : "";
-        openDialog(receiptDialog);
+        FinanceUI.openDialog(receiptDialog);
     };
     const saveReceivable = async () => {
         syncSelectedCustomerId();
         const customerName = $("#receivableCustomerName").value.trim();
         const amount = toNumber($("#receivableAmount").value);
         if (!customerName) {
-            window.alert("请输入客户名称");
+            FinanceUI.alert("请输入客户名称");
             return;
         }
         if (amount <= 0) {
-            window.alert("请输入有效的应收金额");
+            FinanceUI.alert("请输入有效的应收金额");
             return;
         }
         const id = Number($("#receivableId").value);
@@ -440,7 +433,7 @@
             receivableDialog.close();
             await fetchReceivables();
         } catch (err) {
-            window.alert(err.message || "保存失败");
+            FinanceUI.alert(err.message || "保存失败");
         }
     };
     const saveReceipt = async () => {
@@ -449,11 +442,11 @@
         const item = receivables.find((target) => target.id === receivableId);
         if (!item) return;
         if (amount <= 0) {
-            window.alert("请输入有效的入金金额");
+            FinanceUI.alert("请输入有效的入金金额");
             return;
         }
         if (!$("#receiptDate").value) {
-            window.alert("请选择入金日");
+            FinanceUI.alert("请选择入金日");
             return;
         }
         const receiptId = Number($("#receiptId").value);
@@ -482,11 +475,11 @@
             renderTable();
             await loadReceipts(item, true);
         } catch (err) {
-            window.alert(err.message || "保存失败");
+            FinanceUI.alert(err.message || "保存失败");
         }
     };
     const deleteReceipt = async (item, receiptId) => {
-        if (!window.confirm("确定删除这条入金记录吗？")) return;
+        if (!FinanceUI.confirm("确定删除这条入金记录吗？")) return;
         try {
             const response = await window.requestJson(`/api/finance/receipts/${encodeURIComponent(receiptId)}`, { method: "DELETE" });
             refreshCachedReceivable(response.data?.receivable);
@@ -495,7 +488,7 @@
             renderTable();
             await loadReceipts(item, true);
         } catch (err) {
-            window.alert(err.message || "删除失败");
+            FinanceUI.alert(err.message || "删除失败");
         }
     };
     const applyI18n = () => FinanceUI.applyI18n();
@@ -530,18 +523,20 @@
                 fetchReceivables().catch(() => {});
             });
         });
-        if (pagination && window.bindPagination) {
-            window.bindPagination(pagination, (value) => {
+        FinanceUI.bindPagination({
+            pagination,
+            getTotalPages: () => totalPages,
+            onChange: (value, page, maxPages) => {
                 if (value === "prev") {
                     currentPage = Math.max(currentPage - 1, 1);
                 } else if (value === "next") {
-                    currentPage = Math.min(currentPage + 1, totalPages);
+                    currentPage = Math.min(currentPage + 1, maxPages);
                 } else {
-                    currentPage = Math.min(Math.max(Number(value) || 1, 1), totalPages);
+                    currentPage = Math.min(Math.max(page, 1), maxPages);
                 }
                 fetchReceivables().catch(() => {});
-            });
-        }
+            },
+        });
         tableBody.addEventListener("click", async (event) => {
             const button = event.target.closest("[data-action]");
             if (!button) return;

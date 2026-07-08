@@ -166,6 +166,7 @@
         other_amount: "0",
     };
     const PAGE_SIZE = 10;
+    const fetchGuard = FinanceUI.createRequestGuard();
 
     const $ = (selector) => document.querySelector(selector);
     const ledgerContent = $("[data-finance-subpage='payments.ledger']");
@@ -180,15 +181,9 @@
 
     const applyI18n = () => FinanceUI.applyI18n();
     const escapeHtml = FinanceUI.escapeHtml;
-    const toNumber = (value) => {
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : 0;
-    };
-    const money = (value) => `¥${Math.round(toNumber(value)).toLocaleString("ja-JP")}`;
-    const currentMonth = () => {
-        const date = new Date();
-        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    };
+    const toNumber = FinanceUI.toNumber;
+    const money = FinanceUI.money;
+    const currentMonth = FinanceUI.currentMonth;
     const monthParts = (value) => {
         const match = /^(\d{4})-(\d{2})$/.exec(value || "");
         if (!match) return null;
@@ -266,6 +261,7 @@
         return String(new Date().getFullYear());
     };
     const loadPaymentRecords = async () => {
+        const requestToken = fetchGuard.next();
         window.clearTimeout(paymentLoadTimer);
         setPaymentLoading(true);
         paymentLoadTimer = window.setTimeout(async () => {
@@ -279,6 +275,7 @@
                     ["page_size", String(PAGE_SIZE)],
                 ]);
                 const payload = await window.requestJson(window.buildUrl("/api/finance/payments", params), { method: "GET" });
+                if (!fetchGuard.isLatest(requestToken)) return;
                 payments = (payload.data?.items || []).map(normalizePayment);
                 filteredPayments = payments;
                 currentSummary = payload.data?.summary || currentSummary;
@@ -288,23 +285,19 @@
                 if (!payments.some((item) => item.id === expandedId)) expandedId = "";
                 renderTable();
             } catch (err) {
+                if (!fetchGuard.isLatest(requestToken)) return;
                 payments = [];
                 filteredPayments = [];
                 listTotal = 0;
                 listTotalPages = 1;
-                tableBody.innerHTML = `<tr><td class="finance-empty-row" colspan="11">${escapeHtml(err.message || "支付记录加载失败")}</td></tr>`;
+                FinanceUI.setTableMessage(tableBody, 11, err.message || "支付记录加载失败");
                 renderSummary();
                 renderPaymentPagination();
             } finally {
+                if (!fetchGuard.isLatest(requestToken)) return;
                 setPaymentLoading(false);
             }
         }, 120);
-    };
-    const openDialog = (dialog) => {
-        if (dialog && typeof dialog.showModal === "function") dialog.showModal();
-    };
-    const closeDialog = (dialog) => {
-        if (dialog && typeof dialog.close === "function") dialog.close();
     };
     const getPayment = (id) => payments.find((item) => item.id === id);
     const sourceTotal = (payment) => payment.detailsLoaded
@@ -324,13 +317,14 @@
     };
     const renderPaymentPagination = () => {
         const pages = totalPages();
-        currentPage = Math.min(Math.max(1, currentPage), pages);
-        if (paginationSummary) {
-            paginationSummary.textContent = `共 ${listTotal} 条 · 第 ${currentPage}/${pages} 页`;
-        }
-        if (window.renderPagination) {
-            window.renderPagination(pagination, paginationPages, currentPage, pages);
-        }
+        ({ currentPage, totalPages: listTotalPages } = FinanceUI.updatePagination({
+            pagination,
+            pages: paginationPages,
+            summary: paginationSummary,
+            currentPage,
+            totalPages: pages,
+            totalItems: listTotal,
+        }));
     };
     const renderDetailRows = (payment, includeActions = true) => {
         if (!payment.details.length) {
@@ -423,7 +417,7 @@
         $("#detailSourceTotal").textContent = `来源合计 ${money(sourceTotal(payment))}`;
         $("#detailSourceBody").innerHTML = renderDetailRows(payment, false);
         $("#detailPaymentRemark").textContent = payment.remark || "-";
-        openDialog(paymentDialog);
+        FinanceUI.openDialog(paymentDialog);
     };
     const openRemarkDialog = (paymentId, detailId = "") => {
         const payment = getPayment(paymentId);
@@ -433,7 +427,7 @@
         $("#remarkDetailId").value = detailId;
         $("#remarkText").value = detail ? detail.remark : payment.remark;
         $("#remarkDialogTitle").textContent = detail ? "编辑明细备注" : "编辑支付备注";
-        openDialog(remarkDialog);
+        FinanceUI.openDialog(remarkDialog);
     };
     const saveRemark = async () => {
         const payment = getPayment($("#remarkPaymentId").value);
@@ -451,7 +445,7 @@
             },
         );
         mergePayment(payload.data?.item || {});
-        closeDialog(remarkDialog);
+        FinanceUI.closeDialog(remarkDialog);
         if (paymentDialog.open && selectedPaymentId === payment.id) {
             await openPaymentDetail(payment.id);
         }
@@ -490,21 +484,23 @@
                 applyFilters();
             });
         });
-        if (pagination && window.bindPagination) {
-            window.bindPagination(pagination, (value) => {
+        FinanceUI.bindPagination({
+            pagination,
+            getTotalPages: () => totalPages(),
+            onChange: (value, page) => {
                 const pages = totalPages();
                 if (value === "prev") currentPage -= 1;
                 else if (value === "next") currentPage += 1;
-                else currentPage = Number(value) || 1;
+                else currentPage = page;
                 currentPage = Math.min(Math.max(1, currentPage), pages);
                 loadPaymentRecords();
-            });
-        }
+            },
+        });
         $("#editDetailRemarkBtn").addEventListener("click", () => {
             if (selectedPaymentId) openRemarkDialog(selectedPaymentId);
         });
         $("#saveRemarkBtn").addEventListener("click", () => {
-            saveRemark().catch((err) => window.alert(err.message || "备注保存失败"));
+            saveRemark().catch((err) => FinanceUI.alert(err.message || "备注保存失败"));
         });
         tableBody.addEventListener("click", async (event) => {
             const button = event.target.closest("[data-action]");
@@ -520,7 +516,7 @@
                 try {
                     await loadPaymentDetail(paymentId);
                 } catch (err) {
-                    window.alert(err.message || "来源明细加载失败");
+                    FinanceUI.alert(err.message || "来源明细加载失败");
                     return;
                 }
                 expandedId = paymentId;
@@ -528,7 +524,7 @@
                 return;
             }
             if (action === "view") {
-                openPaymentDetail(paymentId).catch((err) => window.alert(err.message || "支付详情加载失败"));
+                openPaymentDetail(paymentId).catch((err) => FinanceUI.alert(err.message || "支付详情加载失败"));
                 return;
             }
             if (action === "edit-remark") {
@@ -539,7 +535,7 @@
                 try {
                     await loadPaymentDetail(paymentId);
                 } catch (err) {
-                    window.alert(err.message || "来源明细加载失败");
+                    FinanceUI.alert(err.message || "来源明细加载失败");
                     return;
                 }
                 openRemarkDialog(paymentId, button.dataset.detailId || "");

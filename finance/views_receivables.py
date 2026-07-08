@@ -78,16 +78,6 @@ def _serialize_receipt(item):
     }
 
 
-def _parse_receivable_month(value):
-    value = (value or "").strip()
-    if not value:
-        return None, None
-    try:
-        return datetime.strptime(value, "%Y-%m").date().replace(day=1), None
-    except ValueError:
-        return None, api_error("Invalid field: month", status=400)
-
-
 def _parse_receivable_display_status(value):
     if value in (None, "", "all"):
         return None, None
@@ -97,28 +87,6 @@ def _parse_receivable_display_status(value):
         return None, api_error("Invalid field: status", status=400)
     if parsed not in RECEIVABLE_DISPLAY_STATUS_LABELS:
         return None, api_error("Invalid field: status", status=400)
-    return parsed, None
-
-
-def _parse_receivable_finance_status(value):
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        return None, api_error("Invalid field: finance_status", status=400)
-    if parsed not in (0, 1, 2):
-        return None, api_error("Invalid field: finance_status", status=400)
-    return parsed, None
-
-
-def _parse_optional_int(value, field_name):
-    if value in (None, ""):
-        return None, None
-    try:
-        parsed = int(value)
-    except (TypeError, ValueError):
-        return None, api_error(f"Invalid field: {field_name}", status=400)
-    if parsed < 0:
-        return None, api_error(f"Invalid field: {field_name}", status=400)
     return parsed, None
 
 
@@ -144,19 +112,6 @@ def _apply_receivable_display_status_filter(qs, status):
             outstanding_amount__gt=0,
         ).filter(Q(due_date__isnull=True) | Q(due_date__gte=today))
     return qs
-
-
-def _parse_decimal_field(payload, field_name, allow_zero=True):
-    value = payload.get(field_name)
-    if value in (None, ""):
-        return Decimal("0"), None
-    try:
-        parsed = Decimal(str(value))
-    except Exception:
-        return None, api_error(f"Invalid field: {field_name}", status=400)
-    if parsed < 0 or (not allow_zero and parsed <= 0):
-        return None, api_error(f"Invalid field: {field_name}", status=400)
-    return parsed, None
 
 
 def _recalculate_receivable_amounts(receivable, updated_by=None):

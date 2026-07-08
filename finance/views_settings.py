@@ -375,18 +375,39 @@ def _normalize_income_tax_settings(payload):
     }, None
 
 
-def _finance_tax_table_settings_api(request, setting_name):
+def _get_finance_settings_record(setting_name, for_update=False):
+    qs = FinanceSettings.objects
+    if for_update:
+        qs = qs.select_for_update()
+    return (
+        qs
+        .filter(name=setting_name, deleted_at__isnull=True)
+        .order_by("id")
+        .first()
+    )
+
+
+def _save_finance_settings_record(record, setting_name, settings_payload, login_id):
+    if record:
+        record.settings = settings_payload
+        record.updated_by = login_id
+        record.save(update_fields=["settings", "updated_by", "updated_at"])
+        return record
+    return FinanceSettings.objects.create(
+        name=setting_name,
+        settings=settings_payload,
+        created_by=login_id,
+        updated_by=login_id,
+    )
+
+
+def _finance_tax_table_settings_api(request, setting_name, normalizer=_normalize_annuity_settings):
     login_id, error = require_login(request)
     if error:
         return error
 
     if request.method == "GET":
-        record = (
-            FinanceSettings.objects
-            .filter(name=setting_name, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
+        record = _get_finance_settings_record(setting_name)
         return api_success(data={
             "name": setting_name,
             "settings": record.settings if record else None,
@@ -395,29 +416,13 @@ def _finance_tax_table_settings_api(request, setting_name):
     payload, error = parse_json_body(request)
     if error:
         return error
-    settings_payload, error = _normalize_annuity_settings(payload)
+    settings_payload, error = normalizer(payload)
     if error:
         return error
 
     with transaction.atomic():
-        record = (
-            FinanceSettings.objects
-            .select_for_update()
-            .filter(name=setting_name, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
-        if record:
-            record.settings = settings_payload
-            record.updated_by = login_id
-            record.save(update_fields=["settings", "updated_by", "updated_at"])
-        else:
-            record = FinanceSettings.objects.create(
-                name=setting_name,
-                settings=settings_payload,
-                created_by=login_id,
-                updated_by=login_id,
-            )
+        record = _get_finance_settings_record(setting_name, for_update=True)
+        record = _save_finance_settings_record(record, setting_name, settings_payload, login_id)
 
     return api_success(data={
         "name": record.name,
@@ -440,53 +445,11 @@ def finance_employment_insurance_settings_api(request):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def finance_income_tax_settings_api(request):
-    login_id, error = require_login(request)
-    if error:
-        return error
-
-    if request.method == "GET":
-        record = (
-            FinanceSettings.objects
-            .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
-        return api_success(data={
-            "name": FINANCE_INCOME_TAX_SETTING_NAME,
-            "settings": record.settings if record else None,
-        })
-
-    payload, error = parse_json_body(request)
-    if error:
-        return error
-    settings_payload, error = _normalize_income_tax_settings(payload)
-    if error:
-        return error
-
-    with transaction.atomic():
-        record = (
-            FinanceSettings.objects
-            .select_for_update()
-            .filter(name=FINANCE_INCOME_TAX_SETTING_NAME, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
-        if record:
-            record.settings = settings_payload
-            record.updated_by = login_id
-            record.save(update_fields=["settings", "updated_by", "updated_at"])
-        else:
-            record = FinanceSettings.objects.create(
-                name=FINANCE_INCOME_TAX_SETTING_NAME,
-                settings=settings_payload,
-                created_by=login_id,
-                updated_by=login_id,
-            )
-
-    return api_success(data={
-        "name": record.name,
-        "settings": record.settings,
-    })
+    return _finance_tax_table_settings_api(
+        request,
+        FINANCE_INCOME_TAX_SETTING_NAME,
+        normalizer=_normalize_income_tax_settings,
+    )
 
 
 def _normalize_payroll_basic_item_names(value, category):
@@ -553,12 +516,7 @@ def finance_payroll_basic_item_settings_api(request):
         return error
 
     if request.method == "GET":
-        record = (
-            FinanceSettings.objects
-            .filter(name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
+        record = _get_finance_settings_record(FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME)
         return api_success(data={
             "name": FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
             "settings": _read_payroll_basic_item_settings(record.settings if record else None),
@@ -578,26 +536,15 @@ def finance_payroll_basic_item_settings_api(request):
         return error
 
     with transaction.atomic():
-        record = (
-            FinanceSettings.objects
-            .select_for_update()
-            .filter(name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
+        record = _get_finance_settings_record(FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME, for_update=True)
         settings = _read_payroll_basic_item_settings(record.settings if record else None)
         settings[category] = items
-        if record:
-            record.settings = settings
-            record.updated_by = login_id
-            record.save(update_fields=["settings", "updated_by", "updated_at"])
-        else:
-            record = FinanceSettings.objects.create(
-                name=FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
-                settings=settings,
-                created_by=login_id,
-                updated_by=login_id,
-            )
+        record = _save_finance_settings_record(
+            record,
+            FINANCE_PAYROLL_BASIC_ITEMS_SETTING_NAME,
+            settings,
+            login_id,
+        )
 
     return api_success(data={
         "name": record.name,
@@ -614,12 +561,7 @@ def finance_payroll_employment_insurance_settings_api(request):
         return error
 
     if request.method == "GET":
-        record = (
-            FinanceSettings.objects
-            .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
-        )
+        record = _get_finance_settings_record(FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME)
         settings = None
         if record:
             settings, _ = _normalize_payroll_employment_rate_settings(record.settings)
@@ -636,24 +578,13 @@ def finance_payroll_employment_insurance_settings_api(request):
         return error
 
     with transaction.atomic():
-        record = (
-            FinanceSettings.objects
-            .select_for_update()
-            .filter(name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, deleted_at__isnull=True)
-            .order_by("id")
-            .first()
+        record = _get_finance_settings_record(FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME, for_update=True)
+        record = _save_finance_settings_record(
+            record,
+            FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME,
+            settings,
+            login_id,
         )
-        if record:
-            record.settings = settings
-            record.updated_by = login_id
-            record.save(update_fields=["settings", "updated_by", "updated_at"])
-        else:
-            record = FinanceSettings.objects.create(
-                name=FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME,
-                settings=settings,
-                created_by=login_id,
-                updated_by=login_id,
-            )
 
     return api_success(data={
         "name": record.name,

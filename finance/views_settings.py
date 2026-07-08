@@ -12,7 +12,6 @@ from project.error_codes import ErrorCode
 from .models import FinanceSettings
 
 FINANCE_ANNUITY_SETTING_NAME = "annuity_insurance"
-FINANCE_EMPLOYMENT_SETTING_NAME = "employment_insurance"
 FINANCE_INCOME_TAX_SETTING_NAME = "income_tax"
 FINANCE_PAYROLL_EMPLOYMENT_SETTING_NAME = "payroll_employment_insurance"
 INCOME_TAX_MONTHLY_COLUMNS = (
@@ -44,13 +43,8 @@ def _unwrap_annuity_settings_payload(payload):
         return None, _finance_settings_payload_error()
     if isinstance(payload.get("settings"), dict):
         return payload["settings"], None
-    for setting_name in (
-        FINANCE_ANNUITY_SETTING_NAME,
-        FINANCE_EMPLOYMENT_SETTING_NAME,
-        FINANCE_INCOME_TAX_SETTING_NAME,
-    ):
-        if isinstance(payload.get(setting_name), dict):
-            return payload[setting_name], None
+    if isinstance(payload.get(FINANCE_ANNUITY_SETTING_NAME), dict):
+        return payload[FINANCE_ANNUITY_SETTING_NAME], None
     return payload, None
 
 
@@ -434,12 +428,6 @@ def _finance_tax_table_settings_api(request, setting_name, normalizer=_normalize
 @require_http_methods(["GET", "POST"])
 def finance_annuity_insurance_settings_api(request):
     return _finance_tax_table_settings_api(request, FINANCE_ANNUITY_SETTING_NAME)
-
-
-@csrf_exempt
-@require_http_methods(["GET", "POST"])
-def finance_employment_insurance_settings_api(request):
-    return _finance_tax_table_settings_api(request, FINANCE_EMPLOYMENT_SETTING_NAME)
 
 
 @csrf_exempt

@@ -90,7 +90,6 @@ from employee.views import (
 )
 from finance.views import (
     finance_annuity_insurance_settings_api,
-    finance_employment_insurance_settings_api,
     finance_income_tax_settings_api,
     finance_payroll_basic_item_settings_api,
     finance_payroll_employment_insurance_settings_api,
@@ -220,10 +219,7 @@ urlpatterns = [
     path("finance/reports/profit.html", TemplateView.as_view(template_name="frontend/finance/reports/profit.html")),
     path("finance/reports/cashflow.html", TemplateView.as_view(template_name="frontend/finance/reports/cashflow.html")),
     path("finance/reports/exports.html", TemplateView.as_view(template_name="frontend/finance/reports/exports.html")),
-    path("finance/settings.html", TemplateView.as_view(template_name="frontend/finance/settings.html")),
     path("finance/settings/annuity.html", TemplateView.as_view(template_name="frontend/finance/settings/annuity.html")),
-    path("finance/settings/employment.html", TemplateView.as_view(template_name="frontend/finance/settings/employment.html")),
-    path("finance/settings/income-tax.html", TemplateView.as_view(template_name="frontend/finance/settings/income-tax.html")),
     path("finance/my_salary.html", TemplateView.as_view(template_name="frontend/finance/my_salary.html")),
     # -------------------------------permission UI-------------------------------
     path("permission.html", TemplateView.as_view(template_name="frontend/permission.html")),
@@ -346,7 +342,6 @@ urlpatterns = [
     path("api/finance/payments", finance_payments_api, name="finance-payments"),
     path("api/finance/payments/<int:payment_id>", finance_payment_detail_api, name="finance-payment-detail"),
     path("api/finance/settings/annuity-insurance", finance_annuity_insurance_settings_api, name="finance-annuity-insurance-settings"),
-    path("api/finance/settings/employment-insurance", finance_employment_insurance_settings_api, name="finance-employment-insurance-settings"),
     path("api/finance/settings/income-tax", finance_income_tax_settings_api, name="finance-income-tax-settings"),
     path("api/finance/settings/payroll-basic-items", finance_payroll_basic_item_settings_api, name="finance-payroll-basic-item-settings"),
     path("api/finance/settings/payroll-employment-insurance", finance_payroll_employment_insurance_settings_api, name="finance-payroll-employment-insurance-settings"),

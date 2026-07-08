@@ -24,7 +24,6 @@ from .views_receivables import (
 )
 from .views_settings import (
     finance_annuity_insurance_settings_api,
-    finance_employment_insurance_settings_api,
     finance_income_tax_settings_api,
     finance_payroll_basic_item_settings_api,
     finance_payroll_employment_insurance_settings_api,
@@ -32,7 +31,6 @@ from .views_settings import (
 
 __all__ = [
     "finance_annuity_insurance_settings_api",
-    "finance_employment_insurance_settings_api",
     "finance_income_tax_settings_api",
     "finance_payroll_basic_item_settings_api",
     "finance_payroll_employment_insurance_settings_api",

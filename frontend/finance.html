@@ -21,7 +21,6 @@
                     <button class="c-toggle" type="button" data-finance-view="payroll" role="tab" aria-selected="false" data-i18n="finance.tabs.payroll">工资计算</button>
                     <button class="c-toggle" type="button" data-finance-view="payments" role="tab" aria-selected="false" data-i18n="finance.tabs.payments">支付记录</button>
                     <button class="c-toggle" type="button" data-finance-view="reports" role="tab" aria-selected="false" data-i18n="finance.tabs.reports">财务报表</button>
-                    <button class="c-toggle" type="button" data-finance-view="settings" role="tab" aria-selected="false" data-i18n="finance.tabs.settings">财务设置</button>
                 </div>
             </div>
         </div>
@@ -53,7 +52,6 @@
             payroll: { src: "finance/payroll.html", title: "工资计算" },
             payments: { src: "finance/payments.html", title: "支付记录" },
             reports: { src: "finance/reports.html", title: "财务报表" },
-            settings: { src: "finance/settings.html", title: "财务设置" }
         };
         const buttons = Array.from(document.querySelectorAll("[data-finance-view]"));
         const frame = document.getElementById("financeModuleFrame");

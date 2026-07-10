@@ -101,22 +101,22 @@
       <div class="filters c-filter-panel">
         <div class="filter-grid c-filter-grid-wide">
           <label class="c-field">
-            <span>客户名称</span>
-            <input id="pay-filter-customer" type="text" placeholder="输入客户名称" list="pay-filter-customer-list" autocomplete="off" />
+            <span data-i18n="pay.filter.customer">客户名称</span>
+            <input id="pay-filter-customer" type="text" placeholder="输入客户名称" data-i18n-placeholder="pay.filter.customer_placeholder" list="pay-filter-customer-list" autocomplete="off" />
           </label>
           <datalist id="pay-filter-customer-list"></datalist>
           <label class="c-field">
-            <span>月份</span>
+            <span data-i18n="common.field.month">月份</span>
             <input id="pay-filter-month" type="month" />
           </label>
         </div>
         <div class="filter-actions c-filter-actions-bar">
           <div class="filter-actions-left c-filter-actions-left">
-            <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createPayBtn" type="button">+ 新增请求书</button>
+            <button class="c-btn c-btn-primary c-btn-lg c-btn-strong" id="createPayBtn" type="button" data-i18n="pay.action.create">+ 新增请求书</button>
           </div>
           <div class="filter-actions-right c-filter-actions-group">
-            <button class="c-btn c-btn-primary" id="paySearchBtn" type="button">搜索</button>
-            <button class="c-btn c-btn-warn" id="payResetBtn" type="button">重置</button>
+            <button class="c-btn c-btn-primary" id="paySearchBtn" type="button" data-i18n="common.search">搜索</button>
+            <button class="c-btn c-btn-warn" id="payResetBtn" type="button" data-i18n="common.reset">重置</button>
           </div>
         </div>
       </div>
@@ -127,27 +127,27 @@
         <table class="c-table c-table-hover c-table-center">
           <thead>
           <tr>
-            <th>请求书编号</th>
-            <th>客户名称</th>
-            <th>总价</th>
-            <th>状态</th>
-            <th>请求书日期</th>
-            <th class="c-actions-col">操作</th>
+            <th data-i18n="pay.field.request_no">请求书编号</th>
+            <th data-i18n="pay.filter.customer">客户名称</th>
+            <th data-i18n="pay.field.total">总价</th>
+            <th data-i18n="common.field.status">状态</th>
+            <th data-i18n="pay.table.request_date">请求书日期</th>
+            <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
           </tr>
           </thead>
           <tbody id="payRequestTableBody">
           <tr>
-            <td colspan="6" class="empty c-empty">暂无数据</td>
+            <td colspan="6" class="empty c-empty" data-i18n="common.no_data">暂无数据</td>
           </tr>
           </tbody>
         </table>
       </div>
       <div class="pagination c-pagination">
-        <div class="pagination-summary">共 0 条 · 第 1/1 页</div>
+        <div class="pagination-summary" data-i18n="common.summary.page">共 0 条 · 第 1/1 页</div>
         <div class="pagination-pages">
-          <button class="c-btn c-btn-sm" type="button">上一页</button>
+          <button class="c-btn c-btn-sm" type="button" data-i18n="common.pagination.prev">上一页</button>
           <button class="c-btn c-btn-sm is-active" type="button">1</button>
-          <button class="c-btn c-btn-sm" type="button">下一页</button>
+          <button class="c-btn c-btn-sm" type="button" data-i18n="common.pagination.next">下一页</button>
         </div>
       </div>
     </section>
@@ -181,19 +181,19 @@
                 <input id="pay-order-no" type="text" placeholder="PO-2024-XXX"/>
               </label>
               <label class="c-inline-field">
-                <span>件名</span>
-                <input id="pay-subject" type="text" placeholder="件名"/>
+                <span data-i18n="pay.field.subject">件名</span>
+                <input id="pay-subject" type="text" placeholder="件名" data-i18n-placeholder="pay.field.subject"/>
               </label>
               <label class="c-inline-field">
-                <span>状态</span>
+                <span data-i18n="common.field.status">状态</span>
                 <select id="pay-status-select">
-                  <option value="待付款" selected>待付款</option>
-                  <option value="已付款">已付款</option>
-                  <option value="已取消">已取消</option>
+                  <option value="待付款" selected data-i18n="pay.status.pending">待付款</option>
+                  <option value="已付款" data-i18n="pay.status.paid">已付款</option>
+                  <option value="已取消" data-i18n="pay.status.canceled">已取消</option>
                 </select>
               </label>
               <label class="c-inline-field">
-                <span>入金期日</span>
+                <span data-i18n="pay.field.due_date">入金期日</span>
                 <input id="pay-request-date" type="date"/>
               </label>
               <div class="order-issue-items">
@@ -204,8 +204,8 @@
                 <div class="order-issue-item-list pay-line-items" id="detailTableBody"></div>
               </div>
               <label class="c-inline-field c-inline-field-full c-inline-field-textarea">
-                <span>备注</span>
-                <textarea id="pay-remark" class="c-input" rows="4" placeholder="填写备注内容"></textarea>
+                <span data-i18n="common.field.note">备注</span>
+                <textarea id="pay-remark" class="c-input" rows="4" placeholder="填写备注内容" data-i18n-placeholder="common.field.note_placeholder"></textarea>
               </label>
             </div>
           </div>
@@ -318,77 +318,79 @@
   <dialog class="c-dialog order-dialog-wide order-send-dialog" id="paySendDialog" aria-labelledby="paySendTitle">
     <div class="c-dialog-header">
       <div>
-        <h3 id="paySendTitle">发送请求书</h3>
-        <p class="c-card-subtitle">确认PDF内容并填写邮件信息。</p>
+        <h3 id="paySendTitle" data-i18n="pay.send.title">发送请求书</h3>
+        <p class="c-card-subtitle" data-i18n="pay.send.subtitle">确认PDF内容并填写邮件信息。</p>
       </div>
-      <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+      <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
       <div class="order-send-layout">
-        <aside class="order-preview-panel" aria-label="PDF预览">
+        <aside class="order-preview-panel" aria-label="PDF预览" data-i18n-aria="common.preview">
           <div class="order-preview-canvas">
-            <iframe class="order-send-pdf-frame" id="paySendPdfFrame" title="请求书PDF预览" hidden></iframe>
-            <div class="order-send-no-pdf" id="paySendNoPdfMessage" hidden>没有PDF</div>
+            <iframe class="order-send-pdf-frame" id="paySendPdfFrame" title="请求书PDF预览" data-i18n-title="pay.send.pdf_preview" hidden></iframe>
+            <div class="order-send-no-pdf" id="paySendNoPdfMessage" data-i18n="pay.send.no_pdf" hidden>没有PDF</div>
           </div>
         </aside>
-        <section class="order-send-panel" aria-label="发送邮件">
+        <section class="order-send-panel" aria-label="发送邮件" data-i18n-aria="pay.send.mail_aria">
           <div class="order-send-form">
             <div class="order-send-head-grid">
               <label class="order-send-field">
-                <span>邮件主题</span>
-                <input id="pay-send-subject" type="text" placeholder="请输入邮件主题"/>
+                <span data-i18n="pay.send.subject">邮件主题</span>
+                <input id="pay-send-subject" type="text" placeholder="请输入邮件主题" data-i18n-placeholder="pay.send.subject_placeholder"/>
               </label>
               <label class="order-send-field order-send-type-field">
-                <span>送信类型</span>
+                <span data-i18n="pay.send.type">送信类型</span>
                 <select id="pay-send-type">
-                  <option value="-1">其他</option>
+                  <option value="-1" data-i18n="customer.bulk.mail_type.other">其他</option>
                   <option value="0">BP</option>
-                  <option value="1">技术者送信</option>
-                  <option value="2">案件送信</option>
-                  <option value="3">发注</option>
-                  <option value="4" selected>请求书</option>
+                  <option value="1" data-i18n="customer.bulk.mail_type.technician">技术者送信</option>
+                  <option value="2" data-i18n="customer.bulk.mail_type.project">案件送信</option>
+                  <option value="3" data-i18n="order.tabs.issue">发注</option>
+                  <option value="4" selected data-i18n="songxinhistory.type.pay_request">请求书</option>
                 </select>
               </label>
             </div>
             <div class="order-send-field">
               <span class="order-send-field-head">
-                <span>邮件内容</span>
+                <span data-i18n="pay.send.body">邮件内容</span>
                 <button
                   id="pay-send-template-edit"
                   class="songxin-template-trigger order-send-template-trigger"
                   type="button"
                   aria-label="编辑模板信息"
                   title="编辑模板信息"
+                  data-i18n-aria="pay.template.edit"
+                  data-i18n-title="pay.template.edit"
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M6 2h8l5 5v4.25a1 1 0 1 1-2 0V8h-4V4H6v16h5.25a1 1 0 1 1 0 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm9 3.41V7h1.59L15 5.41zm-2.04 9.33 4.83-4.83 2.12 2.12-4.83 4.83-2.54.42.42-2.54zm6.24-6.24.71-.71a1 1 0 0 1 1.41 0l.71.71a1 1 0 0 1 0 1.41l-.71.71-2.12-2.12z"/>
                   </svg>
                 </button>
               </span>
-              <textarea id="pay-send-body" placeholder="请输入邮件内容"></textarea>
+              <textarea id="pay-send-body" placeholder="请输入邮件内容" data-i18n-placeholder="pay.send.body_placeholder"></textarea>
             </div>
             <div class="order-send-bottom-grid">
               <div class="order-send-field">
-                <span>上传附件</span>
+                <span data-i18n="pay.send.attachments">上传附件</span>
                 <div class="order-send-upload-row" data-file-i18n-skip="1">
                   <input id="pay-send-files" class="songxin-file-input" type="file" multiple accept=".pdf,.doc,.docx,.jpg,.png,.jpeg,.xls,.xlsx"/>
-                  <button id="pay-send-files-trigger" class="c-btn c-btn-ghost" type="button">选择文件</button>
-                  <span id="pay-send-files-status">未添加附件</span>
-                  <span class="order-send-upload-hint">支持多文件，建议单个不超过10MB</span>
+                  <button id="pay-send-files-trigger" class="c-btn c-btn-ghost" type="button" data-i18n="common.file.choose">选择文件</button>
+                  <span id="pay-send-files-status" data-i18n="pay.send.files.none">未添加附件</span>
+                  <span class="order-send-upload-hint" data-i18n="customer.bulk.attachment_hint">支持多文件，建议单个不超过10MB</span>
                 </div>
-                <div id="pay-send-attachment-list" class="order-send-attachment-list">暂无附件</div>
+                <div id="pay-send-attachment-list" class="order-send-attachment-list" data-i18n="common.empty.attachments">暂无附件</div>
               </div>
               <div class="order-send-recipient-stack">
                 <label class="order-send-field">
-                  <span>收件人</span>
+                  <span data-i18n="pay.send.recipient">收件人</span>
                   <div class="order-send-combobox" id="pay-send-to-combobox">
                     <input id="pay-send-to" type="email" placeholder="name@example.com" autocomplete="off"/>
-                    <button class="order-send-combobox-toggle" id="pay-send-to-toggle" type="button" aria-label="展开收件人选项">▾</button>
+                    <button class="order-send-combobox-toggle" id="pay-send-to-toggle" type="button" aria-label="展开收件人选项" data-i18n-aria="pay.send.recipient_toggle">▾</button>
                     <div class="order-send-combobox-menu" id="pay-send-to-options" hidden></div>
                   </div>
                 </label>
                 <label class="order-send-field order-send-cc">
-                  <span>抄送（可选）</span>
+                  <span data-i18n="pay.send.cc">抄送（可选）</span>
                   <input id="pay-send-cc" type="email" placeholder="cc@example.com"/>
                 </label>
               </div>
@@ -398,18 +400,18 @@
       </div>
     </div>
     <div class="c-dialog-actions order-send-actions">
-      <button class="c-btn c-btn-secondary" type="button" data-dialog-close>取消</button>
-      <button class="c-btn c-btn-primary order-send-submit" type="button" id="paySendSubmit">发送&nbsp; &gt;</button>
+      <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+      <button class="c-btn c-btn-primary order-send-submit" type="button" id="paySendSubmit" data-i18n="pay.send.submit">发送 &gt;</button>
     </div>
   </dialog>
 
   <dialog id="pay-send-template-dialog" class="c-dialog songxin-template-dialog">
     <div class="c-dialog-header">
       <div class="songxin-template-header-text">
-        <h3>编辑模板信息</h3>
-        <p class="c-card-subtitle songxin-template-subtitle">请求书邮件模板。</p>
+        <h3 data-i18n="pay.template.edit">编辑模板信息</h3>
+        <p class="c-card-subtitle songxin-template-subtitle" data-i18n="pay.template.subtitle">请求书邮件模板。</p>
       </div>
-      <button class="c-dialog-close" type="button" aria-label="关闭" data-dialog-close>×</button>
+      <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
     </div>
     <div class="c-dialog-body">
       <textarea
@@ -417,11 +419,12 @@
         class="songxin-template-textarea"
         rows="14"
         placeholder="请输入模板信息"
+        data-i18n-placeholder="pay.template.placeholder"
       ></textarea>
     </div>
     <div class="c-dialog-actions">
-      <button class="c-btn c-btn-ghost" type="button" data-dialog-close>取消</button>
-      <button id="pay-send-template-save" class="c-btn c-btn-primary" type="button">保存</button>
+      <button class="c-btn c-btn-ghost" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
+      <button id="pay-send-template-save" class="c-btn c-btn-primary" type="button" data-i18n="common.save">保存</button>
     </div>
   </dialog>
 
@@ -430,7 +433,18 @@
   <script src="common.js"></script>
   <script>
     const i18n = window.I18N || null;
-    const t = (key, fallback) => (i18n && typeof i18n.t === "function" ? i18n.t(key) : fallback);
+    const t = (key, fallback) => {
+      if (!i18n || typeof i18n.t !== "function") return fallback || key;
+      const value = i18n.t(key);
+      return value === key ? (fallback || key) : value;
+    };
+    const tf = (key, vars = {}, fallback = "") => {
+      const template = t(key, fallback || key);
+      return Object.keys(vars).reduce(
+        (text, name) => text.replace(new RegExp(`\\{${name}\\}`, "g"), String(vars[name])),
+        template
+      );
+    };
     if (i18n) {
       i18n.init();
       i18n.apply();
@@ -502,6 +516,7 @@
     const JSPDF_SRC = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
     let payCurrentPage = 1;
     let payCurrentItems = [];
+    let payCurrentMeta = { total: 0, page: 1, total_pages: 1 };
     let payCurrentEditId = null;
     let payCurrentSendItem = null;
     let paySendExtraFiles = [];
@@ -615,8 +630,15 @@
     );
 
     const formatCurrency = (value) => `¥ ${Number(value || 0).toLocaleString("ja-JP", { maximumFractionDigits: 0 })}`;
+    const formatPayStatus = (status) => {
+      const value = String(status || "").trim();
+      if (value === "待付款") return t("pay.status.pending", value);
+      if (value === "已付款") return t("pay.status.paid", value);
+      if (value === "已取消") return t("pay.status.canceled", value);
+      return value || "-";
+    };
 
-    const showPayError = (error, fallback = "处理失败") => {
+    const showPayError = (error, fallback = t("common.load_failed", "处理失败")) => {
       const message = error?.message || error?.payload?.message || fallback;
       window.alert(message);
     };
@@ -641,7 +663,7 @@
       row.innerHTML = `
         <label class="c-inline-field">
           <span>${t("pay.detail.item", "项目")}</span>
-          <input type="text" placeholder="项目" data-pay-item-field="item"/>
+          <input type="text" placeholder="${t("pay.detail.item", "项目")}" data-pay-item-field="item"/>
         </label>
         <label class="c-inline-field">
           <span>${t("pay.detail.qty", "数量")}</span>
@@ -652,14 +674,14 @@
           <input type="text" placeholder="¥ 0" data-pay-item-field="price"/>
         </label>
         <label class="c-inline-field">
-          <span>税金</span>
+          <span>${t("pay.detail.tax", "税金")}</span>
           <input type="text" placeholder="¥ 0" data-pay-item-field="tax"/>
         </label>
         <label class="c-inline-field">
-          <span>单位</span>
-          <input type="text" placeholder="式" data-pay-item-field="unit"/>
+          <span>${t("pay.detail.unit", "单位")}</span>
+          <input type="text" placeholder="${t("pay.detail.unit_placeholder", "式")}" data-pay-item-field="unit"/>
         </label>
-        <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-pay-line" aria-label="删除">×</button>
+        <button class="c-btn c-btn-ghost c-btn-sm order-issue-item-remove" type="button" data-action="remove-pay-line" aria-label="${t("common.delete", "删除")}">×</button>
       `;
       return row;
     };
@@ -726,6 +748,27 @@
         setItemInputValue(row, "unit", item.unit || "");
         row.dataset.taxManual = item.tax ? "true" : "";
         detailTableBody.appendChild(row);
+      });
+    };
+
+    const refreshDetailRowLabels = () => {
+      if (!detailTableBody) return;
+      detailTableBody.querySelectorAll(".pay-line-item-row").forEach((row) => {
+        const labels = [
+          ["item", t("pay.detail.item", "项目"), t("pay.detail.item", "项目")],
+          ["qty", t("pay.detail.qty", "数量"), "1"],
+          ["price", t("pay.detail.price", "单价"), "¥ 0"],
+          ["tax", t("pay.detail.tax", "税金"), "¥ 0"],
+          ["unit", t("pay.detail.unit", "单位"), t("pay.detail.unit_placeholder", "式")]
+        ];
+        labels.forEach(([field, label, placeholder]) => {
+          const input = getItemInput(row, field);
+          const labelEl = input?.closest(".c-inline-field")?.querySelector("span");
+          if (labelEl) labelEl.textContent = label;
+          if (input) input.placeholder = placeholder;
+        });
+        const remove = row.querySelector('[data-action="remove-pay-line"]');
+        if (remove) remove.setAttribute("aria-label", t("common.delete", "删除"));
       });
     };
 
@@ -1177,15 +1220,27 @@
       updatePreview();
     };
 
+    const updateDialogModeLabels = (mode) => {
+      if (createPayTitle) {
+        createPayTitle.textContent = mode === "edit"
+          ? t("pay.dialog.edit.title", "编辑请求书")
+          : mode === "view"
+            ? t("pay.dialog.view.title", "请求书详情")
+            : t("pay.dialog.create.title", "新建请求书");
+      }
+      if (payDialogSubmitBtn) {
+        payDialogSubmitBtn.textContent = mode === "edit"
+          ? t("pay.action.save_changes", "保存修改")
+          : mode === "view"
+            ? t("common.close", "关闭")
+            : t("common.create", "开始创建");
+      }
+    };
+
     const setDialogMode = (mode) => {
       if (!createPayDialog) return;
       createPayDialog.dataset.mode = mode;
-      if (createPayTitle) {
-        createPayTitle.textContent = mode === "edit" ? "编辑请求书" : mode === "view" ? "请求书详情" : "新建请求书";
-      }
-      if (payDialogSubmitBtn) {
-        payDialogSubmitBtn.textContent = mode === "edit" ? "保存修改" : mode === "view" ? "关闭" : "开始创建";
-      }
+      updateDialogModeLabels(mode);
       if (mode === "create") resetCreateForm();
       setDialogReadonly(mode === "view");
       if (payStatusSelect) {
@@ -1280,7 +1335,7 @@
         const result = String(reader.result || "");
         resolve(result.includes(",") ? result.split(",").pop() : result);
       };
-      reader.onerror = () => reject(reader.error || new Error("文件读取失败"));
+      reader.onerror = () => reject(reader.error || new Error(t("pay.error.file_read_failed", "文件读取失败")));
       reader.readAsDataURL(blob);
     });
 
@@ -1313,7 +1368,7 @@
         await jspdfLoadPromise;
       }
       if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
-        throw new Error("PDF生成依赖未加载");
+        throw new Error(t("pay.error.pdf_dependency_failed", "PDF生成依赖未加载"));
       }
     };
 
@@ -1352,7 +1407,7 @@
 
     const getPaySendPdfBlob = async () => {
       const pdfUrl = getStoredPayPdfUrl(payCurrentSendItem);
-      if (!pdfUrl) throw new Error("没有PDF");
+      if (!pdfUrl) throw new Error(t("pay.send.no_pdf", "没有PDF"));
       const response = await window.fetchWithAuth(pdfUrl, { method: "GET" });
       return response.blob();
     };
@@ -1361,23 +1416,23 @@
       if (!paySendFields.attachmentList) return;
       if (paySendFields.filesStatus) {
         paySendFields.filesStatus.textContent = paySendExtraFiles.length
-          ? `已添加 ${paySendExtraFiles.length} 个附件`
-          : "未添加附件";
+          ? tf("pay.send.files.added", { count: paySendExtraFiles.length }, "已添加 {count} 个附件")
+          : t("pay.send.files.none", "未添加附件");
       }
       const rows = [];
       if (hasStoredPayPdf(payCurrentSendItem)) {
-        rows.push(`<div class="order-send-attachment-item"><span>PDF文件：${escapeHtml(buildPaySafePdfName(payCurrentSendItem))}</span></div>`);
+        rows.push(`<div class="order-send-attachment-item"><span>${escapeHtml(t("pay.send.pdf_file", "PDF文件"))}：${escapeHtml(buildPaySafePdfName(payCurrentSendItem))}</span></div>`);
       }
       paySendExtraFiles.forEach((file, index) => {
         rows.push(`
           <div class="order-send-attachment-item">
             <span>${escapeHtml(file.name)}</span>
-            <button type="button" data-remove-pay-send-file="${index}">删除</button>
+            <button type="button" data-remove-pay-send-file="${index}">${escapeHtml(t("common.delete", "删除"))}</button>
           </div>
         `);
       });
       if (!rows.length) {
-        paySendFields.attachmentList.textContent = "暂无附件";
+        paySendFields.attachmentList.textContent = t("common.empty.attachments", "暂无附件");
         return;
       }
       paySendFields.attachmentList.innerHTML = rows.join("");
@@ -1414,10 +1469,10 @@
         const payload = await window.requestJson(`/api/customers/${encodeURIComponent(customerId)}`, { method: "GET" });
         const customer = payload?.data?.item || {};
         const options = [
-          { name: customer.contact1_name || "联系人1", email: customer.contact1_email },
-          { name: customer.company_name || "公司邮箱", email: customer.company_email },
-          { name: customer.contact2_name || "联系人2", email: customer.contact2_email },
-          { name: customer.contact3_name || "联系人3", email: customer.contact3_email }
+          { name: customer.contact1_name || t("pay.send.contact1", "联系人1"), email: customer.contact1_email },
+          { name: customer.company_name || t("pay.send.company_email", "公司邮箱"), email: customer.company_email },
+          { name: customer.contact2_name || t("pay.send.contact2", "联系人2"), email: customer.contact2_email },
+          { name: customer.contact3_name || t("pay.send.contact3", "联系人3"), email: customer.contact3_email }
         ].map((option) => ({
           name: String(option.name || "").trim(),
           email: String(option.email || "").trim()
@@ -1454,7 +1509,7 @@
       const payload = await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
         method: "GET"
       }, {
-        fallbackMessage: "加载模板失败"
+        fallbackMessage: t("pay.template.load_failed", "加载模板失败")
       });
       const template = payload.data && typeof payload.data.template === "string" ? payload.data.template : "";
       paySendTemplateCache[paySendTemplateName] = template;
@@ -1476,7 +1531,7 @@
           paySendFields.body.value = renderPaySendTemplate(template, payCurrentSendItem);
         }
       } catch (error) {
-        console.warn("加载请求书邮件模板失败", error);
+        console.warn(t("pay.template.load_failed", "加载请求书邮件模板失败"), error);
       }
     };
 
@@ -1487,8 +1542,8 @@
         paySendTemplateContent.value = normalizeMultiline(template);
         paySendTemplateDialog.showModal();
       } catch (error) {
-        console.error("加载模板失败", error);
-        alert(error.message || "加载模板失败");
+        console.error(t("pay.template.load_failed", "加载模板失败"), error);
+        alert(error.message || t("pay.template.load_failed", "加载模板失败"));
       }
     };
 
@@ -1496,13 +1551,13 @@
       if (!paySendTemplateContent || !paySendTemplateSave) return;
       const originalText = paySendTemplateSave.textContent;
       paySendTemplateSave.disabled = true;
-      paySendTemplateSave.textContent = "保存中...";
+      paySendTemplateSave.textContent = t("common.saving", "保存中...");
       try {
         const template = normalizeMultiline(paySendTemplateContent.value);
         await window.requestJson(`/api/mail-templates/${encodeURIComponent(paySendTemplateName)}`, {
           body: JSON.stringify({ template })
         }, {
-          fallbackMessage: "保存模板失败"
+          fallbackMessage: t("pay.template.save_failed", "保存模板失败")
         });
         paySendTemplateCache[paySendTemplateName] = template;
         if (paySendFields.body) {
@@ -1511,11 +1566,11 @@
         }
         paySendTemplateDialog?.close();
       } catch (error) {
-        console.error("保存模板失败", error);
-        alert(error.message || "保存模板失败");
+        console.error(t("pay.template.save_failed", "保存模板失败"), error);
+        alert(error.message || t("pay.template.save_failed", "保存模板失败"));
       } finally {
         paySendTemplateSave.disabled = false;
-        paySendTemplateSave.textContent = originalText || "保存";
+        paySendTemplateSave.textContent = originalText || t("common.save", "保存");
       }
     };
 
@@ -1545,13 +1600,13 @@
       const body = paySendFields.body?.value.trim() || "";
       const recipient = paySendFields.to?.value.trim() || "";
       const mailType = Number(paySendFields.type?.value || 4);
-      if (!subject) return alert("请输入邮件主题"), paySendFields.subject?.focus();
-      if (!hasStoredPayPdf(payCurrentSendItem)) return alert("没有PDF，无法发送。");
-      if (!body) return alert("请输入邮件内容"), paySendFields.body?.focus();
-      if (!recipient) return alert("请输入收件人，或先在客户资料中维护邮箱。"), paySendFields.to?.focus();
+      if (!subject) return alert(t("pay.send.alert.subject_required", "请输入邮件主题")), paySendFields.subject?.focus();
+      if (!hasStoredPayPdf(payCurrentSendItem)) return alert(t("pay.send.alert.no_pdf", "没有PDF，无法发送。"));
+      if (!body) return alert(t("pay.send.alert.body_required", "请输入邮件内容")), paySendFields.body?.focus();
+      if (!recipient) return alert(t("pay.send.alert.recipient_required", "请输入收件人，或先在客户资料中维护邮箱。")), paySendFields.to?.focus();
       const originalText = paySendSubmit.textContent;
       paySendSubmit.disabled = true;
-      paySendSubmit.textContent = "发送中...";
+      paySendSubmit.textContent = t("pay.send.sending", "发送中...");
       try {
         const pdfBlob = await getPaySendPdfBlob();
         const attachments = [{
@@ -1575,17 +1630,17 @@
             mail_type: Number.isFinite(mailType) ? mailType : 4
           })
         }, {
-          fallbackMessage: "发送失败"
+          fallbackMessage: t("pay.send.alert.failed", "发送失败")
         });
-        alert("发送成功");
+        alert(t("pay.send.alert.success", "发送成功"));
         paySendDialog.close();
         fetchPayRequests();
       } catch (error) {
-        console.error("发送邮件失败", error);
-        alert(error.message || "发送失败");
+        console.error(t("pay.send.alert.failed", "发送邮件失败"), error);
+        alert(error.message || t("pay.send.alert.failed", "发送失败"));
       } finally {
         paySendSubmit.disabled = false;
-        paySendSubmit.textContent = originalText || "发送 >";
+        paySendSubmit.textContent = originalText || t("pay.send.submit", "发送 >");
       }
     };
 
@@ -1652,9 +1707,9 @@
     };
 
     const validatePayPayload = (payload) => {
-      if (!payload.request_no) return "请填写请求书编号";
-      if (!payload.customer_id || !payload.customer_name) return "请选择请求对象";
-      if (!payload.details.length) return "请至少填写一条明细";
+      if (!payload.request_no) return t("pay.validation.request_no", "请填写请求书编号");
+      if (!payload.customer_id || !payload.customer_name) return t("pay.validation.target", "请选择请求对象");
+      if (!payload.details.length) return t("pay.validation.details", "请至少填写一条明细");
       return "";
     };
 
@@ -1680,11 +1735,15 @@
         window.renderPagination(payPagination, payPaginationPages, page, totalPages);
       }
       if (payPaginationSummary) {
-        payPaginationSummary.textContent = `共 ${total} 条 · 第 ${page}/${Math.max(totalPages, 1)} 页`;
+        payPaginationSummary.textContent = tf(
+          "common.summary.page",
+          { count: total, page, total: Math.max(totalPages, 1) },
+          "共 {count} 条 · 第 {page}/{total} 页"
+        );
       }
       if (!payRequestTableBody) return;
       if (!items.length) {
-        payRequestTableBody.innerHTML = `<tr><td colspan="6" class="empty c-empty">暂无数据</td></tr>`;
+        payRequestTableBody.innerHTML = `<tr><td colspan="6" class="empty c-empty">${escapeHtml(t("common.no_data", "暂无数据"))}</td></tr>`;
         return;
       }
       payRequestTableBody.innerHTML = items.map((item) => `
@@ -1692,11 +1751,11 @@
           <td>${escapeHtml(item.request_no || "-")}</td>
           <td>${escapeHtml(item.customer_name || "-")}</td>
           <td>${escapeHtml(formatCurrency(item.total_amount))}</td>
-          <td>${escapeHtml(item.status || "-")}</td>
+          <td>${escapeHtml(formatPayStatus(item.status))}</td>
           <td>${escapeHtml(item.created_at || "-")}</td>
           <td class="c-actions-col">
-            <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">编辑</button>
-            <button class="c-btn c-btn-success-lite c-btn-sm" type="button" data-action="send" data-id="${escapeHtml(item.id)}">发送</button>
+            <button class="c-btn c-btn-primary c-btn-sm" type="button" data-action="edit" data-id="${escapeHtml(item.id)}">${escapeHtml(t("common.edit", "编辑"))}</button>
+            <button class="c-btn c-btn-success-lite c-btn-sm" type="button" data-action="send" data-id="${escapeHtml(item.id)}">${escapeHtml(t("order.action.send", "发送"))}</button>
           </td>
         </tr>
       `).join("");
@@ -1713,15 +1772,18 @@
         .then((payload) => {
           if (!payload.success) {
             payCurrentItems = [];
-            renderPayRows([], { total: 0, page: 1, total_pages: 1 });
+            payCurrentMeta = { total: 0, page: 1, total_pages: 1 };
+            renderPayRows([], payCurrentMeta);
             return;
           }
           payCurrentItems = Array.isArray(payload.data?.items) ? payload.data.items : [];
-          renderPayRows(payCurrentItems, payload.meta || {});
+          payCurrentMeta = payload.meta || {};
+          renderPayRows(payCurrentItems, payCurrentMeta);
         })
         .catch(() => {
           payCurrentItems = [];
-          renderPayRows([], { total: 0, page: 1, total_pages: 1 });
+          payCurrentMeta = { total: 0, page: 1, total_pages: 1 };
+          renderPayRows([], payCurrentMeta);
         });
     };
 
@@ -1759,7 +1821,7 @@
       }
       const originalText = payDialogSubmitBtn.textContent;
       payDialogSubmitBtn.disabled = true;
-      payDialogSubmitBtn.textContent = "保存中...";
+      payDialogSubmitBtn.textContent = t("common.saving", "保存中...");
       try {
         await ensurePreviewSupportData();
         const pdfBlob = await exportPreviewPdfBlob();
@@ -1775,7 +1837,7 @@
         createPayDialog.close();
         fetchPayRequests();
       } catch (error) {
-        showPayError(error, "请求书保存失败");
+        showPayError(error, t("pay.error.save_failed", "请求书保存失败"));
       } finally {
         payDialogSubmitBtn.disabled = false;
         payDialogSubmitBtn.textContent = originalText;
@@ -1886,7 +1948,7 @@
           refreshPreviewAfterDialogOpen();
           ensurePreviewSupportData().then(refreshPreviewAfterDialogOpen);
         } catch (error) {
-          showPayError(error, "请求书详情加载失败");
+          showPayError(error, t("pay.error.detail_failed", "请求书详情加载失败"));
         } finally {
           btn.disabled = false;
         }
@@ -1989,6 +2051,18 @@
         fetchPayRequests();
       });
     }
+
+    const refreshI18n = () => {
+      if (i18n) i18n.apply();
+      refreshDetailRowLabels();
+      renderPayRows(payCurrentItems, payCurrentMeta);
+      renderPaySendAttachmentList();
+      renderPaySendRecipientOptions();
+      updateDialogModeLabels(createPayDialog?.dataset?.mode || "create");
+      updatePreview();
+    };
+
+    window.addEventListener("i18n:change", refreshI18n);
 
     resetCreateForm();
     if (payFilterMonthInput && !payFilterMonthInput.value) {

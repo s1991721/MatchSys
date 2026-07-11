@@ -44,15 +44,19 @@ services:
       - web_logs:/app/logs
 
   nginx:
-    image: jef4267/matchsys-nginx:1.7
+    image: jef4267/matchsys-nginx:3.0
     container_name: matchsys-nginx
     restart: unless-stopped
     depends_on:
       - web
     ports:
       - "80:80"
+      - "443:443"
     networks:
       - matchsys-net
+    volumes:
+      - /srv/aomera/certbot/www:/var/www/certbot:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
 
   ollama:
     image: ollama/ollama:latest

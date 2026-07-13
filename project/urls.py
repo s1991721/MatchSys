@@ -83,6 +83,7 @@ from employee.views import (
     login_audit_api,
     login_api,
     logout_api,
+    session_status_api,
     technician_detail_api,
     technician_ss_download,
     technician_ss_upload,
@@ -318,6 +319,7 @@ urlpatterns = [
     # ###################################-API-###################################
     # -------------------------------employee API-------------------------------
     path("api/login", login_api, name="employee-login"),
+    path("api/session/status", session_status_api, name="session-status"),
     path("api/login-audit", login_audit_api, name="login-audit"),
     path("api/user-logins/names", user_login_names_api, name="user-login-names"),
     path("api/user-logins/by-role", user_logins_by_role_api, name="user-logins-by-role"),

@@ -204,6 +204,15 @@ def logout_api(request):
     return api_success()
 
 
+@require_GET
+def session_status_api(request):
+    """返回当前 Session 的认证状态。
+
+    未登录请求会先被 SessionLoginRequiredMiddleware 统一拦截为 401。
+    """
+    return api_success(data={"authenticated": True})
+
+
 @csrf_exempt
 @require_http_methods(["GET", "PUT", "PATCH", "DELETE"])
 # 获取用户详情、更新用户信息、删除用户

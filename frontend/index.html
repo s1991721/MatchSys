@@ -8,7 +8,8 @@
   <link rel="stylesheet" href="components.css">
   <title data-i18n="app.title">IT营业管理系统</title>
 </head>
-<body>
+<body class="auth-checking">
+  <div class="auth-gate-status" id="authGateStatus" role="status" aria-live="polite" data-i18n="index.auth_checking">正在验证登录状态…</div>
   <div class="app">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -238,7 +239,7 @@
 
       <div class="main-body">
         <div class="frame-card c-card c-card-pad">
-          <iframe class="main-frame" id="mainFrame" src="home.html" title="主页"></iframe>
+          <iframe class="main-frame" id="mainFrame" src="about:blank" title="主页"></iframe>
         </div>
       </div>
     </main>
@@ -256,7 +257,33 @@
   <script src="error_code.js"></script>
 <script src="common.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", async () => {
+      const authGateStatus = document.getElementById("authGateStatus");
+      const i18n = window.I18N;
+      if (i18n && authGateStatus) {
+        i18n.init();
+        authGateStatus.textContent = i18n.t("index.auth_checking");
+      }
+      try {
+        const authPayload = await window.requestJson("/api/session/status", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (authPayload.data?.authenticated !== true) {
+          throw new Error("Invalid session status response");
+        }
+      } catch (error) {
+        if (!window.MatchSys?.isAuthRedirecting?.() && authGateStatus) {
+          authGateStatus.textContent = i18n
+            ? i18n.t("index.auth_check_failed")
+            : "无法验证登录状态，请稍后刷新页面。";
+          authGateStatus.classList.add("is-error");
+        }
+        return;
+      }
+      document.body.classList.remove("auth-checking");
+      if (authGateStatus) authGateStatus.hidden = true;
+
       const btn = document.getElementById("collapseBtn");
       const nav = document.getElementById("nav");
       const frame = document.getElementById("mainFrame");
@@ -282,7 +309,6 @@
       const EMPLOYEE_POSITION_KEY = "app_employee_position_name";
       const sessionMenuList = "";
       const langButtons = Array.from(document.querySelectorAll(".lang-switch [data-lang]"));
-      const i18n = window.I18N;
       const employeeNameText = document.getElementById("employeeNameText");
       const employeeNameLabel = document.getElementById("employeeNameLabel");
       const employeePositionLabel = document.getElementById("employeePositionLabel");
@@ -826,7 +852,12 @@
         })
         : null;
       window.addEventListener("message", (event) => {
+        if (event.origin !== window.location.origin) return;
         const data = event.data || {};
+        if (data.type === "auth:failure") {
+          window.MatchSys.redirectAuthFailure(data.reason);
+          return;
+        }
         if (data.type === "route:change") {
           const src = normalizeAppRoute(data.src || "");
           if (!src || !isAllowedRoute(src)) return;

@@ -166,14 +166,21 @@
         return i18n && typeof i18n.getLang === "function" && i18n.getLang() === "ja" ? "ja-JP" : "zh-CN";
     };
 
-    const redirectAuthFailureTopOrSelf = (reason = "login") => {
+    const redirectAuthFailure = (reason = "login") => {
         const target = reason === "activation" ? "login.html?activation=1" : "login.html";
         const nextUrl = MatchSys.buildAppUrl(target);
         if (window.top && window.top !== window) {
-            window.top.location.href = nextUrl;
-        } else {
-            window.location.href = nextUrl;
+            window.top.postMessage({type: "auth:failure", reason}, window.location.origin);
+            return;
         }
+        if (window.__authRedirecting) return;
+        window.__authRedirecting = true;
+        window.location.replace(nextUrl);
+    };
+
+    MatchSys.redirectAuthFailure = redirectAuthFailure;
+    MatchSys.isAuthRedirecting = function () {
+        return window.__authRedirecting === true;
     };
 
     MatchSys.navigateAppRoute = function (src) {
@@ -286,14 +293,14 @@
             const payload = await res.json().catch(() => ({}));
             const message = translateApiError(payload, `HTTP ${res.status}`);
             if (res.status === 401) {
-                redirectAuthFailureTopOrSelf("login");
+                redirectAuthFailure("login");
                 const error = new Error(message);
                 error.payload = payload;
                 error.code = payload?.code;
                 throw error;
             }
             if (res.status === 403) {
-                redirectAuthFailureTopOrSelf("activation");
+                redirectAuthFailure("activation");
             }
             const error = new Error(message);
             error.payload = payload;

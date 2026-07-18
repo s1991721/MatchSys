@@ -824,6 +824,10 @@
         height: 24px;
       }
 
+      .case-mobile-sheet.is-open + .case-line-fab {
+        display: none;
+      }
+
       .case-focus-area,
       .case-other-area,
       .case-footer {
@@ -1762,15 +1766,15 @@
 	    `;
 	  };
 
-	  const renderMobileLineButton = (extraClass = "") => `
-	    <button class="c-btn c-btn-primary case-line-contact ${extraClass}" type="button" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">
+	  const renderMobileLineButton = (item, extraClass = "") => `
+	    <a class="c-btn c-btn-primary case-line-contact ${extraClass}" href="${lineAddFriendUrl}" data-line-inquiry aria-label="${escapeHtml(item?.title || "掲載案件")}についてLINEで問い合わせ">
 	      <span class="case-line-contact-icon" aria-hidden="true">
 	        <svg viewBox="0 0 24 24" focusable="false">
 	          <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
 	        </svg>
 	      </span>
 	      <span>LINEで問い合わせ</span>
-	    </button>
+	    </a>
 	  `;
 
 	  const renderMobileCard = (item, index) => `
@@ -1788,7 +1792,7 @@
 	      </div>
 	      ${renderMobileTags(item)}
 	      <div class="case-mobile-card-action">
-	        ${renderMobileLineButton("case-mobile-contact")}
+	        ${renderMobileLineButton(item, "case-mobile-contact")}
 	        <button class="case-mobile-detail-link" type="button" data-mobile-detail="${index}">詳細</button>
 	      </div>
 	    </article>
@@ -1864,7 +1868,7 @@
 	      ` : ""}
 	    `;
 	    elements.mobileSheetActions.innerHTML = `
-	      ${renderMobileLineButton()}
+	      ${renderMobileLineButton(item)}
 	      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
 	    `;
 	    setOverlayState(elements.mobileSheet, true);
@@ -2011,7 +2015,7 @@
 	  });
 
 	  elements.mobileCaseList.addEventListener("click", (event) => {
-	    if (event.target.closest("[data-open-line-modal]")) return;
+	    if (event.target.closest("[data-line-inquiry]")) return;
 	    const detailButton = event.target.closest("[data-mobile-detail]");
 	    const card = event.target.closest("[data-mobile-index]");
 	    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);

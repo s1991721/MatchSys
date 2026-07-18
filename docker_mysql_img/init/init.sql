@@ -517,6 +517,147 @@ CREATE TABLE IF NOT EXISTS payroll_monthly_calculation
   DEFAULT CHARSET = utf8mb4
     COMMENT = '月度工资计算表';
 
+CREATE TABLE IF NOT EXISTS finance_receivable
+(
+    id                 BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    pay_request_id     BIGINT         NULL COMMENT '来源请求书 pay_request.id',
+    request_no         VARCHAR(50)    NULL COMMENT '请求书号快照',
+
+    customer_id        BIGINT         NULL COMMENT '客户ID',
+    customer_name      VARCHAR(255)   NOT NULL COMMENT '客户名称快照',
+
+    receivable_amount  DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '应收金额',
+    received_amount    DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '已收金额',
+    outstanding_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '未收金额',
+
+    due_date           DATE           NULL COMMENT '预定到账日/入金期日',
+
+    finance_status     TINYINT        NOT NULL DEFAULT 0 COMMENT '财务处理状态：0-正常 1-异常 2-核销',
+
+    remark             TEXT           NULL COMMENT '备注',
+
+    created_by         BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by         BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at         DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '应收台账表';
+
+CREATE TABLE IF NOT EXISTS finance_payable
+(
+    id                 BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    purchase_order_id  BIGINT         NULL COMMENT '来源发注 purchase_order.id',
+    order_no           VARCHAR(50)    NULL COMMENT '发注单号快照',
+
+    payable_month      DATE           NOT NULL COMMENT '应付月份，统一存当月1日',
+
+    customer_id        BIGINT         NULL COMMENT '支付对象ID',
+    customer_name      VARCHAR(255)   NOT NULL COMMENT '支付对象名称快照',
+
+    payable_amount     DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '应付金额',
+    paid_amount        DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '已付金额',
+    outstanding_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '未付金额',
+
+    due_date           DATE           NULL COMMENT '预定支付日/支払期日',
+
+    finance_status     TINYINT        NOT NULL DEFAULT 0 COMMENT '财务处理状态：0-正常 1-异常 2-核销',
+
+    remark             TEXT           NULL COMMENT '备注',
+
+    created_by         BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by         BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at         DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '应付台账表';
+
+CREATE TABLE IF NOT EXISTS finance_receipt
+(
+    id             BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    receivable_id  BIGINT         NOT NULL COMMENT '应收台账 finance_receivable.id',
+
+    customer_id    BIGINT         NULL COMMENT '客户ID，可为空',
+    payer_name     VARCHAR(255)   NULL COMMENT '付款方名称/银行流水付款人',
+    bank_transaction_no VARCHAR(100) NULL COMMENT '银行流水号/交易编号',
+
+    receipt_amount DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '入金金额',
+    receipt_date   DATE           NOT NULL COMMENT '入金日',
+
+    remark         TEXT           NULL COMMENT '备注',
+
+    created_by     BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by     BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at     DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at     DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '入金/收款记录表';
+
+CREATE TABLE IF NOT EXISTS finance_payment
+(
+    id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    customer_id         BIGINT         NULL COMMENT '支付对象ID，可为空',
+    payee_name          VARCHAR(255)   NULL COMMENT '收款方名称/银行流水收款人',
+    bank_transaction_no VARCHAR(100)   NULL COMMENT '银行流水号/交易编号',
+
+    payment_amount      DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '支付金额',
+    payment_date        DATE           NOT NULL COMMENT '支付日',
+
+    remark              TEXT           NULL COMMENT '备注',
+
+    created_by          BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by          BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at          DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '支付记录表';
+
+CREATE TABLE IF NOT EXISTS finance_payment_detail
+(
+    id                  BIGINT         NOT NULL PRIMARY KEY AUTO_INCREMENT,
+
+    payment_id          BIGINT         NOT NULL COMMENT '支付记录 finance_payment.id',
+    payable_id          BIGINT         NOT NULL COMMENT '应付台账 finance_payable.id',
+
+    payment_amount      DECIMAL(12, 2) NOT NULL DEFAULT 0 COMMENT '本次核销金额',
+
+    remark              TEXT           NULL COMMENT '备注',
+
+    created_by          BIGINT         NULL COMMENT '创建人 employee.id',
+    created_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+
+    updated_by          BIGINT         NULL COMMENT '更新人 employee.id',
+    updated_at          DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+
+    deleted_at          DATETIME       NULL COMMENT '删除时间（软删除）'
+
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+    COMMENT = '支付核销明细表';
+
 # ----------------------------------------------- match -----------------------------------------------
 CREATE TABLE IF NOT EXISTS sent_email_logs
 (
@@ -543,6 +684,30 @@ CREATE TABLE IF NOT EXISTS sent_email_logs
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
     COMMENT ='已发送邮件日志(Gmail API)';
+
+CREATE TABLE IF NOT EXISTS mail_send_tasks
+(
+    id                  CHAR(32)      NOT NULL PRIMARY KEY COMMENT '发送任务ID',
+
+    to_email            VARCHAR(320)  NOT NULL COMMENT '收件邮箱',
+    cc                  VARCHAR(1024) NOT NULL DEFAULT '' COMMENT '抄送',
+    subject             VARCHAR(512)  NOT NULL DEFAULT '' COMMENT '邮件主题',
+    body                LONGTEXT      NOT NULL COMMENT '最终邮件正文',
+    attachments         JSON          NOT NULL COMMENT '附件存储引用列表',
+    mail_type           INT           NOT NULL DEFAULT -1 COMMENT '邮件类型 0:bp 1:技术者送信 2:案件送信 3:发注 4:请求书 -1:其他',
+
+    company_name        VARCHAR(255)  NOT NULL DEFAULT '' COMMENT '公司名快照',
+    contact_name        VARCHAR(255)  NOT NULL DEFAULT '' COMMENT '联系人名快照',
+    in_reply_to         VARCHAR(998)  NOT NULL DEFAULT '' COMMENT '回复目标Message-ID',
+    `references`        TEXT          NOT NULL COMMENT '邮件线程References',
+    error_message       TEXT          NULL COMMENT '邮件发送错误信息',
+
+    created_by          BIGINT        NOT NULL COMMENT '创建员工ID',
+    created_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = '邮件发送任务队列表';
 
 CREATE TABLE IF NOT EXISTS mail_project_info
 (
@@ -712,6 +877,10 @@ VALUES (
             '第一 ビル 88F\n',
             'HP:https://www.homapage.jp/\n'
         ),
+        'direct_technician',
+        'いつもお世話になっております。\n\nこの度、下記の技術者をご紹介させていただきます。\n\n**************************************\n{person_intro}\n**************************************\n\nご興味をお持ちいただけましたら、面談の機会をいただけますと幸いです。\nご検討のほど、何卒よろしくお願い申し上げます。',
+        'direct_project',
+        'いつもお世話になっております。\n\n現在、下記案件に対応可能な技術者を募集しております。\n\n**************************************\n{project_detail}\n**************************************\n\nご提案可能な技術者がおりましたら、スキルシートとあわせてご連絡いただけますと幸いです。\n\n何卒よろしくお願い申し上げます。',
         'order',
         CONCAT(
             '{company_name}\n',
@@ -736,7 +905,7 @@ VALUES (
     1,
     '2026-04-22 15:10:29',
     1,
-    '2026-05-26 00:00:00',
+    CURRENT_TIMESTAMP,
     NULL
 );
 
@@ -769,3 +938,15 @@ INSERT INTO sys_tasks (name,`time`,frequency,cron_expr,`method`,api,body,enabled
 	 ('重要数据备份','01:00:00','每周','0 1 * * 6','POST','/api/time-to-backup','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
 	 ('我的邮件定时同步','09:00:00','自定义 Cron','*/10 9-20 * * *','POST','/api/time-to-sync-my-mails','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL),
 	 ('工作日日间数据处理','09:00:00','自定义 Cron','0 9-20 * * 1-5','POST','/api/time-to-save-day','',1,'2026-02-13 16:00:00',NULL,'error','HTTP 403',1,'2026-01-04 15:21:50',1,'2026-02-13 16:00:00',NULL);
+
+# ----------------------------------------------- Django Session -----------------------------------------------
+CREATE TABLE IF NOT EXISTS django_session
+(
+    session_key  VARCHAR(40) NOT NULL PRIMARY KEY,
+    session_data LONGTEXT    NOT NULL,
+    expire_date  DATETIME(6) NOT NULL,
+
+    INDEX django_session_expire_date_a5c62663 (expire_date)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Django server-side sessions';

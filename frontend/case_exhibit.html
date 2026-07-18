@@ -16,6 +16,14 @@
       --exhibit-accent: #1d4ed8;
       --exhibit-accent-soft: #eaf2ff;
       --exhibit-blue: #2563eb;
+      --exhibit-copy: #405066;
+      --exhibit-soft: #f8fafc;
+      --exhibit-urgent: #7c2d12;
+      --exhibit-urgent-soft: #fff7ed;
+      --exhibit-urgent-line: #fed7aa;
+      --line-green: #06c755;
+      --line-green-dark: #05a947;
+      --line-green-hover: #05b94d;
     }
 
     body {
@@ -44,10 +52,6 @@
       align-content: center;
     }
 
-    .case-focus-area > .case-section-head {
-      display: none;
-    }
-
     .case-section-head {
       display: flex;
       justify-content: space-between;
@@ -63,25 +67,17 @@
       letter-spacing: 0;
     }
 
-    .case-section-head h1,
     .case-section-head h2 {
       margin: 6px 0 0;
       letter-spacing: 0;
       line-height: 1.12;
-    }
-
-    .case-section-head h1 {
-      font-size: clamp(30px, 5vw, 54px);
-    }
-
-    .case-section-head h2 {
       font-size: 28px;
     }
 
     .case-section-copy {
       max-width: 650px;
       margin: 8px 0 0;
-      color: #405066;
+      color: var(--exhibit-copy);
       line-height: 1.75;
       font-size: 15px;
     }
@@ -96,23 +92,6 @@
 
     .case-carousel {
       position: relative;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      overflow: visible;
-      min-width: 0;
-    }
-
-    .case-carousel-viewport {
-      overflow: visible;
-      margin: 0;
-      padding: 0;
-      min-width: 0;
-    }
-
-    .case-carousel-track {
-      display: block;
       min-width: 0;
     }
 
@@ -120,9 +99,7 @@
       display: grid;
       grid-template-columns: minmax(0, 1.12fr) minmax(310px, 0.72fr);
       gap: 40px;
-      padding: 0;
       align-items: center;
-      background: transparent;
       animation: case-slide-in 0.54s cubic-bezier(0.22, 1, 0.36, 1);
       min-width: 0;
     }
@@ -160,50 +137,70 @@
       align-items: center;
     }
 
-    .case-carousel::before,
-    .case-carousel::after {
-      display: none;
-    }
-
     .case-slide-main {
       display: grid;
       align-content: start;
       min-width: 0;
     }
 
-    .case-kicker {
+    .case-kicker,
+    .case-card-topline,
+    .case-card-meta,
+    .case-card-tags,
+    .case-judge-tags div,
+    .case-tabs,
+    .case-mobile-card-top,
+    .case-mobile-card-tags {
       display: flex;
       flex-wrap: wrap;
+    }
+
+    .case-kicker {
       gap: 10px;
       margin-bottom: 18px;
     }
 
-    .case-pill {
+    .case-pill,
+    .case-judge-tags strong,
+    .case-card-topline span,
+    .case-card-meta span,
+    .case-card-tags span,
+    .case-compact-status,
+    .case-mobile-badge,
+    .case-mobile-date,
+    .case-mobile-tag {
       display: inline-flex;
       align-items: center;
-      min-height: 28px;
-      padding: 6px 10px;
       border: 1px solid var(--exhibit-line);
       border-radius: 999px;
       background: #fff;
-      color: var(--exhibit-muted);
-      font-size: 12px;
-      font-weight: 800;
       line-height: 1;
       max-width: 100%;
       overflow-wrap: anywhere;
     }
 
-    .case-pill.is-status {
+    .case-pill {
+      min-height: 28px;
+      padding: 6px 10px;
+      color: var(--exhibit-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .case-pill.is-status,
+    .case-tab.is-active,
+    .case-mobile-badge {
       color: var(--exhibit-accent);
       background: var(--exhibit-accent-soft);
       border-color: rgba(28, 123, 255, 0.22);
     }
 
-    .case-pill.is-urgent {
-      color: #7c2d12;
-      background: #fff7ed;
-      border-color: #fed7aa;
+    .case-pill.is-urgent,
+    .case-card-topline .is-open,
+    .case-mobile-badge.is-urgent {
+      color: var(--exhibit-urgent);
+      background: var(--exhibit-urgent-soft);
+      border-color: var(--exhibit-urgent-line);
     }
 
     .case-slide h2 {
@@ -216,7 +213,7 @@
 
     .case-summary {
       margin: 0;
-      color: #405066;
+      color: var(--exhibit-copy);
       font-size: 18px;
       line-height: 1.75;
       overflow-wrap: anywhere;
@@ -254,7 +251,8 @@
 
     .case-metric span,
     .case-fact span,
-    .case-card-foot span {
+    .case-card-foot span,
+    .case-judge-tags > span {
       display: block;
       color: var(--exhibit-muted);
       font-size: 12px;
@@ -293,10 +291,6 @@
       letter-spacing: 0;
     }
 
-    .case-facts {
-      display: grid;
-    }
-
     .case-fact {
       display: grid;
       grid-template-columns: 112px minmax(0, 1fr);
@@ -315,32 +309,14 @@
       gap: 10px;
       padding: 16px 22px 20px;
       border-top: 1px solid var(--exhibit-line);
-      background: #f8fafc;
-    }
-
-    .case-judge-tags span {
-      color: var(--exhibit-muted);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .case-judge-tags div {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      background: var(--exhibit-soft);
     }
 
     .case-judge-tags strong {
-      display: inline-flex;
-      align-items: center;
       min-height: 26px;
       padding: 6px 9px;
-      border: 1px solid var(--exhibit-line);
-      border-radius: 999px;
-      background: #fff;
       color: #344258;
       font-size: 12px;
-      line-height: 1;
     }
 
     .case-carousel-bar {
@@ -349,14 +325,15 @@
       gap: 18px;
       align-items: center;
       margin-top: 22px;
-      padding: 0;
-      border-top: 0;
-      background: transparent;
     }
 
-    .case-tabs {
-      display: flex;
-      flex-wrap: wrap;
+    .case-judge-tags div,
+    .case-tabs,
+    .case-card-topline,
+    .case-card-meta,
+    .case-card-tags,
+    .case-mobile-card-top,
+    .case-mobile-card-tags {
       gap: 8px;
     }
 
@@ -377,12 +354,6 @@
       box-shadow: 0 8px 18px rgba(23, 32, 51, 0.05);
       max-width: 100%;
       overflow-wrap: anywhere;
-    }
-
-    .case-tab.is-active {
-      color: var(--exhibit-accent);
-      background: var(--exhibit-accent-soft);
-      border-color: rgba(28, 123, 255, 0.22);
     }
 
     .case-carousel-controls {
@@ -442,42 +413,30 @@
 
     .case-public-card p {
       margin: 0;
-      color: #405066;
+      color: var(--exhibit-copy);
       font-size: 14px;
       line-height: 1.72;
       overflow-wrap: anywhere;
     }
 
-    .case-card-topline,
-    .case-card-meta,
-    .case-card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .case-card-topline span,
+    .case-card-meta span,
+    .case-card-tags span,
+    .case-mobile-badge,
+    .case-mobile-date,
+    .case-mobile-tag {
+      min-height: 26px;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 800;
     }
 
     .case-card-topline span,
     .case-card-meta span,
-    .case-card-tags span {
-      display: inline-flex;
-      align-items: center;
-      min-height: 26px;
-      padding: 6px 9px;
-      border: 1px solid var(--exhibit-line);
-      border-radius: 999px;
-      background: #fff;
+    .case-card-tags span,
+    .case-mobile-date,
+    .case-mobile-tag {
       color: #344258;
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1;
-      max-width: 100%;
-      overflow-wrap: anywhere;
-    }
-
-    .case-card-topline .is-open {
-      color: #7c2d12;
-      background: #fff7ed;
-      border-color: #fed7aa;
     }
 
     .case-card-foot {
@@ -519,16 +478,10 @@
 
     .case-compact-status {
       flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
       min-height: 24px;
       padding: 5px 8px;
-      border: 1px solid var(--exhibit-line);
-      border-radius: 999px;
-      background: #fff;
       color: #344258;
       font-size: 12px;
-      line-height: 1;
     }
 
     .case-compact-title strong {
@@ -539,7 +492,7 @@
 
     .case-compact-meta {
       white-space: nowrap;
-      color: #405066;
+      color: var(--exhibit-copy);
       font-weight: 700;
     }
 
@@ -567,11 +520,239 @@
       line-height: 1.7;
     }
 
+    .case-line-contact {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      border-color: var(--line-green-dark);
+      background: var(--line-green);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(6, 199, 85, 0.22);
+    }
+
+    .case-line-contact:hover {
+      border-color: var(--line-green-dark);
+      background: var(--line-green-hover);
+    }
+
+    .case-line-contact:focus-visible {
+      outline: 3px solid rgba(6, 199, 85, 0.28);
+      outline-offset: 2px;
+    }
+
+    .case-line-contact-icon {
+      display: inline-flex;
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+    }
+
+    .case-line-contact-icon svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .case-line-fab {
+      position: fixed;
+      right: 20px;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      z-index: 40;
+      min-height: 52px;
+      padding: 13px 18px;
+      border: 0;
+      border-radius: 999px;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .case-line-fab .case-line-contact-icon {
+      position: relative;
+    }
+
+    .case-line-fab .case-line-contact-icon::after {
+      content: "+";
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      display: grid;
+      width: 16px;
+      height: 16px;
+      place-items: center;
+      border: 2px solid var(--line-green);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--line-green-dark);
+      font: 900 13px/1 Arial, sans-serif;
+    }
+
+    .case-line-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: grid;
+      padding: 16px;
+      place-items: center;
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .case-line-modal.is-open,
+    .case-mobile-sheet.is-open {
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    .case-line-modal-backdrop,
+    .case-mobile-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .case-line-modal-backdrop {
+      background: rgba(15, 23, 42, 0.52);
+    }
+
+    .case-line-modal.is-open .case-line-modal-backdrop,
+    .case-mobile-sheet.is-open .case-mobile-sheet-backdrop {
+      opacity: 1;
+    }
+
+    .case-line-modal-panel {
+      position: relative;
+      display: grid;
+      gap: 16px;
+      width: min(100%, 420px);
+      max-height: calc(100vh - 32px);
+      max-height: calc(100dvh - 32px);
+      padding: 22px 18px max(18px, env(safe-area-inset-bottom));
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .case-line-modal.is-open .case-line-modal-panel {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .case-line-modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: grid;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      place-items: center;
+      border: 1px solid var(--exhibit-line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--exhibit-ink);
+      font: inherit;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .case-line-modal-head {
+      padding-right: 38px;
+    }
+
+    .case-line-modal-head span {
+      display: inline-flex;
+      margin-bottom: 6px;
+      color: var(--line-green-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .case-line-modal-head h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.35;
+    }
+
+    .case-line-modal-head p {
+      margin: 6px 0 0;
+      color: var(--exhibit-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .case-line-qr {
+      display: block;
+      width: 156px;
+      height: 156px;
+      margin: 0 auto;
+      border: 1px solid var(--exhibit-line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .case-line-id-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 10px 10px 12px;
+      border: 1px solid #dfe6ef;
+      border-radius: 10px;
+      background: var(--exhibit-soft);
+    }
+
+    .case-line-id-row span,
+    .case-mobile-metric span,
+    .case-mobile-detail-row span {
+      color: var(--exhibit-muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .case-line-id-row strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .case-line-copy {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid rgba(6, 199, 85, 0.28);
+      border-radius: 8px;
+      background: #effcf4;
+      color: #058f3d;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .case-line-modal-actions,
+    .case-facts {
+      display: grid;
+    }
+
+    .case-line-modal-actions .c-btn {
+      min-height: 48px;
+      border-radius: 9px;
+    }
+
     .case-toast {
       position: fixed;
       right: 20px;
-      bottom: 20px;
-      z-index: 20;
+      bottom: 84px;
+      z-index: 80;
       max-width: min(360px, calc(100vw - 40px));
       padding: 12px 14px;
       border-radius: 8px;
@@ -591,12 +772,8 @@
       transform: translateY(0);
     }
 
-    .case-mobile-page {
-      display: none;
-    }
-
-    .case-mobile-sheet,
-    .case-line-modal {
+    .case-mobile-page,
+    .case-mobile-sheet {
       display: none;
     }
 
@@ -621,9 +798,6 @@
         grid-template-columns: 1fr;
         gap: 22px;
         min-height: 0;
-        padding: 0;
-        width: 100%;
-        max-width: 100%;
       }
 
       .case-slide h2 {
@@ -636,14 +810,22 @@
     }
 
     @media (max-width: 680px) {
+      .case-line-fab {
+        right: 14px;
+        bottom: max(14px, env(safe-area-inset-bottom));
+        min-height: 52px;
+        padding: 12px 16px;
+      }
+
+      .case-line-fab .case-line-contact-icon {
+        width: 24px;
+        height: 24px;
+      }
+
       .case-focus-area,
       .case-other-area,
       .case-footer {
         display: none;
-      }
-
-      .case-wrap {
-        width: min(100% - 24px, 1180px);
       }
 
       .case-exhibit-page {
@@ -777,12 +959,16 @@
 
       .case-mobile-empty {
         padding: 22px 16px;
-        border: 1px solid var(--exhibit-line);
-        border-radius: 8px;
-        background: #fff;
         color: var(--exhibit-muted);
         font-size: 14px;
         line-height: 1.7;
+      }
+
+      .case-mobile-empty,
+      .case-mobile-card {
+        border: 1px solid var(--exhibit-line);
+        border-radius: 8px;
+        background: #fff;
       }
 
       .case-mobile-card {
@@ -791,49 +977,13 @@
         width: 100%;
         min-width: 0;
         padding: 16px;
-        border: 1px solid var(--exhibit-line);
-        border-radius: 8px;
-        background: #fff;
         box-shadow: 0 8px 22px rgba(23, 32, 51, 0.06);
         text-align: left;
       }
 
       .case-mobile-card-top,
       .case-mobile-card-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
         align-items: center;
-      }
-
-      .case-mobile-badge,
-      .case-mobile-date,
-      .case-mobile-tag {
-        display: inline-flex;
-        align-items: center;
-        max-width: 100%;
-        min-height: 26px;
-        padding: 6px 9px;
-        border: 1px solid var(--exhibit-line);
-        border-radius: 999px;
-        background: #fff;
-        color: #344258;
-        font-size: 12px;
-        font-weight: 800;
-        line-height: 1;
-        overflow-wrap: anywhere;
-      }
-
-      .case-mobile-badge {
-        border-color: rgba(28, 123, 255, 0.22);
-        background: var(--exhibit-accent-soft);
-        color: var(--exhibit-accent);
-      }
-
-      .case-mobile-badge.is-urgent {
-        border-color: #fed7aa;
-        background: #fff7ed;
-        color: #7c2d12;
       }
 
       .case-mobile-date {
@@ -857,7 +1007,7 @@
         display: -webkit-box;
         margin: 0;
         overflow: hidden;
-        color: #405066;
+        color: var(--exhibit-copy);
         font-size: 14px;
         line-height: 1.68;
         -webkit-box-orient: vertical;
@@ -871,20 +1021,18 @@
         gap: 8px;
       }
 
-      .case-mobile-metric {
+      .case-mobile-metric,
+      .case-mobile-detail-row {
         display: grid;
+        border: 1px solid #edf1f7;
+        border-radius: 8px;
+        background: var(--exhibit-soft);
+      }
+
+      .case-mobile-metric {
         gap: 4px;
         min-width: 0;
         padding: 10px 12px;
-        border: 1px solid #edf1f7;
-        border-radius: 8px;
-        background: #f8fafc;
-      }
-
-      .case-mobile-metric span {
-        color: var(--exhibit-muted);
-        font-size: 11px;
-        font-weight: 800;
       }
 
       .case-mobile-metric strong {
@@ -910,193 +1058,6 @@
         white-space: normal;
       }
 
-      .case-line-contact {
-        display: inline-flex;
-        gap: 8px;
-        align-items: center;
-        justify-content: center;
-        border-color: #06b94f;
-        background: #06c755;
-        color: #fff;
-        cursor: pointer;
-        box-shadow: 0 10px 18px rgba(6, 199, 85, 0.22);
-      }
-
-      .case-line-contact:hover {
-        border-color: #05a947;
-        background: #05b94d;
-      }
-
-      .case-line-contact:focus-visible {
-        outline: 3px solid rgba(6, 199, 85, 0.28);
-        outline-offset: 2px;
-      }
-
-      .case-line-contact-icon {
-        display: inline-flex;
-        flex: 0 0 auto;
-        width: 20px;
-        height: 20px;
-      }
-
-      .case-line-contact-icon svg {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
-
-      .case-toast {
-        z-index: 60;
-      }
-
-      .case-line-modal {
-        position: fixed;
-        inset: 0;
-        z-index: 50;
-        display: grid;
-        padding: 16px;
-        place-items: center;
-        pointer-events: none;
-        visibility: hidden;
-      }
-
-      .case-line-modal.is-open {
-        pointer-events: auto;
-        visibility: visible;
-      }
-
-      .case-line-modal-backdrop {
-        position: absolute;
-        inset: 0;
-        border: 0;
-        background: rgba(15, 23, 42, 0.52);
-        opacity: 0;
-        transition: opacity 0.18s ease;
-      }
-
-      .case-line-modal.is-open .case-line-modal-backdrop {
-        opacity: 1;
-      }
-
-      .case-line-modal-panel {
-        position: relative;
-        display: grid;
-        gap: 16px;
-        width: min(100%, 420px);
-        max-height: calc(100vh - 32px);
-        padding: 22px 18px max(18px, env(safe-area-inset-bottom));
-        border-radius: 16px;
-        background: #fff;
-        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
-        overflow-y: auto;
-        opacity: 0;
-        transform: translateY(12px) scale(0.98);
-        transition: opacity 0.18s ease, transform 0.18s ease;
-      }
-
-      .case-line-modal.is-open .case-line-modal-panel {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-
-      .case-line-modal-close {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        display: grid;
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        place-items: center;
-        border: 1px solid var(--exhibit-line);
-        border-radius: 999px;
-        background: #fff;
-        color: var(--exhibit-ink);
-        font: inherit;
-        font-size: 22px;
-        line-height: 1;
-      }
-
-      .case-line-modal-head {
-        padding-right: 38px;
-      }
-
-      .case-line-modal-head span {
-        display: inline-flex;
-        margin-bottom: 6px;
-        color: #05a947;
-        font-size: 12px;
-        font-weight: 800;
-      }
-
-      .case-line-modal-head h2 {
-        margin: 0;
-        font-size: 21px;
-        line-height: 1.35;
-      }
-
-      .case-line-modal-head p {
-        margin: 6px 0 0;
-        color: var(--exhibit-muted);
-        font-size: 13px;
-        line-height: 1.6;
-      }
-
-      .case-line-qr {
-        display: block;
-        width: 156px;
-        height: 156px;
-        margin: 0 auto;
-        border: 1px solid var(--exhibit-line);
-        border-radius: 10px;
-        background: #fff;
-      }
-
-      .case-line-id-row {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 8px;
-        align-items: center;
-        padding: 10px 10px 10px 12px;
-        border: 1px solid #dfe6ef;
-        border-radius: 10px;
-        background: #f8fafc;
-      }
-
-      .case-line-id-row span {
-        color: var(--exhibit-muted);
-        font-size: 11px;
-        font-weight: 800;
-      }
-
-      .case-line-id-row strong {
-        display: block;
-        margin-top: 2px;
-        font-size: 16px;
-        overflow-wrap: anywhere;
-      }
-
-      .case-line-copy {
-        min-height: 38px;
-        padding: 8px 12px;
-        border: 1px solid rgba(6, 199, 85, 0.28);
-        border-radius: 8px;
-        background: #effcf4;
-        color: #058f3d;
-        font: inherit;
-        font-size: 12px;
-        font-weight: 800;
-      }
-
-      .case-line-modal-actions {
-        display: grid;
-      }
-
-      .case-line-modal-actions .c-btn {
-        min-height: 48px;
-        border-radius: 9px;
-      }
-
       .case-mobile-detail-link {
         min-height: 44px;
         border: 0;
@@ -1120,22 +1081,8 @@
         visibility: hidden;
       }
 
-      .case-mobile-sheet.is-open {
-        pointer-events: auto;
-        visibility: visible;
-      }
-
       .case-mobile-sheet-backdrop {
-        position: absolute;
-        inset: 0;
-        border: 0;
         background: rgba(15, 23, 42, 0.42);
-        opacity: 0;
-        transition: opacity 0.18s ease;
-      }
-
-      .case-mobile-sheet.is-open .case-mobile-sheet-backdrop {
-        opacity: 1;
       }
 
       .case-mobile-sheet-panel {
@@ -1205,7 +1152,7 @@
 
       .case-mobile-sheet-summary {
         margin: 0;
-        color: #405066;
+        color: var(--exhibit-copy);
         font-size: 14px;
         line-height: 1.75;
         overflow-wrap: anywhere;
@@ -1217,18 +1164,8 @@
       }
 
       .case-mobile-detail-row {
-        display: grid;
         gap: 5px;
         padding: 11px 12px;
-        border: 1px solid #edf1f7;
-        border-radius: 8px;
-        background: #f8fafc;
-      }
-
-      .case-mobile-detail-row span {
-        color: var(--exhibit-muted);
-        font-size: 11px;
-        font-weight: 800;
       }
 
       .case-mobile-detail-row strong {
@@ -1255,218 +1192,13 @@
         white-space: normal;
       }
 
-      .case-focus-area {
-        gap: 16px;
-        padding: 24px 0 26px;
-      }
-
-      .case-carousel::before,
-      .case-carousel::after {
-        display: none;
-      }
-
-      .case-section-head,
-      .case-carousel-bar,
-      .case-footer-inner {
-        align-items: start;
-        flex-direction: column;
-      }
-
-      .case-section-head,
-      .case-carousel-bar,
-      .case-footer-inner,
-      .case-tabs,
-      .case-carousel-controls {
-        width: 100%;
-        max-width: 100%;
-        min-width: 0;
-      }
-
-      .case-section-head,
-      .case-footer-inner {
-        display: flex;
-      }
-
-      .case-section-head h1 {
-        font-size: clamp(26px, 8vw, 30px);
-      }
-
-      .case-section-head h2,
-      .case-footer h2 {
-        font-size: 24px;
-      }
-
-      .case-slide h2 {
-        font-size: clamp(26px, 8vw, 30px);
-        line-height: 1.12;
-        max-width: 100%;
-        word-break: break-all;
-      }
-
-      .case-summary {
-        font-size: 15px;
-        line-height: 1.68;
-        word-break: break-all;
-      }
-
-      .case-summary-wrap {
-        margin-top: 14px;
-      }
-
-      .case-actions {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        margin-top: 22px;
-        width: 100%;
-        max-width: 100%;
-      }
-
-      .case-actions .c-btn {
-        min-width: 0;
-        max-width: 100%;
-        min-height: 44px;
-        padding: 11px 14px;
-        white-space: normal;
-        overflow-wrap: anywhere;
-        text-align: center;
-      }
-
-      .case-metrics,
-      .case-card-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .case-metrics {
-        gap: 10px;
-        margin-top: 22px;
-      }
-
-      .case-metric {
-        min-height: auto;
-        padding: 13px 14px;
-      }
-
-      .case-metric strong {
-        font-size: 17px;
-        overflow-wrap: anywhere;
-        word-break: break-all;
-      }
-
-      .case-carousel-bar {
-        gap: 12px;
-        margin-top: 16px;
-      }
-
-      .case-tabs {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        padding-bottom: 4px;
-        scrollbar-width: thin;
-      }
-
-      .case-tab {
-        min-height: 42px;
-        max-width: min(78vw, 360px);
-        flex: 0 0 auto;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-
-      .case-carousel-controls {
-        justify-content: flex-end;
-      }
-
-      .case-icon-btn {
-        width: 42px;
-        height: 42px;
-      }
-
-      .case-judge-head {
-        padding: 16px;
-      }
-
-      .case-judge-tags {
-        padding: 14px 16px 16px;
-      }
-
-      .case-compact-item {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        align-items: start;
-        padding: 12px 14px;
-      }
-
-      .case-compact-title {
-        align-items: start;
-      }
-
-      .case-compact-title strong,
-      .case-compact-meta {
-        white-space: normal;
-        overflow-wrap: anywhere;
-      }
-
-      .case-fact {
-        grid-template-columns: 1fr;
-        gap: 6px;
-        padding: 14px 16px;
-      }
-
-      .case-fact strong {
-        overflow-wrap: anywhere;
-        word-break: break-all;
-      }
-
-      .case-public-card {
-        min-height: auto;
-        padding: 16px;
-      }
-
-      .case-card-foot {
-        align-items: start;
-        flex-direction: column;
-        gap: 6px;
-      }
-
-      .case-actions,
-      .case-actions .c-btn {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 380px) {
-      .case-wrap {
-        width: min(100% - 20px, 1180px);
-      }
-
-      .case-focus-area {
-        padding-top: 20px;
-      }
-
-      .case-slide h2,
-      .case-section-head h1 {
-        font-size: 24px;
-      }
-
-      .case-section-copy,
-      .case-summary,
-      .case-public-card p {
-        font-size: 14px;
-      }
-
-      .case-pill,
-      .case-tab,
-      .case-card-topline span,
-      .case-card-meta span,
-      .case-card-tags span {
-        font-size: 11px;
-      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .case-carousel-track,
-      .case-slide {
+      .case-slide,
+      .case-line-modal-backdrop,
+      .case-line-modal-panel {
+        animation: none;
         transition: none;
       }
     }
@@ -1474,20 +1206,9 @@
 </head>
 <body>
 <main class="case-exhibit-page">
-  <section class="case-focus-area case-wrap" aria-labelledby="focusCasesTitle">
-    <div class="case-section-head">
-      <div>
-        <span class="case-section-label">PRIORITY CASES</span>
-        <h1 id="focusCasesTitle">重点推薦案件</h1>
-        <p class="case-section-copy">現在優先的に進めており、早めに候補者のご提案をいただきたい案件を掲載しています。各スライドは独立した案件として、推薦重点を素早く確認できます。</p>
-      </div>
-      <span class="case-count" id="focusCaseCount"></span>
-    </div>
-
+  <section class="case-focus-area case-wrap" aria-label="重点推薦案件">
     <div class="case-carousel" aria-roledescription="carousel">
-      <div class="case-carousel-viewport">
-        <div class="case-carousel-track" id="focusTrack"></div>
-      </div>
+      <div id="focusTrack"></div>
       <div class="case-carousel-bar">
         <div class="case-tabs" id="focusTabs" aria-label="注目案件の選択"></div>
         <div class="case-carousel-controls" aria-label="カルーセル操作">
@@ -1557,6 +1278,15 @@
   </section>
 </div>
 
+<button class="case-line-fab case-line-contact" type="button" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">
+  <span class="case-line-contact-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
+    </svg>
+  </span>
+  <span>LINE友だち追加</span>
+</button>
+
 <div class="case-line-modal" id="lineContactModal" aria-hidden="true">
   <button class="case-line-modal-backdrop" type="button" data-close-line-modal aria-label="閉じる"></button>
   <section class="case-line-modal-panel" role="dialog" aria-modal="true" aria-labelledby="lineContactTitle">
@@ -1572,11 +1302,11 @@
       <path stroke="#000000" d="M4 4.5h7m1 0h1m1 0h1m2 0h3m1 0h2m3 0h7M4 5.5h1m5 0h1m2 0h1m5 0h1m6 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h6m3 0h1m1 0h1m2 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m3 0h3m2 0h2m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m2 0h2m1 0h1m2 0h5m2 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h1m2 0h1m1 0h2m1 0h1m3 0h1m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M13 11.5h2m1 0h2m4 0h3M4 12.5h1m1 0h1m3 0h2m1 0h1m1 0h1m1 0h1m1 0h3m2 0h1m2 0h1m2 0h1m1 0h1M5 13.5h1m1 0h1m3 0h2m3 0h1m3 0h4m2 0h1m4 0h2M5 14.5h9m2 0h3m1 0h5m3 0h3m1 0h1M4 15.5h6m3 0h1m4 0h3m5 0h2m1 0h1M5 16.5h2m1 0h1m1 0h1m1 0h1m1 0h1m1 0h3m4 0h1m2 0h2m4 0h1M5 17.5h1m1 0h3m2 0h3m2 0h2m2 0h1m1 0h2m1 0h2m3 0h2M6 18.5h2m1 0h2m1 0h5m2 0h1m2 0h2m3 0h1m4 0h1M4 19.5h1m1 0h2m1 0h1m1 0h1m1 0h5m5 0h3m1 0h2M5 20.5h1m4 0h3m1 0h1m1 0h2m1 0h2m3 0h1m1 0h2m4 0h1M5 21.5h1m1 0h1m4 0h2m1 0h1m4 0h1m2 0h1m2 0h2m2 0h3M4 22.5h3m3 0h1m1 0h2m2 0h3m1 0h1m2 0h1m2 0h1m1 0h2m2 0h1M8 23.5h2m1 0h5m2 0h3m4 0h1m2 0h1M4 24.5h5m1 0h2m2 0h1m1 0h3m1 0h2m2 0h6m1 0h1M12 25.5h1m2 0h4m2 0h1m2 0h1m3 0h3m1 0h1M4 26.5h7m1 0h1m6 0h1m2 0h1m1 0h1m1 0h1m1 0h1m3 0h1M4 27.5h1m5 0h1m4 0h1m1 0h1m4 0h3m3 0h1m2 0h2M4 28.5h1m1 0h3m1 0h1m2 0h3m1 0h1m2 0h1m1 0h8M4 29.5h1m1 0h3m1 0h1m3 0h2m3 0h2m1 0h1m5 0h4M4 30.5h1m1 0h3m1 0h1m1 0h1m6 0h2m3 0h2m2 0h1m2 0h2M4 31.5h1m5 0h1m2 0h1m5 0h2m1 0h5m2 0h1M4 32.5h7m1 0h1m1 0h1m1 0h1m3 0h2m2 0h1m4 0h1m2 0h1"/>
     </svg>
     <div class="case-line-id-row">
-      <div><span>LINE ID</span><strong>jef4267</strong></div>
+      <div><span>LINE ID</span><strong id="lineIdValue"></strong></div>
       <button class="case-line-copy" type="button" data-copy-line-id>コピー</button>
     </div>
     <div class="case-line-modal-actions">
-      <a class="c-btn c-btn-primary case-line-contact" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-add-friends>LINEで友だち追加</a>
+      <a class="c-btn c-btn-primary case-line-contact" id="lineAddFriendLink" href="#">LINEで友だち追加</a>
     </div>
   </section>
 </div>
@@ -1591,6 +1321,32 @@
     priority: "priority",
     focus: "focus",
     summary: "summary"
+  };
+  const elements = {
+    copyContact: document.getElementById("copyContactBtn"),
+    focusTabs: document.getElementById("focusTabs"),
+    focusTrack: document.getElementById("focusTrack"),
+    lineAddFriendLink: document.getElementById("lineAddFriendLink"),
+    lineIdValue: document.getElementById("lineIdValue"),
+    lineModal: document.getElementById("lineContactModal"),
+    lineModalClose: document.querySelector(".case-line-modal-close"),
+    mobileCaseList: document.getElementById("mobileCaseList"),
+    mobileFocusCount: document.getElementById("mobileFocusCount"),
+    mobilePriorityCount: document.getElementById("mobilePriorityCount"),
+    mobileSegmentButtons: document.querySelectorAll(".case-mobile-segment"),
+    mobileSegments: document.querySelector(".case-mobile-segments"),
+    mobileSheet: document.getElementById("mobileCaseSheet"),
+    mobileSheetActions: document.getElementById("mobileSheetActions"),
+    mobileSheetBody: document.getElementById("mobileSheetBody"),
+    mobileSheetHead: document.getElementById("mobileSheetHead"),
+    mobileSummaryCount: document.getElementById("mobileSummaryCount"),
+    nextCase: document.getElementById("nextCaseBtn"),
+    otherCaseCount: document.getElementById("otherCaseCount"),
+    otherCaseGrid: document.getElementById("otherCaseGrid"),
+    otherCaseList: document.getElementById("otherCaseList"),
+    prevCase: document.getElementById("prevCaseBtn"),
+    recommendContact: document.getElementById("recommendContact"),
+    toast: document.getElementById("caseToast")
   };
 
   let caseList = [
@@ -1868,6 +1624,7 @@
 	  const expandedSummaries = new Set();
 	  let activeMobileMode = CASE_TYPES.priority;
 	  let activeMobileCases = [];
+	  let activeMobileCase = null;
 
   const renderFocusSlide = (item) => `
       <article class="case-slide">
@@ -1883,7 +1640,7 @@
           </div>
           <div class="case-actions">
             <a class="c-btn c-btn-primary c-btn-lg" href="mailto:${contactEmail}?subject=${encodeURIComponent(item.title + " についての問い合わせ")}">案件を問い合わせる</a>
-            <button class="c-btn c-btn-ghost c-btn-lg" type="button" data-copy-summary="${escapeHtml(item.title)}">概要をコピー</button>
+            <button class="c-btn c-btn-ghost c-btn-lg" type="button" data-copy-summary>概要をコピー</button>
           </div>
           <div class="case-metrics">
             <div class="case-metric"><span>単価</span><strong>${escapeHtml(item.unitPrice)}</strong></div>
@@ -1916,24 +1673,24 @@
 
   const renderFocusSlides = () => {
     if (!focusCases.length) {
-      document.getElementById("focusTrack").innerHTML = '<article class="case-slide"><div class="case-slide-main"><h2>掲載案件は準備中です</h2><div class="case-summary-wrap"><p class="case-summary">最新の案件情報は担当営業までお問い合わせください。</p></div></div></article>';
+      elements.focusTrack.innerHTML = '<article class="case-slide"><div class="case-slide-main"><h2>掲載案件は準備中です</h2><div class="case-summary-wrap"><p class="case-summary">最新の案件情報は担当営業までお問い合わせください。</p></div></div></article>';
       return;
     }
-    document.getElementById("focusTrack").innerHTML = renderFocusSlide(focusCases[activeCaseIndex]);
+    elements.focusTrack.innerHTML = renderFocusSlide(focusCases[activeCaseIndex]);
     window.requestAnimationFrame(updateFocusOverflow);
   };
 
   const normalizeCaseIndex = (index) => focusCases.length ? (index + focusCases.length) % focusCases.length : 0;
 
   const updateFocusOverflow = () => {
-    const summaryWrap = document.querySelector("#focusTrack .case-summary-wrap");
+    const summaryWrap = elements.focusTrack.querySelector(".case-summary-wrap");
     const summary = summaryWrap?.querySelector(".case-summary");
     if (!summaryWrap || !summary || summaryWrap.classList.contains("is-expanded")) return;
     summaryWrap.classList.toggle("has-overflow", summary.scrollHeight > summary.clientHeight + 1);
   };
 
   const renderTabs = () => {
-    document.getElementById("focusTabs").innerHTML = focusCases.map((item, index) => `
+    elements.focusTabs.innerHTML = focusCases.map((item, index) => `
       <button class="case-tab ${index === activeCaseIndex ? "is-active" : ""}" type="button" data-index="${index}">
         ${index + 1}. ${escapeHtml(item.title)}
       </button>
@@ -1941,7 +1698,7 @@
   };
 
   const renderOtherCards = () => {
-    document.getElementById("otherCaseGrid").innerHTML = otherCases.map((item) => `
+    elements.otherCaseGrid.innerHTML = otherCases.map((item) => `
       <article class="case-public-card">
         <div class="case-card-topline">
           <span class="${item.status === "急募" ? "is-open" : ""}">${escapeHtml(item.status)}</span>
@@ -1965,7 +1722,7 @@
   };
 
 	  const renderOtherList = () => {
-	    document.getElementById("otherCaseList").innerHTML = summaryCases.map((item) => `
+	    elements.otherCaseList.innerHTML = summaryCases.map((item) => `
 	      <article class="case-compact-item">
         <div class="case-compact-title">
           <span class="case-compact-status">${escapeHtml(item.status)}</span>
@@ -1985,9 +1742,9 @@
 	  };
 
 	  const renderMobileCounts = () => {
-	    document.getElementById("mobilePriorityCount").textContent = `${focusCases.length}件`;
-	    document.getElementById("mobileFocusCount").textContent = `${otherCases.length}件`;
-	    document.getElementById("mobileSummaryCount").textContent = `${summaryCases.length}件`;
+	    elements.mobilePriorityCount.textContent = `${focusCases.length}件`;
+	    elements.mobileFocusCount.textContent = `${otherCases.length}件`;
+	    elements.mobileSummaryCount.textContent = `${summaryCases.length}件`;
 	  };
 
 	  const renderMobileTags = (item) => {
@@ -2004,7 +1761,7 @@
 	  };
 
 	  const renderMobileLineButton = (extraClass = "") => `
-	    <button class="c-btn c-btn-primary case-line-contact ${extraClass}" type="button" data-mobile-line-contact>
+	    <button class="c-btn c-btn-primary case-line-contact ${extraClass}" type="button" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">
 	      <span class="case-line-contact-icon" aria-hidden="true">
 	        <svg viewBox="0 0 24 24" focusable="false">
 	          <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
@@ -2038,60 +1795,63 @@
 	  const renderMobileCases = () => {
 	    activeMobileCases = getMobileCases();
 	    let activeTabId = "";
-	    document.querySelectorAll(".case-mobile-segment").forEach((button) => {
+	    elements.mobileSegmentButtons.forEach((button) => {
 	      const isActive = button.dataset.mobileMode === activeMobileMode;
 	      button.classList.toggle("is-active", isActive);
 	      button.setAttribute("aria-selected", String(isActive));
 	      if (isActive) activeTabId = button.id;
 	    });
-	    const mobileCaseList = document.getElementById("mobileCaseList");
-	    mobileCaseList.setAttribute("aria-labelledby", activeTabId);
-	    mobileCaseList.innerHTML = activeMobileCases.length
+	    elements.mobileCaseList.setAttribute("aria-labelledby", activeTabId);
+	    elements.mobileCaseList.innerHTML = activeMobileCases.length
 	      ? activeMobileCases.map(renderMobileCard).join("")
 	      : '<div class="case-mobile-empty">掲載案件は準備中です。最新の案件情報は担当営業までお問い合わせください。</div>';
 	  };
 
-	  const buildMobileMetricRows = (item) => [
-	    ["単価", item.unitPrice],
-	    ["場所", item.location],
-	    ["開始時期", item.startAt],
-	    ["面談", item.interview]
-	  ].filter((row) => row[1]).map(([label, value]) => `
-	    <div class="case-mobile-detail-row">
-	      <span>${escapeHtml(label)}</span>
-	      <strong>${escapeHtml(value)}</strong>
-	    </div>
-	  `).join("");
+	  const renderMobileDetailRows = (rows) => rows
+	    .filter(([, value]) => value)
+	    .map(([label, value]) => `
+	      <div class="case-mobile-detail-row">
+	        <span>${escapeHtml(label)}</span>
+	        <strong>${escapeHtml(value)}</strong>
+	      </div>
+	    `).join("");
 
-	  const buildMobileFactRows = (item) => (item.facts || []).map((fact) => `
-	    <div class="case-mobile-detail-row">
-	      <span>${escapeHtml(fact.label)}</span>
-	      <strong>${escapeHtml(fact.value)}</strong>
-	    </div>
-	  `).join("");
+	  const setOverlayState = (element, isOpen) => {
+	    element.classList.toggle("is-open", isOpen);
+	    element.setAttribute("aria-hidden", String(!isOpen));
+	    document.body.style.overflow = isOpen ? "hidden" : "";
+	  };
 
 	  const openMobileSheet = (item) => {
 	    if (!item) return;
-	    document.getElementById("mobileSheetHead").innerHTML = `
+	    activeMobileCase = item;
+	    elements.mobileSheetHead.innerHTML = `
 	      <div class="case-mobile-card-top">
 	        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
 	        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
 	      </div>
 	      <h2 id="mobileSheetTitle">${escapeHtml(item.title)}</h2>
 	    `;
-	    document.getElementById("mobileSheetBody").innerHTML = `
+	    elements.mobileSheetBody.innerHTML = `
 	      <section class="case-mobile-sheet-section">
 	        <h3>案件概要</h3>
 	        <p class="case-mobile-sheet-summary">${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
 	      </section>
 	      <section class="case-mobile-sheet-section">
 	        <h3>基本条件</h3>
-	        <div class="case-mobile-detail-grid">${buildMobileMetricRows(item)}</div>
+	        <div class="case-mobile-detail-grid">${renderMobileDetailRows([
+	          ["単価", item.unitPrice],
+	          ["場所", item.location],
+	          ["開始時期", item.startAt],
+	          ["面談", item.interview]
+	        ])}</div>
 	      </section>
 	      ${(item.facts || []).length ? `
 	        <section class="case-mobile-sheet-section">
 	          <h3>条件概要</h3>
-	          <div class="case-mobile-detail-grid">${buildMobileFactRows(item)}</div>
+	          <div class="case-mobile-detail-grid">${renderMobileDetailRows(
+	            item.facts.map(({label, value}) => [label, value])
+	          )}</div>
 	        </section>
 	      ` : ""}
 	      ${(item.tags || []).length ? `
@@ -2101,24 +1861,16 @@
 	        </section>
 	      ` : ""}
 	    `;
-	    document.getElementById("mobileSheetActions").innerHTML = `
+	    elements.mobileSheetActions.innerHTML = `
 	      ${renderMobileLineButton()}
 	      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
 	    `;
-	    document.querySelector("[data-copy-mobile-detail]").addEventListener("click", () => {
-	      copyText(buildSummaryText(item), "案件概要をコピーしました");
-	    });
-	    const sheet = document.getElementById("mobileCaseSheet");
-	    sheet.classList.add("is-open");
-	    sheet.setAttribute("aria-hidden", "false");
-	    document.body.style.overflow = "hidden";
+	    setOverlayState(elements.mobileSheet, true);
 	  };
 
 	  const closeMobileSheet = () => {
-	    const sheet = document.getElementById("mobileCaseSheet");
-	    sheet.classList.remove("is-open");
-	    sheet.setAttribute("aria-hidden", "true");
-	    document.body.style.overflow = "";
+	    setOverlayState(elements.mobileSheet, false);
+	    activeMobileCase = null;
 	  };
 
 	  const setActiveCase = (index, mode = "absolute") => {
@@ -2138,12 +1890,11 @@
   ].join("\n");
 
   const showToast = (message) => {
-    const toast = document.getElementById("caseToast");
-    toast.textContent = message;
-    toast.classList.add("is-visible");
+    elements.toast.textContent = message;
+    elements.toast.classList.add("is-visible");
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => {
-      toast.classList.remove("is-visible");
+      elements.toast.classList.remove("is-visible");
     }, 2200);
   };
 
@@ -2170,19 +1921,13 @@
   const openLineContactModal = (trigger) => {
     lineModalTrigger = trigger?.closest("#mobileCaseSheet") ? null : trigger || null;
     closeMobileSheet();
-    const modal = document.getElementById("lineContactModal");
-    modal.classList.add("is-open");
-    modal.setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
-    modal.querySelector(".case-line-modal-close").focus();
+    setOverlayState(elements.lineModal, true);
+    elements.lineModalClose.focus();
   };
 
   const closeLineContactModal = () => {
-    const modal = document.getElementById("lineContactModal");
-    if (!modal.classList.contains("is-open")) return;
-    modal.classList.remove("is-open");
-    modal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
+    if (!elements.lineModal.classList.contains("is-open")) return;
+    setOverlayState(elements.lineModal, false);
     lineModalTrigger?.focus();
     lineModalTrigger = null;
   };
@@ -2201,15 +1946,17 @@
 
   const startAutoPlay = () => {
     window.clearInterval(autoTimer);
+    if (focusCases.length < 2) return;
     autoTimer = window.setInterval(() => setActiveCase(1, "relative"), 5200);
   };
 
   const initializePage = async () => {
     await loadCasesFromCsv();
     refreshCaseGroups();
-    document.getElementById("focusCaseCount").textContent = `${focusCases.length}件の重点推薦`;
-    document.getElementById("otherCaseCount").textContent = `${caseList.length}件`;
-    document.getElementById("recommendContact").href = `mailto:${contactEmail}?subject=${encodeURIComponent("候補者推薦")}`;
+    elements.otherCaseCount.textContent = `${caseList.length}件`;
+    elements.recommendContact.href = `mailto:${contactEmail}?subject=${encodeURIComponent("候補者推薦")}`;
+    elements.lineIdValue.textContent = lineId;
+    elements.lineAddFriendLink.href = lineAddFriendUrl;
 
     renderFocusSlides();
 	    renderTabs();
@@ -2220,24 +1967,24 @@
 	    startAutoPlay();
 	  };
 
-  document.getElementById("focusTabs").addEventListener("click", (event) => {
+  elements.focusTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-index]");
     if (!button) return;
     setActiveCase(Number(button.dataset.index), "absolute");
     startAutoPlay();
   });
 
-  document.getElementById("prevCaseBtn").addEventListener("click", () => {
+  elements.prevCase.addEventListener("click", () => {
     setActiveCase(-1, "relative");
     startAutoPlay();
   });
 
-  document.getElementById("nextCaseBtn").addEventListener("click", () => {
+  elements.nextCase.addEventListener("click", () => {
     setActiveCase(1, "relative");
     startAutoPlay();
   });
 
-	  document.getElementById("focusTrack").addEventListener("click", (event) => {
+	  elements.focusTrack.addEventListener("click", (event) => {
     const expandButton = event.target.closest("[data-expand-summary]");
     if (expandButton) {
       expandedSummaries.add(activeCaseIndex);
@@ -2254,19 +2001,15 @@
 
 	  window.addEventListener("resize", updateFocusOverflow);
 
-	  document.querySelector(".case-mobile-segments").addEventListener("click", (event) => {
+	  elements.mobileSegments.addEventListener("click", (event) => {
 	    const button = event.target.closest("[data-mobile-mode]");
 	    if (!button) return;
 	    activeMobileMode = button.dataset.mobileMode;
 	    renderMobileCases();
 	  });
 
-	  document.getElementById("mobileCaseList").addEventListener("click", (event) => {
-	    const lineButton = event.target.closest("[data-mobile-line-contact]");
-	    if (lineButton) {
-	      openLineContactModal(lineButton);
-	      return;
-	    }
+	  elements.mobileCaseList.addEventListener("click", (event) => {
+	    if (event.target.closest("[data-open-line-modal]")) return;
 	    const detailButton = event.target.closest("[data-mobile-detail]");
 	    const card = event.target.closest("[data-mobile-index]");
 	    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);
@@ -2274,7 +2017,7 @@
 	    openMobileSheet(activeMobileCases[index]);
 	  });
 
-	  document.getElementById("mobileCaseList").addEventListener("keydown", (event) => {
+	  elements.mobileCaseList.addEventListener("keydown", (event) => {
 	    if (event.key !== "Enter" && event.key !== " ") return;
 	    if (event.target.closest("button, a")) return;
 	    const card = event.target.closest("[data-mobile-index]");
@@ -2283,23 +2026,21 @@
 	    openMobileSheet(activeMobileCases[Number(card.dataset.mobileIndex)]);
 	  });
 
-	  document.getElementById("mobileCaseSheet").addEventListener("click", (event) => {
-	    const lineButton = event.target.closest("[data-mobile-line-contact]");
-	    if (lineButton) {
-	      openLineContactModal(lineButton);
+	  elements.mobileSheet.addEventListener("click", (event) => {
+	    if (event.target.closest("[data-copy-mobile-detail]") && activeMobileCase) {
+	      copyText(buildSummaryText(activeMobileCase), "案件概要をコピーしました");
 	      return;
 	    }
 	    if (!event.target.closest("[data-close-mobile-sheet]")) return;
 	    closeMobileSheet();
 	  });
 
-	  document.getElementById("lineContactModal").addEventListener("click", async (event) => {
-	    if (event.target.closest("[data-open-line-add-friends]")) {
-	      event.preventDefault();
-	      await copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
-	      window.location.assign(lineAddFriendUrl);
-	      return;
-	    }
+	  document.addEventListener("click", (event) => {
+	    const trigger = event.target.closest("[data-open-line-modal]");
+	    if (trigger) openLineContactModal(trigger);
+	  });
+
+	  elements.lineModal.addEventListener("click", (event) => {
 	    if (event.target.closest("[data-copy-line-id]")) {
 	      copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
 	      return;
@@ -2309,14 +2050,14 @@
 
 	  window.addEventListener("keydown", (event) => {
 	    if (event.key !== "Escape") return;
-	    if (document.getElementById("lineContactModal").classList.contains("is-open")) {
+	    if (elements.lineModal.classList.contains("is-open")) {
 	      closeLineContactModal();
 	      return;
 	    }
 	    closeMobileSheet();
 	  });
 
-	  document.getElementById("copyContactBtn").addEventListener("click", () => {
+	  elements.copyContact.addEventListener("click", () => {
     copyText(buildContactText(), "連絡文テンプレートをコピーしました");
   });
 

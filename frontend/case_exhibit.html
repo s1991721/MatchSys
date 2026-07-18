@@ -1272,7 +1272,7 @@
   </section>
 </main>
 
-<div class="case-mobile-sheet" id="mobileCaseSheet" aria-hidden="true">
+<div class="case-mobile-sheet" id="mobileCaseSheet" aria-hidden="true" inert>
   <button class="case-mobile-sheet-backdrop" type="button" data-close-mobile-sheet aria-label="閉じる"></button>
   <section class="case-mobile-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">
     <header class="case-mobile-sheet-head">
@@ -1293,7 +1293,7 @@
   <span>LINE友だち追加</span>
 </button>
 
-<div class="case-line-modal" id="lineContactModal" aria-hidden="true">
+<div class="case-line-modal" id="lineContactModal" aria-hidden="true" inert>
   <button class="case-line-modal-backdrop" type="button" data-close-line-modal aria-label="閉じる"></button>
   <section class="case-line-modal-panel" role="dialog" aria-modal="true" aria-labelledby="lineContactTitle">
     <button class="case-line-modal-close" type="button" data-close-line-modal aria-label="閉じる">×</button>
@@ -1344,6 +1344,7 @@
     mobileSheet: document.getElementById("mobileCaseSheet"),
     mobileSheetActions: document.getElementById("mobileSheetActions"),
     mobileSheetBody: document.getElementById("mobileSheetBody"),
+    mobileSheetClose: document.querySelector(".case-mobile-sheet-close"),
     mobileSheetHead: document.getElementById("mobileSheetHead"),
     mobileSummaryCount: document.getElementById("mobileSummaryCount"),
     nextCase: document.getElementById("nextCaseBtn"),
@@ -1823,13 +1824,19 @@
 	    `).join("");
 
 	  const setOverlayState = (element, isOpen) => {
+	    element.inert = !isOpen;
 	    element.classList.toggle("is-open", isOpen);
 	    element.setAttribute("aria-hidden", String(!isOpen));
-	    document.body.style.overflow = isOpen ? "hidden" : "";
+	    document.body.style.overflow = document.querySelector(".case-mobile-sheet.is-open, .case-line-modal.is-open")
+	      ? "hidden"
+	      : "";
 	  };
 
-	  const openMobileSheet = (item) => {
+	  let mobileSheetTrigger = null;
+
+	  const openMobileSheet = (item, trigger) => {
 	    if (!item) return;
+	    mobileSheetTrigger = trigger || document.activeElement;
 	    activeMobileCase = item;
 	    elements.mobileSheetHead.innerHTML = `
 	      <div class="case-mobile-card-top">
@@ -1872,11 +1879,19 @@
 	      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
 	    `;
 	    setOverlayState(elements.mobileSheet, true);
+	    elements.mobileSheetClose.focus();
 	  };
 
-	  const closeMobileSheet = () => {
+	  const closeMobileSheet = ({restoreFocus = true} = {}) => {
+	    if (!elements.mobileSheet.classList.contains("is-open")) return;
+	    if (restoreFocus && mobileSheetTrigger?.isConnected) {
+	      mobileSheetTrigger.focus();
+	    } else if (elements.mobileSheet.contains(document.activeElement)) {
+	      document.activeElement.blur();
+	    }
 	    setOverlayState(elements.mobileSheet, false);
 	    activeMobileCase = null;
+	    mobileSheetTrigger = null;
 	  };
 
 	  const setActiveCase = (index, mode = "absolute") => {
@@ -1925,16 +1940,21 @@
   let lineModalTrigger = null;
 
   const openLineContactModal = (trigger) => {
-    lineModalTrigger = trigger?.closest("#mobileCaseSheet") ? null : trigger || null;
-    closeMobileSheet();
+    const openedFromMobileSheet = Boolean(trigger?.closest("#mobileCaseSheet"));
+    lineModalTrigger = openedFromMobileSheet ? mobileSheetTrigger : trigger || null;
     setOverlayState(elements.lineModal, true);
     elements.lineModalClose.focus();
+    if (openedFromMobileSheet) closeMobileSheet({restoreFocus: false});
   };
 
   const closeLineContactModal = () => {
     if (!elements.lineModal.classList.contains("is-open")) return;
+    if (lineModalTrigger?.isConnected) {
+      lineModalTrigger.focus();
+    } else if (elements.lineModal.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
     setOverlayState(elements.lineModal, false);
-    lineModalTrigger?.focus();
     lineModalTrigger = null;
   };
 
@@ -2020,7 +2040,7 @@
 	    const card = event.target.closest("[data-mobile-index]");
 	    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);
 	    if (!Number.isInteger(index)) return;
-	    openMobileSheet(activeMobileCases[index]);
+	    openMobileSheet(activeMobileCases[index], detailButton || card);
 	  });
 
 	  elements.mobileCaseList.addEventListener("keydown", (event) => {
@@ -2029,7 +2049,7 @@
 	    const card = event.target.closest("[data-mobile-index]");
 	    if (!card) return;
 	    event.preventDefault();
-	    openMobileSheet(activeMobileCases[Number(card.dataset.mobileIndex)]);
+	    openMobileSheet(activeMobileCases[Number(card.dataset.mobileIndex)], card);
 	  });
 
 	  elements.mobileSheet.addEventListener("click", (event) => {

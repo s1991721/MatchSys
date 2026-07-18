@@ -657,14 +657,21 @@
 
       .case-mobile-head {
         display: grid;
-        gap: 14px;
-        margin-bottom: 16px;
+        margin-bottom: 6px;
+      }
+
+      .case-mobile-title-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
       }
 
       .case-mobile-brand {
         display: inline-flex;
         gap: 12px;
         align-items: center;
+        min-width: 0;
         width: fit-content;
         max-width: 100%;
         color: var(--exhibit-ink);
@@ -709,26 +716,14 @@
         letter-spacing: 0.01em;
       }
 
-      .case-mobile-heading {
-        display: grid;
-        gap: 8px;
-      }
-
       .case-mobile-head h1 {
+        flex: 0 0 auto;
         margin: 0;
-        color: var(--exhibit-ink);
-        font-size: 26px;
-        line-height: 1.18;
+        color: #2b374b;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.2;
         letter-spacing: 0;
-      }
-
-      .case-mobile-counts {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        color: var(--exhibit-muted);
-        font-size: 12px;
-        font-weight: 800;
       }
 
       .case-mobile-segments {
@@ -745,6 +740,10 @@
       }
 
       .case-mobile-segment {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: center;
         min-width: 0;
         min-height: 40px;
         border: 1px solid var(--exhibit-line);
@@ -754,6 +753,14 @@
         font: inherit;
         font-size: 13px;
         font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .case-mobile-segment-count {
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        opacity: 0.7;
       }
 
       .case-mobile-segment.is-active {
@@ -1330,19 +1337,18 @@
 
   <section class="case-mobile-page" aria-labelledby="mobileCasesTitle">
     <header class="case-mobile-head">
-      <a class="case-mobile-brand" href="/" aria-label="AOMERA株式会社 ホーム">
-        <span class="case-mobile-brand-mark" aria-hidden="true"><img src="/aomera-logo-mark-navy.png" alt=""></span>
-        <span class="case-mobile-brand-name"><strong>AOMERA</strong><span>株式会社</span></span>
-      </a>
-      <div class="case-mobile-heading">
+      <div class="case-mobile-title-row">
+        <a class="case-mobile-brand" href="/" aria-label="AOMERA株式会社 ホーム">
+          <span class="case-mobile-brand-mark" aria-hidden="true"><img src="/aomera-logo-mark-navy.png" alt=""></span>
+          <span class="case-mobile-brand-name"><strong>AOMERA</strong><span>株式会社</span></span>
+        </a>
         <h1 id="mobileCasesTitle">案件一覧</h1>
-        <div class="case-mobile-counts" id="mobileCaseCounts"></div>
       </div>
     </header>
     <div class="case-mobile-segments" role="tablist" aria-label="案件の優先度">
-      <button class="case-mobile-segment is-active" id="mobilePriorityTab" type="button" role="tab" aria-selected="true" aria-controls="mobileCaseList" data-mobile-mode="priority">最優先</button>
-      <button class="case-mobile-segment" id="mobileFocusTab" type="button" role="tab" aria-selected="false" aria-controls="mobileCaseList" data-mobile-mode="focus">注力</button>
-      <button class="case-mobile-segment" id="mobileSummaryTab" type="button" role="tab" aria-selected="false" aria-controls="mobileCaseList" data-mobile-mode="summary">通常</button>
+      <button class="case-mobile-segment is-active" id="mobilePriorityTab" type="button" role="tab" aria-selected="true" aria-controls="mobileCaseList" data-mobile-mode="priority"><span>最優先</span><small class="case-mobile-segment-count" id="mobilePriorityCount"></small></button>
+      <button class="case-mobile-segment" id="mobileFocusTab" type="button" role="tab" aria-selected="false" aria-controls="mobileCaseList" data-mobile-mode="focus"><span>注力</span><small class="case-mobile-segment-count" id="mobileFocusCount"></small></button>
+      <button class="case-mobile-segment" id="mobileSummaryTab" type="button" role="tab" aria-selected="false" aria-controls="mobileCaseList" data-mobile-mode="summary"><span>通常</span><small class="case-mobile-segment-count" id="mobileSummaryCount"></small></button>
     </div>
     <div class="case-mobile-list" id="mobileCaseList" role="tabpanel"></div>
   </section>
@@ -1762,11 +1768,9 @@
 	  };
 
 	  const renderMobileCounts = () => {
-	    document.getElementById("mobileCaseCounts").innerHTML = `
-	      <span>最優先案件 ${focusCases.length}件</span>
-	      <span>注力案件 ${otherCases.length}件</span>
-	      <span>通常案件 ${summaryCases.length}件</span>
-	    `;
+	    document.getElementById("mobilePriorityCount").textContent = `${focusCases.length}件`;
+	    document.getElementById("mobileFocusCount").textContent = `${otherCases.length}件`;
+	    document.getElementById("mobileSummaryCount").textContent = `${summaryCases.length}件`;
 	  };
 
 	  const renderMobileTags = (item) => {

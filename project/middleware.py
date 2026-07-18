@@ -38,6 +38,7 @@ class SessionLoginRequiredMiddleware:
             "/favicon.ico",
             "/favicon.png",
             "/favicon-32.png",
+            "/aomera-logo-mark-navy.png",
             "/common.css",
             "/components.css",
             "/common.js",

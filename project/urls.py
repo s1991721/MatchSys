@@ -312,9 +312,14 @@ urlpatterns = [
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/finance/settings.js", content_type="application/javascript")),
     ),
-    path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
-    path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
+    path("favicon.png", static_serve, {"document_root": settings.BASE_DIR / "frontend", "path": "favicon.png"}),
+    path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR / "frontend", "path": "favicon-32.png"}),
     path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),
+    path(
+        "aomera-logo-mark-navy.png",
+        cache_static_asset(static_serve),
+        {"document_root": settings.BASE_DIR / "website", "path": "aomera-logo-mark-navy.png"},
+    ),
 
     # ###################################-API-###################################
     # -------------------------------employee API-------------------------------

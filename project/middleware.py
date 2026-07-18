@@ -59,7 +59,7 @@ class SessionLoginRequiredMiddleware:
         if path.startswith(("/static/", "/admin/")):
             return True
 
-        if path.startswith("/api/login"):
+        if path == "/api/login":
             return True
 
         if path.startswith("/api/activation"):
@@ -92,7 +92,7 @@ class SessionLoginRequiredMiddleware:
             return api_error(ErrorCode.ACTIVATION_REQUIRED, status=403)
         return HttpResponse(
             "<!doctype html><html><head><meta charset='utf-8'></head>"
-            "<body><script>window.top.location.href='login.html?activation=1';</script></body></html>",
+            "<body><script>window.top.location.replace('/login.html?activation=1');</script></body></html>",
             status=401,
         )
 
@@ -102,7 +102,7 @@ class SessionLoginRequiredMiddleware:
             return api_error(ErrorCode.LOGIN_REQUIRED, "请先登录", status=401)
         return HttpResponse(
             "<!doctype html><html><head><meta charset='utf-8'></head>"
-            "<body><script>window.top.location.href='login.html';</script></body></html>",
+            "<body><script>window.top.location.replace('/login.html');</script></body></html>",
             status=401,
         )
 

@@ -265,13 +265,7 @@
         authGateStatus.textContent = i18n.t("index.auth_checking");
       }
       try {
-        const authPayload = await window.requestJson("/api/session/status", {
-          method: "GET",
-          cache: "no-store",
-        });
-        if (authPayload.data?.authenticated !== true) {
-          throw new Error("Invalid session status response");
-        }
+        await window.MatchSys.verifySession();
       } catch (error) {
         if (!window.MatchSys?.isAuthRedirecting?.() && authGateStatus) {
           authGateStatus.textContent = i18n
@@ -283,6 +277,11 @@
       }
       document.body.classList.remove("auth-checking");
       if (authGateStatus) authGateStatus.hidden = true;
+      window.addEventListener("pageshow", (event) => {
+        if (event.persisted) {
+          void window.MatchSys.verifySession().catch(() => {});
+        }
+      });
 
       const btn = document.getElementById("collapseBtn");
       const nav = document.getElementById("nav");
@@ -854,10 +853,6 @@
       window.addEventListener("message", (event) => {
         if (event.origin !== window.location.origin) return;
         const data = event.data || {};
-        if (data.type === "auth:failure") {
-          window.MatchSys.redirectAuthFailure(data.reason);
-          return;
-        }
         if (data.type === "route:change") {
           const src = normalizeAppRoute(data.src || "");
           if (!src || !isAllowedRoute(src)) return;

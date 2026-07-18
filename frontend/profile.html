@@ -587,24 +587,13 @@
     }
 
     logoutBtn.addEventListener("click", async () => {
+        logoutBtn.disabled = true;
         try {
-            const responsePayload = await window.requestJson(`${API_BASE}/api/logout`, {});
-            if (!responsePayload.success) {
-                throw new Error(responsePayload.message || t("profile.alert.logout_failed"));
-            }
-            const target = "login.html".replace(/^\//, "");
-            const nextUrl = new URL(target, window.location.href).toString();
-            try {
-                localStorage.removeItem(EMPLOYEE_ID_KEY);
-                localStorage.removeItem(EMPLOYEE_NAME_KEY);
-                localStorage.removeItem(EMPLOYEE_POSITION_KEY);
-            } catch (e) {}
-            if (window.top && window.top !== window) {
-                window.top.location.href = nextUrl;
-            } else {
-                window.location.href = nextUrl;
-            }
+            await window.requestJson(`${API_BASE}/api/logout`, {});
+            window.MatchSys.redirectAuthFailure("login");
         } catch (err) {
+            if (window.MatchSys.isAuthRedirecting()) return;
+            logoutBtn.disabled = false;
             alert(t("profile.alert.logout_failed_retry"));
         }
     });

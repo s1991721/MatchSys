@@ -167,4 +167,6 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+# Keep sessions server-side so logout invalidates the session even if a delayed
+# response attempts to reuse the browser's old session cookie.
+SESSION_ENGINE = "django.contrib.sessions.backends.db"

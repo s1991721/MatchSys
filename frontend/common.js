@@ -71,6 +71,24 @@
         return new URL(MatchSys.normalizeAppRoute(route), appBaseUrl).toString();
     };
 
+    const AUTH_STORAGE_KEYS = [
+        "app_employee_id",
+        "app_employee_name",
+        "app_employee_position_name",
+        "app_role_id",
+        "app_menu_list",
+    ];
+    const LOGIN_REQUIRED_CODE = 100401;
+    const ACTIVATION_REQUIRED_CODE = 100410;
+
+    const clearAuthState = () => {
+        AUTH_STORAGE_KEYS.forEach((key) => {
+            try {
+                localStorage.removeItem(key);
+            } catch (e) {}
+        });
+    };
+
     window.escapeHtml = function (value) {
         return String(value == null ? "" : value)
             .replace(/&/g, "&amp;")
@@ -167,15 +185,12 @@
     };
 
     const redirectAuthFailure = (reason = "login") => {
-        const target = reason === "activation" ? "login.html?activation=1" : "login.html";
-        const nextUrl = MatchSys.buildAppUrl(target);
-        if (window.top && window.top !== window) {
-            window.top.postMessage({type: "auth:failure", reason}, window.location.origin);
-            return;
-        }
         if (window.__authRedirecting) return;
         window.__authRedirecting = true;
-        window.location.replace(nextUrl);
+        const target = reason === "activation" ? "login.html?activation=1" : "login.html";
+        const nextUrl = MatchSys.buildAppUrl(target);
+        clearAuthState();
+        window.top.location.replace(nextUrl);
     };
 
     MatchSys.redirectAuthFailure = redirectAuthFailure;
@@ -292,14 +307,14 @@
         if (!res.ok) {
             const payload = await res.json().catch(() => ({}));
             const message = translateApiError(payload, `HTTP ${res.status}`);
-            if (res.status === 401) {
+            if (res.status === 401 && Number(payload?.code) === LOGIN_REQUIRED_CODE) {
                 redirectAuthFailure("login");
                 const error = new Error(message);
                 error.payload = payload;
                 error.code = payload?.code;
                 throw error;
             }
-            if (res.status === 403) {
+            if (res.status === 403 && Number(payload?.code) === ACTIVATION_REQUIRED_CODE) {
                 redirectAuthFailure("activation");
             }
             const error = new Error(message);
@@ -356,6 +371,18 @@
             throw error;
         }
         return payload;
+    };
+
+    MatchSys.verifySession = async function () {
+        if (MatchSys.isAuthRedirecting()) return false;
+        const payload = await window.requestJson("/api/session/status", {
+            method: "GET",
+            cache: "no-store",
+        });
+        if (payload.data?.authenticated !== true) {
+            throw new Error("Invalid session status response");
+        }
+        return true;
     };
 
     //获取当前月

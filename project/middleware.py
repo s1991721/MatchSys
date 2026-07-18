@@ -44,6 +44,7 @@ class SessionLoginRequiredMiddleware:
             "/common.js",
             "/i18n.js",
             "/case_exhibit.html",
+            "/api/case-exhibits.csv",
         }:
             return True
 

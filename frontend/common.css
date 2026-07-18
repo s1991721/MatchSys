@@ -1456,6 +1456,27 @@ body > .page {
   grid-template-columns: var(--sidebar-w) 1fr;
   transition: grid-template-columns 0.25s ease;
 }
+.auth-checking .app {
+  visibility: hidden;
+}
+.auth-gate-status {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: var(--muted);
+  background: var(--bg);
+  text-align: center;
+}
+.auth-gate-status[hidden] {
+  display: none;
+}
+.auth-gate-status.is-error {
+  color: var(--danger);
+}
 body.sidebar-collapsed .app {
   grid-template-columns: var(--sidebar-w-collapsed) 1fr;
 }

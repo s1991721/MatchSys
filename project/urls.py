@@ -83,6 +83,7 @@ from employee.views import (
     login_audit_api,
     login_api,
     logout_api,
+    session_status_api,
     technician_detail_api,
     technician_ss_download,
     technician_ss_upload,
@@ -316,13 +317,21 @@ urlpatterns = [
         cache_static_asset(
             TemplateView.as_view(template_name="frontend/finance/settings.js", content_type="application/javascript")),
     ),
-    path("favicon.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon.png"}),
-    path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR, "path": "favicon-32.png"}),
+    path("favicon.png", static_serve, {"document_root": settings.BASE_DIR / "frontend", "path": "favicon.png"}),
+    path("favicon-16.png", static_serve, {"document_root": settings.BASE_DIR / "frontend", "path": "favicon-16.png"}),
+    path("favicon-32.png", static_serve, {"document_root": settings.BASE_DIR / "frontend", "path": "favicon-32.png"}),
+    path("favicon-48.png", static_serve, {"document_root": settings.BASE_DIR / "frontend", "path": "favicon-48.png"}),
     path("favicon.ico", RedirectView.as_view(url="/favicon-32.png", permanent=False)),
+    path(
+        "aomera-logo-mark-navy.png",
+        cache_static_asset(static_serve),
+        {"document_root": settings.BASE_DIR / "website", "path": "aomera-logo-mark-navy.png"},
+    ),
 
     # ###################################-API-###################################
     # -------------------------------employee API-------------------------------
     path("api/login", login_api, name="employee-login"),
+    path("api/session/status", session_status_api, name="session-status"),
     path("api/login-audit", login_audit_api, name="login-audit"),
     path("api/user-logins/names", user_login_names_api, name="user-login-names"),
     path("api/user-logins/by-role", user_logins_by_role_api, name="user-logins-by-role"),

@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="./favicon-16.png" type="image/png" sizes="16x16">
   <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="./favicon-48.png" type="image/png" sizes="48x48">
   <link rel="stylesheet" href="common.css">
   <link rel="stylesheet" href="components.css">
   <title>案件一覧</title>
@@ -16,6 +18,14 @@
       --exhibit-accent: #1d4ed8;
       --exhibit-accent-soft: #eaf2ff;
       --exhibit-blue: #2563eb;
+      --exhibit-copy: #405066;
+      --exhibit-soft: #f8fafc;
+      --exhibit-urgent: #7c2d12;
+      --exhibit-urgent-soft: #fff7ed;
+      --exhibit-urgent-line: #fed7aa;
+      --line-green: #06c755;
+      --line-green-dark: #05a947;
+      --line-green-hover: #05b94d;
     }
 
     body {
@@ -36,16 +46,79 @@
       margin: 0 auto;
     }
 
+    .case-desktop-head {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 7px 0;
+      border-bottom: 1px solid #d7e1ee;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 28px rgba(23, 32, 51, 0.05);
+      backdrop-filter: blur(12px);
+    }
+
+    .case-desktop-brand {
+      display: inline-flex;
+      gap: 14px;
+      align-items: center;
+      width: fit-content;
+      color: var(--exhibit-ink);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .case-desktop-brand-mark {
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+    }
+
+    .case-desktop-brand-mark img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .case-desktop-brand-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .case-desktop-brand-name {
+      display: inline-flex;
+      gap: 7px;
+      align-items: baseline;
+      line-height: 1;
+    }
+
+    .case-desktop-brand-name strong {
+      font: 800 19px/1 "Sora", "Helvetica Neue", Arial, sans-serif;
+      letter-spacing: 0.045em;
+    }
+
+    .case-desktop-brand-name span {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .case-desktop-brand-copy small {
+      color: var(--exhibit-muted);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.08em;
+    }
+
     .case-focus-area {
-      min-height: min(650px, 88vh);
+      min-height: min(650px, calc(88vh - 69px));
       display: grid;
       gap: 18px;
       padding: 74px 0 48px;
       align-content: center;
-    }
-
-    .case-focus-area > .case-section-head {
-      display: none;
     }
 
     .case-section-head {
@@ -63,25 +136,17 @@
       letter-spacing: 0;
     }
 
-    .case-section-head h1,
     .case-section-head h2 {
       margin: 6px 0 0;
       letter-spacing: 0;
       line-height: 1.12;
-    }
-
-    .case-section-head h1 {
-      font-size: clamp(30px, 5vw, 54px);
-    }
-
-    .case-section-head h2 {
       font-size: 28px;
     }
 
     .case-section-copy {
       max-width: 650px;
       margin: 8px 0 0;
-      color: #405066;
+      color: var(--exhibit-copy);
       line-height: 1.75;
       font-size: 15px;
     }
@@ -96,37 +161,23 @@
 
     .case-carousel {
       position: relative;
-      border: 0;
-      border-radius: 0;
-      background: transparent;
-      box-shadow: none;
-      overflow: visible;
-    }
-
-    .case-carousel-viewport {
-      overflow: visible;
-      margin: 0;
-      padding: 0;
-    }
-
-    .case-carousel-track {
-      display: block;
+      min-width: 0;
     }
 
     .case-slide {
       display: grid;
       grid-template-columns: minmax(0, 1.12fr) minmax(310px, 0.72fr);
       gap: 40px;
-      padding: 0;
       align-items: center;
-      background: transparent;
       animation: case-slide-in 0.54s cubic-bezier(0.22, 1, 0.36, 1);
+      min-width: 0;
     }
 
     .case-summary-wrap {
       position: relative;
       max-width: 760px;
       margin-top: 20px;
+      min-width: 0;
     }
 
     .case-detail-toggle {
@@ -155,48 +206,70 @@
       align-items: center;
     }
 
-    .case-carousel::before,
-    .case-carousel::after {
-      display: none;
-    }
-
     .case-slide-main {
       display: grid;
       align-content: start;
       min-width: 0;
     }
 
-    .case-kicker {
+    .case-kicker,
+    .case-card-topline,
+    .case-card-meta,
+    .case-card-tags,
+    .case-judge-tags div,
+    .case-tabs,
+    .case-mobile-card-top,
+    .case-mobile-card-tags {
       display: flex;
       flex-wrap: wrap;
+    }
+
+    .case-kicker {
       gap: 10px;
       margin-bottom: 18px;
     }
 
-    .case-pill {
+    .case-pill,
+    .case-judge-tags strong,
+    .case-card-topline span,
+    .case-card-meta span,
+    .case-card-tags span,
+    .case-compact-status,
+    .case-mobile-badge,
+    .case-mobile-date,
+    .case-mobile-tag {
       display: inline-flex;
       align-items: center;
-      min-height: 28px;
-      padding: 6px 10px;
       border: 1px solid var(--exhibit-line);
       border-radius: 999px;
       background: #fff;
+      line-height: 1;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+    }
+
+    .case-pill {
+      min-height: 28px;
+      padding: 6px 10px;
       color: var(--exhibit-muted);
       font-size: 12px;
       font-weight: 800;
-      line-height: 1;
     }
 
-    .case-pill.is-status {
+    .case-pill.is-status,
+    .case-tab.is-active,
+    .case-mobile-badge {
       color: var(--exhibit-accent);
       background: var(--exhibit-accent-soft);
       border-color: rgba(28, 123, 255, 0.22);
     }
 
-    .case-pill.is-urgent {
-      color: #7c2d12;
-      background: #fff7ed;
-      border-color: #fed7aa;
+    .case-pill.is-urgent,
+    .case-card-topline .is-open,
+    .case-mobile-badge.is-urgent {
+      color: var(--exhibit-urgent);
+      background: var(--exhibit-urgent-soft);
+      border-color: var(--exhibit-urgent-line);
     }
 
     .case-slide h2 {
@@ -204,13 +277,15 @@
       font-size: clamp(42px, 6vw, 64px);
       line-height: 1.05;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }
 
     .case-summary {
       margin: 0;
-      color: #405066;
+      color: var(--exhibit-copy);
       font-size: 18px;
       line-height: 1.75;
+      overflow-wrap: anywhere;
     }
 
     .case-summary-wrap:not(.is-expanded) .case-summary {
@@ -225,6 +300,7 @@
       flex-wrap: wrap;
       gap: 12px;
       margin-top: 30px;
+      min-width: 0;
     }
 
     .case-metrics {
@@ -244,7 +320,8 @@
 
     .case-metric span,
     .case-fact span,
-    .case-card-foot span {
+    .case-card-foot span,
+    .case-judge-tags > span {
       display: block;
       color: var(--exhibit-muted);
       font-size: 12px;
@@ -279,12 +356,9 @@
 
     .case-judge-head h3 {
       margin: 0;
-      font-size: 18px;
+      font-size: 19px;
+      font-weight: 800;
       letter-spacing: 0;
-    }
-
-    .case-facts {
-      display: grid;
     }
 
     .case-fact {
@@ -305,32 +379,14 @@
       gap: 10px;
       padding: 16px 22px 20px;
       border-top: 1px solid var(--exhibit-line);
-      background: #f8fafc;
-    }
-
-    .case-judge-tags span {
-      color: var(--exhibit-muted);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .case-judge-tags div {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      background: var(--exhibit-soft);
     }
 
     .case-judge-tags strong {
-      display: inline-flex;
-      align-items: center;
       min-height: 26px;
       padding: 6px 9px;
-      border: 1px solid var(--exhibit-line);
-      border-radius: 999px;
-      background: #fff;
       color: #344258;
       font-size: 12px;
-      line-height: 1;
     }
 
     .case-carousel-bar {
@@ -339,14 +395,15 @@
       gap: 18px;
       align-items: center;
       margin-top: 22px;
-      padding: 0;
-      border-top: 0;
-      background: transparent;
     }
 
-    .case-tabs {
-      display: flex;
-      flex-wrap: wrap;
+    .case-judge-tags div,
+    .case-tabs,
+    .case-card-topline,
+    .case-card-meta,
+    .case-card-tags,
+    .case-mobile-card-top,
+    .case-mobile-card-tags {
       gap: 8px;
     }
 
@@ -365,12 +422,8 @@
       font-weight: 800;
       cursor: pointer;
       box-shadow: 0 8px 18px rgba(23, 32, 51, 0.05);
-    }
-
-    .case-tab.is-active {
-      color: var(--exhibit-accent);
-      background: var(--exhibit-accent-soft);
-      border-color: rgba(28, 123, 255, 0.22);
+      max-width: 100%;
+      overflow-wrap: anywhere;
     }
 
     .case-carousel-controls {
@@ -425,43 +478,35 @@
       font-size: 18px;
       line-height: 1.35;
       letter-spacing: 0;
+      overflow-wrap: anywhere;
     }
 
     .case-public-card p {
       margin: 0;
-      color: #405066;
+      color: var(--exhibit-copy);
       font-size: 14px;
       line-height: 1.72;
-    }
-
-    .case-card-topline,
-    .case-card-meta,
-    .case-card-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      overflow-wrap: anywhere;
     }
 
     .case-card-topline span,
     .case-card-meta span,
-    .case-card-tags span {
-      display: inline-flex;
-      align-items: center;
+    .case-card-tags span,
+    .case-mobile-badge,
+    .case-mobile-date,
+    .case-mobile-tag {
       min-height: 26px;
       padding: 6px 9px;
-      border: 1px solid var(--exhibit-line);
-      border-radius: 999px;
-      background: #fff;
-      color: #344258;
       font-size: 12px;
       font-weight: 800;
-      line-height: 1;
     }
 
-    .case-card-topline .is-open {
-      color: #7c2d12;
-      background: #fff7ed;
-      border-color: #fed7aa;
+    .case-card-topline span,
+    .case-card-meta span,
+    .case-card-tags span,
+    .case-mobile-date,
+    .case-mobile-tag {
+      color: #344258;
     }
 
     .case-card-foot {
@@ -503,16 +548,10 @@
 
     .case-compact-status {
       flex: 0 0 auto;
-      display: inline-flex;
-      align-items: center;
       min-height: 24px;
       padding: 5px 8px;
-      border: 1px solid var(--exhibit-line);
-      border-radius: 999px;
-      background: #fff;
       color: #344258;
       font-size: 12px;
-      line-height: 1;
     }
 
     .case-compact-title strong {
@@ -523,7 +562,7 @@
 
     .case-compact-meta {
       white-space: nowrap;
-      color: #405066;
+      color: var(--exhibit-copy);
       font-weight: 700;
     }
 
@@ -551,11 +590,268 @@
       line-height: 1.7;
     }
 
+    .case-line-contact {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      border-color: var(--line-green-dark);
+      background: var(--line-green);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(6, 199, 85, 0.22);
+    }
+
+    .case-line-contact:hover {
+      border-color: var(--line-green-dark);
+      background: var(--line-green-hover);
+    }
+
+    .case-line-contact:focus-visible {
+      outline: 3px solid rgba(6, 199, 85, 0.28);
+      outline-offset: 2px;
+    }
+
+    .case-line-contact-icon {
+      display: inline-flex;
+      flex: 0 0 auto;
+      width: 20px;
+      height: 20px;
+    }
+
+    .case-line-contact-icon svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .case-line-fab {
+      position: fixed;
+      right: 20px;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      z-index: 40;
+      min-height: 52px;
+      padding: 13px 18px;
+      border: 0;
+      border-radius: 999px;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .case-line-fab .case-line-contact-icon {
+      position: relative;
+    }
+
+    .case-line-fab .case-line-contact-icon::after {
+      content: "+";
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      display: grid;
+      width: 16px;
+      height: 16px;
+      place-items: center;
+      border: 2px solid var(--line-green);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--line-green-dark);
+      font: 900 13px/1 Arial, sans-serif;
+    }
+
+    .case-line-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: grid;
+      padding: 16px;
+      place-items: center;
+      pointer-events: none;
+      visibility: hidden;
+    }
+
+    .case-line-modal.is-open,
+    .case-mobile-sheet.is-open {
+      pointer-events: auto;
+      visibility: visible;
+    }
+
+    .case-line-modal-backdrop,
+    .case-mobile-sheet-backdrop {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    .case-line-modal-backdrop {
+      background: rgba(15, 23, 42, 0.52);
+    }
+
+    .case-line-modal.is-open .case-line-modal-backdrop,
+    .case-mobile-sheet.is-open .case-mobile-sheet-backdrop {
+      opacity: 1;
+    }
+
+    .case-line-modal-panel {
+      position: relative;
+      display: grid;
+      gap: 16px;
+      width: min(100%, 420px);
+      max-height: calc(100vh - 32px);
+      max-height: calc(100dvh - 32px);
+      padding: 22px 18px max(18px, env(safe-area-inset-bottom));
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+      overflow-y: auto;
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .case-line-modal.is-open .case-line-modal-panel {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .case-line-modal-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: grid;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      place-items: center;
+      border: 1px solid var(--exhibit-line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--exhibit-ink);
+      font: inherit;
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .case-line-modal-head {
+      padding-right: 38px;
+    }
+
+    .case-line-modal-head span {
+      display: inline-flex;
+      margin-bottom: 6px;
+      color: var(--line-green-dark);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .case-line-modal-head h2 {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.35;
+    }
+
+    .case-line-modal-head p {
+      margin: 6px 0 0;
+      color: var(--exhibit-muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .case-line-qr-wrap {
+      position: relative;
+      width: 156px;
+      height: 156px;
+      margin: 0 auto;
+    }
+
+    .case-line-qr {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 1px solid var(--exhibit-line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .case-line-qr-logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      display: grid;
+      width: 30px;
+      height: 30px;
+      padding: 4px;
+      place-items: center;
+      border-radius: 7px;
+      background: #fff;
+      box-shadow: 0 0 0 1px rgba(223, 230, 239, 0.8);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .case-line-qr-logo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .case-line-id-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 10px 10px 12px;
+      border: 1px solid #dfe6ef;
+      border-radius: 10px;
+      background: var(--exhibit-soft);
+    }
+
+    .case-line-id-row span,
+    .case-mobile-metric span,
+    .case-mobile-detail-row span {
+      color: var(--exhibit-muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .case-line-id-row strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .case-line-copy {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid rgba(6, 199, 85, 0.28);
+      border-radius: 8px;
+      background: #effcf4;
+      color: #058f3d;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .case-line-modal-actions,
+    .case-facts {
+      display: grid;
+    }
+
+    .case-line-modal-actions .c-btn {
+      min-height: 48px;
+      border-radius: 9px;
+    }
+
     .case-toast {
       position: fixed;
       right: 20px;
-      bottom: 20px;
-      z-index: 20;
+      bottom: 84px;
+      z-index: 80;
       max-width: min(360px, calc(100vw - 40px));
       padding: 12px 14px;
       border-radius: 8px;
@@ -573,6 +869,11 @@
     .case-toast.is-visible {
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .case-mobile-page,
+    .case-mobile-sheet {
+      display: none;
     }
 
     @keyframes case-slide-in {
@@ -594,8 +895,12 @@
 
       .case-slide {
         grid-template-columns: 1fr;
-        min-height: 760px;
-        padding: 0;
+        gap: 22px;
+        min-height: 0;
+      }
+
+      .case-slide h2 {
+        font-size: clamp(34px, 7vw, 48px);
       }
 
       .case-card-grid {
@@ -604,64 +909,403 @@
     }
 
     @media (max-width: 680px) {
-      .case-wrap {
-        width: min(100% - 24px, 1180px);
-      }
-
-      .case-carousel::before,
-      .case-carousel::after {
+      .case-desktop-head {
         display: none;
       }
 
-      .case-section-head,
-      .case-carousel-bar,
-      .case-footer-inner {
-        align-items: start;
-        flex-direction: column;
+      .case-line-fab {
+        right: 14px;
+        bottom: max(14px, env(safe-area-inset-bottom));
+        min-height: 52px;
+        padding: 12px 16px;
       }
 
-      .case-section-head,
-      .case-footer-inner {
+      .case-line-fab .case-line-contact-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .case-mobile-sheet.is-open + .case-line-fab {
+        display: none;
+      }
+
+      .case-focus-area,
+      .case-other-area,
+      .case-footer {
+        display: none;
+      }
+
+      .case-exhibit-page {
+        background: #f3f6fa;
+      }
+
+      .case-mobile-page {
+        display: block;
+        min-height: 100vh;
+        padding: 18px 14px 28px;
+      }
+
+      .case-mobile-head {
+        display: grid;
+        margin-bottom: 6px;
+      }
+
+      .case-mobile-title-row {
         display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
       }
 
-      .case-slide h2 {
-        font-size: 34px;
+      .case-mobile-brand {
+        display: inline-flex;
+        gap: 12px;
+        align-items: center;
+        min-width: 0;
+        width: fit-content;
+        max-width: 100%;
+        color: var(--exhibit-ink);
+        text-decoration: none;
+        white-space: nowrap;
       }
 
-      .case-summary {
-        font-size: 16px;
+      .case-mobile-brand-mark {
+        display: grid;
+        flex: 0 0 auto;
+        place-items: center;
+        width: 36px;
+        height: 36px;
       }
 
-      .case-metrics,
-      .case-card-grid {
-        grid-template-columns: 1fr;
+      .case-mobile-brand-mark img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
       }
 
-      .case-compact-item {
+      .case-mobile-brand-name {
+        display: inline-flex;
+        gap: 4px;
+        align-items: baseline;
+        min-width: 0;
+        overflow: hidden;
+        line-height: 1;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .case-mobile-brand-name strong {
+        font: 700 13px/1 "Sora", "Helvetica Neue", Arial, sans-serif;
+        letter-spacing: 0.035em;
+      }
+
+      .case-mobile-brand-name span {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+      }
+
+      .case-mobile-head h1 {
+        flex: 0 0 auto;
+        margin: 0;
+        color: #2b374b;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: 0;
+      }
+
+      .case-mobile-segments {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        margin: 0 -14px 14px;
+        padding: 10px 14px;
+        background: rgba(243, 246, 250, 0.94);
+        backdrop-filter: blur(12px);
+      }
+
+      .case-mobile-segment {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        min-height: 40px;
+        border: 1px solid var(--exhibit-line);
+        border-radius: 999px;
+        background: #fff;
+        color: #344258;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .case-mobile-segment-count {
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1;
+        opacity: 0.7;
+      }
+
+      .case-mobile-segment.is-active {
+        border-color: rgba(29, 78, 216, 0.24);
+        background: var(--exhibit-accent-soft);
+        color: var(--exhibit-accent);
+      }
+
+      .case-mobile-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .case-mobile-empty {
+        padding: 22px 16px;
+        color: var(--exhibit-muted);
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .case-mobile-empty,
+      .case-mobile-card {
+        border: 1px solid var(--exhibit-line);
+        border-radius: 8px;
+        background: #fff;
+      }
+
+      .case-mobile-card {
+        display: grid;
+        gap: 12px;
+        width: 100%;
+        min-width: 0;
+        padding: 16px;
+        box-shadow: 0 8px 22px rgba(23, 32, 51, 0.06);
+        text-align: left;
+      }
+
+      .case-mobile-card-top,
+      .case-mobile-card-tags {
+        align-items: center;
+      }
+
+      .case-mobile-date {
+        color: var(--exhibit-muted);
+      }
+
+      .case-mobile-card h2 {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        color: var(--exhibit-ink);
+        font-size: 20px;
+        line-height: 1.35;
+        letter-spacing: 0;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow-wrap: anywhere;
+      }
+
+      .case-mobile-card p {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        color: var(--exhibit-copy);
+        font-size: 14px;
+        line-height: 1.68;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        overflow-wrap: anywhere;
+      }
+
+      .case-mobile-metrics {
+        display: grid;
         grid-template-columns: 1fr;
         gap: 8px;
+      }
+
+      .case-mobile-metric,
+      .case-mobile-detail-row {
+        display: grid;
+        border: 1px solid #edf1f7;
+        border-radius: 8px;
+        background: var(--exhibit-soft);
+      }
+
+      .case-mobile-metric {
+        gap: 4px;
+        min-width: 0;
+        padding: 10px 12px;
+      }
+
+      .case-mobile-metric strong {
+        color: var(--exhibit-ink);
+        font-size: 15px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+      }
+
+      .case-mobile-card-action {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .case-mobile-contact {
+        min-width: 0;
+        min-height: 44px;
+        padding: 11px 14px;
+        border-radius: 8px;
+        font-weight: 800;
+        white-space: normal;
+      }
+
+      .case-mobile-detail-link {
+        min-height: 44px;
+        border: 0;
+        background: transparent;
+        color: var(--exhibit-accent);
+        font: inherit;
+        font-size: 13px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .case-mobile-sheet {
+        position: fixed;
+        inset: 0;
+        height: 100vh;
+        height: 100dvh;
+        z-index: 30;
+        display: grid;
+        align-items: end;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .case-mobile-sheet-backdrop {
+        background: rgba(15, 23, 42, 0.42);
+      }
+
+      .case-mobile-sheet-panel {
+        position: relative;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        max-height: calc(100vh - 64px);
+        max-height: min(calc(100dvh - 64px), 760px);
+        border-radius: 16px 16px 0 0;
+        background: #fff;
+        box-shadow: 0 -18px 46px rgba(15, 23, 42, 0.2);
+        overflow: hidden;
+        transform: translateY(100%);
+        transition: transform 0.22s ease;
+      }
+
+      .case-mobile-sheet.is-open .case-mobile-sheet-panel {
+        transform: translateY(0);
+      }
+
+      .case-mobile-sheet-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 38px;
+        gap: 12px;
         align-items: start;
+        padding: 18px 16px 12px;
+        border-bottom: 1px solid var(--exhibit-line);
       }
 
-      .case-compact-title {
-        align-items: start;
+      .case-mobile-sheet-head h2 {
+        margin: 8px 0 0;
+        font-size: 21px;
+        line-height: 1.35;
+        letter-spacing: 0;
+        overflow-wrap: anywhere;
       }
 
-      .case-fact {
-        grid-template-columns: 92px minmax(0, 1fr);
-        padding: 14px 16px;
+      .case-mobile-sheet-close {
+        width: 38px;
+        height: 38px;
+        border: 1px solid var(--exhibit-line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--exhibit-ink);
+        font-size: 24px;
+        line-height: 1;
       }
 
-      .case-actions,
-      .case-actions .c-btn {
-        width: 100%;
+      .case-mobile-sheet-body {
+        display: grid;
+        gap: 16px;
+        min-height: 0;
+        padding: 16px;
+        overflow-y: auto;
       }
+
+      .case-mobile-sheet-section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .case-mobile-sheet-section h3 {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.3;
+      }
+
+      .case-mobile-sheet-summary {
+        margin: 0;
+        color: var(--exhibit-copy);
+        font-size: 14px;
+        line-height: 1.75;
+        overflow-wrap: anywhere;
+      }
+
+      .case-mobile-detail-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .case-mobile-detail-row {
+        gap: 5px;
+        padding: 11px 12px;
+      }
+
+      .case-mobile-detail-row strong {
+        color: var(--exhibit-ink);
+        font-size: 14px;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+      }
+
+      .case-mobile-sheet-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+        border-top: 1px solid var(--exhibit-line);
+        background: #fff;
+      }
+
+      .case-mobile-sheet-actions .c-btn {
+        min-width: 0;
+        min-height: 44px;
+        padding: 11px 12px;
+        border-radius: 8px;
+        white-space: normal;
+      }
+
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .case-carousel-track,
-      .case-slide {
+      .case-slide,
+      .case-line-modal-backdrop,
+      .case-line-modal-panel {
+        animation: none;
         transition: none;
       }
     }
@@ -669,20 +1313,20 @@
 </head>
 <body>
 <main class="case-exhibit-page">
-  <section class="case-focus-area case-wrap" aria-labelledby="focusCasesTitle">
-    <div class="case-section-head">
-      <div>
-        <span class="case-section-label">PRIORITY CASES</span>
-        <h1 id="focusCasesTitle">重点推薦案件</h1>
-        <p class="case-section-copy">現在優先的に進めており、早めに候補者のご提案をいただきたい案件を掲載しています。各スライドは独立した案件として、推薦重点を素早く確認できます。</p>
-      </div>
-      <span class="case-count" id="focusCaseCount"></span>
+  <header class="case-desktop-head">
+    <div class="case-wrap">
+      <a class="case-desktop-brand" href="https://www.aomera.co.jp/" aria-label="AOMERA株式会社 公式サイト">
+        <span class="case-desktop-brand-mark" aria-hidden="true"><img src="/aomera-logo-mark-navy.png" alt=""></span>
+        <span class="case-desktop-brand-copy">
+          <span class="case-desktop-brand-name"><strong>AOMERA</strong><span>株式会社</span></span>
+          <small>案件情報ポータル</small>
+        </span>
+      </a>
     </div>
-
+  </header>
+  <section class="case-focus-area case-wrap" aria-label="重点推薦案件">
     <div class="case-carousel" aria-roledescription="carousel">
-      <div class="case-carousel-viewport">
-        <div class="case-carousel-track" id="focusTrack"></div>
-      </div>
+      <div id="focusTrack"></div>
       <div class="case-carousel-bar">
         <div class="case-tabs" id="focusTabs" aria-label="注目案件の選択"></div>
         <div class="case-carousel-controls" aria-label="カルーセル操作">
@@ -716,20 +1360,116 @@
       </div>
       <div class="case-actions">
         <a class="c-btn c-btn-primary" id="recommendContact" href="#">候補者を推薦</a>
-        <button class="c-btn c-btn-ghost" type="button" id="copyContactBtn">連絡文をコピー</button>
       </div>
     </div>
   </section>
+
+  <section class="case-mobile-page" aria-labelledby="mobileCasesTitle">
+    <header class="case-mobile-head">
+      <div class="case-mobile-title-row">
+        <a class="case-mobile-brand" href="https://www.aomera.co.jp/" aria-label="AOMERA株式会社 公式サイト">
+          <span class="case-mobile-brand-mark" aria-hidden="true"><img src="/aomera-logo-mark-navy.png" alt=""></span>
+          <span class="case-mobile-brand-name"><strong>AOMERA</strong><span>株式会社</span></span>
+        </a>
+        <h1 id="mobileCasesTitle">案件一覧</h1>
+      </div>
+    </header>
+    <div class="case-mobile-segments" role="tablist" aria-label="案件の優先度">
+      <button class="case-mobile-segment is-active" id="mobilePriorityTab" type="button" role="tab" aria-selected="true" aria-controls="mobileCaseList" data-mobile-mode="priority"><span>最優先</span><small class="case-mobile-segment-count" id="mobilePriorityCount"></small></button>
+      <button class="case-mobile-segment" id="mobileFocusTab" type="button" role="tab" aria-selected="false" aria-controls="mobileCaseList" data-mobile-mode="focus"><span>注力</span><small class="case-mobile-segment-count" id="mobileFocusCount"></small></button>
+      <button class="case-mobile-segment" id="mobileSummaryTab" type="button" role="tab" aria-selected="false" aria-controls="mobileCaseList" data-mobile-mode="summary"><span>通常</span><small class="case-mobile-segment-count" id="mobileSummaryCount"></small></button>
+    </div>
+    <div class="case-mobile-list" id="mobileCaseList" role="tabpanel"></div>
+  </section>
 </main>
+
+<div class="case-mobile-sheet" id="mobileCaseSheet" aria-hidden="true" inert>
+  <button class="case-mobile-sheet-backdrop" type="button" data-close-mobile-sheet aria-label="閉じる"></button>
+  <section class="case-mobile-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="mobileSheetTitle">
+    <header class="case-mobile-sheet-head">
+      <div id="mobileSheetHead"></div>
+      <button class="case-mobile-sheet-close" type="button" data-close-mobile-sheet aria-label="閉じる">×</button>
+    </header>
+    <div class="case-mobile-sheet-body" id="mobileSheetBody"></div>
+    <div class="case-mobile-sheet-actions" id="mobileSheetActions"></div>
+  </section>
+</div>
+
+<button class="case-line-fab case-line-contact" type="button" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">
+  <span class="case-line-contact-icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" focusable="false">
+      <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
+    </svg>
+  </span>
+  <span>LINE友だち追加</span>
+</button>
+
+<div class="case-line-modal" id="lineContactModal" aria-hidden="true" inert>
+  <button class="case-line-modal-backdrop" type="button" data-close-line-modal aria-label="閉じる"></button>
+  <section class="case-line-modal-panel" role="dialog" aria-modal="true" aria-labelledby="lineContactTitle">
+    <button class="case-line-modal-close" type="button" data-close-line-modal aria-label="閉じる">×</button>
+    <header class="case-line-modal-head">
+      <span>LINE CONTACT</span>
+      <h2 id="lineContactTitle">LINEでお問い合わせ</h2>
+      <p>下のボタン、QRコード、またはLINE IDから友だち追加できます。</p>
+    </header>
+    <div class="case-line-qr-wrap">
+      <svg class="case-line-qr" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 43 43" shape-rendering="crispEdges" role="img" aria-labelledby="lineQrTitle">
+        <title id="lineQrTitle">LINE友だち追加用QRコード</title>
+        <path fill="#fff" d="M0 0h43v43H0z"/>
+        <path fill="#000" d="M5 5h7v1h-7zM15 5h3v1h-3zM19 5h2v1h-2zM22 5h1v1h-1zM24 5h2v1h-2zM28 5h2v1h-2zM31 5h1v1h-1zM34 5h1v1h-1zM36 5h1v1h-1zM5 6h1v1h-1zM11 6h1v1h-1zM14 6h1v1h-1zM18 6h2v1h-2zM21 6h3v1h-3zM27 6h1v1h-1zM30 6h3v1h-3zM35 6h1v1h-1zM5 7h1v1h-1zM7 7h3v1h-3zM11 7h1v1h-1zM13 7h1v1h-1zM15 7h3v1h-3zM19 7h6v1h-6zM26 7h1v1h-1zM28 7h4v1h-4zM34 7h1v1h-1zM5 8h1v1h-1zM7 8h3v1h-3zM11 8h1v1h-1zM13 8h1v1h-1zM17 8h3v1h-3zM29 8h2v1h-2zM33 8h1v1h-1zM36 8h1v1h-1zM5 9h1v1h-1zM7 9h3v1h-3zM11 9h1v1h-1zM13 9h1v1h-1zM15 9h2v1h-2zM18 9h2v1h-2zM21 9h7v1h-7zM29 9h6v1h-6zM36 9h2v1h-2zM5 10h1v1h-1zM11 10h1v1h-1zM14 10h1v1h-1zM16 10h1v1h-1zM21 10h3v1h-3zM25 10h1v1h-1zM28 10h2v1h-2zM33 10h5v1h-5zM5 11h7v1h-7zM14 11h1v1h-1zM16 11h1v1h-1zM21 11h4v1h-4zM27 11h3v1h-3zM31 11h1v1h-1zM33 11h2v1h-2zM36 11h1v1h-1zM13 12h1v1h-1zM16 12h2v1h-2zM19 12h2v1h-2zM22 12h2v1h-2zM25 12h1v1h-1zM29 12h1v1h-1zM33 12h2v1h-2zM37 12h1v1h-1zM5 13h1v1h-1zM7 13h1v1h-1zM11 13h1v1h-1zM14 13h1v1h-1zM16 13h3v1h-3zM20 13h1v1h-1zM22 13h3v1h-3zM27 13h7v1h-7zM36 13h1v1h-1zM5 14h1v1h-1zM8 14h3v1h-3zM13 14h2v1h-2zM17 14h1v1h-1zM21 14h2v1h-2zM26 14h1v1h-1zM29 14h1v1h-1zM33 14h3v1h-3zM5 15h1v1h-1zM7 15h1v1h-1zM10 15h3v1h-3zM17 15h3v1h-3zM21 15h3v1h-3zM26 15h1v1h-1zM32 15h5v1h-5zM5 16h1v1h-1zM7 16h2v1h-2zM10 16h1v1h-1zM12 16h6v1h-6zM20 16h1v1h-1zM23 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM29 16h1v1h-1zM31 16h1v1h-1zM37 16h1v1h-1zM8 17h1v1h-1zM11 17h4v1h-4zM18 17h1v1h-1zM20 17h2v1h-2zM23 17h3v1h-3zM27 17h1v1h-1zM29 17h2v1h-2zM32 17h3v1h-3zM37 17h1v1h-1zM8 18h1v1h-1zM12 18h1v1h-1zM14 18h7v1h-7zM23 18h7v1h-7zM31 18h2v1h-2zM34 18h2v1h-2zM37 18h1v1h-1zM5 19h1v1h-1zM8 19h1v1h-1zM10 19h4v1h-4zM16 19h3v1h-3zM20 19h2v1h-2zM23 19h1v1h-1zM25 19h1v1h-1zM27 19h1v1h-1zM30 19h3v1h-3zM35 19h2v1h-2zM5 20h1v1h-1zM7 20h4v1h-4zM12 20h3v1h-3zM17 20h1v1h-1zM19 20h1v1h-1zM21 20h2v1h-2zM24 20h2v1h-2zM28 20h3v1h-3zM32 20h1v1h-1zM37 20h1v1h-1zM5 21h1v1h-1zM11 21h2v1h-2zM16 21h2v1h-2zM24 21h1v1h-1zM28 21h1v1h-1zM30 21h1v1h-1zM32 21h2v1h-2zM35 21h3v1h-3zM6 22h1v1h-1zM10 22h1v1h-1zM14 22h2v1h-2zM18 22h2v1h-2zM21 22h2v1h-2zM24 22h4v1h-4zM30 22h2v1h-2zM34 22h4v1h-4zM7 23h1v1h-1zM11 23h3v1h-3zM17 23h4v1h-4zM23 23h3v1h-3zM27 23h1v1h-1zM30 23h2v1h-2zM33 23h1v1h-1zM36 23h1v1h-1zM6 24h2v1h-2zM9 24h1v1h-1zM13 24h3v1h-3zM17 24h5v1h-5zM23 24h3v1h-3zM27 24h2v1h-2zM31 24h1v1h-1zM34 24h2v1h-2zM37 24h1v1h-1zM8 25h4v1h-4zM15 25h2v1h-2zM19 25h1v1h-1zM22 25h5v1h-5zM29 25h1v1h-1zM32 25h1v1h-1zM36 25h2v1h-2zM5 26h1v1h-1zM7 26h1v1h-1zM9 26h2v1h-2zM12 26h2v1h-2zM15 26h2v1h-2zM18 26h1v1h-1zM22 26h2v1h-2zM25 26h3v1h-3zM29 26h2v1h-2zM35 26h1v1h-1zM6 27h2v1h-2zM10 27h2v1h-2zM15 27h1v1h-1zM21 27h6v1h-6zM30 27h1v1h-1zM32 27h1v1h-1zM34 27h3v1h-3zM5 28h1v1h-1zM10 28h1v1h-1zM14 28h1v1h-1zM18 28h7v1h-7zM26 28h2v1h-2zM30 28h2v1h-2zM37 28h1v1h-1zM7 29h3v1h-3zM11 29h1v1h-1zM13 29h3v1h-3zM20 29h1v1h-1zM23 29h1v1h-1zM26 29h7v1h-7zM35 29h3v1h-3zM13 30h2v1h-2zM17 30h2v1h-2zM20 30h1v1h-1zM22 30h7v1h-7zM5 31h7v1h-7zM13 31h1v1h-1zM15 31h1v1h-1zM17 31h1v1h-1zM19 31h1v1h-1zM21 31h1v1h-1zM23 31h1v1h-1zM25 31h1v1h-1zM27 31h1v1h-1zM29 31h1v1h-1zM31 31h7v1h-7zM5 32h1v1h-1zM11 32h1v1h-1zM13 32h1v1h-1zM15 32h1v1h-1zM21 32h1v1h-1zM24 32h1v1h-1zM26 32h1v1h-1zM28 32h2v1h-2zM31 32h1v1h-1zM37 32h1v1h-1zM5 33h1v1h-1zM7 33h3v1h-3zM11 33h1v1h-1zM18 33h9v1h-9zM31 33h1v1h-1zM33 33h3v1h-3zM37 33h1v1h-1zM5 34h1v1h-1zM7 34h3v1h-3zM11 34h1v1h-1zM14 34h1v1h-1zM18 34h1v1h-1zM22 34h1v1h-1zM25 34h1v1h-1zM28 34h2v1h-2zM31 34h1v1h-1zM33 34h3v1h-3zM37 34h1v1h-1zM5 35h1v1h-1zM7 35h3v1h-3zM11 35h1v1h-1zM13 35h1v1h-1zM18 35h1v1h-1zM20 35h4v1h-4zM26 35h4v1h-4zM31 35h1v1h-1zM33 35h3v1h-3zM37 35h1v1h-1zM5 36h1v1h-1zM11 36h1v1h-1zM13 36h1v1h-1zM15 36h3v1h-3zM19 36h1v1h-1zM22 36h2v1h-2zM26 36h2v1h-2zM29 36h1v1h-1zM31 36h1v1h-1zM37 36h1v1h-1zM5 37h7v1h-7zM13 37h1v1h-1zM15 37h1v1h-1zM20 37h1v1h-1zM22 37h2v1h-2zM25 37h2v1h-2zM28 37h2v1h-2zM31 37h7v1h-7z"/>
+      </svg>
+      <span class="case-line-qr-logo" aria-hidden="true">
+        <img src="/aomera-logo-mark-navy.png" alt="">
+      </span>
+    </div>
+    <div class="case-line-id-row">
+      <div><span>LINE ID</span><strong id="lineIdValue"></strong></div>
+      <button class="case-line-copy" type="button" data-copy-line-id>コピー</button>
+    </div>
+    <div class="case-line-modal-actions">
+      <a class="c-btn c-btn-primary case-line-contact" id="lineAddFriendLink" href="#">LINEで友だち追加</a>
+    </div>
+  </section>
+</div>
 
 <div class="case-toast" id="caseToast" role="status" aria-live="polite"></div>
 
 <script>
   const contactEmail = "sales@example.com";
+  const lineId = "jef4267";
+  const lineAddFriendUrl = "https://line.me/ti/p/TaAXjfK7Ni";
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   const CASE_TYPES = {
     priority: "priority",
     focus: "focus",
     summary: "summary"
+  };
+  const elements = {
+    focusTabs: document.getElementById("focusTabs"),
+    focusTrack: document.getElementById("focusTrack"),
+    lineAddFriendLink: document.getElementById("lineAddFriendLink"),
+    lineIdValue: document.getElementById("lineIdValue"),
+    lineModal: document.getElementById("lineContactModal"),
+    lineModalClose: document.querySelector(".case-line-modal-close"),
+    mobileCaseList: document.getElementById("mobileCaseList"),
+    mobileFocusCount: document.getElementById("mobileFocusCount"),
+    mobilePriorityCount: document.getElementById("mobilePriorityCount"),
+    mobileSegmentButtons: document.querySelectorAll(".case-mobile-segment"),
+    mobileSegments: document.querySelector(".case-mobile-segments"),
+    mobileSheet: document.getElementById("mobileCaseSheet"),
+    mobileSheetActions: document.getElementById("mobileSheetActions"),
+    mobileSheetBody: document.getElementById("mobileSheetBody"),
+    mobileSheetClose: document.querySelector(".case-mobile-sheet-close"),
+    mobileSheetHead: document.getElementById("mobileSheetHead"),
+    mobileSummaryCount: document.getElementById("mobileSummaryCount"),
+    nextCase: document.getElementById("nextCaseBtn"),
+    otherCaseCount: document.getElementById("otherCaseCount"),
+    otherCaseGrid: document.getElementById("otherCaseGrid"),
+    otherCaseList: document.getElementById("otherCaseList"),
+    prevCase: document.getElementById("prevCaseBtn"),
+    recommendContact: document.getElementById("recommendContact"),
+    toast: document.getElementById("caseToast")
   };
 
   let caseList = [
@@ -962,7 +1702,7 @@
     try {
       const parsed = JSON.parse(value || "[]");
       return Array.isArray(parsed) ? parsed : [];
-    } catch (err) {
+    } catch {
       return [];
     }
   };
@@ -989,7 +1729,7 @@
         .map(mapCsvRowToCase)
         .filter((item) => item.type && item.title);
       caseList = items;
-    } catch (err) {
+    } catch {
       // Keep the built-in sample list if the CSV has not been published yet.
     }
   };
@@ -1004,7 +1744,11 @@
 
   let activeCaseIndex = 0;
   let autoTimer = null;
+  let focusOverflowFrame = null;
   const expandedSummaries = new Set();
+  let activeMobileMode = CASE_TYPES.priority;
+  let activeMobileCases = [];
+  let activeMobileCase = null;
 
   const renderFocusSlide = (item) => `
       <article class="case-slide">
@@ -1020,7 +1764,7 @@
           </div>
           <div class="case-actions">
             <a class="c-btn c-btn-primary c-btn-lg" href="mailto:${contactEmail}?subject=${encodeURIComponent(item.title + " についての問い合わせ")}">案件を問い合わせる</a>
-            <button class="c-btn c-btn-ghost c-btn-lg" type="button" data-copy-summary="${escapeHtml(item.title)}">概要をコピー</button>
+            <button class="c-btn c-btn-ghost c-btn-lg" type="button" data-copy-summary>概要をコピー</button>
           </div>
           <div class="case-metrics">
             <div class="case-metric"><span>単価</span><strong>${escapeHtml(item.unitPrice)}</strong></div>
@@ -1053,32 +1797,40 @@
 
   const renderFocusSlides = () => {
     if (!focusCases.length) {
-      document.getElementById("focusTrack").innerHTML = '<article class="case-slide"><div class="case-slide-main"><h2>掲載案件は準備中です</h2><div class="case-summary-wrap"><p class="case-summary">最新の案件情報は担当営業までお問い合わせください。</p></div></div></article>';
+      elements.focusTrack.innerHTML = '<article class="case-slide"><div class="case-slide-main"><h2>掲載案件は準備中です</h2><div class="case-summary-wrap"><p class="case-summary">最新の案件情報は担当営業までお問い合わせください。</p></div></div></article>';
       return;
     }
-    document.getElementById("focusTrack").innerHTML = renderFocusSlide(focusCases[activeCaseIndex]);
-    window.requestAnimationFrame(updateFocusOverflow);
+    elements.focusTrack.innerHTML = renderFocusSlide(focusCases[activeCaseIndex]);
+    scheduleFocusOverflowUpdate();
   };
 
   const normalizeCaseIndex = (index) => focusCases.length ? (index + focusCases.length) % focusCases.length : 0;
 
   const updateFocusOverflow = () => {
-    const summaryWrap = document.querySelector("#focusTrack .case-summary-wrap");
+    const summaryWrap = elements.focusTrack.querySelector(".case-summary-wrap");
     const summary = summaryWrap?.querySelector(".case-summary");
     if (!summaryWrap || !summary || summaryWrap.classList.contains("is-expanded")) return;
     summaryWrap.classList.toggle("has-overflow", summary.scrollHeight > summary.clientHeight + 1);
   };
 
+  const scheduleFocusOverflowUpdate = () => {
+    if (focusOverflowFrame !== null) return;
+    focusOverflowFrame = window.requestAnimationFrame(() => {
+      focusOverflowFrame = null;
+      updateFocusOverflow();
+    });
+  };
+
   const renderTabs = () => {
-    document.getElementById("focusTabs").innerHTML = focusCases.map((item, index) => `
-      <button class="case-tab ${index === activeCaseIndex ? "is-active" : ""}" type="button" data-index="${index}">
+    elements.focusTabs.innerHTML = focusCases.map((item, index) => `
+      <button class="case-tab ${index === activeCaseIndex ? "is-active" : ""}" type="button" data-index="${index}" aria-pressed="${index === activeCaseIndex}">
         ${index + 1}. ${escapeHtml(item.title)}
       </button>
     `).join("");
   };
 
   const renderOtherCards = () => {
-    document.getElementById("otherCaseGrid").innerHTML = otherCases.map((item) => `
+    elements.otherCaseGrid.innerHTML = otherCases.map((item) => `
       <article class="case-public-card">
         <div class="case-card-topline">
           <span class="${item.status === "急募" ? "is-open" : ""}">${escapeHtml(item.status)}</span>
@@ -1102,7 +1854,7 @@
   };
 
   const renderOtherList = () => {
-    document.getElementById("otherCaseList").innerHTML = summaryCases.map((item) => `
+    elements.otherCaseList.innerHTML = summaryCases.map((item) => `
       <article class="case-compact-item">
         <div class="case-compact-title">
           <span class="case-compact-status">${escapeHtml(item.status)}</span>
@@ -1113,6 +1865,158 @@
         <span class="case-compact-meta">${escapeHtml(item.startAt)}</span>
       </article>
     `).join("");
+  };
+
+  const getMobileCases = () => {
+    if (activeMobileMode === CASE_TYPES.priority) return focusCases;
+    if (activeMobileMode === CASE_TYPES.focus) return otherCases;
+    return summaryCases;
+  };
+
+  const renderMobileCounts = () => {
+    elements.mobilePriorityCount.textContent = `${focusCases.length}件`;
+    elements.mobileFocusCount.textContent = `${otherCases.length}件`;
+    elements.mobileSummaryCount.textContent = `${summaryCases.length}件`;
+  };
+
+  const renderMobileTags = (item) => {
+    const tags = item.tags || [];
+    if (!tags.length) return "";
+    const visibleTags = tags.slice(0, 3);
+    const hiddenCount = tags.length - visibleTags.length;
+    return `
+      <div class="case-mobile-card-tags">
+        ${visibleTags.map((tag) => `<span class="case-mobile-tag">${escapeHtml(tag)}</span>`).join("")}
+        ${hiddenCount > 0 ? `<span class="case-mobile-tag">+${hiddenCount}</span>` : ""}
+      </div>
+    `;
+  };
+
+  const renderMobileLineButton = (item, extraClass = "") => `
+    <a class="c-btn c-btn-primary case-line-contact ${extraClass}" href="${lineAddFriendUrl}" data-line-inquiry aria-label="${escapeHtml(item?.title || "掲載案件")}についてLINEで問い合わせ">
+      <span class="case-line-contact-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
+        </svg>
+      </span>
+      <span>LINEで問い合わせ</span>
+    </a>
+  `;
+
+  const renderMobileCard = (item, index) => `
+    <article class="case-mobile-card" data-mobile-index="${index}" tabindex="0">
+      <div class="case-mobile-card-top">
+        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
+        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
+      </div>
+      <h2>${escapeHtml(item.title)}</h2>
+      <p>${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
+      <div class="case-mobile-metrics">
+        <div class="case-mobile-metric"><span>単価</span><strong>${escapeHtml(item.unitPrice || "-")}</strong></div>
+        <div class="case-mobile-metric"><span>場所</span><strong>${escapeHtml(item.location || "-")}</strong></div>
+        <div class="case-mobile-metric"><span>開始時期</span><strong>${escapeHtml(item.startAt || "-")}</strong></div>
+      </div>
+      ${renderMobileTags(item)}
+      <div class="case-mobile-card-action">
+        ${renderMobileLineButton(item, "case-mobile-contact")}
+        <button class="case-mobile-detail-link" type="button" data-mobile-detail="${index}">詳細</button>
+      </div>
+    </article>
+  `;
+
+  const renderMobileCases = () => {
+    activeMobileCases = getMobileCases();
+    let activeTabId = "";
+    elements.mobileSegmentButtons.forEach((button) => {
+      const isActive = button.dataset.mobileMode === activeMobileMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+      if (isActive) activeTabId = button.id;
+    });
+    elements.mobileCaseList.setAttribute("aria-labelledby", activeTabId);
+    elements.mobileCaseList.innerHTML = activeMobileCases.length
+      ? activeMobileCases.map(renderMobileCard).join("")
+      : '<div class="case-mobile-empty">掲載案件は準備中です。最新の案件情報は担当営業までお問い合わせください。</div>';
+  };
+
+  const renderMobileDetailRows = (rows) => rows
+    .filter(([, value]) => value)
+    .map(([label, value]) => `
+      <div class="case-mobile-detail-row">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(value)}</strong>
+      </div>
+    `).join("");
+
+  const setOverlayState = (element, isOpen) => {
+    element.inert = !isOpen;
+    element.classList.toggle("is-open", isOpen);
+    element.setAttribute("aria-hidden", String(!isOpen));
+    document.body.style.overflow = document.querySelector(".case-mobile-sheet.is-open, .case-line-modal.is-open")
+      ? "hidden"
+      : "";
+  };
+
+  let mobileSheetTrigger = null;
+
+  const openMobileSheet = (item, trigger) => {
+    if (!item) return;
+    mobileSheetTrigger = trigger || document.activeElement;
+    activeMobileCase = item;
+    elements.mobileSheetHead.innerHTML = `
+      <div class="case-mobile-card-top">
+        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
+        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
+      </div>
+      <h2 id="mobileSheetTitle">${escapeHtml(item.title)}</h2>
+    `;
+    elements.mobileSheetBody.innerHTML = `
+      <section class="case-mobile-sheet-section">
+        <h3>案件概要</h3>
+        <p class="case-mobile-sheet-summary">${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
+      </section>
+      <section class="case-mobile-sheet-section">
+        <h3>基本条件</h3>
+        <div class="case-mobile-detail-grid">${renderMobileDetailRows([
+          ["単価", item.unitPrice],
+          ["場所", item.location],
+          ["開始時期", item.startAt],
+          ["面談", item.interview]
+        ])}</div>
+      </section>
+      ${(item.facts || []).length ? `
+        <section class="case-mobile-sheet-section">
+          <h3>条件概要</h3>
+          <div class="case-mobile-detail-grid">${renderMobileDetailRows(
+            item.facts.map(({label, value}) => [label, value])
+          )}</div>
+        </section>
+      ` : ""}
+      ${(item.tags || []).length ? `
+        <section class="case-mobile-sheet-section">
+          <h3>キーワード</h3>
+          <div class="case-mobile-card-tags">${(item.tags || []).map((tag) => `<span class="case-mobile-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+        </section>
+      ` : ""}
+    `;
+    elements.mobileSheetActions.innerHTML = `
+      ${renderMobileLineButton(item)}
+      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
+    `;
+    setOverlayState(elements.mobileSheet, true);
+    elements.mobileSheetClose.focus();
+  };
+
+  const closeMobileSheet = ({restoreFocus = true} = {}) => {
+    if (!elements.mobileSheet.classList.contains("is-open")) return;
+    if (restoreFocus && mobileSheetTrigger?.isConnected) {
+      mobileSheetTrigger.focus();
+    } else if (elements.mobileSheet.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+    setOverlayState(elements.mobileSheet, false);
+    activeMobileCase = null;
+    mobileSheetTrigger = null;
   };
 
   const setActiveCase = (index, mode = "absolute") => {
@@ -1132,82 +2036,106 @@
   ].join("\n");
 
   const showToast = (message) => {
-    const toast = document.getElementById("caseToast");
-    toast.textContent = message;
-    toast.classList.add("is-visible");
+    elements.toast.textContent = message;
+    elements.toast.classList.add("is-visible");
     window.clearTimeout(showToast.timer);
     showToast.timer = window.setTimeout(() => {
-      toast.classList.remove("is-visible");
+      elements.toast.classList.remove("is-visible");
     }, 2200);
   };
 
-  const copyText = async (text, successMessage) => {
+  const copyTextWithFallback = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "readonly");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
     try {
-      await navigator.clipboard.writeText(text);
-      showToast(successMessage);
-    } catch (err) {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.setAttribute("readonly", "readonly");
-      textarea.style.position = "fixed";
-      textarea.style.left = "-9999px";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
+      return document.execCommand("copy");
+    } finally {
       textarea.remove();
-      showToast(successMessage);
     }
   };
 
-  const buildContactText = () => [
-    `${focusCases[activeCaseIndex]?.title || "掲載案件"} について候補者を推薦します。`,
-    "",
-    "候補者概要：",
-    "希望単価：",
-    "稼働開始：",
-    "出社可否：",
-    "日本語：",
-    "",
-    "ご確認よろしくお願いいたします。"
-  ].join("\n");
+  const copyText = async (text, successMessage) => {
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    } catch {
+      try {
+        copied = copyTextWithFallback(text);
+      } catch {
+        copied = false;
+      }
+    }
+    showToast(copied ? successMessage : "コピーできませんでした。もう一度お試しください。");
+  };
+
+  let lineModalTrigger = null;
+
+  const openLineContactModal = (trigger) => {
+    const openedFromMobileSheet = Boolean(trigger?.closest("#mobileCaseSheet"));
+    lineModalTrigger = openedFromMobileSheet ? mobileSheetTrigger : trigger || null;
+    setOverlayState(elements.lineModal, true);
+    elements.lineModalClose.focus();
+    if (openedFromMobileSheet) closeMobileSheet({restoreFocus: false});
+  };
+
+  const closeLineContactModal = () => {
+    if (!elements.lineModal.classList.contains("is-open")) return;
+    if (lineModalTrigger?.isConnected) {
+      lineModalTrigger.focus();
+    } else if (elements.lineModal.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+    setOverlayState(elements.lineModal, false);
+    lineModalTrigger = null;
+  };
 
   const startAutoPlay = () => {
     window.clearInterval(autoTimer);
+    if (document.hidden || reducedMotionQuery.matches || focusCases.length < 2) return;
     autoTimer = window.setInterval(() => setActiveCase(1, "relative"), 5200);
   };
 
   const initializePage = async () => {
     await loadCasesFromCsv();
     refreshCaseGroups();
-    document.getElementById("focusCaseCount").textContent = `${focusCases.length}件の重点推薦`;
-    document.getElementById("otherCaseCount").textContent = `${caseList.length}件`;
-    document.getElementById("recommendContact").href = `mailto:${contactEmail}?subject=${encodeURIComponent("候補者推薦")}`;
+    elements.otherCaseCount.textContent = `${caseList.length}件`;
+    elements.recommendContact.href = `mailto:${contactEmail}?subject=${encodeURIComponent("候補者推薦")}`;
+    elements.lineIdValue.textContent = lineId;
+    elements.lineAddFriendLink.href = lineAddFriendUrl;
 
     renderFocusSlides();
     renderTabs();
     renderOtherCards();
     renderOtherList();
+    renderMobileCounts();
+    renderMobileCases();
     startAutoPlay();
   };
 
-  document.getElementById("focusTabs").addEventListener("click", (event) => {
+  elements.focusTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-index]");
     if (!button) return;
     setActiveCase(Number(button.dataset.index), "absolute");
     startAutoPlay();
   });
 
-  document.getElementById("prevCaseBtn").addEventListener("click", () => {
+  elements.prevCase.addEventListener("click", () => {
     setActiveCase(-1, "relative");
     startAutoPlay();
   });
 
-  document.getElementById("nextCaseBtn").addEventListener("click", () => {
+  elements.nextCase.addEventListener("click", () => {
     setActiveCase(1, "relative");
     startAutoPlay();
   });
 
-  document.getElementById("focusTrack").addEventListener("click", (event) => {
+  elements.focusTrack.addEventListener("click", (event) => {
     const expandButton = event.target.closest("[data-expand-summary]");
     if (expandButton) {
       expandedSummaries.add(activeCaseIndex);
@@ -1222,10 +2150,70 @@
     copyText(buildSummaryText(focusCases[activeCaseIndex]), "案件概要をコピーしました");
   });
 
-  window.addEventListener("resize", updateFocusOverflow);
+  window.addEventListener("resize", scheduleFocusOverflowUpdate);
 
-  document.getElementById("copyContactBtn").addEventListener("click", () => {
-    copyText(buildContactText(), "連絡文テンプレートをコピーしました");
+  elements.mobileSegments.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-mobile-mode]");
+    if (!button) return;
+    activeMobileMode = button.dataset.mobileMode;
+    renderMobileCases();
+  });
+
+  elements.mobileCaseList.addEventListener("click", (event) => {
+    if (event.target.closest("[data-line-inquiry]")) return;
+    const detailButton = event.target.closest("[data-mobile-detail]");
+    const card = event.target.closest("[data-mobile-index]");
+    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);
+    if (!Number.isInteger(index)) return;
+    openMobileSheet(activeMobileCases[index], detailButton || card);
+  });
+
+  elements.mobileCaseList.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.target.closest("button, a")) return;
+    const card = event.target.closest("[data-mobile-index]");
+    if (!card) return;
+    event.preventDefault();
+    openMobileSheet(activeMobileCases[Number(card.dataset.mobileIndex)], card);
+  });
+
+  elements.mobileSheet.addEventListener("click", (event) => {
+    if (event.target.closest("[data-copy-mobile-detail]") && activeMobileCase) {
+      copyText(buildSummaryText(activeMobileCase), "案件概要をコピーしました");
+      return;
+    }
+    if (!event.target.closest("[data-close-mobile-sheet]")) return;
+    closeMobileSheet();
+  });
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-open-line-modal]");
+    if (trigger) openLineContactModal(trigger);
+  });
+
+  elements.lineModal.addEventListener("click", (event) => {
+    if (event.target.closest("[data-copy-line-id]")) {
+      copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
+      return;
+    }
+    if (event.target.closest("[data-close-line-modal]")) closeLineContactModal();
+  });
+
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (elements.lineModal.classList.contains("is-open")) {
+      closeLineContactModal();
+      return;
+    }
+    closeMobileSheet();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      window.clearInterval(autoTimer);
+      return;
+    }
+    startAutoPlay();
   });
 
   initializePage();

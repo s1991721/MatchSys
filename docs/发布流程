@@ -41,8 +41,8 @@ docker push jef4267/matchsys-nginx:1.7
 
 ------------------------------------------------ nginx 镜像
 
-docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:1.7 --push .
-docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:1.7 .
+docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:3.0 --push .
+docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:1.6 .
 
 docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:1.7
 

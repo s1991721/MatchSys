@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" href="./favicon-16.png" type="image/png" sizes="16x16">
   <link rel="icon" href="./favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="icon" href="./favicon-48.png" type="image/png" sizes="48x48">
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="components.css">
     <title data-i18n="profile.title">个人信息</title>
@@ -587,24 +589,13 @@
     }
 
     logoutBtn.addEventListener("click", async () => {
+        logoutBtn.disabled = true;
         try {
-            const responsePayload = await window.requestJson(`${API_BASE}/api/logout`, {});
-            if (!responsePayload.success) {
-                throw new Error(responsePayload.message || t("profile.alert.logout_failed"));
-            }
-            const target = "login.html".replace(/^\//, "");
-            const nextUrl = new URL(target, window.location.href).toString();
-            try {
-                localStorage.removeItem(EMPLOYEE_ID_KEY);
-                localStorage.removeItem(EMPLOYEE_NAME_KEY);
-                localStorage.removeItem(EMPLOYEE_POSITION_KEY);
-            } catch (e) {}
-            if (window.top && window.top !== window) {
-                window.top.location.href = nextUrl;
-            } else {
-                window.location.href = nextUrl;
-            }
+            await window.requestJson(`${API_BASE}/api/logout`, {});
+            window.MatchSys.redirectAuthFailure("login");
         } catch (err) {
+            if (window.MatchSys.isAuthRedirecting()) return;
+            logoutBtn.disabled = false;
             alert(t("profile.alert.logout_failed_retry"));
         }
     });

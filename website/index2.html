@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="AOMERA株式会社は、AI・業務システムの企画、受託開発、技術支援、自社プロダクト、導入支援を通じて企業のDXを支援します。" />
   <meta name="theme-color" content="#102a43" />
-  <meta property="og:title" content="AOMERA株式会社 | AIとシステム開発で企業の業務変革を支える" />
-  <meta property="og:description" content="企画・開発から導入・運用まで、一貫して伴走します。" />
+  <meta property="og:title" content="AOMERA株式会社 | 人とシステムの力を最大化する" />
+  <meta property="og:description" content="無駄なプロセスを省き、人とシステムの連携を最適化。限られた資源から最大の価値を生み出します。" />
   <meta property="og:type" content="website" />
-  <title>AOMERA株式会社 | AIとシステム開発で企業の業務変革を支える</title>
+  <title>AOMERA株式会社 | 人とシステムの力を最大化する</title>
   <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png" />
@@ -160,34 +160,109 @@
     .hero-note span { display: inline-flex; align-items: center; gap: 7px; }
     .hero-note span::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); }
 
-    .capability-map {
+    .optimization-map {
       position: relative;
-      padding: 30px;
+      padding: 28px;
       border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: var(--radius-lg);
       background: rgba(255, 255, 255, 0.72);
       box-shadow: var(--shadow-lg);
       backdrop-filter: blur(12px);
     }
-    .capability-map::before { content: ""; position: absolute; inset: 18% 48%; width: 2px; background: linear-gradient(var(--brand), var(--cyan)); opacity: 0.25; }
-    .map-title { margin-bottom: 22px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: 0.12em; }
-    .map-flow { display: grid; gap: 12px; position: relative; }
-    .map-step {
-      min-height: 72px;
+    .optimization-head { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+    .map-title { color: var(--muted); font: 700 11px/1.4 "Sora", sans-serif; letter-spacing: 0.12em; }
+    .map-state { color: var(--muted); font: 600 10px/1.4 "Sora", sans-serif; letter-spacing: 0.08em; }
+    .map-stage { position: relative; min-height: 390px; }
+    .optimization-map.is-optimized .map-stage { min-height: 390px; }
+    .workflow-panel { position: absolute; inset: 0; display: grid; align-content: start; gap: 10px; opacity: 0; visibility: hidden; transform: translateY(12px); transition: opacity 0.55s ease, transform 0.55s ease, visibility 0s linear 0.55s; }
+    .workflow-panel.is-active { opacity: 1; visibility: visible; transform: translateY(0); transition-delay: 0s; }
+    .workflow-label { display: flex; justify-content: space-between; align-items: center; min-height: 24px; color: var(--navy); font-size: 13px; font-weight: 700; }
+    .workflow-label span { color: var(--muted); font-size: 10px; font-weight: 500; }
+    .workflow-nodes { position: relative; display: grid; gap: 8px; }
+    .workflow-nodes::before { content: ""; position: absolute; top: 24px; bottom: 24px; left: 21px; width: 2px; background: var(--line); }
+    .workflow-node {
+      position: relative;
+      min-height: 45px;
       display: grid;
-      grid-template-columns: 42px 1fr;
+      grid-template-columns: 30px 1fr auto;
       align-items: center;
-      gap: 14px;
-      padding: 13px 16px;
+      gap: 10px;
+      padding: 9px 12px;
       border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
+      border-radius: 12px;
       background: #fff;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 7px 18px rgba(16, 42, 67, 0.06);
     }
-    .map-step:nth-child(2), .map-step:nth-child(4) { margin-left: 34px; }
-    .step-number { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; color: var(--brand); background: var(--brand-soft); font: 700 13px/1 "Sora", sans-serif; }
-    .map-step strong { display: block; color: var(--navy); font-size: 15px; }
-    .map-step small { color: var(--muted); font-size: 12px; }
+    .node-icon { position: relative; z-index: 1; width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; color: var(--muted); background: #edf2f7; font: 700 10px/1 "Sora", sans-serif; }
+    .workflow-node strong { color: var(--navy); font-size: 12px; }
+    .workflow-node small { color: var(--muted); font-size: 10px; white-space: nowrap; }
+    .workflow-node.is-waste { border-style: dashed; background: rgba(255, 255, 255, 0.62); }
+    .workflow-node.is-waste strong { color: #829ab1; text-decoration: line-through; text-decoration-color: #f97373; }
+    .workflow-node.is-waste .node-icon { color: #c24141; background: #fff0f0; }
+    .optimization-map.is-transforming #before-panel .is-waste { opacity: 0; transform: translateX(18px) scale(0.96); }
+    .optimization-map.is-transforming #before-panel .workflow-node:nth-child(2) { transition-delay: 0s; }
+    .optimization-map.is-transforming #before-panel .workflow-node:nth-child(3) { transition-delay: 0.08s; }
+    .optimization-map.is-transforming #before-panel .workflow-node:nth-child(4) { transition-delay: 0.16s; }
+    .optimization-map.is-transforming #before-panel .workflow-node:nth-child(6) { transition-delay: 0.24s; }
+    #before-panel .workflow-node { transition: opacity 0.32s ease, transform 0.32s ease; }
+    .after-nodes { gap: 12px; padding-top: 8px; }
+    .after-nodes::before { left: 24px; background: linear-gradient(var(--brand), var(--cyan)); opacity: 0.32; }
+    .after-nodes .workflow-node { min-height: 64px; grid-template-columns: 36px 1fr auto; border-color: rgba(37, 99, 235, 0.2); }
+    .after-nodes .node-icon { width: 36px; height: 36px; color: #fff; background: var(--brand); }
+    .after-nodes .workflow-node:nth-child(2) .node-icon { background: var(--cyan); }
+    #after-panel .workflow-node, #after-panel .optimization-result { opacity: 0; transform: translateY(12px); transition: opacity 0.42s ease, transform 0.42s ease; }
+    #after-panel.is-active .workflow-node, #after-panel.is-active .optimization-result { opacity: 1; transform: translateY(0); }
+    #after-panel.is-active .workflow-node:nth-child(1) { transition-delay: 0.1s; }
+    #after-panel.is-active .workflow-node:nth-child(2) { transition-delay: 0.18s; }
+    #after-panel.is-active .workflow-node:nth-child(3) { transition-delay: 0.26s; }
+    #after-panel.is-active .optimization-result { transition-delay: 0.36s; }
+    .role-badge { padding: 4px 8px; border-radius: 999px; color: var(--brand-dark); background: var(--brand-soft); font-size: 9px; font-weight: 700; }
+    .role-badge.system { color: #08789f; background: #e1f7ff; }
+    .optimization-result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 10px; }
+    .result-item { padding: 9px 6px; border-radius: 10px; color: var(--brand-dark); background: var(--brand-soft); text-align: center; font-size: 10px; font-weight: 700; }
+    .result-item::before { content: "✓"; margin-right: 4px; color: var(--cyan); }
+    .optimization-action { position: relative; z-index: 2; min-height: 92px; margin-top: 14px; padding: 11px 10px 10px; border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 18px; background: linear-gradient(180deg, rgba(37, 99, 235, 0.07), rgba(37, 99, 235, 0.015)); text-align: center; transition: border-color 0.3s ease, background 0.3s ease; }
+    .optimize-kicker { display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 8px; color: var(--brand-dark); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
+    .optimize-kicker-icon { position: relative; width: 9px; height: 9px; border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 50%; background: #08b5f5; box-shadow: 0 0 9px rgba(14, 165, 233, 0.7); animation: optimize-pulse 1.45s ease-out infinite; }
+    .optimize-trigger { position: relative; isolation: isolate; overflow: hidden; width: 100%; min-height: 46px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 9px 18px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; color: #fff; background: linear-gradient(135deg, #4b83f5, #2864df); box-shadow: 0 9px 22px rgba(37, 99, 235, 0.28), 0 0 14px rgba(37, 99, 235, 0.12); font-size: 12px; font-weight: 700; cursor: pointer; animation: optimize-attention 2.5s ease-in-out infinite; transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease; }
+    .optimize-trigger::after { content: ""; position: absolute; z-index: 0; top: -70%; bottom: -70%; left: -34%; width: 27%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent); filter: blur(1px); transform: rotate(18deg) translateX(-260%); animation: optimize-sheen 2.5s 0.25s ease-in-out infinite; }
+    .optimize-trigger > span { position: relative; z-index: 1; }
+    .optimize-trigger:hover { animation-play-state: paused; transform: translateY(-4px); box-shadow: 0 17px 36px rgba(37, 99, 235, 0.45), 0 0 25px rgba(37, 99, 235, 0.24); }
+    .optimize-trigger:disabled { cursor: wait; transform: none; }
+    .optimize-trigger .optimize-arrow { animation: optimize-arrow 1.05s ease-in-out infinite; transition: transform 0.25s ease; }
+    .optimize-trigger:hover .optimize-arrow { animation-play-state: paused; transform: translateX(4px); }
+    .optimize-label-after { display: none; }
+    @keyframes optimize-attention {
+      0%, 46%, 100% { transform: translateY(0); box-shadow: 0 9px 22px rgba(37, 99, 235, 0.28), 0 0 14px rgba(37, 99, 235, 0.12); }
+      56% { transform: translateY(-6px); box-shadow: 0 17px 36px rgba(37, 99, 235, 0.45), 0 0 25px rgba(37, 99, 235, 0.24); }
+      66% { transform: translateY(0); }
+      75% { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(37, 99, 235, 0.38), 0 0 20px rgba(37, 99, 235, 0.18); }
+      84% { transform: translateY(0); }
+    }
+    @keyframes optimize-sheen {
+      0%, 34% { transform: rotate(18deg) translateX(-260%); opacity: 0; }
+      42% { opacity: 1; }
+      72% { transform: rotate(18deg) translateX(650%); opacity: 1; }
+      80%, 100% { transform: rotate(18deg) translateX(760%); opacity: 0; }
+    }
+    @keyframes optimize-arrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+    @keyframes optimize-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.68), 0 0 9px rgba(14, 165, 233, 0.78); transform: scale(0.95); }
+      55% { box-shadow: 0 0 0 8px rgba(14, 165, 233, 0.14), 0 0 13px rgba(14, 165, 233, 0.58); transform: scale(1.08); }
+      100% { box-shadow: 0 0 0 12px rgba(14, 165, 233, 0), 0 0 8px rgba(14, 165, 233, 0.36); transform: scale(0.95); }
+    }
+    .optimization-map.is-optimized .map-state { color: var(--brand-dark); }
+    .optimization-map.is-optimized .optimization-action { border-color: transparent; background: transparent; }
+    .optimization-map.is-optimized .optimize-kicker { visibility: hidden; }
+    .optimization-map.is-optimized .optimize-trigger { width: 100%; min-height: 46px; padding: 9px 18px; color: var(--muted); border-color: var(--line); background: transparent; box-shadow: none; font-weight: 500; }
+    .optimization-map.is-optimized .optimize-trigger,
+    .optimization-map.is-optimized .optimize-trigger::after,
+    .optimization-map.is-optimized .optimize-arrow,
+    .optimization-map.is-transforming .optimize-trigger,
+    .optimization-map.is-transforming .optimize-trigger::after { animation: none; }
+    .optimization-map.is-optimized .optimize-label-before,
+    .optimization-map.is-optimized .optimize-arrow { display: none; }
+    .optimization-map.is-optimized .optimize-label-after { display: inline; }
 
     .business-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
     .business-card {
@@ -443,7 +518,7 @@
       .site-nav .button { margin-top: 10px; }
       .menu-button { display: block; }
       .hero-grid { grid-template-columns: 1fr; gap: 48px; }
-      .capability-map { max-width: 620px; }
+      .optimization-map { max-width: 620px; width: 100%; }
       .business-grid { grid-template-columns: repeat(2, 1fr); }
       .product-focus-panel { grid-template-columns: 1fr; }
       .product-stage { max-width: 650px; width: 100%; }
@@ -465,8 +540,12 @@
       .hero { padding: 68px 0 58px; }
       .hero-copy h1 { font-size: clamp(34px, 11vw, 46px); }
       .hero-actions { display: grid; }
-      .capability-map { padding: 20px; }
-      .map-step:nth-child(2), .map-step:nth-child(4) { margin-left: 0; }
+      .optimization-map { padding: 20px; }
+      .map-stage { min-height: 390px; }
+      .optimization-map.is-optimized .map-stage { min-height: 390px; }
+      .workflow-node { grid-template-columns: 30px 1fr; }
+      .workflow-node small { display: none; }
+      .after-nodes .workflow-node { grid-template-columns: 36px 1fr auto; }
       .business-grid, .detail-grid { grid-template-columns: 1fr; }
       .business-card { min-height: auto; }
       .product-focus { padding-bottom: 68px; }
@@ -496,6 +575,8 @@
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+      .workflow-panel { transform: none; }
+      .optimize-trigger, .optimize-trigger::after, .optimize-arrow, .optimize-kicker-icon { animation: none !important; }
     }
   </style>
 </head>
@@ -524,24 +605,55 @@
     <section class="hero" aria-labelledby="hero-title">
       <div class="container hero-grid">
         <div class="hero-copy">
-          <span class="eyebrow">Business &amp; Technology Partner</span>
-          <h1 id="hero-title">AIとシステム開発で、<br /><span>企業の業務変革</span>を支える。</h1>
-          <p>業務の整理から企画・開発、導入、運用まで。技術を導入すること自体を目的とせず、現場で使い続けられる仕組みをお客様とともにつくります。</p>
+          <span class="eyebrow">Our Philosophy</span>
+          <h1 id="hero-title">無駄をなくし、<br /><span>人とシステムの力</span>を<br />最大化する。</h1>
+          <p>業務プロセスを見直し、人とシステムの役割を最適化。AIとシステム開発で、限られた資源から最大の価値を生み出せる仕組みをつくります。</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#contact">まずは相談する <span aria-hidden="true">→</span></a>
             <a class="button button-secondary" href="#business">事業内容を見る</a>
           </div>
-          <div class="hero-note" aria-label="対応範囲">
-            <span>企画・PoC</span><span>設計・開発</span><span>導入・データ連携</span><span>運用・改善</span>
+          <div class="hero-note" aria-label="私たちのアプローチ">
+            <span>省く</span><span>つなぐ</span><span>生み出す</span>
           </div>
         </div>
-        <div class="capability-map" aria-label="支援の流れ">
-          <div class="map-title">ONE-STOP SUPPORT</div>
-          <div class="map-flow">
-            <div class="map-step"><span class="step-number">01</span><div><strong>課題整理・企画</strong><small>業務理解から最適な方針を設計</small></div></div>
-            <div class="map-step"><span class="step-number">02</span><div><strong>PoC・要件定義</strong><small>小さく検証し、実現性を確認</small></div></div>
-            <div class="map-step"><span class="step-number">03</span><div><strong>開発・技術支援</strong><small>状況に合ったチームと方法で実行</small></div></div>
-            <div class="map-step"><span class="step-number">04</span><div><strong>導入・運用改善</strong><small>現場定着と継続的な改善を支援</small></div></div>
+        <div class="optimization-map" aria-label="業務プロセスの最適化イメージ">
+          <div class="optimization-head">
+            <div class="map-title">PROCESS OPTIMIZATION</div>
+            <div class="map-state" aria-live="polite">BEFORE</div>
+          </div>
+          <div class="map-stage">
+            <div class="workflow-panel is-active" id="before-panel" aria-hidden="false">
+              <div class="workflow-label">分断された業務フロー</div>
+              <div class="workflow-nodes">
+                <div class="workflow-node"><span class="node-icon">01</span><strong>担当者が情報を入力</strong><small>人</small></div>
+                <div class="workflow-node is-waste"><span class="node-icon">!</span><strong>Excelへ転記</strong><small>重複作業</small></div>
+                <div class="workflow-node is-waste"><span class="node-icon">!</span><strong>メールで確認・承認待ち</strong><small>待ち時間</small></div>
+                <div class="workflow-node is-waste"><span class="node-icon">!</span><strong>別システムへ再入力</strong><small>入力ミス</small></div>
+                <div class="workflow-node"><span class="node-icon">05</span><strong>担当者が集計・判断</strong><small>人</small></div>
+                <div class="workflow-node is-waste"><span class="node-icon">!</span><strong>関係部署へ個別に共有</strong><small>情報分断</small></div>
+              </div>
+            </div>
+            <div class="workflow-panel" id="after-panel" aria-hidden="true">
+              <div class="workflow-label">人とシステムが連携する業務フロー</div>
+              <div class="workflow-nodes after-nodes">
+                <div class="workflow-node"><span class="node-icon">01</span><strong>人が判断し、情報を登録</strong><span class="role-badge">人</span></div>
+                <div class="workflow-node"><span class="node-icon">02</span><strong>データ連携・処理・通知を自動化</strong><span class="role-badge system">システム</span></div>
+                <div class="workflow-node"><span class="node-icon">03</span><strong>人が意思決定と改善に集中</strong><span class="role-badge">人</span></div>
+              </div>
+              <div class="optimization-result" aria-label="最適化による効果">
+                <div class="result-item">工程を削減</div>
+                <div class="result-item">情報を一元化</div>
+                <div class="result-item">価値に集中</div>
+              </div>
+            </div>
+          </div>
+          <div class="optimization-action">
+            <div class="optimize-kicker"><span class="optimize-kicker-icon" aria-hidden="true"></span>1クリックで変化を体験</div>
+            <button class="optimize-trigger" type="button" aria-controls="before-panel after-panel" aria-pressed="false">
+              <span class="optimize-label-before">この業務を最適化する</span>
+              <span class="optimize-arrow" aria-hidden="true">→</span>
+              <span class="optimize-label-after">元の業務を見る</span>
+            </button>
           </div>
         </div>
       </div>
@@ -739,6 +851,48 @@
 
     navLinks.forEach((link) => link.addEventListener("click", closeMenu));
     window.addEventListener("resize", () => { if (window.innerWidth > 980) closeMenu(); });
+
+    const optimizationMap = document.querySelector(".optimization-map");
+    const optimizeTrigger = document.querySelector(".optimize-trigger");
+    const mapState = document.querySelector(".map-state");
+    const workflowPanels = document.querySelectorAll(".workflow-panel");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let workflowOptimized = false;
+    let workflowAnimating = false;
+
+    const showWorkflow = (optimized) => {
+      workflowOptimized = optimized;
+      optimizationMap.classList.toggle("is-optimized", optimized);
+      optimizeTrigger.setAttribute("aria-pressed", String(optimized));
+      optimizeTrigger.setAttribute("aria-label", optimized ? "元の業務を見る" : "この業務を最適化する");
+      mapState.textContent = optimized ? "AFTER" : "BEFORE";
+      workflowPanels.forEach((panel) => {
+        const isActive = panel.id === `${optimized ? "after" : "before"}-panel`;
+        panel.setAttribute("aria-hidden", String(!isActive));
+        panel.classList.toggle("is-active", isActive);
+      });
+    };
+
+    optimizeTrigger.addEventListener("click", () => {
+      if (workflowAnimating) return;
+      if (workflowOptimized || reduceMotion) {
+        showWorkflow(!workflowOptimized);
+        return;
+      }
+
+      workflowAnimating = true;
+      optimizeTrigger.disabled = true;
+      optimizationMap.classList.add("is-transforming");
+      window.setTimeout(() => {
+        showWorkflow(true);
+        window.setTimeout(() => {
+          optimizationMap.classList.remove("is-transforming");
+          optimizeTrigger.disabled = false;
+          workflowAnimating = false;
+        }, 620);
+      }, 560);
+    });
+
     document.getElementById("copyright-year").textContent = new Date().getFullYear();
   </script>
 </body>

@@ -595,7 +595,8 @@
       display: none;
     }
 
-    .case-mobile-sheet {
+    .case-mobile-sheet,
+    .case-line-modal {
       display: none;
     }
 
@@ -907,6 +908,214 @@
         border-radius: 8px;
         font-weight: 800;
         white-space: normal;
+      }
+
+      .case-line-contact {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        border-color: #06b94f;
+        background: #06c755;
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 10px 18px rgba(6, 199, 85, 0.22);
+      }
+
+      .case-line-contact:hover {
+        border-color: #05a947;
+        background: #05b94d;
+      }
+
+      .case-line-contact:focus-visible {
+        outline: 3px solid rgba(6, 199, 85, 0.28);
+        outline-offset: 2px;
+      }
+
+      .case-line-contact-icon {
+        display: inline-flex;
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+      }
+
+      .case-line-contact-icon svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .case-toast {
+        z-index: 60;
+      }
+
+      .case-line-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: grid;
+        padding: 16px;
+        place-items: center;
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .case-line-modal.is-open {
+        pointer-events: auto;
+        visibility: visible;
+      }
+
+      .case-line-modal-backdrop {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        background: rgba(15, 23, 42, 0.52);
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      .case-line-modal.is-open .case-line-modal-backdrop {
+        opacity: 1;
+      }
+
+      .case-line-modal-panel {
+        position: relative;
+        display: grid;
+        gap: 16px;
+        width: min(100%, 420px);
+        max-height: calc(100vh - 32px);
+        padding: 22px 18px max(18px, env(safe-area-inset-bottom));
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+        overflow-y: auto;
+        opacity: 0;
+        transform: translateY(12px) scale(0.98);
+        transition: opacity 0.18s ease, transform 0.18s ease;
+      }
+
+      .case-line-modal.is-open .case-line-modal-panel {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      .case-line-modal-close {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: grid;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid var(--exhibit-line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--exhibit-ink);
+        font: inherit;
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .case-line-modal-head {
+        padding-right: 38px;
+      }
+
+      .case-line-modal-head span {
+        display: inline-flex;
+        margin-bottom: 6px;
+        color: #05a947;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .case-line-modal-head h2 {
+        margin: 0;
+        font-size: 21px;
+        line-height: 1.35;
+      }
+
+      .case-line-modal-head p {
+        margin: 6px 0 0;
+        color: var(--exhibit-muted);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .case-line-qr {
+        display: block;
+        width: 156px;
+        height: 156px;
+        margin: 0 auto;
+        border: 1px solid var(--exhibit-line);
+        border-radius: 10px;
+        background: #fff;
+      }
+
+      .case-line-id-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        padding: 10px 10px 10px 12px;
+        border: 1px solid #dfe6ef;
+        border-radius: 10px;
+        background: #f8fafc;
+      }
+
+      .case-line-id-row span {
+        color: var(--exhibit-muted);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .case-line-id-row strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 16px;
+        overflow-wrap: anywhere;
+      }
+
+      .case-line-copy {
+        min-height: 38px;
+        padding: 8px 12px;
+        border: 1px solid rgba(6, 199, 85, 0.28);
+        border-radius: 8px;
+        background: #effcf4;
+        color: #058f3d;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .case-line-guide {
+        padding: 13px 14px;
+        border-radius: 10px;
+        background: #f3f6fa;
+      }
+
+      .case-line-guide h3 {
+        margin: 0 0 8px;
+        font-size: 13px;
+      }
+
+      .case-line-guide ol {
+        display: grid;
+        gap: 5px;
+        margin: 0;
+        padding-left: 20px;
+        color: #405066;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      .case-line-modal-actions {
+        display: grid;
+      }
+
+      .case-line-modal-actions .c-btn {
+        min-height: 48px;
+        border-radius: 9px;
       }
 
       .case-mobile-detail-link {
@@ -1366,10 +1575,41 @@
   </section>
 </div>
 
+<div class="case-line-modal" id="lineContactModal" aria-hidden="true">
+  <button class="case-line-modal-backdrop" type="button" data-close-line-modal aria-label="閉じる"></button>
+  <section class="case-line-modal-panel" role="dialog" aria-modal="true" aria-labelledby="lineContactTitle">
+    <button class="case-line-modal-close" type="button" data-close-line-modal aria-label="閉じる">×</button>
+    <header class="case-line-modal-head">
+      <span>LINE CONTACT</span>
+      <h2 id="lineContactTitle">LINEでお問い合わせ</h2>
+      <p>QRコードまたはLINE IDから友だち追加してください。</p>
+    </header>
+    <img class="case-line-qr" src="./line-qr-placeholder.svg" alt="LINE友だち追加用QRコード（準備中）">
+    <div class="case-line-id-row">
+      <div><span>LINE ID</span><strong>jef4267</strong></div>
+      <button class="case-line-copy" type="button" data-copy-line-id>コピー</button>
+    </div>
+    <section class="case-line-guide" aria-labelledby="lineGuideTitle">
+      <h3 id="lineGuideTitle">友だち追加の手順</h3>
+      <ol>
+        <li>下のボタンからLINEを開きます。</li>
+        <li>「検索」から「ID」を選択します。</li>
+        <li>コピーした「jef4267」を貼り付けて検索します。</li>
+        <li>プロフィールを確認して「追加」をタップします。</li>
+      </ol>
+    </section>
+    <div class="case-line-modal-actions">
+      <a class="c-btn c-btn-primary case-line-contact" href="https://line.me/R/nv/addFriends" data-open-line-add-friends>LINEで友だち追加</a>
+    </div>
+  </section>
+</div>
+
 <div class="case-toast" id="caseToast" role="status" aria-live="polite"></div>
 
 <script>
   const contactEmail = "sales@example.com";
+  const lineId = "jef4267";
+  const lineAddFriendUrl = "https://line.me/R/nv/addFriends";
   const CASE_TYPES = {
     priority: "priority",
     focus: "focus",
@@ -1786,6 +2026,17 @@
 	    `;
 	  };
 
+	  const renderMobileLineButton = (extraClass = "") => `
+	    <button class="c-btn c-btn-primary case-line-contact ${extraClass}" type="button" data-mobile-line-contact>
+	      <span class="case-line-contact-icon" aria-hidden="true">
+	        <svg viewBox="0 0 24 24" focusable="false">
+	          <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
+	        </svg>
+	      </span>
+	      <span>LINEで問い合わせ</span>
+	    </button>
+	  `;
+
 	  const renderMobileCard = (item, index) => `
 	    <article class="case-mobile-card" data-mobile-index="${index}" tabindex="0">
 	      <div class="case-mobile-card-top">
@@ -1801,7 +2052,7 @@
 	      </div>
 	      ${renderMobileTags(item)}
 	      <div class="case-mobile-card-action">
-	        <a class="c-btn c-btn-primary case-mobile-contact" href="mailto:${contactEmail}?subject=${encodeURIComponent(item.title + " についての問い合わせ")}" data-mobile-contact>問い合わせ</a>
+	        ${renderMobileLineButton("case-mobile-contact")}
 	        <button class="case-mobile-detail-link" type="button" data-mobile-detail="${index}">詳細</button>
 	      </div>
 	    </article>
@@ -1874,7 +2125,7 @@
 	      ` : ""}
 	    `;
 	    document.getElementById("mobileSheetActions").innerHTML = `
-	      <a class="c-btn c-btn-primary" href="mailto:${contactEmail}?subject=${encodeURIComponent(item.title + " についての問い合わせ")}">問い合わせ</a>
+	      ${renderMobileLineButton()}
 	      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
 	    `;
 	    document.querySelector("[data-copy-mobile-detail]").addEventListener("click", () => {
@@ -1935,6 +2186,28 @@
       textarea.remove();
       showToast(successMessage);
     }
+  };
+
+  let lineModalTrigger = null;
+
+  const openLineContactModal = (trigger) => {
+    lineModalTrigger = trigger?.closest("#mobileCaseSheet") ? null : trigger || null;
+    closeMobileSheet();
+    const modal = document.getElementById("lineContactModal");
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    modal.querySelector(".case-line-modal-close").focus();
+  };
+
+  const closeLineContactModal = () => {
+    const modal = document.getElementById("lineContactModal");
+    if (!modal.classList.contains("is-open")) return;
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    lineModalTrigger?.focus();
+    lineModalTrigger = null;
   };
 
   const buildContactText = () => [
@@ -2012,7 +2285,11 @@
 	  });
 
 	  document.getElementById("mobileCaseList").addEventListener("click", (event) => {
-	    if (event.target.closest("[data-mobile-contact]")) return;
+	    const lineButton = event.target.closest("[data-mobile-line-contact]");
+	    if (lineButton) {
+	      openLineContactModal(lineButton);
+	      return;
+	    }
 	    const detailButton = event.target.closest("[data-mobile-detail]");
 	    const card = event.target.closest("[data-mobile-index]");
 	    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);
@@ -2022,6 +2299,7 @@
 
 	  document.getElementById("mobileCaseList").addEventListener("keydown", (event) => {
 	    if (event.key !== "Enter" && event.key !== " ") return;
+	    if (event.target.closest("button, a")) return;
 	    const card = event.target.closest("[data-mobile-index]");
 	    if (!card) return;
 	    event.preventDefault();
@@ -2029,12 +2307,36 @@
 	  });
 
 	  document.getElementById("mobileCaseSheet").addEventListener("click", (event) => {
+	    const lineButton = event.target.closest("[data-mobile-line-contact]");
+	    if (lineButton) {
+	      openLineContactModal(lineButton);
+	      return;
+	    }
 	    if (!event.target.closest("[data-close-mobile-sheet]")) return;
 	    closeMobileSheet();
 	  });
 
+	  document.getElementById("lineContactModal").addEventListener("click", async (event) => {
+	    if (event.target.closest("[data-open-line-add-friends]")) {
+	      event.preventDefault();
+	      await copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
+	      window.location.assign(lineAddFriendUrl);
+	      return;
+	    }
+	    if (event.target.closest("[data-copy-line-id]")) {
+	      copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
+	      return;
+	    }
+	    if (event.target.closest("[data-close-line-modal]")) closeLineContactModal();
+	  });
+
 	  window.addEventListener("keydown", (event) => {
-	    if (event.key === "Escape") closeMobileSheet();
+	    if (event.key !== "Escape") return;
+	    if (document.getElementById("lineContactModal").classList.contains("is-open")) {
+	      closeLineContactModal();
+	      return;
+	    }
+	    closeMobileSheet();
 	  });
 
 	  document.getElementById("copyContactBtn").addEventListener("click", () => {

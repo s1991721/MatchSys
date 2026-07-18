@@ -46,8 +46,75 @@
       margin: 0 auto;
     }
 
+    .case-desktop-head {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 7px 0;
+      border-bottom: 1px solid #d7e1ee;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 8px 28px rgba(23, 32, 51, 0.05);
+      backdrop-filter: blur(12px);
+    }
+
+    .case-desktop-brand {
+      display: inline-flex;
+      gap: 14px;
+      align-items: center;
+      width: fit-content;
+      color: var(--exhibit-ink);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .case-desktop-brand-mark {
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+    }
+
+    .case-desktop-brand-mark img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .case-desktop-brand-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .case-desktop-brand-name {
+      display: inline-flex;
+      gap: 7px;
+      align-items: baseline;
+      line-height: 1;
+    }
+
+    .case-desktop-brand-name strong {
+      font: 800 19px/1 "Sora", "Helvetica Neue", Arial, sans-serif;
+      letter-spacing: 0.045em;
+    }
+
+    .case-desktop-brand-name span {
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .case-desktop-brand-copy small {
+      color: var(--exhibit-muted);
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.08em;
+    }
+
     .case-focus-area {
-      min-height: min(650px, 88vh);
+      min-height: min(650px, calc(88vh - 69px));
       display: grid;
       gap: 18px;
       padding: 74px 0 48px;
@@ -289,7 +356,8 @@
 
     .case-judge-head h3 {
       margin: 0;
-      font-size: 18px;
+      font-size: 19px;
+      font-weight: 800;
       letter-spacing: 0;
     }
 
@@ -812,6 +880,10 @@
     }
 
     @media (max-width: 680px) {
+      .case-desktop-head {
+        display: none;
+      }
+
       .case-line-fab {
         right: 14px;
         bottom: max(14px, env(safe-area-inset-bottom));
@@ -1212,6 +1284,17 @@
 </head>
 <body>
 <main class="case-exhibit-page">
+  <header class="case-desktop-head">
+    <div class="case-wrap">
+      <a class="case-desktop-brand" href="https://www.aomera.co.jp/" aria-label="AOMERA株式会社 公式サイト">
+        <span class="case-desktop-brand-mark" aria-hidden="true"><img src="/aomera-logo-mark-navy.png" alt=""></span>
+        <span class="case-desktop-brand-copy">
+          <span class="case-desktop-brand-name"><strong>AOMERA</strong><span>株式会社</span></span>
+          <small>案件情報ポータル</small>
+        </span>
+      </a>
+    </div>
+  </header>
   <section class="case-focus-area case-wrap" aria-label="重点推薦案件">
     <div class="case-carousel" aria-roledescription="carousel">
       <div id="focusTrack"></div>
@@ -1248,7 +1331,6 @@
       </div>
       <div class="case-actions">
         <a class="c-btn c-btn-primary" id="recommendContact" href="#">候補者を推薦</a>
-        <button class="c-btn c-btn-ghost" type="button" id="copyContactBtn">連絡文をコピー</button>
       </div>
     </div>
   </section>
@@ -1323,13 +1405,13 @@
   const contactEmail = "sales@example.com";
   const lineId = "jef4267";
   const lineAddFriendUrl = "https://line.me/ti/p/TaAXjfK7Ni";
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   const CASE_TYPES = {
     priority: "priority",
     focus: "focus",
     summary: "summary"
   };
   const elements = {
-    copyContact: document.getElementById("copyContactBtn"),
     focusTabs: document.getElementById("focusTabs"),
     focusTrack: document.getElementById("focusTrack"),
     lineAddFriendLink: document.getElementById("lineAddFriendLink"),
@@ -1586,7 +1668,7 @@
     try {
       const parsed = JSON.parse(value || "[]");
       return Array.isArray(parsed) ? parsed : [];
-    } catch (err) {
+    } catch {
       return [];
     }
   };
@@ -1613,7 +1695,7 @@
         .map(mapCsvRowToCase)
         .filter((item) => item.type && item.title);
       caseList = items;
-    } catch (err) {
+    } catch {
       // Keep the built-in sample list if the CSV has not been published yet.
     }
   };
@@ -1626,12 +1708,13 @@
     expandedSummaries.clear();
   };
 
-	  let activeCaseIndex = 0;
-	  let autoTimer = null;
-	  const expandedSummaries = new Set();
-	  let activeMobileMode = CASE_TYPES.priority;
-	  let activeMobileCases = [];
-	  let activeMobileCase = null;
+  let activeCaseIndex = 0;
+  let autoTimer = null;
+  let focusOverflowFrame = null;
+  const expandedSummaries = new Set();
+  let activeMobileMode = CASE_TYPES.priority;
+  let activeMobileCases = [];
+  let activeMobileCase = null;
 
   const renderFocusSlide = (item) => `
       <article class="case-slide">
@@ -1684,7 +1767,7 @@
       return;
     }
     elements.focusTrack.innerHTML = renderFocusSlide(focusCases[activeCaseIndex]);
-    window.requestAnimationFrame(updateFocusOverflow);
+    scheduleFocusOverflowUpdate();
   };
 
   const normalizeCaseIndex = (index) => focusCases.length ? (index + focusCases.length) % focusCases.length : 0;
@@ -1696,9 +1779,17 @@
     summaryWrap.classList.toggle("has-overflow", summary.scrollHeight > summary.clientHeight + 1);
   };
 
+  const scheduleFocusOverflowUpdate = () => {
+    if (focusOverflowFrame !== null) return;
+    focusOverflowFrame = window.requestAnimationFrame(() => {
+      focusOverflowFrame = null;
+      updateFocusOverflow();
+    });
+  };
+
   const renderTabs = () => {
     elements.focusTabs.innerHTML = focusCases.map((item, index) => `
-      <button class="case-tab ${index === activeCaseIndex ? "is-active" : ""}" type="button" data-index="${index}">
+      <button class="case-tab ${index === activeCaseIndex ? "is-active" : ""}" type="button" data-index="${index}" aria-pressed="${index === activeCaseIndex}">
         ${index + 1}. ${escapeHtml(item.title)}
       </button>
     `).join("");
@@ -1728,9 +1819,9 @@
     `).join("");
   };
 
-	  const renderOtherList = () => {
-	    elements.otherCaseList.innerHTML = summaryCases.map((item) => `
-	      <article class="case-compact-item">
+  const renderOtherList = () => {
+    elements.otherCaseList.innerHTML = summaryCases.map((item) => `
+      <article class="case-compact-item">
         <div class="case-compact-title">
           <span class="case-compact-status">${escapeHtml(item.status)}</span>
           <strong>${escapeHtml(item.title)}</strong>
@@ -1739,162 +1830,162 @@
         <span class="case-compact-meta">${escapeHtml(item.location)}</span>
         <span class="case-compact-meta">${escapeHtml(item.startAt)}</span>
       </article>
-	    `).join("");
-	  };
+    `).join("");
+  };
 
-	  const getMobileCases = () => {
-	    if (activeMobileMode === CASE_TYPES.priority) return focusCases;
-	    if (activeMobileMode === CASE_TYPES.focus) return otherCases;
-	    return summaryCases;
-	  };
+  const getMobileCases = () => {
+    if (activeMobileMode === CASE_TYPES.priority) return focusCases;
+    if (activeMobileMode === CASE_TYPES.focus) return otherCases;
+    return summaryCases;
+  };
 
-	  const renderMobileCounts = () => {
-	    elements.mobilePriorityCount.textContent = `${focusCases.length}件`;
-	    elements.mobileFocusCount.textContent = `${otherCases.length}件`;
-	    elements.mobileSummaryCount.textContent = `${summaryCases.length}件`;
-	  };
+  const renderMobileCounts = () => {
+    elements.mobilePriorityCount.textContent = `${focusCases.length}件`;
+    elements.mobileFocusCount.textContent = `${otherCases.length}件`;
+    elements.mobileSummaryCount.textContent = `${summaryCases.length}件`;
+  };
 
-	  const renderMobileTags = (item) => {
-	    const tags = item.tags || [];
-	    if (!tags.length) return "";
-	    const visibleTags = tags.slice(0, 3);
-	    const hiddenCount = tags.length - visibleTags.length;
-	    return `
-	      <div class="case-mobile-card-tags">
-	        ${visibleTags.map((tag) => `<span class="case-mobile-tag">${escapeHtml(tag)}</span>`).join("")}
-	        ${hiddenCount > 0 ? `<span class="case-mobile-tag">+${hiddenCount}</span>` : ""}
-	      </div>
-	    `;
-	  };
+  const renderMobileTags = (item) => {
+    const tags = item.tags || [];
+    if (!tags.length) return "";
+    const visibleTags = tags.slice(0, 3);
+    const hiddenCount = tags.length - visibleTags.length;
+    return `
+      <div class="case-mobile-card-tags">
+        ${visibleTags.map((tag) => `<span class="case-mobile-tag">${escapeHtml(tag)}</span>`).join("")}
+        ${hiddenCount > 0 ? `<span class="case-mobile-tag">+${hiddenCount}</span>` : ""}
+      </div>
+    `;
+  };
 
-	  const renderMobileLineButton = (item, extraClass = "") => `
-	    <a class="c-btn c-btn-primary case-line-contact ${extraClass}" href="${lineAddFriendUrl}" data-line-inquiry aria-label="${escapeHtml(item?.title || "掲載案件")}についてLINEで問い合わせ">
-	      <span class="case-line-contact-icon" aria-hidden="true">
-	        <svg viewBox="0 0 24 24" focusable="false">
-	          <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
-	        </svg>
-	      </span>
-	      <span>LINEで問い合わせ</span>
-	    </a>
-	  `;
+  const renderMobileLineButton = (item, extraClass = "") => `
+    <a class="c-btn c-btn-primary case-line-contact ${extraClass}" href="${lineAddFriendUrl}" data-line-inquiry aria-label="${escapeHtml(item?.title || "掲載案件")}についてLINEで問い合わせ">
+      <span class="case-line-contact-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path fill="currentColor" d="M12 3C6.5 3 2 6.7 2 11.3c0 3.1 2.1 5.9 5.3 7.3-.1.8-.5 2.8-.5 3.1 0 .4.2.5.5.3.2-.1 2.8-1.8 3.9-2.5h.8c5.5 0 10-3.7 10-8.3S17.5 3 12 3Z"/>
+        </svg>
+      </span>
+      <span>LINEで問い合わせ</span>
+    </a>
+  `;
 
-	  const renderMobileCard = (item, index) => `
-	    <article class="case-mobile-card" data-mobile-index="${index}" tabindex="0">
-	      <div class="case-mobile-card-top">
-	        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
-	        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
-	      </div>
-	      <h2>${escapeHtml(item.title)}</h2>
-	      <p>${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
-	      <div class="case-mobile-metrics">
-	        <div class="case-mobile-metric"><span>単価</span><strong>${escapeHtml(item.unitPrice || "-")}</strong></div>
-	        <div class="case-mobile-metric"><span>場所</span><strong>${escapeHtml(item.location || "-")}</strong></div>
-	        <div class="case-mobile-metric"><span>開始時期</span><strong>${escapeHtml(item.startAt || "-")}</strong></div>
-	      </div>
-	      ${renderMobileTags(item)}
-	      <div class="case-mobile-card-action">
-	        ${renderMobileLineButton(item, "case-mobile-contact")}
-	        <button class="case-mobile-detail-link" type="button" data-mobile-detail="${index}">詳細</button>
-	      </div>
-	    </article>
-	  `;
+  const renderMobileCard = (item, index) => `
+    <article class="case-mobile-card" data-mobile-index="${index}" tabindex="0">
+      <div class="case-mobile-card-top">
+        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
+        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
+      </div>
+      <h2>${escapeHtml(item.title)}</h2>
+      <p>${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
+      <div class="case-mobile-metrics">
+        <div class="case-mobile-metric"><span>単価</span><strong>${escapeHtml(item.unitPrice || "-")}</strong></div>
+        <div class="case-mobile-metric"><span>場所</span><strong>${escapeHtml(item.location || "-")}</strong></div>
+        <div class="case-mobile-metric"><span>開始時期</span><strong>${escapeHtml(item.startAt || "-")}</strong></div>
+      </div>
+      ${renderMobileTags(item)}
+      <div class="case-mobile-card-action">
+        ${renderMobileLineButton(item, "case-mobile-contact")}
+        <button class="case-mobile-detail-link" type="button" data-mobile-detail="${index}">詳細</button>
+      </div>
+    </article>
+  `;
 
-	  const renderMobileCases = () => {
-	    activeMobileCases = getMobileCases();
-	    let activeTabId = "";
-	    elements.mobileSegmentButtons.forEach((button) => {
-	      const isActive = button.dataset.mobileMode === activeMobileMode;
-	      button.classList.toggle("is-active", isActive);
-	      button.setAttribute("aria-selected", String(isActive));
-	      if (isActive) activeTabId = button.id;
-	    });
-	    elements.mobileCaseList.setAttribute("aria-labelledby", activeTabId);
-	    elements.mobileCaseList.innerHTML = activeMobileCases.length
-	      ? activeMobileCases.map(renderMobileCard).join("")
-	      : '<div class="case-mobile-empty">掲載案件は準備中です。最新の案件情報は担当営業までお問い合わせください。</div>';
-	  };
+  const renderMobileCases = () => {
+    activeMobileCases = getMobileCases();
+    let activeTabId = "";
+    elements.mobileSegmentButtons.forEach((button) => {
+      const isActive = button.dataset.mobileMode === activeMobileMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+      if (isActive) activeTabId = button.id;
+    });
+    elements.mobileCaseList.setAttribute("aria-labelledby", activeTabId);
+    elements.mobileCaseList.innerHTML = activeMobileCases.length
+      ? activeMobileCases.map(renderMobileCard).join("")
+      : '<div class="case-mobile-empty">掲載案件は準備中です。最新の案件情報は担当営業までお問い合わせください。</div>';
+  };
 
-	  const renderMobileDetailRows = (rows) => rows
-	    .filter(([, value]) => value)
-	    .map(([label, value]) => `
-	      <div class="case-mobile-detail-row">
-	        <span>${escapeHtml(label)}</span>
-	        <strong>${escapeHtml(value)}</strong>
-	      </div>
-	    `).join("");
+  const renderMobileDetailRows = (rows) => rows
+    .filter(([, value]) => value)
+    .map(([label, value]) => `
+      <div class="case-mobile-detail-row">
+        <span>${escapeHtml(label)}</span>
+        <strong>${escapeHtml(value)}</strong>
+      </div>
+    `).join("");
 
-	  const setOverlayState = (element, isOpen) => {
-	    element.inert = !isOpen;
-	    element.classList.toggle("is-open", isOpen);
-	    element.setAttribute("aria-hidden", String(!isOpen));
-	    document.body.style.overflow = document.querySelector(".case-mobile-sheet.is-open, .case-line-modal.is-open")
-	      ? "hidden"
-	      : "";
-	  };
+  const setOverlayState = (element, isOpen) => {
+    element.inert = !isOpen;
+    element.classList.toggle("is-open", isOpen);
+    element.setAttribute("aria-hidden", String(!isOpen));
+    document.body.style.overflow = document.querySelector(".case-mobile-sheet.is-open, .case-line-modal.is-open")
+      ? "hidden"
+      : "";
+  };
 
-	  let mobileSheetTrigger = null;
+  let mobileSheetTrigger = null;
 
-	  const openMobileSheet = (item, trigger) => {
-	    if (!item) return;
-	    mobileSheetTrigger = trigger || document.activeElement;
-	    activeMobileCase = item;
-	    elements.mobileSheetHead.innerHTML = `
-	      <div class="case-mobile-card-top">
-	        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
-	        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
-	      </div>
-	      <h2 id="mobileSheetTitle">${escapeHtml(item.title)}</h2>
-	    `;
-	    elements.mobileSheetBody.innerHTML = `
-	      <section class="case-mobile-sheet-section">
-	        <h3>案件概要</h3>
-	        <p class="case-mobile-sheet-summary">${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
-	      </section>
-	      <section class="case-mobile-sheet-section">
-	        <h3>基本条件</h3>
-	        <div class="case-mobile-detail-grid">${renderMobileDetailRows([
-	          ["単価", item.unitPrice],
-	          ["場所", item.location],
-	          ["開始時期", item.startAt],
-	          ["面談", item.interview]
-	        ])}</div>
-	      </section>
-	      ${(item.facts || []).length ? `
-	        <section class="case-mobile-sheet-section">
-	          <h3>条件概要</h3>
-	          <div class="case-mobile-detail-grid">${renderMobileDetailRows(
-	            item.facts.map(({label, value}) => [label, value])
-	          )}</div>
-	        </section>
-	      ` : ""}
-	      ${(item.tags || []).length ? `
-	        <section class="case-mobile-sheet-section">
-	          <h3>キーワード</h3>
-	          <div class="case-mobile-card-tags">${(item.tags || []).map((tag) => `<span class="case-mobile-tag">${escapeHtml(tag)}</span>`).join("")}</div>
-	        </section>
-	      ` : ""}
-	    `;
-	    elements.mobileSheetActions.innerHTML = `
-	      ${renderMobileLineButton(item)}
-	      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
-	    `;
-	    setOverlayState(elements.mobileSheet, true);
-	    elements.mobileSheetClose.focus();
-	  };
+  const openMobileSheet = (item, trigger) => {
+    if (!item) return;
+    mobileSheetTrigger = trigger || document.activeElement;
+    activeMobileCase = item;
+    elements.mobileSheetHead.innerHTML = `
+      <div class="case-mobile-card-top">
+        <span class="case-mobile-badge ${item.status === "急募" ? "is-urgent" : ""}">${escapeHtml(item.status || "掲載中")}</span>
+        ${item.updatedAt ? `<span class="case-mobile-date">更新日 ${escapeHtml(item.updatedAt)}</span>` : ""}
+      </div>
+      <h2 id="mobileSheetTitle">${escapeHtml(item.title)}</h2>
+    `;
+    elements.mobileSheetBody.innerHTML = `
+      <section class="case-mobile-sheet-section">
+        <h3>案件概要</h3>
+        <p class="case-mobile-sheet-summary">${escapeHtml(item.summary || "詳細条件は担当営業までお問い合わせください。")}</p>
+      </section>
+      <section class="case-mobile-sheet-section">
+        <h3>基本条件</h3>
+        <div class="case-mobile-detail-grid">${renderMobileDetailRows([
+          ["単価", item.unitPrice],
+          ["場所", item.location],
+          ["開始時期", item.startAt],
+          ["面談", item.interview]
+        ])}</div>
+      </section>
+      ${(item.facts || []).length ? `
+        <section class="case-mobile-sheet-section">
+          <h3>条件概要</h3>
+          <div class="case-mobile-detail-grid">${renderMobileDetailRows(
+            item.facts.map(({label, value}) => [label, value])
+          )}</div>
+        </section>
+      ` : ""}
+      ${(item.tags || []).length ? `
+        <section class="case-mobile-sheet-section">
+          <h3>キーワード</h3>
+          <div class="case-mobile-card-tags">${(item.tags || []).map((tag) => `<span class="case-mobile-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+        </section>
+      ` : ""}
+    `;
+    elements.mobileSheetActions.innerHTML = `
+      ${renderMobileLineButton(item)}
+      <button class="c-btn c-btn-ghost" type="button" data-copy-mobile-detail>コピー</button>
+    `;
+    setOverlayState(elements.mobileSheet, true);
+    elements.mobileSheetClose.focus();
+  };
 
-	  const closeMobileSheet = ({restoreFocus = true} = {}) => {
-	    if (!elements.mobileSheet.classList.contains("is-open")) return;
-	    if (restoreFocus && mobileSheetTrigger?.isConnected) {
-	      mobileSheetTrigger.focus();
-	    } else if (elements.mobileSheet.contains(document.activeElement)) {
-	      document.activeElement.blur();
-	    }
-	    setOverlayState(elements.mobileSheet, false);
-	    activeMobileCase = null;
-	    mobileSheetTrigger = null;
-	  };
+  const closeMobileSheet = ({restoreFocus = true} = {}) => {
+    if (!elements.mobileSheet.classList.contains("is-open")) return;
+    if (restoreFocus && mobileSheetTrigger?.isConnected) {
+      mobileSheetTrigger.focus();
+    } else if (elements.mobileSheet.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+    setOverlayState(elements.mobileSheet, false);
+    activeMobileCase = null;
+    mobileSheetTrigger = null;
+  };
 
-	  const setActiveCase = (index, mode = "absolute") => {
+  const setActiveCase = (index, mode = "absolute") => {
     if (!focusCases.length) return;
     activeCaseIndex = normalizeCaseIndex(mode === "relative" ? activeCaseIndex + index : index);
     renderFocusSlides();
@@ -1919,22 +2010,34 @@
     }, 2200);
   };
 
+  const copyTextWithFallback = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "readonly");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      return document.execCommand("copy");
+    } finally {
+      textarea.remove();
+    }
+  };
+
   const copyText = async (text, successMessage) => {
+    let copied = false;
     try {
       await navigator.clipboard.writeText(text);
-      showToast(successMessage);
-    } catch (err) {
-      const textarea = document.createElement("textarea");
-      textarea.value = text;
-      textarea.setAttribute("readonly", "readonly");
-      textarea.style.position = "fixed";
-      textarea.style.left = "-9999px";
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      textarea.remove();
-      showToast(successMessage);
+      copied = true;
+    } catch {
+      try {
+        copied = copyTextWithFallback(text);
+      } catch {
+        copied = false;
+      }
     }
+    showToast(copied ? successMessage : "コピーできませんでした。もう一度お試しください。");
   };
 
   let lineModalTrigger = null;
@@ -1958,21 +2061,9 @@
     lineModalTrigger = null;
   };
 
-  const buildContactText = () => [
-    `${focusCases[activeCaseIndex]?.title || "掲載案件"} について候補者を推薦します。`,
-    "",
-    "候補者概要：",
-    "希望単価：",
-    "稼働開始：",
-    "出社可否：",
-    "日本語：",
-    "",
-    "ご確認よろしくお願いいたします。"
-  ].join("\n");
-
   const startAutoPlay = () => {
     window.clearInterval(autoTimer);
-    if (focusCases.length < 2) return;
+    if (document.hidden || reducedMotionQuery.matches || focusCases.length < 2) return;
     autoTimer = window.setInterval(() => setActiveCase(1, "relative"), 5200);
   };
 
@@ -1985,13 +2076,13 @@
     elements.lineAddFriendLink.href = lineAddFriendUrl;
 
     renderFocusSlides();
-	    renderTabs();
-	    renderOtherCards();
-	    renderOtherList();
-	    renderMobileCounts();
-	    renderMobileCases();
-	    startAutoPlay();
-	  };
+    renderTabs();
+    renderOtherCards();
+    renderOtherList();
+    renderMobileCounts();
+    renderMobileCases();
+    startAutoPlay();
+  };
 
   elements.focusTabs.addEventListener("click", (event) => {
     const button = event.target.closest("[data-index]");
@@ -2010,7 +2101,7 @@
     startAutoPlay();
   });
 
-	  elements.focusTrack.addEventListener("click", (event) => {
+  elements.focusTrack.addEventListener("click", (event) => {
     const expandButton = event.target.closest("[data-expand-summary]");
     if (expandButton) {
       expandedSummaries.add(activeCaseIndex);
@@ -2025,66 +2116,70 @@
     copyText(buildSummaryText(focusCases[activeCaseIndex]), "案件概要をコピーしました");
   });
 
-	  window.addEventListener("resize", updateFocusOverflow);
+  window.addEventListener("resize", scheduleFocusOverflowUpdate);
 
-	  elements.mobileSegments.addEventListener("click", (event) => {
-	    const button = event.target.closest("[data-mobile-mode]");
-	    if (!button) return;
-	    activeMobileMode = button.dataset.mobileMode;
-	    renderMobileCases();
-	  });
+  elements.mobileSegments.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-mobile-mode]");
+    if (!button) return;
+    activeMobileMode = button.dataset.mobileMode;
+    renderMobileCases();
+  });
 
-	  elements.mobileCaseList.addEventListener("click", (event) => {
-	    if (event.target.closest("[data-line-inquiry]")) return;
-	    const detailButton = event.target.closest("[data-mobile-detail]");
-	    const card = event.target.closest("[data-mobile-index]");
-	    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);
-	    if (!Number.isInteger(index)) return;
-	    openMobileSheet(activeMobileCases[index], detailButton || card);
-	  });
+  elements.mobileCaseList.addEventListener("click", (event) => {
+    if (event.target.closest("[data-line-inquiry]")) return;
+    const detailButton = event.target.closest("[data-mobile-detail]");
+    const card = event.target.closest("[data-mobile-index]");
+    const index = Number(detailButton?.dataset.mobileDetail ?? card?.dataset.mobileIndex);
+    if (!Number.isInteger(index)) return;
+    openMobileSheet(activeMobileCases[index], detailButton || card);
+  });
 
-	  elements.mobileCaseList.addEventListener("keydown", (event) => {
-	    if (event.key !== "Enter" && event.key !== " ") return;
-	    if (event.target.closest("button, a")) return;
-	    const card = event.target.closest("[data-mobile-index]");
-	    if (!card) return;
-	    event.preventDefault();
-	    openMobileSheet(activeMobileCases[Number(card.dataset.mobileIndex)], card);
-	  });
+  elements.mobileCaseList.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    if (event.target.closest("button, a")) return;
+    const card = event.target.closest("[data-mobile-index]");
+    if (!card) return;
+    event.preventDefault();
+    openMobileSheet(activeMobileCases[Number(card.dataset.mobileIndex)], card);
+  });
 
-	  elements.mobileSheet.addEventListener("click", (event) => {
-	    if (event.target.closest("[data-copy-mobile-detail]") && activeMobileCase) {
-	      copyText(buildSummaryText(activeMobileCase), "案件概要をコピーしました");
-	      return;
-	    }
-	    if (!event.target.closest("[data-close-mobile-sheet]")) return;
-	    closeMobileSheet();
-	  });
+  elements.mobileSheet.addEventListener("click", (event) => {
+    if (event.target.closest("[data-copy-mobile-detail]") && activeMobileCase) {
+      copyText(buildSummaryText(activeMobileCase), "案件概要をコピーしました");
+      return;
+    }
+    if (!event.target.closest("[data-close-mobile-sheet]")) return;
+    closeMobileSheet();
+  });
 
-	  document.addEventListener("click", (event) => {
-	    const trigger = event.target.closest("[data-open-line-modal]");
-	    if (trigger) openLineContactModal(trigger);
-	  });
+  document.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-open-line-modal]");
+    if (trigger) openLineContactModal(trigger);
+  });
 
-	  elements.lineModal.addEventListener("click", (event) => {
-	    if (event.target.closest("[data-copy-line-id]")) {
-	      copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
-	      return;
-	    }
-	    if (event.target.closest("[data-close-line-modal]")) closeLineContactModal();
-	  });
+  elements.lineModal.addEventListener("click", (event) => {
+    if (event.target.closest("[data-copy-line-id]")) {
+      copyText(lineId, `LINE ID「${lineId}」をコピーしました`);
+      return;
+    }
+    if (event.target.closest("[data-close-line-modal]")) closeLineContactModal();
+  });
 
-	  window.addEventListener("keydown", (event) => {
-	    if (event.key !== "Escape") return;
-	    if (elements.lineModal.classList.contains("is-open")) {
-	      closeLineContactModal();
-	      return;
-	    }
-	    closeMobileSheet();
-	  });
+  window.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (elements.lineModal.classList.contains("is-open")) {
+      closeLineContactModal();
+      return;
+    }
+    closeMobileSheet();
+  });
 
-	  elements.copyContact.addEventListener("click", () => {
-    copyText(buildContactText(), "連絡文テンプレートをコピーしました");
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      window.clearInterval(autoTimer);
+      return;
+    }
+    startAutoPlay();
   });
 
   initializePage();

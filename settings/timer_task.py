@@ -27,6 +27,9 @@ from settings.mails_arrival_notification import notify_project_ingested
 from settings.models import SysSettings
 
 
+SALES_ROLE_ID = 2
+
+
 # 按日期初始化日志logger
 def _ensure_logger(logger: logging.Logger, log_prefix: str):
     date_tag = timezone.now().strftime("%Y-%m-%d")
@@ -164,7 +167,7 @@ def _build_classified_mails_summary(project_items, technician_count):
 def _get_business_owner_ids():
     business_role_ids = list(
         Role.objects.filter(
-            role_name="营业",
+            pk=SALES_ROLE_ID,
             deleted_at__isnull=True,
         ).values_list("id", flat=True)
     )

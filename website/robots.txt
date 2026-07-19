@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /matchSys/
+Disallow: /api/
+
+Sitemap: https://aomera.co.jp/sitemap.xml

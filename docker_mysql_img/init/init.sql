@@ -83,24 +83,23 @@ CREATE TABLE IF NOT EXISTS sys_menu
   DEFAULT CHARSET = utf8mb4;
 
 
-INSERT INTO sys_menu (menu_name, menu_html, sort_order)
-VALUES ('主页', 'home.html', 1),
-       ('BP Match', 'bpmatch.html', 2),
-       ('社内 Match', 'match.html', 3),
-       ('送信历史', 'songxinhistory.html', 4),
-       ('技术者管理', 'people.html', 5),
-       ('社内人员管理', 'personnel.html', 6),
-       ('考勤管理', 'attendance.html', 7),
-       ('我的考勤', 'myattendance.html', 8),
-       ('通知管理', 'notification.html', 9),
-       ('注文书管理', 'order.html', 10),
-       ('请求书管理', 'pay_request.html', 11),
-       ('权限管理', 'permission.html', 12),
-       ('登录日志', 'login_audit.html', 13),
-       ('客户管理', 'customer.html', 14),
-       ('数据分析', 'analysis.html', 15),
-       ('系统设置', 'system_settings.html', 16),
-       ('财务管理', 'finance.html', 17);
+INSERT INTO sys_menu (id, menu_name, menu_html, sort_order)
+VALUES (1, '主页', 'home.html', 1),
+       (2, 'BP Match', 'bpmatch.html', 2),
+       (3, '社内 Match', 'match.html', 3),
+       (4, '案件展示', 'case_exhibition_admin.html', 4),
+       (5, '技术者管理', 'people.html', 5),
+       (6, '社内人员管理', 'personnel.html', 6),
+       (7, '考勤管理', 'attendance.html', 7),
+       (8, '通知管理', 'notification.html', 8),
+       (9, '注文书管理', 'order.html', 9),
+       (10, '请求书管理', 'pay_request.html', 10),
+       (11, '财务管理', 'finance.html', 11),
+       (12, '权限管理', 'permission.html', 12),
+       (13, '登录日志', 'login_audit.html', 13),
+       (14, '客户管理', 'customer.html', 14),
+       (15, '数据分析', 'analysis.html', 15),
+       (16, '系统设置', 'system_settings.html', 16);
 
 
 CREATE TABLE IF NOT EXISTS sys_role
@@ -121,9 +120,9 @@ CREATE TABLE IF NOT EXISTS sys_role
   DEFAULT CHARSET = utf8mb4;
 
 INSERT INTO sys_role (id, role_name, description, menu_list)
-VALUES (1, '技术者', '公司内技术人员', '[myattendance.html]'),
+VALUES (1, '技术者', '公司内技术人员', '[]'),
        (2, '营业', '公司营业部成员',
-        '[home.html,bpmatch.html,match.html,songxinhistory.html,people.html,attendance.html,myattendance.html,order.html,pay_request.html]'),
+        '[home.html,bpmatch.html,match.html,people.html,attendance.html,order.html,pay_request.html]'),
        (3, '财务', '公司财务部成员', '[finance.html]'),
        (999, '管理员', '整个系统的管理者', '*');
 

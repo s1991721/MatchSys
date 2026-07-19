@@ -11,3 +11,6 @@ CREATE TABLE IF NOT EXISTS django_session
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COMMENT = 'Django server-side sessions';
+
+INSERT INTO sys_menu (id, menu_name, menu_html, sort_order)
+VALUES (4, '案件展示', 'case_exhibition_admin.html', 4);

@@ -4,8 +4,8 @@ ALTER TABLE customer
 ALTER TABLE employee
     ADD COLUMN bank_info JSON DEFAULT NULL COMMENT '员工银行信息' AFTER seal;
 
-INSERT INTO sys_menu (menu_name, menu_html, sort_order)
-VALUES ('财务管理', 'finance.html', 17);
+INSERT INTO sys_menu (id, menu_name, menu_html, sort_order)
+VALUES (11, '财务管理', 'finance.html', 11);
 
 INSERT INTO sys_role (id, role_name, description, menu_list)
 VALUES (3, '财务', '公司财务部成员', '[finance.html]');

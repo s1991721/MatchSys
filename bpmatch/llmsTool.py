@@ -18,6 +18,7 @@ DEFAULT_LOCAL_MODEL = "llama3.2:3b-instruct-q4_K_M"
 DEFAULT_TEMPERATURE = 0
 DEFAULT_TIMEOUT = 600
 DEFAULT_OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+RULE_ONLY_LOCAL_MODEL = "matchsys-rules-v1"
 
 _LLM_CACHE = {"config": None, "client": None}
 
@@ -47,6 +48,16 @@ def _load_ai_settings():
     if not record or not isinstance(record.settings, dict):
         return {"model_type": "local", "model_name": "", "api_key": ""}
     return record.settings
+
+
+def _get_ai_settings():
+    if _LLM_CACHE["config"] is None:
+        _LLM_CACHE["config"] = _load_ai_settings()
+    return _LLM_CACHE["config"]
+
+
+def invalidate_llm_cache():
+    _LLM_CACHE.update(config=None, client=None)
 
 
 def _to_openai_messages(messages):
@@ -101,17 +112,16 @@ class CloudChatOpenAI:
 
 
 def _get_llm():
-    settings_payload = _load_ai_settings()
+    if _LLM_CACHE["client"] is not None:
+        return _LLM_CACHE["client"]
+
+    settings_payload = _get_ai_settings()
     model_type = settings_payload.get("model_type") or "local"
     model_name = (settings_payload.get("model_name") or "").strip()
     api_key = (settings_payload.get("api_key") or "").strip()
 
     ollama_host = os.environ.get("OLLAMA_HOST", "127.0.0.1").strip() or None
     openai_url = (os.environ.get("OPENAI_BASE_URL") or DEFAULT_OPENAI_URL).strip()
-
-    cache_key = (model_type, model_name, api_key, ollama_host, openai_url)
-    if _LLM_CACHE["config"] == cache_key and _LLM_CACHE["client"] is not None:
-        return _LLM_CACHE["client"]
 
     if model_type == "cloud":
         if not model_name or not api_key:
@@ -125,7 +135,6 @@ def _get_llm():
             client_kwargs={"timeout": DEFAULT_TIMEOUT},
         )
 
-    _LLM_CACHE["config"] = cache_key
     _LLM_CACHE["client"] = client
     return client
 
@@ -228,10 +237,20 @@ def qiuren_llm_func(text: str)->str:
     ai_msg = _get_llm().invoke(messages)
     return ai_msg.content.strip()
 
+
+def _is_rule_only_local_model(settings_payload):
+    model_type = str(settings_payload.get("model_type") or "").strip().lower()
+    model_name = str(settings_payload.get("model_name") or "").strip()
+    return model_type == "local" and model_name == RULE_ONLY_LOCAL_MODEL
+
+
 # ---------------------------
 #  分析求人邮件内容 返回json
 # ---------------------------
 def qiuren_detail_analysis(text: str) -> str:
+    settings_payload = _get_ai_settings()
+    if _is_rule_only_local_model(settings_payload):
+        return extract_qiuren_all_fields(text, lambda _: {})
     return extract_qiuren_all_fields(text, qiuren_llm_func)
 
 
@@ -367,6 +386,9 @@ def qiuanjian_llm_func(text: str) -> str:
 #  分析求案件邮件内容 返回json
 # ---------------------------
 def qiuanjian_detail_analysis(text: str) -> str:
+    settings_payload = _get_ai_settings()
+    if _is_rule_only_local_model(settings_payload):
+        return extract_qiuanjian_all_fields(text, lambda _: {})
     return extract_qiuanjian_all_fields(text, qiuanjian_llm_func)
 
 

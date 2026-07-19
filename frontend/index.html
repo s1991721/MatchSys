@@ -724,7 +724,13 @@
       const allowedMenuSet = buildAllowedMenuSet();
       const fallbackRoute = "profile.html";
       const bulkMailRoute = "bulk_email.html";
-      const workflowRoutes = new Set([bulkMailRoute, sendTaskRoute, "songxin.html", "bpsongxin.html"]);
+      const workflowRoutes = new Set([
+        bulkMailRoute,
+        sendTaskRoute,
+        sendHistoryRoute,
+        "songxin.html",
+        "bpsongxin.html"
+      ]);
       const isAllowedRoute = (src) => {
         if (!allowedMenuSet) return true;
         const normalized = normalizeMenuItem(src);

@@ -33,7 +33,7 @@
         const item = menu && typeof menu === "object" ? menu : {};
         const id = item.id == null ? "" : String(item.id);
         return resolveLabel(
-            `permission.menu.${id}.name`,
+            `menu.${id}.name`,
             item.menu_name || item.menu_html || id
         );
     };

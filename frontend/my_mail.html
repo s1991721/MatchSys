@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>我的邮件</title>
+  <title data-i18n="topbar.my_mail">我的邮件</title>
   <link rel="stylesheet" href="common.css" />
   <link rel="stylesheet" href="components.css" />
 </head>
@@ -79,10 +79,16 @@
     </section>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="error_code.js"></script>
 <script src="common.js"></script>
   <script>
     (function () {
+      const i18n = window.I18N;
+      if (i18n) {
+        i18n.init();
+        i18n.apply();
+      }
       const mailItems = document.getElementById("mailItems");
       const mailRight = document.getElementById("mailRight");
       const listRefreshBtn = document.getElementById("listRefreshBtn");

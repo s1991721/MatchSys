@@ -494,12 +494,14 @@
         permissionRoleList.innerHTML = cachedRoles.map(role => {
             const roleId = role.id ?? "";
             const checked = String(selectedRoleId) === String(roleId);
+            const roleName = window.MatchSys.getSystemRoleName(role);
+            const roleDescription = window.MatchSys.getSystemRoleDescription(role);
             return `
                 <label class="permission-role-option">
                     <input type="radio" name="permission-role" value="${roleId}" ${checked ? "checked" : ""}>
                     <span class="permission-role-meta">
-                        <strong>${role.role_name || ""}</strong>
-                        <span>${role.description || ""}</span>
+                        <strong>${escapeHtml(roleName)}</strong>
+                        <span>${escapeHtml(roleDescription)}</span>
                     </span>
                 </label>
             `;
@@ -516,12 +518,13 @@
         permissionMenuList.innerHTML = cachedMenus.map(menu => {
             const value = menu.menu_html || "";
             const checked = selectedMenuSet.has(value);
+            const menuName = window.MatchSys.getSystemMenuName(menu);
             return `
                 <label class="role-menu-check">
-                    <input type="checkbox" value="${value}" ${checked ? "checked" : ""}>
+                    <input type="checkbox" value="${escapeHtml(value)}" ${checked ? "checked" : ""}>
                     <span class="role-menu-text">
-                        <strong>${menu.menu_name || ""}</strong>
-                        <span>${value}</span>
+                        <strong>${escapeHtml(menuName)}</strong>
+                        <span>${escapeHtml(value)}</span>
                     </span>
                 </label>
             `;
@@ -734,6 +737,10 @@
         }
         ensureDepartments(cachedDepartments);
         renderPage();
+        if (permissionModal?.classList.contains("show")) {
+            renderPermissionRoles();
+            renderPermissionMenus();
+        }
     };
     if (window && window.addEventListener) {
         window.addEventListener("i18n:change", refreshI18n);

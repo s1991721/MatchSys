@@ -16,6 +16,27 @@
         const value = t(key, fallback);
         return value === key ? fallback : value;
     };
+
+    MatchSys.getSystemRoleName = function (role) {
+        const item = role && typeof role === "object" ? role : {};
+        const id = item.id == null ? "" : String(item.id);
+        return resolveLabel(`permission.role.${id}.name`, item.role_name || id);
+    };
+
+    MatchSys.getSystemRoleDescription = function (role) {
+        const item = role && typeof role === "object" ? role : {};
+        const id = item.id == null ? "" : String(item.id);
+        return resolveLabel(`permission.role.${id}.description`, item.description || "");
+    };
+
+    MatchSys.getSystemMenuName = function (menu) {
+        const item = menu && typeof menu === "object" ? menu : {};
+        const id = item.id == null ? "" : String(item.id);
+        return resolveLabel(
+            `permission.menu.${id}.name`,
+            item.menu_name || item.menu_html || id
+        );
+    };
     const pad2 = (value) => String(value).padStart(2, "0");
     window.pad2 = pad2;
 

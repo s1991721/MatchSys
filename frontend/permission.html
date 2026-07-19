@@ -17,9 +17,9 @@
             <div class="c-card-header c-card-header-gradient">
                 <div>
                     <h3 class="c-panel-title" data-i18n="permission.role.title">角色管理</h3>
-                    <p class="permission-subtitle" data-i18n="permission.role.subtitle">当前系统内置角色，仅展示，不支持新建。</p>
+                    <p class="permission-subtitle" data-i18n="permission.role.subtitle">系统内置角色不可修改，仅可配置可访问的菜单。</p>
                 </div>
-                <span class="c-tag c-tag-neutral" data-i18n="permission.role.readonly">只读</span>
+                <span class="c-tag c-tag-neutral" data-i18n="permission.role.readonly">系统内置</span>
             </div>
             <div class="c-table-wrapper">
                 <table class="c-table c-table-hover c-table-center">
@@ -39,9 +39,9 @@
             <div class="c-card-header c-card-header-gradient">
                 <div>
                     <h3 class="c-panel-title" data-i18n="permission.menu.title">菜单管理</h3>
-                    <p class="permission-subtitle" data-i18n="permission.menu.subtitle">index.html 中所有功能列表由此维护。</p>
+                    <p class="permission-subtitle" data-i18n="permission.menu.subtitle">显示当前系统已注册的功能入口。</p>
                 </div>
-                <button class="c-btn c-btn-primary c-btn-strong" id="menu-add" type="button" data-i18n="permission.menu.add">+ 新增菜单</button>
+                <span class="c-tag c-tag-neutral" data-i18n="permission.menu.readonly">只读</span>
             </div>
             <div class="c-table-wrapper">
                 <table class="c-table c-table-hover c-table-center">
@@ -50,7 +50,6 @@
                         <th data-i18n="permission.menu.table.name">菜单名</th>
                         <th data-i18n="permission.menu.table.page">页面文件</th>
                         <th data-i18n="permission.menu.table.sort">排序</th>
-                        <th class="c-actions-col" data-i18n="common.field.actions">操作</th>
                     </tr>
                     </thead>
                     <tbody id="menu-body"></tbody>
@@ -59,33 +58,6 @@
         </section>
     </div>
 </div>
-
-<dialog class="c-dialog" id="menu-dialog">
-    <div class="c-dialog-header">
-        <h3 id="menu-dialog-title" data-i18n="permission.menu.dialog.add">新增菜单</h3>
-        <button class="c-dialog-close" type="button" aria-label="关闭" data-i18n-aria="common.close" data-dialog-close>×</button>
-    </div>
-    <div class="c-dialog-body">
-        <form id="menu-form" class="form-grid">
-            <label class="c-field">
-                <span data-i18n="permission.menu.field.name">菜单名</span>
-                <input id="menu-name" type="text" required>
-            </label>
-            <label class="c-field">
-                <span data-i18n="permission.menu.field.page">页面文件</span>
-                <input id="menu-page" type="text" placeholder="例如：customer.html" data-i18n-placeholder="permission.menu.placeholder.page" required>
-            </label>
-            <label class="c-field">
-                <span data-i18n="permission.menu.field.sort">排序</span>
-                <input id="menu-sort" type="number" min="1" step="1" placeholder="例如：10" data-i18n-placeholder="permission.menu.placeholder.sort" required>
-            </label>
-        </form>
-    </div>
-    <div class="c-dialog-actions">
-        <button class="c-btn c-btn-secondary" type="button" data-dialog-close data-i18n="common.cancel">取消</button>
-        <button class="c-btn c-btn-primary" id="menu-save" type="button" data-i18n="common.save">保存</button>
-    </div>
-</dialog>
 
 <dialog class="c-dialog" id="role-dialog">
     <div class="c-dialog-header">
@@ -125,23 +97,15 @@
     i18n && typeof i18n.format === "function" ? i18n.format(key, vars) : (fallback || key)
   );
 
-  const menuDialog = document.getElementById("menu-dialog");
-  const menuDialogTitle = document.getElementById("menu-dialog-title");
-  const menuForm = document.getElementById("menu-form");
-  const menuName = document.getElementById("menu-name");
-  const menuPage = document.getElementById("menu-page");
-  const menuSort = document.getElementById("menu-sort");
   const menuBody = document.getElementById("menu-body");
   const roleBody = document.getElementById("role-body");
-  const addBtn = document.getElementById("menu-add");
-  const saveBtn = document.getElementById("menu-save");
   const roleDialog = document.getElementById("role-dialog");
   const roleDialogTitle = document.getElementById("role-dialog-title");
   const roleDialogBody = document.getElementById("role-dialog-body");
 
   if (window.initDialogCloseBehavior) {
     window.initDialogCloseBehavior({
-      dialogs: [menuDialog, roleDialog]
+      dialogs: [roleDialog]
     });
   }
   const roleSaveBtn = document.getElementById("role-save");
@@ -158,40 +122,15 @@
     return [...cachedMenus].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
   };
 
-  const openMenuDialog = (mode, row) => {
-    menuDialog.dataset.editing = "";
-    menuDialog.dataset.menuId = "";
-    if (mode === "edit" && row) {
-      menuDialog.dataset.editing = "1";
-      menuDialog.dataset.menuId = row.dataset.id || "";
-      menuDialogTitle.textContent = t("permission.menu.dialog.edit", "编辑菜单");
-      menuName.value = row.dataset.name || "";
-      menuPage.value = row.dataset.page || "";
-      menuSort.value = row.dataset.sort || "";
-    } else {
-      menuDialogTitle.textContent = t("permission.menu.dialog.add", "新增菜单");
-      menuForm.reset();
-      menuSort.value = "";
-    }
-    menuDialog.showModal();
-  };
-
   const renderMenus = (items) => {
     menuBody.innerHTML = "";
     items.forEach((menu) => {
       const row = document.createElement("tr");
       row.dataset.id = String(menu.id || "");
-      row.dataset.name = menu.menu_name || "";
-      row.dataset.page = menu.menu_html || "";
-      row.dataset.sort = String(menu.sort_order ?? "");
       row.innerHTML = `
-        <td>${menu.menu_name || ""}</td>
-        <td>${menu.menu_html || ""}</td>
+        <td>${escapeHtml(window.MatchSys.getSystemMenuName(menu))}</td>
+        <td>${escapeHtml(menu.menu_html || "")}</td>
         <td>${menu.sort_order ?? ""}</td>
-        <td class="c-row-actions c-row-actions-center">
-          <button class="c-btn c-btn-lite c-btn-sm" data-action="edit">${t("common.edit", "编辑")}</button>
-          <button class="c-btn c-btn-danger c-btn-sm" data-action="delete">${t("common.delete", "删除")}</button>
-        </td>
       `;
       menuBody.appendChild(row);
     });
@@ -200,21 +139,24 @@
   const renderRoles = (items) => {
     roleBody.innerHTML = "";
     const roleClassMap = {
-      "技术者": "c-pill-primary",
-      "营业": "c-pill-info",
-      "管理员": "c-pill-warn"
+      1: "c-pill-primary",
+      2: "c-pill-info",
+      3: "c-pill-success",
+      999: "c-pill-warn"
     };
     items.forEach((role) => {
-      const pillClass = roleClassMap[role.role_name] || "c-pill-primary";
+      const pillClass = roleClassMap[Number(role.id)] || "c-pill-primary";
+      const displayName = window.MatchSys.getSystemRoleName(role);
+      const displayDescription = window.MatchSys.getSystemRoleDescription(role);
       const row = document.createElement("tr");
       row.dataset.id = String(role.id || "");
       row.innerHTML = `
         <td>
           <span class="c-inline-badge">
-            <span class="c-pill ${pillClass}">${role.role_name || ""}</span>
+            <span class="c-pill ${pillClass}">${escapeHtml(displayName)}</span>
           </span>
         </td>
-        <td>${role.description || ""}</td>
+        <td>${escapeHtml(displayDescription)}</td>
         <td class="c-row-actions c-row-actions-center">
           <button class="c-btn c-btn-lite c-btn-sm" data-role-id="${role.id || ""}">${t("permission.role.detail_btn", "详情")}</button>
         </td>
@@ -237,91 +179,24 @@
     renderRoles(cachedRoles);
   };
 
-  addBtn.addEventListener("click", () => openMenuDialog("add"));
-
-  menuBody.addEventListener("click", (event) => {
-    const btn = event.target.closest("[data-action]");
-    if (!btn) return;
-    const row = btn.closest("tr");
-    if (!row) return;
-    if (btn.dataset.action === "edit") {
-      openMenuDialog("edit", row);
-      return;
-    }
-    if (btn.dataset.action === "delete") {
-      const menuId = row.dataset.id;
-      if (!menuId) return;
-      const menuName = row.dataset.name || t("permission.menu.unnamed", "未命名");
-      const confirmText = format(
-        "permission.menu.delete_confirm",
-        { name: menuName },
-        `确定删除菜单「${menuName}」吗？`
-      );
-      if (!confirm(confirmText)) return;
-      requestJson(`/api/menus/${menuId}`, { method: "DELETE" })
-        .then((res) => {
-          if (res.success) {
-            loadMenus();
-          }
-        });
-    }
-  });
-
-  saveBtn.addEventListener("click", () => {
-    if (!menuForm.reportValidity()) return;
-    const name = menuName.value.trim();
-    const page = menuPage.value.trim();
-    const sort = menuSort.value.trim();
-    if (menuDialog.dataset.editing) {
-      const menuId = menuDialog.dataset.menuId;
-      if (!menuId) return;
-      requestJson(`/api/menus/${menuId}`, {
-        method: "PUT",
-        body: JSON.stringify({
-          menu_name: name,
-          menu_html: page,
-          sort_order: sort
-        })
-      }).then((res) => {
-        if (res.success) {
-          menuDialog.close();
-          loadMenus();
-        }
-      });
-    } else {
-      requestJson("/api/menus", {
-        method: "POST",
-        body: JSON.stringify({
-          menu_name: name,
-          menu_html: page,
-          sort_order: sort
-        })
-      }).then((res) => {
-        if (res.success) {
-          menuDialog.close();
-          loadMenus();
-        }
-      });
-    }
-  });
-
   const renderRoleDialog = (role, { open = false } = {}) => {
     if (!role) return;
     const hasAll = role.menu_list === "*";
     const menuSet = new Set(Array.isArray(role.menu_list) ? role.menu_list : []);
     const allMenus = getAllMenus();
+    const displayName = window.MatchSys.getSystemRoleName(role);
     activeRoleId = role.id || null;
     roleDialogTitle.textContent = format(
       "permission.role.detail_title",
-      { role: role.role_name || "" },
-      `${role.role_name || ""} - 角色详情`
+      { role: displayName },
+      `${displayName} - 角色详情`
     );
     roleDialogBody.innerHTML = allMenus.length
       ? `<div class="c-checklist">${allMenus.map(item => `
           <label class="c-check-item">
-            <input type="checkbox" value="${item.menu_html}" ${(hasAll || menuSet.has(item.menu_html)) ? "checked" : ""}>
-            <strong>${item.menu_name}</strong>
-            <span>${item.menu_html}</span>
+            <input type="checkbox" value="${escapeHtml(item.menu_html || "")}" ${(hasAll || menuSet.has(item.menu_html)) ? "checked" : ""}>
+            <strong>${escapeHtml(window.MatchSys.getSystemMenuName(item))}</strong>
+            <span>${escapeHtml(item.menu_html || "")}</span>
           </label>
         `).join("")}</div>`
       : `<p class="permission-subtitle">${t("permission.menu.empty", "暂无菜单")}</p>`;
@@ -351,8 +226,6 @@
     requestJson(`/api/roles/${activeRoleId}`, {
       method: "PUT",
       body: JSON.stringify({
-        role_name: cachedRoles.find((item) => item.id === activeRoleId)?.role_name || "",
-        description: cachedRoles.find((item) => item.id === activeRoleId)?.description || "",
         menu_list: payloadMenuList
       })
     }).then((res) => {
@@ -400,11 +273,6 @@
     }
     renderMenus(cachedMenus);
     renderRoles(cachedRoles);
-    if (menuDialog && menuDialog.open) {
-      menuDialogTitle.textContent = menuDialog.dataset.editing
-        ? t("permission.menu.dialog.edit", "编辑菜单")
-        : t("permission.menu.dialog.add", "新增菜单");
-    }
     if (roleDialog && roleDialog.open && activeRoleId) {
       const role = cachedRoles.find((item) => item.id === activeRoleId);
       if (role) {

@@ -614,36 +614,36 @@
             <div class="exhibit-field-row">
               <div class="exhibit-field">
                 <label for="statusInput">募集状态</label>
-                <input id="statusInput" name="status" autocomplete="off" placeholder="例：募集中">
+                <input id="statusInput" name="status" autocomplete="off">
               </div>
               <div class="exhibit-field">
                 <label for="unitPriceInput">单价</label>
-                <input id="unitPriceInput" name="unitPrice" autocomplete="off" placeholder="例：65万〜78万円 / 月">
+                <input id="unitPriceInput" name="unitPrice" autocomplete="off">
               </div>
             </div>
             <div class="exhibit-field-row">
               <div class="exhibit-field">
                 <label for="locationInput">地点</label>
-                <input id="locationInput" name="location" autocomplete="off" placeholder="例：東京 週2出社 + リモート">
+                <input id="locationInput" name="location" autocomplete="off">
               </div>
               <div class="exhibit-field">
                 <label for="startAtInput">开始时期</label>
-                <input id="startAtInput" name="startAt" autocomplete="off" placeholder="例：2026年8月随時">
+                <input id="startAtInput" name="startAt" autocomplete="off">
               </div>
             </div>
             <div class="exhibit-field-row">
               <div class="exhibit-field">
                 <label for="interviewInput">面谈</label>
-                <input id="interviewInput" name="interview" autocomplete="off" placeholder="例：1〜2回">
+                <input id="interviewInput" name="interview" autocomplete="off">
               </div>
               <div class="exhibit-field">
                 <label for="tagsInput">关键词</label>
-                <input id="tagsInput" name="tags" autocomplete="off" placeholder="PHP/Laravel/MySQL/EC">
+                <input id="tagsInput" name="tags" autocomplete="off">
               </div>
             </div>
             <div class="exhibit-field">
               <label for="factsInput">条件概要</label>
-              <textarea id="factsInput" name="facts" placeholder="契约形态｜準委任&#10;募集人数｜1〜2名&#10;期间｜6か月以上&#10;日本语｜要件确认 N2 以上&#10;商流｜所属または一社先優先&#10;外国籍｜可、業務コミュニケーション必須"></textarea>
+              <textarea id="factsInput" name="facts"></textarea>
             </div>
             <div class="exhibit-editor-actions">
               <div class="exhibit-form-message" id="editorMessage" role="status" aria-live="polite"></div>
@@ -740,6 +740,29 @@
           value: (parts.join("｜") || row).trim()
         };
       });
+
+    const DEFAULT_EDITOR_VALUES = {
+      status: "募集中",
+      unitPrice: "65万〜78万円 / 月",
+      location: "東京 週2出社 + リモート",
+      startAt: "2026年8月随時",
+      interview: "1〜2回",
+      tags: ["PHP", "Laravel", "MySQL", "EC"],
+      facts: [
+        {label: "契约形态", value: "準委任"},
+        {label: "募集人数", value: "1〜2名"},
+        {label: "期间", value: "6か月以上"},
+        {label: "日本语", value: "要件确认 N2 以上"},
+        {label: "商流", value: "所属または一社先優先"},
+        {label: "外国籍", value: "可、業務コミュニケーション必須"}
+      ]
+    };
+
+    const createDefaultEditorValues = () => ({
+      ...DEFAULT_EDITOR_VALUES,
+      tags: [...DEFAULT_EDITOR_VALUES.tags],
+      facts: DEFAULT_EDITOR_VALUES.facts.map((fact) => ({...fact}))
+    });
 
     const createDisplayKey = () => `display:${Date.now()}:${displayKeySeq += 1}`;
 
@@ -958,23 +981,24 @@
       const detail = item.detail || "";
       const normalized = normalizeDetailText(detail);
       const sourceId = String(item.id || "");
-      const saved = displayCases.find((displayItem) => getSourceId(displayItem) === sourceId) || {};
+      const saved = displayCases.find((displayItem) => getSourceId(displayItem) === sourceId);
+      const editorValues = saved || createDefaultEditorValues();
       return {
         id: sourceId,
         sourceId,
-        type: saved.type || "",
-        title: saved.title || "",
+        type: editorValues.type || "",
+        title: editorValues.title || "",
         sourceTitle: item.title || "未命名案件",
         date: item.date || "",
-        status: saved.status || "",
-        updatedAt: saved.updatedAt || formatUpdatedAt(item.date),
-        summary: saved.summary || "",
-        unitPrice: saved.unitPrice || "",
-        location: saved.location || "",
-        startAt: saved.startAt || "",
-        interview: saved.interview || "",
-        facts: [...(saved.facts || [])],
-        tags: [...(saved.tags || [])],
+        status: editorValues.status || "",
+        updatedAt: editorValues.updatedAt || formatUpdatedAt(item.date),
+        summary: editorValues.summary || "",
+        unitPrice: editorValues.unitPrice || "",
+        location: editorValues.location || "",
+        startAt: editorValues.startAt || "",
+        interview: editorValues.interview || "",
+        facts: [...(editorValues.facts || [])],
+        tags: [...(editorValues.tags || [])],
         sourceDetail: normalized,
         sourceAddress: item.address || ""
       };
@@ -1184,6 +1208,7 @@
     const createManualCase = () => {
       const sourceId = createManualSourceId();
       activeCase = {
+        ...createDefaultEditorValues(),
         id: sourceId,
         sourceId,
         __displayKey: sourceId,
@@ -1192,15 +1217,8 @@
         title: "",
         sourceTitle: "",
         date: "",
-        status: "",
         updatedAt: formatUpdatedAt(new Date().toISOString()),
         summary: "",
-        unitPrice: "",
-        location: "",
-        startAt: "",
-        interview: "",
-        facts: [],
-        tags: [],
         sourceDetail: "",
         sourceAddress: ""
       };

@@ -11,8 +11,8 @@ PROCESSOR
 
 ------------------------------------------------ mysql 镜像
 
-docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:3.0 --push .
-docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:3.0 .
+docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:3.1 --push .
+docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:3.1 .
 
 docker run --name matchsys-mysql-test \
   -e MYSQL_ROOT_PASSWORD=123456 \
@@ -26,18 +26,18 @@ docker network connect matchsys-net matchsys-mysql-test
 docker network connect matchsys-net matchsys-test
 ------------------------------------------------ Django 镜像
 
-docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:3.0 --push .
-docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:3.0 .
+docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:3.1 --push .
+docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:3.1 .
 
 docker run --name matchsys-test \
   -p 8000:8000 \
-  -d jef4267/matchsys-web:3.0
+  -d jef4267/matchsys-web:3.1
 
 ------------------------------------------------ 发布 镜像
 
-docker push jef4267/matchsys-mysql:3.0
-docker push jef4267/matchsys-web:3.0
-docker push jef4267/matchsys-nginx:3.0
+docker push jef4267/matchsys-mysql:3.1
+docker push jef4267/matchsys-web:3.1
+docker push jef4267/matchsys-nginx:3.1
 
 ------------------------------------------------ nginx 镜像
 

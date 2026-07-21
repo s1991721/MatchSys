@@ -325,7 +325,10 @@ def _handle_ai(settings_payload, login_id):
         "model_name": str(model_name or "").strip(),
         "api_key": settings_payload.get("api_key")
     }
-    return _save_setting("ai", settings_payload, login_id)
+    response = _save_setting("ai", settings_payload, login_id)
+    from bpmatch.llmsTool import invalidate_llm_cache
+    invalidate_llm_cache()
+    return response
 
 
 # 保存Match 配置

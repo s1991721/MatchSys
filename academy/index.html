@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="AOMERA Academy クラウドと自動化技術の学習プラットフォーム">
+  <link rel="icon" type="image/svg+xml" href="../website/aomera-logo-mark-navy.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap" rel="stylesheet">
+  <title>AOMERA Academy</title>
+  <style>
+    :root { --ink:#071226; --line:#dfe5ed; --blue:#0068ff; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); background:#fff; font-family:"Zen Kaku Gothic New","Noto Sans JP",system-ui,-apple-system,sans-serif; font-synthesis:none; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; text-decoration:none; }
+    img { display:block; max-width:100%; }
+    .wrap { width:min(930px,calc(100% - 48px)); margin-inline:auto; }
+
+    header { height:60px; display:flex; align-items:center; background:#fff; }
+    header .wrap { width:min(960px,calc(100% - 48px)); display:flex; align-items:center; justify-content:space-between; }
+    .header-brand { display:inline-flex; align-items:center; font-family:"Sora",sans-serif; line-height:1; white-space:nowrap; }
+    .brand-mark { width:27px; height:27px; margin-right:1px; object-fit:contain; }
+    .header-brand strong { font-size:28px; letter-spacing:-.9px; }
+    .header-brand span { margin-left:10px; color:#075fff; font-size:17px; font-weight:600; }
+    nav { display:flex; gap:42px; font-size:13px; font-weight:700; }
+    nav a:hover { color:var(--blue); }
+
+    .hero { height:378px; overflow:hidden; color:white; background:linear-gradient(112deg,#00142d 0%,#00182f 60%,#00142b 100%); }
+    .hero .wrap { height:100%; display:grid; grid-template-columns:46% 54%; align-items:center; position:relative; }
+    .hero-copy { position:relative; z-index:3; }
+    .eyebrow { margin:0 0 12px; color:#4aa5ff; font-family:"Sora",sans-serif; font-size:14px; }
+    h1 { margin:0; font-size:34px; line-height:1.38; letter-spacing:.2px; white-space:nowrap; }
+    .hero-title-first { letter-spacing:-.9px; }
+    .hero-copy>p:not(.eyebrow) { margin:13px 0 26px; color:#f0f5fc; font-size:14px; font-weight:500; line-height:1.75; }
+    .hero-tech { letter-spacing:.9px; }
+    .hero-actions { display:flex; gap:16px; position:relative; top:5px; }
+    .btn { min-height:47px; display:inline-flex; align-items:center; justify-content:center; gap:9px; padding:0 21px; border:1px solid rgba(255,255,255,.82); border-radius:5px; font-size:14px; font-weight:700; transition:transform .2s,box-shadow .2s; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { color:#fff; background:linear-gradient(135deg,#0878ff,#005ce9); border-color:transparent; box-shadow:0 8px 22px rgba(0,106,255,.25); }
+    .btn svg { width:18px; height:18px; flex:0 0 auto; }
+    .hero-actions .btn { padding-inline:0; }
+    .hero-actions .btn-primary { width:200px; }
+    .hero-actions .btn:not(.btn-primary) { width:173px; }
+    .hero-art { position:absolute; left:433px; top:0; width:544px; height:378px; overflow:hidden; pointer-events:none; -webkit-mask-image:linear-gradient(to right,transparent 0,#000 42px,#000 calc(100% - 42px),transparent 100%); mask-image:linear-gradient(to right,transparent 0,#000 42px,#000 calc(100% - 42px),transparent 100%); }
+    .hero-art-source { position:absolute; left:-480px; top:-60px; width:1024px; height:1535px; max-width:none; object-fit:fill; user-select:none; }
+
+    main { padding:26px 0 13px; }
+    .section { margin-bottom:30px; scroll-margin-top:20px; }
+    .section:nth-of-type(3) { margin-bottom:20px; }
+    .section:nth-of-type(3) .section-heading { margin-bottom:13px; }
+    .section-heading { height:25px; display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .section-heading h2 { margin:0; font-size:20px; letter-spacing:-.4px; }
+    .more { color:var(--blue); font-size:12px; font-weight:700; }
+    .more span { margin-left:8px; font-size:18px; font-weight:400; }
+
+    .tech-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; }
+    .tech-card { height:240px; padding:20px 10px 14px; text-align:center; border:1px solid var(--line); border-radius:7px; background:#fff; }
+    .tech-card .icon { height:70px; display:grid; place-items:center; }
+    .tech-card h3 { margin:8px -4px 9px; font-size:14px; white-space:nowrap; }
+    .tech-card p { height:65px; margin:0; overflow:hidden; color:#263248; font-size:11px; line-height:1.7; text-align:left; }
+    .tech-card .count { display:block; margin-top:10px; color:#46526a; font-size:11px; }
+    .aws-logo { width:66px; height:56px; object-fit:contain; }
+    .tf-logo { width:54px; height:54px; object-fit:contain; }
+    .docker-logo { width:70px; height:55px; object-fit:contain; }
+    .kube-logo { width:61px; height:61px; object-fit:contain; }
+    .linux-logo { width:54px; height:54px; object-fit:contain; }
+    .ai-logo { width:56px; height:56px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg,#37c979,#72dda2); color:#06120c; font-family:"Sora",sans-serif; font-size:27px; font-weight:700; }
+
+    .course-grid,.path-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:19px; }
+    .course-card { height:212px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
+    .course-cover { height:99px; display:grid; place-items:center; position:relative; overflow:hidden; }
+    .cover-aws { background:#00142d url("assets/course-bg-aws.svg") center/100% 100% no-repeat; }
+    .cover-tf { background:#f0edff url("assets/course-bg-terraform.svg") center/100% 100% no-repeat; }
+    .cover-docker,.cover-kube { background:#e7f4ff url("assets/course-bg-ice.svg") center/100% 100% no-repeat; }
+    .course-cover img { position:relative; z-index:1; }
+    .course-cover .aws-logo { width:79px; filter:brightness(0) invert(1); transform:translateX(-52px); }
+    .course-cover .tf-logo { transform:translateX(-31px); }
+    .course-cover .docker-logo { transform:translateX(-12px); }
+    .course-cover .kube-logo { transform:translateX(-9px); }
+    .course-cover .tf-logo,.course-cover .docker-logo,.course-cover .kube-logo { width:66px; height:66px; }
+    .level { position:absolute; right:7px; top:7px; z-index:2; padding:2px 6px; color:var(--blue); background:#fff; border:1px solid #9fc8ff; border-radius:4px; font-size:11px; font-weight:700; }
+    .course-body { height:113px; padding:10px 12px 9px; }
+    .course-body h3 { margin:0 0 4px; font-size:14px; }
+    .course-body p { height:38px; margin:0; overflow:hidden; color:#263248; font-size:11px; line-height:1.65; }
+    .course-meta { display:flex; justify-content:space-between; margin-top:9px; color:#46526a; font-size:10px; white-space:nowrap; }
+
+    .path-card { height:169px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
+    .path-visual { height:65px; display:flex; align-items:center; justify-content:center; gap:10px; background:linear-gradient(135deg,#f5f9ff,#e8f2ff); }
+    .path-card:nth-child(2) .path-visual { background:linear-gradient(135deg,#fbfaff,#f0edff); }
+    .path-card:nth-child(3) .path-visual { background:linear-gradient(135deg,#effaff,#e7f3ff); }
+    .path-card:nth-child(4) .path-visual { background:linear-gradient(135deg,#f9fcf3,#fff6ed); }
+    .path-visual img,.path-visual svg { width:48px; height:48px; object-fit:contain; }
+    .path-visual .ai-logo { width:45px; height:45px; font-size:22px; }
+    .plus { color:#0870dc; font-size:21px; }
+    .path-body { height:104px; padding:8px 12px 10px; }
+    .path-body h3 { margin:0 0 3px; font-size:13px; white-space:nowrap; }
+    .path-body p { height:38px; margin:0; overflow:hidden; color:#263248; font-size:10.5px; line-height:1.55; }
+    .progress-row { display:flex; align-items:center; gap:9px; margin-top:8px; color:#46526a; font-size:10px; }
+    .progress { flex:1; height:4px; border-radius:4px; background:#e2e8f0; }
+
+    .cta { height:92px; display:grid; grid-template-columns:189px 1fr auto; align-items:center; gap:18px; position:relative; overflow:hidden; padding:12px 70px 12px 23px; border-radius:7px; background:linear-gradient(100deg,#f4f9ff,#edf4ff); }
+    .cta::before { content:""; }
+    .cta-preview { position:absolute; z-index:2; left:-1.4%; top:-15.1%; width:102.9%; height:122.7%; max-width:none; clip-path:inset(0 76.5% 0 0); pointer-events:none; user-select:none; }
+    .cta h2 { margin:0 0 3px; font-size:16px; }
+    .cta p { margin:0; color:#273349; font-size:11px; line-height:1.65; }
+    .cta .btn { width:166px; min-height:44px; padding-inline:0; }
+
+    footer { height:141px; overflow:hidden; color:#c8d1df; background:linear-gradient(115deg,#001a34,#001128); padding-top:18px; }
+    .footer-grid { height:85px; display:grid; grid-template-columns:250px 147px 143px 1fr; gap:53px; }
+    .footer-brand { display:inline-flex; align-items:center; color:white; font-family:"Sora",sans-serif; }
+    .footer-brand .brand-mark { width:20px; height:20px; margin-right:0; filter:brightness(0) invert(1); }
+    .footer-brand strong { font-size:20px; }
+    .footer-brand span { margin-left:4px; color:#1978ff; font-size:11px; }
+    .footer-about p { max-width:244px; margin:6px 0 5px; font-size:9.5px; line-height:1.55; }
+    .socials { display:flex; align-items:center; gap:12px; color:white; font-weight:700; }
+    .footer-col h3 { margin:2px 0 5px; color:white; font-size:11px; }
+    .footer-col a { display:block; margin-bottom:3px; font-size:9.5px; }
+    .copyright { height:36px; padding-top:8px; text-align:center; border-top:1px solid rgba(255,255,255,.09); color:#97a7bb; font-size:9.5px; }
+
+    @media (max-width:900px) {
+      h1 { font-size:30px; }
+      .hero-art { left:auto; right:-80px; opacity:.86; transform:scale(.9); transform-origin:right center; }
+      .tech-grid { grid-template-columns:repeat(3,1fr); }
+      footer { height:auto; }
+      .course-grid,.path-grid { grid-template-columns:repeat(2,1fr); }
+      .cta { grid-template-columns:140px 1fr auto; padding-right:25px; }
+    }
+    @media (max-width:620px) {
+      .wrap,header .wrap { width:min(100% - 30px,930px); }
+      .header-brand strong { font-size:20px; }
+      .header-brand span { margin-left:6px; font-size:14px; }
+      nav { gap:12px; font-size:10px; }
+      nav a:first-child { display:none; }
+      .hero { height:625px; }
+      .hero .wrap { display:block; }
+      .hero-copy { padding-top:45px; }
+      h1 { font-size:26px; white-space:normal; text-wrap:balance; }
+      h1 br { display:none; }
+      .hero-copy>p br { display:none; }
+      .hero-actions { gap:10px; top:0; }
+      .btn { padding-inline:13px; font-size:11px; }
+      .hero-actions .btn { width:auto; flex:1; padding-inline:6px; }
+      .hero-art { top:250px; right:50%; transform:translateX(50%) scale(.78); }
+      .tech-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
+      .course-grid,.path-grid { grid-template-columns:1fr; gap:12px; }
+      .course-card,.path-card { height:auto; }
+      .cta { height:auto; grid-template-columns:1fr; padding:20px; text-align:center; }
+      .cta::before { display:none; }
+      .cta-preview { display:none; }
+      .cta .btn { justify-self:center; }
+      footer { height:auto; padding-bottom:10px; }
+      .footer-grid { height:auto; grid-template-columns:1.4fr 1fr; gap:22px 30px; }
+    }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="cloud" viewBox="0 0 64 64"><path d="M17 47h31a11 11 0 000-22 17 17 0 00-32-4A13 13 0 0017 47z" fill="none" stroke="#177cce" stroke-width="4" stroke-linecap="round"/></symbol></defs></svg>
+  <header><div class="wrap"><a class="header-brand" href="#top" aria-label="AOMERA Academy ホーム"><img class="brand-mark" src="../website/aomera-logo-mark-navy.svg" alt=""><strong>OMERA</strong><span>Academy</span></a><nav aria-label="メインナビゲーション"><a href="#courses">すべてのコース</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ戻る&nbsp; ↗</a></nav></div></header>
+
+  <section class="hero" id="top"><div class="wrap">
+    <div class="hero-copy"><p class="eyebrow">AOMERA ACADEMY</p><h1><span class="hero-title-first">クラウドと自動化技術を学び、</span><br>未来の競争力を構築する</h1><p><span class="hero-tech">AWS、Terraform、Docker、Kubernetes、Linux などの</span><br>実践的な技術を学び、即戦力となるエンジニアへ。</p><div class="hero-actions"><a class="btn btn-primary" href="#courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5.5A3.5 3.5 0 016.5 2H11v17H6.5A3.5 3.5 0 003 22zM21 5.5A3.5 3.5 0 0017.5 2H13v17h4.5A3.5 3.5 0 0121 22z"/></svg>すべてのコースを見る</a><a class="btn" href="#paths"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>学習パスを探す</a></div></div>
+    <div class="hero-art" role="img" aria-label="AOMERA Academy クラウド技術プラットフォーム"><img class="hero-art-source" src="assets/academy-hero-3d.png" alt="" draggable="false"></div>
+  </div></section>
+
+  <main class="wrap">
+    <section class="section" id="directions"><div class="section-heading"><h2>人気の技術分野</h2><a class="more" href="#courses">すべての分野を見る <span>→</span></a></div><div class="tech-grid">
+      <article class="tech-card"><div class="icon"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"></div><h3>AWS クラウド</h3><p>AWS の基礎から実践まで、クラウドの活用を体系的に学びます。</p><span class="count">32 コース</span></article>
+      <article class="tech-card"><div class="icon"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"></div><h3>Terraform 基礎</h3><p>インフラをコードで管理する Terraform の基礎と実践的な使い方を学びます。</p><span class="count">18 コース</span></article>
+      <article class="tech-card"><div class="icon"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"></div><h3>Docker コンテナ</h3><p>コンテナの基本から実践まで、効率的な環境構築を習得します。</p><span class="count">16 コース</span></article>
+      <article class="tech-card"><div class="icon"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"></div><h3>Kubernetes 運用</h3><p>Kubernetes の構成・運用からスケーリングまで実践的に学びます。</p><span class="count">14 コース</span></article>
+      <article class="tech-card"><div class="icon"><img class="linux-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-original.svg" alt="Linux"></div><h3>Linux システム管理</h3><p>Linux の基礎からサーバー管理まで、実務で役立つスキルを習得します。</p><span class="count">20 コース</span></article>
+      <article class="tech-card"><div class="icon"><span class="ai-logo">AI</span></div><h3>AI・機械学習</h3><p>AI 基礎から応用まで、実践的な機械学習の知識を身につけます。</p><span class="count">12 コース</span></article>
+    </div></section>
+
+    <section class="section" id="courses"><div class="section-heading"><h2>おすすめコース</h2><a class="more" href="#courses">すべてのコースを見る <span>→</span></a></div><div class="course-grid">
+      <article class="course-card"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">初級</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>1,256 人が受講</span></div></div></article>
+      <article class="course-card"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">初級</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p><div class="course-meta"><span>6 時間 · 2 時間</span><span>986 人が受講</span></div></div></article>
+      <article class="course-card"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">初級</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>752 人が受講</span></div></div></article>
+      <article class="course-card"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">中級</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p><div class="course-meta"><span>10 時間 · 3.5 時間</span><span>632 人が受講</span></div></div></article>
+    </div></section>
+
+    <section class="section" id="paths"><div class="section-heading"><h2>学習パス（ロードマップ）</h2><a class="more" href="#paths">学習パスをすべて見る <span>→</span></a></div><div class="path-grid">
+      <article class="path-card"><div class="path-visual"><svg><use href="#cloud"></use></svg></div><div class="path-body"><h3>AWS クラウド入門パス</h3><p>AWS の基礎からクラウド構築まで、段階的に学べるパスです。</p><div class="progress-row"><span>8 コース</span><span class="progress"></span><span>0%</span></div></div></article>
+      <article class="path-card"><div class="path-visual"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"></div><div class="path-body"><h3>インフラ自動化パス</h3><p>Terraform を使ったインフラ自動化のスキルを体系的に習得します。</p><div class="progress-row"><span>6 コース</span><span class="progress"></span><span>0%</span></div></div></article>
+      <article class="path-card"><div class="path-visual"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="plus">＋</span><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"></div><div class="path-body"><h3>コンテナ技術パス</h3><p>Docker と Kubernetes を組み合わせて、コンテナ技術を実践的に学びます。</p><div class="progress-row"><span>7 コース</span><span class="progress"></span><span>0%</span></div></div></article>
+      <article class="path-card"><div class="path-visual"><span class="ai-logo">AI</span></div><div class="path-body"><h3>AI・機械学習 入門パス</h3><p>AI と機械学習の基礎を学び、実践的なプロジェクトに取り組みます。</p><div class="progress-row"><span>5 コース</span><span class="progress"></span><span>0%</span></div></div></article>
+    </div></section>
+
+    <section class="cta"><img class="cta-preview" src="assets/cta-preview.png" alt="" aria-hidden="true" draggable="false"><div><h2>学びの旅を始めましょう</h2><p>実践的な学習と豊富なコンテンツで、あなたのスキルアップをサポートします。<br>いつでも、どこでも、自分のペースで学習を進められます。</p></div><a class="btn btn-primary" href="#courses">すべてのコースを見る</a></section>
+  </main>
+
+  <footer><div class="wrap"><div class="footer-grid">
+    <div class="footer-about"><a class="footer-brand" href="#top"><img class="brand-mark" src="../website/aomera-logo-mark-navy.svg" alt=""><strong>OMERA</strong><span>Academy</span></a><p>AOMERA Academy は、クラウドと自動化技術の学習を支援するオンライン学習プラットフォームです。未来の競争力を共に構築しましょう。</p><div class="socials"><span>in</span><span>◉</span><span>𝕏</span><span>▶</span></div></div>
+    <div class="footer-col"><h3>学習リソース</h3><a href="#courses">コース一覧</a><a href="#paths">学習パス</a><a href="#">学習ガイド</a><a href="#directions">技術分野</a></div>
+    <div class="footer-col"><h3>サポート</h3><a href="#">よくある質問</a><a href="#">お問い合わせ</a><a href="#">利用規約</a><a href="#">プライバシーポリシー</a></div>
+    <div class="footer-col"><h3>運営会社</h3><a href="../">AOMERA について</a><a href="https://aomera.co.jp/">AOMERA 公式サイトへ</a></div>
+  </div><div class="copyright">© 2025 AOMERA Co., Ltd. All rights reserved.</div></div></footer>
+</body>
+</html>

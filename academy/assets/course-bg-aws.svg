@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 114">
+  <defs>
+    <linearGradient id="base" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#00162f"/>
+      <stop offset=".55" stop-color="#00142c"/>
+      <stop offset="1" stop-color="#020f20"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="72%" cy="52%" r="48%">
+      <stop offset="0" stop-color="#06468f" stop-opacity=".62"/>
+      <stop offset=".55" stop-color="#052e65" stop-opacity=".3"/>
+      <stop offset="1" stop-color="#00152d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0b5bc0"/><stop offset="1" stop-color="#073578"/>
+    </linearGradient>
+    <linearGradient id="left" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#084590"/><stop offset="1" stop-color="#03255a"/>
+    </linearGradient>
+    <linearGradient id="right" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#073b83"/><stop offset="1" stop-color="#021b43"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#00102a" flood-opacity=".8"/>
+    </filter>
+  </defs>
+  <rect width="256" height="114" fill="url(#base)"/>
+  <rect width="256" height="114" fill="url(#glow)"/>
+  <g stroke="#0871df" stroke-opacity=".22" stroke-width=".7">
+    <path d="M133 57l33-23 38 18 29 27M142 89l35-25 40 17M161 28l22 48 43-37M154 74l55-35 24 14"/>
+  </g>
+  <g fill="#1781ec" fill-opacity=".52">
+    <circle cx="135" cy="57" r="1.4"/><circle cx="151" cy="88" r="1.2"/><circle cx="166" cy="34" r="1.1"/>
+    <circle cx="177" cy="64" r="1.3"/><circle cx="204" cy="52" r="1.1"/><circle cx="217" cy="81" r="1.3"/><circle cx="232" cy="79" r="1.4"/>
+  </g>
+  <g filter="url(#shadow)">
+    <g transform="translate(160 19)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+    <g transform="translate(190 34)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+    <g transform="translate(143 53)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+    <g transform="translate(173 62)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+    <g transform="translate(204 58)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+    <g transform="translate(157 82)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+    <g transform="translate(188 82)"><path d="M0 7L13 0l13 7-13 7z" fill="url(#top)"/><path d="M0 7l13 7v16L0 23z" fill="url(#left)"/><path d="M26 7l-13 7v16l13-7z" fill="url(#right)"/></g>
+  </g>
+</svg>

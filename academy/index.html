@@ -20,10 +20,13 @@
 
     header { height:60px; display:flex; align-items:center; background:#fff; }
     header .wrap { width:min(960px,calc(100% - 48px)); display:flex; align-items:center; justify-content:space-between; }
-    .header-brand { display:inline-flex; align-items:center; font-family:"Sora",sans-serif; line-height:1; white-space:nowrap; }
-    .brand-mark { width:27px; height:27px; margin-right:1px; object-fit:contain; }
-    .header-brand strong { font-size:28px; letter-spacing:-.9px; }
-    .header-brand span { margin-left:10px; color:#075fff; font-size:17px; font-weight:600; }
+    .header-brand { display:inline-flex; align-items:center; gap:12px; color:#102a43; white-space:nowrap; }
+    .brand-mark { width:40px; height:40px; display:grid; place-items:center; flex:0 0 auto; }
+    .brand-mark img { width:100%; height:100%; object-fit:contain; }
+    .brand-name { display:inline-flex; align-items:baseline; gap:4px; line-height:1; }
+    .brand-name strong { font:700 14px/1 "Sora",sans-serif; letter-spacing:.035em; }
+    .brand-name span { font-size:13px; font-weight:700; letter-spacing:.01em; }
+    .header-brand .brand-name span { color:#075fff; }
     nav { display:flex; gap:42px; font-size:13px; font-weight:700; }
     nav a:hover { color:var(--blue); }
 
@@ -107,30 +110,32 @@
     .cta p { margin:0; color:#273349; font-size:11px; line-height:1.65; }
     .cta .btn { width:166px; min-height:44px; padding-inline:0; }
 
-    footer { height:141px; overflow:hidden; color:#c8d1df; background:linear-gradient(115deg,#001a34,#001128); padding-top:18px; }
-    .footer-grid { height:85px; display:grid; grid-template-columns:250px 147px 143px 1fr; gap:53px; }
-    .footer-brand { display:inline-flex; align-items:center; color:white; font-family:"Sora",sans-serif; }
-    .footer-brand .brand-mark { width:20px; height:20px; margin-right:0; filter:brightness(0) invert(1); }
-    .footer-brand strong { font-size:20px; }
-    .footer-brand span { margin-left:4px; color:#1978ff; font-size:11px; }
-    .footer-about p { max-width:244px; margin:6px 0 5px; font-size:9.5px; line-height:1.55; }
-    .socials { display:flex; align-items:center; gap:12px; color:white; font-weight:700; }
-    .footer-col h3 { margin:2px 0 5px; color:white; font-size:11px; }
-    .footer-col a { display:block; margin-bottom:3px; font-size:9.5px; }
-    .copyright { height:36px; padding-top:8px; text-align:center; border-top:1px solid rgba(255,255,255,.09); color:#97a7bb; font-size:9.5px; }
+    footer { color:#c8d1df; background:linear-gradient(115deg,#001a34,#001128); padding-top:18px; }
+    .footer-grid { min-height:61px; display:grid; grid-template-columns:1fr auto; align-items:start; gap:48px; }
+    .footer-brand { display:inline-flex; align-items:center; gap:7px; color:white; }
+    .footer-brand .brand-mark { width:24px; height:24px; }
+    .footer-brand .brand-name { gap:3px; }
+    .footer-brand .brand-name strong { font-size:11px; }
+    .footer-brand .brand-name span { color:#1978ff; font-size:10px; }
+    .footer-about p { margin:6px 0 0; font-size:9.5px; line-height:1.55; }
+    .footer-actions { display:flex; align-items:center; gap:28px; padding-top:9px; color:#e1e7f0; font-size:10px; }
+    .footer-actions a { transition:color .2s; }
+    .footer-actions a:hover { color:#4aa5ff; }
+    .copyright { min-height:36px; display:flex; align-items:center; justify-content:space-between; gap:24px; border-top:1px solid rgba(255,255,255,.09); color:#97a7bb; font-size:9.5px; }
+    .legal { display:flex; gap:18px; }
 
     @media (max-width:900px) {
       h1 { font-size:30px; }
       .hero-art { left:auto; right:-80px; opacity:.86; transform:scale(.9); transform-origin:right center; }
       .tech-grid { grid-template-columns:repeat(3,1fr); }
-      footer { height:auto; }
       .course-grid,.path-grid { grid-template-columns:repeat(2,1fr); }
       .cta { grid-template-columns:140px 1fr auto; padding-right:25px; }
     }
     @media (max-width:620px) {
       .wrap,header .wrap { width:min(100% - 30px,930px); }
-      .header-brand strong { font-size:20px; }
-      .header-brand span { margin-left:6px; font-size:14px; }
+      .header-brand .brand-mark { width:36px; height:36px; }
+      .header-brand .brand-name strong { font-size:13px; }
+      .header-brand .brand-name span { font-size:12px; }
       nav { gap:12px; font-size:10px; }
       nav a:first-child { display:none; }
       .hero { height:625px; }
@@ -151,13 +156,15 @@
       .cta-preview { display:none; }
       .cta .btn { justify-self:center; }
       footer { height:auto; padding-bottom:10px; }
-      .footer-grid { height:auto; grid-template-columns:1.4fr 1fr; gap:22px 30px; }
+      .footer-grid { grid-template-columns:1fr; gap:10px; padding-bottom:14px; }
+      .footer-actions { padding-top:0; }
+      .copyright { align-items:flex-start; flex-direction:column; gap:4px; padding-top:9px; }
     }
   </style>
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="cloud" viewBox="0 0 64 64"><path d="M17 47h31a11 11 0 000-22 17 17 0 00-32-4A13 13 0 0017 47z" fill="none" stroke="#177cce" stroke-width="4" stroke-linecap="round"/></symbol></defs></svg>
-  <header><div class="wrap"><a class="header-brand" href="#top" aria-label="AOMERA Academy ホーム"><img class="brand-mark" src="../website/aomera-logo-mark-navy.svg" alt=""><strong>OMERA</strong><span>Academy</span></a><nav aria-label="メインナビゲーション"><a href="#courses">すべてのコース</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ戻る&nbsp; ↗</a></nav></div></header>
+  <header><div class="wrap"><a class="header-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="../website/aomera-logo-mark-navy.png" alt="" width="192" height="192" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><nav aria-label="メインナビゲーション"><a href="#courses">すべてのコース</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ戻る&nbsp; ↗</a></nav></div></header>
 
   <section class="hero" id="top"><div class="wrap">
     <div class="hero-copy"><p class="eyebrow">AOMERA ACADEMY</p><h1><span class="hero-title-first">クラウドと自動化技術を学び、</span><br>未来の競争力を構築する</h1><p><span class="hero-tech">AWS、Terraform、Docker、Kubernetes、Linux などの</span><br>実践的な技術を学び、即戦力となるエンジニアへ。</p><div class="hero-actions"><a class="btn btn-primary" href="#courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5.5A3.5 3.5 0 016.5 2H11v17H6.5A3.5 3.5 0 003 22zM21 5.5A3.5 3.5 0 0017.5 2H13v17h4.5A3.5 3.5 0 0121 22z"/></svg>すべてのコースを見る</a><a class="btn" href="#paths"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>学習パスを探す</a></div></div>
@@ -192,10 +199,8 @@
   </main>
 
   <footer><div class="wrap"><div class="footer-grid">
-    <div class="footer-about"><a class="footer-brand" href="#top"><img class="brand-mark" src="../website/aomera-logo-mark-navy.svg" alt=""><strong>OMERA</strong><span>Academy</span></a><p>AOMERA Academy は、クラウドと自動化技術の学習を支援するオンライン学習プラットフォームです。未来の競争力を共に構築しましょう。</p><div class="socials"><span>in</span><span>◉</span><span>𝕏</span><span>▶</span></div></div>
-    <div class="footer-col"><h3>学習リソース</h3><a href="#courses">コース一覧</a><a href="#paths">学習パス</a><a href="#">学習ガイド</a><a href="#directions">技術分野</a></div>
-    <div class="footer-col"><h3>サポート</h3><a href="#">よくある質問</a><a href="#">お問い合わせ</a><a href="#">利用規約</a><a href="#">プライバシーポリシー</a></div>
-    <div class="footer-col"><h3>運営会社</h3><a href="../">AOMERA について</a><a href="https://aomera.co.jp/">AOMERA 公式サイトへ</a></div>
-  </div><div class="copyright">© 2025 AOMERA Co., Ltd. All rights reserved.</div></div></footer>
+    <div class="footer-about"><a class="footer-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="../website/aomera-logo-mark-white.png" alt="" width="192" height="192" loading="lazy" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><p>クラウドと自動化技術を学ぶオンラインアカデミー。</p></div>
+    <div class="footer-actions"><a href="../website/#contact">お問い合わせ</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ&nbsp; ↗</a></div>
+  </div><div class="copyright"><span>© 2025 AOMERA Co., Ltd. All rights reserved.</span><span class="legal"><span>利用規約</span><span>プライバシーポリシー</span></span></div></div></footer>
 </body>
 </html>

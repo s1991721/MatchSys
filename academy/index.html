@@ -59,7 +59,7 @@
     .more span { margin-left:8px; font-size:18px; font-weight:400; }
 
     .tech-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; }
-    .tech-card { height:240px; padding:20px 10px 14px; text-align:center; border:1px solid var(--line); border-radius:7px; background:#fff; }
+    .tech-card { min-height:240px; padding:20px 10px 14px; text-align:center; border:1px solid var(--line); border-radius:7px; background:#fff; }
     .tech-card,.course-card,.path-card { -webkit-tap-highlight-color:transparent; transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .22s ease,box-shadow .22s ease; }
     .course-card,.path-card { display:block; cursor:pointer; }
     @media (hover:hover) and (pointer:fine) {
@@ -68,8 +68,7 @@
     .tech-card:active,.course-card:active,.path-card:active { transform:translateY(-2px) scale(.985); border-color:#80b6ff; box-shadow:0 5px 14px rgba(20,55,95,.12); transition-duration:.08s; }
     .tech-card .icon { height:70px; display:grid; place-items:center; }
     .tech-card h3 { margin:8px -4px 9px; font-size:14px; white-space:nowrap; }
-    .tech-card p { height:65px; margin:0; overflow:hidden; color:#263248; font-size:11px; line-height:1.7; text-align:left; }
-    .tech-card .count { display:block; margin-top:10px; color:#46526a; font-size:11px; }
+    .tech-card p { margin:0; color:#263248; font-size:11px; line-height:1.7; text-align:left; }
     .aws-logo { width:66px; height:56px; object-fit:contain; }
     .tf-logo { width:54px; height:54px; object-fit:contain; }
     .docker-logo { width:70px; height:55px; object-fit:contain; }
@@ -232,20 +231,20 @@
   </div></section>
 
   <main class="wrap">
-    <section class="section" id="directions"><div class="section-heading"><h2>人気の技術分野</h2><a class="more" href="#courses">すべての分野を見る <span>→</span></a></div><div class="tech-grid">
-      <article class="tech-card"><div class="icon"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"></div><h3>AWS クラウド</h3><p>AWS の基礎から実践まで、クラウドの活用を体系的に学びます。</p><span class="count">32 コース</span></article>
-      <article class="tech-card"><div class="icon"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"></div><h3>Terraform 基礎</h3><p>インフラをコードで管理する Terraform の基礎と実践的な使い方を学びます。</p><span class="count">18 コース</span></article>
-      <article class="tech-card"><div class="icon"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"></div><h3>Docker コンテナ</h3><p>コンテナの基本から実践まで、効率的な環境構築を習得します。</p><span class="count">16 コース</span></article>
-      <article class="tech-card"><div class="icon"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"></div><h3>Kubernetes 運用</h3><p>Kubernetes の構成・運用からスケーリングまで実践的に学びます。</p><span class="count">14 コース</span></article>
-      <article class="tech-card"><div class="icon"><img class="linux-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-original.svg" alt="Linux"></div><h3>Linux システム管理</h3><p>Linux の基礎からサーバー管理まで、実務で役立つスキルを習得します。</p><span class="count">20 コース</span></article>
-      <article class="tech-card"><div class="icon"><span class="ai-logo">AI</span></div><h3>AI・機械学習</h3><p>AI 基礎から応用まで、実践的な機械学習の知識を身につけます。</p><span class="count">12 コース</span></article>
+    <section class="section" id="directions"><div class="section-heading"><h2>人気の技術分野</h2></div><div class="tech-grid">
+      <article class="tech-card"><div class="icon"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"></div><h3>AWS クラウド</h3><p>AWS の基礎から実践まで、クラウドの活用を体系的に学びます。</p></article>
+      <article class="tech-card"><div class="icon"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"></div><h3>Terraform 基礎</h3><p>インフラをコードで管理する Terraform の基礎と実践的な使い方を学びます。</p></article>
+      <article class="tech-card"><div class="icon"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"></div><h3>Docker コンテナ</h3><p>コンテナの基本から実践まで、効率的な環境構築を習得します。</p></article>
+      <article class="tech-card"><div class="icon"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"></div><h3>Kubernetes 運用</h3><p>Kubernetes の構成・運用からスケーリングまで実践的に学びます。</p></article>
+      <article class="tech-card"><div class="icon"><img class="linux-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-original.svg" alt="Linux"></div><h3>Linux システム管理</h3><p>Linux の基礎からサーバー管理まで、実務で役立つスキルを習得します。</p></article>
+      <article class="tech-card"><div class="icon"><span class="ai-logo">AI</span></div><h3>AI・機械学習</h3><p>AI 基礎から応用まで、実践的な機械学習の知識を身につけます。</p></article>
     </div></section>
 
     <section class="section" id="courses"><div class="section-heading"><h2>おすすめコース</h2><a class="more" href="mailto:info@ooai-solutions.example.jp?subject=AOMERA%20Academy%20全コース資料の申し込み" data-open-resource data-interest="全コース資料">全コース資料を申し込む <span>→</span></a></div><div class="course-grid">
-      <a class="course-card" href="mailto:info@ooai-solutions.example.jp?subject=AWS%20入門資料の申し込み" data-open-resource data-interest="AWS 入門"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">初級</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>1,256 人が受講</span></div></div></a>
-      <a class="course-card" href="mailto:info@ooai-solutions.example.jp?subject=Terraform%20入門資料の申し込み" data-open-resource data-interest="Terraform 入門"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">初級</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p><div class="course-meta"><span>6 時間 · 2 時間</span><span>986 人が受講</span></div></div></a>
-      <a class="course-card" href="mailto:info@ooai-solutions.example.jp?subject=Docker%20入門実践資料の申し込み" data-open-resource data-interest="Docker 入門実践"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">初級</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>752 人が受講</span></div></div></a>
-      <a class="course-card" href="mailto:info@ooai-solutions.example.jp?subject=Kubernetes%20基礎資料の申し込み" data-open-resource data-interest="Kubernetes 基礎"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">中級</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p><div class="course-meta"><span>10 時間 · 3.5 時間</span><span>632 人が受講</span></div></div></a>
+      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">初級</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>1,256 人が受講</span></div></div></a>
+      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">初級</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p><div class="course-meta"><span>6 時間 · 2 時間</span><span>986 人が受講</span></div></div></a>
+      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">初級</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>752 人が受講</span></div></div></a>
+      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">中級</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p><div class="course-meta"><span>10 時間 · 3.5 時間</span><span>632 人が受講</span></div></div></a>
     </div></section>
 
     <section class="section" id="paths"><div class="section-heading"><h2>学習パス（ロードマップ）</h2><a class="more" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを無料相談 <span>→</span></a></div><div class="path-grid">
@@ -255,7 +254,7 @@
       <a class="path-card" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal" aria-label="AI・機械学習 入門パスをLINEで相談"><div class="path-visual"><span class="ai-logo">AI</span></div><div class="path-body"><h3>AI・機械学習 入門パス</h3><p>AI と機械学習の基礎を学び、実践的なプロジェクトに取り組みます。</p><div class="progress-row"><span>5 コース</span><span class="progress"></span><span>LINE相談</span></div></div></a>
     </div></section>
 
-    <section class="cta"><img class="cta-preview" src="assets/cta-preview.png" alt="" aria-hidden="true" draggable="false"><div><h2>全コースの資料をご用意しています</h2><p>カリキュラムや学習内容の詳細を無料でご案内します。<br>申し込みフォームにご希望の分野をご入力ください。</p></div><a class="btn btn-line" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを相談</a></section>
+    <section class="cta"><img class="cta-preview" src="assets/cta-preview.png" alt="" aria-hidden="true" draggable="false"><div><h2>あなたに合った学習パスをご提案します</h2><p>学びたい分野や目標をLINEでお聞かせください。<br>おすすめのコースや学習の進め方を無料でご案内します。</p></div><a class="btn btn-line" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを相談</a></section>
   </main>
 
   <div class="line-modal" id="lineContactModal" aria-hidden="true" inert>
@@ -291,7 +290,7 @@
   <footer><div class="wrap"><div class="footer-grid">
     <div class="footer-about"><a class="footer-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="../website/aomera-logo-mark-white.png" alt="" width="192" height="192" loading="lazy" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><p>クラウドと自動化技術を学ぶオンラインアカデミー。</p></div>
     <div class="footer-actions"><a href="../website/#contact">お問い合わせ</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ&nbsp; ↗</a></div>
-  </div><div class="copyright"><span>© 2025 AOMERA Co., Ltd. All rights reserved.</span><span class="legal"><span>利用規約</span><span>プライバシーポリシー</span></span></div></div></footer>
+  </div><div class="copyright"><span>© 2026 AOMERA Inc. All rights reserved.</span><span class="legal"><span>利用規約</span><span>プライバシーポリシー</span></span></div></div></footer>
   <script>
     (() => {
       const dialog = document.getElementById("resourceDialog");

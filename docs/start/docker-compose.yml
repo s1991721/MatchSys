@@ -44,7 +44,7 @@ services:
       - web_logs:/app/logs
 
   nginx:
-    image: jef4267/matchsys-nginx:3.1
+    image: jef4267/matchsys-nginx:3.2
     container_name: matchsys-nginx
     restart: unless-stopped
     depends_on:

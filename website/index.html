@@ -113,6 +113,18 @@
     .site-nav { display: flex; align-items: center; gap: 26px; font-size: 14px; font-weight: 500; }
     .site-nav a:not(.button) { color: #486581; transition: color 0.2s ease; }
     .site-nav a:not(.button):hover { color: var(--brand); }
+    .academy-link { position: relative; }
+    .academy-new {
+      position: absolute;
+      top: -7px;
+      right: -9px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      color: var(--brand-dark);
+      background: var(--brand-soft);
+      font: 700 9px/1.4 "Sora", sans-serif;
+      letter-spacing: 0.04em;
+    }
     .button {
       min-height: 46px;
       display: inline-flex;
@@ -516,6 +528,7 @@
       }
       .site-nav.is-open { display: flex; }
       .site-nav a { padding: 13px 8px; }
+      .academy-new { display: none; }
       .site-nav .button { margin-top: 10px; }
       .menu-button { display: block; }
       .hero-grid { grid-template-columns: 1fr; gap: 48px; }
@@ -592,7 +605,7 @@
       <nav class="site-nav" id="site-nav" aria-label="メインナビゲーション">
         <a href="#business">事業内容</a>
         <a href="#product-focus">自社プロダクト</a>
-        <a href="https://aomera.co.jp/academy/index.html" target="_blank" rel="noopener noreferrer">研修・Academy</a>
+        <a class="academy-link" href="https://aomera.co.jp/academy/index.html" target="_blank" rel="noopener noreferrer">研修・Academy <span class="academy-new" aria-label="新着">NEW</span></a>
         <a href="#strengths">私たちの強み</a>
         <a href="#company">会社情報</a>
         <a class="button button-primary" href="https://aomera.co.jp/matchSys/case_exhibit.html" target="_blank" rel="noopener noreferrer">案件一覧</a>

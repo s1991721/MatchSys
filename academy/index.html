@@ -4,7 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="AOMERA Academy クラウドと自動化技術の学習プラットフォーム">
-  <link rel="icon" type="image/svg+xml" href="../website/aomera-logo-mark-navy.svg">
+  <link rel="icon" type="image/svg+xml" href="aomera-logo-mark-navy.svg" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/svg+xml" href="aomera-logo-mark-white.svg" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="192x192" href="aomera-favicon-192x192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="aomera-apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700&amp;display=swap" rel="stylesheet">
@@ -77,7 +80,7 @@
     .ai-logo { width:56px; height:56px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg,#37c979,#72dda2); color:#06120c; font-family:"Sora",sans-serif; font-size:27px; font-weight:700; }
 
     .course-grid,.path-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:19px; }
-    .course-card { height:212px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
+    .course-card { height:177px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
     .course-card:focus-visible,.path-card:focus-visible,.btn:focus-visible,.more:focus-visible { outline:3px solid rgba(0,104,255,.32); outline-offset:3px; }
     .course-cover { height:99px; display:grid; place-items:center; position:relative; overflow:hidden; }
     .cover-aws { background:#00142d url("assets/course-bg-aws.svg") center/100% 100% no-repeat; }
@@ -90,10 +93,9 @@
     .course-cover .kube-logo { transform:translateX(-9px); }
     .course-cover .tf-logo,.course-cover .docker-logo,.course-cover .kube-logo { width:66px; height:66px; }
     .level { position:absolute; right:7px; top:7px; z-index:2; padding:2px 6px; color:var(--blue); background:#fff; border:1px solid #9fc8ff; border-radius:4px; font-size:11px; font-weight:700; }
-    .course-body { height:113px; padding:10px 12px 9px; }
+    .course-body { height:78px; padding:10px 12px 9px; }
     .course-body h3 { margin:0 0 4px; font-size:14px; }
     .course-body p { height:38px; margin:0; overflow:hidden; color:#263248; font-size:11px; line-height:1.65; }
-    .course-meta { display:flex; justify-content:space-between; margin-top:9px; color:#46526a; font-size:10px; white-space:nowrap; }
 
     .path-card { height:169px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
     .path-visual { height:65px; display:flex; align-items:center; justify-content:center; gap:10px; background:linear-gradient(135deg,#f5f9ff,#e8f2ff); }
@@ -226,7 +228,7 @@
   <header><div class="wrap"><a class="header-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="../website/aomera-logo-mark-navy.png" alt="" width="192" height="192" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><nav aria-label="メインナビゲーション"><a href="#courses">すべてのコース</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ戻る&nbsp; ↗</a></nav></div></header>
 
   <section class="hero" id="top"><div class="wrap">
-    <div class="hero-copy"><p class="eyebrow">AOMERA ACADEMY</p><h1><span class="hero-title-first">クラウドと自動化技術を学び、</span><br>未来の競争力を構築する</h1><p><span class="hero-tech">AWS、Terraform、Docker、Kubernetes、Linux などの</span><br>実践的な技術を学び、即戦力となるエンジニアへ。</p><div class="hero-actions"><a class="btn btn-primary" href="#courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5.5A3.5 3.5 0 016.5 2H11v17H6.5A3.5 3.5 0 003 22zM21 5.5A3.5 3.5 0 0017.5 2H13v17h4.5A3.5 3.5 0 0121 22z"/></svg>すべてのコースを見る</a></div></div>
+    <div class="hero-copy"><h1><span class="hero-title-first">クラウドと自動化技術を学び、</span><br>未来の競争力を構築する</h1><p><span class="hero-tech">AWS、Terraform、Docker、Kubernetes、Linux などの</span><br>実践的な技術を学び、即戦力となるエンジニアへ。</p><div class="hero-actions"><a class="btn btn-primary" href="#courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5.5A3.5 3.5 0 016.5 2H11v17H6.5A3.5 3.5 0 003 22zM21 5.5A3.5 3.5 0 0017.5 2H13v17h4.5A3.5 3.5 0 0121 22z"/></svg>すべてのコースを見る</a></div></div>
     <div class="hero-art" role="img" aria-label="AOMERA Academy クラウド技術プラットフォーム"><img class="hero-art-source" src="assets/academy-hero-3d.png" alt="" draggable="false"></div>
   </div></section>
 
@@ -241,10 +243,10 @@
     </div></section>
 
     <section class="section" id="courses"><div class="section-heading"><h2>おすすめコース</h2><a class="more" href="mailto:info@ooai-solutions.example.jp?subject=AOMERA%20Academy%20全コース資料の申し込み" data-open-resource data-interest="全コース資料">全コース資料を申し込む <span>→</span></a></div><div class="course-grid">
-      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">初級</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>1,256 人が受講</span></div></div></a>
-      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">初級</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p><div class="course-meta"><span>6 時間 · 2 時間</span><span>986 人が受講</span></div></div></a>
-      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">初級</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p><div class="course-meta"><span>8 時間 · 2.5 時間</span><span>752 人が受講</span></div></div></a>
-      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">中級</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p><div class="course-meta"><span>10 時間 · 3.5 時間</span><span>632 人が受講</span></div></div></a>
+      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">初級</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">初級</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">初級</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">中級</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p></div></a>
     </div></section>
 
     <section class="section" id="paths"><div class="section-heading"><h2>学習パス（ロードマップ）</h2><a class="more" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを無料相談 <span>→</span></a></div><div class="path-grid">

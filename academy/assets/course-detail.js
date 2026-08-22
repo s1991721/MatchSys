@@ -43,6 +43,8 @@
     document.getElementById("breadcrumbTitle").textContent = course.title;
     document.getElementById("courseTitle").textContent = course.title;
     document.getElementById("courseDescription").textContent = course.description;
+    document.getElementById("courseLevel").textContent = course.level;
+    document.getElementById("coursePrerequisites").textContent = course.prerequisites;
     document.getElementById("courseCover").dataset.course = courseKey;
     const coverImage = document.getElementById("courseLogo");
     coverImage.addEventListener("error", () => coverImage.hidden = true, { once: true });

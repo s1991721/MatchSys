@@ -57,18 +57,19 @@
     .section:nth-of-type(3) { margin-bottom:20px; }
     .section:nth-of-type(3) .section-heading { margin-bottom:13px; }
     .section-heading { height:25px; display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .course-heading { height:auto; min-height:25px; }
     .section-heading h2 { margin:0; font-size:20px; letter-spacing:-.4px; }
-    .more { color:var(--blue); font-size:12px; font-weight:700; }
-    .more span { margin-left:8px; font-size:18px; font-weight:400; }
+    .section-title { display:flex; align-items:baseline; gap:12px; }
+    .level-note { color:#637087; font-size:10px; white-space:nowrap; }
 
     .tech-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:16px; }
     .tech-card { min-height:240px; padding:20px 10px 14px; text-align:center; border:1px solid var(--line); border-radius:7px; background:#fff; }
-    .tech-card,.course-card,.path-card { -webkit-tap-highlight-color:transparent; transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .22s ease,box-shadow .22s ease; }
-    .course-card,.path-card { display:block; cursor:pointer; }
+    .tech-card,.course-card { -webkit-tap-highlight-color:transparent; transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .22s ease,box-shadow .22s ease; }
+    .course-card { display:block; cursor:pointer; }
     @media (hover:hover) and (pointer:fine) {
-      .tech-card:hover,.course-card:hover,.path-card:hover { transform:translateY(-6px); border-color:#b9d3f5; box-shadow:0 12px 28px rgba(20,55,95,.14); }
+      .tech-card:hover,.course-card:hover { transform:translateY(-6px); border-color:#b9d3f5; box-shadow:0 12px 28px rgba(20,55,95,.14); }
     }
-    .tech-card:active,.course-card:active,.path-card:active { transform:translateY(-2px) scale(.985); border-color:#80b6ff; box-shadow:0 5px 14px rgba(20,55,95,.12); transition-duration:.08s; }
+    .tech-card:active,.course-card:active { transform:translateY(-2px) scale(.985); border-color:#80b6ff; box-shadow:0 5px 14px rgba(20,55,95,.12); transition-duration:.08s; }
     .tech-card .icon { height:70px; display:grid; place-items:center; }
     .tech-card h3 { margin:8px -4px 9px; font-size:14px; white-space:nowrap; }
     .tech-card p { margin:0; color:#263248; font-size:11px; line-height:1.7; text-align:left; }
@@ -79,37 +80,37 @@
     .linux-logo { width:54px; height:54px; object-fit:contain; }
     .ai-logo { width:56px; height:56px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg,#37c979,#72dda2); color:#06120c; font-family:"Sora",sans-serif; font-size:27px; font-weight:700; }
 
-    .course-grid,.path-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:19px; }
+    .course-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:19px; }
     .course-card { height:177px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
-    .course-card:focus-visible,.path-card:focus-visible,.btn:focus-visible,.more:focus-visible { outline:3px solid rgba(0,104,255,.32); outline-offset:3px; }
+    .course-card:focus-visible,.course-apply-card:focus-visible,.btn:focus-visible { outline:3px solid rgba(0,104,255,.32); outline-offset:3px; }
     .course-cover { height:99px; display:grid; place-items:center; position:relative; overflow:hidden; }
     .cover-aws { background:#00142d url("assets/course-bg-aws.svg") center/100% 100% no-repeat; }
     .cover-tf { background:#f0edff url("assets/course-bg-terraform.svg") center/100% 100% no-repeat; }
     .cover-docker,.cover-kube { background:#e7f4ff url("assets/course-bg-ice.svg") center/100% 100% no-repeat; }
+    .cover-gpt { background:#000; }
     .course-cover img { position:relative; z-index:1; }
     .course-cover .aws-logo { width:79px; filter:brightness(0) invert(1); transform:translateX(-52px); }
     .course-cover .tf-logo { transform:translateX(-31px); }
     .course-cover .docker-logo { transform:translateX(-12px); }
     .course-cover .kube-logo { transform:translateX(-9px); }
     .course-cover .tf-logo,.course-cover .docker-logo,.course-cover .kube-logo { width:66px; height:66px; }
+    .course-cover .gpt-cover { width:100%; height:100%; object-fit:cover; }
     .level { position:absolute; right:7px; top:7px; z-index:2; padding:2px 6px; color:var(--blue); background:#fff; border:1px solid #9fc8ff; border-radius:4px; font-size:11px; font-weight:700; }
     .course-body { height:78px; padding:10px 12px 9px; }
     .course-body h3 { margin:0 0 4px; font-size:14px; }
     .course-body p { height:38px; margin:0; overflow:hidden; color:#263248; font-size:11px; line-height:1.65; }
-
-    .path-card { height:169px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
-    .path-visual { height:65px; display:flex; align-items:center; justify-content:center; gap:10px; background:linear-gradient(135deg,#f5f9ff,#e8f2ff); }
-    .path-card:nth-child(2) .path-visual { background:linear-gradient(135deg,#fbfaff,#f0edff); }
-    .path-card:nth-child(3) .path-visual { background:linear-gradient(135deg,#effaff,#e7f3ff); }
-    .path-card:nth-child(4) .path-visual { background:linear-gradient(135deg,#f9fcf3,#fff6ed); }
-    .path-visual img,.path-visual svg { width:48px; height:48px; object-fit:contain; }
-    .path-visual .ai-logo { width:45px; height:45px; font-size:22px; }
-    .plus { color:#0870dc; font-size:21px; }
-    .path-body { height:104px; padding:8px 12px 10px; }
-    .path-body h3 { margin:0 0 3px; font-size:13px; white-space:nowrap; }
-    .path-body p { height:38px; margin:0; overflow:hidden; color:#263248; font-size:10.5px; line-height:1.55; }
-    .progress-row { display:flex; align-items:center; gap:9px; margin-top:8px; color:#46526a; font-size:10px; }
-    .progress { flex:1; height:4px; border-radius:4px; background:#e2e8f0; }
+    .course-apply-card { min-height:177px; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding:16px; border:1px dashed #78adf5; border-radius:7px; background:linear-gradient(135deg,#f7fbff,#edf5ff); cursor:pointer; transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .22s ease,box-shadow .22s ease,background .22s ease; }
+    .course-apply-icon { width:32px; height:32px; display:grid; place-items:center; border-radius:9px; color:#fff; background:linear-gradient(135deg,#0878ff,#005ce9); box-shadow:0 6px 14px rgba(0,104,255,.2); }
+    .course-apply-icon svg { width:17px; height:17px; }
+    .course-apply-card h3 { margin:9px 0 3px; font-size:14px; }
+    .course-apply-card p { margin:0; color:#46526a; font-size:10.5px; line-height:1.55; }
+    .course-apply-action { display:inline-flex; align-items:center; gap:7px; margin-top:8px; color:var(--blue); font-size:11px; font-weight:700; }
+    .course-apply-action span { transition:transform .2s ease; }
+    @media (hover:hover) {
+      .course-apply-card:hover { transform:translateY(-6px); border-color:var(--blue); background:linear-gradient(135deg,#f3f9ff,#e5f1ff); box-shadow:0 12px 28px rgba(20,55,95,.14); }
+      .course-apply-card:hover .course-apply-action span { transform:translateX(4px); }
+    }
+    .course-apply-card:active { transform:translateY(-2px) scale(.985); }
 
     .cta { height:92px; display:grid; grid-template-columns:189px 1fr auto; align-items:center; gap:18px; position:relative; overflow:hidden; padding:12px 70px 12px 23px; border-radius:7px; background:linear-gradient(100deg,#f4f9ff,#edf4ff); }
     .cta::before { content:""; }
@@ -179,7 +180,7 @@
       h1 { font-size:30px; }
       .hero-art { left:auto; right:-80px; opacity:.86; transform:scale(.9); transform-origin:right center; }
       .tech-grid { grid-template-columns:repeat(3,1fr); }
-      .course-grid,.path-grid { grid-template-columns:repeat(2,1fr); }
+      .course-grid { grid-template-columns:repeat(2,1fr); }
       .cta { grid-template-columns:140px 1fr auto; padding-right:25px; }
     }
     @media (max-width:620px) {
@@ -200,8 +201,11 @@
       .hero-actions .btn { width:auto; flex:1; padding-inline:6px; }
       .hero-art { top:250px; right:50%; transform:translateX(50%) scale(.78); }
       .tech-grid { grid-template-columns:repeat(2,1fr); gap:10px; }
-      .course-grid,.path-grid { grid-template-columns:1fr; gap:12px; }
-      .course-card,.path-card { height:auto; }
+      .course-grid { grid-template-columns:1fr; gap:12px; }
+      .course-card { height:auto; }
+      .course-apply-card { min-height:150px; }
+      .course-heading { align-items:flex-start; flex-direction:column; gap:5px; }
+      .course-heading .section-title { align-items:flex-start; flex-direction:column; gap:1px; }
       .cta { height:auto; grid-template-columns:1fr; padding:20px; text-align:center; }
       .cta::before { display:none; }
       .cta-preview { display:none; }
@@ -217,9 +221,10 @@
       .copyright { align-items:flex-start; flex-direction:column; gap:4px; padding-top:9px; }
     }
     @media (prefers-reduced-motion:reduce) {
-      .tech-card,.course-card,.path-card { transition:border-color .01ms,box-shadow .01ms; }
-      .tech-card:hover,.course-card:hover,.path-card:hover,
-      .tech-card:active,.course-card:active,.path-card:active { transform:none; }
+      .tech-card,.course-card,.course-apply-card { transition:border-color .01ms,box-shadow .01ms; }
+      .tech-card:hover,.course-card:hover,.course-apply-card:hover,
+      .tech-card:active,.course-card:active,.course-apply-card:active { transform:none; }
+      .course-apply-action span { transition:none; }
     }
   </style>
 </head>
@@ -242,18 +247,13 @@
       <article class="tech-card"><div class="icon"><span class="ai-logo">AI</span></div><h3>AI・機械学習</h3><p>AI 基礎から応用まで、実践的な機械学習の知識を身につけます。</p></article>
     </div></section>
 
-    <section class="section" id="courses"><div class="section-heading"><h2>おすすめコース</h2><a class="more" href="mailto:info@ooai-solutions.example.jp?subject=AOMERA%20Academy%20全コース資料の申し込み" data-open-resource data-interest="全コース資料">全コース資料を申し込む <span>→</span></a></div><div class="course-grid">
-      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">初級</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">初級</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">初級</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">中級</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p></div></a>
-    </div></section>
-
-    <section class="section" id="paths"><div class="section-heading"><h2>学習パス（ロードマップ）</h2><a class="more" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを無料相談 <span>→</span></a></div><div class="path-grid">
-      <a class="path-card" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal" aria-label="AWS クラウド入門パスをLINEで相談"><div class="path-visual"><svg><use href="#cloud"></use></svg></div><div class="path-body"><h3>AWS クラウド入門パス</h3><p>AWS の基礎からクラウド構築まで、段階的に学べるパスです。</p><div class="progress-row"><span>8 コース</span><span class="progress"></span><span>LINE相談</span></div></div></a>
-      <a class="path-card" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal" aria-label="インフラ自動化パスをLINEで相談"><div class="path-visual"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"></div><div class="path-body"><h3>インフラ自動化パス</h3><p>Terraform を使ったインフラ自動化のスキルを体系的に習得します。</p><div class="progress-row"><span>6 コース</span><span class="progress"></span><span>LINE相談</span></div></div></a>
-      <a class="path-card" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal" aria-label="コンテナ技術パスをLINEで相談"><div class="path-visual"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="plus">＋</span><img src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"></div><div class="path-body"><h3>コンテナ技術パス</h3><p>Docker と Kubernetes を組み合わせて、コンテナ技術を実践的に学びます。</p><div class="progress-row"><span>7 コース</span><span class="progress"></span><span>LINE相談</span></div></div></a>
-      <a class="path-card" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal" aria-label="AI・機械学習 入門パスをLINEで相談"><div class="path-visual"><span class="ai-logo">AI</span></div><div class="path-body"><h3>AI・機械学習 入門パス</h3><p>AI と機械学習の基礎を学び、実践的なプロジェクトに取り組みます。</p><div class="progress-row"><span>5 コース</span><span class="progress"></span><span>LINE相談</span></div></div></a>
+    <section class="section" id="courses"><div class="section-heading course-heading"><div class="section-title"><h2>おすすめコース</h2><span class="level-note">学習段階は必要な前提知識を基準にしています</span></div></div><div class="course-grid">
+      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">入門</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">入門</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">入門</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">基礎</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=gpt"><div class="course-cover cover-gpt"><img class="gpt-cover" src="https://img.youtube.com/vi/kCc8FmEb1nY/maxresdefault.jpg" alt="Let's build GPT"><span class="level">実践</span></div><div class="course-body"><h3>AI</h3><p>Python と PyTorch を使い、Transformer ベースの GPT をゼロから構築します。</p></div></a>
+      <a class="course-apply-card" href="mailto:info@ooai-solutions.example.jp?subject=AOMERA%20Academy%20全コース資料の申し込み" data-open-resource data-interest="全コース資料" aria-haspopup="dialog" aria-controls="resourceDialog"><span class="course-apply-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg></span><h3>コース資料を申し込む</h3><p>全コースの内容や学習カリキュラムを無料でご案内します。</p><span class="course-apply-action">申し込みフォームへ <span aria-hidden="true">→</span></span></a>
     </div></section>
 
     <section class="cta"><img class="cta-preview" src="assets/cta-preview.png" alt="" aria-hidden="true" draggable="false"><div><h2>あなたに合った学習パスをご提案します</h2><p>学びたい分野や目標をLINEでお聞かせください。<br>おすすめのコースや学習の進め方を無料でご案内します。</p></div><a class="btn btn-line" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを相談</a></section>
@@ -281,7 +281,7 @@
       <div class="form-grid">
         <div class="form-field"><label for="applicantName">お名前<span class="required">必須</span></label><input id="applicantName" name="name" autocomplete="name" required></div>
         <div class="form-field"><label for="applicantEmail">メールアドレス<span class="required">必須</span></label><input id="applicantEmail" name="email" type="email" autocomplete="email" required></div>
-        <div class="form-field form-field-wide"><label for="resourceInterest">ご希望の資料<span class="required">必須</span></label><select id="resourceInterest" name="interest" required><option>全コース資料</option><option>AWS 入門</option><option>Terraform 入門</option><option>Docker 入門実践</option><option>Kubernetes 基礎</option></select></div>
+        <div class="form-field form-field-wide"><label for="resourceInterest">ご希望の資料<span class="required">必須</span></label><select id="resourceInterest" name="interest" required><option>全コース資料</option><option>AWS 入門</option><option>Terraform 入門</option><option>Docker 入門実践</option><option>Kubernetes 基礎</option><option>AI / GPT 実践</option></select></div>
         <div class="form-field form-field-wide"><label for="learningPurpose">学習目的・ご要望<span>（任意）</span></label><textarea id="learningPurpose" name="purpose" placeholder="例：クラウドエンジニアへのキャリアチェンジを検討しています"></textarea></div>
       </div>
       <p class="form-note">送信ボタンを押すとメールソフトが開きます。内容をご確認のうえ送信してください。</p>

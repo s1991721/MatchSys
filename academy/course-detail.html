@@ -30,14 +30,21 @@
     .course-cover[data-course="aws"] { background:#00142d url("assets/course-bg-aws.svg") center/100% 100% no-repeat; }
     .course-cover[data-course="terraform"] { background:#f0edff url("assets/course-bg-terraform.svg") center/100% 100% no-repeat; }
     .course-cover[data-course="docker"],.course-cover[data-course="kubernetes"] { background:#e7f4ff url("assets/course-bg-ice.svg") center/100% 100% no-repeat; }
+    .course-cover[data-course="gpt"] { background:#000; }
     .course-cover img { width:100px; height:100px; position:relative; z-index:1; object-fit:contain; }
     .course-cover[data-course="aws"] img { width:118px; filter:brightness(0) invert(1); transform:translateX(-78px); }
     .course-cover[data-course="terraform"] img { transform:translateX(-47px); }
     .course-cover[data-course="docker"] img { transform:translateX(-18px); }
     .course-cover[data-course="kubernetes"] img { transform:translateX(-14px); }
+    .course-cover[data-course="gpt"] img { width:100%; height:100%; object-fit:cover; }
     .course-summary { align-self:center; padding:4px 0; }
     h1 { margin:0 0 12px; font-size:28px; line-height:1.28; letter-spacing:-.5px; }
     .description { max-width:550px; margin:0; color:#263248; font-size:13px; line-height:1.8; }
+    .course-facts { display:flex; flex-wrap:wrap; gap:8px 18px; margin:14px 0 0; }
+    .course-fact { display:flex; align-items:center; gap:7px; margin:0; font-size:11px; }
+    .course-fact dt { color:var(--muted); }
+    .course-fact dd { margin:0; font-weight:700; }
+    .course-fact:first-child dd { padding:2px 7px; border:1px solid #9fc8ff; border-radius:4px; color:var(--blue); background:#f7fbff; }
     .start-button { min-width:130px; min-height:42px; display:inline-flex; align-items:center; justify-content:center; margin-top:22px; padding:0 22px; border:0; border-radius:5px; color:#fff; background:linear-gradient(135deg,#0878ff,#005ce9); box-shadow:0 7px 16px rgba(0,104,255,.2); font-size:13px; font-weight:700; cursor:pointer; transition:transform .18s ease,box-shadow .18s ease; }
     .start-button:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(0,104,255,.26); }
     .start-button:focus-visible { outline:3px solid rgba(0,104,255,.28); outline-offset:3px; }
@@ -90,6 +97,10 @@
       <div class="course-summary">
         <h1 id="courseTitle"></h1>
         <p class="description" id="courseDescription"></p>
+        <dl class="course-facts">
+          <div class="course-fact"><dt>学習段階</dt><dd id="courseLevel"></dd></div>
+          <div class="course-fact"><dt>前提知識</dt><dd id="coursePrerequisites"></dd></div>
+        </dl>
         <a class="start-button" id="startButton">学習を始める</a>
       </div>
     </section>

@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="AOMERA Academy クラウドと自動化技術の学習プラットフォーム">
+  <meta name="theme-color" content="#00142d">
   <link rel="icon" type="image/svg+xml" href="aomera-logo-mark-navy.svg" media="(prefers-color-scheme: light)">
   <link rel="icon" type="image/svg+xml" href="aomera-logo-mark-white.svg" media="(prefers-color-scheme: dark)">
   <link rel="icon" type="image/png" sizes="192x192" href="aomera-favicon-192x192.png">
@@ -15,11 +16,13 @@
   <style>
     :root { --ink:#071226; --line:#dfe5ed; --blue:#0068ff; }
     * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
+    html { scroll-behavior:smooth; scroll-padding-top:20px; }
     body { margin:0; color:var(--ink); background:#fff; font-family:"Zen Kaku Gothic New","Noto Sans JP",system-ui,-apple-system,sans-serif; font-synthesis:none; -webkit-font-smoothing:antialiased; }
     a { color:inherit; text-decoration:none; }
     img { display:block; max-width:100%; }
     .wrap { width:min(930px,calc(100% - 48px)); margin-inline:auto; }
+    .skip-link { position:fixed; top:8px; left:8px; z-index:100; padding:9px 13px; border-radius:5px; color:#fff; background:var(--blue); transform:translateY(-150%); transition:transform .2s; }
+    .skip-link:focus { transform:translateY(0); }
 
     header { height:60px; display:flex; align-items:center; background:#fff; }
     header .wrap { width:min(960px,calc(100% - 48px)); display:flex; align-items:center; justify-content:space-between; }
@@ -32,6 +35,7 @@
     .header-brand .brand-name span { color:#075fff; }
     nav { display:flex; gap:42px; font-size:13px; font-weight:700; }
     nav a:hover { color:var(--blue); }
+    a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline:3px solid rgba(0,104,255,.35); outline-offset:3px; }
 
     .hero { height:378px; overflow:hidden; color:white; background:linear-gradient(112deg,#00142d 0%,#00182f 60%,#00142b 100%); }
     .hero .wrap { height:100%; display:grid; grid-template-columns:46% 54%; align-items:center; position:relative; }
@@ -82,7 +86,6 @@
 
     .course-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:19px; }
     .course-card { height:177px; overflow:hidden; border:1px solid var(--line); border-radius:7px; background:#fff; }
-    .course-card:focus-visible,.course-apply-card:focus-visible,.btn:focus-visible { outline:3px solid rgba(0,104,255,.32); outline-offset:3px; }
     .course-cover { height:99px; display:grid; place-items:center; position:relative; overflow:hidden; }
     .cover-aws { background:#00142d url("assets/course-bg-aws.svg") center/100% 100% no-repeat; }
     .cover-tf { background:#f0edff url("assets/course-bg-terraform.svg") center/100% 100% no-repeat; }
@@ -136,14 +139,16 @@
     .form-field textarea { min-height:88px; resize:vertical; }
     .form-field input:focus,.form-field select:focus,.form-field textarea:focus { outline:2px solid rgba(0,104,255,.18); border-color:var(--blue); }
     .form-note { margin:14px 0 17px; color:#66758a; font-size:10.5px; line-height:1.65; }
+    .form-status { min-height:20px; margin:12px 0 0; color:#526176; font-size:11px; line-height:1.6; text-align:center; }
+    .form-status.is-success { color:#087a3b; }
+    .form-status.is-error { color:#c72f2f; }
     .resource-form .btn { width:100%; border:0; cursor:pointer; }
+    .resource-form .btn:disabled { cursor:wait; opacity:.65; }
 
-    .line-modal { position:fixed; inset:0; z-index:60; display:grid; padding:16px; place-items:center; pointer-events:none; visibility:hidden; }
-    .line-modal.is-open { pointer-events:auto; visibility:visible; }
-    .line-modal-backdrop { position:absolute; inset:0; border:0; background:rgba(15,23,42,.52); opacity:0; transition:opacity .18s ease; }
-    .line-modal.is-open .line-modal-backdrop { opacity:1; }
-    .line-modal-panel { width:min(100%,420px); max-height:calc(100dvh - 32px); display:grid; gap:16px; position:relative; overflow-y:auto; padding:22px 18px max(18px,env(safe-area-inset-bottom)); border-radius:16px; background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.28); opacity:0; transform:translateY(12px) scale(.98); transition:opacity .18s ease,transform .18s ease; }
-    .line-modal.is-open .line-modal-panel { opacity:1; transform:translateY(0) scale(1); }
+    body.modal-open { overflow:hidden; }
+    .line-modal { width:min(420px,calc(100% - 32px)); max-height:calc(100dvh - 32px); padding:0; overflow:visible; border:0; border-radius:16px; color:var(--ink); background:#fff; box-shadow:0 24px 70px rgba(15,23,42,.28); }
+    .line-modal::backdrop { background:rgba(15,23,42,.52); backdrop-filter:blur(3px); }
+    .line-modal-panel { display:grid; gap:16px; position:relative; max-height:calc(100dvh - 32px); overflow-y:auto; padding:22px 18px max(18px,env(safe-area-inset-bottom)); }
     .line-modal-close { width:36px; height:36px; display:grid; place-items:center; position:absolute; top:12px; right:12px; z-index:2; padding:0; border:1px solid var(--line); border-radius:50%; color:var(--ink); background:#fff; font:inherit; font-size:22px; line-height:1; cursor:pointer; }
     .line-modal-head { height:auto; display:block; padding-right:38px; background:transparent; }
     .line-modal-head span { display:inline-flex; margin-bottom:6px; color:#058f3d; font-size:12px; font-weight:800; }
@@ -189,7 +194,7 @@
       .header-brand .brand-name strong { font-size:13px; }
       .header-brand .brand-name span { font-size:12px; }
       nav { gap:12px; font-size:10px; }
-      nav a:first-child { display:none; }
+      nav .nav-external { display:none; }
       .hero { height:625px; }
       .hero .wrap { display:block; }
       .hero-copy { padding-top:45px; }
@@ -221,6 +226,8 @@
       .copyright { align-items:flex-start; flex-direction:column; gap:4px; padding-top:9px; }
     }
     @media (prefers-reduced-motion:reduce) {
+      html { scroll-behavior:auto; }
+      .skip-link { transition:none; }
       .tech-card,.course-card,.course-apply-card { transition:border-color .01ms,box-shadow .01ms; }
       .tech-card:hover,.course-card:hover,.course-apply-card:hover,
       .tech-card:active,.course-card:active,.course-apply-card:active { transform:none; }
@@ -228,79 +235,78 @@
     }
   </style>
 </head>
-<body>
+<body id="top">
+  <a class="skip-link" href="#main-content">メインコンテンツへ移動</a>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><symbol id="cloud" viewBox="0 0 64 64"><path d="M17 47h31a11 11 0 000-22 17 17 0 00-32-4A13 13 0 0017 47z" fill="none" stroke="#177cce" stroke-width="4" stroke-linecap="round"/></symbol></defs></svg>
-  <header><div class="wrap"><a class="header-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="../website/aomera-logo-mark-navy.png" alt="" width="192" height="192" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><nav aria-label="メインナビゲーション"><a href="#courses">すべてのコース</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ戻る&nbsp; ↗</a></nav></div></header>
+  <header><div class="wrap"><a class="header-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="aomera-logo-mark-navy.svg" alt="" width="40" height="40" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><nav aria-label="メインナビゲーション"><a href="#courses">すべてのコース</a><a class="nav-external" href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ戻る&nbsp; ↗</a></nav></div></header>
 
-  <section class="hero" id="top"><div class="wrap">
+  <section class="hero"><div class="wrap">
     <div class="hero-copy"><h1><span class="hero-title-first">クラウドと自動化技術を学び、</span><br>未来の競争力を構築する</h1><p><span class="hero-tech">AWS、Terraform、Docker、Kubernetes、Linux などの</span><br>実践的な技術を学び、即戦力となるエンジニアへ。</p><div class="hero-actions"><a class="btn btn-primary" href="#courses"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5.5A3.5 3.5 0 016.5 2H11v17H6.5A3.5 3.5 0 003 22zM21 5.5A3.5 3.5 0 0017.5 2H13v17h4.5A3.5 3.5 0 0121 22z"/></svg>すべてのコースを見る</a></div></div>
-    <div class="hero-art" role="img" aria-label="AOMERA Academy クラウド技術プラットフォーム"><img class="hero-art-source" src="assets/academy-hero-3d.png" alt="" draggable="false"></div>
+    <div class="hero-art" role="img" aria-label="AOMERA Academy クラウド技術プラットフォーム"><img class="hero-art-source" src="assets/academy-hero-3d.png" alt="" width="1024" height="1535" fetchpriority="high" decoding="async" draggable="false"></div>
   </div></section>
 
-  <main class="wrap">
+  <main class="wrap" id="main-content">
     <section class="section" id="directions"><div class="section-heading"><h2>人気の技術分野</h2></div><div class="tech-grid">
-      <article class="tech-card"><div class="icon"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"></div><h3>AWS クラウド</h3><p>AWS の基礎から実践まで、クラウドの活用を体系的に学びます。</p></article>
-      <article class="tech-card"><div class="icon"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"></div><h3>Terraform 基礎</h3><p>インフラをコードで管理する Terraform の基礎と実践的な使い方を学びます。</p></article>
-      <article class="tech-card"><div class="icon"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"></div><h3>Docker コンテナ</h3><p>コンテナの基本から実践まで、効率的な環境構築を習得します。</p></article>
-      <article class="tech-card"><div class="icon"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"></div><h3>Kubernetes 運用</h3><p>Kubernetes の構成・運用からスケーリングまで実践的に学びます。</p></article>
-      <article class="tech-card"><div class="icon"><img class="linux-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-original.svg" alt="Linux"></div><h3>Linux システム管理</h3><p>Linux の基礎からサーバー管理まで、実務で役立つスキルを習得します。</p></article>
+      <article class="tech-card"><div class="icon"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="" width="66" height="56" loading="lazy" decoding="async"></div><h3>AWS クラウド</h3><p>AWS の基礎から実践まで、クラウドの活用を体系的に学びます。</p></article>
+      <article class="tech-card"><div class="icon"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="" width="54" height="54" loading="lazy" decoding="async"></div><h3>Terraform 基礎</h3><p>インフラをコードで管理する Terraform の基礎と実践的な使い方を学びます。</p></article>
+      <article class="tech-card"><div class="icon"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="" width="70" height="55" loading="lazy" decoding="async"></div><h3>Docker コンテナ</h3><p>コンテナの基本から実践まで、効率的な環境構築を習得します。</p></article>
+      <article class="tech-card"><div class="icon"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="" width="61" height="61" loading="lazy" decoding="async"></div><h3>Kubernetes 運用</h3><p>Kubernetes の構成・運用からスケーリングまで実践的に学びます。</p></article>
+      <article class="tech-card"><div class="icon"><img class="linux-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/linux/linux-original.svg" alt="" width="54" height="54" loading="lazy" decoding="async"></div><h3>Linux システム管理</h3><p>Linux の基礎からサーバー管理まで、実務で役立つスキルを習得します。</p></article>
       <article class="tech-card"><div class="icon"><span class="ai-logo">AI</span></div><h3>AI・機械学習</h3><p>AI 基礎から応用まで、実践的な機械学習の知識を身につけます。</p></article>
     </div></section>
 
     <section class="section" id="courses"><div class="section-heading course-heading"><div class="section-title"><h2>おすすめコース</h2><span class="level-note">学習段階は必要な前提知識を基準にしています</span></div></div><div class="course-grid">
-      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="AWS"><span class="level">入門</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="Terraform"><span class="level">入門</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="Docker"><span class="level">入門</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="Kubernetes"><span class="level">基礎</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p></div></a>
-      <a class="course-card" href="course-detail.html?course=gpt"><div class="course-cover cover-gpt"><img class="gpt-cover" src="https://img.youtube.com/vi/kCc8FmEb1nY/maxresdefault.jpg" alt="Let's build GPT"><span class="level">実践</span></div><div class="course-body"><h3>AI</h3><p>Python と PyTorch を使い、Transformer ベースの GPT をゼロから構築します。</p></div></a>
-      <a class="course-apply-card" href="mailto:info@ooai-solutions.example.jp?subject=AOMERA%20Academy%20全コース資料の申し込み" data-open-resource data-interest="全コース資料" aria-haspopup="dialog" aria-controls="resourceDialog"><span class="course-apply-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg></span><h3>コース資料を申し込む</h3><p>全コースの内容や学習カリキュラムを無料でご案内します。</p><span class="course-apply-action">申し込みフォームへ <span aria-hidden="true">→</span></span></a>
+      <a class="course-card" href="course-detail.html?course=aws"><div class="course-cover cover-aws"><img class="aws-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" alt="" width="79" height="56" loading="lazy" decoding="async"><span class="level">入門</span></div><div class="course-body"><h3>AWS 入門</h3><p>AWS の主要サービスを使って、クラウドの基本を実践的に学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=terraform"><div class="course-cover cover-tf"><img class="tf-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/terraform/terraform-original.svg" alt="" width="66" height="66" loading="lazy" decoding="async"><span class="level">入門</span></div><div class="course-body"><h3>Terraform 入門</h3><p>インフラをコードで管理する Terraform の基本を学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=docker"><div class="course-cover cover-docker"><img class="docker-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/docker/docker-original.svg" alt="" width="66" height="66" loading="lazy" decoding="async"><span class="level">入門</span></div><div class="course-body"><h3>Docker 入門実践</h3><p>Docker の基本操作と実践的な環境構築を学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=kubernetes"><div class="course-cover cover-kube"><img class="kube-logo" src="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/kubernetes/kubernetes-original.svg" alt="" width="66" height="66" loading="lazy" decoding="async"><span class="level">基礎</span></div><div class="course-body"><h3>Kubernetes 基礎</h3><p>Kubernetes の基本概念と構築・運用のベストプラクティスを学びます。</p></div></a>
+      <a class="course-card" href="course-detail.html?course=gpt"><div class="course-cover cover-gpt"><img class="gpt-cover" src="https://img.youtube.com/vi/kCc8FmEb1nY/maxresdefault.jpg" alt="" width="1280" height="720" loading="lazy" decoding="async"><span class="level">実践</span></div><div class="course-body"><h3>GPT 構築実践</h3><p>Python と PyTorch を使い、Transformer ベースの GPT をゼロから構築します。</p></div></a>
+      <a class="course-apply-card" href="#resourceDialog" data-open-resource aria-haspopup="dialog" aria-controls="resourceDialog"><span class="course-apply-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h9l3 3v15H6z"/><path d="M15 3v4h4M9 11h6M9 15h6"/></svg></span><h3>コース資料を申し込む</h3><p>全コースの内容や学習カリキュラムを無料でご案内します。</p><span class="course-apply-action">申し込みフォームへ <span aria-hidden="true">→</span></span></a>
     </div></section>
 
-    <section class="cta"><img class="cta-preview" src="assets/cta-preview.png" alt="" aria-hidden="true" draggable="false"><div><h2>あなたに合った学習パスをご提案します</h2><p>学びたい分野や目標をLINEでお聞かせください。<br>おすすめのコースや学習の進め方を無料でご案内します。</p></div><a class="btn btn-line" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを相談</a></section>
+    <section class="cta"><img class="cta-preview" src="assets/cta-preview.png" alt="" width="957" height="113" loading="lazy" decoding="async" aria-hidden="true" draggable="false"><div><h2>あなたに合った学習パスをご提案します</h2><p>学びたい分野や目標をLINEでお聞かせください。<br>おすすめのコースや学習の進め方を無料でご案内します。</p></div><a class="btn btn-line" href="https://line.me/ti/p/TaAXjfK7Ni" data-open-line-modal aria-haspopup="dialog" aria-controls="lineContactModal">LINEで学習パスを相談</a></section>
   </main>
 
-  <div class="line-modal" id="lineContactModal" aria-hidden="true" inert>
-    <button class="line-modal-backdrop" type="button" data-close-line-modal aria-label="閉じる"></button>
-    <section class="line-modal-panel" role="dialog" aria-modal="true" aria-labelledby="lineContactTitle">
+  <dialog class="line-modal" id="lineContactModal" aria-labelledby="lineContactTitle">
+    <section class="line-modal-panel">
       <button class="line-modal-close" type="button" data-close-line-modal aria-label="閉じる">×</button>
       <header class="line-modal-head"><span>LINE CONTACT</span><h2 id="lineContactTitle">LINEで学習パスを無料相談</h2><p>下のボタン、QRコード、またはLINE IDから友だち追加できます。</p></header>
       <div class="line-qr-wrap">
         <img src="https://quickchart.io/qr?text=https%3A%2F%2Fline.me%2Fti%2Fp%2FTaAXjfK7Ni&amp;size=148&amp;margin=1" alt="LINE友だち追加用QRコード" width="148" height="148" loading="lazy" decoding="async">
-        <span class="line-qr-logo" aria-hidden="true"><img src="../website/aomera-logo-mark-navy.png" alt="" width="192" height="192" loading="lazy" decoding="async"></span>
+        <span class="line-qr-logo" aria-hidden="true"><img src="aomera-logo-mark-navy.svg" alt="" width="30" height="30" loading="lazy" decoding="async"></span>
       </div>
       <div class="line-id-row"><div><span>LINE ID</span><strong id="lineIdValue">jef4267</strong></div><button class="line-copy" type="button" data-copy-line-id>コピー</button></div>
       <div class="line-modal-actions"><a class="btn btn-line" href="https://line.me/ti/p/TaAXjfK7Ni" target="_blank" rel="noopener noreferrer">LINEで友だち追加</a></div>
     </section>
-  </div>
+  </dialog>
 
   <div class="line-toast" id="lineToast" role="status" aria-live="polite"></div>
 
   <dialog class="resource-dialog" id="resourceDialog" aria-labelledby="resourceDialogTitle">
     <div class="dialog-head"><p class="eyebrow">COURSE MATERIALS</p><h2 id="resourceDialogTitle">コース資料のお申し込み</h2><p>ご希望のコース内容と学習カリキュラムをご案内します。</p><button class="dialog-close" type="button" data-close-dialog aria-label="閉じる">×</button></div>
-    <form class="resource-form" id="resourceForm">
+    <form class="resource-form" id="resourceForm" data-google-script-url="https://script.google.com/macros/s/AKfycbz8l0MSxW3r1kAIPrA4X0-r6RSuVD1qYlp7GvCfXWPL4vVUlkkh0bup1vcSJgwgIgBL/exec">
       <div class="form-grid">
-        <div class="form-field"><label for="applicantName">お名前<span class="required">必須</span></label><input id="applicantName" name="name" autocomplete="name" required></div>
-        <div class="form-field"><label for="applicantEmail">メールアドレス<span class="required">必須</span></label><input id="applicantEmail" name="email" type="email" autocomplete="email" required></div>
-        <div class="form-field form-field-wide"><label for="resourceInterest">ご希望の資料<span class="required">必須</span></label><select id="resourceInterest" name="interest" required><option>全コース資料</option><option>AWS 入門</option><option>Terraform 入門</option><option>Docker 入門実践</option><option>Kubernetes 基礎</option><option>AI / GPT 実践</option></select></div>
-        <div class="form-field form-field-wide"><label for="learningPurpose">学習目的・ご要望<span>（任意）</span></label><textarea id="learningPurpose" name="purpose" placeholder="例：クラウドエンジニアへのキャリアチェンジを検討しています"></textarea></div>
+        <div class="form-field"><label for="applicantName">お名前<span class="required">必須</span></label><input id="applicantName" name="name" type="text" autocomplete="name" maxlength="100" required></div>
+        <div class="form-field"><label for="applicantEmail">メールアドレス<span class="required">必須</span></label><input id="applicantEmail" name="email" type="email" autocomplete="email" maxlength="254" required></div>
+        <div class="form-field form-field-wide"><label for="learningPurpose">学習目的・ご要望<span>（任意）</span></label><textarea id="learningPurpose" name="purpose" maxlength="1000" placeholder="例：クラウドエンジニアへのキャリアチェンジを検討しています"></textarea></div>
       </div>
-      <p class="form-note">送信ボタンを押すとメールソフトが開きます。内容をご確認のうえ送信してください。</p>
-      <button class="btn btn-primary" type="submit">メールで資料を申し込む</button>
+      <p class="form-note">入力内容は送信後、自動的に申込記録へ保存されます。</p>
+      <button class="btn btn-primary" type="submit">資料を申し込む</button>
+      <p class="form-status" id="resourceFormStatus" role="status" aria-live="polite"></p>
     </form>
   </dialog>
 
   <footer><div class="wrap"><div class="footer-grid">
-    <div class="footer-about"><a class="footer-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="../website/aomera-logo-mark-white.png" alt="" width="192" height="192" loading="lazy" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><p>クラウドと自動化技術を学ぶオンラインアカデミー。</p></div>
+    <div class="footer-about"><a class="footer-brand" href="#top" aria-label="AOMERA Academy ホーム"><span class="brand-mark" aria-hidden="true"><img src="aomera-logo-mark-white.svg" alt="" width="24" height="24" loading="lazy" decoding="async"></span><span class="brand-name"><strong>AOMERA</strong><span>Academy</span></span></a><p>クラウドと自動化技術を学ぶオンラインアカデミー。</p></div>
     <div class="footer-actions"><a href="../website/#contact">お問い合わせ</a><a href="https://aomera.co.jp/" target="_blank" rel="noopener noreferrer">AOMERA 公式サイトへ&nbsp; ↗</a></div>
   </div><div class="copyright"><span>© 2026 AOMERA Inc. All rights reserved.</span><span class="legal"><span>利用規約</span><span>プライバシーポリシー</span></span></div></div></footer>
   <script>
     (() => {
-      const dialog = document.getElementById("resourceDialog");
+      const resourceDialog = document.getElementById("resourceDialog");
       const form = document.getElementById("resourceForm");
-      const interest = document.getElementById("resourceInterest");
-      const recipient = "info@ooai-solutions.example.jp";
+      const submitButton = form.querySelector('button[type="submit"]');
+      const formStatus = document.getElementById("resourceFormStatus");
       const lineModal = document.getElementById("lineContactModal");
-      const lineModalClose = lineModal.querySelector(".line-modal-close");
       const lineId = document.getElementById("lineIdValue").textContent.trim();
       const lineToast = document.getElementById("lineToast");
       let lineModalTrigger = null;
@@ -313,29 +319,76 @@
         toastTimer = window.setTimeout(() => lineToast.classList.remove("is-visible"), 2400);
       };
 
-      const openLineModal = (trigger) => {
-        lineModalTrigger = trigger;
-        lineModal.inert = false;
-        lineModal.classList.add("is-open");
-        lineModal.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-        lineModalClose.focus();
-      };
+      const submitToGoogleDocument = (endpoint, payload) => new Promise((resolve, reject) => {
+        const requestId = window.crypto.randomUUID();
+        const frameName = `resource-submit-${requestId}`;
+        const frame = document.createElement("iframe");
+        const submissionForm = document.createElement("form");
+        let timeoutId = 0;
+
+        frame.name = frameName;
+        frame.hidden = true;
+        frame.setAttribute("aria-hidden", "true");
+        submissionForm.hidden = true;
+        submissionForm.method = "POST";
+        submissionForm.action = endpoint;
+        submissionForm.target = frameName;
+
+        Object.entries({ ...payload, requestId }).forEach(([name, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = value;
+          submissionForm.append(input);
+        });
+
+        const cleanup = () => {
+          window.clearTimeout(timeoutId);
+          window.removeEventListener("message", handleMessage);
+          submissionForm.remove();
+          frame.remove();
+        };
+
+        const handleMessage = (event) => {
+          let origin;
+          try {
+            origin = new URL(event.origin);
+          } catch {
+            return;
+          }
+          const isGoogleOrigin = origin.protocol === "https:" && (
+            origin.hostname === "script.google.com" ||
+            origin.hostname === "script.googleusercontent.com" ||
+            origin.hostname.endsWith(".googleusercontent.com")
+          );
+          if (!isGoogleOrigin || event.data?.type !== "aomera-resource-submission" || event.data?.requestId !== requestId) return;
+
+          const result = event.data;
+          cleanup();
+          if (result.ok) resolve();
+          else reject(new Error(result.error || "Google Sheets write failed."));
+        };
+
+        window.addEventListener("message", handleMessage);
+        document.body.append(frame, submissionForm);
+        timeoutId = window.setTimeout(() => {
+          cleanup();
+          reject(new Error("Google Sheets response timed out."));
+        }, 20000);
+        submissionForm.submit();
+      });
 
       const closeLineModal = () => {
-        if (!lineModal.classList.contains("is-open")) return;
-        lineModal.inert = true;
-        lineModal.classList.remove("is-open");
-        lineModal.setAttribute("aria-hidden", "true");
-        document.body.style.overflow = "";
-        if (lineModalTrigger?.isConnected) lineModalTrigger.focus();
-        lineModalTrigger = null;
+        if (lineModal.open) lineModal.close();
       };
 
       document.querySelectorAll("[data-open-line-modal]").forEach((trigger) => {
         trigger.addEventListener("click", (event) => {
+          if (typeof lineModal.showModal !== "function") return;
           event.preventDefault();
-          openLineModal(trigger);
+          lineModalTrigger = trigger;
+          lineModal.showModal();
+          document.body.classList.add("modal-open");
         });
       });
 
@@ -353,38 +406,64 @@
         }
       });
 
-      window.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && lineModal.classList.contains("is-open")) closeLineModal();
+      lineModal.addEventListener("close", () => {
+        document.body.classList.remove("modal-open");
+        if (lineModalTrigger?.isConnected) lineModalTrigger.focus();
+        lineModalTrigger = null;
       });
 
       document.querySelectorAll("[data-open-resource]").forEach((trigger) => {
         trigger.addEventListener("click", (event) => {
-          if (typeof dialog.showModal !== "function") return;
+          if (typeof resourceDialog.showModal !== "function") return;
           event.preventDefault();
-          interest.value = trigger.dataset.interest || "全コース資料";
-          dialog.showModal();
+          formStatus.textContent = "";
+          formStatus.className = "form-status";
+          resourceDialog.showModal();
+          document.body.classList.add("modal-open");
         });
       });
 
-      dialog.querySelector("[data-close-dialog]").addEventListener("click", () => dialog.close());
-      dialog.addEventListener("click", (event) => {
-        if (event.target === dialog) dialog.close();
+      resourceDialog.querySelector("[data-close-dialog]").addEventListener("click", () => resourceDialog.close());
+      resourceDialog.addEventListener("close", () => document.body.classList.remove("modal-open"));
+      resourceDialog.addEventListener("click", (event) => {
+        if (event.target === resourceDialog) resourceDialog.close();
       });
 
-      form.addEventListener("submit", (event) => {
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
+        const endpoint = form.dataset.googleScriptUrl;
+        if (!endpoint || endpoint === "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL") {
+          formStatus.textContent = "送信先が未設定です。サイト管理者へお問い合わせください。";
+          formStatus.className = "form-status is-error";
+          return;
+        }
+
         const data = new FormData(form);
-        const subject = `AOMERA Academy資料申し込み：${data.get("interest")}`;
-        const body = [
-          `お名前：${data.get("name")}`,
-          `メールアドレス：${data.get("email")}`,
-          `ご希望の資料：${data.get("interest")}`,
-          "",
-          "学習目的・ご要望：",
-          data.get("purpose") || "（未入力）"
-        ].join("\n");
-        window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        dialog.close();
+        const payload = {
+          name: data.get("name"),
+          email: data.get("email"),
+          purpose: data.get("purpose") || "（未入力）",
+          submittedAt: new Date().toISOString(),
+          source: window.location.href
+        };
+
+        submitButton.disabled = true;
+        submitButton.textContent = "送信中…";
+        formStatus.textContent = "";
+        formStatus.className = "form-status";
+
+        try {
+          await submitToGoogleDocument(endpoint, payload);
+          form.reset();
+          formStatus.textContent = "お申し込みを受け付けました。";
+          formStatus.className = "form-status is-success";
+        } catch {
+          formStatus.textContent = "送信できませんでした。時間をおいてもう一度お試しください。";
+          formStatus.className = "form-status is-error";
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "資料を申し込む";
+        }
       });
     })();
   </script>

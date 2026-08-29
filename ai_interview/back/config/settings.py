@@ -15,14 +15,14 @@ def env_bool(name: str, default: bool = False) -> bool:
 
 
 SECRET_KEY = os.environ.get(
-    "DJANGO_SECRET_KEY",
+    "AI_INTERVIEW_SECRET_KEY",
     "django-insecure-ai-interview-local-development-only",
 )
-DEBUG = env_bool("DJANGO_DEBUG", default=True)
+DEBUG = env_bool("AI_INTERVIEW_DEBUG", default=True)
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
-        "DJANGO_ALLOWED_HOSTS",
+        "AI_INTERVIEW_ALLOWED_HOSTS",
         "localhost,127.0.0.1,[::1]",
     ).split(",")
     if host.strip()
@@ -69,8 +69,16 @@ ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": os.environ.get("AI_INTERVIEW_DB_NAME", "ai_interview"),
+        "USER": os.environ.get("AI_INTERVIEW_DB_USER", "root"),
+        "PASSWORD": os.environ.get("AI_INTERVIEW_DB_PASSWORD", "123456"),
+        "HOST": os.environ.get("AI_INTERVIEW_DB_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("AI_INTERVIEW_DB_PORT", "3306"),
+        "OPTIONS": {
+            "charset": "utf8mb4",
+            "init_command": "SET time_zone = '+09:00'",
+        },
     }
 }
 

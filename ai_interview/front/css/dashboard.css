@@ -37,9 +37,11 @@ body::before {
 
 .app-shell { position: relative; z-index: 1; display: grid; grid-template-columns: 236px minmax(0, 1fr); min-height: 100svh; }
 .sidebar { position: sticky; z-index: 20; top: 0; display: flex; flex-direction: column; height: 100svh; border-right: 1px solid var(--line); background: rgba(3, 12, 22, .88); backdrop-filter: blur(20px); }
-.sidebar-brand { position: relative; height: 88px; padding: 27px 27px 0; border-bottom: 1px solid var(--line); }
-.sidebar-brand a { display: block; width: max-content; font: 12px var(--sans); letter-spacing: .34em; }
-.sidebar-brand > span { display: block; margin-top: 7px; color: #668096; font-size: 9px; letter-spacing: .18em; }
+.sidebar-brand { position: relative; display: flex; align-items: center; height: 88px; padding: 0 27px; border-bottom: 1px solid var(--line); }
+.sidebar-brand a { display: inline-flex; align-items: center; width: max-content; font: 9px var(--sans); letter-spacing: .18em; }
+.sidebar-brand img { display: block; width: 78px; height: auto; }
+.sidebar-brand-divider { width: 1px; height: 14px; margin: 0 14px; background: rgba(142, 164, 186, .34); }
+.sidebar-brand-product { color: #a8b8c8; white-space: nowrap; }
 .sidebar-close { display: none; }
 .main-nav { display: grid; gap: 5px; padding: 24px 14px; }
 .main-nav a, .sidebar-bottom > a { position: relative; display: flex; align-items: center; gap: 14px; min-height: 46px; padding: 0 14px; border: 1px solid transparent; border-radius: 8px; color: #758da2; font-size: 12px; transition: .2s ease; }

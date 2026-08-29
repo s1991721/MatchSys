@@ -30,6 +30,7 @@ services:
              gunicorn project.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
     depends_on:
       - db
+      - ollama
     networks:
       - matchsys-net
     environment:
@@ -38,6 +39,7 @@ services:
       DB_PASSWORD: bpmatch_user_AbCdEfG
       DB_HOST: db
       DB_PORT: 3306
+      OLLAMA_HOST: http://ollama:11434
     volumes:
       - web_upload:/app/upload
       - web_logs:/app/logs
@@ -84,8 +86,43 @@ services:
       - /srv/aomera/certbot/www:/var/www/certbot:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_NUM_THREADS: "8"
+      OLLAMA_NUM_PARALLEL: "4"
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - matchsys-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        ollama serve &
+
+        until ollama list > /dev/null 2>&1; do
+          sleep 1
+        done
+
+        ollama pull llama3.2:3b-instruct-q4_K_M
+
+        wait
+
 volumes:
   mysql_data:
+  ollama_data:
   web_upload:
   web_logs:
   ai_interview_media:

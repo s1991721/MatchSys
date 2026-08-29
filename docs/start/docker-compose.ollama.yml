@@ -49,8 +49,7 @@ services:
     container_name: matchsys-ai-interview
     restart: unless-stopped
     command: >
-      sh -c "python manage.py migrate --noinput &&
-             python manage.py collectstatic --noinput &&
+      sh -c "python manage.py collectstatic --noinput &&
              gunicorn config.wsgi:application --bind 0.0.0.0:8001 --workers 3 --timeout 120"
     depends_on:
       - db
@@ -64,7 +63,7 @@ services:
       AI_INTERVIEW_ALLOWED_HOSTS: aomera.co.jp,www.aomera.co.jp,ai_interview
       AI_INTERVIEW_DB_NAME: ai_interview
       AI_INTERVIEW_DB_USER: ai_interview_user
-      AI_INTERVIEW_DB_PASSWORD: ${AI_INTERVIEW_DB_PASSWORD:?AI_INTERVIEW_DB_PASSWORD is required}
+      AI_INTERVIEW_DB_PASSWORD: ai_interview_user_AbCdEfG
       AI_INTERVIEW_DB_HOST: db
       AI_INTERVIEW_DB_PORT: 3306
     volumes:

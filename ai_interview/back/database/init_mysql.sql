@@ -11,6 +11,17 @@ CREATE DATABASE IF NOT EXISTS `ai_interview`
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
 
+-- Keep the AI Interview service isolated from the MatchSys database user.
+-- CREATE USER and GRANT are idempotent so this bootstrap can also be applied
+-- manually to an existing MySQL data volume.
+CREATE USER IF NOT EXISTS 'ai_interview_user'@'%'
+    IDENTIFIED BY 'ai_interview_user_AbCdEfG';
+ALTER USER 'ai_interview_user'@'%'
+    IDENTIFIED BY 'ai_interview_user_AbCdEfG';
+
+GRANT ALL PRIVILEGES ON `ai_interview`.* TO 'ai_interview_user'@'%';
+FLUSH PRIVILEGES;
+
 USE `ai_interview`;
 
 -- Django server-side session storage.

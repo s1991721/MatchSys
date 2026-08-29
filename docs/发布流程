@@ -11,7 +11,7 @@ PROCESSOR
 
 ------------------------------------------------ mysql 镜像
 
-docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:3.1 --push .
+docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:3.3 --push .
 docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:3.1 .
 
 docker run --name matchsys-mysql-test \

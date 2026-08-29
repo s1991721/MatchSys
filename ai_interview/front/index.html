@@ -13,8 +13,14 @@
   </head>
   <body>
     <header class="site-header">
-      <a class="brand" href="#story" aria-label="AOMERA トップへ">AOMERA</a>
-      <span class="header-label">AI面接官</span>
+      <div class="header-product">
+        <a class="brand" href="#story" aria-label="AOMERA トップへ">AOMERA</a>
+        <span class="header-divider" aria-hidden="true"></span>
+        <span class="header-label">AI面接官</span>
+      </div>
+      <a class="header-login" href="login.html">
+        ログイン <span aria-hidden="true">→</span>
+      </a>
     </header>
 
     <nav class="step-nav" aria-label="ストーリーの各段階">
@@ -244,7 +250,15 @@
         <div class="cta-copy">
           <p>AIが見抜く。可能性を、確信に変える。</p>
           <h2>AOMERA</h2>
-          <a href="#story">今すぐ始める <span>→</span></a>
+          <div class="cta-actions">
+            <a class="cta-primary" href="login.html">
+              AI面接を始める <span aria-hidden="true">→</span>
+            </a>
+            <p class="cta-login">
+              すでにアカウントをお持ちの方は
+              <a href="login.html">ログイン</a>
+            </p>
+          </div>
         </div>
       </section>
 

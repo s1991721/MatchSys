@@ -54,13 +54,56 @@ a {
   font: 10px var(--sans);
   letter-spacing: 0.28em;
 }
+.header-product {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
 .brand {
   color: inherit;
   text-decoration: none;
   letter-spacing: 0.38em;
 }
+.header-divider {
+  width: 1px;
+  height: 14px;
+  margin: 0 18px;
+  background: rgba(142, 164, 186, 0.34);
+}
 .header-label {
   color: #a8b8c8;
+}
+.header-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  min-height: 38px;
+  padding: 0 17px;
+  border: 1px solid rgba(123, 195, 255, 0.34);
+  border-radius: 999px;
+  color: #d9e8f5;
+  background: rgba(5, 22, 39, 0.58);
+  box-shadow: inset 0 0 22px rgba(69, 145, 211, 0.04);
+  backdrop-filter: blur(10px);
+  text-decoration: none;
+  letter-spacing: 0.16em;
+  transition:
+    border-color 0.25s,
+    background 0.25s,
+    box-shadow 0.25s;
+}
+.header-login span {
+  color: var(--blue);
+  font-size: 13px;
+  letter-spacing: 0;
+}
+.header-login:hover,
+.header-login:focus-visible {
+  border-color: rgba(147, 208, 255, 0.82);
+  background: rgba(15, 48, 77, 0.78);
+  box-shadow: 0 0 22px rgba(77, 164, 244, 0.2);
+  outline: 0;
 }
 .story {
   height: 900vh;
@@ -1026,7 +1069,12 @@ a {
   letter-spacing: 0.38em;
   text-indent: 0.38em;
 }
-.cta-copy a {
+.cta-actions {
+  display: grid;
+  justify-items: center;
+  gap: 17px;
+}
+.cta-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1039,11 +1087,27 @@ a {
   background: rgba(7, 25, 44, 0.76);
   text-decoration: none;
 }
-.cta-copy a:hover,
-.cta-copy a:focus-visible {
+.cta-primary:hover,
+.cta-primary:focus-visible {
   border-color: #93d0ff;
   background: rgba(20, 58, 92, 0.82);
   box-shadow: 0 0 25px rgba(77, 164, 244, 0.25);
+  outline: 0;
+}
+.cta-copy .cta-login {
+  margin: 0;
+  color: #8195a9;
+  font: 11px var(--sans);
+  letter-spacing: 0.04em;
+}
+.cta-login a {
+  margin-left: 4px;
+  color: #b9d9f5;
+  text-underline-offset: 4px;
+}
+.cta-login a:hover,
+.cta-login a:focus-visible {
+  color: #e6f4ff;
   outline: 0;
 }
 .reduced-story {
@@ -1107,6 +1171,15 @@ a {
   }
   .site-header {
     height: 54px;
+    padding-inline: 18px;
+  }
+  .header-divider,
+  .header-label {
+    display: none;
+  }
+  .header-login {
+    min-height: 36px;
+    padding-inline: 14px;
   }
   .step-nav {
     display: none;

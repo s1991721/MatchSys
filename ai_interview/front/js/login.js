@@ -56,7 +56,6 @@
   const submitButton = document.querySelector("#submitBtn");
   const submitLabel = submitButton.querySelector(".submit-label");
   const loginError = document.querySelector("#loginError");
-  const loginEndpoint = "/ai_interview/api/login";
   let currentLanguage = "ja";
   let isSubmitting = false;
 
@@ -134,30 +133,22 @@
     updateSubmitState();
 
     try {
-      const response = await fetch(loginEndpoint, {
+      await window.AIInterview.requestJson("/login", {
         method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_name: userName.value.trim(),
           password: password.value,
         }),
       });
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok || !result?.success) {
-        const copy = translations[currentLanguage];
-        const errorCode = result?.error?.code;
-        if (errorCode === "invalid_credentials") setError(copy.invalidCredentials);
-        else if (response.status === 400) setError(copy.invalidRequest);
-        else setError(copy.loginFailed);
-        return;
-      }
 
       form.dispatchEvent(new CustomEvent("aomera:login-submit", { bubbles: true, detail: { userName: userName.value.trim() } }));
       window.location.href = "dashboard.html";
-    } catch (_error) {
-      setError(translations[currentLanguage].networkError);
+    } catch (error) {
+      const copy = translations[currentLanguage];
+      if (error.code === "invalid_credentials") setError(copy.invalidCredentials);
+      else if (error.status === 400) setError(copy.invalidRequest);
+      else if (error.isNetworkError) setError(copy.networkError);
+      else setError(copy.loginFailed);
     } finally {
       finishSubmitting();
     }

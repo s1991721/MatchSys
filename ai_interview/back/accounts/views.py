@@ -1,6 +1,5 @@
 import json
 
-from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -21,33 +20,16 @@ def login(request):
     """Authenticate a company account and start a Django session."""
 
     try:
-        payload = json.loads(request.body or b"{}")
-    except (json.JSONDecodeError, UnicodeDecodeError):
+        payload = json.loads(request.body)
+        username = payload.get("user_name", "").strip()
+        password = payload.get("password", "")
+    except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
         return error_response(
-            "请求内容不是有效的 JSON。",
-            code="invalid_json",
+            "请求参数错误。",
+            code="invalid_request",
             status=400,
         )
 
-    if not isinstance(payload, dict):
-        return error_response(
-            "请求内容必须是 JSON 对象。",
-            code="invalid_json",
-            status=400,
-        )
-
-    # The login page submits `user_name`; accepting `username` as an alias also
-    # keeps the API convenient for non-browser clients.
-    username = payload.get("user_name", payload.get("username", ""))
-    password = payload.get("password", "")
-    if not isinstance(username, str) or not isinstance(password, str):
-        return error_response(
-            "账号和密码必须是字符串。",
-            code="invalid_parameters",
-            status=400,
-        )
-
-    username = username.strip()
     if not username or not password:
         return error_response(
             "请输入账号和密码。",
@@ -56,11 +38,14 @@ def login(request):
         )
 
     account = (
-        UserAccount.objects.filter(username=username, deleted_at__isnull=True)
+        UserAccount.objects.filter(
+            username=username,
+            password=password,
+            deleted_at__isnull=True,
+        )
         .only(
             "id",
             "username",
-            "password",
             "display_name",
             "company_name",
             "company_code",
@@ -68,8 +53,7 @@ def login(request):
         .first()
     )
 
-    # Keep the failure response identical so callers cannot enumerate accounts.
-    if account is None or not check_password(password, account.password):
+    if account is None:
         return error_response(
             "账号或密码错误。",
             code="invalid_credentials",

@@ -35,10 +35,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "accounts",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -47,6 +49,25 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# PyCharm serves static files from a separate local port. Allow those local
+# origins in development while keeping production same-origin by default.
+_default_local_origins = (
+    "http://localhost:63342,http://127.0.0.1:63342" if DEBUG else ""
+)
+CORS_ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get(
+        "AI_INTERVIEW_CORS_ALLOWED_ORIGINS",
+        _default_local_origins,
+    ).split(",")
+    if origin.strip()
+]
+CORS_ALLOWED_ORIGIN_REGEXES = (
+    [r"^http://(?:localhost|127\.0\.0\.1)(?::\d+)?$"] if DEBUG else []
+)
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 ROOT_URLCONF = "config.urls"
 
@@ -107,13 +128,16 @@ USE_TZ = True
 # names and paths so signing in to either Django service does not overwrite the
 # other service's session or CSRF token.
 SESSION_COOKIE_NAME = "ai_interview_sessionid"
-SESSION_COOKIE_PATH = "/ai_interview/"
+SESSION_COOKIE_PATH = os.environ.get(
+    "AI_INTERVIEW_COOKIE_PATH",
+    "/" if DEBUG else "/ai_interview/",
+)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = "Lax"
 
 CSRF_COOKIE_NAME = "ai_interview_csrftoken"
-CSRF_COOKIE_PATH = "/ai_interview/"
+CSRF_COOKIE_PATH = SESSION_COOKIE_PATH
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SAMESITE = "Lax"
 

@@ -13,13 +13,28 @@ CREATE DATABASE IF NOT EXISTS `ai_interview`
 
 USE `ai_interview`;
 
+-- Django server-side session storage.
+-- This schema is initialized by SQL, so django_migrations is not required for
+-- the session table.
+CREATE TABLE IF NOT EXISTS django_session
+(
+    session_key  VARCHAR(40) NOT NULL PRIMARY KEY,
+    session_data LONGTEXT    NOT NULL,
+    expire_date  DATETIME(6) NOT NULL,
+
+    INDEX django_session_expire_date_a5c62663 (expire_date)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COMMENT = 'Django server-side sessions';
+
+
 -- One account represents one company in the first release.
 CREATE TABLE IF NOT EXISTS user_account
 (
     id             BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '账户ID',
 
     username       VARCHAR(100) NOT NULL COMMENT '登录账号',
-    password       VARCHAR(255) NOT NULL COMMENT '登录密码哈希',
+    password       VARCHAR(255) NOT NULL COMMENT '登录密码（现阶段明文）',
     display_name   VARCHAR(100) NOT NULL COMMENT '登录用户姓名',
 
     company_name   VARCHAR(200) NOT NULL COMMENT '公司名称',

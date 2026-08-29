@@ -2,7 +2,7 @@ import json
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_GET, require_POST
 
 from .models import UserAccount
 
@@ -12,6 +12,16 @@ def error_response(message: str, *, code: str, status: int) -> JsonResponse:
         {"success": False, "error": {"code": code, "message": message}},
         status=status,
     )
+
+
+def user_payload(account: UserAccount) -> dict:
+    return {
+        "id": account.id,
+        "user_name": account.username,
+        "display_name": account.display_name,
+        "company_name": account.company_name,
+        "company_code": account.company_code,
+    }
 
 
 @csrf_exempt
@@ -69,14 +79,48 @@ def login(request):
     return JsonResponse(
         {
             "success": True,
-            "data": {
-                "user": {
-                    "id": account.id,
-                    "user_name": account.username,
-                    "display_name": account.display_name,
-                    "company_name": account.company_name,
-                    "company_code": account.company_code,
-                }
-            },
+            "data": {"user": user_payload(account)},
+        }
+    )
+
+
+@require_GET
+def current_user(request):
+    """Return the account attached to the current Django session."""
+
+    account_id = request.session.get("user_account_id")
+    if not account_id:
+        return error_response(
+            "登录状态已失效，请重新登录。",
+            code="authentication_required",
+            status=401,
+        )
+
+    account = (
+        UserAccount.objects.filter(
+            id=account_id,
+            deleted_at__isnull=True,
+        )
+        .only(
+            "id",
+            "username",
+            "display_name",
+            "company_name",
+            "company_code",
+        )
+        .first()
+    )
+    if account is None:
+        request.session.flush()
+        return error_response(
+            "登录状态已失效，请重新登录。",
+            code="authentication_required",
+            status=401,
+        )
+
+    return JsonResponse(
+        {
+            "success": True,
+            "data": {"user": user_payload(account)},
         }
     )

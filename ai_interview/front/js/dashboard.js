@@ -13,8 +13,30 @@
   const profileButton = document.querySelector("#profileButton");
   const profileMenu = document.querySelector("#profileMenu");
   const toast = document.querySelector("#toast");
+  const companyMark = document.querySelector("#companyMark");
+  const companyName = document.querySelector("#companyName");
+  const userAvatar = document.querySelector("#userAvatar");
+  const displayName = document.querySelector("#displayName");
+  const greetingName = document.querySelector("#greetingName");
   let lang = localStorage.getItem("aomera-language") || "ja";
+  let currentUser = null;
   let toastTimer;
+
+  function firstCharacter(value, fallback = "—") {
+    const character = Array.from(String(value || "").trim())[0];
+    return character ? character.toLocaleUpperCase() : fallback;
+  }
+
+  function renderCurrentUser() {
+    if (!currentUser) return;
+    const name = currentUser.display_name || currentUser.user_name;
+    const workspace = currentUser.company_name || "—";
+    companyName.textContent = workspace;
+    companyMark.textContent = firstCharacter(workspace);
+    displayName.textContent = name;
+    userAvatar.textContent = firstCharacter(name);
+    greetingName.textContent = lang === "ja" ? `${name}さん。` : `${name}。`;
+  }
 
   function applyLanguage(next) {
     lang = copy[next] ? next : "ja";
@@ -31,6 +53,24 @@
       button.setAttribute("aria-pressed", String(active));
     });
     localStorage.setItem("aomera-language", lang);
+    renderCurrentUser();
+  }
+
+  async function loadCurrentUser() {
+    try {
+      const response = await window.AIInterview.requestJson("/me");
+      currentUser = response.data.user;
+      renderCurrentUser();
+    } catch (error) {
+      if (error.status === 401) {
+        window.location.replace(`login.html?lang=${encodeURIComponent(lang)}`);
+        return;
+      }
+      companyName.textContent = "—";
+      displayName.textContent = "—";
+      greetingName.textContent = "";
+      console.error("Failed to load the signed-in user.", error);
+    }
   }
 
   function closeSidebar() { sidebar.classList.remove("open"); scrim.classList.remove("open"); }
@@ -60,4 +100,5 @@
   const now = new Date();
   document.querySelector("#today").textContent = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
   applyLanguage(lang);
+  loadCurrentUser();
 })();

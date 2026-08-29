@@ -49,8 +49,8 @@
         <header class="topbar">
           <button class="menu-button" id="menuButton" type="button" aria-label="メニューを開く">☰</button>
           <div class="company-switcher">
-            <span class="company-mark">A</span>
-            <div><small data-copy="workspaceLabel">ワークスペース</small><strong>AOMERA株式会社</strong></div>
+            <span class="company-mark" id="companyMark">—</span>
+            <div><small data-copy="workspaceLabel">ワークスペース</small><strong id="companyName">読み込み中…</strong></div>
             <button type="button" aria-label="ワークスペースを切り替える">⌄</button>
           </div>
           <div class="top-actions">
@@ -60,8 +60,8 @@
             </div>
             <button class="notification-button" id="notificationButton" type="button" aria-label="通知"><span>♢</span><i></i></button>
             <button class="profile-button" id="profileButton" type="button" aria-expanded="false">
-              <span class="avatar">田</span>
-              <span class="profile-name"><strong data-copy="userName">田中 悠介</strong><small data-copy="userRole">採用担当者</small></span>
+              <span class="avatar" id="userAvatar">—</span>
+              <span class="profile-name"><strong id="displayName">読み込み中…</strong><small data-copy="userRole">採用担当者</small></span>
               <span>⌄</span>
             </button>
           </div>
@@ -75,7 +75,7 @@
           <section class="welcome" aria-labelledby="pageTitle">
             <div>
               <p class="eyebrow">INTERVIEW WORKSPACE <span>·</span> <time id="today">2026.08.29</time></p>
-              <h1 id="pageTitle"><span data-copy="greeting">おはようございます、</span><strong data-copy="greetingName">田中さん。</strong></h1>
+              <h1 id="pageTitle"><span data-copy="greeting">おはようございます、</span><strong id="greetingName"></strong></h1>
               <p data-copy="welcomeCopy">今日も、候補者の可能性を見つけましょう。</p>
             </div>
             <button class="primary-action" id="createPosition" type="button">
@@ -188,6 +188,7 @@
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="js/common.js"></script>
     <script src="js/dashboard.js"></script>
   </body>
 </html>

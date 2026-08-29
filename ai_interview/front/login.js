@@ -112,6 +112,7 @@
       submitLabel.textContent = translations[currentLanguage].submitLabel;
       updateSubmitState();
       form.dispatchEvent(new CustomEvent("aomera:login-submit", { bubbles: true, detail: { userName: userName.value.trim() } }));
+      window.location.href = "dashboard.html";
     }, 800);
   });
 

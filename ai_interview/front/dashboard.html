@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07111e" />
+    <meta name="description" content="AOMERA AI面接官の面接管理ワークスペース。" />
+    <title>AOMERA AI面接官 — ホーム</title>
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <a href="index.html" aria-label="AOMERA ホーム">AOMERA</a>
+          <span>AI面接官</span>
+          <button class="sidebar-close" id="sidebarClose" type="button" aria-label="メニューを閉じる">×</button>
+        </div>
+
+        <nav class="main-nav" aria-label="メインナビゲーション">
+          <a class="active" href="index.html" aria-current="page"><i>⌂</i><span data-copy="navHome">ホーム</span></a>
+          <a href="#positions"><i>▱</i><span data-copy="navPositions">職種管理</span><b>4</b></a>
+          <a href="#interviews"><i>◉</i><span data-copy="navInterviews">面接管理</span><b>6</b></a>
+          <a href="#candidates"><i>♙</i><span data-copy="navCandidates">候補者</span></a>
+          <a href="#reports"><i>▥</i><span data-copy="navReports">評価レポート</span><em>3</em></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <a href="#help"><i>?</i><span data-copy="navHelp">ヘルプ</span></a>
+          <a href="#settings"><i>⚙</i><span data-copy="navSettings">設定</span></a>
+          <div class="plan-card">
+            <div><span data-copy="planLabel">今月の面接枠</span><strong>24 / 50</strong></div>
+            <div class="plan-progress"><i></i></div>
+            <a href="#plan" data-copy="planLink">プランを確認</a>
+          </div>
+        </div>
+      </aside>
+
+      <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+      <main class="workspace">
+        <header class="topbar">
+          <button class="menu-button" id="menuButton" type="button" aria-label="メニューを開く">☰</button>
+          <div class="company-switcher">
+            <span class="company-mark">A</span>
+            <div><small data-copy="workspaceLabel">ワークスペース</small><strong>AOMERA株式会社</strong></div>
+            <button type="button" aria-label="ワークスペースを切り替える">⌄</button>
+          </div>
+          <div class="top-actions">
+            <div class="language-switch" role="group" aria-label="Language">
+              <button class="active" type="button" data-lang="ja" aria-pressed="true">日本語</button>
+              <button type="button" data-lang="zh-CN" aria-pressed="false">中文</button>
+            </div>
+            <button class="notification-button" id="notificationButton" type="button" aria-label="通知"><span>♢</span><i></i></button>
+            <button class="profile-button" id="profileButton" type="button" aria-expanded="false">
+              <span class="avatar">田</span>
+              <span class="profile-name"><strong data-copy="userName">田中 悠介</strong><small data-copy="userRole">採用担当者</small></span>
+              <span>⌄</span>
+            </button>
+          </div>
+          <div class="profile-menu" id="profileMenu">
+            <a href="#account" data-copy="accountSettings">アカウント設定</a>
+            <a href="login.html" data-copy="logout">ログアウト</a>
+          </div>
+        </header>
+
+        <div class="content">
+          <section class="welcome" aria-labelledby="pageTitle">
+            <div>
+              <p class="eyebrow">INTERVIEW WORKSPACE <span>·</span> <time id="today">2026.08.29</time></p>
+              <h1 id="pageTitle"><span data-copy="greeting">おはようございます、</span><strong data-copy="greetingName">田中さん。</strong></h1>
+              <p data-copy="welcomeCopy">今日も、候補者の可能性を見つけましょう。</p>
+            </div>
+            <button class="primary-action" id="createPosition" type="button">
+              <span>＋</span><span data-copy="createPosition">新しい職種を作成</span>
+            </button>
+          </section>
+
+          <section class="stat-grid" aria-label="面接状況">
+            <article class="stat-card attention">
+              <div class="stat-icon">✓</div>
+              <div><span data-copy="pendingReports">確認待ちレポート</span><strong>3<small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
+            </article>
+            <article class="stat-card">
+              <div class="stat-icon">◷</div>
+              <div><span data-copy="waitingCandidates">参加待ち</span><strong>2<small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note neutral" data-copy="thisWeek">今週の予定</span>
+            </article>
+            <article class="stat-card live">
+              <div class="stat-icon">●</div>
+              <div><span data-copy="inProgress">面接中</span><strong>1<small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note live-note" data-copy="nowRunning">現在進行中</span>
+            </article>
+            <article class="stat-card">
+              <div class="stat-icon">↗</div>
+              <div><span data-copy="monthCompleted">今月の完了</span><strong>24<small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note positive">+18% <span data-copy="lastMonth">先月比</span></span>
+            </article>
+          </section>
+
+          <section class="dashboard-grid">
+            <article class="panel action-panel" id="interviews">
+              <div class="panel-heading">
+                <div><p class="section-kicker">ACTION CENTER</p><h2 data-copy="needsAction">対応が必要です</h2></div>
+                <a href="#all-actions"><span data-copy="viewAll">すべて見る</span> →</a>
+              </div>
+              <div class="action-list">
+                <article class="action-row">
+                  <div class="candidate-avatar blue">山</div>
+                  <div class="candidate-info"><strong>山田 太郎</strong><span data-copy="positionPm">プロダクトマネージャー</span></div>
+                  <div class="action-status"><span class="status report"><i></i><span data-copy="statusReport">レポート確認待ち</span></span><time>12:42</time></div>
+                  <div class="score"><small>AI SCORE</small><strong>86</strong></div>
+                  <button class="row-action" type="button"><span data-copy="reviewReport">レポートを確認</span><i>→</i></button>
+                </article>
+                <article class="action-row">
+                  <div class="candidate-avatar purple">李</div>
+                  <div class="candidate-info"><strong>李 明</strong><span data-copy="positionBackend">バックエンドエンジニア</span></div>
+                  <div class="action-status"><span class="status waiting"><i></i><span data-copy="statusWaiting">参加待ち</span></span><time>2 days</time></div>
+                  <div class="score empty"><small data-copy="invited">招待済み</small><strong>—</strong></div>
+                  <button class="row-action secondary" type="button"><span data-copy="resend">再招待する</span><i>→</i></button>
+                </article>
+                <article class="action-row">
+                  <div class="candidate-avatar coral">佐</div>
+                  <div class="candidate-info"><strong>佐藤 美咲</strong><span data-copy="positionUx">UXデザイナー</span></div>
+                  <div class="action-status"><span class="status warning"><i></i><span data-copy="statusInterrupted">面接が中断</span></span><time>09:18</time></div>
+                  <div class="score empty"><small data-copy="progress">進捗</small><strong>62%</strong></div>
+                  <button class="row-action secondary" type="button"><span data-copy="viewDetails">詳細を見る</span><i>→</i></button>
+                </article>
+              </div>
+            </article>
+
+            <aside class="panel pulse-panel">
+              <div class="panel-heading compact"><div><p class="section-kicker">TODAY'S PULSE</p><h2 data-copy="todayStatus">本日の状況</h2></div><span class="live-pill"><i></i> LIVE</span></div>
+              <div class="pulse-visual">
+                <div class="pulse-ring"><div><strong>6</strong><span data-copy="interviewsUnit">面接</span></div></div>
+                <div class="pulse-legend">
+                  <span><i class="complete"></i><b data-copy="completed">完了</b><strong>3</strong></span>
+                  <span><i class="processing"></i><b data-copy="processing">進行中</b><strong>1</strong></span>
+                  <span><i class="scheduled"></i><b data-copy="scheduled">予定</b><strong>2</strong></span>
+                </div>
+              </div>
+              <div class="next-interview">
+                <p data-copy="nextInterview">次の面接</p>
+                <div><time>14:30</time><span><strong>鈴木 健</strong><small data-copy="positionSales">セールスマネージャー</small></span><button type="button">→</button></div>
+              </div>
+            </aside>
+          </section>
+
+          <section class="panel positions-panel" id="positions">
+            <div class="panel-heading">
+              <div><p class="section-kicker">ACTIVE POSITIONS</p><h2 data-copy="activePositions">募集中の職種</h2></div>
+              <a href="#all-positions"><span data-copy="positionManagement">職種管理へ</span> →</a>
+            </div>
+            <div class="position-list">
+              <article class="position-row">
+                <div class="position-icon">PM</div><div class="position-name"><strong data-copy="positionPm">プロダクトマネージャー</strong><span>Tokyo · Full-time</span></div>
+                <div class="position-metric"><span data-copy="candidates">候補者</span><strong>12</strong></div>
+                <div class="position-metric"><span data-copy="completed">完了</span><strong>8</strong></div>
+                <div class="position-progress"><div><span data-copy="completionRate">完了率</span><strong>67%</strong></div><span><i style="width:67%"></i></span></div>
+                <div class="position-score"><span data-copy="averageScore">平均スコア</span><strong>82</strong></div><button type="button" aria-label="プロダクトマネージャーの詳細">···</button>
+              </article>
+              <article class="position-row">
+                <div class="position-icon violet">BE</div><div class="position-name"><strong data-copy="positionBackend">バックエンドエンジニア</strong><span>Remote · Full-time</span></div>
+                <div class="position-metric"><span data-copy="candidates">候補者</span><strong>9</strong></div>
+                <div class="position-metric"><span data-copy="completed">完了</span><strong>5</strong></div>
+                <div class="position-progress"><div><span data-copy="completionRate">完了率</span><strong>56%</strong></div><span><i style="width:56%"></i></span></div>
+                <div class="position-score"><span data-copy="averageScore">平均スコア</span><strong>78</strong></div><button type="button" aria-label="バックエンドエンジニアの詳細">···</button>
+              </article>
+              <article class="position-row">
+                <div class="position-icon cyan">UX</div><div class="position-name"><strong data-copy="positionUx">UXデザイナー</strong><span>Tokyo · Contract</span></div>
+                <div class="position-metric"><span data-copy="candidates">候補者</span><strong>6</strong></div>
+                <div class="position-metric"><span data-copy="completed">完了</span><strong>4</strong></div>
+                <div class="position-progress"><div><span data-copy="completionRate">完了率</span><strong>67%</strong></div><span><i style="width:67%"></i></span></div>
+                <div class="position-score"><span data-copy="averageScore">平均スコア</span><strong>84</strong></div><button type="button" aria-label="UXデザイナーの詳細">···</button>
+              </article>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

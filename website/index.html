@@ -320,6 +320,10 @@
     .product-focus-copy > p { margin-top: 16px; color: var(--muted); }
     .product-lines { display: grid; gap: 10px; margin-top: 24px; }
     .product-line { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: center; padding: 12px 14px; border: 1px solid rgba(37, 99, 235, 0.14); border-radius: 14px; background: rgba(255, 255, 255, 0.72); }
+    .product-line-link { grid-template-columns: 40px 1fr auto; transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease; }
+    .product-line-link::after { content: "→"; color: var(--brand-dark); font-weight: 700; transition: transform 0.2s ease; }
+    .product-line-link:hover { transform: translateY(-2px); border-color: rgba(37, 99, 235, 0.35); box-shadow: 0 8px 18px rgba(37, 99, 235, 0.1); }
+    .product-line-link:hover::after { transform: translateX(3px); }
     .product-line-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 11px; color: var(--brand); background: var(--brand-soft); font-weight: 700; }
     .product-line strong { display: block; color: var(--navy); font-size: 14px; }
     .product-line span { color: var(--muted); font-size: 12px; }
@@ -605,6 +609,7 @@
       <nav class="site-nav" id="site-nav" aria-label="メインナビゲーション">
         <a href="#business">事業内容</a>
         <a href="#product-focus">自社プロダクト</a>
+        <a href="https://aomera.co.jp/ai_interview/index.html" target="_blank" rel="noopener noreferrer">AI面接官</a>
         <a class="academy-link" href="https://aomera.co.jp/academy/index.html" target="_blank" rel="noopener noreferrer">研修・Academy <span class="academy-new" aria-label="新着">NEW</span></a>
         <a href="#strengths">私たちの強み</a>
         <a href="#company">会社情報</a>
@@ -710,10 +715,11 @@
           <div class="product-focus-copy">
             <span class="eyebrow">In-house Products</span>
             <h2 id="product-focus-title">現場の知見を、<br />自社プロダクトへ。</h2>
-            <p>システム開発と導入支援で培った業務理解をもとに、営業と財務の情報をつなぐ自社プロダクトを開発しています。</p>
+            <p>システム開発と導入支援で培った業務理解をもとに、営業・財務・採用の課題を解決する自社プロダクトを開発しています。</p>
             <div class="product-lines">
               <div class="product-line"><span class="product-line-icon" aria-hidden="true">S</span><div><strong>営業管理システム</strong><span>案件・見積・受注・請求を一つの流れで管理</span></div></div>
               <div class="product-line"><span class="product-line-icon" aria-hidden="true">F</span><div><strong>財務管理システム</strong><span>入出金・予実・資金繰りをわかりやすく可視化</span></div></div>
+              <a class="product-line product-line-link" href="https://aomera.co.jp/ai_interview/index.html" target="_blank" rel="noopener noreferrer"><span class="product-line-icon" aria-hidden="true">AI</span><div><strong>AI面接官</strong><span>AIを活用し、面接の効率化と評価の標準化を支援</span></div></a>
             </div>
             <div class="product-focus-actions">
               <a class="button button-primary" href="#products">機能を見る <span aria-hidden="true">→</span></a>

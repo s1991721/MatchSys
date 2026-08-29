@@ -216,6 +216,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
   font: 10px var(--sans);
 }
 .password-toggle:hover, .password-toggle:focus-visible { color: #bddbf3; background: rgba(76, 144, 204, 0.09); outline: 0; }
+.login-error {
+  margin: -4px 2px -2px;
+  color: #ff9b9b;
+  font: 11px var(--sans);
+  line-height: 1.6;
+}
+.login-error[hidden] { display: none; }
 .login-submit {
   display: inline-flex;
   align-items: center;

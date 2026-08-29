@@ -17,6 +17,10 @@
       hidePasswordLabel: "パスワードを隠す",
       submitLabel: "ログインする",
       submittingLabel: "ログイン中…",
+      invalidCredentials: "アカウントまたはパスワードが正しくありません。",
+      invalidRequest: "入力内容を確認してください。",
+      loginFailed: "ログインに失敗しました。しばらくしてからもう一度お試しください。",
+      networkError: "サーバーに接続できませんでした。通信環境を確認してください。",
       backLink: "AI面接官の紹介に戻る",
     },
     "zh-CN": {
@@ -36,6 +40,10 @@
       hidePasswordLabel: "隐藏密码",
       submitLabel: "登录",
       submittingLabel: "登录中…",
+      invalidCredentials: "账号或密码错误。",
+      invalidRequest: "请检查输入内容。",
+      loginFailed: "登录失败，请稍后重试。",
+      networkError: "无法连接服务器，请检查网络连接。",
       backLink: "返回AI面试官介绍页",
     },
   };
@@ -47,6 +55,8 @@
   const passwordToggle = document.querySelector("#passwordToggle");
   const submitButton = document.querySelector("#submitBtn");
   const submitLabel = submitButton.querySelector(".submit-label");
+  const loginError = document.querySelector("#loginError");
+  const loginEndpoint = "/ai_interview/api/login";
   let currentLanguage = "ja";
   let isSubmitting = false;
 
@@ -90,30 +100,67 @@
     submitButton.disabled = isSubmitting || !userName.value.trim() || !password.value;
   }
 
+  function setError(message = "") {
+    loginError.textContent = message;
+    loginError.hidden = !message;
+  }
+
+  function finishSubmitting() {
+    isSubmitting = false;
+    form.removeAttribute("aria-busy");
+    submitButton.classList.remove("loading");
+    submitLabel.textContent = translations[currentLanguage].submitLabel;
+    updateSubmitState();
+  }
+
   languageButtons.forEach((button) => button.addEventListener("click", () => applyLanguage(button.dataset.lang)));
-  [userName, password].forEach((input) => input.addEventListener("input", updateSubmitState));
+  [userName, password].forEach((input) => input.addEventListener("input", () => {
+    setError();
+    updateSubmitState();
+  }));
   passwordToggle.addEventListener("click", () => {
     password.type = password.type === "password" ? "text" : "password";
     syncPasswordToggle();
     password.focus({ preventScroll: true });
   });
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (submitButton.disabled) return;
+    setError();
     isSubmitting = true;
     form.setAttribute("aria-busy", "true");
     submitButton.classList.add("loading");
     submitLabel.textContent = translations[currentLanguage].submittingLabel;
     updateSubmitState();
-    window.setTimeout(() => {
-      isSubmitting = false;
-      form.removeAttribute("aria-busy");
-      submitButton.classList.remove("loading");
-      submitLabel.textContent = translations[currentLanguage].submitLabel;
-      updateSubmitState();
+
+    try {
+      const response = await fetch(loginEndpoint, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_name: userName.value.trim(),
+          password: password.value,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || !result?.success) {
+        const copy = translations[currentLanguage];
+        const errorCode = result?.error?.code;
+        if (errorCode === "invalid_credentials") setError(copy.invalidCredentials);
+        else if (response.status === 400) setError(copy.invalidRequest);
+        else setError(copy.loginFailed);
+        return;
+      }
+
       form.dispatchEvent(new CustomEvent("aomera:login-submit", { bubbles: true, detail: { userName: userName.value.trim() } }));
       window.location.href = "dashboard.html";
-    }, 800);
+    } catch (_error) {
+      setError(translations[currentLanguage].networkError);
+    } finally {
+      finishSubmitting();
+    }
   });
 
   applyLanguage(initialLanguage());

@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -101,6 +102,24 @@ LANGUAGE_CODE = "ja"
 TIME_ZONE = "Asia/Tokyo"
 USE_I18N = True
 USE_TZ = True
+
+# MatchSys and AI Interview share one public domain. Use product-specific cookie
+# names and paths so signing in to either Django service does not overwrite the
+# other service's session or CSRF token.
+SESSION_COOKIE_NAME = "ai_interview_sessionid"
+SESSION_COOKIE_PATH = "/ai_interview/"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SAMESITE = "Lax"
+
+CSRF_COOKIE_NAME = "ai_interview_csrftoken"
+CSRF_COOKIE_PATH = "/ai_interview/"
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SAMESITE = "Lax"
+
+# Gunicorn receives HTTP from Nginx; trust the forwarded protocol for secure
+# request and cookie handling.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

@@ -21,10 +21,7 @@ SECRET_KEY = os.environ.get(
 DEBUG = env_bool("AI_INTERVIEW_DEBUG", default=True)
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.environ.get(
-        "AI_INTERVIEW_ALLOWED_HOSTS",
-        "localhost,127.0.0.1,[::1]",
-    ).split(",")
+    for host in os.environ.get("ALLOWED_HOSTS", "*").split(",")
     if host.strip()
 ]
 

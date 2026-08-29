@@ -1025,7 +1025,7 @@ a {
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: url("assets/08_final_cta.png") center/cover no-repeat;
+  background: url("../assets/images/08_final_cta.png") center/cover no-repeat;
   text-align: center;
 }
 .final-cta::before {

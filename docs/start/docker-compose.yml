@@ -69,7 +69,7 @@ services:
       - ai_interview_media:/app/media
 
   nginx:
-    image: jef4267/matchsys-nginx:3.2
+    image: jef4267/matchsys-nginx:3.3
     container_name: matchsys-nginx
     restart: unless-stopped
     depends_on:

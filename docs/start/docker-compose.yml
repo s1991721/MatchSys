@@ -43,7 +43,7 @@ services:
       - web_logs:/app/logs
 
   ai_interview:
-    image: jef4267/matchsys-ai-interview:1.0
+    image: jef4267/ai-interview:1.0
     container_name: matchsys-ai-interview
     restart: unless-stopped
     command: >

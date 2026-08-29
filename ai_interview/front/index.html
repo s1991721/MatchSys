@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#020814" />
+    <meta
+      name="description"
+      content="ポジション設計から候補者評価まで、採用面接を支援するAOMERA AI面接官。"
+    />
+    <title>AOMERA — AI面接官</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#story" aria-label="AOMERA トップへ">AOMERA</a>
+      <span class="header-label">AI面接官</span>
+    </header>
+
+    <nav class="step-nav" aria-label="ストーリーの各段階">
+      <button class="active" data-step="0">
+        <span>01</span><b>職種作成</b>
+      </button>
+      <button data-step="1"><span>02</span><b>質問生成</b></button>
+      <button data-step="2"><span>03</span><b>候補者参加</b></button>
+      <button data-step="3"><span>04</span><b>AI面接</b></button>
+      <button data-step="4"><span>05</span><b>深掘り</b></button>
+      <button data-step="5"><span>06</span><b>分析</b></button>
+      <button data-step="6"><span>07</span><b>評価</b></button>
+    </nav>
+
+    <main>
+      <section class="story" id="story" aria-label="AOMERA AI面接の流れ">
+        <div class="stage">
+          <div class="ambient" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i>
+          </div>
+
+          <div class="chapter-heading">
+            <span class="chapter-no">01 / 07</span>
+            <p class="chapter-kicker">INTERVIEW DESIGN</p>
+            <h1>AI面接官</h1>
+            <p class="chapter-copy">
+              ポジションを作成すると、AIが最適な面接を設計します。
+            </p>
+          </div>
+
+          <div class="layer position-layer">
+            <div class="job-state">
+              <div class="briefcase"><span></span></div>
+              <p>職種を作成中…</p>
+            </div>
+            <div class="glass job-form">
+              <div class="form-row">
+                <label>ポジション名</label>
+                <div class="field">プロダクトマネージャー</div>
+              </div>
+              <div class="form-row">
+                <label>仕事内容</label>
+                <div class="field multiline">
+                  プロダクトの戦略立案から要件定義、開発ディレクションまで<br />一貫してリードし、事業成長に貢献する。
+                </div>
+              </div>
+              <div class="form-row">
+                <label>スキル要件</label>
+                <div class="tags">
+                  <span>プロダクト戦略</span><span>要件定義</span
+                  ><span>データ分析</span><span>KPI設計</span
+                  ><span>ステークホルダー調整</span
+                  ><span>ユーザーリサーチ</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="layer generation-layer" aria-hidden="true">
+            <div class="skill-bank">
+              <p>抽出されたスキル</p>
+              <span>プロダクト戦略</span><span>要件定義</span
+              ><span>データ分析</span><span>KPI設計</span
+              ><span>ステークホルダー調整</span>
+            </div>
+            <div class="energy-lines"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="ai-core"><b>AI</b><span></span><span></span></div>
+            <div class="question-bank">
+              <p>生成された質問</p>
+              <article>
+                プロダクト戦略を立てる上で、最も重視するポイントは何ですか？
+              </article>
+              <article>
+                要件定義で難しさを感じた経験と、どのように乗り越えましたか？
+              </article>
+              <article>
+                データ分析を用いて意思決定した事例を教えてください。
+              </article>
+              <article>
+                意見が対立した際、どのように合意形成を図りましたか？
+              </article>
+            </div>
+            <div class="ready-state"><i></i> 面接の準備が完了しました</div>
+          </div>
+
+          <div class="candidate-stage" aria-label="山田太郎さんの面接映像">
+            <div class="candidate-media">
+              <img
+                src="assets/04_interview.png"
+                alt="面接に参加した候補者、山田太郎さん"
+              />
+            </div>
+            <div class="waiting-shade"></div>
+            <div class="waiting-state">
+              <div class="waiting-orbit"><i></i></div>
+              <p class="waiting-copy">候補者の参加を待っています…</p>
+              <p class="joined-copy">山田 太郎さんが参加しました</p>
+            </div>
+            <div class="video-name"><i></i> 山田 太郎</div>
+            <div class="call-controls">
+              <button aria-label="カメラを切り替える">▣</button
+              ><button class="hangup" aria-label="通話を終了する">⌁</button
+              ><button aria-label="マイクを切り替える">●</button>
+            </div>
+            <div class="timer">◷ <span>03:24</span></div>
+            <div class="waveform" aria-hidden="true"></div>
+          </div>
+
+          <div class="interview-ui layer" aria-hidden="true">
+            <article class="glass prompt-card initial-prompt">
+              <small>AI面接官</small>
+              <p>
+                これまでのご経験の中で、最も成果を出したプロジェクトについて教えてください。
+              </p>
+            </article>
+            <aside class="glass live-score">
+              <small>LIVE SCORE</small>
+              <div class="live-ring"><strong>82</strong></div>
+              <dl>
+                <div>
+                  <dt>コミュニケーション</dt>
+                  <dd>86</dd>
+                </div>
+                <div>
+                  <dt>論理的思考</dt>
+                  <dd>82</dd>
+                </div>
+                <div>
+                  <dt>課題解決力</dt>
+                  <dd>78</dd>
+                </div>
+                <div>
+                  <dt>協働性</dt>
+                  <dd>85</dd>
+                </div>
+              </dl>
+            </aside>
+          </div>
+
+          <div class="followup-ui layer" aria-hidden="true">
+            <div class="answer-skills">
+              <p>回答から抽出</p>
+              <span>課題発見力 <b>✓</b></span
+              ><span>ユーザー視点 <b>✓</b></span
+              ><span>データ活用 <b>✓</b></span
+              ><span>推進力 <b>✓</b></span>
+            </div>
+            <article class="glass followup-card">
+              <small>AIフォローアップ質問</small>
+              <p>
+                そのプロジェクトで、<br />最も困難だった意思決定について<br />もう少し詳しく教えてください。
+              </p>
+              <i>•••</i><b>➤</b>
+            </article>
+          </div>
+
+          <div class="analysis-ui layer" aria-hidden="true">
+            <p class="analysis-title">リアルタイム分析</p>
+            <div class="metrics">
+              <article style="--value: 86%">
+                <div><strong>86</strong></div>
+                <p>コミュニケーション</p>
+              </article>
+              <article style="--value: 82%">
+                <div><strong>82</strong></div>
+                <p>論理的思考</p>
+              </article>
+              <article style="--value: 78%">
+                <div><strong>78</strong></div>
+                <p>課題解決力</p>
+              </article>
+              <article style="--value: 85%">
+                <div><strong>85</strong></div>
+                <p>協働性</p>
+              </article>
+            </div>
+            <div class="radar" aria-label="能力評価レーダーチャート">
+              <div class="radar-grid"></div>
+              <div class="radar-shape"></div>
+              <span class="radar-top">論理的思考</span
+              ><span class="radar-right">協働性</span
+              ><span class="radar-bottom">課題解決力</span
+              ><span class="radar-left">コミュニケーション</span>
+            </div>
+          </div>
+
+          <div class="report-ui layer" aria-hidden="true">
+            <div class="glass report-card">
+              <div class="report-person">
+                <p class="report-label">候補者評価</p>
+                <div class="report-avatar">
+                  <img src="assets/04_interview.png" alt="山田太郎さん" />
+                </div>
+                <h2>山田 太郎</h2>
+                <p>プロダクトマネージャー</p>
+              </div>
+              <div class="report-summary">
+                <div class="final-score">
+                  <strong>84</strong><span>/100</span>
+                </div>
+                <div class="grade">総合評価：A</div>
+                <h3>強み</h3>
+                <ul>
+                  <li>戦略的思考と実行力が高い</li>
+                  <li>データに基づく意思決定ができる</li>
+                  <li>ステークホルダーを巻き込む力がある</li>
+                </ul>
+              </div>
+              <div class="report-action">
+                <h3>総合コメント</h3>
+                <p>
+                  プロダクトへの深い理解と、周囲を巻き込みながら成果を出す力が高く評価できます。
+                </p>
+                <h3>推奨アクション</h3>
+                <button>最終面接に進む</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="scroll-cue">SCROLL TO BEGIN<span></span></div>
+          <div class="story-progress" aria-hidden="true"><i></i></div>
+        </div>
+      </section>
+
+      <section class="final-cta" id="start">
+        <div class="stars" aria-hidden="true"></div>
+        <div class="cta-copy">
+          <p>AIが見抜く。可能性を、確信に変える。</p>
+          <h2>AOMERA</h2>
+          <a href="#story">今すぐ始める <span>→</span></a>
+        </div>
+      </section>
+
+      <section class="reduced-story" aria-label="AI面接の流れ">
+        <h2>AOMERA AI面接官</h2>
+        <ol>
+          <li>ポジションを作成</li>
+          <li>AIが面接質問を生成</li>
+          <li>候補者が面接に参加</li>
+          <li>回答を理解して深掘り</li>
+          <li>リアルタイム分析</li>
+          <li>候補者評価を生成</li>
+        </ol>
+      </section>
+    </main>
+
+    <script src="vendor/gsap.min.js"></script>
+    <script src="vendor/ScrollTrigger.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

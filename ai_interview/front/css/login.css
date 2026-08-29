@@ -113,7 +113,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   letter-spacing: 0.25em;
   text-decoration: none;
 }
-.login-brand strong { font-weight: 400; letter-spacing: 0.38em; }
+.login-brand img { display: block; width: 88px; height: auto; }
 .brand-divider { width: 1px; height: 14px; margin: 0 18px; background: rgba(142, 164, 186, 0.34); }
 .brand-product { color: #a8b8c8; }
 .language-switch {

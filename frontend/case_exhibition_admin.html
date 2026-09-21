@@ -551,6 +551,76 @@
         border-bottom: 1px solid var(--border);
       }
     }
+
+    /* Preserve all three work areas in the iPad landscape iframe. */
+    @media (min-width: 900px) and (max-width: 1366px) {
+      .exhibit-page {
+        padding: 6px;
+      }
+
+      .exhibit-shell {
+        grid-template-columns:
+          clamp(210px, 22vw, 260px)
+          minmax(0, 1fr)
+          clamp(220px, 23vw, 280px);
+        gap: 6px;
+      }
+
+      .display-panel {
+        display: flex;
+      }
+
+      .exhibit-editor-workspace {
+        grid-template-columns: minmax(180px, 36%) minmax(0, 1fr);
+      }
+
+      .exhibit-panel-head {
+        padding: 12px;
+      }
+
+      .exhibit-shell > .exhibit-panel:first-child .exhibit-panel-head,
+      .display-panel .exhibit-panel-head {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .exhibit-shell > .exhibit-panel:first-child .exhibit-filters {
+        justify-content: flex-end;
+      }
+
+      .display-panel .exhibit-head-actions {
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        gap: 6px;
+      }
+
+      .display-panel .exhibit-add-btn {
+        min-width: 82px;
+        padding-inline: 10px;
+      }
+
+      .source-panel {
+        padding: 12px 8px 12px 10px;
+      }
+
+      .exhibit-editor {
+        padding: 14px 10px;
+        gap: 10px;
+      }
+
+      .exhibit-field-row {
+        gap: 10px;
+      }
+
+      .exhibit-title-row {
+        grid-template-columns: minmax(0, 1fr) minmax(110px, 0.55fr);
+      }
+
+      .display-list-wrap {
+        padding: 10px;
+      }
+    }
   </style>
 </head>
 <body>

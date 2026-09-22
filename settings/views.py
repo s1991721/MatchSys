@@ -78,6 +78,7 @@ SECTION_DEFAULTS = {
         "channel_access_token": "",
         "channel_secret": "",
         "to_user_id": "",
+        "project_notify_group_id": "",
         "nationality": -1,
         "skills": [],
     },
@@ -493,6 +494,10 @@ def _handle_line_notify(settings_payload, login_id):
         normalized["channel_secret"] = str(settings_payload.get("channel_secret") or "").strip()
     if "to_user_id" in settings_payload:
         normalized["to_user_id"] = str(settings_payload.get("to_user_id") or "").strip()
+    if "project_notify_group_id" in settings_payload:
+        normalized["project_notify_group_id"] = str(
+            settings_payload.get("project_notify_group_id") or ""
+        ).strip()
     if "nationality" in settings_payload:
         normalized["nationality"] = _normalize_nationality(settings_payload.get("nationality"))
     else:
@@ -1042,10 +1047,14 @@ def sys_settings_line_notify_test_api(request):
         payload = {}
 
     channel_access_token = str(payload.get("channel_access_token") or "").strip() or None
-    to_user_id = str(payload.get("to_user_id") or "").strip() or None
+    target_id = str(
+        payload.get("project_notify_group_id")
+        or payload.get("to_user_id")
+        or ""
+    ).strip() or None
 
     try:
-        result = test_line_connection(channel_access_token, to_user_id)
+        result = test_line_connection(channel_access_token, target_id)
     except Exception as exc:
         return api_error(ErrorCode.SETTINGS_LINE_TEST_FAILED, str(exc))
 

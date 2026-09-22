@@ -12,6 +12,7 @@ LINE_SETTING_SECTION = "line-notify"
 LINE_SETTING_KEY_ACCESS_TOKEN = "channel_access_token"
 LINE_SETTING_KEY_TO_USER_ID = "to_user_id"
 LINE_SETTING_KEY_CHANNEL_SECRET = "channel_secret"
+LINE_SETTING_KEY_PROJECT_NOTIFY_GROUP_ID = "project_notify_group_id"
 
 # API 基础地址（一般无需修改）
 LINE_API_BASE_URL = "https://api.line.me"
@@ -89,6 +90,14 @@ def get_line_channel_access_token() -> str:
 def get_line_channel_secret() -> str:
     settings_payload = _get_line_settings_from_cache()
     return str(settings_payload.get(LINE_SETTING_KEY_CHANNEL_SECRET) or "").strip()
+
+
+def get_line_project_notify_group_id() -> str:
+    """获取项目邮件入库通知使用的 LINE 群组 ID。"""
+    settings_payload = _get_line_settings_from_cache()
+    return str(
+        settings_payload.get(LINE_SETTING_KEY_PROJECT_NOTIFY_GROUP_ID) or ""
+    ).strip()
 
 
 # 校验获取到的信息签名
@@ -178,6 +187,26 @@ def send_line_text(
     )
 
 
+def send_project_notify_group_text(text: str) -> Dict[str, Any]:
+    """向项目邮件入库通知专用群组发送一条 Push Message。"""
+    if not str(text or "").strip():
+        raise LineSendError("text is empty")
+
+    target_id = get_line_project_notify_group_id()
+    if not target_id:
+        raise LineSendError("Missing LINE project notification group id")
+
+    token = get_line_channel_access_token()
+    if not token:
+        raise LineSendError("Missing LINE channel access token")
+
+    return real_send_line_messages(
+        [{"type": "text", "text": str(text)}],
+        token,
+        target_id,
+    )
+
+
 # LINE回复信息
 def reply_line_messages(
         reply_token: str,
@@ -235,9 +264,9 @@ def reply_line_text(reply_token: str, text: str) -> Dict[str, Any]:
 
 
 # 测试链接
-def test_line_connection(channel_access_token: str, to_user_id: str):
+def test_line_connection(channel_access_token: str, target_id: str):
     messages = [{"type": "text", "text": str("LINE connection test")}]
-    return real_send_line_messages(messages, channel_access_token, to_user_id)
+    return real_send_line_messages(messages, channel_access_token, target_id)
 
 
 # 真送信

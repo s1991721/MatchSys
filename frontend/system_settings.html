@@ -328,6 +328,11 @@
               <label for="line-to-user-id" data-i18n="system_settings.line_notify.to_user_id">默认接收者 User ID</label>
               <input id="line-to-user-id" type="text" autocomplete="off" placeholder="请输入接收者 User ID" data-i18n-placeholder="system_settings.line_notify.to_user_id_placeholder" />
             </div>
+            <div class="form-field full">
+              <label for="line-project-notify-group-id" data-i18n="system_settings.line_notify.project_group_id">项目通知群组 Group ID</label>
+              <input id="line-project-notify-group-id" type="text" autocomplete="off" placeholder="请输入项目通知群组 Group ID" data-i18n-placeholder="system_settings.line_notify.project_group_id_placeholder" />
+              <div class="hint" data-i18n="system_settings.line_notify.project_group_help">案件入库时仅发送一条提醒；群成员可 @Bot 并发送“查看案件”获取最近一次任务的案件详情。</div>
+            </div>
 
             <div class="form-field full">
               <div class="hint" data-i18n="system_settings.line_notify.conditions_desc">推送条件：可按国籍与技能填写筛选条件。</div>
@@ -1699,6 +1704,7 @@
         channel_access_token: getValue("line-channel-access-token").trim(),
         channel_secret: getValue("line-channel-secret").trim(),
         to_user_id: getValue("line-to-user-id").trim(),
+        project_notify_group_id: getValue("line-project-notify-group-id").trim(),
         nationality,
         skills: getValue("line-condition-skill").trim(),
       };
@@ -2170,8 +2176,8 @@
     if (lineNotifySaveButton) {
       lineNotifySaveButton.addEventListener("click", async () => {
         const settings = collectLineNotifySettings();
-        if (!settings.channel_access_token || !settings.to_user_id) {
-          setInlineStatus("line-notify-status", t("system_settings.line_notify.error_missing", "请填写 Token 和 User ID。"), false);
+        if (!settings.channel_access_token || !settings.project_notify_group_id) {
+          setInlineStatus("line-notify-status", t("system_settings.line_notify.error_missing_project_group", "请填写 Token 和项目通知群组 Group ID。"), false);
           return;
         }
         try {
@@ -2188,8 +2194,8 @@
     if (lineNotifyTestButton) {
       lineNotifyTestButton.addEventListener("click", async () => {
         const settings = collectLineNotifySettings();
-        if (!settings.channel_access_token || !settings.to_user_id) {
-          setInlineStatus("line-notify-status", t("system_settings.line_notify.error_missing", "请填写 Token 和 User ID。"), false);
+        if (!settings.channel_access_token || !settings.project_notify_group_id) {
+          setInlineStatus("line-notify-status", t("system_settings.line_notify.error_missing_project_group", "请填写 Token 和项目通知群组 Group ID。"), false);
           return;
         }
         try {
@@ -2723,6 +2729,10 @@
       setValue("line-channel-access-token", lineNotifySettings.channel_access_token || "");
       setValue("line-channel-secret", lineNotifySettings.channel_secret || "");
       setValue("line-to-user-id", lineNotifySettings.to_user_id || "");
+      setValue(
+        "line-project-notify-group-id",
+        lineNotifySettings.project_notify_group_id || ""
+      );
       setInlineStatus("line-notify-status", "", false);
     };
 

@@ -1726,7 +1726,7 @@
 
   const loadCasesFromCsv = async () => {
     try {
-      const response = await fetch("case_exhibits.csv");
+      const response = await fetch("case_exhibits.csv", {cache: "no-cache"});
       if (!response.ok) return;
       const items = parseCsvText(await response.text())
         .map(mapCsvRowToCase)

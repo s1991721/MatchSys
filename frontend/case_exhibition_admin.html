@@ -64,7 +64,8 @@
       color: #0f5fd7;
     }
 
-    .exhibit-add-btn {
+    .exhibit-add-btn,
+    .exhibit-refresh-btn {
       min-width: 92px;
       height: 32px;
       border-radius: 8px;
@@ -72,12 +73,52 @@
       font-weight: 800;
     }
 
-    .exhibit-head-actions {
+    .display-panel-head {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .display-panel-title-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .display-publish-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 32px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .display-publish-row .exhibit-refresh-btn {
+      grid-column: 1;
+    }
+
+    .exhibit-cache-message {
+      grid-column: 2;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .display-publish-row .exhibit-page-link {
+      grid-column: 3;
+      justify-self: end;
+    }
+
+    .exhibit-cache-message.is-error {
+      color: #b42318;
+    }
+
+    .exhibit-cache-message.is-success {
+      color: #166534;
     }
 
     .exhibit-filters {
@@ -606,15 +647,14 @@
         justify-content: flex-end;
       }
 
-      .display-panel .exhibit-head-actions {
-        justify-content: space-between;
-        flex-wrap: nowrap;
-        gap: 6px;
-      }
-
-      .display-panel .exhibit-add-btn {
+      .display-panel .exhibit-add-btn,
+      .display-panel .exhibit-refresh-btn {
         min-width: 82px;
         padding-inline: 10px;
+      }
+
+      .display-panel .exhibit-cache-message {
+        display: none;
       }
 
       .source-panel {
@@ -741,10 +781,14 @@
       </section>
 
       <section class="c-card exhibit-panel display-panel">
-        <div class="exhibit-panel-head">
-          <h2>展示列表数据</h2>
-          <div class="exhibit-head-actions">
+        <div class="exhibit-panel-head display-panel-head">
+          <div class="display-panel-title-row">
+            <h2>展示列表数据</h2>
             <button class="c-btn c-btn-ghost exhibit-add-btn" type="button" id="addManualDisplayBtn">+ 手动添加</button>
+          </div>
+          <div class="display-publish-row">
+            <button class="c-btn c-btn-ghost exhibit-refresh-btn" type="button" id="refreshExhibitCacheBtn">刷新展示缓存</button>
+            <span class="exhibit-cache-message" id="exhibitCacheMessage" role="status" aria-live="polite"></span>
             <a class="exhibit-page-link" href="case_exhibit.html" target="_blank" rel="noopener noreferrer" id="openExhibitPageLink">打开展示页</a>
           </div>
         </div>
@@ -779,6 +823,8 @@
     const casePageSummary = document.getElementById("casePageSummary");
     const displayList = document.getElementById("displayList");
     const addManualDisplayBtn = document.getElementById("addManualDisplayBtn");
+    const refreshExhibitCacheBtn = document.getElementById("refreshExhibitCacheBtn");
+    const exhibitCacheMessage = document.getElementById("exhibitCacheMessage");
     const openExhibitPageLink = document.getElementById("openExhibitPageLink");
     const editorForm = document.getElementById("editorForm");
     const sourceTitle = document.getElementById("sourceTitle");
@@ -932,6 +978,30 @@
       }, {
         fallbackMessage: "展示 CSV 删除失败"
       });
+    };
+
+    const setExhibitCacheMessage = (message = "", type = "") => {
+      exhibitCacheMessage.textContent = message;
+      exhibitCacheMessage.classList.toggle("is-error", type === "error");
+      exhibitCacheMessage.classList.toggle("is-success", type === "success");
+    };
+
+    const refreshExhibitCache = async () => {
+      const url = new URL("case_exhibits.csv", window.location.href);
+      url.searchParams.set("refresh", Date.now().toString());
+      const response = await fetch(url, {
+        method: "GET",
+        cache: "no-store",
+        credentials: "same-origin"
+      });
+      await response.text();
+      if (!response.ok) {
+        throw new Error(`展示缓存刷新失败（HTTP ${response.status}）`);
+      }
+      const cacheStatus = response.headers.get("X-Cache-Status");
+      if (cacheStatus && cacheStatus !== "BYPASS") {
+        throw new Error(`缓存未被绕过（${cacheStatus}）`);
+      }
     };
 
     const setEditorMessage = (message = "", type = "") => {
@@ -1522,6 +1592,25 @@
       readForm();
       syncActiveCase();
       createManualCase();
+    });
+
+    refreshExhibitCacheBtn.addEventListener("click", async () => {
+      const originalText = refreshExhibitCacheBtn.textContent;
+      refreshExhibitCacheBtn.disabled = true;
+      refreshExhibitCacheBtn.textContent = "刷新中...";
+      setExhibitCacheMessage("");
+      try {
+        await refreshExhibitCache();
+        refreshExhibitCacheBtn.textContent = "刷新成功";
+        setExhibitCacheMessage("展示缓存已更新。", "success");
+      } catch (err) {
+        refreshExhibitCacheBtn.textContent = "刷新失败";
+        setExhibitCacheMessage(err.message || "展示缓存刷新失败", "error");
+      }
+      window.setTimeout(() => {
+        refreshExhibitCacheBtn.textContent = originalText;
+        refreshExhibitCacheBtn.disabled = false;
+      }, 1500);
     });
 
     const handleEditorChange = (event) => {

@@ -471,6 +471,12 @@
       user-select: none;
     }
 
+    .display-card-content {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
     .display-card h4 {
       margin: 0;
       color: var(--text);
@@ -480,6 +486,17 @@
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+
+    .display-card-updated-at {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .display-card-updated-at.is-stale {
+      color: #dc2626;
+      font-weight: 700;
     }
 
     .display-card-remove {
@@ -745,6 +762,7 @@
 
     let activeCase = null;
     const CASE_PAGE_SIZE = 10;
+    const DISPLAY_STALE_AFTER_DAYS = 7;
     const filters = {
       range: "today"
     };
@@ -1007,6 +1025,25 @@
       return `${y}.${m}.${d}`;
     };
 
+    const parseUpdatedAtDate = (value) => {
+      const match = String(value || "").trim().match(/^(\d{4})[.-](\d{2})[.-](\d{2})(?:$|[T\s])/);
+      if (!match) return null;
+      const [year, month, day] = match.slice(1).map(Number);
+      const date = new Date(year, month - 1, day);
+      return date.getFullYear() === year
+        && date.getMonth() === month - 1
+        && date.getDate() === day
+        ? date
+        : null;
+    };
+
+    const getStaleUpdatedAtCutoff = () => {
+      const cutoff = new Date();
+      cutoff.setHours(0, 0, 0, 0);
+      cutoff.setDate(cutoff.getDate() - DISPLAY_STALE_AFTER_DAYS);
+      return cutoff;
+    };
+
     const formatDateParam = (date) => {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -1137,19 +1174,29 @@
       };
     };
 
-    const renderDisplayCard = (item) => {
+    const renderDisplayUpdatedAt = (value, staleCutoff) => {
+      if (!value) return "";
+      const date = parseUpdatedAtDate(value);
+      const staleClass = date && date < staleCutoff ? " is-stale" : "";
+      return `<span class="display-card-updated-at${staleClass}">更新日 ${escapeHtml(value)}</span>`;
+    };
+
+    const renderDisplayCard = (item, staleCutoff) => {
       const displayKey = ensureDisplayKey(item);
       const activeDisplayKey = activeCase ? ensureDisplayKey(activeCase) : "";
       return `
       <article class="display-card ${displayKey && displayKey === activeDisplayKey ? "is-active" : ""}" draggable="true" data-display-key="${escapeHtml(displayKey)}" data-display-type="${escapeHtml(item.type || "")}" role="button" tabindex="0" aria-label="编辑${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">
         <span class="display-card-drag" aria-hidden="true">⋮⋮</span>
-        <h4>${escapeHtml(item.title || item.sourceTitle || "未命名案件")}</h4>
+        <div class="display-card-content">
+          <h4>${escapeHtml(item.title || item.sourceTitle || "未命名案件")}</h4>
+          ${renderDisplayUpdatedAt(item.updatedAt, staleCutoff)}
+        </div>
         <button class="display-card-remove" type="button" data-remove-display="${escapeHtml(displayKey)}" aria-label="删除${escapeHtml(item.title || item.sourceTitle || "未命名案件")}">删除</button>
       </article>
     `;
     };
 
-    const renderDisplayGroup = (type, title) => {
+    const renderDisplayGroup = (type, title, staleCutoff) => {
       const items = displayCases.filter((item) => item.type === type);
       return `
         <section class="display-group">
@@ -1157,16 +1204,17 @@
             <h3>${escapeHtml(title)}</h3>
             <span>${items.length} 件</span>
           </div>
-          ${items.length ? items.map((item) => renderDisplayCard(item)).join("") : '<div class="display-empty">暂无展示数据</div>'}
+          ${items.length ? items.map((item) => renderDisplayCard(item, staleCutoff)).join("") : '<div class="display-empty">暂无展示数据</div>'}
         </section>
       `;
     };
 
     const renderDisplayList = () => {
+      const staleCutoff = getStaleUpdatedAtCutoff();
       displayList.innerHTML = [
-        renderDisplayGroup("priority", "重点推荐案件"),
-        renderDisplayGroup("focus", "注力案件"),
-        renderDisplayGroup("summary", "简易展示列表")
+        renderDisplayGroup("priority", "重点推荐案件", staleCutoff),
+        renderDisplayGroup("focus", "注力案件", staleCutoff),
+        renderDisplayGroup("summary", "简易展示列表", staleCutoff)
       ].join("");
     };
 

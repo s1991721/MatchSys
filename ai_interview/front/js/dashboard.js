@@ -54,6 +54,7 @@
     });
     localStorage.setItem("aomera-language", lang);
     renderCurrentUser();
+    window.dispatchEvent(new CustomEvent("aomera-language-change", { detail: lang }));
   }
 
   async function loadCurrentUser() {
@@ -61,6 +62,7 @@
       const response = await window.AIInterview.requestJson("/me");
       currentUser = response.data.user;
       renderCurrentUser();
+      window.dispatchEvent(new CustomEvent("aomera-user-ready", { detail: currentUser }));
     } catch (error) {
       if (error.status === 401) {
         window.location.replace(`login.html?lang=${encodeURIComponent(lang)}`);
@@ -95,7 +97,7 @@
     }
   });
   document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => applyLanguage(button.dataset.lang)));
-  document.querySelectorAll(".row-action, #createPosition, #notificationButton, .next-interview button, .position-row > button").forEach((button) => button.addEventListener("click", showToast));
+  document.querySelectorAll(".row-action, #notificationButton, .next-interview button, .position-row > button").forEach((button) => button.addEventListener("click", showToast));
 
   const now = new Date();
   document.querySelector("#today").textContent = `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;

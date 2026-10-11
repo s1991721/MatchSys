@@ -70,77 +70,13 @@
           </div>
         </header>
 
-        <div class="content">
-          <div id="homeView">
-          <section class="welcome" aria-labelledby="pageTitle">
-            <div>
-              <p class="eyebrow">INTERVIEW WORKSPACE <span>·</span> <time id="today">2026.08.29</time></p>
-              <h1 id="pageTitle"><span data-copy="greeting">おはようございます、</span><strong id="greetingName"></strong></h1>
-              <p data-copy="welcomeCopy">今日も、候補者の可能性を見つけましょう。</p>
-            </div>
-            <button class="primary-action" id="createInterview" type="button">
-              <span>＋</span><span data-ui="create">面接を作成</span>
-            </button>
-          </section>
-
-          <p class="sample-label" data-ui="sampleData">一覧にはサンプルデータが含まれます。作成した招待プレビューはこのブラウザに保存されます。</p>
-          <section class="stat-grid" aria-label="面接状況">
-            <button type="button" data-filter="reports" aria-pressed="true" aria-controls="filteredInterviews" class="stat-card attention">
-              <div class="stat-icon">✓</div>
-              <div><span data-copy="pendingReports">未確認レポート</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
-              <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
-            </button>
-            <button type="button" data-filter="abnormal" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card warning">
-              <div class="stat-icon">!</div>
-              <div><span data-copy="abnormalInterviews">面接の異常</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
-              <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
-            </button>
-            <button type="button" data-filter="waiting" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card ">
-              <div class="stat-icon">◷</div>
-              <div><span data-copy="waitingCandidates">参加待ち</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
-            </button>
-            <button type="button" data-filter="today" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card">
-              <div class="stat-icon">▦</div>
-              <div><span data-copy="todayInterviews">本日の面接</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
-              <span class="stat-note neutral" data-copy="startedToday">本日開始</span>
-            </button>
-          </section>
-          <section class="panel action-panel" id="interviews" aria-labelledby="actionsTitle">
-            <div class="panel-heading"><div><p class="section-kicker">INTERVIEWS</p><h2 id="actionsTitle">未確認レポート</h2></div><span class="panel-note" id="filterNote"></span></div>
-            <div class="action-list" id="filteredInterviews" aria-live="polite"></div>
-          </section>
-          </div>
-          <section id="createView" hidden aria-labelledby="createTitle">
-            <button type="button" class="back-action" id="backHome" data-ui="back">← ホームに戻る</button>
-            <div class="creation-heading"><p class="eyebrow">CREATE INTERVIEW</p><h1 id="createTitle" tabindex="-1" data-ui="create">面接を作成</h1><p data-ui="intro">職種要件と評価目標を入力して、専用の面接リンクを作成します。</p></div>
-            <div class="creation-layout">
-              <form id="interviewForm" novalidate>
-                <fieldset class="panel form-section"><legend><span>1</span><b data-ui="positionInfo">職種情報</b></legend>
-                  <label><span data-ui="positionName">職種名 *</span><input name="position" maxlength="200" required data-placeholder-ui="positionPlaceholder" /></label>
-                  <label><span data-ui="work">業務内容 *</span><textarea name="work" rows="3" maxlength="5000" required data-placeholder-ui="workPlaceholder"></textarea></label>
-                  <label><span data-ui="experience">経験要件</span><input name="experience" maxlength="500" data-placeholder-ui="experiencePlaceholder" /></label>
-                </fieldset>
-                <fieldset class="panel form-section"><legend><span>2</span><b data-ui="skills">職種に必要なスキル</b></legend><div id="skillRows" class="dynamic-rows"></div><button class="outline-action" type="button" id="addSkill" data-ui="addSkill">＋ スキルを追加</button></fieldset>
-                <fieldset class="panel form-section"><legend><span>3</span><b data-ui="targets">評価目標</b></legend><p class="field-help" data-ui="targetsHelp">AIの質問内容と評価レポートの採点項目を設定します。</p><div id="targetRows" class="dynamic-rows"></div><div class="weight-footer"><button class="outline-action" type="button" id="addTarget" data-ui="addTarget">＋ 評価目標を追加</button><span id="weightTotal" role="status"></span></div><p class="field-help" data-ui="oralMode">初期版は技術問答を想定しています。オンラインコーディングは今後対応予定です。</p></fieldset>
-                <fieldset class="panel form-section"><legend><span>4</span><b data-ui="settings">面接設定</b></legend><div class="settings-grid">
-                  <label><span data-ui="interviewLanguage">面接言語</span><select name="interviewLanguage"><option value="ja" data-ui="japanese">日本語</option><option value="zh-CN" data-ui="chinese">中国語</option><option value="en" data-ui="english">英語</option></select></label>
-                  <label><span data-ui="duration">所要時間（分）</span><input name="duration" type="number" value="15" readonly /></label>
-                  <label><span data-ui="validity">リンク有効期間（日） *</span><input name="validity" type="number" min="1" max="30" step="1" value="7" required /></label>
-                </div><div class="candidate-grid"><label><span data-ui="candidateName">候補者氏名 *</span><input name="candidateName" maxlength="100" autocomplete="off" required /></label><label><span data-ui="candidateEmail">候補者メール *</span><input name="candidateEmail" type="email" maxlength="255" autocomplete="off" required /></label></div></fieldset>
-                <p id="formError" class="form-error" role="alert" hidden></p>
-                <div class="form-actions"><button type="button" class="outline-action" id="cancelCreate" data-ui="cancel">キャンセル</button><button type="submit" class="primary-action" data-ui="generate">作成してリンクを生成 →</button></div>
-              </form>
-              <aside class="panel creation-summary"><h2 data-ui="summary">面接プレビュー</h2><h3 id="summaryPosition"></h3><dl><dt data-ui="skills">職種に必要なスキル</dt><dd id="summarySkills"></dd><dt data-ui="targets">評価目標</dt><dd id="summaryTargets"></dd><dt data-ui="settings">面接設定</dt><dd id="summarySettings"></dd><dt data-ui="expires">有効期限</dt><dd id="summaryExpires"></dd></dl><div class="async-callout"><strong data-ui="anytime">有効期間内はいつでも開始</strong><p data-ui="anytimeHelp">日時の予約は不要です。リンクごとに1名の候補者を招待します。</p></div></aside>
-            </div>
-          </section>
-          <section id="successView" class="panel success-view" hidden aria-labelledby="successTitle"><div class="success-check">✓</div><h1 id="successTitle" tabindex="-1" data-ui="success">面接を作成しました</h1><p data-ui="successHelp">記録はこのブラウザに保存されています。招待リンクはまだ有効になっていません。</p><div class="link-copy"><input id="invitationLink" readonly data-aria-ui="linkLabel" /><button type="button" class="primary-action" id="copyInvitation" data-ui="copy">リンクをコピー</button></div><div class="success-details"><h2 id="successPosition"></h2><p id="successSettings"></p><span class="status waiting" data-ui="waiting">参加待ち</span><p data-ui="anytime">有効期間内はいつでも開始</p></div><div class="form-actions"><button class="outline-action" type="button" id="successHome" data-ui="back">← ホームに戻る</button><button class="primary-action" type="button" id="createAnother" data-ui="another">別の面接を作成</button></div></section>
-        </div>
+        <iframe id="workspaceFrame" class="workspace-frame" title="ホーム" src="home.html"></iframe>
       </main>
     </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="js/common.js"></script>
+    <script src="js/dashboard-copy.js"></script>
     <script src="js/dashboard.js"></script>
-    <script src="js/interview-create.js"></script>
   </body>
 </html>

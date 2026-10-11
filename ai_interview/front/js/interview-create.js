@@ -37,7 +37,7 @@
   function removeButton(row) {
     const button = localized(element('button', 'remove-row'), 'remove');
     button.type = 'button';
-    button.addEventListener('click', () => { row.remove(); dirty = true; updateSummary(); });
+    button.addEventListener('click', () => { row.remove(); dirty = true; updateSummary(); saveDraft(); });
     return button;
   }
   function addSkill() {
@@ -102,21 +102,19 @@
     updateSummary(); renderRecords(); if (result) renderResult();
   }
   function view(name) {
-    ['home', 'create', 'success'].forEach((key) => { $(`#${key}View`).hidden = key !== name; });
-    $('#sidebar').classList.remove('open'); $('#sidebarScrim').classList.remove('open');
+    ['create', 'success'].forEach((key) => { $(`#${key}View`).hidden = key !== name; });
     window.scrollTo({top: 0, behavior: 'instant'});
-    if (name !== 'home') $(`#${name}Title`).focus(); else $('#createInterview').focus();
+    $(`#${name}Title`).focus();
   }
   function clearForm() {
     form.reset(); $('#skillRows').replaceChildren(); $('#targetRows').replaceChildren();
     addSkill(); addTarget('languageTarget', 30); addTarget('codingTarget', 40); addTarget('databaseTarget', 30);
     $('#formError').hidden = true; dirty = false; updateSummary();
   }
-  function startCreate() { clearForm(); view('create'); }
+  function startCreate() { if (owner) sessionStorage.removeItem(draftKey()); clearForm(); view('create'); }
   function backHome(event) {
     event?.preventDefault();
-    if (!$('#createView').hidden && dirty && !window.confirm(t('discard'))) return;
-    view('home');
+    saveDraft(); window.AIInterviewFrame.navigate('home');
   }
   function toast(key) {
     clearTimeout(toastTimer); $('#toast').textContent = t(key); $('#toast').classList.add('show');
@@ -155,12 +153,8 @@
     $('#successSettings').textContent = `${settings(result)} · ${t('expires')} ${date(result.expiresAt)}`;
   }
   function renderRecords() {
-    window.dispatchEvent(new CustomEvent('aomera-records-change', { detail: records }));
+    window.AIInterviewFrame.recordsUpdated();
   }
-  window.addEventListener('aomera-copy-record', (event) => {
-    const record = records.find((item) => item.id === event.detail);
-    if (record) { result = record; renderResult(); copyLink(record.link); }
-  });
 
   form.addEventListener('submit', (event) => {
     event.preventDefault(); $('#formError').hidden = true;
@@ -173,15 +167,14 @@
     const next = [record, ...records];
     try { localStorage.setItem(`aomera-interview-demo:${owner}`, JSON.stringify(next)); }
     catch { error('saveError'); return; }
-    records = next; result = record; dirty = false; renderRecords(); renderResult(); view('success');
+    records = next; result = record; dirty = false; sessionStorage.removeItem(draftKey()); renderRecords(); renderResult(); view('success');
   });
   form.addEventListener('input', () => { dirty = true; updateSummary(); });
   form.addEventListener('change', () => { dirty = true; updateSummary(); });
   $('#addSkill').addEventListener('click', () => { const control = addSkill(); dirty = true; control?.focus(); });
   $('#addTarget').addEventListener('click', () => { const control = addTarget(); dirty = true; control?.focus(); });
-  $('#createInterview').addEventListener('click', startCreate);
   $('#createAnother').addEventListener('click', startCreate);
-  ['backHome', 'cancelCreate', 'successHome', 'homeNav'].forEach((id) => $(`#${id}`).addEventListener('click', backHome));
+  ['backHome', 'cancelCreate', 'successHome'].forEach((id) => $(`#${id}`).addEventListener('click', backHome));
   $('#copyInvitation').addEventListener('click', () => copyLink(result.link, $('#invitationLink')));
   window.addEventListener('aomera-language-change', (event) => applyLanguage(event.detail));
   window.addEventListener('aomera-user-ready', (event) => {
@@ -190,8 +183,33 @@
       const saved = JSON.parse(localStorage.getItem(`aomera-interview-demo:${owner}`) || '[]');
       records = Array.isArray(saved) ? saved.filter((item) => item && typeof item.id === 'string' && typeof item.position === 'string' && typeof item.link === 'string' && item.link.startsWith('https://aomera.example/interview/') && ['ja','zh-CN','en'].includes(item.language) && Number.isFinite(item.duration) && Number.isFinite(Date.parse(item.expiresAt))) : [];
     } catch { records = []; toast('saveError'); }
-    renderRecords();
+    restoreDraft(); renderRecords();
   });
-  window.addEventListener('beforeunload', (event) => { if (dirty && !$('#createView').hidden) { event.preventDefault(); event.returnValue = ''; } });
+
+  function draftKey() { return `aomera-interview-draft:${owner}`; }
+  function saveDraft() {
+    if (!owner || !dirty) return;
+    const values = Object.fromEntries(Array.from(form.elements).filter(control => control.name).map(control => [control.name, control.value]));
+    const skillRows = Array.from($('#skillRows').children, row => ({name:row.querySelector('.skill-name').value, level:row.querySelector('.skill-level').value}));
+    const targetRows = Array.from($('#targetRows').children, row => ({name:row.querySelector('.target-name').value, detail:row.querySelector('.target-detail').value, weight:row.querySelector('.target-weight').value}));
+    try { sessionStorage.setItem(draftKey(), JSON.stringify({values, skills:skillRows, targets:targetRows})); }
+    catch { toast('saveError'); }
+  }
+  function restoreDraft() {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem(draftKey()) || 'null');
+      if (!draft || !draft.values || !Array.isArray(draft.skills) || !Array.isArray(draft.targets)) return;
+      Object.entries(draft.values).forEach(([name,value]) => { if (fields().namedItem(name)) fields().namedItem(name).value = value; });
+      $('#skillRows').replaceChildren(); $('#targetRows').replaceChildren();
+      draft.skills.slice(0,20).forEach(item => { const control = addSkill(); control.value = item.name; control.closest('.skill-row').querySelector('.skill-level').value = item.level; });
+      draft.targets.slice(0,20).forEach(item => { const control = addTarget('custom', item.weight); control.value = item.name; control.closest('.target-row').querySelector('.target-detail').value = item.detail; });
+      dirty = true; updateSummary();
+    } catch { toast('saveError'); }
+  }
+  form.addEventListener('input', saveDraft);
+  form.addEventListener('change', saveDraft);
+  $('#addSkill').addEventListener('click', saveDraft);
+  $('#addTarget').addEventListener('click', saveDraft);
+  window.addEventListener('pagehide', saveDraft);
   clearForm(); applyLanguage(lang);
 })();

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07111e" />
+    <meta name="description" content="AOMERA AI面接官の面接管理ワークスペース。" />
+    <title>AOMERA AI面接官 — home</title>
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-navy.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-white.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/aomera-favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/aomera-apple-touch-icon.png" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body class="function-page">
+<main class="content">          <div id="homeView">
+          <section class="welcome" aria-labelledby="pageTitle">
+            <div>
+              <p class="eyebrow">INTERVIEW WORKSPACE <span>·</span> <time id="today">2026.08.29</time></p>
+              <h1 id="pageTitle"><span data-copy="greeting">おはようございます、</span><strong id="greetingName"></strong></h1>
+              <p data-copy="welcomeCopy">今日も、候補者の可能性を見つけましょう。</p>
+            </div>
+            <button class="primary-action" id="createInterview" type="button">
+              <span>＋</span><span data-ui="create">面接を作成</span>
+            </button>
+          </section>
+
+          <p class="sample-label" data-ui="sampleData">一覧にはサンプルデータが含まれます。作成した招待プレビューはこのブラウザに保存されます。</p>
+          <section class="stat-grid" aria-label="面接状況">
+            <button type="button" data-filter="reports" aria-pressed="true" aria-controls="filteredInterviews" class="stat-card attention">
+              <div class="stat-icon">✓</div>
+              <div><span data-copy="pendingReports">未確認レポート</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
+            </button>
+            <button type="button" data-filter="abnormal" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card warning">
+              <div class="stat-icon">!</div>
+              <div><span data-copy="abnormalInterviews">面接の異常</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
+            </button>
+            <button type="button" data-filter="waiting" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card ">
+              <div class="stat-icon">◷</div>
+              <div><span data-copy="waitingCandidates">参加待ち</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+            </button>
+            <button type="button" data-filter="today" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card">
+              <div class="stat-icon">▦</div>
+              <div><span data-copy="todayInterviews">本日の面接</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note neutral" data-copy="startedToday">本日開始</span>
+            </button>
+          </section>
+          <section class="panel action-panel" id="interviews" aria-labelledby="actionsTitle">
+            <div class="panel-heading"><div><p class="section-kicker">INTERVIEWS</p><h2 id="actionsTitle">未確認レポート</h2></div><span class="panel-note" id="filterNote"></span></div>
+            <div class="action-list" id="filteredInterviews" aria-live="polite"></div>
+          </section>
+          </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/common.js"></script>
+<script src="js/frame.js"></script>
+<script src="js/dashboard-copy.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>

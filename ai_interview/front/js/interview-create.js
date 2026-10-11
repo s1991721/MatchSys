@@ -153,6 +153,7 @@
   }
   function renderResult() {
     $('#invitationLink').value = result.link;
+    $('#invitationCode').textContent = `${lang === 'zh-CN' ? '面试码' : '面接コード'}: ${result.code || ''}`;
     $('#successPosition').textContent = result.position;
     $('#successSettings').textContent = `${settings(result)} · ${t('expires')} ${date(result.expiresAt)}`;
   }
@@ -180,7 +181,7 @@
     try {
       const response = await window.AIInterview.requestJson('/interviews', {method:'POST', body:JSON.stringify(payload)});
       const interview = response.data.interview;
-      result = {position:interview.position_name, language:'ja', duration:interview.duration_minutes, expiresAt:interview.invite_expires_at, link:response.data.invitation_url};
+      result = {position:interview.position_name, language:'ja', duration:interview.duration_minutes, expiresAt:interview.invite_expires_at, link:response.data.invitation_url, code:response.data.invitation_code};
       window.AIInterview.cacheInvitation(owner, interview.id, result.link);
       dirty = false; requestId = null;
       try { sessionStorage.removeItem(draftKey()); } catch {}

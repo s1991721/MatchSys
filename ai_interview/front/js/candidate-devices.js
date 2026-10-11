@@ -1,10 +1,14 @@
 (() => {
   let streams = [], context = null, frame = null, generation = 0;
+  const checks = {camera:false, microphone:false, network:false};
+  function notify() { window.dispatchEvent(new Event('candidate-devices')); }
+  window.CandidateDevices = {ready: () => Object.values(checks).every(Boolean)};
   const button = document.getElementById('checkDevices');
   const help = document.getElementById('deviceHelp');
   const state = (id, value) => { window.AIInterviewI18n.set(document.getElementById(id), value); };
   function stop() {
     generation++;
+    checks.camera = checks.microphone = checks.network = false; notify();
     if (frame) cancelAnimationFrame(frame);
     frame = null;
     streams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
@@ -33,8 +37,8 @@
         streams.push(stream);
         document.querySelectorAll('.device-video').forEach(video => { video.srcObject = stream; video.hidden = false; video.play().catch(() => {}); });
         document.querySelectorAll('.camera-placeholder > :not(video)').forEach(item => { item.hidden = true; });
-        stream.getVideoTracks()[0].addEventListener('ended', () => state('cameraState', '摄像头已断开'));
-        state('cameraState', '已连接');
+        stream.getVideoTracks()[0].addEventListener('ended', () => { checks.camera = false; notify(); state('cameraState', '摄像头已断开'); });
+        checks.camera = true; notify(); state('cameraState', '已连接');
       })(),
       (async () => {
         if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error('需要 HTTPS 或 localhost 才能访问麦克风');
@@ -56,8 +60,8 @@
           frame = requestAnimationFrame(update);
         }
         update();
-        stream.getAudioTracks()[0].addEventListener('ended', () => state('microphoneState', '麦克风已断开'));
-        state('microphoneState', '已连接，请试说话');
+        stream.getAudioTracks()[0].addEventListener('ended', () => { checks.microphone = false; notify(); state('microphoneState', '麦克风已断开'); });
+        checks.microphone = true; notify(); state('microphoneState', '已连接，请试说话');
       })(),
       (async () => {
         const controller = new AbortController();
@@ -65,9 +69,9 @@
         try {
           if (!navigator.onLine) throw new Error('网络离线');
           const start = performance.now();
-          const response = await fetch(new URL('candidate.html', location.href), {method:'HEAD', cache:'no-store', signal:controller.signal});
+          const response = await fetch(new URL((window.AI_INTERVIEW_API_BASE || (['localhost','127.0.0.1'].includes(location.hostname) ? `${location.protocol}//${location.hostname}:8001/api` : '/ai_interview/api')) + '/candidate/health', location.origin), {method:'HEAD', cache:'no-store', signal:controller.signal});
           if (!response.ok) throw new Error('页面服务器不可达');
-          if (run === generation) state('networkState', `可达 · ${Math.round(performance.now() - start)} ms`);
+          if (run === generation) { checks.network = true; notify(); state('networkState', `可达 · ${Math.round(performance.now() - start)} ms`); }
         } finally { clearTimeout(timeout); }
       })(),
     ]);
@@ -77,8 +81,9 @@
     });
     button.disabled = false;
     window.AIInterviewI18n.set(button, '重新检查设备');
-    window.AIInterviewI18n.set(help, '请确认画面清晰，讲话时音量条有变化。网络结果仅表示当前页面服务器可达。');
+    window.AIInterviewI18n.set(help, '请确认画面清晰，讲话时音量条有变化。网络结果仅表示面试服务可达。');
   }
+  window.addEventListener('offline', () => { checks.network = false; notify(); state('networkState', '连接失败，请检查网络'); });
   button.addEventListener('click', check);
   window.addEventListener('pagehide', stop);
   new MutationObserver(() => {

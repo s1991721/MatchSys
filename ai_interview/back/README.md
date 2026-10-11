@@ -150,3 +150,28 @@ completed/abnormal 为终态，仅允许重复写入相同状态，不能互相�
 锁定父面试行，保证并发写入仍只有一份报告；报告软删除后再次写入恢复原记录。
 首次创建 201、更新 200；内容变化时刷新 generated_at 并清除 read_at，
 相同内容的重复提交保持时间和阅读状态。失败时不创建空报告。
+
+## 候选人接口（已接入）
+
+POST `/api/candidate/verify`、`/start`、`/submit` 接收 JSON `token` 或 `code`，二者只能提供一个。
+候选人使用邀请凭证，不使用企业 session；这些入口豁免 CSRF，企业入口保持 CSRF 校验。
+返回 `data.interview` 包含岗位、工作内容、技能、固定 ja 语言、时长、状态和有效期，不返回候选人邮箱或凭证哈希。
+无效/已删除返回 404；待参加过期返回 410；异常返回 409；已完成返回 completed 供结束页显示。
+`start` 需要 `devices_ready: true, consent: true`，行锁保护 waiting → running，重试只恢复当前状态。
+设备是否正常只能由浏览器检查，这两个字段是客户端确认，不是可信硬件证明。
+`submit` 只允许已开始的面试推进到 submitting，实际完成仍由可信后台接口写入 completed/abnormal。
+状态存在原 VARCHAR 字段，无需新建表；手动维护的状态约束如有自定义 CHECK/ENUM 须相应更新。
+创建/轮换响应增加 invitation_code，为 token SHA-256 的前 16 个十六进制字符，输入忽略大小写、空格、连字符。
+旧邀请也可由原 token 计算面试码；碰撞时拒绝验证。轮换后两种旧凭证失效。
+按请求 IP 每分钟限制 60 次。默认缓存为进程内，生产多 worker 必须配置共享 Redis 缓存并在代理层加速率限制；
+部署在代理后应配置可信客户端 IP 转发，否则限制会按代理 IP 聚合。
+GET/HEAD `/api/candidate/health` 提供面试 API 连通检查。
+契约测试：`../../.venv/bin/python tests/candidate_contract.py`（在 back 下运行）；使用隔离 SQLite，不访问业务数据库。
+前文“仅生成凭证、无候选人入口”的阶段说明已由本节替代，AI 对话、录制上传及真实提交完成仍未实现。
+
+### 面试码统一入口（替代上面的 token 设计）
+
+现在只生成随机 16 位十六进制面试码，四组显示；链接为 `candidate.html?code={面试码}`。
+候选人接口仅接受 `code`，不再接受 token；创建和轮换不再返回 invitation_token。
+数据库沿用旧列名 invitation_token_hash，但新记录存的是规范化面试码的完整 SHA-256；无需修改表结构。
+旧版已发出的面试码仍可验证，旧 token 链接不再支持，需重新生成邀请或发送原面试码。

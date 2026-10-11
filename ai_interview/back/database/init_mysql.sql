@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS interview
     candidate_name          VARCHAR(100) NOT NULL COMMENT '候选人姓名',
     candidate_email         VARCHAR(255) NOT NULL COMMENT '候选人邮箱',
 
-    status                  VARCHAR(32)  NOT NULL DEFAULT 'waiting' COMMENT '面试状态：waiting 待参加 / completed 已完成 / abnormal 异常 / expired 已过期',
+    status                  VARCHAR(32)  NOT NULL DEFAULT 'waiting' COMMENT '面试状态：waiting 待参加 / running 面试中 / submitting 提交中 / completed 已完成 / abnormal 异常 / expired 已过期',
     invite_expires_at       DATETIME     NOT NULL COMMENT '邀请有效截止时间',
     recording_storage_key   VARCHAR(1000) NULL COMMENT '音频对象存储文件标识',
     video_storage_key       VARCHAR(1000) NULL COMMENT '视频对象存储文件标识',

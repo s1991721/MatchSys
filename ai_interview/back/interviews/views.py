@@ -47,19 +47,20 @@ def status_condition(status, now):
     return Q(status=status)
 
 
-def invitation_data(token):
-    """统一创建和轮换邀请的返回结构，数据库仅保存凭证哈希。"""
-    base = settings.AI_INTERVIEW_INVITATION_BASE_URL.rstrip("/")
+def invitation_data(code):
+    """链接与手动输入统一使用同一个面试码。"""
+    base = settings.AI_INTERVIEW_INVITATION_BASE_URL.rstrip('/')
     return {
-        "invitation_token": token,
-        "invitation_url": f"{base}/{quote(token)}",
+        'invitation_code': code,
+        'invitation_url': f'{base}?code={quote(code)}' if base.endswith('.html') else f'{base}/{quote(code)}',
     }
 
 
 def new_invitation():
-    """一次生成原始凭证和哈希，供创建与轮换共用。"""
-    token = secrets.token_urlsafe(32)
-    return token, hashlib.sha256(token.encode()).hexdigest()
+    """只生成面试码；兼容旧数据库列名，存储完整 SHA-256。"""
+    raw = secrets.token_hex(8).upper()
+    code = '-'.join(raw[i:i+4] for i in range(0, 16, 4))
+    return code, hashlib.sha256(raw.lower().encode()).hexdigest()
 
 
 def owned(request, *, lock=False):
@@ -138,7 +139,7 @@ def filtered(request, query):
     """按有效状态、候选人及东京时区的创建日期筛选面试。"""
     status = request.GET.get("status", "all")
     now = timezone.now()
-    if status not in ("all", "waiting", "expired", "completed", "abnormal", "attention"):
+    if status not in ("all", "waiting", "expired", "completed", "abnormal", "running", "submitting", "attention"):
         raise APIError("状态筛选无效。")
     if status != "all":
         query = query.filter(status_condition(status, now))
@@ -200,7 +201,7 @@ def interviews(request):
         skills 项为 name、level（basic/proficient/advanced）；
         assessment_targets 项为 id（可省略）、name、detail、weight；
         两种列表各 1–20 项，评价 ID 唯一，权重为整数且合计 100。
-    POST 返回：201，data 包含 interview、invitation_token、invitation_url、remaining_count。
+    POST 返回：201，data 包含 interview、invitation_code、invitation_url、remaining_count。
     规则：创建与扣减一次额度同事务，原始凭证仅返回一次，数据库只存哈希。
     错误：400 参数错误；401 未登录；403 CSRF 失败；
         409 额度未配置、额度不足或 request_id 重复（包含已软删除的记录）。
@@ -214,7 +215,7 @@ def interviews(request):
         raise APIError("request_id 必须为 ASCII 字符。")
     days = integer(data.get("validity_days"), "validity_days", 1, 30)
     now = timezone.now()
-    token, token_hash = new_invitation()
+    code, code_hash = new_invitation()
     # SQL 未设置 request_id 唯一约束，先锁定企业唯一的额度行，
     # 将同一企业的创建操作串行化；事务内插入失败时额度扣减也会回滚。
     with transaction.atomic():
@@ -243,7 +244,7 @@ def interviews(request):
             **values,
             request_id=request_id,
             user_id=request.account.id,
-            invitation_token_hash=token_hash,
+            invitation_token_hash=code_hash,
             invite_expires_at=now + timedelta(days=days),
             created_at=now,
             updated_at=now,
@@ -253,7 +254,7 @@ def interviews(request):
     return success(
         {
             "interview": interview_data(item),
-            **invitation_data(token),
+            **invitation_data(code),
             "remaining_count": quota.remaining_count - 1,
         },
         201,
@@ -607,7 +608,7 @@ def invitation_rotate(request, pk):
     接口：POST /api/interviews/{pk}/invitation（兼容末尾 /）。
     认证：企业 session，并通过 X-CSRFToken 校验。
     路径参数：pk 为当前企业的面试 ID；无需请求体。
-    返回：200，data 包含 invitation_token、invitation_url、invite_expires_at。
+    返回：200，data 包含 invitation_code、invitation_url、invite_expires_at。
     规则：仅未过期的 waiting 面试可轮换；旧凭证失效，不扣额度，不延长有效期；
         原始凭证只在响应中返回，数据库保存 SHA-256 哈希。
     错误：401 未登录；403 CSRF 失败；404 不存在或不属于当前企业；409 面试不可编辑。
@@ -618,9 +619,9 @@ def invitation_rotate(request, pk):
             raise APIError(
                 "仅待参加的面试可以重新生成邀请。", "interview_not_editable", 409
             )
-        token, item.invitation_token_hash = new_invitation()
+        code, item.invitation_token_hash = new_invitation()
         item.updated_at, item.updated_by = timezone.now(), request.account.id
         item.save(update_fields=["invitation_token_hash", "updated_at", "updated_by"])
     return success(
-        {**invitation_data(token), "invite_expires_at": item.invite_expires_at}
+        {**invitation_data(code), "invite_expires_at": item.invite_expires_at}
     )

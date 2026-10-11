@@ -132,7 +132,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AI_INTERVIEW_SERVICE_KEY = os.environ.get("AI_INTERVIEW_SERVICE_KEY", "")
 # 候选人入口的 URL 前缀，本阶段只生成凭证链接，候选人流程待后续接入。
 AI_INTERVIEW_INVITATION_BASE_URL = os.environ.get(
-    "AI_INTERVIEW_INVITATION_BASE_URL", "http://localhost:8000/interview"
+    "AI_INTERVIEW_INVITATION_BASE_URL", "http://localhost:63342/candidate.html" if DEBUG else "https://aomera.co.jp/ai_interview/candidate.html"
 )
 
 # 让 CSRF 校验失败使用与业务接口一致的 JSON 错误格式。

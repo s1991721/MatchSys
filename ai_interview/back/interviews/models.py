@@ -35,7 +35,7 @@ class Interview(AuditModel):
     user_id = models.BigIntegerField()
     # SQL 没有请求标识唯一约束，创建接口通过企业额度行锁检查重复请求。
     request_id = models.CharField(max_length=100)
-    # 只存凭证的 SHA-256 哈希，原始凭证仅在创建或轮换时返回。
+    # 保存面试码 SHA-256；列名沿用历史结构，原始码只在创建或轮换时返回。
     invitation_token_hash = models.CharField(max_length=64)
     position_name = models.CharField(max_length=200)
     work_description = models.TextField()

@@ -100,27 +100,20 @@ CSRF 失败清除缓存 token，下一次用户操作重新获取；修改请求
 时不预加载隐藏列表；返回列表后再查询。首页及报告列表取消被后续操作替代的
 请求，报告已读写入按报告 ID 合并，阅读状态保存失败不重建媒体播放器。
 
-## 候选人页面与单向流程演示
+## 候选人入口
 
-通用入口 `candidate.html` 始终显示面试码输入页，不恢复上一位候选人的邀请。
-演示邀请 A：`K7MP-9X2D` / `candidate.html?token=demo-invitation`。
-演示邀请 B：`R4NT-6W8C` / `candidate.html?token=demo-invitation-b`。
-面试码忽略大小写、空格和连字符。验证后用 replaceState 将 URL 更新为对应邀请链接，
-刷新可恢复该邀请的进度，不增加阶段历史。未知凭证不接受。
+通用入口 `candidate.html` 输入创建响应中的 `invitation_code`。
+专属链接 `candidate.html?code=...` 自动验证，同一邀请两种凭证恢复同一记录。
+代码入口验证后 URL 使用 `?code=...` 以支持刷新；凭证属于访问秘密，请勿公开或写入分析日志。
+页面不加载企业登录逻辑，候选人 API 不发送企业 session cookie。
+进度由后端 waiting/running/submitting/completed 决定，浏览器只保存语言偏好。
+设备检查全部通过并勾选确认后允许开始，刷新准备页需重新检测。
+摄像头/麦克风只本地预览，不录制上传。健康检查探测面试 API。
+提交入口只标记 submitting，真实对话、回答上传和完成处理尚待后续接入。
 
-同一邀请按验证 → 准备 → 面试中 → 提交中 → 已结束单向前进。
-开始前需勾选准备确认，提交接口尚未接入，结束操作停留在提交页，不伪造提交成功。
-结束页“进入其他面试”回到通用入口，不删除或重置已结束的邀请。
+创建结果页显示 16 位十六进制面试码（四组），链接与手动输入使用完全相同的码，轮换后旧码失效。
+开发默认邀请链接指向 `http://localhost:63342/candidate.html`，可用
+`AI_INTERVIEW_INVITATION_BASE_URL` 覆盖为实际静态服务地址；生产默认指向公开候选人页面。
+Nginx 兼容 `/interview/{code}` 和 `/ai_interview/interview/{code}`；本地旧链接需更换到实际前端服务地址。
 
-进度按邀请 ID 保存在 localStorage 的 `aomera-candidate-demo-v2:demo-a` 和
-`aomera-candidate-demo-v2:demo-b` 中。同源其他标签页只同步对应邀请。
-旧全局键 `aomera-candidate-demo-v1` 不再读取；它不能确定邀请归属，因此不自动迁移。
-开发工具可清除对应演示键以重新测试，正式产品不提供重置功能。
-
-桌面采用双栏，740px 以下采用单栏。数据均为示例，不调用企业 API，不请求设备权限，
-也不提交回答。浏览器存储只用于演示恢复；真实验证、过期判断、跨设备恢复、
-凭证轮换失效和不可逆状态转换必须由后端实现。
-
-设备检查通过 getUserMedia 分别请求摄像头和麦克风，显示实时画面及本地音量条，不录制或上传。需要 HTTPS 或 localhost。网络检查仅探测当前页面服务器的 HEAD 响应，不能代表未来面试服务的连接质量。离开准备/面试阶段或页面时释放设备。
-
-语言资源统一放在 `js/i18n.js`，企业页面通过 `AIInterviewCopy` 读取词条，候选人页面通过 `AIInterviewI18n` 更新静态和动态文案；不再为页面新增独立 i18n 文件。
+语言资源统一放在 `js/i18n.js`，候选人动态提示通过 `AIInterviewI18n` 更新。

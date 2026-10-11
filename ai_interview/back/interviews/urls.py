@@ -1,8 +1,13 @@
 from django.urls import path
-from . import views
+from . import views, candidate
 
 # 企业入口使用 session 身份；internal 路由仅供持有服务密钥的后台调用。
-urlpatterns = []
+urlpatterns = [
+    path("candidate/health", candidate.health),
+    path("candidate/verify", candidate.verify),
+    path("candidate/start", candidate.start),
+    path("candidate/submit", candidate.submit),
+]
 for route, view, name in [
     ("interviews", views.interviews, "interviews"),
     ("interviews/<int:pk>", views.interview_detail, "interview_detail"),

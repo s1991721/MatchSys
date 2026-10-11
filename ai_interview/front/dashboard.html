@@ -56,7 +56,10 @@
               <button class="active" type="button" data-lang="ja" aria-pressed="true">日本語</button>
               <button type="button" data-lang="zh-CN" aria-pressed="false">中文</button>
             </div>
-            <button class="notification-button" id="notificationButton" type="button" aria-label="通知"><span>♢</span><i></i></button>
+            <div class="notification-anchor">
+              <button class="notification-button" id="notificationButton" type="button" aria-label="通知" aria-expanded="false" aria-controls="notificationPopover"><span>♢</span><i></i></button>
+              <div class="notification-popover" id="notificationPopover" role="status" aria-live="polite" hidden></div>
+            </div>
             <button class="profile-button" id="profileButton" type="button" aria-expanded="false">
               <span class="avatar" id="userAvatar">—</span>
               <span class="profile-name"><strong id="displayName">読み込み中…</strong><small data-copy="userRole">採用担当者</small></span>
@@ -73,7 +76,6 @@
       </main>
     </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="js/common.js"></script>
     <script src="js/dashboard-i18n.js"></script>
     <script src="js/reports-demo.js"></script>

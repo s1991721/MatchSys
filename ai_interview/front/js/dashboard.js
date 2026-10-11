@@ -4,14 +4,28 @@
   const scrim = document.querySelector("#sidebarScrim");
   const profileButton = document.querySelector("#profileButton");
   const profileMenu = document.querySelector("#profileMenu");
-  const toast = document.querySelector("#toast");
+  const notificationButton = document.querySelector("#notificationButton");
+  const notificationPopover = document.querySelector("#notificationPopover");
   const companyMark = document.querySelector("#companyMark");
   const companyName = document.querySelector("#companyName");
   const userAvatar = document.querySelector("#userAvatar");
   const displayName = document.querySelector("#displayName");
   let lang = localStorage.getItem("aomera-language") || "ja";
   let currentUser = null;
-  let toastTimer;
+  let unreadReportCount = 0;
+  const reportNoticeCopy = {
+    'zh-CN': { unread: '你有未查看的评估报告', empty: '暂无未查看的评估报告' },
+    ja: { unread: '未閲覧の評価レポートがあります', empty: '未閲覧の評価レポートはありません' }
+  };
+  function reportNotice() {
+    return reportNoticeCopy[lang][unreadReportCount > 0 ? 'unread' : 'empty'];
+  }
+  function renderReportNotice() {
+    const button = document.querySelector('#notificationButton');
+    button.querySelector('i').hidden = unreadReportCount === 0;
+    button.setAttribute('aria-label', reportNotice());
+    notificationPopover.textContent = reportNotice();
+  }
 
   function firstCharacter(value, fallback = "—") {
     const character = Array.from(String(value || "").trim())[0];
@@ -45,6 +59,7 @@
     });
     localStorage.setItem("aomera-language", lang);
     renderCurrentUser();
+    renderReportNotice();
     sendContext();
     window.dispatchEvent(new CustomEvent("aomera-language-change", { detail: lang }));
   }
@@ -70,11 +85,14 @@
   }
 
   function closeSidebar() { sidebar.classList.remove("open"); scrim.classList.remove("open"); }
-  function showToast() {
-    window.clearTimeout(toastTimer);
-    toast.textContent = copy[lang].demoAction;
-    toast.classList.add("show");
-    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 2400);
+  function closeNotification() {
+    notificationPopover.hidden = true;
+    notificationButton.setAttribute('aria-expanded', 'false');
+  }
+  function toggleNotification() {
+    const open = notificationPopover.hidden;
+    notificationPopover.hidden = !open;
+    notificationButton.setAttribute('aria-expanded', String(open));
   }
 
   document.querySelector("#menuButton").addEventListener("click", () => { sidebar.classList.add("open"); scrim.classList.add("open"); });
@@ -85,13 +103,21 @@
     profileButton.setAttribute("aria-expanded", String(open));
   });
   document.addEventListener("click", (event) => {
+    if (!notificationButton.contains(event.target) && !notificationPopover.contains(event.target)) closeNotification();
     if (!profileButton.contains(event.target) && !profileMenu.contains(event.target)) {
       profileMenu.classList.remove("open");
       profileButton.setAttribute("aria-expanded", "false");
     }
   });
   document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => applyLanguage(button.dataset.lang)));
-  document.querySelectorAll("#notificationButton").forEach((button) => button.addEventListener("click", showToast));
+  notificationButton.addEventListener('click', toggleNotification);
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !notificationPopover.hidden) {
+      closeNotification();
+      notificationButton.focus();
+    }
+  });
+  window.addEventListener('blur', closeNotification);
 
 
   const frame = document.querySelector('#workspaceFrame');
@@ -108,6 +134,8 @@
     document.querySelector('.main-nav a[href="#interviews"] b').textContent = Array.isArray(records) ? records.length : 0;
   }
   function setReportCount(value) {
+    unreadReportCount = value;
+    renderReportNotice();
     const badge = document.querySelector('.main-nav a[href="#reports"] em');
     badge.textContent = value;
     badge.hidden = value === 0;

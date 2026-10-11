@@ -328,3 +328,22 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--blue-bright); o
   .interview-filters { grid-template-columns: minmax(0, 1fr) auto; gap: 16px; }
   .interview-filters .interview-search { grid-column: 1 / -1; }
 }
+
+/* Reports keep the generated document as plain text. */
+.reports-panel { margin-top: 28px; overflow: hidden; }
+.report-filters { display: flex; gap: 12px; padding: 20px; border-bottom: 1px solid var(--line); }
+.report-filters .selected { background: rgba(118,188,245,.15); border-color: var(--line-strong); }
+.report-table { min-width: 650px; }
+.report-unread { color: var(--blue); font-weight: 600; }
+#listStatus, #detailStatus { padding: 20px; color: var(--muted); }
+#reportDetail { margin-top: 28px; }
+.report-article { margin-top: 20px; padding: 28px; }
+.report-article h2 { margin-top: 0; }
+.report-meta { color: var(--muted); padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.report-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 2; }
+.report-media { display: grid; gap: 24px; margin-top: 32px; }
+.report-media:empty { display: none; }
+.report-media video { display: block; width: 100%; max-height: 480px; background: #000; }
+.report-media audio { width: 100%; }
+[hidden] { display: none !important; }
+@media (max-width: 600px) { .report-article { padding: 18px; } }

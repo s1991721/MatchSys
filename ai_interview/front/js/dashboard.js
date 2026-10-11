@@ -56,6 +56,7 @@
       renderCurrentUser();
       sendContext();
       updateCounts();
+      loadReportCount();
     } catch (error) {
       if (error.status === 401) {
         window.location.replace(`login.html?lang=${encodeURIComponent(lang)}`);
@@ -106,6 +107,17 @@
     try { records = JSON.parse(localStorage.getItem(`aomera-interview-demo:${currentUser?.id}`) || '[]'); } catch {}
     document.querySelector('.main-nav a[href="#interviews"] b').textContent = Array.isArray(records) ? records.length : 0;
   }
+  function setReportCount(value) {
+    const badge = document.querySelector('.main-nav a[href="#reports"] em');
+    badge.textContent = value;
+    badge.hidden = value === 0;
+  }
+  function loadReportCount() {
+    setReportCount(window.AIInterviewReportDemo.unreadCount(currentUser?.id));
+  }
+  window.addEventListener('storage', event => {
+    if (event.key === null || event.key === window.AIInterviewReportDemo.storageKey(currentUser?.id)) loadReportCount();
+  });
   function navigate() {
     const next = location.hash.slice(1);
     if (!Object.hasOwn(routes, next)) { location.replace('#home'); return; }
@@ -122,8 +134,9 @@
     if (event.data?.type === 'aomera-ready') sendContext();
     if (event.data?.type === 'aomera-navigate' && Object.hasOwn(routes, event.data.route)) location.hash = event.data.route;
     if (event.data?.type === 'aomera-records-updated') updateCounts();
+    if (event.data?.type === 'aomera-reports-updated' && Number.isInteger(event.data.unreadCount) && event.data.unreadCount >= 0) setReportCount(event.data.unreadCount);
   });
   window.addEventListener('hashchange', navigate);
   frame.addEventListener('load', sendContext);
-  applyLanguage(lang); navigate(); loadCurrentUser();
+  applyLanguage(lang); navigate(); loadReportCount(); loadCurrentUser();
 })();

@@ -13,6 +13,25 @@
     <link rel="stylesheet" href="css/dashboard.css" />
   </head>
   <body class="function-page" data-page="reports">
-<main class="content"><p class="eyebrow">INTERVIEW WORKSPACE</p><h1 id="functionTitle"></h1><section class="panel placeholder-panel"><p id="functionNotice"></p><button class="primary-action" id="functionAction" type="button"></button></section></main>
-<script src="js/common.js"></script><script src="js/frame.js"></script><script src="js/dashboard-copy.js"></script><script src="js/function-placeholder.js"></script>
+<main class="content">
+  <h1 id="reportPageTitle"></h1>
+  <section id="reportList" class="panel reports-panel">
+    <div id="reportFilters" class="report-filters" aria-label="报告筛选"></div>
+    <div id="listStatus" role="status"></div>
+    <div class="interview-table-scroll"><table class="interview-table report-table">
+      <thead><tr><th data-ui="candidate"></th><th data-ui="position"></th><th data-ui="time"></th><th data-ui="reading"></th><th data-ui="action"></th></tr></thead>
+      <tbody id="reportRows"></tbody>
+    </table></div>
+  </section>
+  <section id="reportDetail" hidden>
+    <button id="backReports" class="outline-action" type="button" data-ui="back"></button>
+    <div id="detailStatus" role="status"></div>
+    <article id="reportArticle" class="panel report-article" hidden>
+      <h2 id="reportCandidate"></h2><p id="reportMeta" class="report-meta"></p>
+      <div id="reportText" class="report-text"></div>
+      <section id="reportMedia" class="report-media"></section>
+    </article>
+  </section>
+</main>
+<script src="js/common.js"></script><script src="js/frame.js"></script><script src="js/reports-demo.js"></script><script src="js/reports.js"></script>
 </body></html>

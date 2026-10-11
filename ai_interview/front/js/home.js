@@ -58,7 +58,6 @@
     });
   }
   document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => { selectedFilter = button.dataset.filter; renderFilteredInterviews(); }));
-  window.addEventListener('aomera-records-change', (event) => { localRecords = event.detail; renderFilteredInterviews(); });
 
 
   async function copyInvitation(link) {

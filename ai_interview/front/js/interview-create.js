@@ -75,7 +75,6 @@
   function targets() {
     return Array.from($('#targetRows').children, (row) => ({ name: row.querySelector('.target-name').value.trim(), detail: row.querySelector('.target-detail').value.trim(), weight: Number(row.querySelector('.target-weight').value) }));
   }
-  const targetTitle = (target) => target.name;
   function expiration(days, now = Date.now()) { return new Date(now + days * 86400000).toISOString(); }
   function date(value) {
     return new Intl.DateTimeFormat(lang, { timeZone: 'Asia/Tokyo', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value));
@@ -88,7 +87,7 @@
     $('#weightTotal').classList.toggle('invalid-weight', total !== 100);
     $('#summaryPosition').textContent = fields().position.value.trim() || t('untitled');
     $('#summarySkills').textContent = skillList.filter((item) => item.name).map((item) => `${item.name} · ${t(item.level)}`).join(' / ') || t('unspecified');
-    $('#summaryTargets').textContent = targetList.map((item) => `${targetTitle(item) || t('custom')} ${item.weight}%`).join(' / ') || t('unspecified');
+    $('#summaryTargets').textContent = targetList.map((item) => `${item.name || t('custom')} ${item.weight}%`).join(' / ') || t('unspecified');
     $('#summarySettings').textContent = settings({ language: fields().interviewLanguage.value, duration: 15 });
     const days = Number(fields().validity.value);
     $('#summaryExpires').textContent = Number.isInteger(days) && days >= 1 && days <= 30 ? date(expiration(days)) : t('unspecified');
@@ -99,7 +98,7 @@
     document.querySelectorAll('[data-placeholder-ui]').forEach((node) => { node.placeholder = t(node.dataset.placeholderUi); });
     document.querySelectorAll('[data-aria-ui]').forEach((node) => { node.setAttribute('aria-label', t(node.dataset.ariaUi)); });
     if (!$('#formError').hidden) $('#formError').textContent = t($('#formError').dataset.errorKey);
-    updateSummary(); renderRecords(); if (result) renderResult();
+    updateSummary(); if (result) renderResult();
   }
   function view(name) {
     ['create', 'success'].forEach((key) => { $(`#${key}View`).hidden = key !== name; });
@@ -142,8 +141,7 @@
       if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
       await navigator.clipboard.writeText(link); toast('copied');
     } catch {
-      if (fallback) { fallback.focus(); fallback.select(); }
-      else { $('#invitationLink').value = link; view('success'); $('#invitationLink').focus(); $('#invitationLink').select(); }
+      fallback.focus(); fallback.select();
       toast('copyError');
     }
   }
@@ -152,10 +150,6 @@
     $('#successPosition').textContent = result.position;
     $('#successSettings').textContent = `${settings(result)} · ${t('expires')} ${date(result.expiresAt)}`;
   }
-  function renderRecords() {
-    window.AIInterviewFrame.recordsUpdated();
-  }
-
   form.addEventListener('submit', (event) => {
     event.preventDefault(); $('#formError').hidden = true;
     if (!validate()) return;
@@ -167,7 +161,7 @@
     const next = [record, ...records];
     try { localStorage.setItem(`aomera-interview-demo:${owner}`, JSON.stringify(next)); }
     catch { error('saveError'); return; }
-    records = next; result = record; dirty = false; sessionStorage.removeItem(draftKey()); renderRecords(); renderResult(); view('success');
+    records = next; result = record; dirty = false; sessionStorage.removeItem(draftKey()); window.AIInterviewFrame.recordsUpdated(); renderResult(); view('success');
   });
   form.addEventListener('input', () => { dirty = true; updateSummary(); });
   form.addEventListener('change', () => { dirty = true; updateSummary(); });
@@ -183,7 +177,7 @@
       const saved = JSON.parse(localStorage.getItem(`aomera-interview-demo:${owner}`) || '[]');
       records = Array.isArray(saved) ? saved.filter((item) => item && typeof item.id === 'string' && typeof item.position === 'string' && typeof item.link === 'string' && item.link.startsWith('https://aomera.example/interview/') && ['ja','zh-CN','en'].includes(item.language) && Number.isFinite(item.duration) && Number.isFinite(Date.parse(item.expiresAt))) : [];
     } catch { records = []; toast('saveError'); }
-    restoreDraft(); renderRecords();
+    restoreDraft(); window.AIInterviewFrame.recordsUpdated();
   });
 
   function draftKey() { return `aomera-interview-draft:${owner}`; }

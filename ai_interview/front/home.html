@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="css/dashboard.css" />
   </head>
   <body class="function-page">
-<main class="content">          <div id="homeView">
+<main class="content">
           <section class="welcome" aria-labelledby="pageTitle">
             <div>
               <p class="eyebrow">INTERVIEW WORKSPACE <span>·</span> <time id="today">2026.08.29</time></p>
@@ -37,7 +37,7 @@
               <div><span data-copy="abnormalInterviews">面接の異常</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
               <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
             </button>
-            <button type="button" data-filter="waiting" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card ">
+            <button type="button" data-filter="waiting" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card">
               <div class="stat-icon">◷</div>
               <div><span data-copy="waitingCandidates">参加待ち</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
             </button>
@@ -51,7 +51,6 @@
             <div class="panel-heading"><div><p class="section-kicker">INTERVIEWS</p><h2 id="actionsTitle">未確認レポート</h2></div><span class="panel-note" id="filterNote"></span></div>
             <div class="action-list" id="filteredInterviews" aria-live="polite"></div>
           </section>
-          </div>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="js/common.js"></script>

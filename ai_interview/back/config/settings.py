@@ -3,7 +3,6 @@
 import os
 from pathlib import Path
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -31,6 +30,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "accounts",
+    # 面试、额度和报告 ORM 映射使用现有 SQL 表，不生成业务表迁移。
+    "interviews",
 ]
 
 MIDDLEWARE = [
@@ -126,3 +127,13 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# 服务密钥仅交给可信后台 worker；未配置时禁止访问内部写入接口。
+AI_INTERVIEW_SERVICE_KEY = os.environ.get("AI_INTERVIEW_SERVICE_KEY", "")
+# 候选人入口的 URL 前缀，本阶段只生成凭证链接，候选人流程待后续接入。
+AI_INTERVIEW_INVITATION_BASE_URL = os.environ.get(
+    "AI_INTERVIEW_INVITATION_BASE_URL", "http://localhost:8000/interview"
+)
+
+# 让 CSRF 校验失败使用与业务接口一致的 JSON 错误格式。
+CSRF_FAILURE_VIEW = "interviews.api.csrf_failure"

@@ -133,6 +133,7 @@
     if (event.origin !== location.origin || event.source !== frame.contentWindow) return;
     if (event.data?.type === 'aomera-ready') sendContext();
     if (event.data?.type === 'aomera-navigate' && Object.hasOwn(routes, event.data.route)) location.hash = event.data.route;
+    if (event.data?.type === 'aomera-account-updated') loadCurrentUser();
     if (event.data?.type === 'aomera-records-updated') updateCounts();
     if (event.data?.type === 'aomera-reports-updated' && Number.isInteger(event.data.unreadCount) && event.data.unreadCount >= 0) setReportCount(event.data.unreadCount);
   });

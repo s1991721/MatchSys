@@ -13,6 +13,7 @@
   let lang = localStorage.getItem("aomera-language") || "ja";
   let currentUser = null;
   let unreadReportCount = null;
+  const monthlyQuota = 30;
   let quotaData = null, quotaError = null, accountError = null, summarySequence = 0;
   let loggingOut = false;
   const reportNoticeCopy = {
@@ -138,12 +139,20 @@
     badge.textContent = value ?? '—'; badge.hidden = !(value > 0);
   }
   function renderQuota() {
-    document.querySelector('#remainingQuota').textContent = quotaData?.remaining_count ?? '—';
+    document.querySelector('#remainingQuota').textContent = `${quotaData?.remaining_count ?? '—'} / ${monthlyQuota}`;
+    const progress = document.querySelector('#quotaProgress');
+    const remaining = Number(quotaData?.remaining_count);
+    progress.hidden = !!quotaError || !quotaData?.configured || !Number.isFinite(remaining);
+    const progressValue = Math.max(0, Math.min(monthlyQuota, remaining || 0));
+    progress.querySelector('i').style.width = `${progressValue / monthlyQuota * 100}%`;
+    progress.setAttribute('aria-valuenow', String(progressValue));
+    progress.setAttribute('aria-label', lang === 'zh-CN' ? '本月剩余面试额度' : '今月の残りの面接枠');
     const status = document.querySelector('#quotaStatus'); status.replaceChildren();
     if (quotaError) {
       status.append(document.createTextNode(lang === 'zh-CN' ? '额度加载失败。' : '面接枠を取得できません。'));
       const retry = document.createElement('button'); retry.type = 'button'; retry.className = 'outline-action'; retry.textContent = lang === 'zh-CN' ? '重试' : '再試行'; retry.addEventListener('click', loadSummary); status.append(retry);
     } else if (quotaData && !quotaData.configured) status.textContent = lang === 'zh-CN' ? '请联系管理员配置额度。' : '管理者へ面接枠の設定をご依頼ください。';
+    status.hidden = !status.hasChildNodes();
   }
   function renderAccountStatus() {
     const status = document.querySelector('#workspaceStatus'); status.hidden = !accountError; status.replaceChildren();

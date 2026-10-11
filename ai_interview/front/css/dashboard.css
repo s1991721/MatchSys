@@ -53,7 +53,7 @@ body::before {
 .plan-card > div:first-child { display: flex; justify-content: space-between; color: #748da2; font-size: 9px; }
 .plan-card strong { color: #afc7da; font-size: 10px; font-weight: 500; }
 .plan-progress { overflow: hidden; height: 3px; margin: 12px 0; border-radius: 3px; background: #172d40; }
-.plan-progress i { display: block; width: 48%; height: 100%; background: linear-gradient(90deg, #4e9bda, #8bcbfb); }
+.plan-progress i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, #4e9bda, #8bcbfb); }
 .plan-card a { color: #81bdec; font-size: 9px; }
 .sidebar-scrim { display: none; }
 

@@ -35,7 +35,8 @@
           <a href="#settings"><i>⚙</i><span data-copy="navSettings">設定</span></a>
           <div class="plan-card">
             <div><span data-copy="planLabel">残りの面接枠</span><strong id="remainingQuota">—</strong></div>
-            <p id="quotaStatus" role="status"></p>
+            <div class="plan-progress" id="quotaProgress" role="progressbar" aria-valuemin="0" aria-valuemax="30" hidden><i></i></div>
+            <p id="quotaStatus" role="status" hidden></p>
             <a href="#plan" data-copy="planLink">プランを確認</a>
           </div>
         </div>

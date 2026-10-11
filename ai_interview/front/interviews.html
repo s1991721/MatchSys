@@ -13,6 +13,42 @@
     <link rel="stylesheet" href="css/dashboard.css" />
   </head>
   <body class="function-page" data-page="interviews">
-<main class="content"><p class="eyebrow">INTERVIEW WORKSPACE</p><h1 id="functionTitle"></h1><section class="panel placeholder-panel"><p id="functionNotice"></p><button class="primary-action" id="functionAction" type="button"></button></section></main>
-<script src="js/common.js"></script><script src="js/frame.js"></script><script src="js/dashboard-copy.js"></script><script src="js/function-placeholder.js"></script>
+<main class="content interviews-content">
+  <header class="interview-page-heading">
+    <div><p class="eyebrow">INTERVIEW WORKSPACE</p><h1 id="functionTitle" data-ui="title"></h1></div>
+    <button class="primary-action" id="createInterview" type="button" data-ui="create"></button>
+  </header>
+  <section class="panel interviews-panel" aria-labelledby="listTitle">
+    <h2 id="listTitle" class="visually-hidden" data-ui="title"></h2>
+    <nav class="interview-tabs" id="statusFilters" aria-label="面接ステータス"></nav>
+    <form class="interview-filters" id="filters">
+      <label class="interview-search"><span data-ui="search"></span><input id="candidateSearch" type="search" maxlength="255" /></label>
+      <fieldset class="interview-date-range">
+        <legend data-ui="createdDate"></legend>
+        <div class="interview-date-inputs">
+          <label><span class="visually-hidden" data-ui="from"></span><input id="createdFrom" type="date" /></label>
+          <span class="date-range-divider" aria-hidden="true">—</span>
+          <label><span class="visually-hidden" data-ui="to"></span><input id="createdTo" type="date" /></label>
+        </div>
+      </fieldset>
+      <button class="outline-action" id="resetFilters" type="button" data-ui="reset"></button>
+    </form>
+    <p id="filterError" class="form-error" role="alert" hidden></p>
+    <div class="interview-table-scroll" tabindex="0" role="region" aria-labelledby="listTitle">
+      <table class="interview-table"><thead><tr>
+        <th scope="col" data-ui="candidate"></th><th scope="col" data-ui="position"></th><th scope="col" data-ui="status"></th>
+        <th scope="col" data-ui="created"></th><th scope="col" data-ui="relatedTime"></th><th scope="col" data-ui="action"></th>
+      </tr></thead><tbody id="interviewRows"></tbody></table>
+    </div>
+    <div class="interview-pagination">
+      <span id="resultCount" role="status" aria-live="polite"></span>
+      <label><span data-ui="pageSize"></span><select id="pageSize"><option value="10">10</option><option value="20">20</option><option value="50">50</option></select></label>
+      <button class="outline-action" id="previousPage" type="button" data-ui="previous"></button>
+      <span id="pageNumber"></span>
+      <button class="outline-action" id="nextPage" type="button" data-ui="next"></button>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="js/common.js"></script><script src="js/frame.js"></script><script src="js/interviews-state.js"></script><script src="js/interviews.js"></script>
 </body></html>

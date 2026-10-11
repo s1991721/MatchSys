@@ -104,7 +104,7 @@
   function updateCounts() {
     let records = [];
     try { records = JSON.parse(localStorage.getItem(`aomera-interview-demo:${currentUser?.id}`) || '[]'); } catch {}
-    document.querySelector('.main-nav a[href="#interviews"] b').textContent = 6 + (Array.isArray(records) ? records.length : 0);
+    document.querySelector('.main-nav a[href="#interviews"] b').textContent = Array.isArray(records) ? records.length : 0;
   }
   function navigate() {
     const next = location.hash.slice(1);

@@ -6,7 +6,8 @@
 
 - `home.html`: existing dashboard statistics and sample/local invitation lists.
 - `interview-create.html`: existing invitation preview form and success view.
-- `interviews.html`, `candidates.html`, `reports.html`, `help.html`, `settings.html`, `plan.html`, `account.html`: independent entry pages for features that are not implemented yet.
+- `interviews.html`: interview list with candidate search, status and creation-date filters.
+- `reports.html`, `help.html`, `settings.html`, `plan.html`, `account.html`: independent entry pages for features that are not implemented yet.
 
 Routes use `dashboard.html#home`, `#create`, `#interviews`, etc. The shell replaces the iframe document's history entry so browser Back follows the shell routes. Open pages through an HTTP server on the same origin, not `file://`.
 

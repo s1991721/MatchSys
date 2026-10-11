@@ -1,6 +1,6 @@
 (() => {
   const route = document.body.dataset.page;
-  const keys = {interviews:'navInterviews', candidates:'navCandidates', reports:'navReports', help:'navHelp', settings:'navSettings', plan:'planLink', account:'accountSettings'};
+  const keys = {interviews:'navInterviews', reports:'navReports', help:'navHelp', settings:'navSettings', plan:'planLink', account:'accountSettings'};
   function render(lang) {
     const ja = lang !== 'zh-CN';
     const title = window.AIInterviewCopy[ja ? 'ja' : 'zh-CN'][keys[route]];

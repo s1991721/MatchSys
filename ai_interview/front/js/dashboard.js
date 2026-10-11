@@ -94,8 +94,8 @@
 
 
   const frame = document.querySelector('#workspaceFrame');
-  const routes = { home: 'home', create: 'interview-create', interviews: 'interviews', candidates: 'candidates', reports: 'reports', help: 'help', settings: 'settings', plan: 'plan', account: 'account' };
-  const titles = {home:'navHome', create:'navInterviews', interviews:'navInterviews', candidates:'navCandidates', reports:'navReports', help:'navHelp', settings:'navSettings', plan:'planLink', account:'accountSettings'};
+  const routes = { home: 'home', create: 'interview-create', interviews: 'interviews', reports: 'reports', help: 'help', settings: 'settings', plan: 'plan', account: 'account' };
+  const titles = {home:'navHome', create:'navInterviews', interviews:'navInterviews', reports:'navReports', help:'navHelp', settings:'navSettings', plan:'planLink', account:'accountSettings'};
   let route;
   function sendContext() {
     frame.contentWindow?.postMessage({type:'aomera-context', lang, user:currentUser}, location.origin);

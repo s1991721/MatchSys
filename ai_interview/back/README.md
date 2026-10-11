@@ -1,6 +1,6 @@
-# AI 面试后端 API（第一阶段 review）
+# AI 面试后端 API
 
-本阶段仅实现后端，不修改 `ai_interview/front`。业务表由 `database/init_mysql.sql`
+前端接入说明见 `../front/README.md`。业务表由 `database/init_mysql.sql`
 维护，ORM 模型均为 `managed=False`，不要用 Django migrations 创建业务表。
 报告使用 ORM 关联查询，但 `db_constraint=False` 不会给现有表增加外键。
 
@@ -55,13 +55,14 @@ python manage.py runserver 8000
 | PATCH | `/interviews/{id}` | 修改未过期的待参加面试 |
 | DELETE | `/interviews/{id}` | 软删除面试及关联报告，不返还额度 |
 | POST | `/interviews/{id}/invitation` | 重新生成凭证，旧链接失效，不扣额度，不延长有效期 |
-| GET | `/reports` | 分页报告列表，`reading=all/unread/read` |
+| GET | `/reports` | 分页报告列表，`reading=all/unread/read`，可选 `interview_id` |
 | GET | `/reports/{id}` | 报告详情，读取本身不改变未读状态 |
 | POST | `/reports/{id}/read` | 标记首次阅读；重复操作保留原始 `read_at` |
 | DELETE | `/reports/{id}` | 软删除报告 |
 
-面试列表筛选：`status=all/waiting/completed/abnormal/expired`；`query` 搜索
+面试列表筛选：`status=all/waiting/completed/abnormal/expired/attention`；`query` 搜索
 候选人姓名/邮箱；`from=YYYY-MM-DD`、`to=YYYY-MM-DD` 筛选创建日期（两端包含）。
+`attention` 合并异常与过期记录，供首页异常分类使用，不存为面试状态。
 待参加记录超过有效期时，查询、统计和编辑判断均视为 expired；completed/abnormal
 不受有效期影响。GET 不会为过期状态修改数据库。
 
@@ -112,7 +113,7 @@ python manage.py runserver 8000
 
 列表返回 `id`、`interview_id`、`candidate_name`、`candidate_email`、`position_name`、
 `generated_at`、`read_at`、`is_read`。详情额外返回 `report_text`、
-`assessment_scores`、`recording_storage_key`、`video_storage_key`。
+`assessment_scores`、`assessment_targets`、`recording_storage_key`、`video_storage_key`。
 报告列表时间取 SQL 的 `generated_at`，不将它冒充实际面试完成时间。
 媒体只返回对象存储 key，不拼接未经授权的公开 URL；签名播放 URL 接入留待存储服务确定。
 

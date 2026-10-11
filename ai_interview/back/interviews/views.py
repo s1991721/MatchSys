@@ -37,6 +37,9 @@ REPORT_LIST_FIELDS = (
 
 def status_condition(status, now):
     """列表与统计共用有效状态条件，确保过期判断口径一致。"""
+    if status == "attention":
+        # 首页异常分类合并运行异常和邀请过期，分页仍由数据库完成。
+        return Q(status="abnormal") | status_condition("expired", now)
     if status == "waiting":
         return Q(status="waiting", invite_expires_at__gt=now)
     if status == "expired":
@@ -135,7 +138,7 @@ def filtered(request, query):
     """按有效状态、候选人及东京时区的创建日期筛选面试。"""
     status = request.GET.get("status", "all")
     now = timezone.now()
-    if status not in ("all", "waiting", "expired", "completed", "abnormal"):
+    if status not in ("all", "waiting", "expired", "completed", "abnormal", "attention"):
         raise APIError("状态筛选无效。")
     if status != "all":
         query = query.filter(status_condition(status, now))
@@ -187,7 +190,8 @@ def interviews(request):
     接口：GET /api/interviews；POST /api/interviews（兼容末尾 /）。
     认证：企业 session；POST 还需 X-CSRFToken。
     GET 参数：page 默认 1，page_size 默认 20（1–100）；
-        status 为 all/waiting/completed/abnormal/expired，默认 all；
+        status 为 all/waiting/completed/abnormal/expired/attention，默认 all；
+        attention 为异常与过期的合并筛选，仅用于查询，不存为面试状态；
         query 搜索候选人姓名或邮箱，from/to 为 YYYY-MM-DD 创建日期，包含两端。
     GET 返回：200，data 为 items、total、page、page_size。
     POST 请求：JSON，必填 request_id、position_name、work_description、skills、
@@ -334,6 +338,7 @@ def report_data(report, interview=None, *, detail=False):
         result.update(
             report_text=report.report_text,
             assessment_scores=report.assessment_scores,
+            assessment_targets=interview.assessment_targets,
             recording_storage_key=interview.recording_storage_key,
             video_storage_key=interview.video_storage_key,
         )
@@ -347,7 +352,7 @@ def reports(request):
     接口：GET /api/reports（兼容末尾 /）。
     认证：企业 session。
     查询参数：page 默认 1，page_size 默认 20（1–100）；
-        reading 为 all/unread/read，默认 all。
+        reading 为 all/unread/read，默认 all；interview_id 可按指定面试筛选。
     返回：200，data 为 items、total、page、page_size；
         items 包含报告 ID、面试 ID、候选人、岗位、generated_at、read_at、is_read。
     规则：按生成时间和 ID 降序排列，不加载正文及评分，不包含已删除面试的报告。
@@ -357,6 +362,15 @@ def reports(request):
     if reading not in ("all", "unread", "read"):
         raise APIError("阅读状态无效。")
     query = report_query(request)
+    interview_id = request.GET.get("interview_id")
+    if interview_id is not None:
+        try:
+            interview_id = int(interview_id)
+        except ValueError:
+            raise APIError("interview_id 必须为正整数。")
+        integer(interview_id, "interview_id", 1, 2**63 - 1)
+        # 保留企业归属限定，供面试列表直接跳转到对应面试的报告。
+        query = query.filter(interview_id=interview_id)
     if reading != "all":
         query = query.filter(read_at__isnull=reading == "unread")
     # ORM JOIN 同时取得候选人信息，避免两次查询之间面试被软删除导致映射缺失。

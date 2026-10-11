@@ -1,43 +1,101 @@
-# AI interview frontend
+# AI 面试前端：API 接入
 
-`dashboard.html` is the workspace shell. It owns the sidebar, topbar, authenticated user, language selection, navigation badges and URL hash. One same-origin iframe displays an independent HTML page and owns content scrolling.
+`dashboard.html` 是工作空间外壳，维护侧栏、用户、语言、导航和未读提示。
+同源 iframe 展示独立功能页；内容区自行管理筛选、分页和滚动。
 
-## Pages
+## 本地启动
 
-- `home.html`: existing dashboard statistics and sample/local invitation lists.
-- `interview-create.html`: existing invitation preview form and success view.
-- `interviews.html`: interview list with candidate search, status and creation-date filters.
-- `reports.html`: simulated report list, plain-text detail and independent audio/video playback.
-- `help.html`, `settings.html`, `plan.html`: usage guide, read-only preferences and trial plan information, rendered by `js/static-pages.js`.
-- `account.html`: workspace information, display-name editing and password changes via the authenticated account API.
+使用已经由其他模块创建的企业账户及额度，数据库表结构需要先按
+`../back/database/init_mysql.sql` 初始化。`CREATE TABLE IF NOT EXISTS` 不会更新已有旧表的字段；旧数据库需要先迁移
+到当前 SQL 定义的结构。后端启动在 8001 端口：
 
-Routes use `dashboard.html#home`, `#create`, `#interviews`, etc. The shell replaces the iframe document's history entry so browser Back follows the shell routes. Open pages through an HTTP server on the same origin, not `file://`.
+```sh
+cd ai_interview/back
+python manage.py runserver 8001
+```
 
-## Shared integration
+前端通过 PyCharm HTTP 服务（63342 端口）或静态 HTTP 服务访问，不能使用 `file://`。
+例如在 `ai_interview/front` 目录运行：
 
-`js/dashboard-i18n.js` supplies shared workspace translations to the shell, home and information pages. Account, interview and report pages own their feature-specific translations.
+```sh
+python -m http.server 63342 --bind 127.0.0.1
+```
 
-Each function page loads `js/common.js` for API access and `js/frame.js` for shell communication. Page scripts listen for `aomera-language-change` and `aomera-user-ready`; the bridge sends its ready message after their listeners are installed. Language updates continue throughout the page lifetime. User readiness is emitted once per user ID.
+打开 `http://127.0.0.1:63342/login.html`。前端与后端使用同一主机名
+（localhost 或 127.0.0.1），保证 session/CSRF cookie 在本地跨端口使用。
+如果改用其他前端端口，请在后端设置 `AI_INTERVIEW_CORS_ALLOWED_ORIGINS`
+为实际前端 origin，使 CORS 与 CSRF 校验同时允许该来源。
 
-`window.AIInterviewFrame` provides:
+接口基址默认：
 
-- `user` and `lang`: the current shell context.
-- `navigate(route)`: navigate the outer workspace, or open the workspace when a function page is accessed directly.
-- `records(userId)`: read validated local invitation previews.
-- `recordsUpdated()`: notify the shell to refresh navigation counts.
+- 本地：`http://{当前主机名}:8001/api`。
+- 生产：`/ai_interview/api`，由现有反向代理转发。
+- 自定义：在加载 `js/common.js` 之前设置 `window.AI_INTERVIEW_API_BASE`。
+  工作空间 iframe 会继承外壳的配置；独立打开功能页时需自行设置。
 
-Messages are checked against the same origin and the expected parent/iframe window. Function pages opened directly request `/me` themselves.
+## 已接入的交互
 
-Creation drafts use per-user `sessionStorage` and survive menu changes and reloads in the current tab. Successful creation clears the draft; creating another interview resets the form. Invitation previews still use per-user `localStorage`; links remain demonstration URLs and do not issue live invitations.
+| 页面 | 使用的接口及行为 |
+| --- | --- |
+| 登录 | POST `/login`，保留 session cookie 并进入工作空间 |
+| 工作空间 | GET `/me`、`/dashboard`、`/quota`；POST `/logout` 真正清除 session |
+| 首页 | GET `/dashboard` 统计；按分类分页查询 `/reports` 或 `/interviews` |
+| 创建面试 | POST `/interviews`，显示真实返回的链接、有效期及面试记录 |
+| 面试管理 | GET `/interviews`，后端状态/候选人/日期筛选与分页；POST 邀请凭证轮换 |
+| 评估报告 | GET `/reports` 分页与未读筛选、GET 详情、POST `/reports/{id}/read` |
+| 账户设置 | GET `/me`；POST `/account` 修改显示名/密码 |
+| 套餐 | GET `/quota` 展示剩余次数与额度配置状态 |
 
-## Report interaction demo
+首页报告操作可直接打开对应报告；已完成面试的报告操作按 `interview_id` 筛选，避免打开其他候选人的报告。
+工作空间支持 `#reports?report={报告ID}` 和 `#reports?interview={面试ID}`。
 
-`js/reports-demo.js` provides four simulated reports (three initially unread),
-including two interviews for the same candidate. Reports are plain text.
-Reading state is saved in per-user localStorage and updates the sidebar badge.
-The report page does not call any report API or access the database.
-The existing workspace authentication remains unchanged.
+首页“今日”表示东京时区的今日创建记录。异常分类合并异常和过期记录，
+使用后端 `status=attention` 查询，仍由后端分页。
+报告列表展示报告生成时间，不将其冒充面试完成时间。
+页面在接口失败时显示错误与重试入口，不回退到样例数据。
+列表异步响应有顺序检查，避免旧搜索或翻页响应覆盖新的结果。
 
-Local sample audio/video files only demonstrate playback controls; they are
-not candidate recordings. The detail preserves the list filter and scroll
-position when returning to the list.
+## 请求与会话
+
+`js/common.js` 统一发送带凭据的请求；修改请求自动获取 `/csrf` 并设置
+`X-CSRFToken`。401 会跳转整个工作空间到登录页；登录凭据错误留在登录页提示。
+CSRF 失败清除缓存 token，下一次用户操作重新获取；修改请求不会被自动重放。
+后台服务密钥不进入浏览器，前端只访问企业接口。
+
+`js/frame.js` 只接收同源且来自预期父窗口的消息。`recordsUpdated()` 通知外壳
+重新获取计数与额度，并通知其他同源标签页刷新数据；不再读取 localStorage 演示记录。
+首页、面试列表和报告阅读状态以数据库为准。原有 `reports-demo.js`、
+`interviews-state.js` 与演示媒体文件不再被工作空间页面加载。
+
+## 创建草稿与邀请凭证
+
+创建草稿仍按企业 ID 保存在 `sessionStorage`，切换菜单或刷新当前标签页后可恢复。
+每份草稿保留一个创建请求标识；提交按钮和表单在请求期间禁用，失败后的重试
+沿用标识，避免重复创建和重复扣减额度。遇到 `duplicate_request` 时去面试列表
+查看已创建记录；成功创建后清除草稿。
+
+原始邀请 URL 只在创建或轮换时由后端返回，并在当前标签页按企业和面试 ID
+临时缓存。当前标签页可复制已有链接；没有缓存时显示“重新生成邀请链接”，
+确认旧链接将失效后才调用轮换接口。轮换不扣额度，也不延长有效期。
+旧版本存储在 localStorage 的样例记录不导入业务数据库。
+
+## 本阶段范围
+
+面试语言固定日语、时长固定 15 分钟，与后端校验一致。
+企业开户和额度初始化继续由其他模块负责。
+当前页面没有自助编辑/删除面试和报告的交互，因此没有新增相应页面。
+候选人入口、AI 对话、邮件发送、实际报告生成、媒体上传仍属于后续功能。
+后端只返回媒体存储 key 时，报告页提示播放尚未开放；只有明确返回
+`recording_url` / `video_url` 的 HTTP(S) 绝对地址时才启用播放器。
+
+### 请求刷新策略
+
+同源父子页面共享 `/dashboard` 和 `/quota` 的并发请求及 30 秒成功缓存。
+切换菜单不再单独刷新侧栏统计；修改成功后立即清除统计缓存，数据变更通知
+当前工作空间只走一次消息通道，其他标签页通过 storage 事件刷新。
+面试列表保持可见时每 30 秒轮询，分页、搜索和报告列表请求按实际操作发送。
+失败结果不缓存，重试可重新发起请求。
+
+账户身份和 CSRF 获取由工作空间统一处理，同源功能页复用结果。直达报告详情
+时不预加载隐藏列表；返回列表后再查询。首页及报告列表取消被后续操作替代的
+请求，报告已读写入按报告 ID 合并，阅读状态保存失败不重建媒体播放器。

@@ -26,7 +26,7 @@
 
         <nav class="main-nav" aria-label="メインナビゲーション">
           <a class="active" href="#home" aria-current="page"><i>⌂</i><span data-copy="navHome">ホーム</span></a>
-          <a href="#interviews"><i>◉</i><span data-copy="navInterviews">面接管理</span><b>0</b></a>
+          <a href="#interviews"><i>◉</i><span data-copy="navInterviews">面接管理</span><b>—</b></a>
           <a href="#reports"><i>▥</i><span data-copy="navReports">評価レポート</span><em hidden></em></a>
         </nav>
 
@@ -34,8 +34,8 @@
           <a href="#help"><i>?</i><span data-copy="navHelp">ヘルプ</span></a>
           <a href="#settings"><i>⚙</i><span data-copy="navSettings">設定</span></a>
           <div class="plan-card">
-            <div><span data-copy="planLabel">今月の使用数</span><strong>24 / 50</strong></div>
-            <div class="plan-progress"><i></i></div>
+            <div><span data-copy="planLabel">残りの面接枠</span><strong id="remainingQuota">—</strong></div>
+            <p id="quotaStatus" role="status"></p>
             <a href="#plan" data-copy="planLink">プランを確認</a>
           </div>
         </div>
@@ -68,17 +68,17 @@
           </div>
           <div class="profile-menu" id="profileMenu">
             <a href="#account" data-copy="accountSettings">アカウント設定</a>
-            <a href="login.html" data-copy="logout">ログアウト</a>
+            <a href="login.html" id="logout" data-copy="logout">ログアウト</a>
           </div>
         </header>
 
+        <div id="workspaceStatus" class="form-error" role="alert" hidden></div>
         <iframe id="workspaceFrame" class="workspace-frame" title="ホーム" src="home.html"></iframe>
       </main>
     </div>
 
     <script src="js/common.js"></script>
     <script src="js/dashboard-i18n.js"></script>
-    <script src="js/reports-demo.js"></script>
     <script src="js/dashboard.js"></script>
   </body>
 </html>

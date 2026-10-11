@@ -141,6 +141,7 @@
         }),
       });
 
+      try { localStorage.setItem("aomera-language", currentLanguage); } catch {}
       window.location.href = "dashboard.html";
     } catch (error) {
       const copy = translations[currentLanguage];

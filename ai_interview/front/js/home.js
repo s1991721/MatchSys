@@ -1,85 +1,82 @@
 (() => {
-  const copy = window.AIInterviewCopy;
-  let lang = localStorage.getItem("aomera-language") || "ja";
-  const firstCharacter = (value) => Array.from(String(value || "").trim())[0] || "—";
-  const showToast = () => { document.querySelector("#toast").textContent = copy[lang].demoAction; document.querySelector("#toast").classList.add("show"); setTimeout(() => document.querySelector("#toast").classList.remove("show"), 2400); };
-
-
-  const filterKeys = { reports: 'pendingReports', abnormal: 'abnormalInterviews', waiting: 'waitingCandidates', today: 'todayInterviews' };
-  let selectedFilter = 'reports';
-  let localRecords = [];
-  const samples = [
-    { name: '山田 太郎', position: 'positionPm', state: 'reports', today: true, time: '12:42' },
-    { name: '鈴木 花子', position: 'positionBackend', state: 'reports', today: true, time: '11:30' },
-    { name: '王 芳', position: 'positionUx', state: 'reports', today: true, time: '10:15' },
-    { name: '佐藤 美咲', position: 'positionUx', state: 'abnormal', today: true, time: '09:18' },
-    { name: '李 明', position: 'positionBackend', state: 'waiting', time: 'expiringTime' },
-    { name: '高橋 健', position: 'positionPm', state: 'waiting', time: 'invitationValid' },
-    { name: '田中 葵', position: 'positionBackend', state: 'running', today: true, time: '13:00' },
-    { name: '陳 晨', position: 'positionUx', state: 'completed', today: true, time: '08:45' }
-  ];
-  const filterCopy = {
-    ja: { latestFirst: '完了日時の新しい順', todayScope: '本日開始した面接・状態は他の分類と重複します', emptyFilter: '該当する面接はありません。', invitationValid: '招待リンクは有効です', running: '面接中', completed: 'レポート確認済み', copyLink: 'リンクをコピー', expired: '招待の期限切れ', completedAt: '面接完了 · 今日', startedAt: '面接開始 · 今日', interruptedAt: '中断 · 今日', localPreview: 'ブラウザ保存のプレビュー・有効期限' },
-    'zh-CN': { latestFirst: '按完成时间从新到旧', todayScope: '今日开始的面试，与其他分类可能重叠', emptyFilter: '暂无此类面试。', invitationValid: '邀请链接有效', running: '面试中', completed: '报告已查看', copyLink: '复制链接', expired: '邀请已过期', completedAt: '面试完成 · 今天', startedAt: '面试开始 · 今天', interruptedAt: '面试中断 · 今天', localPreview: '浏览器保存的预览 · 有效至' }
-  };
-  function renderFilteredInterviews() {
-    const values = { ...copy[lang], ...filterCopy[lang] };
-    const data = [...samples, ...localRecords.map((record) => ({ ...record, name: record.candidateName || '—', state: new Date(record.expiresAt) <= new Date() ? 'expired' : 'waiting', local: true }))];
-    const matches = (item, filter) => filter === 'today' ? item.today === true : filter === 'abnormal' ? ['abnormal', 'expired'].includes(item.state) : item.state === filter;
-    document.querySelectorAll('[data-filter]').forEach((button) => {
-      const active = button.dataset.filter === selectedFilter;
-      button.classList.toggle('selected', active);
-      button.setAttribute('aria-pressed', String(active));
-      button.querySelector('.stat-count').textContent = data.filter((item) => matches(item, button.dataset.filter)).length;
+  const bridge = window.AIInterviewFrame, api = window.AIInterview, copy = window.AIInterviewCopy;
+  const $ = selector => document.querySelector(selector);
+  const text = (zh, ja) => bridge.lang === 'zh-CN' ? zh : ja;
+  const filterKeys = {reports:'pendingReports', abnormal:'abnormalInterviews', waiting:'waitingCandidates', today:'todayInterviews'};
+  let selected = 'reports', stats = null, records = [], total = 0, page = 1, loading = true, failure = null, sequence = 0;
+  let controller = null;
+  const node = (tag, className, content) => { const el = document.createElement(tag); el.className = className; if (content !== undefined) el.textContent = content; return el; };
+  const today = () => new Intl.DateTimeFormat('sv-SE', {timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
+  function render() {
+    const values = copy[bridge.lang], counts = {reports:stats?.unread_reports, abnormal:stats ? stats.abnormal + stats.expired : null, waiting:stats?.waiting, today:stats?.today_created};
+    document.querySelectorAll('[data-filter]').forEach(button => {
+      button.classList.toggle('selected', button.dataset.filter === selected);
+      button.setAttribute('aria-pressed', String(button.dataset.filter === selected));
+      button.querySelector('.stat-count').textContent = counts[button.dataset.filter] ?? '—';
     });
-    const list = data.filter((item) => matches(item, selectedFilter));
-    document.querySelector('#actionsTitle').textContent = `${values[filterKeys[selectedFilter]]} · ${list.length} ${values.countUnit}`;
-    document.querySelector('#filterNote').textContent = selectedFilter === 'today' ? values.todayScope : selectedFilter === 'reports' ? values.latestFirst : '';
-    const container = document.querySelector('#filteredInterviews');
-    container.replaceChildren();
-    const node = (tag, className, text) => { const el = document.createElement(tag); el.className = className; if (text !== undefined) el.textContent = text; return el; };
-    if (!list.length) container.append(node('p', 'empty-interviews', values.emptyFilter));
-    list.forEach((item) => {
-      const row = node('article', 'action-row');
-      const info = node('div', 'candidate-info');
-      info.append(node('strong', '', item.name), node('span', '', item.local ? item.position : values[item.position]));
-      const status = node('div', 'action-status');
-      const statusKey = { reports: 'statusReport', abnormal: 'statusInterrupted', waiting: 'statusWaiting', expired: 'expired', running: 'running', completed: 'completed' }[item.state];
-      const statusClass = ['abnormal', 'expired'].includes(item.state) ? 'warning' : item.state === 'waiting' ? 'waiting' : 'report';
-      status.append(node('span', `status ${statusClass}`, values[statusKey]));
-      const prefix = item.state === 'abnormal' ? values.interruptedAt : item.state === 'running' ? values.startedAt : values.completedAt;
-      status.append(node('span', 'action-time', item.local ? `${values.localPreview} ${new Intl.DateTimeFormat(lang, { timeZone: 'Asia/Tokyo', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(item.expiresAt))}` : values[item.time] || `${prefix} ${item.time}`));
-      const actionKey = item.local ? 'copyLink' : ['reports', 'completed'].includes(item.state) ? 'reviewReport' : item.state === 'waiting' ? 'viewInvitation' : 'viewDetails';
-      const button = node('button', `row-action ${item.state === 'reports' ? '' : 'secondary'}`, values[actionKey]);
-      button.type = 'button';
-      button.addEventListener('click', () => item.local ? copyInvitation(item.link) : showToast());
-      row.append(node('div', 'candidate-avatar', firstCharacter(item.name)), info, status, button);
-      container.append(row);
-    });
+    $('#actionsTitle').textContent = `${values[filterKeys[selected]]} · ${counts[selected] ?? '—'} ${values.countUnit}`;
+    $('#filterNote').textContent = selected === 'today' ? text('今日创建的面试', '本日作成した面接') : selected === 'reports' ? text('按报告生成时间排序', 'レポート生成日時順') : '';
+    const container = $('#filteredInterviews'); container.replaceChildren();
+    if (loading || failure || !records.length) {
+      container.append(node('p', 'empty-interviews', loading ? text('正在加载…', '読み込み中…') : failure ? api.errorMessage(failure, bridge.lang) : text('暂无此类记录。', '該当するデータはありません。')));
+      if (failure) { const retry = node('button', 'outline-action', text('重试', '再試行')); retry.type = 'button'; retry.addEventListener('click', load); container.append(retry); }
+      return;
+    }
+    for (const record of records) {
+      const report = selected === 'reports', state = report ? 'reports' : record.status;
+      const row = node('article', 'action-row'), info = node('div', 'candidate-info'), status = node('div', 'action-status');
+      info.append(node('strong', '', record.candidate_name), node('span', '', record.position_name));
+      const label = {reports:values.statusReport, waiting:values.statusWaiting, completed:text('已完成', '完了'), abnormal:values.statusInterrupted, expired:text('已过期', '期限切れ')}[state];
+      const time = report ? record.generated_at : state === 'waiting' ? record.invite_expires_at : record.created_at;
+      const prefix = report ? text('报告生成', 'レポート生成') : state === 'waiting' ? text('有效至', '有効期限') : text('创建于', '作成日時');
+      status.append(node('span', `status ${['abnormal','expired'].includes(state) ? 'warning' : state === 'waiting' ? 'waiting' : 'report'}`, label), node('span', 'action-time', `${prefix} · ${new Intl.DateTimeFormat(bridge.lang, {timeZone:'Asia/Tokyo', dateStyle:'short', timeStyle:'short'}).format(new Date(time))}`));
+      const action = node('button', 'row-action secondary', report || state === 'completed' ? text('查看报告', 'レポートを見る') : text('面试管理', '面接管理'));
+      action.type = 'button'; action.addEventListener('click', () => bridge.navigate(report || state === 'completed' ? 'reports' : 'interviews', report ? {report:record.id} : state === 'completed' ? {interview:record.id} : {}));
+      row.append(node('div', 'candidate-avatar', Array.from(record.candidate_name)[0] || '—'), info, status, action); container.append(row);
+    }
+    const pages = Math.max(1, Math.ceil(total / 10));
+    if (pages > 1) {
+      const nav = node('div', 'interview-pagination');
+      for (const [label, step] of [[text('上一页','前へ'), -1], [text('下一页','次へ'), 1]]) {
+        const button = node('button', 'outline-action', label); button.type = 'button'; button.disabled = step < 0 ? page <= 1 : page >= pages;
+        button.addEventListener('click', () => {page += step; load();}); nav.append(button);
+      }
+      nav.append(node('span', '', `${page} / ${pages}`)); container.append(nav);
+    }
   }
-  document.querySelectorAll('[data-filter]').forEach((button) => button.addEventListener('click', () => { selectedFilter = button.dataset.filter; renderFilteredInterviews(); }));
-
-
-  async function copyInvitation(link) {
-    try { await navigator.clipboard.writeText(link); }
-    catch { window.prompt(lang === 'ja' ? 'リンクをコピー' : '复制链接', link); }
+  async function load() {
+    if (!bridge.user) return;
+    controller?.abort(); controller = new AbortController();
+    const current = ++sequence; loading = true; failure = null; render();
+    const params = {page, page_size:10};
+    let path;
+    if (selected === 'reports') path = api.query('/reports', {...params, reading:'unread'});
+    else if (selected === 'today') path = api.query('/interviews', {...params, from:today(), to:today()});
+    else path = api.query('/interviews', {...params, status:selected === 'abnormal' ? 'attention' : selected});
+    try {
+      const [summary, list] = await Promise.all([api.requestSummary('/dashboard'), api.requestJson(path, {signal:controller.signal})]);
+      if (current !== sequence) return;
+      stats = summary.data; records = list.data.items; total = list.data.total;
+      const lastPage = Math.max(1, Math.ceil(total / 10));
+      if (page > lastPage) {page = lastPage; return load();}
+    } catch (error) { if (current !== sequence || error.name === 'AbortError') return; failure = error; records = []; }
+    finally { if (current === sequence) {loading = false; render();} }
   }
-  function applyLanguage(next) {
-    lang = copy[next] ? next : 'ja';
-    document.documentElement.lang = lang;
-    document.querySelectorAll('[data-copy]').forEach(node => { node.textContent = copy[lang][node.dataset.copy] || ''; });
-    document.querySelector('[data-ui="create"]').textContent = lang === 'ja' ? '面接を作成' : '创建面试';
-    document.querySelector('[data-ui="sampleData"]').textContent = lang === 'ja' ? '一覧にはサンプルデータが含まれます。作成した招待プレビューはこのブラウザに保存されます。' : '列表包含示例数据；创建的邀请预览仅保存在当前浏览器。';
-    const user = window.AIInterviewFrame.user;
-    document.querySelector('#greetingName').textContent = user ? `${user.display_name || user.user_name}${lang === 'ja' ? 'さん。' : '。'}` : '';
-    renderFilteredInterviews();
+  function translate() {
+    document.title = `AOMERA — ${copy[bridge.lang].navHome}`;
+    document.querySelectorAll('[data-copy]').forEach(el => {el.textContent = copy[bridge.lang][el.dataset.copy] || '';});
+    $('[data-ui="create"]').textContent = text('创建面试', '面接を作成');
+    $('[data-ui="sampleData"]').hidden = true;
+    $('[data-copy="startedToday"]').textContent = text('今日创建', '本日作成');
+    $('#greetingName').textContent = bridge.user ? `${bridge.user.display_name || bridge.user.user_name}${text('。','さん。')}` : '';
+    $('#today').textContent = today().replaceAll('-', '.'); render();
   }
-  window.addEventListener('aomera-language-change', event => applyLanguage(event.detail));
-  window.addEventListener('aomera-user-ready', event => {
-    localRecords = window.AIInterviewFrame.records(event.detail.id);
-    applyLanguage(window.AIInterviewFrame.lang);
-  });
-  document.querySelector('#createInterview').addEventListener('click', () => window.AIInterviewFrame.navigate('create'));
-  document.querySelector('#today').textContent = new Intl.DateTimeFormat('sv-SE', {timeZone: 'Asia/Tokyo'}).format(new Date()).replaceAll('-', '.');
-  applyLanguage(lang);
+  document.querySelectorAll('[data-filter]').forEach(button => button.addEventListener('click', () => {selected = button.dataset.filter; page = 1; load();}));
+  $('#createInterview').addEventListener('click', () => bridge.navigate('create'));
+  window.addEventListener('aomera-language-change', translate);
+  window.addEventListener('aomera-user-ready', () => {translate(); load();});
+  window.addEventListener('storage', event => { if (event.key === 'aomera-data-updated') load(); });
+  document.addEventListener('visibilitychange', () => {if (!document.hidden) load();});
+  window.addEventListener('pagehide', () => controller?.abort());
+  translate();
 })();

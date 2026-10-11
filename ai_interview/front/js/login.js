@@ -141,7 +141,6 @@
         }),
       });
 
-      form.dispatchEvent(new CustomEvent("aomera:login-submit", { bubbles: true, detail: { userName: userName.value.trim() } }));
       window.location.href = "dashboard.html";
     } catch (error) {
       const copy = translations[currentLanguage];

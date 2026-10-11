@@ -10,7 +10,7 @@
       candidate: '候选人', status: '状态', created: '创建时间', relatedTime: '截止／完成时间', action: '操作',
       empty: '尚未创建面试，请点击「创建面试」开始。', noMatch: '没有符合条件的面试，请调整筛选条件。',
       pageSize: '每页', previous: '上一页', next: '下一页', total: '共 {total} 条 · 当前 {start}–{end} 条',
-      deadline: '截止', finished: '完成', error: '异常记录', unknownError: '面试失败或中断', generating: '报告生成中', reportUnavailable: '报告功能准备中',
+      deadline: '截止', finished: '完成', unknownError: '面试失败或中断', generating: '报告生成中', reportUnavailable: '报告功能准备中',
       copyLink: '复制邀请链接', copied: '邀请预览链接已复制', copyFallback: '请复制邀请预览链接', invalidRange: '开始日期不能晚于结束日期。'
     },
     ja: {
@@ -20,7 +20,7 @@
       candidate: '候補者', status: 'ステータス', created: '作成日時', relatedTime: '有効期限／完了日時', action: '操作',
       empty: '面接はまだありません。「面接を作成」から始めましょう。', noMatch: '条件に一致する面接はありません。絞り込み条件を変更してください。',
       pageSize: '表示件数', previous: '前へ', next: '次へ', total: '全 {total} 件 · {start}–{end} 件を表示',
-      deadline: '有効期限', finished: '完了', error: '異常記録', unknownError: '面接の失敗または中断', generating: 'レポート生成中', reportUnavailable: 'レポート機能は準備中',
+      deadline: '有効期限', finished: '完了', unknownError: '面接の失敗または中断', generating: 'レポート生成中', reportUnavailable: 'レポート機能は準備中',
       copyLink: '招待リンクをコピー', copied: '招待プレビューをコピーしました', copyFallback: '招待プレビューをコピーしてください', invalidRange: '開始日は終了日以前にしてください。'
     }
   };

@@ -8,11 +8,14 @@
 - `interview-create.html`: existing invitation preview form and success view.
 - `interviews.html`: interview list with candidate search, status and creation-date filters.
 - `reports.html`: simulated report list, plain-text detail and independent audio/video playback.
-- `help.html`, `settings.html`, `plan.html`, `account.html`: independent entry pages for features that are not implemented yet.
+- `help.html`, `settings.html`, `plan.html`: usage guide, read-only preferences and trial plan information, rendered by `js/static-pages.js`.
+- `account.html`: workspace information, display-name editing and password changes via the authenticated account API.
 
 Routes use `dashboard.html#home`, `#create`, `#interviews`, etc. The shell replaces the iframe document's history entry so browser Back follows the shell routes. Open pages through an HTTP server on the same origin, not `file://`.
 
 ## Shared integration
+
+`js/dashboard-i18n.js` supplies shared workspace translations to the shell, home and information pages. Account, interview and report pages own their feature-specific translations.
 
 Each function page loads `js/common.js` for API access and `js/frame.js` for shell communication. Page scripts listen for `aomera-language-change` and `aomera-user-ready`; the bridge sends its ready message after their listeners are installed. Language updates continue throughout the page lifetime. User readiness is emitted once per user ID.
 

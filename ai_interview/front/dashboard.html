@@ -83,79 +83,32 @@
             </button>
           </section>
 
-          <section class="panel local-interviews" aria-labelledby="recentTitle">
-            <div class="panel-heading"><div><p class="section-kicker">INTERVIEW INVITATIONS</p><h2 id="recentTitle" data-ui="recent">作成した面接</h2></div></div>
-            <div id="createdInterviews" class="created-interviews"></div>
-          </section>
-          <p class="sample-label" data-ui="sampleData">以下はダッシュボードのサンプルデータです。</p>
+          <p class="sample-label" data-ui="sampleData">一覧にはサンプルデータが含まれます。作成した招待プレビューはこのブラウザに保存されます。</p>
           <section class="stat-grid" aria-label="面接状況">
-            <article class="stat-card attention">
+            <button type="button" data-filter="reports" aria-pressed="true" aria-controls="filteredInterviews" class="stat-card attention">
               <div class="stat-icon">✓</div>
-              <div><span data-copy="pendingReports">確認待ちレポート</span><strong>3<small data-copy="countUnit">件</small></strong></div>
+              <div><span data-copy="pendingReports">未確認レポート</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
               <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
-            </article>
-            <article class="stat-card">
+            </button>
+            <button type="button" data-filter="abnormal" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card warning">
+              <div class="stat-icon">!</div>
+              <div><span data-copy="abnormalInterviews">面接の異常</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note" data-copy="actionNeeded">対応が必要です</span>
+            </button>
+            <button type="button" data-filter="waiting" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card ">
               <div class="stat-icon">◷</div>
-              <div><span data-copy="waitingCandidates">参加待ち</span><strong>2<small data-copy="countUnit">件</small></strong></div>
-              <span class="stat-note neutral" data-ui="anytimeShort">有効期間内に参加</span>
-            </article>
-            <article class="stat-card live">
-              <div class="stat-icon">●</div>
-              <div><span data-copy="inProgress">面接中</span><strong>1<small data-copy="countUnit">件</small></strong></div>
-              <span class="stat-note live-note" data-copy="nowRunning">現在進行中</span>
-            </article>
-            <article class="stat-card">
-              <div class="stat-icon">↗</div>
-              <div><span data-copy="monthCompleted">今月の完了</span><strong>24<small data-copy="countUnit">件</small></strong></div>
-              <span class="stat-note positive">+18% <span data-copy="lastMonth">先月比</span></span>
-            </article>
+              <div><span data-copy="waitingCandidates">参加待ち</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+            </button>
+            <button type="button" data-filter="today" aria-pressed="false" aria-controls="filteredInterviews" class="stat-card">
+              <div class="stat-icon">▦</div>
+              <div><span data-copy="todayInterviews">本日の面接</span><strong><span class="stat-count">0</span><small data-copy="countUnit">件</small></strong></div>
+              <span class="stat-note neutral" data-copy="startedToday">本日開始</span>
+            </button>
           </section>
-
-          <section class="dashboard-grid">
-            <article class="panel action-panel" id="interviews">
-              <div class="panel-heading">
-                <div><p class="section-kicker">ACTION CENTER</p><h2 data-copy="needsAction">対応が必要です</h2></div>
-                <a href="#all-actions"><span data-copy="viewAll">すべて見る</span> →</a>
-              </div>
-              <div class="action-list">
-                <article class="action-row">
-                  <div class="candidate-avatar blue">山</div>
-                  <div class="candidate-info"><strong>山田 太郎</strong><span data-copy="positionPm">プロダクトマネージャー</span></div>
-                  <div class="action-status"><span class="status report"><i></i><span data-copy="statusReport">レポート確認待ち</span></span><time>12:42</time></div>
-                  <div class="score"><small>AI SCORE</small><strong>86</strong></div>
-                  <button class="row-action" type="button"><span data-copy="reviewReport">レポートを確認</span><i>→</i></button>
-                </article>
-                <article class="action-row">
-                  <div class="candidate-avatar purple">李</div>
-                  <div class="candidate-info"><strong>李 明</strong><span data-copy="positionBackend">バックエンドエンジニア</span></div>
-                  <div class="action-status"><span class="status waiting"><i></i><span data-copy="statusWaiting">参加待ち</span></span><time>2 days</time></div>
-                  <div class="score empty"><small data-copy="invited">招待済み</small><strong>—</strong></div>
-                  <button class="row-action secondary" type="button"><span data-copy="resend">再招待する</span><i>→</i></button>
-                </article>
-                <article class="action-row">
-                  <div class="candidate-avatar coral">佐</div>
-                  <div class="candidate-info"><strong>佐藤 美咲</strong><span data-copy="positionUx">UXデザイナー</span></div>
-                  <div class="action-status"><span class="status warning"><i></i><span data-copy="statusInterrupted">面接が中断</span></span><time>09:18</time></div>
-                  <div class="score empty"><small data-copy="progress">進捗</small><strong>62%</strong></div>
-                  <button class="row-action secondary" type="button"><span data-copy="viewDetails">詳細を見る</span><i>→</i></button>
-                </article>
-              </div>
-            </article>
-
-            <aside class="panel pulse-panel">
-              <div class="panel-heading compact"><div><p class="section-kicker">TODAY'S PULSE</p><h2 data-copy="todayStatus">本日の状況</h2></div><span class="live-pill"><i></i> LIVE</span></div>
-              <div class="pulse-visual">
-                <div class="pulse-ring"><div><strong>6</strong><span data-copy="interviewsUnit">面接</span></div></div>
-                <div class="pulse-legend">
-                  <span><i class="complete"></i><b data-copy="completed">完了</b><strong>3</strong></span>
-                  <span><i class="processing"></i><b data-copy="processing">進行中</b><strong>1</strong></span>
-                  <span><i class="scheduled"></i><b data-copy="scheduled">予定</b><strong>2</strong></span>
-                </div>
-              </div>
-              <div class="next-interview async-notice"><p data-ui="anytime">有効期間内はいつでも開始</p><span data-ui="anytimeHelp">日時の予約は不要です。リンクごとに1名の候補者を招待します。</span></div>
-            </aside>
+          <section class="panel action-panel" id="interviews" aria-labelledby="actionsTitle">
+            <div class="panel-heading"><div><p class="section-kicker">INTERVIEWS</p><h2 id="actionsTitle">未確認レポート</h2></div><span class="panel-note" id="filterNote"></span></div>
+            <div class="action-list" id="filteredInterviews" aria-live="polite"></div>
           </section>
-
           </div>
           <section id="createView" hidden aria-labelledby="createTitle">
             <button type="button" class="back-action" id="backHome" data-ui="back">← ホームに戻る</button>

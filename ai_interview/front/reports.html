@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07111e" />
+    <meta name="description" content="AOMERA AI面接官の面接管理ワークスペース。" />
+    <title>AOMERA AI面接官 — reports</title>
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-navy.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-white.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/aomera-favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/aomera-apple-touch-icon.png" />
+    <link rel="stylesheet" href="css/dashboard.css?v=20261012-player2" />
+  </head>
+  <body class="function-page" data-page="reports">
+<main class="content">
+  <h1 id="reportPageTitle"></h1>
+  <section id="reportList" class="panel reports-panel">
+    <div id="reportFilters" class="report-filters" aria-label="报告筛选"></div>
+    <div id="listStatus" role="status"></div>
+    <div class="interview-table-scroll"><table class="interview-table report-table">
+      <thead><tr><th data-ui="candidate"></th><th data-ui="position"></th><th data-ui="time"></th><th data-ui="reading"></th><th data-ui="action"></th></tr></thead>
+      <tbody id="reportRows"></tbody>
+    </table></div>
+  </section>
+  <section id="reportDetail" hidden>
+    <button id="backReports" class="outline-action" type="button" data-ui="back"></button>
+    <div id="detailStatus" role="status"></div>
+    <article id="reportArticle" class="panel report-article" hidden>
+      <h2 id="reportCandidate"></h2><p id="reportMeta" class="report-meta"></p>
+      <div id="reportText" class="report-text"></div>
+      <section id="reportMedia" class="report-media"></section>
+    </article>
+  </section>
+</main>
+<script src="js/common.js"></script><script src="js/frame.js"></script><script src="js/report-player.js?v=20261012-player2"></script><script src="js/reports.js?v=20261012-player1"></script>
+</body></html>

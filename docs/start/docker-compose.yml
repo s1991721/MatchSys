@@ -38,17 +38,42 @@ services:
       DB_PASSWORD: bpmatch_user_AbCdEfG
       DB_HOST: db
       DB_PORT: 3306
-      OLLAMA_HOST: http://ollama:11434
     volumes:
       - web_upload:/app/upload
       - web_logs:/app/logs
 
+  ai_interview:
+    image: jef4267/ai-interview:1.0
+    container_name: matchsys-ai-interview
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             uvicorn config.asgi:application --host 0.0.0.0 --port 8001 --workers 3 --ws none --proxy-headers --forwarded-allow-ips '*'"
+    depends_on:
+      - db
+    expose:
+      - "8001"
+    networks:
+      - matchsys-net
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AI_INTERVIEW_REALTIME_MODEL: ${AI_INTERVIEW_REALTIME_MODEL:-gpt-realtime}
+      AI_INTERVIEW_REALTIME_VOICE: ${AI_INTERVIEW_REALTIME_VOICE:-marin}
+      AI_INTERVIEW_DB_NAME: ai_interview
+      AI_INTERVIEW_DB_USER: ai_interview_user
+      AI_INTERVIEW_DB_PASSWORD: ai_interview_user_AbCdEfG
+      AI_INTERVIEW_DB_HOST: db
+      AI_INTERVIEW_DB_PORT: 3306
+    volumes:
+      - ai_interview_media:/app/media
+
   nginx:
-    image: jef4267/matchsys-nginx:3.2
+    image: jef4267/matchsys-nginx:3.3
     container_name: matchsys-nginx
     restart: unless-stopped
     depends_on:
       - web
+      - ai_interview
     ports:
       - "80:80"
       - "443:443"
@@ -58,41 +83,11 @@ services:
       - /srv/aomera/certbot/www:/var/www/certbot:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
 
-  ollama:
-    image: ollama/ollama:latest
-    container_name: ollama
-    restart: unless-stopped
-    environment:
-      OLLAMA_NUM_THREADS: "6"    #提升效率使用机器的核心数线程
-      OLLAMA_NUM_PARALLEL: "2"   #提升并发
-
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks:
-      - matchsys-net
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        ollama serve &
-    
-        until ollama list > /dev/null 2>&1; do
-          sleep 1
-        done
-    
-        ollama pull llama3.2:3b-instruct-q4_K_M
-    
-        wait
-
-      
-
 volumes:
   mysql_data:
-  ollama_data:
   web_upload:
   web_logs:
+  ai_interview_media:
 
 networks:
   matchsys-net:

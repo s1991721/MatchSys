@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07111e" />
+    <meta name="description" content="AOMERA AI面接官の面接管理ワークスペース。" />
+    <title>AOMERA AI面接官 — ホーム</title>
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-navy.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-white.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/aomera-favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/aomera-apple-touch-icon.png" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <a href="index.html" aria-label="AOMERA AI面接官 ホーム">
+            <img src="aomera-wordmark-light.png" alt="AOMERA" width="2172" height="724" />
+            <span class="sidebar-brand-divider" aria-hidden="true"></span>
+            <span class="sidebar-brand-product" data-copy="productName">AI面接官</span>
+          </a>
+          <button class="sidebar-close" id="sidebarClose" type="button" aria-label="メニューを閉じる">×</button>
+        </div>
+
+        <nav class="main-nav" aria-label="メインナビゲーション">
+          <a class="active" href="#home" aria-current="page"><i>⌂</i><span data-copy="navHome">ホーム</span></a>
+          <a href="#interviews"><i>◉</i><span data-copy="navInterviews">面接管理</span><b>—</b></a>
+          <a href="#reports"><i>▥</i><span data-copy="navReports">評価レポート</span><em hidden></em></a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <a href="#help"><i>?</i><span data-copy="navHelp">ヘルプ</span></a>
+          <a href="#settings"><i>⚙</i><span data-copy="navSettings">設定</span></a>
+          <div class="plan-card">
+            <div><span data-copy="planLabel">残りの面接枠</span><strong id="remainingQuota">—</strong></div>
+            <div class="plan-progress" id="quotaProgress" role="progressbar" aria-valuemin="0" aria-valuemax="30" hidden><i></i></div>
+            <p id="quotaStatus" role="status" hidden></p>
+            <a href="#plan" data-copy="planLink">プランを確認</a>
+          </div>
+        </div>
+      </aside>
+
+      <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+      <main class="workspace">
+        <header class="topbar">
+          <button class="menu-button" id="menuButton" type="button" aria-label="メニューを開く">☰</button>
+          <div class="company-switcher">
+            <span class="company-mark" id="companyMark">—</span>
+            <div><small data-copy="workspaceLabel">ワークスペース</small><strong id="companyName">読み込み中…</strong></div>
+            <button type="button" aria-label="ワークスペースを切り替える">⌄</button>
+          </div>
+          <div class="top-actions">
+            <div class="language-switch" role="group" aria-label="Language">
+              <button class="active" type="button" data-lang="ja" aria-pressed="true">日本語</button>
+              <button type="button" data-lang="zh-CN" aria-pressed="false">中文</button>
+            </div>
+            <div class="notification-anchor">
+              <button class="notification-button" id="notificationButton" type="button" aria-label="通知" aria-expanded="false" aria-controls="notificationPopover"><span>♢</span><i></i></button>
+              <div class="notification-popover" id="notificationPopover" role="status" aria-live="polite" hidden></div>
+            </div>
+            <button class="profile-button" id="profileButton" type="button" aria-expanded="false">
+              <span class="avatar" id="userAvatar">—</span>
+              <span class="profile-name"><strong id="displayName">読み込み中…</strong><small data-copy="userRole">採用担当者</small></span>
+              <span>⌄</span>
+            </button>
+          </div>
+          <div class="profile-menu" id="profileMenu">
+            <a href="#account" data-copy="accountSettings">アカウント設定</a>
+            <a href="login.html" id="logout" data-copy="logout">ログアウト</a>
+          </div>
+        </header>
+
+        <div id="workspaceStatus" class="form-error" role="alert" hidden></div>
+        <iframe id="workspaceFrame" class="workspace-frame" title="ホーム" src="home.html"></iframe>
+      </main>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/dashboard.js"></script>
+  </body>
+</html>

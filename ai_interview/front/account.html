@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#07111e" />
+    <meta name="description" content="AOMERA AI面接官の面接管理ワークスペース。" />
+    <title>AOMERA AI面接官 — account</title>
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-navy.svg" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/svg+xml" href="/aomera-logo-mark-white.svg" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/aomera-favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/aomera-apple-touch-icon.png" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body class="function-page" data-page="account">
+<main class="content static-content">
+<header class="static-heading"><p class="eyebrow">INTERVIEW WORKSPACE</p><h1 data-account-copy="title"></h1><p data-account-copy="intro"></p></header>
+<section class="panel static-panel"><h2 data-account-copy="workspace"></h2><dl class="static-rows"><div><dt data-account-copy="workspace"></dt><dd id="accountWorkspace">—</dd></div><div><dt data-account-copy="workspaceCode"></dt><dd id="accountWorkspaceCode">—</dd></div><div><dt data-account-copy="username"></dt><dd id="accountUsername">—</dd></div></dl></section>
+<section class="panel static-panel"><h2 data-account-copy="profile"></h2><form id="profileForm" class="account-form"><label for="accountDisplayName" data-account-copy="displayName"></label><input id="accountDisplayName" name="display_name" maxlength="100" required autocomplete="nickname" /><button class="primary-action" type="submit" data-account-copy="saveName" disabled></button><p id="profileStatus" role="status" aria-live="polite"></p></form></section>
+<section class="panel static-panel"><h2 data-account-copy="password"></h2><form id="passwordForm" class="account-form"><label for="currentPassword" data-account-copy="currentPassword"></label><input id="currentPassword" name="current_password" type="password" required autocomplete="current-password" maxlength="128" /><label for="newPassword" data-account-copy="newPassword"></label><input id="newPassword" name="new_password" type="password" required autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="passwordHint" /><p id="passwordHint" class="static-muted" data-account-copy="passwordHint"></p><label for="confirmPassword" data-account-copy="confirmPassword"></label><input id="confirmPassword" name="confirm_password" type="password" required autocomplete="new-password" minlength="8" maxlength="128" /><button class="primary-action" type="submit" data-account-copy="savePassword" disabled></button><p id="passwordStatus" role="status" aria-live="polite"></p></form></section>
+<p id="accountLoadStatus" role="status"></p>
+</main>
+<script src="js/common.js"></script><script src="js/frame.js"></script><script src="js/account.js"></script>
+</body></html>

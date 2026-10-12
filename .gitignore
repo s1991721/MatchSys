@@ -17,3 +17,6 @@ __pycache__/
 /.$ER.drawio.bkp
 /.vscode/
 /logs/**
+/ai_interview/back/.venv/**
+/ai_interview/back/media/**
+/ai_interview/back/.env

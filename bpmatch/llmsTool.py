@@ -1,3 +1,4 @@
+from project.tenancy import current_schema
 import json
 import os
 import ssl
@@ -20,7 +21,11 @@ DEFAULT_TIMEOUT = 600
 DEFAULT_OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 RULE_ONLY_LOCAL_MODEL = "matchsys-rules-v1"
 
-_LLM_CACHE = {"config": None, "client": None}
+_LLM_CACHE = {}
+
+
+def _tenant_llm_cache():
+    return _LLM_CACHE.setdefault(current_schema(), {"config": None, "client": None})
 
 
 class _SimpleMessage:
@@ -51,13 +56,13 @@ def _load_ai_settings():
 
 
 def _get_ai_settings():
-    if _LLM_CACHE["config"] is None:
-        _LLM_CACHE["config"] = _load_ai_settings()
-    return _LLM_CACHE["config"]
+    if _tenant_llm_cache()["config"] is None:
+        _tenant_llm_cache()["config"] = _load_ai_settings()
+    return _tenant_llm_cache()["config"]
 
 
 def invalidate_llm_cache():
-    _LLM_CACHE.update(config=None, client=None)
+    _LLM_CACHE.pop(current_schema(), None)
 
 
 def _to_openai_messages(messages):
@@ -112,8 +117,8 @@ class CloudChatOpenAI:
 
 
 def _get_llm():
-    if _LLM_CACHE["client"] is not None:
-        return _LLM_CACHE["client"]
+    if _tenant_llm_cache()["client"] is not None:
+        return _tenant_llm_cache()["client"]
 
     settings_payload = _get_ai_settings()
     model_type = settings_payload.get("model_type") or "local"
@@ -135,7 +140,7 @@ def _get_llm():
             client_kwargs={"timeout": DEFAULT_TIMEOUT},
         )
 
-    _LLM_CACHE["client"] = client
+    _tenant_llm_cache()["client"] = client
     return client
 
 

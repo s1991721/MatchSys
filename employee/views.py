@@ -126,6 +126,8 @@ def login_api(request):
         return error
 
     user_name = (payload.get("user_name") or "").strip()
+    if getattr(request, "tenant_domain", None) and "@" in user_name:
+        user_name = user_name.rsplit("@", 1)[0] + "@" + request.tenant_domain
     password = payload.get("password") or ""
 
     if not user_name or not password:
@@ -160,6 +162,8 @@ def login_api(request):
         )
 
     request.session.cycle_key()
+    request.session["tenant_domain"] = request.tenant_domain
+    request.tenant_login_success = True
     request.session["employee_id"] = user_login.employee_id
     request.session["employee_name"] = user_login.employee_name
     employee_department_name = ""
@@ -193,6 +197,7 @@ def login_api(request):
         "employee_position_name": employee_position_name,
         "role_id": user_login.role_id,
         "menu_list": normalized_menu_list,
+        "tenant_domain": request.tenant_domain,
     })
 
 

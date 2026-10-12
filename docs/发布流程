@@ -91,5 +91,5 @@ v2.0 财务版本
 v3.0 案件告示板版本
 v3.1 官网SEO
 v3.2 研修・Academy
-v3.3 AI面接官
+v3.3 AI面接官 强制刷新nginx缓存、ipad适配、案件列表日期提醒、LINE群组案件提醒
 v3.4 面试&评价、matchSys多租户   nginx3.4  web3.2   ai1.1  db3.4

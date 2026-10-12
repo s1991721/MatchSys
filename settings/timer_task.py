@@ -23,7 +23,7 @@ from bpmatch.models import (
 from employee.models import LoginAudit, UserLogin
 from permission.models import Role
 from settings.activation_code import is_activation_code_valid
-from settings.mails_arrival_notification import notify_project_ingested
+from settings.mails_arrival_notification import replace_latest_project_batch
 from settings.models import SysSettings
 
 
@@ -280,6 +280,7 @@ def _fetch_and_classify_mails(task_name: str, logger: logging.Logger, start_date
 # 邮件落库
 def _save_classified_mails(task_name: str, logger: logging.Logger, project_list, technician_list):
     saved_project_items = []
+    saved_project_notifications = []
     saved_technician_count = 0
 
     # 案件邮件落库
@@ -305,16 +306,25 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                     id=mail.get("id"),
                     date=mail.get("date"),
                 )
-                transaction.on_commit(
-                    lambda _mail=mail, _country=country, _skills=skills, _price=price: notify_project_ingested(
-                        _mail, _country, _skills, _price
-                    )
-                )
             saved_project_items.append(
                 {
                     "id": mail.get("id") or "",
                     "title": mail.get("subject") or "",
                     "country": country,
+                }
+            )
+            saved_project_notifications.append(
+                {
+                    "mail": {
+                        "id": mail.get("id") or "",
+                        "message_id_header": mail.get("message_id_header") or "",
+                        "subject": mail.get("subject") or "",
+                        "from": mail.get("from") or "",
+                        "date": mail.get("date") or "",
+                    },
+                    "country": country,
+                    "skills": skills,
+                    "price": price,
                 }
             )
             logger.info(
@@ -371,6 +381,7 @@ def _save_classified_mails(task_name: str, logger: logging.Logger, project_list,
                 mail.get("subject"),
             )
 
+    replace_latest_project_batch(task_name, saved_project_notifications)
     _save_classified_mails_summary_to_my_mail(
         task_name,
         logger,

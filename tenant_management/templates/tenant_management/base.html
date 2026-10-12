@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}租户管理{% endblock %} - MatchSys</title>
+    <link rel="icon" href="/favicon-32.png">
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, sans-serif; color: #172b4d; background: #f3f6fb; }
+        main { max-width: 960px; margin: 64px auto; padding: 24px; }
+        .card { background: white; border: 1px solid #e0e6ef; border-radius: 16px; padding: 32px; box-shadow: 0 12px 36px #172b4d0a; }
+        .login { max-width: 440px; margin: 10vh auto; }
+        .brand { color: #315f9f; font-weight: 700; letter-spacing: 2px; }
+        h1 { margin: 12px 0; font-size: 28px; }
+        p { color: #607089; line-height: 1.7; }
+        label { display: block; margin: 24px 0 8px; font-weight: 600; }
+        input { width: 100%; padding: 12px; border: 1px solid #bdc9da; border-radius: 8px; font: inherit; }
+        input:focus { outline: 2px solid #315f9f; outline-offset: 2px; }
+        button { padding: 12px 20px; border: 0; border-radius: 8px; background: #244e83; color: white; font: inherit; cursor: pointer; }
+        .submit { width: 100%; margin-top: 28px; }
+        .error { padding: 12px; border-radius: 8px; background: #fff0f0; color: #a32929; }
+        header { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+        a { color: #315f9f; }
+        .back { display: block; text-align: center; margin-top: 24px; }
+    </style>
+</head>
+<body><main>{% block content %}{% endblock %}</main></body>
+</html>

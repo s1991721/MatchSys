@@ -1,3 +1,4 @@
+from project.tenancy import tenant_target
 import base64
 import binascii
 import json
@@ -448,7 +449,7 @@ def queue_bulk_mail_by_login(login_id, payload):
     with transaction.atomic():
         MailSendTask.objects.bulk_create(tasks)
         send_thread = threading.Thread(
-            target=_consume_mail_send_tasks,
+            target=tenant_target(_consume_mail_send_tasks),
             args=(int(login_id), tasks),
             name=f"mail-send-{login_id}",
             daemon=True,
@@ -498,7 +499,7 @@ def queue_mail_by_login(login_id, payload):
     with transaction.atomic():
         task.save(force_insert=True)
         send_thread = threading.Thread(
-            target=_consume_mail_send_tasks,
+            target=tenant_target(_consume_mail_send_tasks),
             args=(int(login_id), [task]),
             name=f"mail-send-{login_id}-{task.id}",
             daemon=True,

@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from project.api import api_error
 from project.error_codes import ErrorCode
+from project.tenancy import tenant_cache_key
 from settings.activation_code import is_activation_code_valid
 from settings.models import SysSettings
 
@@ -23,6 +24,10 @@ class SessionLoginRequiredMiddleware:
         path = request.path
         if self._should_skip(path):
             return self.get_response(request)
+
+        if (not getattr(request, "tenant_domain", None)
+                or request.session.get("tenant_domain") != request.tenant_domain):
+            return self._login_required_response(path)
 
         if not self._check_activation():
             return self._activation_required_response(path)
@@ -59,7 +64,7 @@ class SessionLoginRequiredMiddleware:
         }:
             return True
 
-        if path.startswith(("/static/", "/admin/")):
+        if path.startswith(("/static/", "/admin/", "/tenant-management/")):
             return True
 
         if path == "/api/login":
@@ -75,7 +80,7 @@ class SessionLoginRequiredMiddleware:
 
     @staticmethod
     def _check_activation() -> bool:
-        if cache.get("activation_valid") is True:
+        if cache.get(tenant_cache_key("activation_valid")) is True:
             return True
         record = SysSettings.objects.filter(name="activation", deleted_at__isnull=True).first()
         if not record:
@@ -86,7 +91,7 @@ class SessionLoginRequiredMiddleware:
             return False
         valid, _payload, _reason = is_activation_code_valid(token, now=timezone.now())
         if valid:
-            cache.set("activation_valid", True, timeout=3600)
+            cache.set(tenant_cache_key("activation_valid"), True, timeout=3600)
         return valid
 
     @staticmethod

@@ -1,0 +1,19 @@
+{% extends "tenant_management/base.html" %}
+{% block title %}租户管理登录{% endblock %}
+{% block content %}
+<section class="card login">
+    <div class="brand">MATCHSYS</div>
+    <h1>租户管理登录</h1>
+    <p>请使用平台管理员账号登录。</p>
+    {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="{% url 'tenant_management:login' %}">
+        {% csrf_token %}
+        <label for="username">平台管理员账号</label>
+        <input id="username" name="username" value="{{ username }}" autocomplete="username" maxlength="150" required autofocus>
+        <label for="password">密码</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="submit" type="submit">登录</button>
+    </form>
+    <a class="back" href="/login.html">返回公司用户登录</a>
+</section>
+{% endblock %}

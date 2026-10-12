@@ -21,8 +21,15 @@ from project.storage import StorageArea
 from settings.LINE import (
     get_line_message_content,
     get_line_channel_secret,
+    get_line_project_notify_group_id,
+    reply_line_messages,
     reply_line_text,
     verify_line_signature,
+)
+from settings.mails_arrival_notification import (
+    claim_latest_project_batch,
+    complete_latest_project_batch_claim,
+    release_latest_project_batch_claim,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,6 +48,46 @@ def _guess_image_suffix(content_type: str) -> str:
     if "bmp" in ctype:
         return ".bmp"
     return ".bin"
+
+
+def _is_project_batch_query(event: dict, message: dict) -> bool:
+    source = event.get("source") if isinstance(event.get("source"), dict) else {}
+    if source.get("type") != "group":
+        return False
+    configured_group_id = get_line_project_notify_group_id()
+    if not configured_group_id or source.get("groupId") != configured_group_id:
+        return False
+    if "查看案件" not in str(message.get("text") or ""):
+        return False
+    mention = message.get("mention") if isinstance(message.get("mention"), dict) else {}
+    mentionees = mention.get("mentionees")
+    if not isinstance(mentionees, list):
+        return False
+    return any(
+        isinstance(item, dict)
+        and item.get("type") == "user"
+        and item.get("isSelf") is True
+        for item in mentionees
+    )
+
+
+def _reply_project_batch_query(reply_token: str) -> str:
+    claim = claim_latest_project_batch()
+    status = claim.get("status")
+    if status == "empty":
+        reply_line_text(reply_token, "当前没有待查看的案件。")
+        return "empty"
+    if status == "busy":
+        reply_line_text(reply_token, "案件信息正在发送，请稍后再试。")
+        return "busy"
+
+    try:
+        reply_line_messages(reply_token, claim["messages"])
+    except Exception:
+        release_latest_project_batch_claim(claim)
+        raise
+    complete_latest_project_batch_claim(claim)
+    return "sent"
 
 
 @require_GET
@@ -114,6 +161,7 @@ def customer_card_ocr_api(request):
             os.remove(temp_path)
 
 # LINE webhook 通过传送图片添加客户
+# 同一入口增加项目通知文本查询，图片名片处理逻辑保持不变
 @csrf_exempt
 @require_POST
 def line_webhook_api(request):
@@ -139,13 +187,33 @@ def line_webhook_api(request):
     errors = []
     saved_files = []
     processed_results = []
+    project_query_count = 0
+    project_query_results = []
     for event in events:
         if not isinstance(event, dict):
             continue
         if event.get("type") != "message":
             continue
         message = event.get("message")
-        if not isinstance(message, dict) or message.get("type") != "image":
+        if not isinstance(message, dict):
+            continue
+
+        if message.get("type") == "text":
+            if not _is_project_batch_query(event, message):
+                continue
+            project_query_count += 1
+            reply_token = str(event.get("replyToken") or "").strip()
+            if not reply_token:
+                errors.append("project query reply_token is empty")
+                continue
+            try:
+                project_query_results.append(_reply_project_batch_query(reply_token))
+            except Exception:
+                logger.exception("line webhook project batch query failed")
+                errors.append("project batch query failed")
+            continue
+
+        if message.get("type") != "image":
             continue
 
         image_event_count += 1
@@ -205,6 +273,8 @@ def line_webhook_api(request):
             "downloaded_images": downloaded_count,
             "saved_files": saved_files,
             "processed_results": processed_results,
+            "project_queries": project_query_count,
+            "project_query_results": project_query_results,
             "errors": errors,
         }
     )

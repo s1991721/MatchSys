@@ -81,3 +81,28 @@ class InterviewReport(models.Model):
     class Meta:
         managed = False
         db_table = "interview_report"
+
+
+class InterviewRuntime(models.Model):
+    """Connection/recording metadata; temporary final evaluation, never dialog text."""
+    interview = models.OneToOneField(Interview, on_delete=models.DO_NOTHING,
+        db_constraint=False, related_name='runtime')
+    page_id_hash = models.CharField(max_length=64)
+    started_at = models.DateTimeField()
+    deadline_at = models.DateTimeField()
+    connected_at = models.DateTimeField(null=True)
+    heartbeat_at = models.DateTimeField(null=True)
+    finishing_at = models.DateTimeField(null=True)
+    closed_at = models.DateTimeField(null=True)
+    connection_id = models.CharField(max_length=64, default='')
+    abnormal_reason = models.CharField(max_length=64, default='')
+    evaluation = models.JSONField(null=True)
+    recording_mime = models.CharField(max_length=100, default='')
+    recording_chunks = models.JSONField(default=dict)
+    recording_state = models.CharField(max_length=20, default='pending')
+    recording_final_count = models.PositiveIntegerField(null=True)
+    recording_duration_ms = models.PositiveIntegerField(null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'interview_runtime'

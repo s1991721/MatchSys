@@ -19,4 +19,4 @@ COPY . /app/
 
 EXPOSE 8001
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8001", "--workers", "3", "--timeout", "120"]
+CMD ["uvicorn", "config.asgi:application", "--host", "0.0.0.0", "--port", "8001", "--workers", "3", "--ws", "none", "--proxy-headers", "--forwarded-allow-ips", "*"]

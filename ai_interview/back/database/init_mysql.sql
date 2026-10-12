@@ -1,8 +1,8 @@
 -- AI面试系统 MySQL 数据库及表结构初始化脚本。
 --
--- 本脚本用于初始化，可重复执行，不删除现有业务数据。
+-- 本脚本统一用于新环境初始化及已有环境补建缺失表，可重复执行，不删除现有业务数据。
 -- CREATE TABLE IF NOT EXISTS 仅创建尚不存在的表，不更新已有表结构。
--- 升级已有数据库时，需要另行执行表结构迁移。
+-- 已有表的字段变更仍需显式执行 ALTER TABLE，本脚本不会自动迁移已有表结构。
 -- 业务表统一使用 deleted_at 标记软删除，NULL 表示未删除。
 -- 表间不设置外键，关联关系由应用层校验。
 
@@ -147,3 +147,25 @@ CREATE TABLE IF NOT EXISTS interview_report
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci
   COMMENT = 'AI面试报告表';
+-- 面试运行元数据：连接、录制、异常原因及最终评价暂存，不保存对话或转写文本。
+CREATE TABLE IF NOT EXISTS interview_runtime (
+ id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ interview_id BIGINT NOT NULL,
+ page_id_hash CHAR(64) NOT NULL,
+ started_at DATETIME(6) NOT NULL,
+ deadline_at DATETIME(6) NOT NULL,
+ connected_at DATETIME(6) NULL,
+ heartbeat_at DATETIME(6) NULL,
+ finishing_at DATETIME(6) NULL,
+ closed_at DATETIME(6) NULL,
+ connection_id VARCHAR(64) NOT NULL DEFAULT '',
+ abnormal_reason VARCHAR(64) NOT NULL DEFAULT '',
+ evaluation JSON NULL,
+ recording_mime VARCHAR(100) NOT NULL DEFAULT '',
+ recording_chunks JSON NOT NULL,
+ recording_state VARCHAR(20) NOT NULL DEFAULT 'pending',
+ recording_final_count INT UNSIGNED NULL,
+ recording_duration_ms INT UNSIGNED NULL,
+ UNIQUE KEY uk_runtime_interview (interview_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 当前版本不再读写旧 interview_conversation 表，已有历史数据保留。

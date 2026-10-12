@@ -2,7 +2,7 @@
   let streams = [], context = null, frame = null, generation = 0;
   const checks = {camera:false, microphone:false, network:false};
   function notify() { window.dispatchEvent(new Event('candidate-devices')); }
-  window.CandidateDevices = {ready: () => Object.values(checks).every(Boolean)};
+  window.CandidateDevices = {ready: () => Object.values(checks).every(Boolean), microphone: () => streams.find(stream => stream.getAudioTracks().some(track => track.readyState === 'live')), camera: () => streams.find(stream => stream.getVideoTracks().some(track => track.readyState === 'live'))};
   const button = document.getElementById('checkDevices');
   const help = document.getElementById('deviceHelp');
   const state = (id, value) => { window.AIInterviewI18n.set(document.getElementById(id), value); };
@@ -42,7 +42,7 @@
       })(),
       (async () => {
         if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) throw new Error('需要 HTTPS 或 localhost 才能访问麦克风');
-        const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+        const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
         if (run !== generation) { stream.getTracks().forEach(track => track.stop()); return; }
         streams.push(stream);
         context = new (window.AudioContext || window.webkitAudioContext)();

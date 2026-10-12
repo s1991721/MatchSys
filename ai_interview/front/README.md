@@ -11,7 +11,7 @@
 
 ```sh
 cd ai_interview/back
-python manage.py runserver 8001
+python -m uvicorn config.asgi:application --host 127.0.0.1 --port 8001 --reload
 ```
 
 前端通过 PyCharm HTTP 服务（63342 端口）或静态 HTTP 服务访问，不能使用 `file://`。
@@ -84,7 +84,7 @@ CSRF 失败清除缓存 token，下一次用户操作重新获取；修改请求
 面试语言固定日语、时长固定 15 分钟，与后端校验一致。
 企业开户和额度初始化继续由其他模块负责。
 当前页面没有自助编辑/删除面试和报告的交互，因此没有新增相应页面。
-候选人入口、AI 对话、邮件发送、实际报告生成、媒体上传仍属于后续功能。
+候选人 Live 面试、评价及音视频上传见后文。邮件发送仍属于后续功能。
 后端只返回媒体存储 key 时，报告页提示播放尚未开放；只有明确返回
 `recording_url` / `video_url` 的 HTTP(S) 绝对地址时才启用播放器。
 
@@ -100,20 +100,27 @@ CSRF 失败清除缓存 token，下一次用户操作重新获取；修改请求
 时不预加载隐藏列表；返回列表后再查询。首页及报告列表取消被后续操作替代的
 请求，报告已读写入按报告 ID 合并，阅读状态保存失败不重建媒体播放器。
 
-## 候选人入口
+## 候选人 Live 面试
 
-通用入口 `candidate.html` 输入创建响应中的 `invitation_code`。
-专属链接 `candidate.html?code=...` 自动验证，同一邀请两种凭证恢复同一记录。
-代码入口验证后 URL 使用 `?code=...` 以支持刷新；凭证属于访问秘密，请勿公开或写入分析日志。
-页面不加载企业登录逻辑，候选人 API 不发送企业 session cookie。
-进度由后端 waiting/running/submitting/completed 决定，浏览器只保存语言偏好。
-设备检查全部通过并勾选确认后允许开始，刷新准备页需重新检测。
-摄像头/麦克风只本地预览，不录制上传。健康检查探测面试 API。
-提交入口只标记 submitting，真实对话、回答上传和完成处理尚待后续接入。
+`candidate.html` 手动输入面试码，或通过 `?code=...` 链接验证。
+页面不依赖企业登录，不发送企业 session cookie。
+设备检查与候选人同意后，先准备麦克风、摄像头和 MediaRecorder，再请求开始面试。
+Live 期间直接用日语回答，停顿后 AI 自动继续；开口或点击按钮可打断，麦克风可静音。
 
-创建结果页显示 16 位十六进制面试码（四组），链接与手动输入使用完全相同的码，轮换后旧码失效。
-开发默认邀请链接指向 `http://localhost:63342/candidate.html`，可用
-`AI_INTERVIEW_INVITATION_BASE_URL` 覆盖为实际静态服务地址；生产默认指向公开候选人页面。
-Nginx 兼容 `/interview/{code}` 和 `/ai_interview/interview/{code}`；本地旧链接需更换到实际前端服务地址。
+不显示、保存逐句对话文本；AI 直接在同一次 Live 音频会话中生成最终评价。
+前端录制候选人视频与双方声音，5 秒分片持续上传，结束时补传尾片并封存。
+只有评价与完整录制都保存成功才显示完成；企业报告提供授权的音频 / 视频播放。
 
-语言资源统一放在 `js/i18n.js`，候选人动态提示通过 `AIInterviewI18n` 更新。
+运行中的面试刷新、关闭或断线一律异常，禁止重连、恢复或重新开始。
+页面所有权只存在内存，刷新后验证入口会终止旧运行。
+异常页提示联系邀请方重新安排，后端保留已上传的录制片段并记录异常原因与时间。
+请在 HTTPS / localhost 使用支持 WebRTC、Web Audio 和 MediaRecorder 的浏览器。
+
+前端使用后端签发的短期凭证，通过 WebRTC 直连 OpenAI；音频不经过 Django。
+结束时前端提交最终评价，后端校验格式并存储。后台可使用 Django runserver 或 Uvicorn。数据库升级、存储和部署配置见 `../back/README.md`。
+
+### 面试官声音球体
+
+`js/candidate-orb.js` 使用 Canvas 绘制蓝紫色球面线条与外围波纹，
+从 `CandidateLiveAudio` 的远端语音分析器读取音量，平滑调整起伏和亮度。
+静音时保留缓慢流动；隐藏页面时停止绘制，并遵循系统减少动态效果偏好。

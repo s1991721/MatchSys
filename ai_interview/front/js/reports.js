@@ -68,8 +68,8 @@
       if (!detail[key] && !detail[storage]) continue;
       const section = node('section'); section.append(node('h3', c()[label])); const url = mediaUrl(detail[key]);
       if (url) {
-        const player = node(tag); player.controls = true; player.preload = 'none'; player.src = url;
-        const error = node('p', c().mediaError); error.hidden = true; player.addEventListener('error', () => {error.hidden = false;}); section.append(player, error);
+        const player = node(tag); player.src = url;
+        section.append(window.createReportPlayer(player, detail.recording_duration_ms, bridge.lang === 'zh-CN'));
       } else section.append(node('p', text('录制文件已保存，播放功能尚未开放。', '録画・録音は保存されています。再生機能は準備中です。')));
       $('#reportMedia').append(section);
     }

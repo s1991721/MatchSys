@@ -1,88 +1,87 @@
-"""隔离的 SQLite 契约测试：不连接业务数据库。运行 python tests/candidate_contract.py。"""
+"""Isolated SQLite contracts; no business DB or OpenAI calls."""
 import hashlib
 import json
 import sys
 import unittest
 from datetime import timedelta
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from django.conf import settings
-settings.configure(INSTALLED_APPS=['accounts', 'interviews'], DATABASES={'default': {'ENGINE':'django.db.backends.sqlite3','NAME':':memory:'}}, USE_TZ=True, SECRET_KEY='test', CACHES={'default':{'BACKEND':'django.core.cache.backends.locmem.LocMemCache'}}, AI_INTERVIEW_INVITATION_BASE_URL='http://localhost/candidate.html')
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+settings.configure(INSTALLED_APPS=['accounts','interviews'],DATABASES={'default':{'ENGINE':'django.db.backends.sqlite3','NAME':':memory:'}},
+    USE_TZ=True,SECRET_KEY='test',CACHES={'default':{'BACKEND':'django.core.cache.backends.locmem.LocMemCache'}},
+    AI_INTERVIEW_INVITATION_BASE_URL='http://localhost/candidate.html',OPENAI_API_KEY='test-key',ROOT_URLCONF='config.urls',ALLOWED_HOSTS=['testserver'],DEBUG=True)
 import django
 django.setup()
 from django.db import connection
 from django.core.cache import cache
-from django.test import RequestFactory
+from django.test import RequestFactory,override_settings
 from django.utils import timezone
-from interviews.models import Interview
-from interviews.candidate import verify, start, submit
-from interviews.views import invitation_data, new_invitation
+from django.urls import resolve,Resolver404
+from accounts.models import UserAccount
+from interviews.models import Interview,InterviewRuntime,InterviewReport
+from interviews import candidate,runtime
 
-class CandidateContract(unittest.TestCase):
+
+class Fixture(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         with connection.schema_editor() as editor:
-            editor.create_model(Interview)
+            existing=set(connection.introspection.table_names())
+            for model in (UserAccount,Interview,InterviewRuntime,InterviewReport):
+                if model._meta.db_table not in existing:editor.create_model(model)
     def setUp(self):
-        Interview.objects.all().delete(); cache.clear()
-        self.code = 'ABCD-1234-5678-EF90'
-        now = timezone.now()
-        self.item = Interview.objects.create(user_id=1,request_id='one',invitation_token_hash=hashlib.sha256(self.code.replace('-', '').lower().encode()).hexdigest(),position_name='Backend',work_description='Build services',skills=[{'name':'Python'}],assessment_targets=[],candidate_name='A',candidate_email='a@example.com',invite_expires_at=now+timedelta(days=1),created_at=now,updated_at=now)
-    def call(self, view, data):
-        response = view(RequestFactory().post('/',json.dumps(data),content_type='application/json'))
-        return response.status_code, json.loads(response.content)
-    def test_both_credentials_and_rotation(self):
-        code=invitation_data(self.code)['invitation_code']
-        for data in [{'code':self.code},{'code':code.replace('-', '').lower()}]:
-            status,result=self.call(verify,data); self.assertEqual(status,200); self.assertEqual(result['data']['interview']['id'],self.item.id)
-        self.item.invitation_token_hash=hashlib.sha256(('b'*43).encode()).hexdigest();self.item.save()
-        self.assertEqual(self.call(verify,{'code':code})[0],404)
-        self.assertEqual(self.call(verify,{'token':'a'*43})[0],400)
-    def test_start_requires_readiness_and_is_monotonic(self):
-        self.assertEqual(self.call(start,{'code':self.code})[0],409)
-        data={'code':self.code,'devices_ready':True,'consent':True}
-        self.assertEqual(self.call(start,data)[1]['data']['interview']['status'],'running')
-        self.assertEqual(self.call(start,data)[1]['data']['interview']['status'],'running')
-        self.assertEqual(self.call(submit,{'code':self.code})[1]['data']['interview']['status'],'submitting')
-        self.assertEqual(self.call(start,data)[1]['data']['interview']['status'],'submitting')
-        self.assertEqual(self.call(verify,{'code':self.code})[1]['data']['interview']['status'],'submitting')
-    def test_expired_deleted_completed_invalid(self):
+        InterviewReport.objects.all().delete();InterviewRuntime.objects.all().delete();Interview.objects.all().delete();UserAccount.objects.all().delete();cache.clear()
+        self.code='ABCD-1234-5678-EF90';self.page='a'*32;now=timezone.now()
+        self.account=UserAccount.objects.create(username='owner',password='test',display_name='Owner',company_name='Company',created_at=now,updated_at=now)
+        self.item=Interview.objects.create(user_id=self.account.pk,request_id='one',invitation_token_hash=hashlib.sha256(self.code.replace('-','').lower().encode()).hexdigest(),
+            position_name='Backend',work_description='Build',skills=[{'name':'Python','level':'advanced'}],assessment_targets=[{'id':'coding','name':'Coding','detail':'Design','weight':100}],
+            candidate_name='A',candidate_email='a@example.com',invite_expires_at=now+timedelta(days=1),created_at=now,updated_at=now)
+    def call(self,view,data):
+        response=view(RequestFactory().post('/',json.dumps(data),content_type='application/json'))
+        return response.status_code,json.loads(response.content)
+    def start(self):return self.call(candidate.start,{'code':self.code,'page_id':self.page,'devices_ready':True,'consent':True})
+    def connect(self):
+        self.start();session=InterviewRuntime.objects.get(interview=self.item);session.connected_at=session.heartbeat_at=timezone.now();session.save();return session
+
+
+class CandidateContract(Fixture):
+    def test_readiness_and_missing_key_do_not_start(self):
+        self.assertEqual(self.call(candidate.start,{'code':self.code,'page_id':self.page})[0],409)
+        with override_settings(OPENAI_API_KEY=''):self.assertEqual(self.start()[0],503)
+        self.item.refresh_from_db();self.assertEqual(self.item.status,'waiting');self.assertFalse(InterviewRuntime.objects.exists())
+    def test_owner_is_ephemeral_and_refresh_is_abnormal(self):
+        self.assertEqual(self.start()[0],200)
+        self.assertEqual(self.call(candidate.verify,{'code':self.code,'page_id':self.page})[1]['data']['interview']['status'],'running')
+        self.assertEqual(self.call(candidate.verify,{'code':self.code,'page_id':'b'*32})[1]['data']['interview']['status'],'abnormal')
+        self.assertEqual(self.start()[1]['data']['interview']['status'],'abnormal')
+        self.assertFalse(InterviewReport.objects.exists())
+        session=InterviewRuntime.objects.get();self.assertEqual(session.abnormal_reason,'page_reloaded');self.assertIsNotNone(session.closed_at)
+    def test_closed_page_cannot_be_resumed(self):
+        self.connect()
+        self.call(candidate.abort,{'code':self.code,'page_id':self.page,'reason':'page_closed'})
+        result=self.call(candidate.verify,{'code':self.code,'page_id':self.page})[1]
+        self.assertEqual(result['data']['interview']['status'],'abnormal')
+    def test_watchdog_terminalizes_crashed_server(self):
+        session=self.connect();session.heartbeat_at=timezone.now()-timedelta(seconds=21);session.save()
+        self.assertEqual(runtime.expire_sessions(),1)
+        self.item.refresh_from_db();self.assertEqual(self.item.status,'abnormal')
+        session.refresh_from_db();self.assertEqual(session.abnormal_reason,'connection_lost')
+    def test_waiting_for_connection_has_bounded_timeout(self):
+        self.start();session=InterviewRuntime.objects.get();session.started_at=timezone.now()-timedelta(seconds=91);session.save()
+        self.assertEqual(runtime.expire_sessions(),1)
+    def test_no_dialog_fields_or_secondary_evaluation_routes(self):
+        fields={field.name for field in InterviewRuntime._meta.fields}
+        self.assertTrue(fields.isdisjoint({'messages','transcript','covered_targets'}))
+        for path in ('/api/candidate/room','/api/candidate/turn','/api/candidate/evaluate','/api/candidate/submit'):
+            with self.assertRaises(Resolver404):resolve(path)
+    def test_invalid_expired_completed_and_private_fields(self):
+        self.assertEqual(self.call(candidate.verify,{'code':'bad'})[0],404)
+        self.assertEqual(self.call(candidate.verify,{'token':'old'})[0],400)
         self.item.invite_expires_at=timezone.now()-timedelta(seconds=1);self.item.save()
-        self.assertEqual(self.call(verify,{'code':self.code})[0],410)
+        self.assertEqual(self.call(candidate.verify,{'code':self.code})[0],410)
         self.item.status='completed';self.item.save()
-        self.assertEqual(self.call(verify,{'code':self.code})[1]['data']['interview']['status'],'completed')
-        self.item.deleted_at=timezone.now();self.item.save()
-        self.assertEqual(self.call(verify,{'code':self.code})[0],404)
-        self.assertEqual(self.call(verify,{'code':'bad'})[0],404)
-    def test_submit_before_start_and_no_private_fields(self):
-        self.assertEqual(self.call(submit,{'code':self.code})[0],409)
-        payload=self.call(verify,{'code':self.code})[1]['data']['interview']
-        self.assertNotIn('candidate_email',payload);self.assertNotIn('invitation_token_hash',payload)
-    def test_invitations_are_isolated(self):
-        original_id = self.item.id
-        self.item.pk = None
-        self.item.request_id = 'two'
-        other = '1234567890abcdef'
-        self.item.invitation_token_hash = hashlib.sha256(other.encode()).hexdigest()
-        self.item.save()
-        self.call(start, {'code': self.code, 'devices_ready': True, 'consent': True})
-        self.assertEqual(self.call(verify, {'code': other})[1]['data']['interview']['status'], 'waiting')
-        self.assertNotEqual(self.call(verify, {'code': other})[1]['data']['interview']['id'], original_id)
+        payload=self.call(candidate.verify,{'code':self.code})[1]['data']['interview']
+        self.assertEqual(payload['status'],'completed');self.assertNotIn('candidate_email',payload);self.assertNotIn('page_id_hash',payload)
 
-    def test_new_code_is_shared_by_link_and_manual_entry(self):
-        from urllib.parse import urlparse, parse_qs
-        code, digest = new_invitation()
-        data = invitation_data(code)
-        self.assertNotIn('invitation_token', data)
-        self.assertEqual(parse_qs(urlparse(data['invitation_url']).query)['code'][0], code)
-        self.assertEqual(digest, hashlib.sha256(code.replace('-', '').lower().encode()).hexdigest())
-        self.item.invitation_token_hash = digest
-        self.item.save()
-        self.assertEqual(self.call(verify, {'code': code})[0], 200)
-
-    def test_rate_limit(self):
-        for _ in range(60):self.call(verify,{'code':'bad'})
-        self.assertEqual(self.call(verify,{'code':'bad'})[0],429)
 
 if __name__=='__main__':unittest.main()

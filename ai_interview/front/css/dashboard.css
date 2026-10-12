@@ -318,6 +318,15 @@ button:focus-visible, a:focus-visible { outline: 1px solid var(--blue-bright); o
 .report-media:empty { display: none; }
 .report-media video { display: block; width: 100%; max-height: 480px; background: #000; }
 .report-media audio { width: 100%; }
+.report-player-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px; background: #0a1b2b; border: 1px solid var(--line); border-radius: 0 0 8px 8px; }
+.report-player-controls button, .report-player-controls select { color: var(--text); background: #10283a; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer; }
+.report-player-controls label, .report-player-time { font-size: 13px; white-space: nowrap; }
+.report-player-controls input[type=range] { flex: 1; min-width: 100px; accent-color: var(--blue); cursor: pointer; }
+.report-player-time { font-variant-numeric: tabular-nums; }
+.report-player-controls .report-player-icon { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 8px; flex-shrink: 0; }
+.report-player-icon svg { pointer-events: none; }
+.report-player:fullscreen { display: flex; flex-direction: column; justify-content: center; background: #000; }
+.report-player:fullscreen video { flex: 1; min-height: 0; max-height: none; }
 @media (max-width: 600px) { .report-article { padding: 18px; } }
 
 /* Read-only information pages share the workspace palette. */

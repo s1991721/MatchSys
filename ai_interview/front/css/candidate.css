@@ -63,12 +63,7 @@ button:disabled { opacity: .45; cursor: not-allowed; }
 .message.candidate { justify-self: end; }
 .message.candidate > span { display: block; text-align: right; }
 .message.candidate p { background: #112f3a; border-color: #23505a; border-radius: 10px 0 10px 10px; }
-.answer-area { padding: 24px 0 0; border-top: 1px solid var(--line); text-align: center; }
-.answer-area strong { font-size: 12px; font-weight: 500; }
-.answer-area p { font-size: 11px; color: var(--muted); }
-.voice-display { display: flex; justify-content: center; align-items: center; gap: 5px; height: 30px; margin-bottom: 10px; }
-.voice-display i { width: 3px; height: 8px; background: #5d94b4; border-radius: 3px; }
-.voice-display i:nth-child(2n) { height: 16px; }.voice-display i:nth-child(3n) { height: 25px; }
+
 .session-camera { min-height: 170px; }
 .device-summary { color: var(--muted); font-size: 10px; text-align: center; margin-top: 16px; }.device-summary span { margin: 0 5px; }
 .end-button { padding: 14px; border: 1px solid #6b4149; border-radius: 7px; color: #dda4a6; background: #271a23; cursor: pointer; font-size: 12px; }
@@ -89,7 +84,13 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .entry-card label { font-size: 12px; color: #b3c7d7; }
 .entry-card input { width: 100%; min-height: 52px; border: 1px solid var(--line-strong); border-radius: 7px; padding: 12px 16px; background: #071624; color: var(--text); font: 18px var(--sans); letter-spacing: .12em; }
 .entry-card .entry-error { color: var(--red); }
-.submission-icon { color: var(--blue); font-size: 40px; margin-bottom: 24px; }
+.submission-spinner { width: 56px; height: 56px; box-sizing: border-box; margin: 0 auto 28px; border: 3px solid var(--line); border-top-color: var(--blue); border-right-color: var(--blue); border-radius: 50%; animation: submission-spin 1s linear infinite; }
+.completion-notice .submission-warning { color: var(--blue); font-size: 14px; font-weight: 500; }
+.abnormal-details { text-align: left; overflow-wrap: anywhere; }
+.abnormal-details #abnormalMessage { color: #e2edf5; font-size: 13px; }
+.abnormal-details code { color: var(--blue); }
+@keyframes submission-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .submission-spinner { animation: none; } }
 @media (max-width: 740px) { .entry-card { margin: 30px auto; padding: 28px 22px; } }
 .device-video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; transform: scaleX(-1); }
 #microphoneLevel { display: block; width: 100%; height: 16px; margin: 6px 0 18px; }
@@ -99,3 +100,82 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 #languageSwitch button { background: transparent; padding: 7px 10px; color: var(--muted); border-radius: 4px; font-size: 11px; cursor: pointer; }
 #languageSwitch button[aria-pressed="true"] { color: var(--text); background: #173b57; }
 @media (max-width: 400px) { .candidate-brand { gap: 10px; }.candidate-brand > span { padding-left: 10px; }.candidate-header { padding: 0 12px; } }
+
+.voice-message { margin: 0 0 18px; padding: 14px 16px; border-radius: 12px; background: rgba(255,255,255,.04); }
+.voice-message.user { background: rgba(74,173,207,.10); }
+.voice-message p { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Audio-reactive interviewer sphere. */
+.conversation { display: flex; flex-direction: column; }
+.interviewer-stage { flex: 1; min-height: 390px; gap: 8px; align-content: center; text-align: center; padding: 24px 0; }
+.interviewer-wave { height: clamp(280px, 32vw, 390px); width: 100%; border-radius: 16px; background: radial-gradient(ellipse at center, rgba(61, 160, 199, .10), transparent 68%); }
+.interviewer-wave canvas { display: block; width: 100%; height: 100%; }
+.interviewer-stage .device-help { min-height: 0; margin: 0; }
+.interviewer-stage #recordingStatus { opacity: .7; }
+.interviewer-controls { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 0 0 10px; text-align: center; }
+.interviewer-state { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.interviewer-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.interviewer-controls #voiceHelp { max-width: 440px; margin: 0; line-height: 1.7; }
+@media (max-width: 740px) { .interviewer-stage { min-height: 310px; }.interviewer-wave { height: 270px; } }
+
+/* Focused interview room: one stage, self view, persistent controls. */
+.session-meta { display: none; }
+.in-session .candidate-header { min-height: 72px; gap: 24px; }
+.in-session .session-meta { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex: 1; min-width: 0; }
+.session-meta h1 { font: 500 15px var(--sans); margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.session-clock { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.session-clock span { font-size: 10px; color: var(--muted); }
+.session-clock strong { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.in-session .header-note, .in-session .candidate-footer { display: none; }
+.in-session .candidate-main { padding-top: 0; padding-bottom: 0; }
+#session { position: relative; height: calc(100dvh - 72px); min-height: 470px; display: flex; flex-direction: column; }
+#session .session-layout { display: block; position: relative; flex: 1; min-height: 0; }
+#session .conversation { height: 100%; border: 0; background: transparent; padding: 0; }
+#session .interviewer-stage { height: 100%; min-height: 0; padding: 16px 0 0; gap: 12px; justify-items: center; }
+#session .interviewer-wave { height: min(55dvh, 560px); max-height: 100%; width: min(100%, 760px); background: none; }
+.orb-label { font-size: 10px; color: #6e8ea8; }
+.self-view { position: absolute; top: 24px; right: 0; width: clamp(280px, 24vw, 340px); border: 1px solid var(--line-strong); border-radius: 12px; background: #0a1b2b; overflow: hidden; }
+.self-view .session-camera { margin: 0; min-height: 0; aspect-ratio: 16 / 9; overflow: hidden; border: 0; border-radius: 0; }
+.self-view .camera-symbol { font-size: 22px; margin-bottom: 5px; }
+.self-view .camera-placeholder strong { font-size: 10px; }
+.self-view .device-video { width: 100%; height: 100%; aspect-ratio: 16 / 9; object-fit: contain; border-radius: 0; }
+.self-view-caption { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 10px; font-size: 10px; color: var(--muted); }
+#recordingStatus { overflow-wrap: anywhere; font-size: 9px; }
+#recordingStatus::before { content: ''; display: inline-block; width: 5px; height: 5px; margin-right: 5px; border-radius: 50%; background: #66879e; }
+#recordingStatus[data-recording="active"]::before { background: #ef8b96; }
+#session .interviewer-controls { flex-shrink: 0; padding: 24px 0 max(32px, env(safe-area-inset-bottom)); }
+#session .interviewer-actions { align-items: flex-end; gap: 20px; }
+.session-help { position: relative; font-size: 12px; color: var(--muted); }
+.session-help summary { list-style: none; }
+.session-help summary::-webkit-details-marker { display: none; }
+.call-control, #session .end-button { display: inline-flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; width: 80px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #b4c7d7; font: inherit; cursor: pointer; }
+.call-control-disc { display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border: 1px solid #30475b; border-radius: 50%; background: #172b3d; transition: background .15s, border-color .15s, transform .15s; }
+.call-icon { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.call-control-label { font-size: 11px; line-height: 1.5; white-space: nowrap; }
+#session .end-button .call-control-disc { width: 56px; height: 56px; border-color: #ef5b64; background: #dc4451; color: #fff; box-shadow: 0 4px 18px #dc445126; }
+#session .end-button .call-icon { width: 26px; height: 26px; }
+.call-control:hover:not(:disabled) .call-control-disc, .session-help[open] .call-control-disc { background: #254158; border-color: #60819b; }
+#session .end-button:hover:not(:disabled) .call-control-disc { background: #ee5360; border-color: #ff7b84; }
+.call-control:active:not(:disabled) .call-control-disc { transform: scale(.95); }
+.call-control:focus-visible { outline: 2px solid #83caff; outline-offset: 5px; border-radius: 8px; }
+.call-control:disabled { cursor: not-allowed; opacity: .45; }
+.microphone-slash { display: none; }
+.microphone-toggle[aria-pressed="true"] .call-control-disc { background: #49303c; border-color: #ba8198; color: #ffd0d9; }
+.microphone-toggle[aria-pressed="true"] .microphone-slash { display: block; }
+.microphone-toggle[aria-pressed="true"] .microphone-shape { opacity: .45; }
+@media (prefers-reduced-motion: reduce) { .call-control-disc { transition: none; } }
+.help-content { position: absolute; bottom: calc(100% + 14px); right: 0; width: min(320px, 80vw); padding: 18px; border: 1px solid var(--line-strong); border-radius: 10px; background: #0a1b2b; box-shadow: 0 12px 40px #0008; z-index: 5; text-align: left; line-height: 1.8; }
+.help-content p { margin: 0 0 10px; }.help-content p:last-child { margin-bottom: 0; }
+@media(max-width:740px) {
+  .in-session .candidate-header { flex-wrap: wrap; gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+  .in-session .session-meta { order: 3; flex-basis: 100%; gap: 12px; }
+  .session-meta h1 { font-size: 13px; }.session-clock strong { font-size: 17px; }
+  #session { height: calc(100dvh - 112px); min-height: 440px; }
+  .self-view { width: clamp(144px, 28vw, 180px); top: 16px; }
+  .self-view-caption { padding: 6px; font-size: 9px; flex-wrap: wrap; gap: 3px; }
+  #session .interviewer-stage { padding-top: 150px; gap: 8px; }
+  #session .interviewer-wave { height: min(40dvh, 380px); }
+  #session .interviewer-controls { padding: 20px 0 max(24px, env(safe-area-inset-bottom)); }
+  #session .interviewer-actions { gap: 16px; }
+  .call-control, #session .end-button { width: 76px; }
+}

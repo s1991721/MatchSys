@@ -2,8 +2,11 @@
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Local .env is ignored by Git and Docker; deployment environment takes priority.
+load_dotenv(BASE_DIR / ".env", override=False)
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -137,3 +140,10 @@ AI_INTERVIEW_INVITATION_BASE_URL = os.environ.get(
 
 # 让 CSRF 校验失败使用与业务接口一致的 JSON 错误格式。
 CSRF_FAILURE_VIEW = "interviews.api.csrf_failure"
+
+# OpenAI credentials remain server-side. Model names can be changed independently.
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '')
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+AI_INTERVIEW_REALTIME_MODEL = os.environ.get('AI_INTERVIEW_REALTIME_MODEL', 'gpt-realtime')
+AI_INTERVIEW_REALTIME_VOICE = os.environ.get('AI_INTERVIEW_REALTIME_VOICE', 'marin')

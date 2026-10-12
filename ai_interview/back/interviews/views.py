@@ -20,7 +20,7 @@ from .api import (
     string,
     success,
 )
-from .models import Interview, InterviewReport, UserQuota
+from .models import Interview, InterviewReport, InterviewRuntime, UserQuota
 
 # 列表无需加载报告正文和评分 JSON，仅选取用于展示的列。
 REPORT_LIST_FIELDS = (
@@ -206,6 +206,8 @@ def interviews(request):
     错误：400 参数错误；401 未登录；403 CSRF 失败；
         409 额度未配置、额度不足或 request_id 重复（包含已软删除的记录）。
     """
+    from .runtime import sweep
+    sweep()
     if request.method == "GET":
         return page(request, filtered(request, owned(request)), interview_data)
     data = body(request)
@@ -276,8 +278,16 @@ def interview_detail(request, pk):
     错误：400 参数错误；401 未登录；403 CSRF 失败；
         404 不存在或不属于当前企业；409 面试不可编辑。
     """
+    from .runtime import sweep
+    sweep()
     if request.method == "GET":
-        return success({"interview": interview_data(get_item(owned(request), pk))})
+        item = get_item(owned(request), pk)
+        detail = interview_data(item)
+        run = InterviewRuntime.objects.filter(interview=item).first()
+        if run:
+            detail.update(started_at=run.started_at, ended_at=run.closed_at,
+                abnormal_reason=run.abnormal_reason or None, recording_state=run.recording_state)
+        return success({"interview": detail})
     with transaction.atomic():
         item = get_item(owned(request, lock=True), pk)
         now = timezone.now()
@@ -395,7 +405,15 @@ def report_detail(request, pk):
     if request.method == "GET":
         report = get_item(query.select_related("interview"), pk)
         # GET 只返回详情，已读状态由独立 POST 更新。
-        return success({"report": report_data(report, detail=True)})
+        detail = report_data(report, detail=True)
+        recording_session = InterviewRuntime.objects.filter(interview=report.interview).first()
+        if report.interview.video_storage_key and recording_session:
+            # Public production proxy prepends /ai_interview to Django's /api routes.
+            prefix = "" if settings.DEBUG else "/ai_interview"
+            url = request.build_absolute_uri(f"{prefix}/api/interviews/{report.interview_id}/recording")
+            detail.update(video_url=url, recording_url=url,
+                          recording_duration_ms=recording_session.recording_duration_ms)
+        return success({"report": detail})
     report = get_item(query.only("id", "interview_id"), pk)
     with transaction.atomic():
         # 与后台报告写入使用相同的父面试锁，协调删除和更新操作。
@@ -466,6 +484,8 @@ def dashboard(request):
         waiting 超过有效期计入 expired，completed/abnormal 不受有效期影响。
     错误：401 未登录。
     """
+    from .runtime import sweep
+    sweep()
     query = owned(request)
     now = timezone.now()
     today = timezone.localdate(now)

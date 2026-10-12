@@ -9,7 +9,7 @@
 安装 `requirements.txt`，初始化 SQL 后，在本目录运行：
 
 ```sh
-python manage.py runserver 8000
+python -m uvicorn config.asgi:application --host 127.0.0.1 --port 8001 --reload
 ```
 
 企业账户创建、初始额度及后续额度发放由其他功能模块负责，本后端使用已有的
@@ -106,8 +106,7 @@ python manage.py runserver 8000
 
 `AI_INTERVIEW_INVITATION_BASE_URL` 指定候选人页面 URL 前缀，生成格式为
 `{前缀}/{token}`，开发默认 `http://localhost:8000/interview`。
-**本阶段不包含候选人页面、凭证兑换/开始面试、AI 对话、邮件发送、媒体上传或实际报告生成**；
-生成 URL 是后续候选人入口使用的接口契约，当前不能直接开始面试。
+候选人流程、Live 面试、录制与评价见后文；邮件发送仍待实现。
 
 ### 报告数据
 
@@ -151,27 +150,134 @@ completed/abnormal 为终态，仅允许重复写入相同状态，不能互相�
 首次创建 201、更新 200；内容变化时刷新 generated_at 并清除 read_at，
 相同内容的重复提交保持时间和阅读状态。失败时不创建空报告。
 
-## 候选人接口（已接入）
+## 候选人 Live 面试（2026-10-12）
 
-POST `/api/candidate/verify`、`/start`、`/submit` 接收 JSON `token` 或 `code`，二者只能提供一个。
-候选人使用邀请凭证，不使用企业 session；这些入口豁免 CSRF，企业入口保持 CSRF 校验。
-返回 `data.interview` 包含岗位、工作内容、技能、固定 ja 语言、时长、状态和有效期，不返回候选人邮箱或凭证哈希。
-无效/已删除返回 404；待参加过期返回 410；异常返回 409；已完成返回 completed 供结束页显示。
-`start` 需要 `devices_ready: true, consent: true`，行锁保护 waiting → running，重试只恢复当前状态。
-设备是否正常只能由浏览器检查，这两个字段是客户端确认，不是可信硬件证明。
-`submit` 只允许已开始的面试推进到 submitting，实际完成仍由可信后台接口写入 completed/abnormal。
-状态存在原 VARCHAR 字段，无需新建表；手动维护的状态约束如有自定义 CHECK/ENUM 须相应更新。
-创建/轮换响应增加 invitation_code，为 token SHA-256 的前 16 个十六进制字符，输入忽略大小写、空格、连字符。
-旧邀请也可由原 token 计算面试码；碰撞时拒绝验证。轮换后两种旧凭证失效。
-按请求 IP 每分钟限制 60 次。默认缓存为进程内，生产多 worker 必须配置共享 Redis 缓存并在代理层加速率限制；
-部署在代理后应配置可信客户端 IP 转发，否则限制会按代理 IP 聚合。
-GET/HEAD `/api/candidate/health` 提供面试 API 连通检查。
-契约测试：`../../.venv/bin/python tests/candidate_contract.py`（在 back 下运行）；使用隔离 SQLite，不访问业务数据库。
-前文“仅生成凭证、无候选人入口”的阶段说明已由本节替代，AI 对话、录制上传及真实提交完成仍未实现。
+候选人通过 16 位面试码或 `candidate.html?code=...` 进入，不使用企业 session。
+创建和轮换返回同一面试码作为链接与手动输入凭证，忽略大小写、空格和连字符。
+只保存邀请码 SHA-256，旧 token 链接不再支持。
 
-### 面试码统一入口（替代上面的 token 设计）
+本次实现遵循三条规则：
 
-现在只生成随机 16 位十六进制面试码，四组显示；链接为 `candidate.html?code={面试码}`。
-候选人接口仅接受 `code`，不再接受 token；创建和轮换不再返回 invitation_token。
-数据库沿用旧列名 invitation_token_hash，但新记录存的是规范化面试码的完整 SHA-256；无需修改表结构。
-旧版已发出的面试码仍可验证，旧 token 链接不再支持，需重新生成邀请或发送原面试码。
+- AI 在同一次 Live 音频会话中提问、追问，并在结束时直接生成最终评价。
+- 不保存逐轮对话文本，不启用输入转写，不接收浏览器提交的对话或评分。
+- 前端录制候选人摄像头画面及双方声音，分片上传；后端保存录制和最终评价。
+
+### 配置与启动
+
+安装 `requirements.txt`，执行统一脚本 `database/init_mysql.sql`，用于新环境初始化或
+为已有数据库补建缺失表。脚本也会按其中的配置重设数据库账户密码并授予权限，执行前确认账户配置。
+`CREATE TABLE IF NOT EXISTS` 不修改已有表结构，已有表的字段变更仍需显式执行 `ALTER TABLE`。
+新的 `interview_runtime` 表只有连接、录制、
+异常原因和最终评价的暂存字段，没有对话文本字段。旧版 `interview_conversation` 不再读取或写入；
+统一脚本不删除已有历史数据。
+
+在 `back/.env` 或进程环境设置 `OPENAI_API_KEY`、`AI_INTERVIEW_REALTIME_MODEL`（默认 `gpt-realtime`）、
+`AI_INTERVIEW_REALTIME_VOICE`（默认 `marin`）。进程环境优先，密钥不打包进镜像。
+后端访问 OpenAI 时使用系统信任根并补充 `certifi` CA 证书，始终校验服务器证书和主机名。
+更新后执行 `pip install -r requirements.txt` 并重启后端（开发模式自动重载除外）。
+若签发短期凭证失败，后端日志会记录 HTTP 状态码或连接错误类别，不记录密钥、上游响应正文或面试内容。
+当前流程没有文本评价模型、转写模型或 TTS 模型的单独调用。
+
+在 `ai_interview/back` 下启动：
+
+```sh
+python -m uvicorn config.asgi:application --host 127.0.0.1 --port 8001 --reload
+```
+
+浏览器通过 WebRTC 直连 OpenAI，后端只提供 HTTP API。本地也可使用
+`python manage.py runserver 127.0.0.1:8001`（PyCharm Django Server 配置同样可用）。
+Dockerfile / Compose 继续使用 Uvicorn ASGI，提供后台超时巡检；HTTP 入口也会触发巡检。
+Docker 后端只在内部网络暴露端口，信任 Nginx 转发的客户端 IP；Nginx 为本服务覆盖
+X-Forwarded-For，避免候选人分片上传的限流全部算到代理 IP。
+上线需要更新后端、前端与 Nginx 配置并重启。
+
+### 面试状态与异常
+
+`waiting → running → submitting → completed` 是正常流程。
+候选人页面生成仅保存在内存中的随机 page_id，后端只保存其哈希。
+刷新后 page_id 变化，验证入口立即把运行中的面试标记为 `abnormal`。
+连接只允许建立一次，不允许重新连接或恢复历史；重复连接也按异常处理。
+关闭页面、断线、AI 服务失败、录制失败或上传失败均终止为 abnormal。
+
+前端每 5 秒通过 HTTP 续心跳，超过 20 秒失联即异常；尚未连接的启动阶段最多 90 秒，
+结束后的评价与录制封存最多 120 秒。ASGI lifespan watchdog 每 5 秒检查，
+服务重启后也会终止遗留失联会话。正常浏览器直接向 OpenAI 发送音频。
+刷新 / pagehide 的 abort 通知只是补充，不能替代后端检测。
+
+异常记录保存原因和终止时间，保留已收到的录制片段，清除尚未发布的正常评价。
+原邀请不可再次开始，候选人看到异常页，重新安排需要新邀请。
+
+### 实时语音与最终评价
+
+浏览器通过 `POST /api/candidate/client-secret` 获取 60 秒有效的短期凭证和面试配置，
+再使用 WebRTC 直接连接 `https://api.openai.com/v1/realtime/calls`。
+正式 OPENAI_API_KEY 不返回浏览器，短期凭证只保存在内存中。每个邀请只签发一次。
+音频不经过 Django，不再使用 `/api/candidate/live` 后端 WebSocket。
+
+所有候选人接口携带 `code` 和仅在内存中的 `page_id`：
+
+| POST 路径 | 用途 |
+| --- | --- |
+| `/api/candidate/client-secret` | 开始后获取短期凭证及最终评价工具配置 |
+| `/api/candidate/heartbeat` | 每 5 秒续心跳，返回面试状态；到时转入 submitting |
+| `/api/candidate/finish` | 结束面试，转入 submitting；重试不重复改变状态 |
+| `/api/candidate/evaluation` | 提交 `evaluation: {summary, conclusion, scores}` |
+| `/api/candidate/recording/chunk`、`seal` | 持续上传录制并封存（沿用原格式） |
+
+前端控制日语面试、语义 VAD 和打断，在同一 OpenAI 会话结束后强制调用
+`submit_interview_report`，取得工具参数并经 HTTP 提交后端。
+后端校验目标覆盖性、分数范围、总结与结论；客户端结果不视为可信的服务端 AI 输出。
+只有评价格式无效时在同一上下文重试一次，不从录像转写后评价。
+模型上下文禁止静默截断；如上下文超限或评价失败，按异常处理。
+
+最终评价不逐字引用对话，只总结岗位相关能力与依据，供招聘人员复核，不自动决定录用。
+缺少考察依据的目标明确标注，不能将其 0 分当作能力差。
+评价与录制均成功后，才原子写入报告并标记 completed。
+前端忽略逐句转写和普通会话消息，不入库、写文件、打印日志或显示字幕。
+OpenAI 会话自身仍有临时上下文，这不等同于本系统保存对话文本。
+
+### 前端录制与上传
+
+MediaRecorder 录制候选人视频和 WebAudio 混合音频（候选人 + 实际播放的 AI 声音），
+每 5 秒上传。静音麦克风时相应录音也静音，AI 被打断后未播放的声音不会被录入。
+录制格式优先 WebM（VP8/Opus），浏览器不支持时使用 MP4。
+
+| POST 路径 | 行为 |
+| --- | --- |
+| `/api/candidate/verify` | 验证邀请及页面所有权，刷新按异常处理 |
+| `/api/candidate/start` | 设备、录制准备与同意后开始，绑定 page_id |
+| `/api/candidate/abort` | 辅助终止并记录异常原因 |
+| `/api/candidate/recording/chunk` | multipart code/page_id/index/mime/chunk，幂等写入片段 |
+| `/api/candidate/recording/seal` | 校验分片齐全，合并录制，正常流程中等待同会话评价 |
+
+每片最多 8MB、单场最多 256MB / 256 片。分片用编号和 SHA-256 去重，乱序到达也按编号合并；
+上传或封存遇到网络错误及 5xx 响应时，前端以相同内容重试一次；4xx 错误直接终止，不重复请求。
+首片校验容器标记。文件保存在 `MEDIA_ROOT/interviews/面试ID/运行标识/`，没有公开静态路由。
+正常录制包含视频与双方音频的一份文件，DB 的音频与视频 key 指向同一录制，避免复制两份。
+异常时未上传的最后片段可能丢失，后端已收到的片段保留在 parts 目录及运行元数据中。
+
+企业报告详情返回受 session 保护的播放 URL：`GET /api/interviews/{id}/recording`。
+播放入口校验企业归属、软删除状态，支持 HTTP Range；不能靠存储路径公开访问。
+企业面试详情额外返回 started_at、ended_at、abnormal_reason、recording_state。
+旧的候选人 room/turn/speech/evaluate/submit 入口已删除。
+
+### 验证
+
+项目根目录运行：
+
+```sh
+.venv/bin/python ai_interview/back/tests/candidate_contract.py
+.venv/bin/python ai_interview/back/tests/finalization_contract.py
+.venv/bin/python ai_interview/back/tests/browser_contract.py
+node ai_interview/back/tests/candidate_frontend.cjs
+node ai_interview/back/tests/voice_frontend.cjs
+node ai_interview/back/tests/recording_frontend.cjs
+node ai_interview/back/tests/live_audio.cjs
+.venv/bin/python ai_interview/back/manage.py check
+```
+
+自动测试隔离数据库，使用模拟 Realtime 事件与录制分片，不调用真实 API。
+配置有效密钥后需联调同会话评价、真实浏览器音视频录制与播放、刷新 / 断网异常，
+及结束阶段最后音频和最后录制分片的保存。
+
+WebRTC 与短期凭证接口参考：[OpenAI 官方文档](https://developers.openai.com/api/docs/guides/realtime-webrtc)。

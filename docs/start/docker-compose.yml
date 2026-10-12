@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     command: >
       sh -c "python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8001 --workers 3 --timeout 120"
+             uvicorn config.asgi:application --host 0.0.0.0 --port 8001 --workers 3 --ws none --proxy-headers --forwarded-allow-ips '*'"
     depends_on:
       - db
     expose:
@@ -56,6 +56,9 @@ services:
     networks:
       - matchsys-net
     environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      AI_INTERVIEW_REALTIME_MODEL: ${AI_INTERVIEW_REALTIME_MODEL:-gpt-realtime}
+      AI_INTERVIEW_REALTIME_VOICE: ${AI_INTERVIEW_REALTIME_VOICE:-marin}
       AI_INTERVIEW_DB_NAME: ai_interview
       AI_INTERVIEW_DB_USER: ai_interview_user
       AI_INTERVIEW_DB_PASSWORD: ai_interview_user_AbCdEfG

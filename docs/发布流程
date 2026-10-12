@@ -11,13 +11,13 @@ PROCESSOR
 
 ------------------------------------------------ mysql 镜像
 
-docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:3.1 --push .
-docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:3.1 .
+docker buildx build -f docker_mysql_img/Dockerfile --platform linux/amd64,linux/arm64  --no-cache -t jef4267/matchsys-mysql:3.4 --push .
+docker build -f docker_mysql_img/Dockerfile --no-cache -t jef4267/matchsys-mysql:3.4 .
 
 docker run --name matchsys-mysql-test \
   -e MYSQL_ROOT_PASSWORD=123456 \
   -p 3306:3306 \
-  -d jef4267/matchsys-mysql:3.0
+  -d jef4267/matchsys-mysql:3.4
 
 ------------------------------------------------ 连接网络
 
@@ -26,25 +26,35 @@ docker network connect matchsys-net matchsys-mysql-test
 docker network connect matchsys-net matchsys-test
 ------------------------------------------------ Django 镜像
 
-docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:3.1 --push .
-docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:3.1 .
+docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/matchsys-web:3.2 --push .
+docker build -f ./Dockerfile --no-cache -t jef4267/matchsys-web:3.2 .
 
 docker run --name matchsys-test \
   -p 8000:8000 \
-  -d jef4267/matchsys-web:3.1
+  -d jef4267/matchsys-web:3.2
+
+------------------------------------------------ AI面接官 镜像
+
+docker buildx build -f ./Dockerfile --platform linux/amd64,linux/arm64 --no-cache -t jef4267/ai-interview:1.1 --push .
+docker build -f ./Dockerfile --no-cache -t jef4267/ai-interview:1.1 .
+
+docker run --name ai-interview-test \
+  -p 8001:8001 \
+  -d jef4267/ai-interview:1.1
 
 ------------------------------------------------ 发布 镜像
 
 docker push jef4267/matchsys-mysql:3.1
 docker push jef4267/matchsys-web:3.1
+docker push jef4267/ai-interview:1.0
 docker push jef4267/matchsys-nginx:3.1
 
 ------------------------------------------------ nginx 镜像
 
-docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:3.2 --push .
-docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:3.2 .
+docker buildx build -f nginx/Dockerfile --platform linux/amd64,linux/arm64 --no-cache -f nginx/Dockerfile -t jef4267/matchsys-nginx:3.4 --push .
+docker build -f nginx/Dockerfile --no-cache -t jef4267/matchsys-nginx:3.4 .
 
-docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:3.1
+docker run --name matchsys-nginx -p 80:80 jef4267/matchsys-nginx:3.4
 
 ------------------------------------------------ 服务器部署使用
 docker compose down
@@ -81,3 +91,5 @@ v2.0 财务版本
 v3.0 案件告示板版本
 v3.1 官网SEO
 v3.2 研修・Academy
+v3.3 AI面接官
+v3.4 面试&评价、matchSys多租户   nginx3.4  web3.2   ai1.1  db3.4

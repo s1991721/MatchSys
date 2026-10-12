@@ -126,9 +126,6 @@
   $('#nextPage').addEventListener('click', () => { page++; load(); });
   window.addEventListener('aomera-language-change', translate);
   window.addEventListener('aomera-user-ready', load);
-  window.addEventListener('storage', event => { if (event.key === 'aomera-data-updated') load(); });
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) load(); });
-  setInterval(() => { if (!document.hidden && !loading) load(); }, 30000);
   window.addEventListener('pagehide', () => {clearTimeout(debounce); controller?.abort();});
   translate();
 })();

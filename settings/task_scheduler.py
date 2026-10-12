@@ -1,7 +1,7 @@
 from project.tenancy import current_domain, tenant_context, TASK_SALT
 from django.core import signing
 from django.db import connections
-from tenant_management.services import list_tenants, managed_schema
+from tenant_management.services import list_tenants, managed_schema, require_enabled
 from urllib.parse import urlparse
 import json
 import logging
@@ -273,10 +273,12 @@ def _scan_and_run():
         logger.exception("Unable to enumerate tenant schedules")
         return
     for tenant in tenants:
-        if not tenant['managed']:
+        if not tenant['managed'] or not tenant.get('enabled', True):
             continue
         try:
-            with tenant_context(tenant['email_domain'], managed_schema(tenant['email_domain'])):
+            schema = managed_schema(tenant['email_domain'])
+            require_enabled(schema)
+            with tenant_context(tenant['email_domain'], schema):
                 _scan_current_tenant()
         except Exception:
             logger.exception("Tenant schedule failed domain=%s", tenant['email_domain'])

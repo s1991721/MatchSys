@@ -68,6 +68,9 @@ def dashboard(request):
             elif action == "password":
                 services.update_password(domain, request.POST.get("password", ""))
                 notice = "管理员密码已更新"
+            elif action in {"disable", "enable"}:
+                services.set_enabled(domain, action == "enable")
+                notice = "租户已启用" if action == "enable" else "租户已停用，现有登录会话已失效"
             elif action == "delete":
                 if request.POST.get("confirmation") != domain:
                     raise ValueError("请输入完整邮箱域名确认删除")

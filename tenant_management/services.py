@@ -12,6 +12,40 @@ LEGACY_PREFIX = 'matchsys_tenant_'
 MARKER = 'tenant_profile'
 
 
+class TenantDisabled(ValueError):
+    pass
+
+
+def _has_enabled_column(cursor, name):
+    cursor.execute('SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=%s AND TABLE_NAME=%s AND COLUMN_NAME=%s', [name, MARKER, 'enabled'])
+    return bool(cursor.fetchone())
+
+
+def tenant_enabled(name):
+    with database(name) as db, db.cursor() as cursor:
+        if not _has_enabled_column(cursor, name):
+            return True
+        cursor.execute(f'SELECT enabled FROM {quote(MARKER)} WHERE id=1')
+        row = cursor.fetchone()
+        return bool(row and row[0])
+
+
+def require_enabled(name):
+    if not tenant_enabled(name):
+        raise TenantDisabled('该租户已停用，请联系平台管理员')
+
+
+def set_enabled(domain, enabled):
+    name = managed_schema(domain)
+    with database(name) as db, db.cursor() as cursor:
+        if not _has_enabled_column(cursor, name):
+            cursor.execute(f'ALTER TABLE {quote(MARKER)} ADD COLUMN enabled BOOLEAN NOT NULL DEFAULT TRUE')
+        cursor.execute(f'UPDATE {quote(MARKER)} SET enabled=%s WHERE id=1', [bool(enabled)])
+        if not enabled:
+            # Existing logins must not become valid again after re-enabling.
+            cursor.execute('DELETE FROM django_session')
+
+
 def normalize_domain(value):
     try:
         domain = value.strip().lower().encode('idna').decode('ascii')
@@ -66,7 +100,8 @@ def list_tenants():
             cursor.execute(f'SELECT company_name, email_domain FROM {quote(name)}.{quote(MARKER)} WHERE id=1')
             row = cursor.fetchone()
             if row:
-                result.append({'company_name': row[0], 'email_domain': row[1], 'managed': True})
+                result.append({'company_name': row[0], 'email_domain': row[1], 'managed': True,
+                               'enabled': tenant_enabled(name)})
         # Existing installation remains visible without changing its data.
         cursor.execute("SELECT settings FROM sys_settings WHERE name='company-info' AND deleted_at IS NULL LIMIT 1")
         row = cursor.fetchone()
@@ -119,8 +154,8 @@ def create_tenant(company_name, domain, password):
             # MatchSys currently compares company passwords directly.
             cursor.execute("INSERT INTO user_login (employee_id, employee_name, user_name, password, role_id, menu_list, created_at, updated_at) VALUES (1, '公司管理员', %s, %s, 999, '[\"*\"]', NOW(), NOW())", ['admin@' + domain, password])
             cursor.execute("INSERT INTO sys_settings (name, settings, created_at, updated_at) VALUES ('company-info', %s, NOW(), NOW())", [json.dumps({'company_name': company_name, 'mail': 'admin@' + domain})])
-            cursor.execute(f'CREATE TABLE {quote(MARKER)} (id INT PRIMARY KEY, company_name VARCHAR(100) NOT NULL, email_domain VARCHAR(253) NOT NULL, admin_employee_id BIGINT NOT NULL)')
-            cursor.execute(f'INSERT INTO {quote(MARKER)} VALUES (1, %s, %s, 1)', [company_name, domain])
+            cursor.execute(f'CREATE TABLE {quote(MARKER)} (id INT PRIMARY KEY, company_name VARCHAR(100) NOT NULL, email_domain VARCHAR(253) NOT NULL, admin_employee_id BIGINT NOT NULL, enabled BOOLEAN NOT NULL DEFAULT TRUE)')
+            cursor.execute(f'INSERT INTO {quote(MARKER)} (id, company_name, email_domain, admin_employee_id) VALUES (1, %s, %s, 1)', [company_name, domain])
     except Exception:
         # Only the new schema created by this invocation is rolled back.
         with database() as db, db.cursor() as cursor:

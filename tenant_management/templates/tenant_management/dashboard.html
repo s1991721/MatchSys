@@ -35,9 +35,19 @@
         <thead><tr><th scope="col">公司名</th><th scope="col">邮箱域名</th><th scope="col">操作</th></tr></thead>
         <tbody>
         {% for tenant in tenants %}
-        <tr><td>{{ tenant.company_name }}</td><td>{{ tenant.email_domain }}</td><td>
+        <tr><td>{{ tenant.company_name }}{% if tenant.managed and not tenant.enabled %}<span style="color:#a32929; margin-left:8px; font-size:13px">已停用</span>{% endif %}</td><td>{{ tenant.email_domain }}</td><td>
             {% if tenant.managed %}
             <button type="button" class="action password-button" data-domain="{{ tenant.email_domain }}">更新管理员密码</button>
+            <form method="post" style="display:inline">{% csrf_token %}
+                <input type="hidden" name="email_domain" value="{{ tenant.email_domain }}">
+                {% if tenant.enabled %}
+                <input type="hidden" name="action" value="disable">
+                <button type="submit" class="action danger">停用</button>
+                {% else %}
+                <input type="hidden" name="action" value="enable">
+                <button type="submit" class="action">启用</button>
+                {% endif %}
+            </form>
             <button type="button" class="action danger delete-button" data-domain="{{ tenant.email_domain }}" data-company="{{ tenant.company_name }}">删除</button>
             {% else %}<span>现有业务库，待接入</span>{% endif %}
         </td></tr>

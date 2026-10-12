@@ -10,7 +10,7 @@ from django.db import DatabaseError
 from project.api import api_error
 from project.error_codes import ErrorCode
 from project.tenancy import COOKIE, SALT, TASK_SALT, TASK_PATHS, tenant_context
-from tenant_management.services import managed_schema, normalize_domain
+from tenant_management.services import managed_schema, normalize_domain, require_enabled, TenantDisabled
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +47,12 @@ class TenantRoutingMiddleware:
                     domain = normalize_domain(value)
             if domain:
                 schema = managed_schema(domain)
+                require_enabled(schema)
                 claimed = request.headers.get('X-Tenant-Domain')
                 if claimed and normalize_domain(claimed) != domain:
                     return api_error(ErrorCode.FORBIDDEN, '租户标识与登录公司不一致', status=403)
+        except TenantDisabled as exc:
+            return api_error(ErrorCode.FORBIDDEN, str(exc), status=403)
         except (ValueError, TypeError, AttributeError, KeyError, ValidationError, signing.BadSignature, DatabaseError):
             if request.path == '/api/login':
                 return api_error(ErrorCode.LOGIN_INVALID_CREDENTIALS, status=401)

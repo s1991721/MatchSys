@@ -1,3 +1,4 @@
+from project.tenancy import tenant_target
 import json
 import mimetypes
 import re
@@ -1106,7 +1107,7 @@ def sys_settings_ai_test_api(request):
 # 夜间定时刷新数据库中的案件及技术者信息
 def time_to_save(request):
     thread = threading.Thread(
-        target=run_time_to_save,
+        target=tenant_target(run_time_to_save),
         name="time_to_save",
         daemon=True,
     )
@@ -1119,7 +1120,7 @@ def time_to_save(request):
 # 日间定时刷新数据库中的案件及技术者信息，仅当天
 def time_to_save_day(request):
     thread = threading.Thread(
-        target=run_time_to_save_day,
+        target=tenant_target(run_time_to_save_day),
         name="time_to_save_day",
         daemon=True,
     )
@@ -1132,7 +1133,7 @@ def time_to_save_day(request):
 # 定时清理过期的案件及技术者信息
 def time_to_clean(request):
     thread = threading.Thread(
-        target=run_time_to_clean,
+        target=tenant_target(run_time_to_clean),
         name="time_to_clean",
         daemon=True,
     )
@@ -1145,7 +1146,7 @@ def time_to_clean(request):
 # 定时备份数据
 def time_to_backup(request):
     thread = threading.Thread(
-        target=run_time_to_clean,
+        target=tenant_target(run_time_to_clean),
         name="time_to_clean",
         daemon=True,
     )
@@ -1157,7 +1158,7 @@ def time_to_backup(request):
 @require_POST
 def time_to_hello(request):
     thread = threading.Thread(
-        target=run_time_to_hello,
+        target=tenant_target(run_time_to_hello),
         name="time_to_hello",
         daemon=True,
     )
@@ -1169,7 +1170,7 @@ def time_to_hello(request):
 @require_POST
 def time_to_sync_my_mails(request):
     thread = threading.Thread(
-        target=run_time_to_sync_my_mails,
+        target=tenant_target(run_time_to_sync_my_mails),
         name="time_to_sync_my_mails",
         daemon=True,
     )

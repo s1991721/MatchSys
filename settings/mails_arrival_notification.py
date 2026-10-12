@@ -1,3 +1,4 @@
+from project.tenancy import current_schema
 import logging
 import threading
 import uuid
@@ -17,13 +18,14 @@ LINE_REPLY_TEXT_SOFT_LIMIT = 4500
 LINE_REPLY_MAX_MESSAGES = 5
 
 _LATEST_PROJECT_BATCH_LOCK = threading.Lock()
-_LATEST_PROJECT_BATCH = {
-    "version": uuid.uuid4().hex,
-    "task_name": "",
-    "completed_at": "",
-    "projects": [],
-    "claim_id": "",
-}
+_LATEST_PROJECT_BATCHES = {}
+
+
+def _tenant_project_batch():
+    return _LATEST_PROJECT_BATCHES.setdefault(current_schema(), {
+        "version": uuid.uuid4().hex, "task_name": "", "completed_at": "",
+        "projects": [], "claim_id": "",
+    })
 
 
 # 同意skills格式
@@ -176,7 +178,7 @@ def replace_latest_project_batch(task_name: str, projects: list[dict]) -> int:
     ]
 
     with _LATEST_PROJECT_BATCH_LOCK:
-        _LATEST_PROJECT_BATCH.update(
+        _tenant_project_batch().update(
             {
                 "version": uuid.uuid4().hex,
                 "task_name": str(task_name or ""),
@@ -214,20 +216,20 @@ def replace_latest_project_batch(task_name: str, projects: list[dict]) -> int:
 def claim_latest_project_batch() -> dict:
     """占用可回复的数据，防止并发查询重复发送。"""
     with _LATEST_PROJECT_BATCH_LOCK:
-        if _LATEST_PROJECT_BATCH.get("claim_id"):
+        if _tenant_project_batch().get("claim_id"):
             return {"status": "busy", "messages": [], "project_count": 0}
-        projects = _LATEST_PROJECT_BATCH.get("projects") or []
+        projects = _tenant_project_batch().get("projects") or []
         if not projects:
             return {"status": "empty", "messages": [], "project_count": 0}
         messages, project_count = _build_reply_messages(projects)
         if not project_count:
             return {"status": "empty", "messages": [], "project_count": 0}
         claim_id = uuid.uuid4().hex
-        _LATEST_PROJECT_BATCH["claim_id"] = claim_id
+        _tenant_project_batch()["claim_id"] = claim_id
         return {
             "status": "ready",
             "claim_id": claim_id,
-            "version": _LATEST_PROJECT_BATCH["version"],
+            "version": _tenant_project_batch()["version"],
             "messages": messages,
             "project_count": project_count,
             "remaining_count": len(projects) - project_count,
@@ -239,15 +241,15 @@ def complete_latest_project_batch_claim(claim: dict) -> None:
     """回复成功后，仅移除本次确实回复的案件。"""
     with _LATEST_PROJECT_BATCH_LOCK:
         if (
-            _LATEST_PROJECT_BATCH.get("version") != claim.get("version")
-            or _LATEST_PROJECT_BATCH.get("claim_id") != claim.get("claim_id")
+            _tenant_project_batch().get("version") != claim.get("version")
+            or _tenant_project_batch().get("claim_id") != claim.get("claim_id")
         ):
             return
         count = max(int(claim.get("project_count") or 0), 0)
-        _LATEST_PROJECT_BATCH["projects"] = (
-            _LATEST_PROJECT_BATCH.get("projects") or []
+        _tenant_project_batch()["projects"] = (
+            _tenant_project_batch().get("projects") or []
         )[count:]
-        _LATEST_PROJECT_BATCH["claim_id"] = ""
+        _tenant_project_batch()["claim_id"] = ""
 
 
 # 回复失败时解除占用并保留案件
@@ -255,7 +257,7 @@ def release_latest_project_batch_claim(claim: dict) -> None:
     """回复失败时解除占用，保留全部待查看案件。"""
     with _LATEST_PROJECT_BATCH_LOCK:
         if (
-            _LATEST_PROJECT_BATCH.get("version") == claim.get("version")
-            and _LATEST_PROJECT_BATCH.get("claim_id") == claim.get("claim_id")
+            _tenant_project_batch().get("version") == claim.get("version")
+            and _tenant_project_batch().get("claim_id") == claim.get("claim_id")
         ):
-            _LATEST_PROJECT_BATCH["claim_id"] = ""
+            _tenant_project_batch()["claim_id"] = ""

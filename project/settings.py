@@ -61,7 +61,9 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "project.tenant_middleware.TenantRoutingMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "project.tenant_middleware.TenantSessionBindingMiddleware",
     "tenant_management.middleware.PlatformSessionMiddleware",
     "project.middleware.SessionLoginRequiredMiddleware",
     "project.middleware.ApiExceptionMiddleware",
@@ -102,7 +104,7 @@ WSGI_APPLICATION = "project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.mysql",
+        "ENGINE": "project.db.backends.tenant_mysql",
         "NAME": os.environ.get("DB_NAME", "matchSys"),
         "USER": os.environ.get("DB_USER", "root"),
         "PASSWORD": os.environ.get("DB_PASSWORD", "123456"),

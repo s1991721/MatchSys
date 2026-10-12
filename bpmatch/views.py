@@ -1,3 +1,4 @@
+from project.tenancy import tenant_target
 import csv
 import json
 import os
@@ -1079,7 +1080,7 @@ def my_mail_detail_api(request, mail_id):
         if data and data.get("unread"):
             data["unread"] = False
             thread = threading.Thread(
-                target=_mark_my_mail_as_read_async,
+                target=tenant_target(_mark_my_mail_as_read_async),
                 args=(login_id, mail_id),
                 name="mark_my_mail_as_read",
                 daemon=True,

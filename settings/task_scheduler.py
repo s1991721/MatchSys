@@ -1,3 +1,8 @@
+from project.tenancy import current_domain, tenant_context, TASK_SALT
+from django.core import signing
+from django.db import connections
+from tenant_management.services import list_tenants, managed_schema
+from urllib.parse import urlparse
 import json
 import logging
 from logging.handlers import TimedRotatingFileHandler
@@ -211,7 +216,7 @@ def _run_task(task: ScheduledTask, timeout=10):
         url,
         data=data,
         method=method,
-        headers={"Content-Type": "application/json"},
+        headers=_task_headers(url),
     )
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -241,21 +246,45 @@ def _run_task(task: ScheduledTask, timeout=10):
         return False, str(exc)
 
 
+def _task_headers(url):
+    headers = {"Content-Type": "application/json"}
+    # Never send internal authentication tokens to an external configured URL.
+    if current_domain() and urlparse(url).netloc == urlparse(_base_url()).netloc:
+        headers["X-MatchSys-Task"] = signing.dumps(
+            {"domain": current_domain(), "path": urlparse(url).path}, salt=TASK_SALT)
+    return headers
+
+
 def invalidate_scheduled_tasks_cache():
     global _scheduled_tasks_cache
     _scheduled_tasks_cache = None
 
 
 def _get_enabled_tasks_from_cache():
-    global _scheduled_tasks_cache
-    if _scheduled_tasks_cache is None:
-        _scheduled_tasks_cache = list(
-            ScheduledTask.objects.filter(deleted_at__isnull=True, enabled=True)
-        )
-    return list(_scheduled_tasks_cache)
+    # Query within the current tenant; IDs and schedules overlap across schemas.
+    return list(ScheduledTask.objects.filter(deleted_at__isnull=True, enabled=True))
 
 
 def _scan_and_run():
+    logger = _get_logger()
+    try:
+        tenants = list_tenants()
+    except Exception:
+        logger.exception("Unable to enumerate tenant schedules")
+        return
+    for tenant in tenants:
+        if not tenant['managed']:
+            continue
+        try:
+            with tenant_context(tenant['email_domain'], managed_schema(tenant['email_domain'])):
+                _scan_current_tenant()
+        except Exception:
+            logger.exception("Tenant schedule failed domain=%s", tenant['email_domain'])
+        finally:
+            connections.close_all()
+
+
+def _scan_current_tenant():
     logger = _get_logger()
     now = timezone.localtime(timezone.now())
     tasks = _get_enabled_tasks_from_cache()

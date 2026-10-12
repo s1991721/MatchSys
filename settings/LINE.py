@@ -1,3 +1,4 @@
+from project.tenancy import current_schema
 import base64
 import hashlib
 import hmac
@@ -25,7 +26,7 @@ class LineSendError(Exception):
 
 
 # 内存缓存LINE 配置
-_LINE_SETTINGS_CACHE: Optional[Dict[str, Any]] = None
+_LINE_SETTINGS_CACHE = {}
 
 
 # 缓存失效
@@ -33,8 +34,7 @@ def invalidate_line_notify_filter_cache():
     """
     line-notify 配置更新后，清理相关缓存。
     """
-    global _LINE_SETTINGS_CACHE
-    _LINE_SETTINGS_CACHE = None
+    _LINE_SETTINGS_CACHE.pop(current_schema(), None)
 
 
 # 加载DB数据到缓存
@@ -54,21 +54,17 @@ def _load_line_settings_from_db() -> Dict[str, Any]:
 
 # 从缓存获取配置
 def _get_line_settings_from_cache() -> Dict[str, Any]:
-    global _LINE_SETTINGS_CACHE
-    if _LINE_SETTINGS_CACHE is None:
-        _LINE_SETTINGS_CACHE = _load_line_settings_from_db()
-    return dict(_LINE_SETTINGS_CACHE)
+    key = current_schema()
+    if key not in _LINE_SETTINGS_CACHE:
+        _LINE_SETTINGS_CACHE[key] = _load_line_settings_from_db()
+    return dict(_LINE_SETTINGS_CACHE[key])
 
 
-# 获取过滤配置
 def get_line_notify_filter() -> Dict[str, Any]:
-    global _LINE_SETTINGS_CACHE
-    if _LINE_SETTINGS_CACHE is None:
-        _get_line_settings_from_cache()
-
+    config = _get_line_settings_from_cache()
     return {
-        "nationality": _LINE_SETTINGS_CACHE.get("nationality", -1),
-        "skills": list(_LINE_SETTINGS_CACHE.get("skills", [])),
+        "nationality": config.get("nationality", -1),
+        "skills": list(config.get("skills", [])),
     }
 
 

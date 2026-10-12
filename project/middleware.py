@@ -59,7 +59,7 @@ class SessionLoginRequiredMiddleware:
         }:
             return True
 
-        if path.startswith(("/static/", "/admin/")):
+        if path.startswith(("/static/", "/admin/", "/tenant-management/")):
             return True
 
         if path == "/api/login":

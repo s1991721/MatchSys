@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.urls import path
+from django.urls import include, path
 from django.views.decorators.cache import cache_control
 from django.views.decorators.clickjacking import xframe_options_deny
 from django.views.generic import TemplateView
@@ -165,6 +165,7 @@ cache_static_asset = (
 )
 
 urlpatterns = [
+    path("tenant-management/", include("tenant_management.urls")),
     # ###################################-Front End-###################################
     path("", RedirectView.as_view(url="/index.html", permanent=False)),
     path("index.html", TemplateView.as_view(template_name="frontend/index.html")),

@@ -1,0 +1,15 @@
+{% extends "tenant_management/base.html" %}
+{% block content %}
+<header>
+    <div><div class="brand">MATCHSYS</div><h1>租户管理</h1></div>
+    <form method="post" action="{% url 'tenant_management:logout' %}">
+        {% csrf_token %}
+        <button type="submit">退出登录</button>
+    </form>
+</header>
+<section class="card">
+    <h2>欢迎，{{ username }}</h2>
+    <p>平台管理员已登录。</p>
+    <p>租户创建、数据库初始化及公司管理员初始化功能将在下一阶段接入。</p>
+</section>
+{% endblock %}

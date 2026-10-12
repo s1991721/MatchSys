@@ -55,12 +55,14 @@ INSTALLED_APPS = [
     "finance",
     "permission",
     "settings.apps.SettingsConfig",
+    "tenant_management.apps.TenantManagementConfig",
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "tenant_management.middleware.PlatformSessionMiddleware",
     "project.middleware.SessionLoginRequiredMiddleware",
     "project.middleware.ApiExceptionMiddleware",
     "django.middleware.common.CommonMiddleware",
